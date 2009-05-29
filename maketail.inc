@@ -97,7 +97,8 @@ superclean:
 	rm -rf global.h defs.h
 	rm -rf extractnonfunc gprof-helper.so
 	rm -rf objslong objsdepssmcalc.cmd.list objsdepssmcalc objsdepsliaison objsdepsjoninterp objsdepsbin2txt.cmd.list objsdepsbin2txt
-
+	rm -rf prepbin2txt prepsmcalc
+	
 cleani:
 	rm *.o *.il
 
