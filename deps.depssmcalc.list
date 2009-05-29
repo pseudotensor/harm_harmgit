@@ -1,2 +1,0 @@
-smcalc.o: smcalc.c global.nondepnmemonics.h metric.h coord.h global.stepch.h \
- para_and_paraenohybrid.h

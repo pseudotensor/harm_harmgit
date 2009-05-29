@@ -89,10 +89,12 @@ superclean:
 	rm -rf $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(BIN2TXTCMD) $(SMCALCCMD) *.o $(PREP) $(PREPLD) $(PREPLIAISON) $(PREPJONINTERP) deps.onepoint.list deps.manypoints.list objsmanypoints.cmd.list objsonepoint.cmd.list objslong.cmd.list global.defnprs.h generatenprs libml.a
 	rm -rf objsonepoint.cmd.list objsmanypoints.cmd.list objslong.cmd.list objsdepsliaison.cmd.list objsdepsjoninterp.cmd.list
 	rm -rf deps.manypoints.list deps.onepoint.list deps.long.list deps.depsliaison.list deps.depsjoninterp.list
-	rm -rf onepoint manypoints
+	rm -rf objsonepoint objsmanypoints onepoint manypoints
 	rm -rf decs.h mpidecs.h superdecs.h superdecs.pointers.h decs.user.h decs.general.h supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h
 	rm -rf freespace.o tau_neededbyharm.o
-
+	rm -rf depssmcalc depsliaison depsjoninterp deps.depssmcalc.list deps.depsbin2txt.list depsbin2txt
+# below are just links
+	rm -rf global.h defs.h
 
 
 cleani:
