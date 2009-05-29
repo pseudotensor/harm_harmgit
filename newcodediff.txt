@@ -1,0 +1,1350 @@
+advance.c
+  DLOOPA(jj) dphidt += GLOBALMETMACP0A3(conn,i,j,k,jj,TT,TT)*(ptrgeom->gcov[GIND(jj,TT)]);																										   |	  DLOOPA(jj) dphidt += GLOBALMETMACP0A3(conn,i,j,k,jj,TT,TT)*(ptrgeom->gcov[jj][TT]);
+  phi = -(1.0+ptrgeom->gcov[GIND(TT,TT)])*0.5;																																   |	  phi = -(1.0+ptrgeom->gcov[TT][TT])*0.5;
+  frac = fabs(ptrgeom->gcon[GIND(TT,TT)]*dphidt);																															   |	  frac = fabs(ptrgeom->gcon[TT][TT]*dphidt);
+bcucof.c
+bcuint.c
+bin2txt.c
+boundmpi.c
+boundmpiint.c
+bounds.c
+bounds.ff.c
+        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);																							   |	        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[3][3])/(geom.gcov[3][3]);
+    prface[B3] = rprim[B3]*(geomc.gcov[GIND(3,3)])/(geomf.gcov[GIND(3,3)]);																												   |	    prface[B3] = rprim[B3]*(geomc.gcov[3][3])/(geomf.gcov[3][3]);
+        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);																							   |	        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[3][3])/(geom.gcov[3][3]);
+    prface[B3]=MACP0A1(prim,ri,rj,rk,B3)*fabs(geomc.gcov[GIND(3,3)])/(geomf.gcov[GIND(3,3)]);																										   |	    prface[B3]=MACP0A1(prim,ri,rj,rk,B3)*fabs(geomc.gcov[3][3])/(geomf.gcov[3][3]);
+        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);																							   |	        pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[3][3])/(geom.gcov[3][3]);
+bounds.fishmon.c
+boundsflux.c
+bounds.grb.c
+boundsint.c
+bounds.ns.backup2.c
+bounds.ns.backup.c
+bounds.ns.c
+      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(sqrt(fabs(geom.gcov[GIND(2,2)]))*pow(V[1],3.0))/(sqrt(fabs(rgeom.gcov[GIND(2,2)]))*pow(rV[1],3.0));																		   |	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(sqrt(fabs(geom.gcov[2][2]))*pow(V[1],3.0))/(sqrt(fabs(rgeom.gcov[2][2]))*pow(rV[1],3.0));
+	  v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole																									   |		  v1=prface[B1]*sqrt(fabs(fgeom.gcov[1][1]))*pow(fV[1],3); // close to constant for dipole
+	  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);																											   |		  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[1][1]))*pow(rV[1],3);
+	  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));																											   |		  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[1][1]))*pow(V[1],3));
+	  v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole																									   |		  v1=prface[B1]*sqrt(fabs(fgeom.gcov[1][1]))*pow(fV[1],3); // close to constant for dipole
+	  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);																											   |		  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[1][1]))*pow(rV[1],3);
+	  v3=MACP0A1(prim,ri+1,rj,rk,B1)*sqrt(fabs(rrgeom.gcov[GIND(1,1)]))*pow(rrV[1],3);																										   |		  v3=MACP0A1(prim,ri+1,rj,rk,B1)*sqrt(fabs(rrgeom.gcov[1][1]))*pow(rrV[1],3);
+	  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));																											   |		  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[1][1]))*pow(V[1],3));
+	    up2face+=prface[U1+jj-1]*prface[U1+kk-1]*fgeom.gcov[GIND(jj,kk)];																												   |		    up2face+=prface[U1+jj-1]*prface[U1+kk-1]*fgeom.gcov[jj][kk];
+	    Bp2face+=prface[B1+jj-1]*prface[B1+kk-1]*fgeom.gcov[GIND(jj,kk)];																												   |		    Bp2face+=prface[B1+jj-1]*prface[B1+kk-1]*fgeom.gcov[jj][kk];
+	    up2cent+=MACP0A1(prim,i,j,k,U1+jj-1)*MACP0A1(prim,i,j,k,U1+kk-1)*geom.gcov[GIND(jj,kk)];																									   |		    up2cent+=MACP0A1(prim,i,j,k,U1+jj-1)*MACP0A1(prim,i,j,k,U1+kk-1)*geom.gcov[jj][kk];
+	    Bp2cent+=MACP0A1(prim,i,j,k,B1+jj-1)*MACP0A1(prim,i,j,k,B1+kk-1)*geom.gcov[GIND(jj,kk)];																									   |		    Bp2cent+=MACP0A1(prim,i,j,k,B1+jj-1)*MACP0A1(prim,i,j,k,B1+kk-1)*geom.gcov[jj][kk];
+    prface[B1] = GLOBALMACP0A1(panalytic,i,j,k,B1)*sqrt(fabs(geomc.gcov[GIND(1,1)]))*pow(Vc[1],3)/(sqrt(fabs(geomf.gcov[GIND(1,1)]))*pow(Vf[1],3)); // set from offset of analytical solution														   |	    prface[B1] = GLOBALMACP0A1(panalytic,i,j,k,B1)*sqrt(fabs(geomc.gcov[1][1]))*pow(Vc[1],3)/(sqrt(fabs(geomf.gcov[1][1]))*pow(Vf[1],3)); // set from offset of analytical solution
+    //    prface[B1] = MACP0A1(prim,i,j,k,B1)*sqrt(fabs(geomc.gcov[GIND(1,1)]))*pow(Vc[1],3)/(sqrt(fabs(geomf.gcov[GIND(1,1)]))*pow(Vf[1],3));																				   |	    //    prface[B1] = MACP0A1(prim,i,j,k,B1)*sqrt(fabs(geomc.gcov[1][1]))*pow(Vc[1],3)/(sqrt(fabs(geomf.gcov[1][1]))*pow(Vf[1],3));
+      prface[B2] = MACP0A1(prim,i,j,k,B2)*(sqrt(fabs(geomc.gcov[GIND(2,2)]))*pow(Vc[1],3.0))/(sqrt(fabs(geomf.gcov[GIND(2,2)]))*pow(Vf[1],3.0));																			   |	      prface[B2] = MACP0A1(prim,i,j,k,B2)*(sqrt(fabs(geomc.gcov[2][2]))*pow(Vc[1],3.0))/(sqrt(fabs(geomf.gcov[2][2]))*pow(Vf[1],3.0));
+bounds.nsold.c
+bounds.rebecca.c
+bounds.sasha.c
+bounds.tools.c
+		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom   |			// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[1][1]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[2][2]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[
+		//	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);																						   |			//	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[jj][kk]);
+		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].g   |			// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[1][1]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[2][2]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[3][3])
+		//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gc   |			//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[1][1]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[2][2]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[3][3]))
+  Bd3=0.0; SLOOPA(jj) Bd3 += MACP0A1(prim,ri,rj,rk,B1+jj-1)*(ptrrgeom[B1+jj-1]->gcov[GIND(3,jj)]);																									   |	  Bd3=0.0; SLOOPA(jj) Bd3 += MACP0A1(prim,ri,rj,rk,B1+jj-1)*(ptrrgeom[B1+jj-1]->gcov[3][jj]);
+  Bd3ri2=0.0; SLOOPA(jj) Bd3ri2 += MACP0A1(prim,ri2,rj,rk,B1+jj-1)*(ptrri2geom[B1+jj-1]->gcov[GIND(3,jj)]);																								   |	  Bd3ri2=0.0; SLOOPA(jj) Bd3ri2 += MACP0A1(prim,ri2,rj,rk,B1+jj-1)*(ptrri2geom[B1+jj-1]->gcov[3][jj]);
+  Bd3ri3=0.0; SLOOPA(jj) Bd3ri3 += MACP0A1(prim,ri3,rj,rk,B1+jj-1)*(ptrri3geom[B1+jj-1]->gcov[GIND(3,jj)]);																								   |	  Bd3ri3=0.0; SLOOPA(jj) Bd3ri3 += MACP0A1(prim,ri3,rj,rk,B1+jj-1)*(ptrri3geom[B1+jj-1]->gcov[3][jj]);
+    gcon03=ptrgeom[B3]->gcon[GIND(0,3)];																																   |	    gcon03=ptrgeom[B3]->gcon[0][3];
+    gcon13=ptrgeom[B3]->gcon[GIND(1,3)];																																   |	    gcon13=ptrgeom[B3]->gcon[1][3];
+    gcon23=ptrgeom[B3]->gcon[GIND(2,3)];																																   |	    gcon23=ptrgeom[B3]->gcon[2][3];
+    gcon33=ptrgeom[B3]->gcon[GIND(3,3)];																																   |	    gcon33=ptrgeom[B3]->gcon[3][3];
+    gcov01=ptrgeom[B3]->gcov[GIND(0,1)];																																   |	    gcov01=ptrgeom[B3]->gcov[0][1];
+    gcov02=ptrgeom[B3]->gcov[GIND(0,2)];																																   |	    gcov02=ptrgeom[B3]->gcov[0][2];
+    gcov11=ptrgeom[B3]->gcov[GIND(1,1)];																																   |	    gcov11=ptrgeom[B3]->gcov[1][1];
+    gcov12=gcov21=ptrgeom[B3]->gcov[GIND(1,2)];																																   |	    gcov12=gcov21=ptrgeom[B3]->gcov[1][2];
+    gcov22=ptrgeom[B3]->gcov[GIND(2,2)];																																   |	    gcov22=ptrgeom[B3]->gcov[2][2];
+    gcov03=ptrgeom[B3]->gcov[GIND(0,3)];																																   |	    gcov03=ptrgeom[B3]->gcov[0][3];
+    gcov13=ptrgeom[B3]->gcov[GIND(1,3)];																																   |	    gcov13=ptrgeom[B3]->gcov[1][3];
+    gcov23=ptrgeom[B3]->gcov[GIND(2,3)];																																   |	    gcov23=ptrgeom[B3]->gcov[2][3];
+    //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));																				   |	    //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gcov[3][3])/(ptrgeom[pl]->gcov[3][3]));
+	  MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));																								   |		  MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[3][3])/(ptrgeom[pl]->gcov[3][3]));
+broydn.c
+coord.c
+coord.h
+copyandinit_functions.c
+definit.h
+defs.general.h
+defs.grmhd.h
+defs.h@
+defs.jon_interp.h
+defs.liaison.h
+defs.user.h
+defs.user.sasha.h
+diag.c
+dudp_calc_3vel.c
+	ducov_dv[i][j] += geom->gcov[GIND(i,k)] * ducon_dv[k][j];																													   |		ducov_dv[i][j] += geom->gcov[i][k] * ducon_dv[k][j];
+	dbcov_dv[i][j] += geom->gcov[GIND(i,k)] * dbcon_dv[k][j];																													   |		dbcov_dv[i][j] += geom->gcov[i][k] * dbcon_dv[k][j];
+dudp_calc.c
+  SLOOP(j,k) dgdvi[j]+=1.0/gamma*ptrgeom->gcov[GIND(j,k)]*pr[U1+k-1];																													   |	  SLOOP(j,k) dgdvi[j]+=1.0/gamma*ptrgeom->gcov[j][k]*pr[U1+k-1];
+  //alpha=1.0/sqrt(-ptrgeom->gcon[GIND(TT,TT)]);																															   |	  //alpha=1.0/sqrt(-ptrgeom->gcon[TT][TT]);
+  SLOOPA(j) betacon[j]=ptrgeom->gcon[GIND(TT,j)]*alpha*alpha;																														   |	  SLOOPA(j) betacon[j]=ptrgeom->gcon[TT][j]*alpha*alpha;
+  DLOOP(j,k) n += ptrgeom->gcov[GIND(j,k)]*vcon1[j]*vcon2[k] ;																														   |	  DLOOP(j,k) n += ptrgeom->gcov[j][k]*vcon1[j]*vcon2[k] ;
+  DLOOP(j,k) n += ptrgeom->gcon[GIND(j,k)]*vcov1[j]*vcov2[k] ;																														   |	  DLOOP(j,k) n += ptrgeom->gcon[j][k]*vcov1[j]*vcov2[k] ;
+  DSLOOP(j,k) duudud[j][k] = ptrgeom->gcon[GIND(j,k)] + ptrgeom->gcon[GIND(j,TT)]*(-ucon[k]/ucon[TT]) ;																									   |	  DSLOOP(j,k) duudud[j][k] = ptrgeom->gcon[j][k] + ptrgeom->gcon[j][TT]*(-ucon[k]/ucon[TT]) ;
+  DSLOOP(j,k) dudduu[j][k] = ptrgeom->gcov[GIND(j,k)] + ptrgeom->gcov[GIND(j,TT)]*dutdui[k];																										   |	  DSLOOP(j,k) dudduu[j][k] = ptrgeom->gcov[j][k] + ptrgeom->gcov[j][TT]*dutdui[k];
+  DSLOOP(j,k) for(l=0;l<NDIM;l++) dbdiduj[j][k] += ptrgeom->gcov[GIND(j,l)]*dbiduj[l][k];																										   |	  DSLOOP(j,k) for(l=0;l<NDIM;l++) dbdiduj[j][k] += ptrgeom->gcov[j][l]*dbiduj[l][k];
+dump.c
+  ptrftemp=(FTYPE*)(&localgcon[GIND(0,0)]);																																   |	  ptrftemp=(FTYPE*)(&localgcon[0][0]);
+  ptrftemp=(FTYPE*)(&localgcov[GIND(0,0)]);																																   |	  ptrftemp=(FTYPE*)(&localgcov[0][0]);
+dump_ener.c
+dumpgen.c
+eos.c
+extractnonfunc.c
+f2c.h
+fail.c
+fdjac.c
+fixup.c
+	      //	  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);																													   |		      //	  alpha = 1. / sqrt(-ptrgeom->gcon[0][0]);
+    //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[GIND(TT,TT)]) ;																													   |	    //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[TT][TT]) ;
+  //alpha = 1./sqrt(-ptrgeom->gcon[GIND(TT,TT)]) ;																															   |	  //alpha = 1./sqrt(-ptrgeom->gcon[TT][TT]) ;
+    //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[GIND(TT,TT)]) ;																													   |	    //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[TT][TT]) ;
+    probs[U1+i-1] = ptrgeom->gcon[GIND(TT,i)]/ptrgeom->gcon[GIND(TT,TT)] ;																												   |	    probs[U1+i-1] = ptrgeom->gcon[TT][i]/ptrgeom->gcon[TT][TT] ;
+      gradient[i]=2.0*(ptrgeom->gcov[GIND(0,i)]);																															   |	      gradient[i]=2.0*(ptrgeom->gcov[0][i]);
+	gradient[i]+=2.0*ucon[j]*ptrgeom->gcov[GIND(i,j)];																														   |		gradient[i]+=2.0*ucon[j]*ptrgeom->gcov[i][j];
+    alpha = 1./sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																															   |	    alpha = 1./sqrt(-ptrgeom->gcon[0][0]) ;
+      betacon = ptrgeom->gcon[GIND(0,1)]*alpha*alpha ;																															   |	      betacon = ptrgeom->gcon[0][1]*alpha*alpha ;
+      betacon = ptrgeom->gcon[GIND(0,2)]*alpha*alpha ;																															   |	      betacon = ptrgeom->gcon[0][2]*alpha*alpha ;
+      betacon = ptrgeom->gcon[GIND(0,3)]*alpha*alpha ;																															   |	      betacon = ptrgeom->gcon[0][3]*alpha*alpha ;
+    SLOOP(j,k) vsq += ptrgeom->gcov[GIND(j,k)]*pr[U1+j-1]*pr[U1+k-1] ;																													   |	    SLOOP(j,k) vsq += ptrgeom->gcov[j][k]*pr[U1+j-1]*pr[U1+k-1] ;
+flux.c
+fluxcompute.c
+fluxct.c
+fluxctstag.c
+flux.mergedc2ea2cmethod.c
+fluxvpot.c
+fmin.c
+freespace.c
+gaussj.c
+generatenprs.c
+global.bounds.h
+global.comploops.h
+global.depnmemonics.h
+global.dump.h
+global.fieldmacros.h
+global.funcdeclare.h
+  //  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][SYMMATRIXNDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3   |	  //  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM][NDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SH
+int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE *gcov, FTYPE *g   |	int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE (*gcov)[NDIM], 
+extern int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);						   |	extern int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);
+extern int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);					   |	extern int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);
+extern int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);					   |	extern int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **beta, FTYPE **localeomfunc);
+//  FTYPE (*localgcov)[NDIM];			\																															   <
+//  FTYPE (*localgcon)[NDIM];			\																															   <
+  FTYPE *localgcov; \																																			   |	  FTYPE (*localgcov)[NDIM];\
+  FTYPE *localgcon;\																																			   |	  FTYPE (*localgcon)[NDIM];\
+extern FTYPE gdet_func(int whichcoord, FTYPE *gcov);																															   |	extern FTYPE gdet_func(int whichcoord, FTYPE (*gcov)[NDIM]);
+extern FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V, FTYPE *gcov);																												   |	extern FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V, FTYPE (*gcov)[NDIM]);
+//extern void bl_gcov_func(FTYPE r, FTYPE th, FTYPE *gcov);																														   |	//extern void bl_gcov_func(FTYPE r, FTYPE th, FTYPE (*gcov)[NDIM]);
+//extern void bl_gcon_func(FTYPE r, FTYPE th, FTYPE *gcon);																														   |	//extern void bl_gcon_func(FTYPE r, FTYPE th, FTYPE (*gcon)[NDIM]);
+//extern void gcov_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov);																												   |	//extern void gcov_func(int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM]);
+//extern void gcon_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);																										   |	//extern void gcon_func(int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+extern void matrix_inverse_metric(int whichcoord, FTYPE *gcov, FTYPE *gcon);																												   |	extern void matrix_inverse(int whichcoord, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+extern void matrix_inverse(int whichcoord, FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);																								   |	extern void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE *alphalapse);
+extern void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *alphalapse);																				   |	extern void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE *betasqoalphasq);
+extern void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *betasqoalphasq);																			   |	extern void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE alphalapse, FTYPE *beta);
+extern void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE alphalapse, FTYPE *beta);																				   <
+extern int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]);																							   |	extern int tetr_func(int inputtype, FTYPE (*gcov)[NDIM], FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]);
+extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);																					   |	extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE (*gcov)[NDIM], FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
+//extern void SHOULDNOTREACHHEREEVERBUGYOUHAVE(void);																															   <
+global.funcdeclare.user.h
+global.funcdeclare.user.sasha.h
+global.general.h
+global.gridsectioning.h
+global.grmhd.h
+global.h@
+global.inits.h
+global.jon_interp.h
+extern void matrix_inverse(int whichcoord, FTYPE *gcov, FTYPE *gcon);																													   |	extern void matrix_inverse(int whichcoord, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+extern int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]);																							   |	extern int tetr_func(int inputtype, FTYPE (*gcov)[NDIM], FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]);
+extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);																					   |	extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE (*gcov)[NDIM], FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
+global.liaison.h
+global.loops.boundaries.h
+global.loops.diagnostics.h
+global.loops.h
+global.loops.manypoints1d.h
+global.loops.manypoints.h
+global.loops.perpoint.h
+global.mpi_grmhd_grray_liaison.h
+global.nondepnmemonics.h
+																																					   <
+// define how to access symmetric matrices with size 4x4 without redundant elements																											   <
+																																					   <
+// 1) regexp: gcov\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\] -> gcov[GIND(\1,\2)]																									   <
+// Then revert: gcov\[GIND( *NDIM *, *NDIM *)\] -> gcov[SYMMATRIXNDIM] since otherwise will be 1 larger than required																							   <
+// also need to catch: localgcon gcon gcovinfunc gcovtovks gcovbhks gcovmcoord gcovmid tmpgcov gcovprim tmpgcon glgen ghgen																						   <
+// 2) Then need to replace any multi-D pointer arg type with simple arg type:																												   <
+// FTYPE (**localgcov)[NDIM] -> FTYPE **localgcov																															   <
+// 3) Then need to get all global variables with [NDIM][NDIM]																														   <
+// 4) Also get *gcov type things:  (\*gcov)\[NDIM\] -> *gcov																														   <
+//    also need to catch: gcon gcovinfunc gcovinfuncprim gcovprim gconprim gcovmcoord gcovptr gconptr																									   <
+// 5) If making assignment TO something using GIND(), then must control loops.																												   <
+//    E.g. tetrad.c:tetr_func_frommetric(): newgcov[GIND(jj,kk)] +=																													   <
+//   Find some maybe by doing: grep -e "+ \{0,\}=" *.c *.h | grep GIND																													   <
+																																					   <
+// below are non-conditional ways of getting same result as:																														   <
+//#define GCOVI(i,j) (i>=j) ? i : j																																	   <
+//#define GCOVJ(i,j) (i>=j) ? j : i																																	   <
+#define GCOVI(i,j) ((i>=j)*(i-j) + j)																																	   <
+#define GCOVJ(i,j) ((i>=j)*(j-i) + i)																																	   <
+#define GIND(i,j) GCOVJ(i,j)*4 + GCOVI(i,j) - MAX(GCOVJ(i,j),0) - MAX(GCOVJ(i,j)-1,0) - MAX(GCOVJ(i,j)-2,0)																								   <
+// must multiply assignments by the below so don't duplicate sums																													   <
+#define GINDASSIGNFACTOR(i,j) (1.0*(i>=j))																																   <
+//#if(PRODUCTION==0)																																			   <
+//#define GINDASSIGNMAC(name,i,j) (i>=j ? name[GIND(i,j)] : SHOULDNOTREACHHEREEVERBUGYOUHAVE())																										   <
+//#else																																					   <
+//#define GINDASSIGNMAC(name,i,j) name[GIND(i,j)]																															   <
+//#endif																																				   <
+																																					   <
+																																					   <
+																																					   <
+#define NDIM	4		/* number of total dimensions.  Never changes */																											   |	#define NDIM	4		/* number of total dimensions.  Never
+#define SYMMATRIXNDIM 10 // total number of independent elements of a symmetric matrix																											   |					   changes */
+global.openmploops.h
+global.openmpsharedlist.h
+global.other.h
+global.realdef.h
+global.stepch.h
+global.storage.h
+global.structs.h
+  //  FTYPE gcov[SYMMATRIXNDIM];			\																														   <
+  FTYPE gcov[SYMMATRIXNDIM];			\																															   |	  FTYPE gcov[NDIM][NDIM];   \
+//  FTYPE gcon[SYMMATRIXNDIM];																																		   |
+  FTYPE gcon[SYMMATRIXNDIM];																																		   |	  FTYPE gcon[NDIM][NDIM];
+  FTYPE gengcov[SYMMATRIXNDIM];																																		   |	  FTYPE gengcov[NDIM][NDIM];
+  FTYPE gengcon[SYMMATRIXNDIM];																																		   |	  FTYPE gengcon[NDIM][NDIM];
+  FTYPE *gcov;																																				   |	  FTYPE (*gcov)[NDIM];
+  FTYPE *gcon;																																				   |	  FTYPE (*gcon)[NDIM];
+  FTYPE gcov[SYMMATRIXNDIM];																																		   |	  FTYPE gcov[NDIM][NDIM];
+  FTYPE gcon[SYMMATRIXNDIM];																																		   |	  FTYPE gcon[NDIM][NDIM];
+  FTYPE gengcon[SYMMATRIXNDIM];																																		   |	  FTYPE gengcon[NDIM][NDIM];
+  FTYPE gengcov[SYMMATRIXNDIM];																																		   |	  FTYPE gengcov[NDIM][NDIM];
+  FTYPE *gcov;																																				   |	  FTYPE (*gcov)[NDIM];
+  FTYPE *gcon;																																				   |	  FTYPE (*gcon)[NDIM];
+global.variousmacros.h
+gprof-helper.c
+grbpwf99eos.c
+higherorder_pointavg.c
+		  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) *= sqrt(fabs(ptrgeom->gcon[GIND(theotherdir,theotherdir)])/(fabs(ptrgeom->gcon[GIND(dir,dir)])+SMALL));																	   |			  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) *= sqrt(fabs(ptrgeom->gcon[theotherdir][theotherdir])/(fabs(ptrgeom->gcon[dir][dir])+SMALL));
+idealgaseos.c
+image.c
+initbase.boundloop.c
+initbase.c
+  DODIAGS=1; // whether to do diagnostics																																   |	  DODIAGS=0; // whether to do diagnostics
+initbase.defaultnprlists.c
+nprstart=0; nprend=8;																																			   |	nprstart=0; nprend=7;
+nprlist[8]=8;																																				   <
+nprfluxboundstart=0; nprfluxboundend=8;																																	   |	nprfluxboundstart=0; nprfluxboundend=7;
+nprfluxboundlist[8]=8;																																			   <
+initbase.enerregions.c
+initbase.gridsectioning.c
+initbase.tools.c
+init.c
+  defcoord = 9;																																				   |	  defcoord = JET3COORDS;
+  a = 0.9375 ;																																				   |	  a = 0.92 ;
+  R0 = 0.0;																																				   |	  //  R0 = 0.0;
+  Rout = 40.0;																																				   |	  //  Rout = 40.0;
+																																					   >	  // define coordinate type
+																																					   >	  //  R0 = -2.27317;    // GODMARK: ts1=256 : see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+																																					   >	  //  R0 = -4.65049;    // GODMARK:ts1=512 : see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+																																					   >	  //  R0 = -17.5422;    // GODMARK:ts1=2048 : see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+																																					   >	  //  R0 = -15.011886;    // GODMARK:npow=10,ts1=2048 : see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+																																					   >	  //  R0 = -8.53017750;    // GODMARK:npow=10,ts1=1024 : see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+																																					   >	  //  R0=-1.0;
+																																					   >	  //  Rout=1E10;  
+																																					   >	  R0=0;
+																																					   >	  Rout=10;
+  //  hslope = 0.3;																																			   |	  hslope = 0.3;
+  hslope = 1.04*pow(h_over_r,2.0/3.0);																																	   |	  //hslope = 1.04*pow(h_over_r,2.0/3.0);
+																																					   >	  FLUXB=FLUXCTTOTH;
+  tf = 2000.0;																																				   |	  tf = 1E12;
+#define FIELDTYPE BLANDFORDQUAD																																		   |	#define FIELDTYPE VERTFIELD
+  //jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);																									   |	  jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
+																																					   >	#if(0)
+																																					   |	#endif
+init.ff.c
+    GLOBALMACP1A0(pother,B2FACE2SIMPLE,i,j,k) = -(B0*nu*pow(V[1],nu-2)) * (geom.gcov[GIND(2,2)]);																									   |	    GLOBALMACP1A0(pother,B2FACE2SIMPLE,i,j,k) = -(B0*nu*pow(V[1],nu-2)) * (geom.gcov[2][2]);
+  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[0][0]));
+  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[0][0]));
+init.ff.h
+init.fishmon.c
+init.fishmon.h
+init.grb.c
+    pr[U3] += 4.0*dxdxp[3][3]*ptrgeom->gcon[GIND(3,3)]*sin(th)*sin(th);																													   |	    pr[U3] += 4.0*dxdxp[3][3]*ptrgeom->gcon[3][3]*sin(th)*sin(th);
+    pr[U3] += lspecific*dxdxp[3][3]*ptrgeom->gcon[GIND(3,3)]; // u^\phi 																												   |	    pr[U3] += lspecific*dxdxp[3][3]*ptrgeom->gcon[3][3]; // u^\phi 
+init.grb.h
+init.h
+#define N1 64																																				   |	//#define N1 512
+#define N2 64																																				   |
+																																					   >	//#define N1 32
+																																					   >	//#define N2 16
+																																					   >
+																																					   >	#define N1 16
+																																					   >	#define N2 8
+																																					   >
+#define FIELDSTAGMEM 1 // testing																																	   |	#define FIELDSTAGMEM 0 // testing
+#define PRODUCTION 0																																			   |	#define PRODUCTION 1
+#define LIMITDTWITHSOURCETERM 0 // doesn't work right																															   |	#define LIMITDTWITHSOURCETERM 0
+#define DODISS 1																																			   |	#define DODISS 0
+#define DOLUMVSR 1																																			   |	#define DOLUMVSR 0
+#define DODISSVSR 1																																			   |	#define DODISSVSR 0
+init.ns.backup2.c
+      ur = -geom.gcon[GIND(0,1)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      ur = -geom.gcon[0][1]/sqrt(-geom.gcon[0][0]) ;
+      uh = -geom.gcon[GIND(0,2)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      uh = -geom.gcon[0][2]/sqrt(-geom.gcon[0][0]) ;
+      up = -geom.gcon[GIND(0,3)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      up = -geom.gcon[0][3]/sqrt(-geom.gcon[0][0]) ;
+      ur = geom.gcon[GIND(0,1)]/geom.gcon[GIND(0,0)] ;																															   |	      ur = geom.gcon[0][1]/geom.gcon[0][0] ;
+      uh = geom.gcon[GIND(0,2)]/geom.gcon[GIND(0,0)] ;																															   |	      uh = geom.gcon[0][2]/geom.gcon[0][0] ;
+      up = geom.gcon[GIND(0,3)]/geom.gcon[GIND(0,0)] ;																															   |	      up = geom.gcon[0][3]/geom.gcon[0][0] ;
+  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[0][0]));
+  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[0][0]));
+init.ns.backup2.h
+init.ns.backup.c
+      ur = -geom.gcon[GIND(0,1)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      ur = -geom.gcon[0][1]/sqrt(-geom.gcon[0][0]) ;
+      uh = -geom.gcon[GIND(0,2)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      uh = -geom.gcon[0][2]/sqrt(-geom.gcon[0][0]) ;
+      up = -geom.gcon[GIND(0,3)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      up = -geom.gcon[0][3]/sqrt(-geom.gcon[0][0]) ;
+      ur = geom.gcon[GIND(0,1)]/geom.gcon[GIND(0,0)] ;																															   |	      ur = geom.gcon[0][1]/geom.gcon[0][0] ;
+      uh = geom.gcon[GIND(0,2)]/geom.gcon[GIND(0,0)] ;																															   |	      uh = geom.gcon[0][2]/geom.gcon[0][0] ;
+      up = geom.gcon[GIND(0,3)]/geom.gcon[GIND(0,0)] ;																															   |	      up = geom.gcon[0][3]/geom.gcon[0][0] ;
+init.ns.backup.h
+init.ns.c
+      ur = -geom.gcon[GIND(0,1)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      ur = -geom.gcon[0][1]/sqrt(-geom.gcon[0][0]) ;
+      uh = -geom.gcon[GIND(0,2)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      uh = -geom.gcon[0][2]/sqrt(-geom.gcon[0][0]) ;
+      up = -geom.gcon[GIND(0,3)]/sqrt(-geom.gcon[GIND(0,0)]) ;																														   |	      up = -geom.gcon[0][3]/sqrt(-geom.gcon[0][0]) ;
+      ur = geom.gcon[GIND(0,1)]/geom.gcon[GIND(0,0)] ;																															   |	      ur = geom.gcon[0][1]/geom.gcon[0][0] ;
+      uh = geom.gcon[GIND(0,2)]/geom.gcon[GIND(0,0)] ;																															   |	      uh = geom.gcon[0][2]/geom.gcon[0][0] ;
+      up = geom.gcon[GIND(0,3)]/geom.gcon[GIND(0,0)] ;																															   |	      up = geom.gcon[0][3]/geom.gcon[0][0] ;
+  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconortho[0]=uconmet[0]*sqrt(fabs(ptrgeom->gcov[0][0]));
+  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[GIND(0,0)]));																													   |	  //  uconmet[0]=uconortho[0]/sqrt(fabs(ptrgeom->gcov[0][0]));
+init.ns.h
+init.readdata.c
+    przamobl[U1] = (geombl.gcon[GIND(0,1)])/(geombl.gcon[GIND(0,0)]) ;																													   |	    przamobl[U1] = (geombl.gcon[0][1])/(geombl.gcon[0][0]) ;
+    przamobl[U2] = (geombl.gcon[GIND(0,2)])/(geombl.gcon[GIND(0,0)]) ;																													   |	    przamobl[U2] = (geombl.gcon[0][2])/(geombl.gcon[0][0]) ;
+    przamobl[U3] = (geombl.gcon[GIND(0,3)])/(geombl.gcon[GIND(0,0)]) ;																													   |	    przamobl[U3] = (geombl.gcon[0][3])/(geombl.gcon[0][0]) ;
+init.rebecca.c
+    prlocal[U1] = -ptrgeom->gcon[GIND(0,1)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U1] = -ptrgeom->gcon[0][1]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U2] = -ptrgeom->gcon[GIND(0,2)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U2] = -ptrgeom->gcon[0][2]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U3] = -ptrgeom->gcon[GIND(0,3)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U3] = -ptrgeom->gcon[0][3]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U1] = ptrgeom->gcon[GIND(0,1)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U1] = ptrgeom->gcon[0][1]/ptrgeom->gcon[0][0] ;
+    prlocal[U2] = ptrgeom->gcon[GIND(0,2)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U2] = ptrgeom->gcon[0][2]/ptrgeom->gcon[0][0] ;
+    prlocal[U3] = ptrgeom->gcon[GIND(0,3)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U3] = ptrgeom->gcon[0][3]/ptrgeom->gcon[0][0] ;
+init.rebecca.h
+init.sasha.c
+  //  dualfprintf(fail_file,"g=%21.15g gcov11=%21.15g gcov22=%21.15g gcov33=%21.15g\n",geom.g,geom.gcov[GIND(1,1)],geom.gcov[GIND(2,2)],geom.gcov[GIND(3,3)]);																		   |	  //  dualfprintf(fail_file,"g=%21.15g gcov11=%21.15g gcov22=%21.15g gcov33=%21.15g\n",geom.g,geom.gcov[1][1],geom.gcov[2][2],geom.gcov[3][3]);
+  //  dualfprintf(fail_file,"g=%21.15g gcov11=%21.15g gcov22=%21.15g gcov33=%21.15g\n",geomreal.g,geomreal.gcov[GIND(1,1)],geomreal.gcov[GIND(2,2)],geomreal.gcov[GIND(3,3)]);																   |	  //  dualfprintf(fail_file,"g=%21.15g gcov11=%21.15g gcov22=%21.15g gcov33=%21.15g\n",geomreal.g,geomreal.gcov[1][1],geomreal.gcov[2][2],geomreal.gcov[3][3]);
+  //	      ,0.5*primtest[RHO]*(primtest[U1]*primtest[U1]*geomreal.gcov[GIND(1,1)] + primtest[U2]*primtest[U2]*geomreal.gcov[GIND(2,2)] + primtest[U3]*primtest[U3]*geomreal.gcov[GIND(3,3)])+primtest[UU]+0.5*(primtest[B1]*primtest[B1]*geomreal.gcov[GIND(1,1)] + primtest[B2]*primtest[B2]*geomrea   |	  //	      ,0.5*primtest[RHO]*(primtest[U1]*primtest[U1]*geomreal.gcov[1][1] + primtest[U2]*primtest[U2]*geomreal.gcov[2][2] + primtest[U3]*primtest[U3]*geomreal.gcov[3][3])+primtest[UU]+0.5*(primtest[B1]*primtest[B1]*geomreal.gcov[1][1] + primtest[B2]*primtest[B2]*geomreal.gcov[2][2] + primt
+  //	      ,0.5*prim[RHO]*(prim[U1]*prim[U1]*geomreal.gcov[GIND(1,1)] + prim[U2]*prim[U2]*geomreal.gcov[GIND(2,2)] + prim[U3]*prim[U3]*geomreal.gcov[GIND(3,3)])+prim[UU]+0.5*(prim[B1]*prim[B1]*geomreal.gcov[GIND(1,1)] + prim[B2]*prim[B2]*geomreal.gcov[GIND(2,2)] + prim[B3]*prim[B3]*geomreal.g   |	  //	      ,0.5*prim[RHO]*(prim[U1]*prim[U1]*geomreal.gcov[1][1] + prim[U2]*prim[U2]*geomreal.gcov[2][2] + prim[U3]*prim[U3]*geomreal.gcov[3][3])+prim[UU]+0.5*(prim[B1]*prim[B1]*geomreal.gcov[1][1] + prim[B2]*prim[B2]*geomreal.gcov[2][2] + prim[B3]*prim[B3]*geomreal.gcov[3][3])
+init.sasha.h
+init.tools.c
+																																					   >	  //  lim[1] = lim[2] = lim[3] = MC;
+																																					   >	  //lim[1] = lim[2] = lim[3] = DONOR;
+																																					   >
+    prlocal[U1] = -ptrgeom->gcon[GIND(0,1)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U1] = -ptrgeom->gcon[0][1]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U2] = -ptrgeom->gcon[GIND(0,2)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U2] = -ptrgeom->gcon[0][2]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U3] = -ptrgeom->gcon[GIND(0,3)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;																												   |	    prlocal[U3] = -ptrgeom->gcon[0][3]/sqrt(-ptrgeom->gcon[0][0]) ;
+    prlocal[U1] = ptrgeom->gcon[GIND(0,1)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U1] = ptrgeom->gcon[0][1]/ptrgeom->gcon[0][0] ;
+    prlocal[U2] = ptrgeom->gcon[GIND(0,2)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U2] = ptrgeom->gcon[0][2]/ptrgeom->gcon[0][0] ;
+    prlocal[U3] = ptrgeom->gcon[GIND(0,3)]/ptrgeom->gcon[GIND(0,0)] ;																													   |	    prlocal[U3] = ptrgeom->gcon[0][3]/ptrgeom->gcon[0][0] ;
+interpline.c
+interpline.jmono.c
+interpline.mono.c
+interpline.para.c
+interpline.smono.c
+interpline.smono.h
+interpline.smono_static.h
+interppoint.c
+interppoint.para.c
+jon_interp.c
+jon_interp_computepreprocess.c
+static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);									   |	static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
+static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);				   |	static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
+static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);					   |	static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);
+static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM]);															   |	static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM]);
+  FTYPE gcon[SYMMATRIXNDIM];																																		   |	  FTYPE gcon[NDIM][NDIM];
+  FTYPE gcov[SYMMATRIXNDIM];																																		   |	  FTYPE gcov[NDIM][NDIM];
+static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)									   |	static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
+static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout)				   |	static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout)
+  FTYPE newgcov[SYMMATRIXNDIM];																																		   |	  FTYPE newgcov[NDIM][NDIM];
+  DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[GIND(jj,kk)];																															   |	  DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[jj][kk];
+  DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[GIND(jj,kk)];																															   |	  DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[jj][kk];
+  DLOOP(jj,kk) Titsq+=Tit[jj]*Tit[kk]*gcov[GIND(jj,kk)];																														   |	  DLOOP(jj,kk) Titsq+=Tit[jj]*Tit[kk]*gcov[jj][kk];
+static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout)					   |	static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout)
+  FTYPE newgcov[SYMMATRIXNDIM];																																		   |	  FTYPE newgcov[NDIM][NDIM];
+    newgcov[GIND(jj,kk)]=0.0;																																		   |	    newgcov[jj][kk]=0.0;
+      newgcov[GIND(jj,kk)] += GINDASSIGNFACTOR(jj,kk)*gcov[GIND(ll,pp)]*idxdxp[ll][jj]*idxdxp[pp][kk];																									   |	      newgcov[jj][kk] += gcov[ll][pp]*idxdxp[ll][jj]*idxdxp[pp][kk];
+  DLOOP(jj,kk) tempcomp[jj] += finalvec[kk]*newgcov[GIND(jj,kk)];																													   |	  DLOOP(jj,kk) tempcomp[jj] += finalvec[kk]*newgcov[jj][kk];
+static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM])															   |	static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE (*gcon)[NDIM],  FTYPE (*gcov)[NDIM],  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM])
+  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[GIND(jj,kk)]);																														   |	  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[jj][kk]);
+  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[GIND(jj,kk)]);																														   |	  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[jj][kk]);
+jon_interp_filter.c
+jon_interp_interpolationitself.c
+jon_interp_mnewt.c
+jon_interp_newt.c
+kazfulleos.c
+kazfulleos.decsglobalprivate.h
+kazfulleos.defsglobalprivate.h
+kazfulleos.defs.h
+kazfulleos.eostablesdefs.h
+kazfulleos.global.h
+kazfulleos_set_arrays.c
+kazfulleos.superdefs.h
+liaison.c
+liaison_set_arrays.c
+lnsrch.c
+lubksb.c
+ludcmp.c
+main.c
+    //    if(nstep==50) break;																																		   |	    if(nstep==100000) break;
+math_tools.c
+metric.c
+void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc)																						   |	void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc)
+  void set_gcov_cylminkmetric    (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_cylminkmetric    (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_spcminkmetric    (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_spcminkmetric    (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_cartminkmetric   (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_cartminkmetric   (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_unigravity   (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_unigravity   (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_htmetric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_htmetric         (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_htmetric_accurate(FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_ksmetric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_ksmetric         (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_ks_bh_tov_metric (FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																									   |	  void set_gcov_ks_bh_tov_metric (FTYPE *X, FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  extern void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																									   |	  extern void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  extern void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																									   |	  extern void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void set_gcov_blmetric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);																											   |	  void set_gcov_blmetric         (FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc);
+  void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc, FTYPE *gcovinfuncprim, FTYPE *gcovpertinfuncprim);																		   |	  void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*gcovinfunc)[NDIM], FTYPE *gcovpertinfunc, FTYPE (*gcovinfuncprim)[NDIM], FTYPE *gcovpertinfuncprim);
+	gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];																															   |		gcovinfunc[j][k]=localgcov[j][k];
+	//gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*(-2.0*phi);																												   |		//gcovinfunc[TT][TT] += -2.0*phi;
+	//      gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*(-2.0*phi);																												   |		//      gcovinfunc[RR][RR] += -2.0*phi;
+	//    gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*gcovselfpert[TT];																											   |		//    gcovinfunc[TT][TT] += gcovselfpert[TT];
+	//    gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*gcovselfpert[TH];																											   |		//    gcovinfunc[RR][RR] += gcovselfpert[TH];
+	//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,X[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);										   |		//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,X[1],j,j,gcovinfunc[j][j],j,gcovselfpert[j],-2.0*phi);
+	  gcovinfunc[GIND(j,j)] += GINDASSIGNFACTOR(j,j)*gcovselfpert[j];																												   |		  gcovinfunc[j][j] +=gcovselfpert[j];
+	  gcovinfunc[GIND(TT,RR)] += GINDASSIGNFACTOR(TT,RR)*gcovselfpert[TT];																												   |		  gcovinfunc[TT][RR] += gcovselfpert[TT];
+	  gcovinfunc[GIND(RR,TT)] = gcovinfunc[GIND(TT,RR)];																														   |		  gcovinfunc[RR][TT] = gcovinfunc[TT][RR];
+      //  DLOOP(j,k) { fprintf(stderr,"1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}																								   |	      //  DLOOP(j,k) { fprintf(stderr,"1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[j][k]); fflush(stderr);}
+      //  DLOOP(j,k) { fprintf(stderr,"2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}																								   |	      //  DLOOP(j,k) { fprintf(stderr,"2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[j][k]); fflush(stderr);}
+      //    //      DLOOP(j,k) dualfprintf(fail_file,"present time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);																							   |	      //    //      DLOOP(j,k) dualfprintf(fail_file,"present time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[j][k]);
+	gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];																															   |		gcovinfunc[j][k]=localgcov[j][k];
+      //	DLOOP(j,k) dualfprintf(fail_file,"past time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);																							   |	      //	DLOOP(j,k) dualfprintf(fail_file,"past time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[j][k]);
+int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE *gcov, FTYPE *g   |	int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE (*gcov)[NDIM], 
+    gijk=METMACP1A0(compgeom,loc,i,j,k).gcov[GIND(jj,kk)];																														   |	    gijk=METMACP1A0(compgeom,loc,i,j,k).gcov[jj][kk];
+    gip=METMACP1A0(compgeom,loc,ip,j,k).gcov[GIND(jj,kk)];																														   |	    gip=METMACP1A0(compgeom,loc,ip,j,k).gcov[jj][kk];
+    gjp=METMACP1A0(compgeom,loc,i,jp,k).gcov[GIND(jj,kk)];																														   |	    gjp=METMACP1A0(compgeom,loc,i,jp,k).gcov[jj][kk];
+    gkp=METMACP1A0(compgeom,loc,i,j,kp).gcov[GIND(jj,kk)];																														   |	    gkp=METMACP1A0(compgeom,loc,i,j,kp).gcov[jj][kk];
+    gcov[GIND(jj,kk)] = (gijk*dist[1]+gip*dist[2]+gjp*dist[3]+gkp*dist[4])/totaldist;																											   |	    gcov[jj][kk] = (gijk*dist[1]+gip*dist[2]+gjp*dist[3]+gkp*dist[4])/totaldist;
+void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon)																								   |	void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM])
+  void set_gcon_blmetric(FTYPE *V, FTYPE *gcon);																															   |	  void set_gcon_blmetric(FTYPE *V, FTYPE (*gcon)[NDIM]);
+  void set_gcon_ksmetric(FTYPE *V, FTYPE *gcon);																															   |	  void set_gcon_ksmetric(FTYPE *V, FTYPE (*gcon)[NDIM]);
+  void gcon2gconprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcon,FTYPE *gconprim);																										   |	  void gcon2gconprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*gcon)[NDIM],FTYPE (*gconprim)[NDIM]);
+  void matrix_inverse_metric(int whichcoord, FTYPE *gcov, FTYPE *gcon);																													   |	  void matrix_inverse(int whichcoord, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+																																					   >	  void matrix_inverse_2d(FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+      else matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      else matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      //DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);																											   |	      //DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[j][k]);
+      else matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      else matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+      matrix_inverse_metric(whichcoord,gcov,gcon);																															   |	      matrix_inverse(whichcoord,gcov,gcon);
+																																					   >	  // avoid coordinate singularity
+																																					   >	  // should be needed with new matrix_inverse()
+																																					   >	#if(0)
+																																					   >	  if(ISSPCMCOORD(whichcoord)){
+																																					   >	    bl_coord(X, V);
+																																					   >	    if(fabs(V[1]-0.0)<SMALL){
+																																					   >	      // then make PRIMECOORD flat since never should really be used if gdet=0
+																																					   >	      // use t-r inverse rather than full inverse
+																																					   >	      matrix_inverse_2d(gcov,gcon);
+																																					   >	    }
+																																					   >	  }
+																																					   >	#endif
+void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *alphalapse)																					   |	void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE *alphalapse)
+  *alphalapse = 1.0/sqrt(fabs(-gcon[GIND(TT,TT)]));																															   |	  *alphalapse = 1.0/sqrt(fabs(-gcon[TT][TT]));
+void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *betasqoalphasq)																				   |	void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE *betasqoalphasq)
+  SLOOPA(j) *betasqoalphasq += (gcov[GIND(TT,j)])*(gcon[GIND(TT,j)]);																													   |	  SLOOPA(j) *betasqoalphasq += (gcov[TT][j])*(gcon[TT][j]);
+void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE alphalapse, FTYPE *beta)																					   |	void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM], FTYPE alphalapse, FTYPE *beta)
+  SLOOPA(j) beta[j] = gcon[GIND(TT,j)]*alphasq ;																															   |	  SLOOPA(j) beta[j] = gcon[TT][j]*alphasq ;
+  FTYPE gcovmcoord[SYMMATRIXNDIM];																																	   |	  FTYPE gcovmcoord[NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+void set_gcov_htmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																														   |	void set_gcov_htmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(PH,PH)] = rsharp*rsharp*AA*sin(th)*sin(th) ;																														   |	  gcov[PH][PH] = rsharp*rsharp*AA*sin(th)*sin(th) ;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+  gcov[GIND(TT,TT)] = -(alphasq-betaphi*betaphi*gcov[GIND(PH,PH)]) ;																													   |	  gcov[TT][TT] = -(alphasq-betaphi*betaphi*gcov[PH][PH]) ;
+  gcovpert[TT] = ftemp + betaphi*betaphi*gcov[GIND(PH,PH)] ;																														   |	  gcovpert[TT] = ftemp + betaphi*betaphi*gcov[PH][PH] ;
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = betaphi*gcov[GIND(PH,PH)] ;																															   |	  gcov[TT][PH] = betaphi*gcov[PH][PH] ;
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = SS/OO ;																																		   |	  gcov[RR][RR] = SS/OO ;
+  gcov[GIND(RR,TH)] = 0.0 ;																																		   |	  gcov[RR][TH] = 0.0 ;
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = rsharp*rsharp*AA ;																																   |	  gcov[TH][TH] = rsharp*rsharp*AA ;
+  gcovpert[TH] = gcov[GIND(TH,TH)] - 1.0;																																   |	  gcovpert[TH] = gcov[TH][TH] - 1.0;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																													   |	void set_gcov_htmetric_accurate(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = -(1.0-2.0*M/r)*(1.0+ftemp);																															   |	  gcov[TT][TT] = -(1.0-2.0*M/r)*(1.0+ftemp);
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = (2.0*J*M*M/r)*sin(th)*sin(th);																															   |	  gcov[TT][PH] = (2.0*J*M*M/r)*sin(th)*sin(th);
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = (1.0/(1.0-2.0*M/r))*(1.0+ftemp);																															   |	  gcov[RR][RR] = (1.0/(1.0-2.0*M/r))*(1.0+ftemp);
+  gcov[GIND(RR,TH)] = 0.0 ;																																		   |	  gcov[RR][TH] = 0.0 ;
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = rsharp*rsharp*(1.0+J*J*H1-Q*H2) ;																															   |	  gcov[TH][TH] = rsharp*rsharp*(1.0+J*J*H1-Q*H2) ;
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+  gcov[GIND(PH,PH)] = gcov[GIND(TH,TH)]*sin(th)*sin(th);																														   |	  gcov[PH][PH] = gcov[TH][TH]*sin(th)*sin(th);
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+void set_gcov_cartminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																													   |	void set_gcov_cartminkmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = -1.0;																																		   |	  gcov[TT][TT] = -1.0;
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = 0.0 ;																																		   |	  gcov[TT][PH] = 0.0 ;
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = 1.0 ;																																		   |	  gcov[RR][RR] = 1.0 ;
+  gcov[GIND(RR,TH)] = 0.0 ;																																		   |	  gcov[RR][TH] = 0.0 ;
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = 1.0 ;																																		   |	  gcov[TH][TH] = 1.0 ;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+  gcov[GIND(PH,PH)] = 1.0 ;																																		   |	  gcov[PH][PH] = 1.0 ;
+void set_gcov_unigravity(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																													   |	void set_gcov_unigravity(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = -1.0-2.0*phi;																																	   |	  gcov[TT][TT] = -1.0-2.0*phi;
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = 0.0 ;																																		   |	  gcov[TT][PH] = 0.0 ;
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = 1.0-2.0*phi ;																																	   |	  gcov[RR][RR] = 1.0-2.0*phi ;
+  gcov[GIND(RR,TH)] = 0.0 ;																																		   |	  gcov[RR][TH] = 0.0 ;
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = 1.0-2.0*phi ;																																	   |	  gcov[TH][TH] = 1.0-2.0*phi ;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+  gcov[GIND(PH,PH)] = 1.0-2.0*phi ;																																	   |	  gcov[PH][PH] = 1.0-2.0*phi ;
+void set_gcov_cylminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																													   |	void set_gcov_cylminkmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = -1.0-2.0*phi;																																	   |	  gcov[TT][TT] = -1.0-2.0*phi;
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = 0.0 ;																																		   |	  gcov[TT][PH] = 0.0 ;
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = 1.0-2.0*phi*R*R/(r*r); 																																   |	  gcov[RR][RR] = 1.0-2.0*phi*R*R/(r*r); 
+  gcov[GIND(RR,TH)] = -2.0*phi*R*z/(r*r) ; // order v^4																															   |	  gcov[RR][TH] = -2.0*phi*R*z/(r*r) ; // order v^4
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = 1.0 -2.0*phi*z*z/(r*r) ;																																   |	  gcov[TH][TH] = 1.0 -2.0*phi*z*z/(r*r) ;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+  gcov[GIND(PH,PH)] = R*R;																																		   |	  gcov[PH][PH] = R*R;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0; // doesn't matter that -1.0 subtracted																												   |	  gcovpert[PH] = gcov[PH][PH]-1.0; // doesn't matter that -1.0 subtracted
+void set_gcov_spcminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																													   |	void set_gcov_spcminkmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = -1.0;																																		   |	  gcov[TT][TT] = -1.0;
+  gcov[GIND(TT,RR)] = 0.0 ;																																		   |	  gcov[TT][RR] = 0.0 ;
+  gcov[GIND(TT,TH)] = 0.0 ;																																		   |	  gcov[TT][TH] = 0.0 ;
+  gcov[GIND(TT,PH)] = 0.0 ;																																		   |	  gcov[TT][PH] = 0.0 ;
+  gcov[GIND(RR,TT)] = 0.0 ;																																		   |	  gcov[RR][TT] = 0.0 ;
+  gcov[GIND(RR,RR)] = 1.0; 																																		   |	  gcov[RR][RR] = 1.0; 
+  gcov[GIND(RR,TH)] = 0.0 ;																																		   |	  gcov[RR][TH] = 0.0 ;
+  gcov[GIND(RR,PH)] = 0.0 ;																																		   |	  gcov[RR][PH] = 0.0 ;
+  gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;																																   |	  gcov[TH][TT] = gcov[TT][TH] ;
+  gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;																																   |	  gcov[TH][RR] = gcov[RR][TH] ;
+  gcov[GIND(TH,TH)] = rsharp*rsharp ;																																	   |	  gcov[TH][TH] = rsharp*rsharp ;
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcov[GIND(TH,PH)] = 0.0 ;																																		   |	  gcov[TH][PH] = 0.0 ;
+  gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;																																   |	  gcov[PH][TT] = gcov[TT][PH] ;
+  gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;																																   |	  gcov[PH][RR] = gcov[RR][PH] ;
+  gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;																																   |	  gcov[PH][TH] = gcov[TH][PH] ;
+  gcov[GIND(PH,PH)] = (rsharp*sin(th))*(rsharp*sin(th));																														   |	  gcov[PH][PH] = (rsharp*sin(th))*(rsharp*sin(th));
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+void set_gcov_ks_bh_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																											   |	void set_gcov_ks_bh_tov_metric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert);																													   |	  void set_gcov_ksmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  extern int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);																				   |	  extern int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);
+  FTYPE gcovtovks[SYMMATRIXNDIM],gcovtovkspert[NDIM];																															   |	  FTYPE gcovtovks[NDIM][NDIM],gcovtovkspert[NDIM];
+  FTYPE gcovbhks[SYMMATRIXNDIM],gcovbhkspert[NDIM];																															   |	  FTYPE gcovbhks[NDIM][NDIM],gcovbhkspert[NDIM];
+  DLOOP(j,k) gcov[GIND(j,k)] = 0.0;																																	   |	  DLOOP(j,k) gcov[j][k] = 0.0;
+  DLOOPA(j,j) gcov[GIND(j,j)] = 1.0;																																	   |	  DLOOPA(j,j) gcov[j][j] = 1.0;
+  gcovpert[TT] gcov[GIND(TT,TT)]=-1.0;																																	   |	  gcovpert[TT] gcov[TT][TT]=-1.0;
+  DLOOP(j,k) gcov[GIND(j,k)] = gcovbhks[GIND(j,k)];																															   |	  DLOOP(j,k) gcov[j][k] = gcovbhks[j][k];
+  gcov[GIND(TT,TT)] = gcovbhks[GIND(TT,TT)]*(-gcovtovks[GIND(TT,TT)]);																													   |	  gcov[TT][TT] = gcovbhks[TT][TT]*(-gcovtovks[TT][TT]);
+  gcovpert[TT] = gcov[GIND(TT,TT)] + 1.0; // no obvious way to remove perturbed part																											   |	  gcovpert[TT] = gcov[TT][TT] + 1.0; // no obvious way to remove perturbed part
+  //  gcov[GIND(RR,RR)] = 1.0 + 2.0*MtotOr-vrsqself;																															   |	  //  gcov[RR][RR] = 1.0 + 2.0*MtotOr-vrsqself;
+  gcov[GIND(RR,RR)] = 1.0 + fabs(- totalpot);																																   |	  gcov[RR][RR] = 1.0 + fabs(- totalpot);
+  disc=-gcovtovks[GIND(TT,TT)]/(1.0-fabs(starpot));																															   |	  disc=-gcovtovks[TT][TT]/(1.0-fabs(starpot));
+    gcov[GIND(TT,TT)]=-fabs(gcov[GIND(TT,TT)]); // should never be used																													   |	    gcov[TT][TT]=-fabs(gcov[TT][TT]); // should never be used
+  gcov[GIND(TT,RR)] = gcov[GIND(RR,TT)] = (-totalpot)*sqrt(disc);																													   |	  gcov[TT][RR] = gcov[RR][TT] = (-totalpot)*sqrt(disc);
+  //  DLOOP(j,k) gcov[GIND(j,k)] = gcovtovks[GIND(j,k)];																														   |	  //  DLOOP(j,k) gcov[j][k] = gcovtovks[j][k];
+  //    dualfprintf(fail_file,"r=%21.15g icurr=%d starpot=%21.15g totalpot=%21.15g MBHprimeOr=%21.15g MOrself=%21.15g gcovtovks[GIND(TT,TT)]=%21.15g disc=%21.15g gcovbhks[GIND(TT,TT)]=%21.15g\n",r,icurr,starpot,totalpot,MBHprimeOr,MOrself,gcovtovks[GIND(TT,TT)],disc,gcovbhks[GIND(TT,TT)]);	   |	  //    dualfprintf(fail_file,"r=%21.15g icurr=%d starpot=%21.15g totalpot=%21.15g MBHprimeOr=%21.15g MOrself=%21.15g gcovtovks[TT][TT]=%21.15g disc=%21.15g gcovbhks[TT][TT]=%21.15g\n",r,icurr,starpot,totalpot,MBHprimeOr,MOrself,gcovtovks[TT][TT],disc,gcovbhks[TT][TT]);
+  // DLOOP(j,k) dualfprintf(fail_file,"ks_bh_tov gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);																										   |	  // DLOOP(j,k) dualfprintf(fail_file,"ks_bh_tov gcov[%d][%d]=%g\n",j,k,gcov[j][k]);
+void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																												   |	void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  extern int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);																				   |	  extern int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);
+void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																												   |	void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  extern int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);																				   |	  extern int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);
+void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																														   |	void set_gcov_ksmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = ks_gcov00 ;																																	   |	  gcov[TT][TT] = ks_gcov00 ;
+  gcov[GIND(TT,RR)] = ks_gcov01 ;																																	   |	  gcov[TT][RR] = ks_gcov01 ;
+  gcov[GIND(TT,TH)] = ks_gcov02 ;																																	   |	  gcov[TT][TH] = ks_gcov02 ;
+  gcov[GIND(TT,PH)] = ks_gcov03 ;																																	   |	  gcov[TT][PH] = ks_gcov03 ;
+  gcov[GIND(RR,TT)] = ks_gcov10 ;																																	   |	  gcov[RR][TT] = ks_gcov10 ;
+  gcov[GIND(RR,RR)] = ks_gcov11 ;																																	   |	  gcov[RR][RR] = ks_gcov11 ;
+  gcov[GIND(RR,TH)] = ks_gcov12 ;																																	   |	  gcov[RR][TH] = ks_gcov12 ;
+  gcov[GIND(RR,PH)] = ks_gcov13 ;																																	   |	  gcov[RR][PH] = ks_gcov13 ;
+  gcov[GIND(TH,TT)] = ks_gcov20 ;																																	   |	  gcov[TH][TT] = ks_gcov20 ;
+  gcov[GIND(TH,RR)] = ks_gcov21 ;																																	   |	  gcov[TH][RR] = ks_gcov21 ;
+  gcov[GIND(TH,TH)] = ks_gcov22 ;																																	   |	  gcov[TH][TH] = ks_gcov22 ;
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcov[GIND(TH,PH)] = ks_gcov23 ;																																	   |	  gcov[TH][PH] = ks_gcov23 ;
+  gcov[GIND(PH,TT)] = ks_gcov30 ;																																	   |	  gcov[PH][TT] = ks_gcov30 ;
+  gcov[GIND(PH,RR)] = ks_gcov31 ;																																	   |	  gcov[PH][RR] = ks_gcov31 ;
+  gcov[GIND(PH,TH)] = ks_gcov32 ;																																	   |	  gcov[PH][TH] = ks_gcov32 ;
+  gcov[GIND(PH,PH)] = ks_gcov33 ;																																	   |	  gcov[PH][PH] = ks_gcov33 ;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+  // dualfprintf(fail_file,"MBH=%21.15g a=%21.15g gcov[GIND(TT,TT)]=%21.15g\n",MBH,a,gcov[GIND(TT,TT)]);																								   |	  // dualfprintf(fail_file,"MBH=%21.15g a=%21.15g gcov[TT][TT]=%21.15g\n",MBH,a,gcov[TT][TT]);
+  //  DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);																											   |	  //  DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[j][k]);
+void set_gcov_blmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)																														   |	void set_gcov_blmetric(FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert)
+  gcov[GIND(TT,TT)] = bl_gcov00 ;																																	   |	  gcov[TT][TT] = bl_gcov00 ;
+  gcov[GIND(TT,RR)] = bl_gcov01 ;																																	   |	  gcov[TT][RR] = bl_gcov01 ;
+  gcov[GIND(TT,TH)] = bl_gcov02 ;																																	   |	  gcov[TT][TH] = bl_gcov02 ;
+  gcov[GIND(TT,PH)] = bl_gcov03 ;																																	   |	  gcov[TT][PH] = bl_gcov03 ;
+  gcov[GIND(RR,TT)] = bl_gcov10 ;																																	   |	  gcov[RR][TT] = bl_gcov10 ;
+  gcov[GIND(RR,RR)] = bl_gcov11 ;																																	   |	  gcov[RR][RR] = bl_gcov11 ;
+  gcov[GIND(RR,TH)] = bl_gcov12 ;																																	   |	  gcov[RR][TH] = bl_gcov12 ;
+  gcov[GIND(RR,PH)] = bl_gcov13 ;																																	   |	  gcov[RR][PH] = bl_gcov13 ;
+  gcov[GIND(TH,TT)] = bl_gcov20 ;																																	   |	  gcov[TH][TT] = bl_gcov20 ;
+  gcov[GIND(TH,RR)] = bl_gcov21 ;																																	   |	  gcov[TH][RR] = bl_gcov21 ;
+  gcov[GIND(TH,TH)] = bl_gcov22 ;																																	   |	  gcov[TH][TH] = bl_gcov22 ;
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcov[GIND(TH,PH)] = bl_gcov23 ;																																	   |	  gcov[TH][PH] = bl_gcov23 ;
+  gcov[GIND(PH,TT)] = bl_gcov30 ;																																	   |	  gcov[PH][TT] = bl_gcov30 ;
+  gcov[GIND(PH,RR)] = bl_gcov31 ;																																	   |	  gcov[PH][RR] = bl_gcov31 ;
+  gcov[GIND(PH,TH)] = bl_gcov32 ;																																	   |	  gcov[PH][TH] = bl_gcov32 ;
+  gcov[GIND(PH,PH)] = bl_gcov33 ;																																	   |	  gcov[PH][PH] = bl_gcov33 ;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+  //  DLOOP(j,k) dualfprintf(fail_file,"bl gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);																											   |	  //  DLOOP(j,k) dualfprintf(fail_file,"bl gcov[%d][%d]=%g\n",j,k,gcov[j][k]);
+void set_gcon_ksmetric(FTYPE *V, FTYPE *gcon)																																   |	void set_gcon_ksmetric(FTYPE *V, FTYPE (*gcon)[NDIM])
+  gcon[GIND(TT,TT)] = ks_gcon00 ;																																	   |	  gcon[TT][TT] = ks_gcon00 ;
+  gcon[GIND(TT,RR)] = ks_gcon01 ;																																	   |	  gcon[TT][RR] = ks_gcon01 ;
+  gcon[GIND(TT,TH)] = ks_gcon02 ;																																	   |	  gcon[TT][TH] = ks_gcon02 ;
+  gcon[GIND(TT,PH)] = ks_gcon03 ;																																	   |	  gcon[TT][PH] = ks_gcon03 ;
+  gcon[GIND(RR,TT)] = ks_gcon10 ;																																	   |	  gcon[RR][TT] = ks_gcon10 ;
+  gcon[GIND(RR,RR)] = ks_gcon11 ;																																	   |	  gcon[RR][RR] = ks_gcon11 ;
+  gcon[GIND(RR,TH)] = ks_gcon12 ;																																	   |	  gcon[RR][TH] = ks_gcon12 ;
+  gcon[GIND(RR,PH)] = ks_gcon13 ;																																	   |	  gcon[RR][PH] = ks_gcon13 ;
+  gcon[GIND(TH,TT)] = ks_gcon20 ;																																	   |	  gcon[TH][TT] = ks_gcon20 ;
+  gcon[GIND(TH,RR)] = ks_gcon21 ;																																	   |	  gcon[TH][RR] = ks_gcon21 ;
+  gcon[GIND(TH,TH)] = ks_gcon22 ;																																	   |	  gcon[TH][TH] = ks_gcon22 ;
+  gcon[GIND(TH,PH)] = ks_gcon23 ;																																	   |	  gcon[TH][PH] = ks_gcon23 ;
+  gcon[GIND(PH,TT)] = ks_gcon30 ;																																	   |	  gcon[PH][TT] = ks_gcon30 ;
+  gcon[GIND(PH,RR)] = ks_gcon31 ;																																	   |	  gcon[PH][RR] = ks_gcon31 ;
+  gcon[GIND(PH,TH)] = ks_gcon32 ;																																	   |	  gcon[PH][TH] = ks_gcon32 ;
+    gcon[GIND(PH,PH)] = ks_gcon33 ;																																	   |	    gcon[PH][PH] = ks_gcon33 ;
+  else gcon[GIND(PH,PH)]=1.0; // avoid coordinate singularity -- although should never use this value																									   |	  else gcon[PH][PH]=1.0; // avoid coordinate singularity -- although should never use this value
+void set_gcon_blmetric(FTYPE *V, FTYPE *gcon)																																   |	void set_gcon_blmetric(FTYPE *V, FTYPE (*gcon)[NDIM])
+  gcon[GIND(TT,TT)] = bl_gcon00 ;																																	   |	  gcon[TT][TT] = bl_gcon00 ;
+  gcon[GIND(TT,RR)] = bl_gcon01 ;																																	   |	  gcon[TT][RR] = bl_gcon01 ;
+  gcon[GIND(TT,TH)] = bl_gcon02 ;																																	   |	  gcon[TT][TH] = bl_gcon02 ;
+  gcon[GIND(TT,PH)] = bl_gcon03 ;																																	   |	  gcon[TT][PH] = bl_gcon03 ;
+  gcon[GIND(RR,TT)] = bl_gcon10 ;																																	   |	  gcon[RR][TT] = bl_gcon10 ;
+  gcon[GIND(RR,RR)] = bl_gcon11 ;																																	   |	  gcon[RR][RR] = bl_gcon11 ;
+  gcon[GIND(RR,TH)] = bl_gcon12 ;																																	   |	  gcon[RR][TH] = bl_gcon12 ;
+  gcon[GIND(RR,PH)] = bl_gcon13 ;																																	   |	  gcon[RR][PH] = bl_gcon13 ;
+  gcon[GIND(TH,TT)] = bl_gcon20 ;																																	   |	  gcon[TH][TT] = bl_gcon20 ;
+  gcon[GIND(TH,RR)] = bl_gcon21 ;																																	   |	  gcon[TH][RR] = bl_gcon21 ;
+  gcon[GIND(TH,TH)] = bl_gcon22 ;																																	   |	  gcon[TH][TH] = bl_gcon22 ;
+  gcon[GIND(TH,PH)] = bl_gcon23 ;																																	   |	  gcon[TH][PH] = bl_gcon23 ;
+  gcon[GIND(PH,TT)] = bl_gcon30 ;																																	   |	  gcon[PH][TT] = bl_gcon30 ;
+  gcon[GIND(PH,RR)] = bl_gcon31 ;																																	   |	  gcon[PH][RR] = bl_gcon31 ;
+  gcon[GIND(PH,TH)] = bl_gcon32 ;																																	   |	  gcon[PH][TH] = bl_gcon32 ;
+  gcon[GIND(PH,PH)] = bl_gcon33 ;																																	   |	  gcon[PH][PH] = bl_gcon33 ;
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  FTYPE gcovmid[SYMMATRIXNDIM];																																		   |	  FTYPE gcovmid[NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);																								   |	  void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+  FTYPE *gcovptr;																																			   |	  FTYPE (*gcovptr)[NDIM];
+  FTYPE *gconptr;																																			   |	  FTYPE (*gconptr)[NDIM];
+//void SHOULDNOTREACHHEREEVERBUGYOUHAVE(void)																																   <
+//{																																					   <
+//  exit(1);																																				   <
+//}																																					   <
+																																					   <
+void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, FTYPE *gcovprim, FTYPE *gcovpertprim)																					   |	void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, FTYPE (*gcovprim)[NDIM], FTYPE *gcovpertprim)
+																																					   >	     //void gcov2gcovprim(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, FTYPE (*gcovprim)[NDIM], FTYPE *gcovpertprim)
+																																					   >	     //void gcov2gcovprim(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM],FTYPE (*gcovprim)[NDIM])
+  FTYPE tmpgcov[SYMMATRIXNDIM];																																		   |	  FTYPE tmp[NDIM][NDIM];
+  void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim);																													   |	  void transgcov(FTYPE (*gcov)[NDIM], FTYPE (*dxdxp)[NDIM], FTYPE (*gcovprim)[NDIM]);
+    tmpgcov[GIND(j,k)] = 0.;																																		   |	    tmp[j][k] = 0.;
+	tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];																									   |	      tmp[j][k] += gcov[l][m] * dxdxp[l][j] * dxdxp[m][k];
+    // use tmpgcov since gcon might be same address as gconprim																														   |	    // use tmp since gcon might be same address as gconprim
+    gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];																																   |	    gcovprim[j][k] = tmp[j][k];
+  //  DLOOP(j,k) dualfprintf(fail_file,"prim gcov[%d][%d]=%21.15g\n",j,k,gcov[GIND(j,k)]);																										   |	  //  DLOOP(j,k) dualfprintf(fail_file,"prim gcov[%d][%d]=%21.15g\n",j,k,gcov[j][k]);
+  //  DLOOP(j,k) dualfprintf(fail_file,"prim gcovprim[%d][%d]=%21.15g\n",j,k,gcovprim[GIND(j,k)]);																									   |	  //  DLOOP(j,k) dualfprintf(fail_file,"prim gcovprim[%d][%d]=%21.15g\n",j,k,gcovprim[j][k]);
+      if((l!=q)&&(m!=q)) ftemp2+= gcov[GIND(l,m)] * dxdxp[l][q] * dxdxp[m][q];																												   |	      if((l!=q)&&(m!=q)) ftemp2+= gcov[l][m] * dxdxp[l][q] * dxdxp[m][q];
+  gcovpertprim[TT]=gcovprim[GIND(TT,TT)]-mink(TT,TT);																															   |	  gcovpertprim[TT]=gcovprim[TT][TT]-mink(TT,TT);
+    gcovpertprim[q]=gcovprim[GIND(q,q)]-mink(q,q);																															   |	    gcovpertprim[q]=gcovprim[q][q]-mink(q,q);
+  gcovpertprim[TT]=gcovprim[GIND(TT,TT)]+1.0;																																   |	  gcovpertprim[TT]=gcovprim[TT][TT]+1.0;
+  gcovpertprim[RR]=gcovprim[GIND(RR,RR)]-1.0;																																   |	  gcovpertprim[RR]=gcovprim[RR][RR]-1.0;
+  gcovpertprim[TH]=gcovprim[GIND(TH,TH)]-1.0;																																   |	  gcovpertprim[TH]=gcovprim[TH][TH]-1.0;
+  gcovpertprim[PH]=gcovprim[GIND(PH,PH)]-1.0;																																   |	  gcovpertprim[PH]=gcovprim[PH][PH]-1.0;
+void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)																													   |	void transgcov_old(FTYPE (*gcov)[NDIM], FTYPE (*dxdxp)[NDIM], FTYPE (*gcovprim)[NDIM])
+  FTYPE tmpgcov[SYMMATRIXNDIM];																																		   |	  FTYPE tmp[NDIM][NDIM];
+    tmpgcov[GIND(j,k)] = 0.;																																		   |	    tmp[j][k] = 0.;
+      tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];																												   |	      tmp[j][k] += gcov[l][m] * dxdxp[l][j] * dxdxp[m][k];
+    // use tmpgcov since gcon might be same address as gconprim																														   |	    // use tmp since gcon might be same address as gconprim
+    gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];																																   |	    gcovprim[j][k] = tmp[j][k];
+void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)																													   |	void transgcov(FTYPE (*gcov)[NDIM], FTYPE (*dxdxp)[NDIM], FTYPE (*gcovprim)[NDIM])
+          gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\																															   |	          gcov[0][0] * dxdxp[0][a]* dxdxp[0][b]\
+    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\																															   |	    +     gcov[1][1] * dxdxp[1][a]* dxdxp[1][b]\
+    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\																															   |	    +     gcov[2][2] * dxdxp[2][a]* dxdxp[2][b]\
+    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\																															   |	    +     gcov[3][3] * dxdxp[3][a]* dxdxp[3][b]\
+    + 2.0*gcov[GIND(0,1)] * dxdxp[0][a]* dxdxp[1][b]\																															   |	    + 2.0*gcov[0][1] * dxdxp[0][a]* dxdxp[1][b]\
+    + 2.0*gcov[GIND(0,2)] * dxdxp[0][a]* dxdxp[2][b]\																															   |	    + 2.0*gcov[0][2] * dxdxp[0][a]* dxdxp[2][b]\
+    + 2.0*gcov[GIND(0,3)] * dxdxp[0][a]* dxdxp[3][b]\																															   |	    + 2.0*gcov[0][3] * dxdxp[0][a]* dxdxp[3][b]\
+    + 2.0*gcov[GIND(1,2)] * dxdxp[1][a]* dxdxp[2][b]\																															   |	    + 2.0*gcov[1][2] * dxdxp[1][a]* dxdxp[2][b]\
+    + 2.0*gcov[GIND(1,3)] * dxdxp[1][a]* dxdxp[3][b]\																															   |	    + 2.0*gcov[1][3] * dxdxp[1][a]* dxdxp[3][b]\
+    + 2.0*gcov[GIND(2,3)] * dxdxp[2][a]* dxdxp[3][b]																															   |	    + 2.0*gcov[2][3] * dxdxp[2][a]* dxdxp[3][b]
+          gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\																															   |	          gcov[0][0] * dxdxp[0][a]* dxdxp[0][b]\
+    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\																															   |	    +     gcov[1][1] * dxdxp[1][a]* dxdxp[1][b]\
+    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\																															   |	    +     gcov[2][2] * dxdxp[2][a]* dxdxp[2][b]\
+    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\																															   |	    +     gcov[3][3] * dxdxp[3][a]* dxdxp[3][b]\
+    +     gcov[GIND(0,1)] * (dxdxp[0][a]* dxdxp[1][b] + dxdxp[1][a]* dxdxp[0][b])\																											   |	    +     gcov[0][1] * (dxdxp[0][a]* dxdxp[1][b] + dxdxp[1][a]* dxdxp[0][b])\
+    +     gcov[GIND(0,2)] * (dxdxp[0][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[0][b])\																											   |	    +     gcov[0][2] * (dxdxp[0][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[0][b])\
+    +     gcov[GIND(0,3)] * (dxdxp[0][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[0][b])\																											   |	    +     gcov[0][3] * (dxdxp[0][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[0][b])\
+    +     gcov[GIND(1,2)] * (dxdxp[1][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[1][b])\																											   |	    +     gcov[1][2] * (dxdxp[1][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[1][b])\
+    +     gcov[GIND(1,3)] * (dxdxp[1][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[1][b])\																											   |	    +     gcov[1][3] * (dxdxp[1][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[1][b])\
+    +     gcov[GIND(2,3)] * (dxdxp[2][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[2][b])																											   |	    +     gcov[2][3] * (dxdxp[2][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[2][b])
+  DLOOPA(j) gcovprim[GIND(j,j)] = tmp[j][j];																																   |	  DLOOPA(j) gcovprim[j][j] = tmp[j][j];
+  gcovprim[GIND(0,1)]=gcovprim[GIND(1,0)]=tmp[0][1];																															   |	  gcovprim[0][1]=gcovprim[1][0]=tmp[0][1];
+  gcovprim[GIND(0,2)]=gcovprim[GIND(2,0)]=tmp[0][2];																															   |	  gcovprim[0][2]=gcovprim[2][0]=tmp[0][2];
+  gcovprim[GIND(0,3)]=gcovprim[GIND(3,0)]=tmp[0][3];																															   |	  gcovprim[0][3]=gcovprim[3][0]=tmp[0][3];
+  gcovprim[GIND(1,2)]=gcovprim[GIND(2,1)]=tmp[1][2];																															   |	  gcovprim[1][2]=gcovprim[2][1]=tmp[1][2];
+  gcovprim[GIND(1,3)]=gcovprim[GIND(3,1)]=tmp[1][3];																															   |	  gcovprim[1][3]=gcovprim[3][1]=tmp[1][3];
+  gcovprim[GIND(2,3)]=gcovprim[GIND(3,2)]=tmp[2][3];																															   |	  gcovprim[2][3]=gcovprim[3][2]=tmp[2][3];
+void gcon2gconprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcon,FTYPE *gconprim)																										   |	void gcon2gconprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*gcon)[NDIM],FTYPE (*gconprim)[NDIM])
+  FTYPE tmpgcon[SYMMATRIXNDIM];																																		   |	  FTYPE tmp[NDIM][NDIM];
+  DLOOP(j,k) tmpgcon[GIND(j,k)] = 0.;																																	   |	  DLOOP(j,k) tmp[j][k] = 0.;
+  DLOOP(j,k){																																				   |	  DLOOP(j,k) for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
+    for(l=0;l<NDIM;l++){																																		   |	    tmp[j][k] += idxdxp[j][l] * idxdxp[k][m] * gcon[l][m] ;
+      for(m=0;m<NDIM;m++){																																		   <
+	tmpgcon[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*idxdxp[j][l] * idxdxp[k][m] * gcon[GIND(l,m)] ;																									   <
+      }																																					   <
+    }																																					   <
+  // use tmpgcon since gcon might be same address as gconprim																														   |	  // use tmp since gcon might be same address as gconprim
+  DLOOP(j,k) gconprim[GIND(j,k)] = tmpgcon[GIND(j,k)];																															   |	  DLOOP(j,k) gconprim[j][k] = tmp[j][k];
+FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE *gcov)																														   |	FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*gcov)[NDIM])
+  FTYPE gdet_func_orig(int whichcoord, FTYPE *gcov);																															   |	  FTYPE gdet_func_orig(int whichcoord, FTYPE (*gcov)[NDIM]);
+FTYPE gdet_func_orig(int whichcoord, FTYPE *gcov)																															   |	FTYPE gdet_func_orig(int whichcoord, FTYPE (*gcov)[NDIM])
+  void metric_sing_check(int whichcoord, FTYPE *gcov, int *anglesing, int*centersing, int *truedim);																									   |	  void metric_sing_check(int whichcoord, FTYPE (*gcov)[NDIM], int *anglesing, int*centersing, int *truedim);
+  DLOOP(j,k) tmp[j + 1][k + 1] = gcov[GIND(j,k)];																															   |	  DLOOP(j,k) tmp[j + 1][k + 1] = gcov[j][k];
+      DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,gcov[GIND(j,k)]);																											   |	      DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,gcov[j][k]);
+  FTYPE gmid[SYMMATRIXNDIM];																																		   |	  FTYPE gmid[NDIM][NDIM];
+  FTYPE ghgen[NDIM][SYMMATRIXNDIM];																																	   |	  FTYPE ghgen[NDIM][NDIM][NDIM];
+  FTYPE glgen[NDIM][SYMMATRIXNDIM];																																	   |	  FTYPE glgen[NDIM][NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE* X, int i, int j);																									   |	  FTYPE gdet_func_mcoord_usegcov(FTYPE (*gcovmcoord)[NDIM], struct of_geom *ptrgeom, FTYPE* X, int i, int j);
+				     ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen																			   |					     ,struct of_geom *geom, FTYPE *X, FTYPE (*gmid)[NDIM], FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
+				     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]													   |					     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[NDIM][NDIM], FTYPE (*ghgen)[NDIM][NDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
+      for (i = 0; i < NDIM; i++){																																	   |	      for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++){
+	for (j = 0; j < NDIM; j++){																																	   <
+	  conn[i][j][k] = signdXgen[k]*(ghgen[k][GIND(i,j)] - glgen[k][GIND(i,j)]) / (Xhgen[k][k] - Xlgen[k][k]);																							   |		conn[i][j][k] = signdXgen[k]*(ghgen[k][i][j] - glgen[k][i][j]) / (Xhgen[k][k] - Xlgen[k][k]);
+	}//end over j																																			   |		}
+      } // end over i																																			   <
+	  conn[i][j][k] += geom->gcon[GIND(i,l)] * tmp[l][j][k];																													   |		  conn[i][j][k] += geom->gcon[i][l] * tmp[l][j][k];
+      dualfprintf(fail_file,"i=%d gcon[%d][%d]=%21.15g\n",geom->i,i,l,geom->gcon[GIND(i,l)]);																										   |	      dualfprintf(fail_file,"i=%d gcon[%d][%d]=%21.15g\n",geom->i,i,l,geom->gcon[i][l]);
+				   ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen																			   |					   ,struct of_geom *geom, FTYPE *X, FTYPE (*gmid)[NDIM], FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
+				   ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]													   |					   ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[NDIM][NDIM], FTYPE (*ghgen)[NDIM][NDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
+  FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE* X, int i, int j);																									   |	  FTYPE gdet_func_mcoord_usegcov(FTYPE (*gcovmcoord)[NDIM], struct of_geom *ptrgeom, FTYPE* X, int i, int j);
+  FTYPE gcovmcoord[SYMMATRIXNDIM];																																	   |	  FTYPE gcovmcoord[NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  return(gcovmcoord[GIND(i,j)]);																																	   |	  return(gcovmcoord[i][j]);
+  FTYPE gcovmcoord[SYMMATRIXNDIM];																																	   |	  FTYPE gcovmcoord[NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+  FTYPE gcovmcoord[SYMMATRIXNDIM];																																	   |	  FTYPE gcovmcoord[NDIM][NDIM];
+  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																								   |	  void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE* X, int i, int j)																									   |	FTYPE gdet_func_mcoord_usegcov(FTYPE (*gcovmcoord)[NDIM], struct of_geom *ptrgeom, FTYPE* X, int i, int j)
+  //  FTYPE gcovmcoord[SYMMATRIXNDIM];																																	   |	  //  FTYPE gcovmcoord[NDIM][NDIM];
+  //void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																							   |	  //void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+metric.h
+metric_selfgravity_or_evolvemetric.c
+// 4) static int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)																			   |	// 4) static int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
+// 5) static int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)																			   |	// 5) static int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
+    //    alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(TT,TT)]);																														   |	    //    alpha = 1.0/sqrt(-ptrgeom->gcon[TT][TT]);
+    //    alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(TT,TT)]);																														   |	    //    alpha = 1.0/sqrt(-ptrgeom->gcon[TT][TT]);
+    //    alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(TT,TT)]);																														   |	    //    alpha = 1.0/sqrt(-ptrgeom->gcon[TT][TT]);
+    //    alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(TT,TT)]);																														   |	    //    alpha = 1.0/sqrt(-ptrgeom->gcon[TT][TT]);
+int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)																					   |	int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
+  DLOOP(jj,kk) gcov[GIND(jj,kk)]=0.0;																																	   |	  DLOOP(jj,kk) gcov[jj][kk]=0.0;
+  gcov[GIND(TT,TT)] = -exp(2.0*phiself[0]);																																   |	  gcov[TT][TT] = -exp(2.0*phiself[0]);
+  gcov[GIND(RR,RR)] = 1.0+fabs(-genpot); // [RR][RR] term is positive and be 1 in limit that genpot=0																									   |	  gcov[RR][RR] = 1.0+fabs(-genpot); // [RR][RR] term is positive and be 1 in limit that genpot=0
+  gcov[GIND(RR,TT)] = gcov[GIND(TT,RR)] = sqrt(-gcov[GIND(TT,TT)]/(1.0-fabs(genpot)))*(-genpot);																									   |	  gcov[RR][TT] = gcov[TT][RR] = sqrt(-gcov[TT][TT]/(1.0-fabs(genpot)))*(-genpot);
+  gcov[GIND(TH,TH)] = r2;																																		   |	  gcov[TH][TH] = r2;
+  gcov[GIND(PH,PH)] = r2*sh2;																																		   |	  gcov[PH][PH] = r2*sh2;
+  gcovpert[TT] = gcov[GIND(TT,TT)]+1.0; // no obvious way to decouple non-linear piece																											   |	  gcovpert[TT] = gcov[TT][TT]+1.0; // no obvious way to decouple non-linear piece
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+  DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,gcov[GIND(jj,kk)]);																											   |	  DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,gcov[jj][kk]);
+int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)																					   |	int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE (*gcov)[NDIM], FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
+  DLOOP(jj,kk) gcov[GIND(jj,kk)]=0.0;																																	   |	  DLOOP(jj,kk) gcov[jj][kk]=0.0;
+  gcov[GIND(TT,TT)] = -exp(2.0*phiself[0]);																																   |	  gcov[TT][TT] = -exp(2.0*phiself[0]);
+  gcov[GIND(RR,RR)] = 1.0/(1.0+fabs(genpot));																																   |	  gcov[RR][RR] = 1.0/(1.0+fabs(genpot));
+  gcov[GIND(RR,TT)] = gcov[GIND(TT,RR)] = 0.0;																																   |	  gcov[RR][TT] = gcov[TT][RR] = 0.0;
+  gcov[GIND(TH,TH)] = r2;																																		   |	  gcov[TH][TH] = r2;
+  gcov[GIND(PH,PH)] = r2*sh2;																																		   |	  gcov[PH][PH] = r2*sh2;
+  gcovpert[TT] = gcov[GIND(TT,TT)]+1.0; // no obvious way to decouple non-linear piece																											   |	  gcovpert[TT] = gcov[TT][TT]+1.0; // no obvious way to decouple non-linear piece
+  gcovpert[RR] = gcov[GIND(RR,RR)]-1.0; // no obvious way ...																														   |	  gcovpert[RR] = gcov[RR][RR]-1.0; // no obvious way ...
+  gcovpert[TH] = gcov[GIND(TH,TH)]-1.0;																																	   |	  gcovpert[TH] = gcov[TH][TH]-1.0;
+  gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;																																	   |	  gcovpert[PH] = gcov[PH][PH]-1.0;
+  //  DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,gcov[GIND(jj,kk)]);																										   |	  //  DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,gcov[jj][kk]);
+metric_tools.c
+void matrix_inverse_2d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM])																											   |	void matrix_inverse_2d(FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM])
+  DLOOP(jj,kk) genmatrixupper[jj][kk] = 0.0;																																   |	  DLOOP(jj,kk) gcon[jj][kk] = 0.0;
+  genmatrixupper[TT][TT] = 1.0/(-genmatrixlower[TT][RR]*genmatrixlower[TT][RR]/genmatrixlower[RR][RR] + genmatrixlower[TT][TT]);																					   |	  gcon[TT][TT] = 1.0/(-gcov[TT][RR]*gcov[TT][RR]/gcov[RR][RR] + gcov[TT][TT]);
+  genmatrixupper[TT][RR] = genmatrixupper[RR][TT] = -genmatrixlower[TT][RR]/(-genmatrixlower[TT][RR]*genmatrixlower[TT][RR] + genmatrixlower[RR][RR]*genmatrixlower[TT][TT]);																   |	  gcon[TT][RR] = gcon[RR][TT] = -gcov[TT][RR]/(-gcov[TT][RR]*gcov[TT][RR] + gcov[RR][RR]*gcov[TT][TT]);
+  genmatrixupper[RR][RR] = 1.0/(-genmatrixlower[TT][RR]*genmatrixlower[TT][RR]/genmatrixlower[TT][TT] + genmatrixlower[RR][RR]);																					   |	  gcon[RR][RR] = 1.0/(-gcov[TT][RR]*gcov[TT][RR]/gcov[TT][TT] + gcov[RR][RR]);
+void matrix_inverse_3d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM])																											   |	void matrix_inverse_3d(FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM])
+  FTYPE genmatrixlowerrhsq,genmatrixlowertrsq,genmatrixlowerthsq;																													   |	  FTYPE gcovrhsq,gcovtrsq,gcovthsq;
+																																					   <
+																																					   <
+  DLOOP(jj,kk) genmatrixupper[jj][kk] = 0.0;																																   <
+																																					   <
+																																					   <
+  genmatrixlowerrhsq = genmatrixlower[RR][TH]*genmatrixlower[RR][TH];																													   <
+  genmatrixlowertrsq = genmatrixlower[TT][RR]*genmatrixlower[TT][RR];																													   <
+  genmatrixlowerthsq = genmatrixlower[TT][TH]*genmatrixlower[TT][TH];																													   <
+  																																					   <
+  genmatrixupper[TT][TT]=(genmatrixlowerrhsq - genmatrixlower[TH][TH]*genmatrixlower[RR][RR])/(genmatrixlower[RR][RR]*genmatrixlowerthsq - 2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrixlowertrsq + genmatrixlowerrhsq*genmatrixlower[TT][   <
+  genmatrixupper[TT][RR]=genmatrixupper[RR][TT]=(-(genmatrixlower[RR][TH]*genmatrixlower[TT][TH]) + genmatrixlower[TH][TH]*genmatrixlower[TT][RR])/(-2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrixlowertrsq + genmatrixlowerrhsq*genmatrix   <
+  genmatrixupper[TT][TH]=genmatrixupper[TH][TT]=(genmatrixlower[RR][RR]*genmatrixlower[TT][TH] - genmatrixlower[RR][TH]*genmatrixlower[TT][RR])/(genmatrixlower[RR][RR]*genmatrixlowerthsq - 2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrix   <
+  genmatrixupper[RR][RR]=(genmatrixlowerthsq - genmatrixlower[TH][TH]*genmatrixlower[TT][TT])/(genmatrixlower[RR][RR]*genmatrixlowerthsq - 2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrixlowertrsq + genmatrixlowerrhsq*genmatrixlower[TT][   <
+  genmatrixupper[RR][TH]=genmatrixupper[TH][RR]=(-(genmatrixlower[TT][TH]*genmatrixlower[TT][RR]) + genmatrixlower[RR][TH]*genmatrixlower[TT][TT])/(-2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrixlowertrsq + genmatrixlowerrhsq*genmatrix   <
+  genmatrixupper[TH][TH]=(genmatrixlowertrsq - genmatrixlower[RR][RR]*genmatrixlower[TT][TT])/(genmatrixlower[RR][RR]*genmatrixlowerthsq - 2.0*genmatrixlower[RR][TH]*genmatrixlower[TT][TH]*genmatrixlower[TT][RR] + genmatrixlower[TH][TH]*genmatrixlowertrsq + genmatrixlowerrhsq*genmatrixlower[TT][   <
+																																					   <
+}																																					   <
+																																					   >	  DLOOP(jj,kk) gcon[jj][kk] = 0.0;
+// wrapper for symmetric matrix																																		   <
+void matrix_inverse_metric(int whichcoord, FTYPE *gcov, FTYPE *gcon)																													   <
+{																																					   <
+  FTYPE genmatrixlower[NDIM][NDIM];																																	   <
+  FTYPE genmatrixupper[NDIM][NDIM];																																	   <
+  int jj,kk;																																				   <
+  // copy both in case both needed for some reason																															   |	  gcovrhsq = gcov[RR][TH]*gcov[RR][TH];
+  DLOOP(jj,kk) genmatrixlower[jj][kk]=gcov[GIND(jj,kk)];																														   |	  gcovtrsq = gcov[TT][RR]*gcov[TT][RR];
+  DLOOP(jj,kk) genmatrixupper[jj][kk]=gcon[GIND(jj,kk)];																														   |	  gcovthsq = gcov[TT][TH]*gcov[TT][TH];
+  matrix_inverse(whichcoord, genmatrixlower, genmatrixupper);																														   |	  gcon[TT][TT]=(gcovrhsq - gcov[TH][TH]*gcov[RR][RR])/(gcov[RR][RR]*gcovthsq - 2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] - gcov[TH][TH]*gcov[RR][RR]*gcov[TT][TT]);
+																																					   >	  gcon[TT][RR]=gcon[RR][TT]=(-(gcov[RR][TH]*gcov[TT][TH]) + gcov[TH][TH]*gcov[TT][RR])/(-2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] + gcov[RR][RR]*(gcovthsq - gcov[TH][TH]*gcov[TT][TT]));
+																																					   >	  gcon[TT][TH]=gcon[TH][TT]=(gcov[RR][RR]*gcov[TT][TH] - gcov[RR][TH]*gcov[TT][RR])/(gcov[RR][RR]*gcovthsq - 2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] - gcov[TH][TH]*gcov[RR][RR]*gcov[TT][TT]);
+																																					   >	  gcon[RR][RR]=(gcovthsq - gcov[TH][TH]*gcov[TT][TT])/(gcov[RR][RR]*gcovthsq - 2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] - gcov[TH][TH]*gcov[RR][RR]*gcov[TT][TT]);
+																																					   >	  gcon[RR][TH]=gcon[TH][RR]=(-(gcov[TT][TH]*gcov[TT][RR]) + gcov[RR][TH]*gcov[TT][TT])/(-2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] + gcov[RR][RR]*(gcovthsq - gcov[TH][TH]*gcov[TT][TT]));
+																																					   >	  gcon[TH][TH]=(gcovtrsq - gcov[RR][RR]*gcov[TT][TT])/(gcov[RR][RR]*gcovthsq - 2.0*gcov[RR][TH]*gcov[TT][TH]*gcov[TT][RR] + gcov[TH][TH]*gcovtrsq + gcovrhsq*gcov[TT][TT] - gcov[TH][TH]*gcov[RR][RR]*gcov[TT][TT]);
+  // translate back																																			   <
+  DLOOP(jj,kk) gcon[GIND(jj,kk)]=genmatrixupper[jj][kk];																														   <
+																																					   |	/* invert gcov to get gcon */
+/* invert genmatrixlower to get genmatrixupper */																															   <
+// genmatrixlower=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l																											   |	// gcov=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l
+void matrix_inverse(int whichcoord, FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM])																									   |	void matrix_inverse(int whichcoord, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM])
+  void metric_sing_check(int whichcoord, FTYPE (*genmatrixlower)[NDIM], int *anglesing, int*centersing, int *truedim);																							   |	  void metric_sing_check(int whichcoord, FTYPE (*gcov)[NDIM], int *anglesing, int*centersing, int *truedim);
+  void matrix_inverse_2d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);																											   |	  void matrix_inverse_2d(FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+  void matrix_inverse_3d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);  																										   |	  void matrix_inverse_3d(FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);  
+  DLOOP(j,k) tmp[j + 1][k + 1] = genmatrixlower[j][k];																															   |	  DLOOP(j,k) tmp[j + 1][k + 1] = gcov[j][k];
+  metric_sing_check(whichcoord, genmatrixlower, &anglesing, &centersing, &truedim);																											   |	  metric_sing_check(whichcoord, gcov, &anglesing, &centersing, &truedim);
+  // 0-out all genmatrixupper																																		   |	  // 0-out all gcon
+  DLOOP(j,k) genmatrixupper[j][k]=0.0;																																	   |	  DLOOP(j,k) gcon[j][k]=0.0;
+      //if(centersing)  matrix_inverse_2d(genmatrixlower,genmatrixupper);																												   |	      //if(centersing)  matrix_inverse_2d(gcov,gcon);
+      //      else if(anglesing) matrix_inverse_3d(genmatrixlower,genmatrixupper);																											   |	      //      else if(anglesing) matrix_inverse_3d(gcov,gcon);
+      matrix_inverse_2d(genmatrixlower,genmatrixupper);																															   |	      matrix_inverse_2d(gcov,gcon);
+    DLOOP(j,k) dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,genmatrixlower[j][k]);																										   |	    DLOOP(j,k) dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,gcov[j][k]);
+    //DLOOP(j,k) genmatrixupper[j][k] = tmp[k + 1][j + 1];																														   |	    //DLOOP(j,k) gcon[j][k] = tmp[k + 1][j + 1];
+    DLOOP(j,k) genmatrixupper[j][k] = tmp[j + 1][k + 1];																														   |	    DLOOP(j,k) gcon[j][k] = tmp[j + 1][k + 1];
+  DLOOP(j,k) if(!finite(genmatrixupper[j][k])){																																   |	  DLOOP(j,k) if(!finite(gcon[j][k])){
+    dualfprintf(fail_file,"Came out of matrix_inverse with inf/nan for genmatrixupper at j=%d k=%d\n",j,k);																								   |	    dualfprintf(fail_file,"Came out of matrix_inverse with inf/nan for gcon at j=%d k=%d\n",j,k);
+void metric_sing_check(int whichcoord, FTYPE (*genmatrixlower)[NDIM], int *anglesing, int*centersing, int *truedim)																							   |	void metric_sing_check(int whichcoord, FTYPE (*gcov)[NDIM], int *anglesing, int*centersing, int *truedim)
+    if(fabs(genmatrixlower[PH][PH])<10.0*SMALL){																															   |	    if(fabs(gcov[PH][PH])<10.0*SMALL){
+    if(fabs(genmatrixlower[TH][TH])<10.0*SMALL){																															   |	    if(fabs(gcov[TH][TH])<10.0*SMALL){
+mignoneeos.c
+mnewt.c
+mpidefs.h
+mpidefs.mpi_grmhd_grray_liaison.h
+mpi_fileio.c
+mpi_fprintfs.c
+mpi_grmhd_grray_liaison.c
+mpi_init.c
+mpi_init_grmhd.c
+mpi_set_arrays.c
+mympi.definit.h
+mympi.global.depnmemonics.h
+mympi.global.funcdeclare.h
+mympi.global.loops.h
+mympi.global.nondepnmemonics.h
+mympi.h
+mympi.simulbccalcstuff.h
+mytime.c
+mytime.h
+nrutil2.c
+nrutil.c
+out.h
+para_and_paraenohybrid.h
+paraenohybrid.c
+phys.c
+  //  DLOOP(j,k) geom->gcov[GIND(j,k)] = GLOBALMETMACP1A2(gcov,pp,myii,myjj,mykk,j,k);																											   |	  //  DLOOP(j,k) geom->gcov[j][k] = GLOBALMETMACP1A2(gcov,pp,myii,myjj,mykk,j,k);
+  //DLOOP(j,k) geom->gcon[GIND(j,k)] = GLOBALMETMACP1A2(gcon,pp,myii,myjj,mykk,j,k);																											   |	  //DLOOP(j,k) geom->gcon[j][k] = GLOBALMETMACP1A2(gcon,pp,myii,myjj,mykk,j,k);
+    geom->gcon[GIND(0,j)] = GLOBALMETMACP1A2(gcon,pp,myii,myjj,mykk,0,j);																												   |	    geom->gcon[0][j] = GLOBALMETMACP1A2(gcon,pp,myii,myjj,mykk,0,j);
+    geom->gcov[GIND(0,j)] = GLOBALMETMACP1A2(gcov,pp,myii,myjj,mykk,0,j);																												   |	    geom->gcov[0][j] = GLOBALMETMACP1A2(gcov,pp,myii,myjj,mykk,0,j);
+    allgeom->gcov[GIND(0,j)]=ptrgeom->gcov[GIND(0,j)];																															   |	    allgeom->gcov[0][j]=ptrgeom->gcov[0][j];
+    allgeom->gcon[GIND(0,j)]=ptrgeom->gcon[GIND(0,j)];																															   |	    allgeom->gcon[0][j]=ptrgeom->gcon[0][j];
+      vxm = MACP0A1(p,i,jm1mac(j),k,U1)*sqrt(ptrgeom->gcov[GIND(1,1)]);																													   |	      vxm = MACP0A1(p,i,jm1mac(j),k,U1)*sqrt(ptrgeom->gcov[1][1]);
+      vxp = MACP0A1(p,i,jp1mac(j),k,U1)*sqrt(ptrgeom->gcov[GIND(1,1)]);																													   |	      vxp = MACP0A1(p,i,jp1mac(j),k,U1)*sqrt(ptrgeom->gcov[1][1]);
+      vym = MACP0A1(p,im1mac(i),j,k,U2)*sqrt(ptrgeom->gcov[GIND(2,2)]);																													   |	      vym = MACP0A1(p,im1mac(i),j,k,U2)*sqrt(ptrgeom->gcov[2][2]);
+      vyp = MACP0A1(p,ip1mac(i),j,k,U2)*sqrt(ptrgeom->gcov[GIND(2,2)]);																													   |	      vyp = MACP0A1(p,ip1mac(i),j,k,U2)*sqrt(ptrgeom->gcov[2][2]);
+phys.coldgrmhd.c
+  alphasq = 1./(- geom->gcon[GIND(0,0)]);  																																   |	  alphasq = 1./(- geom->gcon[0][0]);  
+  DLOOP(j,k) projetauu[j][k] = geom->gcon[GIND(j,k)] + etacon[j]*etacon[k];																												   |	  DLOOP(j,k) projetauu[j][k] = geom->gcon[j][k] + etacon[j]*etacon[k];
+phys.ffde.c
+  alphasq = 1./(- geom->gcon[GIND(0,0)]);  																																   |	  alphasq = 1./(- geom->gcon[0][0]);  
+  alphasq = 1./(- geom->gcon[GIND(0,0)]);  																																   |	  alphasq = 1./(- geom->gcon[0][0]);  
+  SLOOPA(j) beta[j] = geom->gcon[GIND(0,j)]*alphasq ;																															   |	  SLOOPA(j) beta[j] = geom->gcon[0][j]*alphasq ;
+  vcon[1]=alphasq*(-geom->gcon[GIND(TT,1)] + (Ecov[2]*Bcov[3]-Ecov[3]*Bcov[2])*oBsqgeom);																										   |	  vcon[1]=alphasq*(-geom->gcon[TT][1] + (Ecov[2]*Bcov[3]-Ecov[3]*Bcov[2])*oBsqgeom);
+  vcon[2]=alphasq*(-geom->gcon[GIND(TT,2)] + (Ecov[3]*Bcov[1]-Ecov[1]*Bcov[3])*oBsqgeom);																										   |	  vcon[2]=alphasq*(-geom->gcon[TT][2] + (Ecov[3]*Bcov[1]-Ecov[1]*Bcov[3])*oBsqgeom);
+  vcon[3]=alphasq*(-geom->gcon[GIND(TT,3)] + (Ecov[1]*Bcov[2]-Ecov[2]*Bcov[1])*oBsqgeom);																										   |	  vcon[3]=alphasq*(-geom->gcon[TT][3] + (Ecov[1]*Bcov[2]-Ecov[2]*Bcov[1])*oBsqgeom);
+  alphasq = 1./(- geom->gcon[GIND(0,0)]);  																																   |	  alphasq = 1./(- geom->gcon[0][0]);  
+  SLOOPA(j) beta[j] = geom->gcon[GIND(0,j)]*alphasq ;																															   |	  SLOOPA(j) beta[j] = geom->gcon[0][j]*alphasq ;
+  alpha = sqrt(1./(- geom->gcon[GIND(0,0)]));  																																   |	  alpha = sqrt(1./(- geom->gcon[0][0]));  
+  alpha = sqrt(1./(- geom->gcon[GIND(0,0)]));  																																   |	  alpha = sqrt(1./(- geom->gcon[0][0]));  
+  subEsq=0.0; SLOOPA(j) subEsq+=Tin[j]*geom->gcon[GIND(TT,j)];																														   |	  subEsq=0.0; SLOOPA(j) subEsq+=Tin[j]*geom->gcon[TT][j];
+  SSLOOP(j,k) Q[j][k]=(geom->gcon[GIND(j,k)])+(alphasq*geom->gcon[GIND(TT,j)]*geom->gcon[GIND(TT,k)])-BconOalpha[j]*BconOalpha[k]/BsqOalphasq;																				   |	  SSLOOP(j,k) Q[j][k]=(geom->gcon[j][k])+(alphasq*geom->gcon[TT][j]*geom->gcon[TT][k])-BconOalpha[j]*BconOalpha[k]/BsqOalphasq;
+  *BB=alphasq*(geom->gcon[GIND(TT,which)]) - subBB/BsqOalphasq;																														   |	  *BB=alphasq*(geom->gcon[TT][which]) - subBB/BsqOalphasq;
+  subCC1=0; SLOOPA(j) if(j!=which) subCC1+=geom->gcon[GIND(TT,j)]*Tin[j];																												   |	  subCC1=0; SLOOPA(j) if(j!=which) subCC1+=geom->gcon[TT][j]*Tin[j];
+      alpha = 1./sqrt(- geom->gcon[GIND(0,0)]);  																															   |	      alpha = 1./sqrt(- geom->gcon[0][0]);  
+      //      SLOOPA(j) beta[j] = geom->gcon[GIND(0,j)]*alpha*alpha ;																													   |	      //      SLOOPA(j) beta[j] = geom->gcon[0][j]*alpha*alpha ;
+      alpha = 1./sqrt(- geom->gcon[GIND(0,0)]);  																															   |	      alpha = 1./sqrt(- geom->gcon[0][0]);  
+      //      SLOOPA(j) beta[j] = geom->gcon[GIND(0,j)]*alpha*alpha ;																													   |	      //      SLOOPA(j) beta[j] = geom->gcon[0][j]*alpha*alpha ;
+      alpha = 1./sqrt(- geom->gcon[GIND(0,0)]);  																															   |	      alpha = 1./sqrt(- geom->gcon[0][0]);  
+      SLOOPA(j) beta[j] = geom->gcon[GIND(0,j)]*alpha*alpha ;																														   |	      SLOOPA(j) beta[j] = geom->gcon[0][j]*alpha*alpha ;
+phys.tools.c
+    SLOOPA(kk) Bcov[jj] += Bcon[kk]*(geom->gcov[GIND(jj,kk)]);																														   |	    SLOOPA(kk) Bcov[jj] += Bcon[kk]*(geom->gcov[jj][kk]);
+  //  plus1gv00=1.0+geom->gcov[GIND(TT,TT)];																																   |	  //  plus1gv00=1.0+geom->gcov[TT][TT];
+  SLOOPA(j) AA+=2.0*geom->gcov[GIND(TT,j)]*vcon[j];																															   |	  SLOOPA(j) AA+=2.0*geom->gcov[TT][j]*vcon[j];
+  SLOOP(j,k) AA+=geom->gcov[GIND(j,k)]*vcon[j]*vcon[k];																															   |	  SLOOP(j,k) AA+=geom->gcov[j][k]*vcon[j]*vcon[k];
+  //AA/=geom->gcov[GIND(TT,TT)];																																	   |	  //AA/=geom->gcov[TT][TT];
+  BB=geom->gcov[GIND(TT,TT)];																																		   |	  BB=geom->gcov[TT][TT];
+  SLOOPA(j) alpha+=geom->gcov[GIND(j,TT)]*q->ucon[j];																															   |	  SLOOPA(j) alpha+=geom->gcov[j][TT]*q->ucon[j];
+  //  *plus1ud0=(plus1gv00+(2.0*alpha+alpha*alpha)*(1.0+AA)+AA)/((1.0+alpha)*(1.0+AA)+sqrt(-geom->gcov[GIND(TT,TT)]*(1.0+AA)));																						   |	  //  *plus1ud0=(plus1gv00+(2.0*alpha+alpha*alpha)*(1.0+AA)+AA)/((1.0+alpha)*(1.0+AA)+sqrt(-geom->gcov[TT][TT]*(1.0+AA)));
+  //  plus1gv00=1.0+geom->gcov[GIND(TT,TT)];																																   |	  //  plus1gv00=1.0+geom->gcov[TT][TT];
+  SLOOPA(j) vsq+=2.0*geom->gcov[GIND(TT,j)]*vcon[j];																															   |	  SLOOPA(j) vsq+=2.0*geom->gcov[TT][j]*vcon[j];
+  SLOOP(j,k) vsq+=geom->gcov[GIND(j,k)]*vcon[j]*vcon[k];																														   |	  SLOOP(j,k) vsq+=geom->gcov[j][k]*vcon[j]*vcon[k];
+  gvtt=geom->gcov[GIND(TT,TT)];																																		   |	  gvtt=geom->gcov[TT][TT];
+  SLOOPA(j) alpha+=geom->gcov[GIND(j,TT)]*q->ucon[j];																															   |	  SLOOPA(j) alpha+=geom->gcov[j][TT]*q->ucon[j];
+  SLOOPA(j) ud0tilde += pr[U1+j-1]*(geom->gcov[GIND(TT,j)]);																														   |	  SLOOPA(j) ud0tilde += pr[U1+j-1]*(geom->gcov[TT][j]);
+    SLOOPA(kk) Bcov[jj] += Bcon[kk]*(ptrgeom->gcov[GIND(jj,kk)]);																													   |	    SLOOPA(kk) Bcov[jj] += Bcon[kk]*(ptrgeom->gcov[jj][kk]);
+  ucov[0] = geom->gcov[GIND(0,0)]*ucon[0]																																   |	  ucov[0] = geom->gcov[0][0]*ucon[0]
+    + geom->gcov[GIND(0,1)]*ucon[1]																																	   |	    + geom->gcov[0][1]*ucon[1]
+    + geom->gcov[GIND(0,2)]*ucon[2]																																	   |	    + geom->gcov[0][2]*ucon[2]
+    + geom->gcov[GIND(0,3)]*ucon[3] ;																																	   |	    + geom->gcov[0][3]*ucon[3] ;
+  ucov[1] = geom->gcov[GIND(0,1)]*ucon[0]																																   |	  ucov[1] = geom->gcov[0][1]*ucon[0]
+    + geom->gcov[GIND(1,1)]*ucon[1]																																	   |	    + geom->gcov[1][1]*ucon[1]
+    + geom->gcov[GIND(1,2)]*ucon[2]																																	   |	    + geom->gcov[1][2]*ucon[2]
+    + geom->gcov[GIND(1,3)]*ucon[3]																																	   |	    + geom->gcov[1][3]*ucon[3]
+  ucov[2] = geom->gcov[GIND(0,2)]*ucon[0]																																   |	  ucov[2] = geom->gcov[0][2]*ucon[0]
+    + geom->gcov[GIND(1,2)]*ucon[1]																																	   |	    + geom->gcov[1][2]*ucon[1]
+    + geom->gcov[GIND(2,2)]*ucon[2]																																	   |	    + geom->gcov[2][2]*ucon[2]
+    + geom->gcov[GIND(2,3)]*ucon[3]																																	   |	    + geom->gcov[2][3]*ucon[3]
+  ucov[3] = geom->gcov[GIND(0,3)]*ucon[0]																																   |	  ucov[3] = geom->gcov[0][3]*ucon[0]
+    + geom->gcov[GIND(1,3)]*ucon[1]																																	   |	    + geom->gcov[1][3]*ucon[1]
+    + geom->gcov[GIND(2,3)]*ucon[2]																																	   |	    + geom->gcov[2][3]*ucon[2]
+    + geom->gcov[GIND(3,3)]*ucon[3] ;																																	   |	    + geom->gcov[3][3]*ucon[3] ;
+      myfcov[j][k]+=myfcon[jp][kp]*geom->gcov[GIND(j,jp)]*geom->gcov[GIND(k,kp)];																											   |	      myfcov[j][k]+=myfcon[jp][kp]*geom->gcov[j][jp]*geom->gcov[k][kp];
+  ucon[0] = geom->gcon[GIND(0,0)]*ucov[0]																																   |	  ucon[0] = geom->gcon[0][0]*ucov[0]
+    + geom->gcon[GIND(0,1)]*ucov[1]																																	   |	    + geom->gcon[0][1]*ucov[1]
+    + geom->gcon[GIND(0,2)]*ucov[2]																																	   |	    + geom->gcon[0][2]*ucov[2]
+    + geom->gcon[GIND(0,3)]*ucov[3] ;																																	   |	    + geom->gcon[0][3]*ucov[3] ;
+  ucon[1] = geom->gcon[GIND(0,1)]*ucov[0]																																   |	  ucon[1] = geom->gcon[0][1]*ucov[0]
+    + geom->gcon[GIND(1,1)]*ucov[1]																																	   |	    + geom->gcon[1][1]*ucov[1]
+    + geom->gcon[GIND(1,2)]*ucov[2]																																	   |	    + geom->gcon[1][2]*ucov[2]
+    + geom->gcon[GIND(1,3)]*ucov[3] ;																																	   |	    + geom->gcon[1][3]*ucov[3] ;
+  ucon[2] = geom->gcon[GIND(0,2)]*ucov[0]																																   |	  ucon[2] = geom->gcon[0][2]*ucov[0]
+    + geom->gcon[GIND(1,2)]*ucov[1]																																	   |	    + geom->gcon[1][2]*ucov[1]
+    + geom->gcon[GIND(2,2)]*ucov[2]																																	   |	    + geom->gcon[2][2]*ucov[2]
+    + geom->gcon[GIND(2,3)]*ucov[3] ;																																	   |	    + geom->gcon[2][3]*ucov[3] ;
+  ucon[3] = geom->gcon[GIND(0,3)]*ucov[0]																																   |	  ucon[3] = geom->gcon[0][3]*ucov[0]
+    + geom->gcon[GIND(1,3)]*ucov[1]																																	   |	    + geom->gcon[1][3]*ucov[1]
+    + geom->gcon[GIND(2,3)]*ucov[2]																																	   |	    + geom->gcon[2][3]*ucov[2]
+    + geom->gcon[GIND(3,3)]*ucov[3] ;																																	   |	    + geom->gcon[3][3]*ucov[3] ;
+  //  alpha = 1./sqrt(-geom->gcon[GIND(TT,TT)]) ;																															   |	  //  alpha = 1./sqrt(-geom->gcon[TT][TT]) ;
+      DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);																										   |	      DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[j][k]);
+    + geom->gcov[GIND(1,1)]*uconrel[1]*uconrel[1]																															   |	    + geom->gcov[1][1]*uconrel[1]*uconrel[1]
+    + geom->gcov[GIND(2,2)]*uconrel[2]*uconrel[2]																															   |	    + geom->gcov[2][2]*uconrel[2]*uconrel[2]
+    + geom->gcov[GIND(3,3)]*uconrel[3]*uconrel[3]																															   |	    + geom->gcov[3][3]*uconrel[3]*uconrel[3]
+    + 2.*(geom->gcov[GIND(1,2)]*uconrel[1]*uconrel[2]																															   |	    + 2.*(geom->gcov[1][2]*uconrel[1]*uconrel[2]
+	  + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3]																															   |		  + geom->gcov[1][3]*uconrel[1]*uconrel[3]
+	  + geom->gcov[GIND(2,3)]*uconrel[2]*uconrel[3])																														   |		  + geom->gcov[2][3]*uconrel[2]*uconrel[3])
+    + 2.*(geom->gcov[GIND(1,2)]*uconrel[1]*uconrel[2]																															   |	    + 2.*(geom->gcov[1][2]*uconrel[1]*uconrel[2]
+	  + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3])																														   |		  + geom->gcov[1][3]*uconrel[1]*uconrel[3])
+  //  DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g uconrel[%d]=%21.15g uconrel[%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)],j,uconrel[j],k,uconrel[k]); // CHANGINGMARK																   |	  //  DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g uconrel[%d]=%21.15g uconrel[%d]=%21.15g\n",j,k,geom->gcov[j][k],j,uconrel[j],k,uconrel[k]); // CHANGINGMARK
+  negdiscr = geom->gcov[GIND(0,0)] + velterm ;																																   |	  negdiscr = geom->gcov[0][0] + velterm ;
+	  dualfprintf(fail_file,"%21.15g",geom->gcon[GIND(j,k)]);																													   |		  dualfprintf(fail_file,"%21.15g",geom->gcon[j][k]);
+	  dualfprintf(fail_file,"%21.15g",geom->gcov[GIND(j,k)]);																													   |		  dualfprintf(fail_file,"%21.15g",geom->gcov[j][k]);
+    + geom->gcov[GIND(1,1)] * vcon[1] * vcon[1]																																   |	    + geom->gcov[1][1] * vcon[1] * vcon[1]
+    + geom->gcov[GIND(2,2)] * vcon[2] * vcon[2]																																   |	    + geom->gcov[2][2] * vcon[2] * vcon[2]
+    + geom->gcov[GIND(3,3)] * vcon[3] * vcon[3]																																   |	    + geom->gcov[3][3] * vcon[3] * vcon[3]
+    + 2. * (geom->gcov[GIND(0,1)]* vcon[1]																																   |	    + 2. * (geom->gcov[0][1]* vcon[1]
+	    + geom->gcov[GIND(0,2)] * vcon[2]																																   |		    + geom->gcov[0][2] * vcon[2]
+	    + geom->gcov[GIND(0,3)] * vcon[3]																																   |		    + geom->gcov[0][3] * vcon[3]
+	    + geom->gcov[GIND(1,2)] * vcon[1] * vcon[2]																															   |		    + geom->gcov[1][2] * vcon[1] * vcon[2]
+	    + geom->gcov[GIND(1,3)] * vcon[1] * vcon[3]																															   |		    + geom->gcov[1][3] * vcon[1] * vcon[3]
+	    + geom->gcov[GIND(2,3)] * vcon[2] * vcon[3]																															   |		    + geom->gcov[2][3] * vcon[2] * vcon[3]
+  *AA = geom->gcov[GIND(TT,TT)] ;																																	   |	  *AA = geom->gcov[TT][TT] ;
+  *BB = 2.*(geom->gcov[GIND(TT,1)]*ucon[1] +																																   |	  *BB = 2.*(geom->gcov[TT][1]*ucon[1] +
+	    geom->gcov[GIND(TT,2)]*ucon[2] +																																   |		    geom->gcov[TT][2]*ucon[2] +
+	    geom->gcov[GIND(TT,3)]*ucon[3]) ;																																   |		    geom->gcov[TT][3]*ucon[3]) ;
+  *CCM1 = geom->gcov[GIND(1,1)]*ucon[1]*ucon[1] +																															   |	  *CCM1 = geom->gcov[1][1]*ucon[1]*ucon[1] +
+    geom->gcov[GIND(2,2)]*ucon[2]*ucon[2] +																																   |	    geom->gcov[2][2]*ucon[2]*ucon[2] +
+    geom->gcov[GIND(3,3)]*ucon[3]*ucon[3] +																																   |	    geom->gcov[3][3]*ucon[3]*ucon[3] +
+    2.*(geom->gcov[GIND(1,2)]*ucon[1]*ucon[2] +																																   |	    2.*(geom->gcov[1][2]*ucon[1]*ucon[2] +
+	geom->gcov[GIND(1,3)]*ucon[1]*ucon[3] +																																   |		geom->gcov[1][3]*ucon[1]*ucon[3] +
+	geom->gcov[GIND(2,3)]*ucon[2]*ucon[3]) ;																															   |		geom->gcov[2][3]*ucon[2]*ucon[3]) ;
+      ftemp1+=vu[j]*geom->gcov[GIND(dir,j)];																																   |	      ftemp1+=vu[j]*geom->gcov[dir][j];
+      ftemp2+=vu[j]*geom->gcov[GIND(TT,j)];																																   |	      ftemp2+=vu[j]*geom->gcov[TT][j];
+      ftemp3+=vu[j]*vu[j]*geom->gcov[GIND(j,j)];																															   |	      ftemp3+=vu[j]*vu[j]*geom->gcov[j][j];
+  BB=2.0*(ftemp1+geom->gcov[GIND(0,dir)])/geom->gcov[GIND(dir,dir)];																													   |	  BB=2.0*(ftemp1+geom->gcov[0][dir])/geom->gcov[dir][dir];
+  CC=(geom->gcov[GIND(TT,TT)] + 2.0*ftemp2 + ftemp3 + 2.0*vu[diro1]*vu[diro2]*geom->gcov[GIND(diro1,diro2)])/geom->gcov[GIND(dir,dir)];																					   |	  CC=(geom->gcov[TT][TT] + 2.0*ftemp2 + ftemp3 + 2.0*vu[diro1]*vu[diro2]*geom->gcov[diro1][diro2])/geom->gcov[dir][dir];
+    DLOOP(j,k) proj[j][k]=geom->gcon[GIND(j,k)] + q->ucon[j]*q->ucon[k];																												   |	    DLOOP(j,k) proj[j][k]=geom->gcon[j][k] + q->ucon[j]*q->ucon[k];
+    DLOOP(j,k) proj[j][k]=geom->gcov[GIND(j,k)] + q->ucov[j]*q->ucov[k];																												   |	    DLOOP(j,k) proj[j][k]=geom->gcov[j][k] + q->ucov[j]*q->ucov[k];
+  gconttsq = (geom->gcon[GIND(TT,TT)]*geom->gcon[GIND(TT,TT)]);																														   |	  gconttsq = (geom->gcon[TT][TT]*geom->gcon[TT][TT]);
+  SLOOPA(j) *gconttplus1 += 2.0*geom->gcov[GIND(TT,j)]*(geom->gcon[GIND(j,TT)]*geom->gcon[GIND(j,TT)]);																									   |	  SLOOPA(j) *gconttplus1 += 2.0*geom->gcov[TT][j]*(geom->gcon[j][TT]*geom->gcon[j][TT]);
+  SLOOP(j,k) *gconttplus1 += geom->gcov[GIND(j,k)]*geom->gcon[GIND(j,TT)]*geom->gcon[GIND(k,TT)];																									   |	  SLOOP(j,k) *gconttplus1 += geom->gcov[j][k]*geom->gcon[j][TT]*geom->gcon[k][TT];
+  //  gcovttplus1 = geom->gcov[GIND(TT,TT)] + 1.0;																															   |	  //  gcovttplus1 = geom->gcov[TT][TT] + 1.0;
+  //  gconttplus1= geom->gcon[GIND(TT,TT)] + 1.0;																															   |	  //  gconttplus1= geom->gcon[TT][TT] + 1.0;
+  // *utsqm1 = (gcovttplus1 + velterm) / (-geom->gcov[GIND(TT,TT)] - velterm);																												   |	  // *utsqm1 = (gcovttplus1 + velterm) / (-geom->gcov[TT][TT] - velterm);
+  *quasivsq =  (gcovttplus1 + velterm) / (-geom->gcov[GIND(TT,TT)] - velterm) + gconttplus1 ;																										   |	  *quasivsq =  (gcovttplus1 + velterm) / (-geom->gcov[TT][TT] - velterm) + gconttplus1 ;
+  //  gconttplus1= geom->gcon[GIND(TT,TT)] + 1.0;																															   |	  //  gconttplus1= geom->gcon[TT][TT] + 1.0;
+  //        alpha = 1./sqrt(-geom->gcon[GIND(TT,TT)]) ;																															   |	  //        alpha = 1./sqrt(-geom->gcon[TT][TT]) ;
+  alphasq=1./(-geom->gcon[GIND(TT,TT)]); // positive definite and 1 in non-rel case																											   |	  alphasq=1./(-geom->gcon[TT][TT]); // positive definite and 1 in non-rel case
+  //timeterm = -(geom->gcon[GIND(TT,TT)] + 1.0 ); // ~0 in non-rel case, and equal to 1+g_{tt} in non-rel case, which is always positive																				   |	  //timeterm = -(geom->gcon[TT][TT] + 1.0 ); // ~0 in non-rel case, and equal to 1+g_{tt} in non-rel case, which is always positive
+	FTYPE localgcon[SYMMATRIXNDIM];																																	   |		FTYPE localgcon[NDIM][NDIM];
+	  localgcon[GIND(j,k)]=geom->gcon[GIND(j,k)];																															   |		  localgcon[j][k]=geom->gcon[j][k];
+       	       Acon[0][1] += (localgcon[GIND(0,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;																											   |	       	       Acon[0][1] += (localgcon[0][j])*(localgcon[1][k])*Acov[j][k] ;
+       	       Acon[0][2] += (localgcon[GIND(0,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;																											   |	       	       Acon[0][2] += (localgcon[0][j])*(localgcon[2][k])*Acov[j][k] ;
+       	       Acon[0][3] += (localgcon[GIND(0,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;																											   |	       	       Acon[0][3] += (localgcon[0][j])*(localgcon[3][k])*Acov[j][k] ;
+	       Acon[1][2] += (localgcon[GIND(1,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;																											   |		       Acon[1][2] += (localgcon[1][j])*(localgcon[2][k])*Acov[j][k] ;
+	       Acon[2][3] += (localgcon[GIND(2,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;																											   |		       Acon[2][3] += (localgcon[2][j])*(localgcon[3][k])*Acov[j][k] ;
+	       Acon[3][1] += (localgcon[GIND(3,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;																											   |		       Acon[3][1] += (localgcon[3][j])*(localgcon[1][k])*Acov[j][k] ;
+	FTYPE localgcov[SYMMATRIXNDIM];																																	   |		FTYPE localgcov[NDIM][NDIM];
+	  localgcov[GIND(j,k)]=geom->gcov[GIND(j,k)];																															   |		  localgcov[j][k]=geom->gcov[j][k];
+       	       Acov[0][1] += (localgcov[GIND(0,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;																											   |	       	       Acov[0][1] += (localgcov[0][j])*(localgcov[1][k])*Acon[j][k] ;
+       	       Acov[0][2] += (localgcov[GIND(0,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;																											   |	       	       Acov[0][2] += (localgcov[0][j])*(localgcov[2][k])*Acon[j][k] ;
+       	       Acov[0][3] += (localgcov[GIND(0,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;																											   |	       	       Acov[0][3] += (localgcov[0][j])*(localgcov[3][k])*Acon[j][k] ;
+	       Acov[1][2] += (localgcov[GIND(1,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;																											   |		       Acov[1][2] += (localgcov[1][j])*(localgcov[2][k])*Acon[j][k] ;
+	       Acov[2][3] += (localgcov[GIND(2,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;																											   |		       Acov[2][3] += (localgcov[2][j])*(localgcov[3][k])*Acon[j][k] ;
+	       Acov[3][1] += (localgcov[GIND(3,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;																											   |		       Acov[3][1] += (localgcov[3][j])*(localgcov[1][k])*Acon[j][k] ;
+    pr[U1] = -ptrgeom->gcon[GIND(0,1)]*ptrgeom->alphalapse;																														   |	    pr[U1] = -ptrgeom->gcon[0][1]*ptrgeom->alphalapse;
+    pr[U2] = -ptrgeom->gcon[GIND(0,2)]*ptrgeom->alphalapse;																														   |	    pr[U2] = -ptrgeom->gcon[0][2]*ptrgeom->alphalapse;
+    pr[U3] = -ptrgeom->gcon[GIND(0,3)]*ptrgeom->alphalapse;																														   |	    pr[U3] = -ptrgeom->gcon[0][3]*ptrgeom->alphalapse;
+    pr[U1] = ptrgeom->gcon[GIND(0,1)]*ptrgeom->alphalapse;																														   |	    pr[U1] = ptrgeom->gcon[0][1]*ptrgeom->alphalapse;
+    pr[U2] = ptrgeom->gcon[GIND(0,2)]*ptrgeom->alphalapse;																														   |	    pr[U2] = ptrgeom->gcon[0][2]*ptrgeom->alphalapse;
+    pr[U3] = ptrgeom->gcon[GIND(0,3)]*ptrgeom->alphalapse;																														   |	    pr[U3] = ptrgeom->gcon[0][3]*ptrgeom->alphalapse;
+  //  ialpha=sqrt(fabs(-ptrgeom->gcon[GIND(TT,TT)]));																															   |	  //  ialpha=sqrt(fabs(-ptrgeom->gcon[TT][TT]));
+qrdcmp.c
+qrupdt.c
+ranc.c
+reconstructeno.c
+reconstructeno.debug.c
+reconstructeno_defs.h
+reconstructeno_global.funcdeclare.h
+reconstructeno_global.h
+reconstructeno.h
+reconstructeno_set_arrays.c
+reconstructeno_staticfuncs_constvars.h
+reconstructeno_superdefs.h
+reconstructeno.weightmin.c
+rescale_interp.c
+    pl=B1; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[GIND(1,1)])*pow(r,2.0-nu) );																											   |	    pl=B1; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[1][1])*pow(r,2.0-nu) );
+    pl=B2; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[GIND(2,2)])*pow(r,2.0-nu) );																											   |	    pl=B2; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[2][2])*pow(r,2.0-nu) );
+    pl=B3; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[GIND(3,3)])*pow(r,2.0-nu) );																											   |	    pl=B3; p2interp[pl] = pr[pl] * (sqrt(ptrgeom->gcov[3][3])*pow(r,2.0-nu) );
+    pl=B1; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[GIND(1,1)])*pow(r,2.0-nu) );																											   |	    pl=B1; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[1][1])*pow(r,2.0-nu) );
+    pl=B2; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[GIND(2,2)])*pow(r,2.0-nu) );																											   |	    pl=B2; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[2][2])*pow(r,2.0-nu) );
+    pl=B3; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[GIND(3,3)])*pow(r,2.0-nu) );																											   |	    pl=B3; pr[pl] = p2interp[pl] / (sqrt(ptrgeom->gcov[3][3])*pow(r,2.0-nu) );
+      p2interp[B1]=Bconin[1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);																												   |	      p2interp[B1]=Bconin[1]*sqrt(fabs(ptrgeom->gcov[1][1]))*pow(V[1],3);
+      p2interp[B2]=Bconin[2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);																												   |	      p2interp[B2]=Bconin[2]*sqrt(fabs(ptrgeom->gcov[2][2]))*pow(V[1],3);
+      Bconin[1]=p2interp[B1]/(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));																											   |	      Bconin[1]=p2interp[B1]/(sqrt(fabs(ptrgeom->gcov[1][1]))*pow(V[1],3));
+      Bconin[2]=p2interp[B2]/(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));																											   |	      Bconin[2]=p2interp[B2]/(sqrt(fabs(ptrgeom->gcov[1][1]))*pow(V[1],3));
+restart.c
+restart.checks.c
+restart.h
+restart.rebeccaoldcode.c
+rotate.c
+rsolv.c
+set_arrays.c
+set_arrays_multidimen.c
+  GLOBALPOINT(gcon) = (FTYPE PTRMETMACP1A1(gcon,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM)) (&(BASEMETMACP1A1(gcon,0,N1BND,N2BND,N3BND,0)));																			   |	  GLOBALPOINT(gcon) = (FTYPE PTRMETMACP1A2(gcon,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM)) (&(BASEMETMACP1A2(gcon,0,N1BND,N2BND,N3BND,0,0)));
+  GLOBALPOINT(gcov) = (FTYPE PTRMETMACP1A1(gcov,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM)) (&(BASEMETMACP1A1(gcov,0,N1BND,N2BND,N3BND,0)));																			   |	  GLOBALPOINT(gcov) = (FTYPE PTRMETMACP1A2(gcov,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM)) (&(BASEMETMACP1A2(gcov,0,N1BND,N2BND,N3BND,0,0)));
+  GLOBALPOINT(gcovlast) = (FTYPE PTRMETMACP1A1(gcovlast,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM)) (&(BASEMETMACP1A1(gcovlast,0,N1BND,N2BND,N3BND,0)));																	   |	  GLOBALPOINT(gcovlast) = (FTYPE PTRMETMACP1A2(gcovlast,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM)) (&(BASEMETMACP1A2(gcovlast,0,N1BND,N2BND,N3BND,0,0)));
+set_arrays_perpoint_perline.c
+set_grid.c
+int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)						   |	int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
+int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)						   |	int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
+int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)					   |	int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE (**localgcov)[NDIM], FTYPE (**localgcon)[NDIM], FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
+    extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);																						   |	    extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE *gcovpert);
+    extern void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);																							   |	    extern void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE (*gcov)[NDIM], FTYPE (*gcon)[NDIM]);
+	if (fabs(localgcon[GIND(TT,TT)]) < SMALL) {																															   |		if (fabs(localgcon[TT][TT]) < SMALL) {
+	  dualfprintf(fail_file, "grid location too near g_{tt}==0: %d %d %d : r=%21.15g th=%21.15g phi=%21.15g : Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(TT,TT)]);														   |		  dualfprintf(fail_file, "grid location too near g_{tt}==0: %d %d %d : r=%21.15g th=%21.15g phi=%21.15g : Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[TT][TT]);
+	if (0 && fabs(localgcon[GIND(RR,RR)]) < SMALL) {																														   |		if (0 && fabs(localgcon[RR][RR]) < SMALL) {
+	  dualfprintf(fail_file, "grid location too near g^{rr}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(RR,RR)]);														   |		  dualfprintf(fail_file, "grid location too near g^{rr}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[RR][RR]);
+	if (0 && fabs(localgcon[GIND(TH,TH)]) < SMALL) {																														   |		if (0 && fabs(localgcon[TH][TH]) < SMALL) {
+	  dualfprintf(fail_file,"grid location too near g^{\\theta\\theta}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(TH,TH)]);												   |		  dualfprintf(fail_file,"grid location too near g^{\\theta\\theta}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[TH][TH]);
+	if (0 && fabs(localgcon[GIND(PH,PH)]) < SMALL) {																														   |		if (0 && fabs(localgcon[PH][PH]) < SMALL) {
+	  dualfprintf(fail_file,"grid location too near g^{\\phi\\phi}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(PH,PH)]);													   |		  dualfprintf(fail_file,"grid location too near g^{\\phi\\phi}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[PH][PH]);
+smcalc.c
+sources.c
+		alpha = 1./sqrt(-geom->gcon[GIND(0,0)]) ;																														   |			alpha = 1./sqrt(-geom->gcon[0][0]) ;
+		SLOOPA(j) ucon_norm[j] = geom->gcon[GIND(0,j)]*alpha ;																													   |			SLOOPA(j) ucon_norm[j] = geom->gcon[0][j]*alpha ;
+step_ch.c
+superdefs.h
+FTYPE BASEMETMACP1A1(gcon,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																												   |	FTYPE BASEMETMACP1A2(gcon,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+FTYPE BASEMETMACP1A1(gcov,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																												   |	FTYPE BASEMETMACP1A2(gcov,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+FTYPE BASEMETMACP1A1(gcovlast,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																											   |	FTYPE BASEMETMACP1A2(gcovlast,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+superdefs.liaison.h
+superdefs.pointers.h
+FTYPE PTRDEFGLOBALMETMACP1A1(gcon,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																											   |	FTYPE PTRDEFGLOBALMETMACP1A2(gcon,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+FTYPE PTRDEFGLOBALMETMACP1A1(gcov,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																											   |	FTYPE PTRDEFGLOBALMETMACP1A2(gcov,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+FTYPE PTRDEFGLOBALMETMACP1A1(gcovlast,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,SYMMATRIXNDIM);																										   |	FTYPE PTRDEFGLOBALMETMACP1A2(gcovlast,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
+supermpidefs.h
+SwapEndian.h
+tau_neededbyharm.c
+tensor.c
+tetrad.c
+static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenvalues[]);																										   |	static int tetlapack_func(FTYPE (*gcov)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenvalues[]);
+static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);																						   |	static int compute_tetrcon_frommetric_mathematica(FTYPE (*gcov)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
+static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);																							   |	static int compute_tetrcon_frommetric(FTYPE (*gcov)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
+int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])																						   |	int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE (*gcov)[NDIM], FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
+  FTYPE newgcov[SYMMATRIXNDIM];																																		   |	  FTYPE newgcov[NDIM][NDIM];
+    newgcov[GIND(jj,kk)]=0.0;																																		   |	    newgcov[jj][kk]=0.0;
+      newgcov[GIND(jj,kk)] += GINDASSIGNFACTOR(jj,kk)*gcov[GIND(ll,pp)]*idxdxp[ll][jj]*idxdxp[pp][kk];																									   |	      newgcov[jj][kk] += gcov[ll][pp]*idxdxp[ll][jj]*idxdxp[pp][kk];
+int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]) 																							   |	int tetr_func(int inputtype, FTYPE (*gcov)[NDIM], FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]) 
+  FTYPE generalmatrixlower[NDIM][NDIM];																																	   |	  FTYPE tmp[NDIM][NDIM] ;
+  FTYPE tmpgeneralmatrix[NDIM][NDIM] ;																																	   <
+  int jj,kk;																																				   <
+																																					   <
+  // copy to 2D space																																			   <
+  DLOOP(jj,kk) generalmatrixlower[jj][kk] = gcov[GIND(jj,kk)];																														   <
+    info=compute_tetrcon_frommetric(generalmatrixlower,tetr_con,eigenvalues);																												   |	    info=compute_tetrcon_frommetric(gcov,tetr_con,eigenvalues);
+    info=tetlapack_func(generalmatrixlower,tetr_con,eigenvalues);																													   |	    info=tetlapack_func(gcov,tetr_con,eigenvalues);
+  DLOOP(j,k) tmpgeneralmatrix[j][k] = 0. ;																																   |	  DLOOP(j,k) tmp[j][k] = 0. ;
+  DLOOP(j,k) for(l=0;l<NDIM;l++) tmpgeneralmatrix[j][k] += tetr_con[j][l]*gcov[GIND(l,k)] ;																										   |	  DLOOP(j,k) for(l=0;l<NDIM;l++) tmp[j][k] += tetr_con[j][l]*gcov[l][k] ;
+  DLOOP(j,k) for(l=0;l<NDIM;l++) tetr_cov[j][k] += mink(j,l)*tmpgeneralmatrix[l][k] ;																											   |	  DLOOP(j,k) for(l=0;l<NDIM;l++) tetr_cov[j][k] += mink(j,l)*tmp[l][k] ;
+  DLOOP(j,k) tmpgeneralmatrix[j+1][k+1] = tetr_cov[j][k] ;																														   |	  DLOOP(j,k) tmp[j+1][k+1] = tetr_cov[j][k] ;
+  gaussj(tmpgeneralmatrix,NDIM,NULL,0) ;																																   |	  gaussj(tmp,NDIM,NULL,0) ;
+  DLOOP(j,k) tetr_con[j][k] = tmpgeneralmatrix[k+1][j+1] ;																														   |	  DLOOP(j,k) tetr_con[j][k] = tmp[k+1][j+1] ;
+static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])																							   |	int compute_tetrcon_frommetric(FTYPE (*gcov)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
+  info=tetlapack_func(generalmatrix,tetrcon,eigenvalues);																														   |	  info=tetlapack_func(gcov,tetrcon,eigenvalues);
+  compute_tetrcon_frommetric_mathematica(generalmatrix, tetrconother, eigenvaluesother);																										   |	  compute_tetrcon_frommetric_mathematica(gcov, tetrconother, eigenvaluesother);
+  info=tetlapack_func(generalmatrix,tetrcon,eigenvalues);																														   |	  info=tetlapack_func(gcov,tetrcon,eigenvalues);
+  info=compute_tetrcon_frommetric_mathematica(generalmatrix, tetrcon, eigenvalues);																											   |	  info=compute_tetrcon_frommetric_mathematica(gcov, tetrcon, eigenvalues);
+static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])																						   |	int compute_tetrcon_frommetric_mathematica(FTYPE (*gcov)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
+  gtt=generalmatrix[0][0];																																		   |	  gtt=gcov[0][0];
+  grr=generalmatrix[1][1];																																		   |	  grr=gcov[1][1];
+  grt=generalmatrix[1][0];																																		   |	  grt=gcov[1][0];
+  ghh=generalmatrix[2][2];																																		   |	  ghh=gcov[2][2];
+  gpp=generalmatrix[3][3];																																		   |	  gpp=gcov[3][3];
+transforms.c
+    alphasq = 1./(-geom->gcon[GIND(TT,TT)]) ;																																   |	    alphasq = 1./(-geom->gcon[TT][TT]) ;
+    SLOOPA(j) beta[j] = alphasq*geom->gcon[GIND(TT,j)] ;																														   |	    SLOOPA(j) beta[j] = alphasq*geom->gcon[TT][j] ;
+    alphasq = 1./(-geom->gcon[GIND(TT,TT)]) ;																																   |	    alphasq = 1./(-geom->gcon[TT][TT]) ;
+    SLOOPA(j) beta[j] = alphasq*geom->gcon[GIND(TT,j)] ;																														   |	    SLOOPA(j) beta[j] = alphasq*geom->gcon[TT][j] ;
+u2p_defs.h
+u2p_util.c
+/* void primtoU_g( FTYPE prim[], FTYPE *gcov, FTYPE *gcon,  FTYPE U[] ); */																												   |	/* void primtoU_g( FTYPE prim[], FTYPE (*gcov)[4], FTYPE (*gcon)[4],  FTYPE U[] ); */
+/* void ucon_calc_g(FTYPE prim[],FTYPE *gcov,FTYPE *gcon,FTYPE ucon[]); */																												   |	/* void ucon_calc_g(FTYPE prim[],FTYPE (*gcov)[4],FTYPE (*gcon)[4],FTYPE ucon[]); */
+/* void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]); */																														   |	/* void raise_g(FTYPE vcov[], FTYPE (*gcon)[4], FTYPE vcon[]); */
+/* void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]); */																														   |	/* void lower_g(FTYPE vcon[], FTYPE (*gcov)[4], FTYPE vcov[]); */
+/* void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ; */																															   |	/* void ncov_calc(FTYPE (*gcon)[4],FTYPE ncov[]) ; */
+static void ucon_calc_g(FTYPE prim[],FTYPE *gcov,FTYPE *gcon,FTYPE ucon[]);																												   |	static void ucon_calc_g(FTYPE prim[],FTYPE (*gcov)[NDIM],FTYPE (*gcon)[NDIM],FTYPE ucon[]);
+static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);																														   |	static void raise_g(FTYPE vcov[], FTYPE (*gcon)[NDIM], FTYPE vcon[]);
+static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);																														   |	static void lower_g(FTYPE vcon[], FTYPE (*gcov)[NDIM], FTYPE vcov[]);
+static void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ;																															   |	static void ncov_calc(FTYPE (*gcon)[NDIM],FTYPE ncov[]) ;
+static void primtoU_g(FTYPE *prim,FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE *U)																										   |	static void primtoU_g(FTYPE *prim,FTYPE gcov[NDIM][NDIM],FTYPE gcon[NDIM][NDIM],FTYPE *U)
+static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM])																								   |	static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[NDIM][NDIM],FTYPE gcon[NDIM][NDIM],FTYPE ucon[NDIM])
+		u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;																												   |			u_tilde_sq += gcov[i][j]*u_tilde_con[i]*u_tilde_con[j] ;
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	for(i=0;i<NDIM;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;																											   |		for(i=0;i<NDIM;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[0][i] ;
+static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM])																											   |	static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[NDIM][NDIM], FTYPE vcon[NDIM])
+			vcon[i] += gcon[GIND(i,j)]*vcov[j] ;																														   |				vcon[i] += gcon[i][j]*vcov[j] ;
+static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM])																											   |	static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[NDIM][NDIM], FTYPE vcov[NDIM])
+			vcov[i] += gcov[GIND(i,j)]*vcon[j] ;																														   |				vcov[i] += gcov[i][j]*vcon[j] ;
+static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[NDIM])																													   |	static void ncov_calc(FTYPE gcon[NDIM][NDIM],FTYPE ncov[NDIM])
+        lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |	        lapse = sqrt(-1./gcon[0][0]) ;
+utoprim_1d2d.h
+utoprim_1d.c
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+  alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(0,0)]);																																   |	  alpha = 1.0/sqrt(-ptrgeom->gcon[0][0]);
+	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |		gcov[i][j] = ptrgeom->gcov[i][j];
+	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |		gcon[i][j] = ptrgeom->gcon[i][j];
+	fprintf(stdout,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);fflush(stdout);																							   |		fprintf(stdout,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[i][j], gcon[i][j]);fflush(stdout);
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM];																															   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM];
+      gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |	      gcov[i][j] = ptrgeom->gcov[i][j];
+      gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |	      gcon[i][j] = ptrgeom->gcon[i][j];
+    for(j=1;j<4;j++) utsq += gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																											   |	    for(j=1;j<4;j++) utsq += gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[GIND(4,4)],FTYPE gcon[GIND(4,4)],FTYPE ucon[4])																									   |	static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[4][4],FTYPE gcon[4][4],FTYPE ucon[4])
+		u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;																												   |			u_tilde_sq += gcov[i][j]*u_tilde_con[i]*u_tilde_con[j] ;
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;																											   |		for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[0][i] ;
+static void raise_g(FTYPE vcov[4], FTYPE gcon[GIND(4,4)], FTYPE vcon[4])																												   |	static void raise_g(FTYPE vcov[4], FTYPE gcon[4][4], FTYPE vcon[4])
+			vcon[i] += gcon[GIND(i,j)]*vcov[j] ;																														   |				vcon[i] += gcon[i][j]*vcov[j] ;
+static void lower_g(FTYPE vcon[4], FTYPE gcov[GIND(4,4)], FTYPE vcov[4])																												   |	static void lower_g(FTYPE vcon[4], FTYPE gcov[4][4], FTYPE vcov[4])
+			vcov[i] += gcov[GIND(i,j)]*vcon[j] ;																														   |				vcov[i] += gcov[i][j]*vcon[j] ;
+static void ncov_calc(FTYPE gcon[GIND(4,4)],FTYPE ncov[4]) 																														   |	static void ncov_calc(FTYPE gcon[4][4],FTYPE ncov[4]) 
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	       FTYPE gcov[GIND(4,4)],    /* covariant (index dn) form of metric */																											   |		       FTYPE gcov[4][4],    /* covariant (index dn) form of metric */
+	       FTYPE gcon[GIND(4,4)],    /* contravariant (index up) form of metric */																											   |		       FTYPE gcon[4][4],    /* contravariant (index up) form of metric */
+utoprim_1d_final.c
+static void primtoU_g( FTYPE prim[], FTYPE *gcov, FTYPE *gcon,  FTYPE U[] );																												   |	static void primtoU_g( FTYPE prim[], FTYPE (*gcov)[4], FTYPE (*gcon)[4],  FTYPE U[] );
+static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);																														   |	static void raise_g(FTYPE vcov[], FTYPE (*gcon)[4], FTYPE vcon[]);
+static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);																														   |	static void lower_g(FTYPE vcon[], FTYPE (*gcov)[4], FTYPE vcov[]);
+static void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ;																															   |	static void ncov_calc(FTYPE (*gcon)[4],FTYPE ncov[]) ;
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+  alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(0,0)]);																																   |	  alpha = 1.0/sqrt(-ptrgeom->gcon[0][0]);
+	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |		gcov[i][j] = ptrgeom->gcov[i][j];
+	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |		gcon[i][j] = ptrgeom->gcon[i][j];
+	dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);																								   |		dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[i][j], gcon[i][j]);
+    for(j=1;j<4;j++) utsq += ptrgeom->gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																										   |	    for(j=1;j<4;j++) utsq += ptrgeom->gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+utoprim_1d.h
+static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM]) ;																											   |	static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[NDIM][NDIM], FTYPE vcov[NDIM]) ;
+static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[NDIM]) ;																													   |	static void ncov_calc(FTYPE gcon[NDIM][NDIM],FTYPE ncov[NDIM]) ;
+static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM]) ;																											   |	static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[NDIM][NDIM], FTYPE vcon[NDIM]) ;
+static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM]) ;																							   |	static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[NDIM][NDIM],FTYPE gcon[NDIM][NDIM],FTYPE ucon[NDIM]) ;
+static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[SYMMATRIXNDIM], FTYPE gcon[SYMMATRIXNDIM],FTYPE U[MYNPRINVERT] );																						   |	static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[NDIM][NDIM], FTYPE gcon[NDIM][NDIM],FTYPE U[MYNPRINVERT] );
+utoprim_1d_opt.c
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+  alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(0,0)]);																																   |	  alpha = 1.0/sqrt(-ptrgeom->gcon[0][0]);
+	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |		gcov[i][j] = ptrgeom->gcov[i][j];
+	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |		gcon[i][j] = ptrgeom->gcon[i][j];
+	dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);fflush(fail_file);																					   |		dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[i][j], gcon[i][j]);fflush(fail_file);
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM];																															   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM];
+      gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |	      gcov[i][j] = ptrgeom->gcov[i][j];
+      gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |	      gcon[i][j] = ptrgeom->gcon[i][j];
+  ncov_calc(gcon[GIND(0,0)],ncov) ;																																	   |	  ncov_calc(gcon[0][0],ncov) ;
+    for(j=1;j<4;j++) utsq += gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																											   |	    for(j=1;j<4;j++) utsq += gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[GIND(4,4)],FTYPE gcon[GIND(4,4)],FTYPE ucon[4])																									   |	static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[4][4],FTYPE gcon[4][4],FTYPE ucon[4])
+		u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;																												   |			u_tilde_sq += gcov[i][j]*u_tilde_con[i]*u_tilde_con[j] ;
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;																											   |		for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[0][i] ;
+static void raise_g(FTYPE vcov[4], FTYPE gcon[GIND(4,4)], FTYPE vcon[4])																												   |	static void raise_g(FTYPE vcov[4], FTYPE gcon[4][4], FTYPE vcon[4])
+			vcon[i] += gcon[GIND(i,j)]*vcov[j] ;																														   |				vcon[i] += gcon[i][j]*vcov[j] ;
+static void lower_g(FTYPE vcon[4], FTYPE gcov[GIND(4,4)], FTYPE vcov[4])																												   |	static void lower_g(FTYPE vcon[4], FTYPE gcov[4][4], FTYPE vcov[4])
+			vcov[i] += gcov[GIND(i,j)]*vcon[j] ;																														   |				vcov[i] += gcov[i][j]*vcon[j] ;
+	       FTYPE gcov[GIND(4,4)],    /* covariant (index dn) form of metric */																											   |		       FTYPE gcov[4][4],    /* covariant (index dn) form of metric */
+	       FTYPE gcon[GIND(4,4)],    /* contravariant (index up) form of metric */																											   |		       FTYPE gcon[4][4],    /* contravariant (index up) form of metric */
+  ncov_calc(gcon[GIND(0,0)],ncov) ;																																	   |	  ncov_calc(gcon[0][0],ncov) ;
+utoprim_1d_opt.h
+static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM]) ;																											   |	static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[NDIM][NDIM], FTYPE vcov[NDIM]) ;
+static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM]) ;																											   |	static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[NDIM][NDIM], FTYPE vcon[NDIM]) ;
+static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM]) ;																							   |	static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[NDIM][NDIM],FTYPE gcon[NDIM][NDIM],FTYPE ucon[NDIM]) ;
+static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[SYMMATRIXNDIM], FTYPE gcon[SYMMATRIXNDIM],FTYPE U[MYNPRINVERT] );																						   |	static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[NDIM][NDIM], FTYPE gcon[NDIM][NDIM],FTYPE U[MYNPRINVERT] );
+utoprim_2d.c
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+      gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |	      gcov[i][j] = ptrgeom->gcov[i][j];
+      gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |	      gcon[i][j] = ptrgeom->gcon[i][j];
+  alpha = 1.0/sqrt(-gcon[GIND(0,0)]);																																	   |	  alpha = 1.0/sqrt(-gcon[0][0]);
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM];																															   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM];
+      gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |	      gcov[i][j] = ptrgeom->gcov[i][j];
+      gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |	      gcon[i][j] = ptrgeom->gcon[i][j];
+    for(j=1;j<4;j++) utsq += gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																											   |	    for(j=1;j<4;j++) utsq += gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[GIND(4,4)],FTYPE gcon[GIND(4,4)],FTYPE ucon[4])																									   |	static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[4][4],FTYPE gcon[4][4],FTYPE ucon[4])
+		u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;																												   |			u_tilde_sq += gcov[i][j]*u_tilde_con[i]*u_tilde_con[j] ;
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;																											   |		for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[0][i] ;
+static void raise_g(FTYPE vcov[4], FTYPE gcon[GIND(4,4)], FTYPE vcon[4])																												   |	static void raise_g(FTYPE vcov[4], FTYPE gcon[4][4], FTYPE vcon[4])
+			vcon[i] += gcon[GIND(i,j)]*vcov[j] ;																														   |				vcon[i] += gcon[i][j]*vcov[j] ;
+static void lower_g(FTYPE vcon[4], FTYPE gcov[GIND(4,4)], FTYPE vcov[4])																												   |	static void lower_g(FTYPE vcon[4], FTYPE gcov[4][4], FTYPE vcov[4])
+			vcov[i] += gcov[GIND(i,j)]*vcon[j] ;																														   |				vcov[i] += gcov[i][j]*vcon[j] ;
+static void ncov_calc(FTYPE gcon[GIND(4,4)],FTYPE ncov[4]) 																														   |	static void ncov_calc(FTYPE gcon[4][4],FTYPE ncov[4]) 
+	lapse = sqrt(-1./gcon[GIND(0,0)]) ;																																   |		lapse = sqrt(-1./gcon[0][0]) ;
+	       FTYPE gcov[GIND(4,4)],    /* covariant (index dn) form of metric */																											   |		       FTYPE gcov[4][4],    /* covariant (index dn) form of metric */
+	       FTYPE gcon[GIND(4,4)],    /* contravariant (index up) form of metric */																											   |		       FTYPE gcon[4][4],    /* contravariant (index up) form of metric */
+utoprim_2d_final.c
+static void primtoU_g( FTYPE prim[], FTYPE *gcov, FTYPE *gcon,  FTYPE U[] );																												   |	static void primtoU_g( FTYPE prim[], FTYPE (*gcov)[4], FTYPE (*gcon)[4],  FTYPE U[] );
+static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);																														   |	static void raise_g(FTYPE vcov[], FTYPE (*gcon)[4], FTYPE vcon[]);
+static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);																														   |	static void lower_g(FTYPE vcon[], FTYPE (*gcov)[4], FTYPE vcov[]);
+static void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ;																															   |	static void ncov_calc(FTYPE (*gcon)[4],FTYPE ncov[]) ;
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+  alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(0,0)]);																																   |	  alpha = 1.0/sqrt(-ptrgeom->gcon[0][0]);
+	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |		gcov[i][j] = ptrgeom->gcov[i][j];
+	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |		gcon[i][j] = ptrgeom->gcon[i][j];
+	dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);																								   |		dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[i][j], gcon[i][j]);
+    for(j=1;j<4;j++) utsq += ptrgeom->gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																										   |	    for(j=1;j<4;j++) utsq += ptrgeom->gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+utoprim_2d.h
+static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM]) ;																											   |	static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[NDIM][NDIM], FTYPE vcov[NDIM]) ;
+static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[NDIM]) ;																													   |	static void ncov_calc(FTYPE gcon[NDIM][NDIM],FTYPE ncov[NDIM]) ;
+static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM]) ;																											   |	static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[NDIM][NDIM], FTYPE vcon[NDIM]) ;
+static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM]) ;																							   |	static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[NDIM][NDIM],FTYPE gcon[NDIM][NDIM],FTYPE ucon[NDIM]) ;
+static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[SYMMATRIXNDIM], FTYPE gcon[SYMMATRIXNDIM],FTYPE U[MYNPRINVERT] );																						   |	static void primtoU_g( FTYPE prim[MYNPRINVERT], FTYPE gcov[NDIM][NDIM], FTYPE gcon[NDIM][NDIM],FTYPE U[MYNPRINVERT] );
+utoprim_5d2_final.c
+      *vsq += ptrlgeom->gcov[GIND(id,jd)]*x[UTCON1+id-1]*x[UTCON1+jd-1] ;      																												   |	      *vsq += ptrlgeom->gcov[id][jd]*x[UTCON1+id-1]*x[UTCON1+jd-1] ;      
+utoprimgen.c
+      DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);																						   |	      DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[j][k],ptrgeom->gcon[j][k]);
+    DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);																							   |	    DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[j][k],ptrgeom->gcon[j][k]);
+utoprim_jon.c
+static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);																														   |	static void raise_g(FTYPE vcov[], FTYPE (*gcon)[4], FTYPE vcon[]);
+static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);																														   |	static void lower_g(FTYPE vcon[], FTYPE (*gcov)[4], FTYPE vcov[]);
+static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[]) ;																														   |	static void ncov_calc(FTYPE gcon[NDIM][NDIM],FTYPE ncov[]) ;
+static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);																														   |	static void lower_g(FTYPE vcon[], FTYPE (*gcov)[4], FTYPE vcov[]);
+  FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;																														   |	  FTYPE gcov[NDIM][NDIM], gcon[NDIM][NDIM], alpha;
+  //  alpha = 1.0/sqrt(-ptrgeom->gcon[GIND(0,0)]);																															   |	  //  alpha = 1.0/sqrt(-ptrgeom->gcon[0][0]);
+	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];																															   |		gcov[i][j] = ptrgeom->gcov[i][j];
+	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];																															   |		gcon[i][j] = ptrgeom->gcon[i][j];
+	dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);																								   |		dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[i][j], gcon[i][j]);
+  SSLOOP(j,i) Qtcon[j] += U[QCOV0+i]*(ptrgeom->gcon[GIND(i,j)] + ncon[i]*ncon[j]) ;																											   |	  SSLOOP(j,i) Qtcon[j] += U[QCOV0+i]*(ptrgeom->gcon[i][j] + ncon[i]*ncon[j]) ;
+  //      Qtcon[i] = U[QCOV0+j]*(ptrgeom->gcon[GIND(j,i)]+ncon[j]*ncon[i]);																												   |	  //      Qtcon[i] = U[QCOV0+j]*(ptrgeom->gcon[j][i]+ncon[j]*ncon[i]);
+  //  SLOOPA(j) betasqoalphasq += (ptrgeom->gcov[GIND(TT,j)])*(ptrgeom->gcon[GIND(TT,j)]);																										   |	  //  SLOOPA(j) betasqoalphasq += (ptrgeom->gcov[TT][j])*(ptrgeom->gcon[TT][j]);
+    for(j=1;j<4;j++) utsq += ptrgeom->gcov[GIND(i,j)]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;																										   |	    for(j=1;j<4;j++) utsq += ptrgeom->gcov[i][j]*prim[UTCON1+i-1]*prim[UTCON1+j-1] ;
+utoprim_jon_eos.c
+utoprim_jon.h
+utoprim_ldz.c
+  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);																																   |	  alpha = 1. / sqrt(-ptrgeom->gcon[0][0]);
+  SLOOPA(j) beta[j] = ptrgeom->gcon[GIND(0,j)] * alpha * alpha;																														   |	  SLOOPA(j) beta[j] = ptrgeom->gcon[0][j] * alpha * alpha;
+  SLOOP(j,k) Qsq += Q[j] * Q[k] * ptrgeom->gcov[GIND(j,k)];																														   |	  SLOOP(j,k) Qsq += Q[j] * Q[k] * ptrgeom->gcov[j][k];
+  SLOOP(j,k) Sc += ptrgeom->gcov[GIND(j,k)] * Q[j] * B[k];																														   |	  SLOOP(j,k) Sc += ptrgeom->gcov[j][k] * Q[j] * B[k];
+  SLOOP(j,k) Bsq += ptrgeom->gcov[GIND(j,k)] * B[j] * B[k];																														   |	  SLOOP(j,k) Bsq += ptrgeom->gcov[j][k] * B[j] * B[k];
+utoprim.orig.c
+  SLOOP(j,k) pr[UU+j]+=vd[k]*ptrgeom->gcon[GIND(j,k)];																															   |	  SLOOP(j,k) pr[UU+j]+=vd[k]*ptrgeom->gcon[j][k];
+  SLOOP(j,k) rhosqvsq+=U[UU+k]*U[UU+j]*ptrgeom->gcon[GIND(j,k)];																													   |	  SLOOP(j,k) rhosqvsq+=U[UU+k]*U[UU+j]*ptrgeom->gcon[j][k];
+  SLOOP(j,k) Bsq+=pr[B1+j-1]*pr[B1+k-1]*ptrgeom->gcov[GIND(j,k)];																													   |	  SLOOP(j,k) Bsq+=pr[B1+j-1]*pr[B1+k-1]*ptrgeom->gcov[j][k];
+  //  SLOOP(j,k) dualfprintf(fail_file,"%d %d : %21.15g\n",j,k,ptrgeom->gcov[GIND(j,k)]);																										   |	  //  SLOOP(j,k) dualfprintf(fail_file,"%d %d : %21.15g\n",j,k,ptrgeom->gcov[j][k]);
+  //  bsq=Bsq+bt*bt*(vsq+2.0*(1.0+ptrgeom->gcov[GIND(0,0)])); // machine precision accurate for Minkowski																								   |	  //  bsq=Bsq+bt*bt*(vsq+2.0*(1.0+ptrgeom->gcov[0][0])); // machine precision accurate for Minkowski
+utoprim.orig.debug.c
+      dualfprintf(fail_file, "%21.15g``20 ",ptrgeom->gcon[GIND(i,j)]);																													   |	      dualfprintf(fail_file, "%21.15g``20 ",ptrgeom->gcon[i][j]);
+      dualfprintf(fail_file, "%21.15g``20 ",ptrgeom->gcov[GIND(i,j)]);																													   |	      dualfprintf(fail_file, "%21.15g``20 ",ptrgeom->gcov[i][j]);
+      fprintf(out, "%21.15g ",ptrgeom->gcon[GIND(i,j)]);																														   |	      fprintf(out, "%21.15g ",ptrgeom->gcon[i][j]);
+      fprintf(out, "%21.15g ",ptrgeom->gcov[GIND(i,j)]);																														   |	      fprintf(out, "%21.15g ",ptrgeom->gcov[i][j]);
+vchar.c
+  int realfast(int dir,FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE *gcon,FTYPE *vmin,FTYPE *vmax);																						   |	  int realfast(int dir,FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE (*gcon)[NDIM],FTYPE *vmin,FTYPE *vmax);
+      dualfprintf(fail_file,"geom->gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);																											   |	      dualfprintf(fail_file,"geom->gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[j][k]);
+      dualfprintf(fail_file,"geom->gcon[%d][%d]=%21.15g\n",j,k,geom->gcon[GIND(j,k)]);																											   |	      dualfprintf(fail_file,"geom->gcon[%d][%d]=%21.15g\n",j,k,geom->gcon[j][k]);
+int realfast(int dir,FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE *gcon,FTYPE *vmin,FTYPE *vmax)																						   |	int realfast(int dir,FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE (*gcon)[NDIM],FTYPE *vmin,FTYPE *vmax)
+    for(i=0;i<NDIM;i++){ for(j=0;j<NDIM;j++) fprintf(stderr,"%21.15g ",gcon[GIND(i,j)]); fprintf(stderr,"\n");}																								   |	    for(i=0;i<NDIM;i++){ for(j=0;j<NDIM;j++) fprintf(stderr,"%21.15g ",gcon[i][j]); fprintf(stderr,"\n");}
+  gn300=gcon[GIND(0,0)];																																		   |	  gn300=gcon[0][0];
+  gn3xx=gcon[GIND(dir,dir)];																																		   |	  gn3xx=gcon[dir][dir];
+  gn30x=gcon[GIND(0,dir)];																																		   |	  gn30x=gcon[0][dir];
+  git=geom->gcon[GIND(dir,TT)];																																		   |	  git=geom->gcon[dir][TT];
+  gtt=geom->gcon[GIND(TT,TT)]; 																																		   |	  gtt=geom->gcon[TT][TT]; 
+  gii=geom->gcon[GIND(dir,dir)];																																	   |	  gii=geom->gcon[dir][dir];
+wavespeeds.c
+  SLOOP(j,k) vsqroe += p_roe[UU+j]*p_roe[UU+k] * geom->gcov[GIND(j,k)];																													   |	  SLOOP(j,k) vsqroe += p_roe[UU+j]*p_roe[UU+k] * geom->gcov[j][k];

@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# REMEMBER for HARM code:
+# 1) PRODUCTION 1 in init.h
+# 2) Set N1,N2,N3, and MAXBND in init.h
+# 3) set lim[] in init.c
+#
+#
+# login:
+# ssh tg802609@ranger.tacc.utexas.edu
+
+# To get environment:
+module unload mvapich2 pgi
+module load intel/10.1
+module load mvapich2
+
+# Docs:
+# http://www.tacc.utexas.edu/services/userguides/ranger/
+#
+# qsub <thisbatchfilename>
+
+# check on jobs
+# qstat or showq
+#
+
+################
+# QSUB commands:
+################
+#
+#     -pe 16way 32 means 16cores/node and 32 cores total
+#$ -pe 16way 16
+#
+#     job name (default = name of script file)
+#$ -N harm3drun1
+#
+#     -l h_rt=01:30:00 means 1.5 hours
+#$ -l h_rt=00:10:00
+#
+# queue name (normal, large,development,serial)
+#$ -q development
+#
+#
+#
+# export all my environment variables to the job
+#$ -V
+#$ -A TG-AST080025N
+#    combine standard output and standard error (optional)
+#$ -j y
+#    output files
+#$ -o job.out
+#$ -cwd
+#$ -e job.err
+#
+#    filename for standard output (default = <job_name>.o<job_id>)
+#$ -o $JOB_NAME.o$JOB_ID
+#$ -M jmckinne@stanford.edu
+#    send mail when the job begins and ends (optional)
+#$ -m abe
+#    End of embedded QSUB options
+
+
+set -x
+
+#set echo               # echo commands before execution; use for debugging
+wait
+date
+#
+# do qsub mako.qsub
+#
+# other commands: qstat, qdel, xpbsmon
+###################
+#
+# setup run
+#
+##################
+# below is 2 or 4
+export NCPUX1=4
+export NCPUX2=4
+export NCPUX3=1
+export NTOT=16
+export FILENAME="grmhd"
+export DIRFILE="/share/home/01014/tg802609/harm3d/code1"
+export RUNDIR=$WORK/$JOB_NAME/
+
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+cp $DIRFILE/$FILENAME .
+cp $DIRFILE/*.dat .
+cp $DIRFILE/*.txt .
+wait
+chmod u+x $FILENAME
+#wait
+#save node list to a file
+#cp $PBS_NODEFILE node.list
+
+# below means 4 thread/task, to be used with -pe 4way 32 (e.g.) instead of -pe 16way 32
+# export OMP_NUM_THREADS=4
+
+# FRESH START:
+ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
+
+#./$FILENAME > $FILENAME.so
+
+wait   # for the ssh's above to complete
+
+date

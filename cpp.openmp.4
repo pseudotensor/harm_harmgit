@@ -1,0 +1,413 @@
+
+# 1 "mpidefs.h" 1
+
+
+
+
+
+# 1 "supermpidefs.h" 1
+
+
+
+
+
+double workbc
+signed char workbc_int
+# 7 "mpidefs.h" 2
+
+
+
+
+# 1 "mpidefs.mpi_grmhd_grray_liaison.h" 1
+# 94 "mpidefs.mpi_grmhd_grray_liaison.h"
+int processtypelist_world
+int processtypelist_grmhd
+int sizeproclist_world
+int sizeproclist_grmhd
+# 12 "mpidefs.h" 2
+
+
+
+
+int romiocoliter
+int periodicx1, periodicx2, periodicx3
+int mpiperiodicx1, mpiperiodicx2, mpiperiodicx3
+int skipix1, reflectix1, reflectox1
+int skipix2, reflectix2, reflectox2
+int skipix3, reflectix3, reflectox3
+int intix1, intox1, intix2, intox2, intix3, intox3
+int skipintix1, skipintix2, skipintix3
+int ncpux1, ncpux2, ncpux3
+int truenumprocs
+int myid, myid_world, numprocs
+char myidtxt
+int totalzones, realtotalzones,realtotalcompzones
+int rtotalzones
+int itotalzones
+int sizes
+int isizes
+int totalsize
+int itotalsize
+int mycpupos
+int primgridpos
+
+double primfactor
+int dirgenset
+int dirloopset
+int srdir
+
+int startpos
+int endpos
+
+int startpos0
+int endpos0
+int mycpupos0
+
+int plmpiglobal
+
+
+int procnamelen
+
+
+
+
+
+
+
+double ndtsend, bsq_maxsend
+
+
+int nextbuf,numcolumns
+int bufferoffset
+int joniosize,writebufsize
+# 5 "defs.general.h" 2
+# 20 "defs.general.h"
+double Xmetricnew
+
+double lumvsr,lumvsr_tot
+
+double dissvsr
+
+double rcent,rcent_tot
+
+double dVvsr,dVvsr_tot,vrsqvsr,vrsqvsr_tot,dMvsr,dMvsr_tot,dTrrvsr, dTrrvsr_tot,Mvsr_tot,Mvsrface1_tot,MOrvsr_tot,phivsr_tot,dJvsr,dJvsr_tot,Jvsr_tot,Jvsrface1_tot
+
+
+
+
+
+double gam,gamideal
+
+
+int defcoord
+double Rin, R0, Rout, hslope, Zin, Zout
+double Rin_array
+double Risco,Rhor
+double cour
+double dV, dVF, dx
+double dt,t,tf,tstepparti,tsteppartf
+double TDYNORYEglobal,Hglobal
+double rcurr, hcurr
+double drsing
+# 62 "defs.general.h"
+double mydminarg1, mydminarg2
+long nstep
+int specialstep
+
+int steppart,numstepparts
+
+int gocont
+int runtype
+
+
+FILE log_file
+FILE fail_file
+FILE logfull_file
+FILE logdt_file
+FILE logdtfull_file
+FILE logstep_file
+FILE logperf_file
+double DTstep,DTstepdot,DTperf,DTgocheck,DTtimecheck
+int reallaststep,onemorestep
+
+
+int PVER,GRIDVER,DVER,FLVER,NPVER,AVG1DVER,AVG2DVER,ENERVER,MODEVER,LOSSVER,SPVER,TSVER,LOGDTVER,STEPVER,PERFVER,ADVER,PDVER,CALCVER,FLINEVER
+
+int PTYPE,GRIDTYPE,DTYPE,FLTYPE,NPTYPE,AVG2DTYPE,AVG1DTYPE,ENERTYPE,LOSSTYPE,SPTYPE,TSTYPE,LOGDTTYPE,STEPTYPE,PERFTYPE,ADTYPE,PDTYPE,CALCTYPE,FLINETYPE,MODETYPE,EXPANDTYPE,NPCOMPUTETYPE
+
+
+double DTdumpgen
+long dumpcntgen
+
+
+
+
+
+long DTr
+
+
+
+
+long rdump_cnt
+
+int nstroke
+
+
+
+double t_transition_in,t_transition_out
+int global_enerregiondef
+
+
+
+
+
+int failed
+int lim
+int dofluxreconevolvepointfield,emffixedstencil,extrazones4emf,splitmaem,unewisavg
+int do_transverse_flux_integration
+int useghostplusactive
+double defcon
+
+
+
+double frdot
+double pdottermsjet2
+double failfloorcountlocal
+double failfloorcountlocal_tot
+
+
+int dothisenerreg
+int dofluxreg
+int enerposreg
+
+
+
+double fladdreg
+double fladdreg_tot
+double fladdtermsreg
+double fladdtermsreg_tot
+double Ureg_init
+double Ureg_init_tot
+double pcumreg
+double pcumreg_tot
+double pdotreg
+double pdottermsreg
+double sourceaddreg
+double sourceaddreg_tot
+double sourceaddtermsreg
+double sourceaddtermsreg_tot
+double dissreg
+double dissreg_tot
+
+
+
+
+
+
+
+double pdotreg_tot
+double pdottermsreg_tot
+
+
+
+
+int doflux
+int enerpos
+double fladd
+double fladd_tot
+double fladdterms
+double fladdterms_tot
+double U_init
+double U_init_tot
+double pcum
+double pcum_tot
+double pdot
+double pdotterms
+double sourceadd
+double sourceadd_tot
+double sourceaddterms
+double sourceaddterms_tot
+double diss
+double diss_tot
+
+
+double pdot_tot
+double pdotterms_tot
+
+
+
+
+
+int icurr, jcurr, kcurr, pcurr, ihere, jhere, phere
+
+
+int horizoni,horizoncpupos1
+long realnstep
+int partialstep
+int mpicombine
+int mpicombinetype
+int truempicombinetype
+int halftimep
+int whichrestart
+int appendold
+int whocalleducon
+
+long restartsteps
+int binaryoutput,sortedoutput
+int CHECKCONT,DOTSTEPDIAG,DOLOGSTEP,DOLOGPERF
+int NDTCCHECK,NZCCHECK,NDTDOTCCHECK,NGOCHECK,NTIMECHECK
+double PERFWALLTIME,ZCPSESTIMATE
+
+long steptofaildump,steptofailmap
+int ifail,jfail,kfail,dofailmap,dofaildump,restartonfail
+
+double h_over_r
+
+double h_over_r_jet
+int BCtype
+int rescaletype
+int cooling
+int DOENERDIAG,DOGDUMPDIAG,DORDUMPDIAG,DODUMPDIAG,DOAVGDIAG, DOIMAGEDIAG,DOAREAMAPDIAG
+int GAMMIEDUMP,GAMMIEIMAGE,GAMMIEENER,DODIAGS,RESTARTMODE,WHICHFILE,POSDEFMETRIC,DOENODEBUGEVERYSUBSTEP,DODIAGEVERYSUBSTEP
+int INVERTFROMAVERAGEIFFAILED,LIMIT_AC_PRIM_FRAC_CHANGE,LIMIT_AC_FRAC_CHANGE
+int PARAMODWENO
+double MAX_AC_FRAC_CHANGE,MAX_AC_PRIM_FRAC_CHANGE
+double RHOMIN,UUMIN,RHOMINLIMIT,UUMINLIMIT
+double prMAX
+double prfloorcoef
+double BSQORHOLIMIT,BSQOULIMIT,UORHOLIMIT,GAMMAMAX,GAMMADAMP,GAMMAFAIL
+double SAFE
+int debugfail
+double uttdiscr
+int jonchecks
+int dnumcolumns
+struct blink  blinkptr0
+struct blink  cpulinkptr0
+int DOCOLSPLIT
+int docolsplit
+int nextcol
+int doevolvemetricsubsteps, gravityskipstep
+double gravitydtglobal, sourcedtglobal, wavedtglobal
+int waveglobaldti
+int didstorepositiondata,didstoremetricdata
+
+
+double msun,lsun,rsun,G,H,C,qe,Na,malpha,mn,me,kb,arad,sigmasb,sigmamat,mevocsq,ergPmev,mp,Q,R,Re,hpl,hbar,K,K2
+double a,MBH,QBH
+double Mfactor,Jfactor,rhofactor
+double dabh,dE,dJ,dEold,dJold
+double mb,mbcsq,mbwithrhounit,amu,a0,MBH0,QBH0,Mdot,Mdotc,Mcgs,Ccode
+double Lunit,Tunit,Vunit,rhounit,rhomassunit,Munit,mdotunit,energyunit,edotunit,Pressureunit,Tempunit,Bunit,massunitPmsun
+int rho0unittype
+double ledd,leddcode
+
+int NUMBUFFERS
+
+int advancepassnumber
+
+
+
+
+int nprstart,nprend
+int plglobal
+int nprlist
+
+
+int npr2interpstart,npr2interpend
+int pl2global
+int npr2interplist
+
+
+int npr2notinterpstart,npr2notinterpend
+int pl3global
+int npr2notinterplist
+
+
+int nprboundstart,nprboundend
+int pl4global
+int nprboundlist
+
+
+int nprfluxboundstart,nprfluxboundend
+int pl5global
+int nprfluxboundlist
+
+
+int nprdumpstart,nprdumpend
+int pl6global
+int nprdumplist
+
+
+int nprinvertstart,nprinvertend
+int pl7global
+int nprinvertlist
+
+
+int fluxloop
+int emffluxloop
+int Uconsloop
+int emfUconsloop
+int Uconsevolveloop
+int a_interporder
+int interporder
+
+
+
+int dirglobal,locglobal,iglobal,jglobal,kglobal,iterglobal,interporfluxglobal
+
+
+int special3dspc
+
+int numbercpu
+
+double globalinv
+char globalinvtext
+
+
+double nu,ss,ucrit,Ttpow,jetalpha
+
+int lntries
+double lerrx
+
+
+double ptr_pressure_rho0_u
+double ptr_compute_u_from_entropy
+double ptr_u_rho0_p
+double ptr_dpdu_rho0_u
+double ptr_dpdrho0_rho0_u
+double ptr_cs2_compute
+double ptr_compute_dSdrho
+double ptr_compute_dSdu
+double ptr_compute_entropy
+double ptr_pressure_wmrho0
+double ptr_compute_idwmrho0dp
+double ptr_compute_idrho0dp
+double ptr_compute_qdot
+int ptr_compute_sources_EOS
+void ptr_compute_allextras
+int ptr_get_extrasprocessed
+double ptr_compute_temp
+void ptr_compute_EOS_parms
+void ptr_store_EOS_parms
+void ptr_get_EOS_parms
+
+double SQRTMINNUMREPRESENT
+
+
+
+int AVOIDADVANCESHIFTX1DN,AVOIDADVANCESHIFTX1UP,AVOIDADVANCESHIFTX2DN,AVOIDADVANCESHIFTX2UP,AVOIDADVANCESHIFTX3DN,AVOIDADVANCESHIFTX3UP,GLOBALBCMOVEDWITHACTIVESECTION
+
+
+# 1 "defs.user.h" 1
+
+
+struct Ccoordparams coordparams
+# 351 "defs.general.h" 2
+
+
+
+int crapdebug
+
+
+
+

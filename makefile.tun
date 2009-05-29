@@ -1,0 +1,78 @@
+#
+#
+#echo "Make sure MPICH params set in both global.h and makefile!"
+#echo "Make sure MPICH params set in both global.h and makefile!"
+
+#don't really need to split using GCC for freespace.c on Tungsten, but
+ oh well.
+
+PREP = prep
+CMD=grmhd
+
+
+
+ifeq ($(USEINT),1)
+# bash
+# source /usr/local/intel/7.1.038/compiler70/ia32/bin/iccvars.sh
+#
+# tcsh
+# source /usr/local/intel/7.1.038/compiler70/ia32/bin/iccvars.csh
+#
+CC = cmpicc -icc -io
+CFLAGS=-O3 -tpp7 -axKW -ipo -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310
+#CFLAGS=-O0
+LDFLAGS=  -lm
+# /usr/local/opt/intel/mkl/doc
+# Platinum is 1Ghz P3
+# icc compiler opts (icc -help)
+# -w2 or -r, show all warnings
+# -ax<i/M/K/W> i=ppro/p2 M=mmx K=SIMD W=P4 (needed when using -O3)
+# -x<""> ""
+# -ip, -ipo, -wp_ipo Interprocedural Opt (each higher opt)
+# -tpp7 for P4
+# -tpp6 for Ppro,P2,P3
+# -tpp5 for Pentium
+# -rcd fast float-to-int conversions
+# -unroll[n]
+# -prof_use : profiling data
+endif
+
+
+
+SRCS = \
+bounds.c boundsint.c coord.c diag.c dudp_calc_3vel.c dudp_calc.c dump.c dump_ener.c fixup.c gaussj.c \
+image.c initbase.c init.c interp.c lubksb.c ludcmp.c main.c metric.c \
+mnewt.c nrutil.c phys.c ranc.c restart.c set_arrays.c set_grid.c \
+step_ch.c tensor.c utoprim.c utoprim_2d.c utoprim_1d.c vchar.c transforms.c fail.c utoprim_ldz.c \
+init_mpi.c boundmpi.c boundmpiint.c sources.c
+ 
+OBJS = \
+bounds.o boundsint.o coord.o diag.o dudp_calc_3vel.o dudp_calc.o dump.o dump_ener.o fixup.o gaussj.o \
+image.o initbase.o init.o interp.o lubksb.o ludcmp.o main.o metric.o \
+mnewt.o nrutil.o phys.o ranc.o restart.o set_arrays.o set_grid.o \
+step_ch.o tensor.o utoprim.o utoprim_2d.o utoprim_1d.o vchar.o transforms.o fail.o utoprim_ldz.o \
+init_mpi.o boundmpi.o boundmpiint.o sources.o
+
+all:	$(PREP) $(CMD)
+
+
+$(PREP):
+	( sh ./makedecs.h.sh )
+	( sh ./makempidecs.h.sh )
+
+$(CMD):	$(OBJS) makefile.tun
+	$(CC2) $(GCCCFLAGS) -c freespace.c $(LDFLAGS)
+	$(CC)  $(CFLAGS) -o $(CMD) $(OBJS) freespace.o $(LDFLAGS)
+
+clean:
+	rm *.o
+
+# dependencies
+$(OBJS) : global.h defs.h mympi.h mpidefs.h makefile.tun
+phys.o : metric.h
+metric.o : metric.h
+transforms.o : metric.h
+init_mpi.o : mympi.h
+utoprim_2d.o : utoprim_2d.h
+utoprim_1d.o : utoprim_1d.h
+step_ch.o : step_ch.h

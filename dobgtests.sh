@@ -1,0 +1,1 @@
+(sh doforetests.sh $1 $2 $3)&

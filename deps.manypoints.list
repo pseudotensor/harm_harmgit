@@ -1,0 +1,831 @@
+init.o: init.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+init.tools.o: init.tools.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+initbase.o: initbase.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h initbase.defaultnprlists.c
+initbase.enerregions.o: initbase.enerregions.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+initbase.tools.o: initbase.tools.c
+initbase.gridsectioning.o: initbase.gridsectioning.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+restart.o: restart.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h restart.h restart.rebeccaoldcode.c
+restart.checks.o: restart.checks.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+set_arrays.o: set_arrays.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+set_arrays_perpoint_perline.o: set_arrays_perpoint_perline.c decs.h \
+ global.grmhd.h global.general.h SwapEndian.h mytime.h kazfulleos.global.h \
+ global.realdef.h global.nondepnmemonics.h metric.h coord.h global.stepch.h \
+ definit.h init.h global.openmpthreadprivates.h global.depnmemonics.h \
+ global.defnprs.h global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+set_arrays_multidimen.o: set_arrays_multidimen.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+mpi_set_arrays.o: mpi_set_arrays.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+set_grid.o: set_grid.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+advance.o: advance.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+copyandinit_functions.o: copyandinit_functions.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+reconstructeno.o: reconstructeno.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ reconstructeno_global.h reconstructeno_defs.h reconstructeno_superdefs.h \
+ reconstructeno_staticfuncs_constvars.h reconstructeno_global.funcdeclare.h \
+ reconstructeno_set_arrays.c para_and_paraenohybrid.h reconstructeno.weightmin.c \
+ reconstructeno.debug.c
+paraenohybrid.o: paraenohybrid.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ reconstructeno.h reconstructeno_global.h reconstructeno_global.funcdeclare.h \
+ para_and_paraenohybrid.h
+flux.o: flux.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+flux.mergedc2ea2cmethod.o: flux.mergedc2ea2cmethod.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+higherorder_pointavg.o: higherorder_pointavg.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+wavespeeds.o: wavespeeds.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+boundsflux.o: boundsflux.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+fluxct.o: fluxct.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+fluxctstag.o: fluxctstag.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+fluxvpot.o: fluxvpot.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+bounds.o: bounds.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h reconstructeno.h reconstructeno_global.h \
+ reconstructeno_global.funcdeclare.h
+bounds.tools.o: bounds.tools.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+boundsint.o: boundsint.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+diag.o: diag.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+dump.o: dump.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+dumpgen.o: dumpgen.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+dump_ener.o: dump_ener.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+image.o: image.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+fail.o: fail.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+fixup.o: fixup.c decs.h global.grmhd.h global.general.h SwapEndian.h mytime.h \
+ kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h coord.h \
+ global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+mpi_init.o: mpi_init.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+mpi_init_grmhd.o: mpi_init_grmhd.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+mpi_fileio.o: mpi_fileio.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+mpi_fprintfs.o: mpi_fprintfs.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+boundmpi.o: boundmpi.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+boundmpiint.o: boundmpiint.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+mpi_grmhd_grray_liaison.o: mpi_grmhd_grray_liaison.c decs.h global.grmhd.h \
+ global.general.h SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h
+interppoint.o: interppoint.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+interppoint.para.o: interppoint.para.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ para_and_paraenohybrid.h
+interpline.o: interpline.c decs.h global.grmhd.h global.general.h SwapEndian.h \
+ mytime.h kazfulleos.global.h global.realdef.h global.nondepnmemonics.h metric.h \
+ coord.h global.stepch.h definit.h init.h global.openmpthreadprivates.h \
+ global.depnmemonics.h global.defnprs.h global.storage.h global.loops.h \
+ global.loops.perpoint.h global.loops.manypoints.h global.loops.diagnostics.h \
+ global.loops.boundaries.h global.loops.manypoints1d.h global.variousmacros.h \
+ global.fieldmacros.h global.structs.h mympi.h mympi.global.nondepnmemonics.h \
+ mympi.definit.h /usr/local/mpich2//include/mpi.h \
+ /usr/local/mpich2//include/mpio.h /usr/local/mpich2//include/mpi.h \
+ global.mpi_grmhd_grray_liaison.h mympi.global.depnmemonics.h \
+ mympi.global.loops.h mympi.simulbccalcstuff.h mympi.global.funcdeclare.h \
+ global.gridsectioning.h global.comploops.h global.openmploops.h \
+ global.funcdeclare.h global.funcdeclare.user.h global.dump.h global.bounds.h \
+ global.inits.h global.other.h unconverted_by_double2longdouble.inc superdecs.h \
+ kazfulleos.superdecs.h superdecs.pointers.h decs.general.h mpidecs.h \
+ supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h \
+ decs.user.h
+interpline.para.o: interpline.para.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ para_and_paraenohybrid.h
+interpline.mono.o: interpline.mono.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ reconstructeno.h reconstructeno_global.h reconstructeno_global.funcdeclare.h \
+ interpline.smono.h interpline.smono.h interpline.smono.h
+interpline.jmono.o: interpline.jmono.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ reconstructeno.h reconstructeno_global.h reconstructeno_global.funcdeclare.h
+interpline.smono.o: interpline.smono.c decs.h global.grmhd.h global.general.h \
+ SwapEndian.h mytime.h kazfulleos.global.h global.realdef.h \
+ global.nondepnmemonics.h metric.h coord.h global.stepch.h definit.h init.h \
+ global.openmpthreadprivates.h global.depnmemonics.h global.defnprs.h \
+ global.storage.h global.loops.h global.loops.perpoint.h \
+ global.loops.manypoints.h global.loops.diagnostics.h global.loops.boundaries.h \
+ global.loops.manypoints1d.h global.variousmacros.h global.fieldmacros.h \
+ global.structs.h mympi.h mympi.global.nondepnmemonics.h mympi.definit.h \
+ /usr/local/mpich2//include/mpi.h /usr/local/mpich2//include/mpio.h \
+ /usr/local/mpich2//include/mpi.h global.mpi_grmhd_grray_liaison.h \
+ mympi.global.depnmemonics.h mympi.global.loops.h mympi.simulbccalcstuff.h \
+ mympi.global.funcdeclare.h global.gridsectioning.h global.comploops.h \
+ global.openmploops.h global.funcdeclare.h global.funcdeclare.user.h \
+ global.dump.h global.bounds.h global.inits.h global.other.h \
+ unconverted_by_double2longdouble.inc superdecs.h kazfulleos.superdecs.h \
+ superdecs.pointers.h decs.general.h mpidecs.h supermpidecs.h \
+ mpidecs.mpi_grmhd_grray_liaison.h kazfulleos.decsglobalprivate.h decs.user.h \
+ reconstructeno.h reconstructeno_global.h reconstructeno_global.funcdeclare.h \
+ interpline.smono_static.h interpline.smono.h

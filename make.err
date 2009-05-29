@@ -1,0 +1,865 @@
+gcc -Wall -O0 -g -pg -c init.c -lm
+In file included from decs.h:1,
+                 from init.c:11:
+global.h:1557:3: warning: multi-line comment
+init.c: In function `init_grid':
+init.c:425: warning: unused variable `rh'
+init.c: In function `init_atmosphere':
+init.c:775: warning: unused variable `geom'
+init.c: In function `init_primitives':
+init.c:852: warning: unused variable `geom'
+init.c:853: warning: unused variable `r'
+init.c:853: warning: unused variable `th'
+init.c:853: warning: unused variable `X'
+init.c:853: warning: unused variable `V'
+init.c: In function `init_disk':
+init.c:1086: warning: unused variable `realgeom'
+init.c:1086: warning: unused variable `geom'
+init.c:1092: warning: unused variable `rh'
+init.c: In function `init_uniformdensity':
+init.c:1237: warning: unused variable `realgeom'
+init.c:1237: warning: unused variable `geom'
+init.c: In function `init_vpot':
+init.c:1275: warning: unused variable `geom'
+init.c: In function `normalize_field':
+init.c:1454: warning: unused variable `bsq_ij'
+init.c: In function `set_phi_velocity_grb1':
+init.c:1695: warning: unused variable `omegak'
+init.c:1695: warning: unused variable `omega'
+init.c:1695: warning: unused variable `lspecific'
+init.c: In function `set_atmosphere_grb1':
+init.c:1748: warning: unused variable `rho'
+init.c:1748: warning: unused variable `u'
+init.c:1748: warning: unused variable `ur'
+init.c:1748: warning: unused variable `uh'
+init.c:1748: warning: unused variable `up'
+In file included from init.c:1851:
+init.readdata.c: In function `set_phi_velocity_grb2':
+init.readdata.c:172: warning: unused variable `roR0'
+init.readdata.c:173: warning: unused variable `R0'
+init.readdata.c: In function `set_stellar_solution':
+init.readdata.c:436: warning: unused variable `geom'
+init.readdata.c:437: warning: unused variable `x2'
+init.readdata.c:439: warning: unused variable `firsttime'
+init.c: At top level:
+init.c:19: warning: `INDEXN' defined but not used
+init.c:21: warning: `tauff' defined but not used
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c initbase.c -lm
+In file included from decs.h:1,
+                 from initbase.c:2:
+global.h:1557:3: warning: multi-line comment
+initbase.c: In function `setjetflux':
+initbase.c:1650: warning: unused variable `pl'
+initbase.c: In function `pi2Uavg':
+initbase.c:2300: warning: unused variable `Ucomputed'
+initbase.c:2301: warning: unused variable `Ustored'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c restart.c -lm
+In file included from decs.h:1,
+                 from restart.c:4:
+global.h:1557:3: warning: multi-line comment
+restart.c: In function `restart_init':
+restart.c:11: warning: unused variable `ans'
+restart.c:14: warning: unused variable `ucon'
+restart.c:16: warning: unused variable `pl'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c set_arrays.c -lm
+In file included from decs.h:1,
+                 from set_arrays.c:2:
+global.h:1557:3: warning: multi-line comment
+set_arrays.c: In function `set_arrays':
+set_arrays.c:6: warning: unused variable `m'
+set_arrays.c:7: warning: unused variable `ii'
+set_arrays.c:10: warning: unused variable `dir'
+set_arrays.c:10: warning: unused variable `interpi'
+set_arrays.c:10: warning: unused variable `enodebugi'
+set_arrays.c:11: warning: unused variable `dimen'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c set_grid.c -lm
+In file included from decs.h:1,
+                 from set_grid.c:2:
+global.h:1557:3: warning: multi-line comment
+set_grid.c: In function `set_grid':
+set_grid.c:9: warning: unused variable `l'
+set_grid.c:9: warning: unused variable `m'
+set_grid.c:10: warning: unused variable `ii'
+set_grid.c:10: warning: unused variable `jj'
+set_grid.c:10: warning: unused variable `kk'
+set_grid.c:15: warning: unused variable `dxdxp'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c advance.c -lm
+In file included from decs.h:1,
+                 from advance.c:1:
+global.h:1557:3: warning: multi-line comment
+advance.c: In function `advance_standard_old':
+advance.c:77: warning: unused variable `sc'
+advance.c:82: warning: unused variable `dUtot'
+advance.c:83: warning: unused variable `idx1'
+advance.c:83: warning: unused variable `idx2'
+advance.c: In function `advance_standard':
+advance.c:386: warning: unused variable `sc'
+advance.c:388: warning: unused variable `dUriemann'
+advance.c:391: warning: unused variable `dUtot'
+advance.c:392: warning: unused variable `idx1'
+advance.c:392: warning: unused variable `idx2'
+advance.c: In function `advance_finitevolume':
+advance.c:846: warning: unused variable `sc'
+advance.c:850: warning: unused variable `q'
+advance.c:851: warning: unused variable `dUtot'
+advance.c:852: warning: unused variable `idx1'
+advance.c:852: warning: unused variable `idx2'
+advance.c: In function `set_dt':
+advance.c:1693: warning: unused variable `pl'
+advance.c:1694: warning: unused variable `kk'
+advance.c:1694: warning: unused variable `ll'
+advance.c:1697: warning: unused variable `cmax2'
+advance.c:1697: warning: unused variable `cmin2'
+advance.c:1698: warning: unused variable `cmax3'
+advance.c:1698: warning: unused variable `cmin3'
+advance.c:1702: warning: unused variable `tempwavedt'
+advance.c:1710: warning: unused variable `X'
+advance.c:1710: warning: unused variable `V'
+advance.c:1710: warning: unused variable `Vp1'
+advance.c: In function `compute_dt_fromsource':
+advance.c:1875: warning: unused variable `kk'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c reconstructeno.c -lm
+In file included from decs.h:1,
+                 from reconstructeno.c:78:
+global.h:1557:3: warning: multi-line comment
+reconstructeno.c: In function `eno_line_c2a':
+reconstructeno.c:188: warning: unused variable `i'
+reconstructeno.c: In function `eno_line_reconstruct':
+reconstructeno.c:272: warning: unused variable `simpleweight'
+reconstructeno.c:278: warning: unused variable `order_to_be_used'
+reconstructeno.c:280: warning: unused variable `yout_left_temp'
+reconstructeno.c:280: warning: unused variable `yout_right_temp'
+reconstructeno.c:289: warning: unused variable `slope'
+reconstructeno.c:290: warning: unused variable `interface_value'
+reconstructeno.c:292: warning: unused variable `fraction_point_value'
+reconstructeno.c: In function `apply_additional_reduction_to_weights':
+reconstructeno.c:670: warning: unused variable `counter'
+reconstructeno.c:673: warning: unused variable `i'
+reconstructeno.c: In function `eno_cvt':
+reconstructeno.c:750: warning: unused variable `symmetric_shift'
+reconstructeno.c:757: warning: unused variable `a2cupdate'
+reconstructeno.c:757: warning: unused variable `this_order_weight'
+reconstructeno.c: In function `compute_ac_ca_stencil_weights':
+reconstructeno.c:1136: warning: unused variable `um'
+reconstructeno.c:1136: warning: unused variable `u3'
+reconstructeno.c:1145: warning: unused variable `stencil_pos_weights'
+reconstructeno.c:1146: warning: unused variable `stencil_neg_weights'
+reconstructeno.c: In function `compute_optimized_ac_ca_stencil_weights':
+reconstructeno.c:1324: warning: unused variable `i'
+reconstructeno.c:1324: warning: unused variable `min_shift'
+reconstructeno.c:1324: warning: unused variable `max_shift'
+reconstructeno.c:1325: warning: unused variable `um'
+reconstructeno.c:1325: warning: unused variable `u0'
+reconstructeno.c:1325: warning: unused variable `u1'
+reconstructeno.c:1325: warning: unused variable `u2'
+reconstructeno.c:1325: warning: unused variable `u3'
+reconstructeno.c: In function `compute_cf_stencil_weights':
+reconstructeno.c:1427: warning: unused variable `index'
+reconstructeno.c:1428: warning: unused variable `sum_of_nonopt_stencil_weights'
+reconstructeno.c:1429: warning: unused variable `order_over_two'
+reconstructeno.c:1430: warning: unused variable `is_order_odd'
+reconstructeno.c:1431: warning: unused variable `symmetric_shift'
+reconstructeno.c:1432: warning: unused variable `counter'
+reconstructeno.c:1441: warning: unused variable `second_der'
+reconstructeno.c:1441: warning: unused variable `first_der'
+reconstructeno.c: In function `compute_optimized_cf_stencil_weights':
+reconstructeno.c:1637: warning: unused variable `i'
+reconstructeno.c:1638: warning: unused variable `index'
+reconstructeno.c:1638: warning: unused variable `min_shift'
+reconstructeno.c:1638: warning: unused variable `max_shift'
+reconstructeno.c:1639: warning: unused variable `sum_of_leftface_stencil_weights'
+reconstructeno.c:1639: warning: unused variable `sum_of_rightface_stencil_weights'
+reconstructeno.c:1639: warning: unused variable `sum_of_nonopt_stencil_weights'
+reconstructeno.c:1640: warning: unused variable `order_over_two'
+reconstructeno.c:1641: warning: unused variable `is_order_odd'
+reconstructeno.c:1642: warning: unused variable `symmetric_shift'
+reconstructeno.c:1643: warning: unused variable `counter'
+reconstructeno.c:1650: warning: unused variable `u'
+reconstructeno.c: In function `do_reduce_near_cusps_jon_version_still_fails_even_though_ok_in_monointerp_file':
+reconstructeno.c:1854: warning: unused variable `second_der_arr'
+reconstructeno.c: In function `compute_weights_from_smoothness_indicators':
+reconstructeno.c:1896: warning: unused variable `i'
+reconstructeno.c:1899: warning: unused variable `timescalefactor'
+reconstructeno.c: In function `compute_weights_ratios':
+reconstructeno.c:1997: warning: unused variable `w_ratio_combined'
+reconstructeno.c: In function `choose_weno_order':
+reconstructeno.c:2119: warning: unused variable `i'
+reconstructeno.c:2119: warning: unused variable `il'
+reconstructeno.c:2119: warning: unused variable `ir'
+reconstructeno.c:2123: warning: unused variable `dPi'
+reconstructeno.c: In function `compute_lower_order_fraction':
+reconstructeno.c:2289: warning: unused variable `w_ratio_sq'
+reconstructeno.c:2290: warning: unused variable `w_transition_ratio_sq'
+reconstructeno.c:2294: warning: unused variable `a'
+reconstructeno.c:2294: warning: unused variable `b'
+reconstructeno.c:2294: warning: unused variable `c'
+reconstructeno.c:2294: warning: unused variable `d'
+reconstructeno.c:2295: warning: unused variable `x'
+reconstructeno.c:2295: warning: unused variable `x1'
+reconstructeno.c:2295: warning: unused variable `x2'
+reconstructeno.c:2295: warning: unused variable `x_2'
+reconstructeno.c:2295: warning: unused variable `x_3'
+reconstructeno.c: In function `limit_ac_correction':
+reconstructeno.c:2627: warning: unused variable `start_correction'
+reconstructeno.c:2628: warning: unused variable `end_correction'
+reconstructeno.c:2629: warning: unused variable `is'
+reconstructeno.c:2630: warning: unused variable `ie'
+reconstructeno.c:2631: warning: unused variable `i'
+reconstructeno.c: At top level:
+reconstructeno_static.h:11: warning: `get_weno5_high_order_central_weight' declared `static' but never defined
+reconstructeno.c:1733: warning: `apply_weno5_high_order_central_weight' defined but not used
+reconstructeno_static.h:16: warning: `compute_monotonicity_indicator' declared `static' but never defined
+reconstructeno_static.h:18: warning: `ac_simple_eno_odd' declared `static' but never defined
+reconstructeno.c:636: warning: `rescale_weight' defined but not used
+reconstructeno.c:583: warning: `rescale_unoptimized_weights' defined but not used
+reconstructeno.c:2660: warning: `check_symmetry_of_weno_input' defined but not used
+reconstructeno.c:2675: warning: `check_symmetry_of_weno_output' defined but not used
+reconstructeno.c:1804: warning: `do_reduce_near_cusps' defined but not used
+reconstructeno.c:2592: warning: `limit_weight' defined but not used
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c flux.c -lm
+In file included from decs.h:1,
+                 from flux.c:4:
+global.h:1557:3: warning: multi-line comment
+flux.c: In function `fluxcalc_standard':
+flux.c:488: warning: unused variable `reallim'
+flux.c:489: warning: unused variable `locallim'
+flux.c: In function `rescale':
+flux.c:927: warning: unused variable `scale'
+flux.c:929: warning: unused variable `q'
+flux.c:931: warning: unused variable `quasivsq'
+flux.c:933: warning: unused variable `vcon'
+flux.c:933: warning: unused variable `ucon'
+flux.c:934: warning: unused variable `j'
+flux.c:935: warning: unused variable `newpr'
+flux.c:936: warning: unused variable `uconrel'
+flux.c:936: warning: unused variable `ucovrel'
+flux.c:937: warning: unused variable `vconrel'
+flux.c:939: warning: unused variable `normuconrel'
+flux.c:939: warning: unused variable `normuconrel_fromui'
+flux.c:940: warning: unused variable `gamma'
+flux.c:946: warning: unused variable `Bconin'
+flux.c:946: warning: unused variable `Bconout'
+flux.c:947: warning: unused variable `dxdxp'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c wavespeeds.c -lm
+In file included from decs.h:1,
+                 from wavespeeds.c:1:
+global.h:1557:3: warning: multi-line comment
+wavespeeds.c: In function `get_wavespeeds':
+wavespeeds.c:15: warning: unused variable `failreturn'
+wavespeeds.c:16: warning: unused variable `ftemp'
+wavespeeds.c:17: warning: unused variable `p_roe'
+wavespeeds.c:17: warning: unused variable `cminmax_roe'
+wavespeeds.c:18: warning: unused variable `state_roe'
+wavespeeds.c:19: warning: unused variable `cminmax_o'
+wavespeeds.c:20: warning: unused variable `Hroe'
+wavespeeds.c:20: warning: unused variable `cminmaxnonrel_roe'
+wavespeeds.c:22: warning: unused variable `q'
+wavespeeds.c: In function `global_vchar':
+wavespeeds.c:258: warning: unused variable `ftemp'
+wavespeeds.c: In function `cminmax_calc':
+wavespeeds.c:327: warning: unused variable `ltop'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c boundsflux.c -lm
+In file included from decs.h:1,
+                 from boundsflux.c:2:
+global.h:1557:3: warning: multi-line comment
+boundsflux.c: In function `bound_flux_user':
+boundsflux.c:36: warning: unused variable `geom'
+boundsflux.c:36: warning: unused variable `rgeom'
+boundsflux.c:37: warning: unused variable `vcon'
+boundsflux.c:42: warning: unused variable `prescale'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c fluxct.c -lm
+In file included from decs.h:1,
+                 from fluxct.c:2:
+global.h:1557:3: warning: multi-line comment
+fluxct.c: In function `flux_ct':
+fluxct.c:18: warning: unused variable `geomco1'
+fluxct.c:22: warning: unused variable `v1_av'
+fluxct.c:22: warning: unused variable `w1'
+fluxct.c:22: warning: unused variable `v2_av'
+fluxct.c:22: warning: unused variable `w2'
+fluxct.c:22: warning: unused variable `w_12'
+fluxct.c:23: warning: unused variable `rho_av'
+fluxct.c:23: warning: unused variable `sqrtrho'
+fluxct.c:23: warning: unused variable `b1_av'
+fluxct.c:23: warning: unused variable `b2_av'
+fluxct.c:23: warning: unused variable `va1'
+fluxct.c:23: warning: unused variable `va2'
+fluxct.c:24: warning: unused variable `alpha'
+fluxct.c:28: warning: unused variable `U1pp'
+fluxct.c:28: warning: unused variable `U1pm'
+fluxct.c:28: warning: unused variable `U1mp'
+fluxct.c:28: warning: unused variable `U1mm'
+fluxct.c:29: warning: unused variable `U2pp'
+fluxct.c:29: warning: unused variable `U2pm'
+fluxct.c:29: warning: unused variable `U2mp'
+fluxct.c:29: warning: unused variable `U2mm'
+fluxct.c:30: warning: unused variable `U3pp'
+fluxct.c:30: warning: unused variable `U3pm'
+fluxct.c:30: warning: unused variable `U3mp'
+fluxct.c:30: warning: unused variable `U3mm'
+fluxct.c:33: warning: unused variable `B2d'
+fluxct.c:33: warning: unused variable `B2u'
+fluxct.c:34: warning: unused variable `B3l'
+fluxct.c:34: warning: unused variable `B3r'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c fluxcompute.c -lm
+In file included from decs.h:1,
+                 from fluxcompute.c:2:
+global.h:1557:3: warning: multi-line comment
+fluxcompute.c: In function `flux_compute_general':
+fluxcompute.c:20: warning: unused variable `pl'
+fluxcompute.c:21: warning: unused variable `jj'
+fluxcompute.c:21: warning: unused variable `kk'
+fluxcompute.c: In function `flux_compute':
+fluxcompute.c:139: warning: unused variable `laxffrac'
+fluxcompute.c:139: warning: unused variable `hllfrac'
+fluxcompute.c: In function `hllflux_compute':
+fluxcompute.c:254: warning: unused variable `vmin'
+fluxcompute.c:254: warning: unused variable `vmax'
+fluxcompute.c:255: warning: unused variable `cminreal'
+fluxcompute.c:255: warning: unused variable `cmaxreal'
+fluxcompute.c: In function `forceflux_compute':
+fluxcompute.c:333: warning: unused variable `vmin'
+fluxcompute.c:333: warning: unused variable `vmax'
+fluxcompute.c:334: warning: unused variable `vminorig'
+fluxcompute.c:334: warning: unused variable `vmaxorig'
+fluxcompute.c:335: warning: unused variable `cminreal'
+fluxcompute.c:335: warning: unused variable `cmaxreal'
+fluxcompute.c: In function `mustaflux_compute':
+fluxcompute.c:435: warning: unused variable `Forig'
+fluxcompute.c: In function `musta1flux_compute':
+fluxcompute.c:563: warning: unused variable `umid'
+fluxcompute.c:563: warning: unused variable `plnew'
+fluxcompute.c:563: warning: unused variable `prnew'
+fluxcompute.c:563: warning: unused variable `fmid'
+fluxcompute.c:564: warning: unused variable `state'
+fluxcompute.c:570: warning: unused variable `Fother'
+fluxcompute.c:571: warning: unused variable `correctionl'
+fluxcompute.c:571: warning: unused variable `correctionr'
+fluxcompute.c:571: warning: unused variable `mymustacoef'
+fluxcompute.c:571: warning: unused variable `mymustacoeffinal'
+fluxcompute.c:573: warning: unused variable `Ucl'
+fluxcompute.c:573: warning: unused variable `Ucr'
+fluxcompute.c:574: warning: unused variable `pllargest'
+fluxcompute.c:575: warning: unused variable `fracl'
+fluxcompute.c:575: warning: unused variable `fracr'
+fluxcompute.c:576: warning: unused variable `mustaf'
+fluxcompute.c: In function `musta2flux_compute':
+fluxcompute.c:852: warning: unused variable `umid'
+fluxcompute.c:852: warning: unused variable `plnew'
+fluxcompute.c:852: warning: unused variable `prnew'
+fluxcompute.c:852: warning: unused variable `fmid'
+fluxcompute.c:859: warning: unused variable `ctopnow'
+fluxcompute.c:865: warning: unused variable `otherF'
+fluxcompute.c:867: warning: unused variable `ms'
+fluxcompute.c:867: warning: unused variable `me'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c bounds.c -lm
+In file included from decs.h:1,
+                 from bounds.c:2:
+global.h:1557:3: warning: multi-line comment
+bounds.c: In function `bound_prim_user':
+bounds.c:44: warning: unused variable `vcon'
+bounds.c:49: warning: unused variable `prescale'
+bounds.c: In function `flip_y':
+bounds.c:570: warning: unused variable `pl'
+bounds.c:570: warning: unused variable `myi'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c boundsint.c -lm
+In file included from decs.h:1,
+                 from boundsint.c:2:
+global.h:1557:3: warning: multi-line comment
+boundsint.c: In function `bound_pflag_user':
+boundsint.c:9: warning: unused variable `failreturn'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c diag.c -lm
+In file included from decs.h:1,
+                 from diag.c:2:
+global.h:1557:3: warning: multi-line comment
+diag.c: In function `diag':
+diag.c:17: warning: unused variable `asym'
+diag.c:17: warning: unused variable `norm'
+diag.c:17: warning: unused variable `maxasym'
+diag.c: In function `area_map':
+diag.c:601: warning: unused variable `tens_em'
+diag.c:601: warning: unused variable `tens_matt'
+diag.c:601: warning: unused variable `b'
+diag.c:602: warning: unused variable `ucon'
+diag.c:603: warning: unused variable `U'
+diag.c: In function `diag_flux':
+diag.c:765: warning: unused variable `surf2'
+diag.c:770: warning: unused variable `ii'
+diag.c:771: warning: unused variable `ftemp'
+diag.c:776: warning: unused variable `X'
+diag.c:776: warning: unused variable `V'
+diag.c:777: warning: unused variable `b'
+diag.c:777: warning: unused variable `ucon'
+diag.c:778: warning: unused variable `U'
+diag.c:781: warning: unused variable `firstinloop'
+diag.c: In function `frdotout':
+diag.c:1130: warning: unused variable `j'
+diag.c:1130: warning: unused variable `k'
+diag.c:1130: warning: unused variable `l'
+diag.c:1131: warning: unused variable `ftemp'
+diag.c:1136: warning: unused variable `frdottemp'
+diag.c:1138: warning: unused variable `ospos1'
+diag.c: In function `set_varstavg':
+diag.c:1302: warning: unused variable `ll'
+diag.c:1315: warning: unused variable `b'
+diag.c:1315: warning: unused variable `ucon'
+diag.c:1316: warning: unused variable `U'
+diag.c: In function `diss_compute':
+diag.c:1631: warning: unused variable `primtoUcons'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c dump.c -lm
+In file included from decs.h:1,
+                 from dump.c:1:
+global.h:1557:3: warning: multi-line comment
+dump.c: In function `writesyminfo':
+dump.c:82: warning: unused variable `j'
+dump.c: In function `dump_content':
+dump.c:148: warning: unused variable `r'
+dump.c:148: warning: unused variable `th'
+dump.c:154: warning: unused variable `b'
+dump.c:154: warning: unused variable `ucon'
+dump.c:155: warning: unused variable `U'
+dump.c: In function `avg_content':
+dump.c:472: warning: unused variable `pl'
+dump.c:472: warning: unused variable `l'
+dump.c:472: warning: unused variable `col'
+dump.c: In function `avg2_content':
+dump.c:560: warning: unused variable `pl'
+dump.c:560: warning: unused variable `l'
+dump.c:560: warning: unused variable `col'
+dump.c: In function `gdump_content':
+dump.c:625: warning: unused variable `pl'
+dump.c:625: warning: unused variable `l'
+dump.c:625: warning: unused variable `m'
+dump.c:625: warning: unused variable `n'
+dump.c:625: warning: unused variable `col'
+dump.c: In function `fieldline_content':
+dump.c:721: warning: unused variable `l'
+dump.c:721: warning: unused variable `col'
+dump.c: In function `fluxdump_content':
+dump.c:964: warning: unused variable `pl'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c dumpgen.c -lm
+In file included from decs.h:1,
+                 from dumpgen.c:1:
+global.h:1557:3: warning: multi-line comment
+dumpgen.c: In function `dump_gen':
+dumpgen.c:7: warning: unused variable `l'
+dumpgen.c:7: warning: unused variable `col'
+dumpgen.c:16: warning: unused variable `headerptr'
+dumpgen.c:23: warning: unused variable `headerendpos'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c dump_ener.c -lm
+In file included from decs.h:1,
+                 from dump_ener.c:1:
+global.h:1557:3: warning: multi-line comment
+dump_ener.c: In function `dump_ener':
+dump_ener.c:37: warning: unused variable `ifnam'
+dump_ener.c:38: warning: unused variable `l'
+dump_ener.c:42: warning: unused variable `divb'
+dump_ener.c: In function `divbmaxavg':
+dump_ener.c:650: warning: unused variable `divbmaxsend'
+dump_ener.c:650: warning: unused variable `divbavgsend'
+dump_ener.c: In function `gettotal':
+dump_ener.c:701: warning: unused variable `send'
+dump_ener.c: In function `getalltotal':
+dump_ener.c:733: warning: unused variable `send'
+dump_ener.c: In function `gettotall':
+dump_ener.c:763: warning: unused variable `send'
+dump_ener.c: In function `constotal2':
+dump_ener.c:837: warning: unused variable `pl'
+dump_ener.c:838: warning: unused variable `U'
+dump_ener.c:839: warning: unused variable `geom'
+dump_ener.c:840: warning: unused variable `q'
+dump_ener.c:841: warning: unused variable `ftemp'
+dump_ener.c: In function `integrate':
+dump_ener.c:884: warning: unused variable `totalptrs'
+dump_ener.c:884: warning: unused variable `totaloptrs'
+dump_ener.c:885: warning: unused variable `numptrs'
+dump_ener.c: In function `integratel':
+dump_ener.c:920: warning: unused variable `totalptrs'
+dump_ener.c:920: warning: unused variable `totaloptrs'
+dump_ener.c:921: warning: unused variable `numptrs'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c image.c -lm
+In file included from decs.h:1,
+                 from image.c:4:
+global.h:1557:3: warning: multi-line comment
+image.c: In function `imagedefs':
+image.c:123: warning: unused variable `l'
+image.c:123: warning: unused variable `col'
+image.c:124: warning: unused variable `fp'
+image.c:126: warning: unused variable `pr'
+image.c:126: warning: unused variable `iq'
+image.c:126: warning: unused variable `liq'
+image.c:127: warning: unused variable `liqb'
+image.c:130: warning: unused variable `truemyidtxt'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c fail.c -lm
+In file included from decs.h:1,
+                 from fail.c:2:
+global.h:1557:3: warning: multi-line comment
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c fixup.c -lm
+In file included from decs.h:1,
+                 from fixup.c:2:
+global.h:1557:3: warning: multi-line comment
+fixup.c: In function `diag_fixup_U':
+fixup.c:303: warning: unused variable `q'
+fixup.c:305: warning: unused variable `failreturn'
+fixup.c: In function `fixup1zone':
+fixup.c:355: warning: unused variable `ip'
+fixup.c:355: warning: unused variable `jp'
+fixup.c:355: warning: unused variable `im'
+fixup.c:355: warning: unused variable `jm'
+fixup.c:356: warning: unused variable `bsq'
+fixup.c:356: warning: unused variable `del'
+fixup.c:357: warning: unused variable `r'
+fixup.c:357: warning: unused variable `th'
+fixup.c:357: warning: unused variable `X'
+fixup.c:358: warning: unused variable `ftempA'
+fixup.c:358: warning: unused variable `ftempB'
+fixup.c:359: warning: unused variable `q'
+fixup.c: In function `fixup_checksolution':
+fixup.c:498: warning: suggest parentheses around && within ||
+fixup.c:483: warning: unused variable `gamma'
+fixup.c:483: warning: unused variable `ucon'
+fixup.c: In function `fixup_utoprim':
+fixup.c:697: warning: unused variable `Uf'
+fixup.c:697: warning: unused variable `Ui'
+fixup.c:699: warning: unused variable `failreturn'
+fixup.c:714: warning: unused variable `ftemp'
+fixup.c: In function `superdebug':
+fixup.c:1626: warning: unused variable `ftemp'
+fixup.c: In function `set_density_floors':
+fixup.c:1690: warning: unused variable `Upbinf'
+fixup.c:1693: warning: unused variable `pl'
+fixup.c: In function `get_bsqflags':
+fixup.c:1821: warning: unused variable `X'
+fixup.c:1821: warning: unused variable `V'
+fixup.c:1822: warning: unused variable `prfloor'
+fixup.c: In function `limit_gamma':
+fixup.c:1935: warning: unused variable `alpha'
+fixup.c:1939: warning: unused variable `r'
+fixup.c:1939: warning: unused variable `X'
+fixup.c:1939: warning: unused variable `V'
+fixup.c:1941: warning: unused variable `uu0'
+fixup.c:1941: warning: unused variable `uu0max'
+fixup.c: In function `check_pr':
+fixup.c:2071: warning: unused variable `k'
+fixup.c: In function `fix_flux':
+fixup.c:2564: warning: unused variable `sth'
+fixup.c:2565: warning: unused variable `X'
+fixup.c:2565: warning: unused variable `V'
+fixup.c:2565: warning: unused variable `r'
+fixup.c:2565: warning: unused variable `th'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c mpi_init.c -lm
+In file included from decs.h:1,
+                 from mpi_init.c:1:
+global.h:1557:3: warning: multi-line comment
+mpi_init.c: In function `init_mpi':
+mpi_init.c:53: warning: zero-length printf format string
+mpi_init.c:15: warning: unused variable `size'
+mpi_init.c: In function `init_placeongrid':
+mpi_init.c:251: warning: unused variable `stage'
+mpi_init.c:251: warning: unused variable `stagei'
+mpi_init.c:251: warning: unused variable `stagef'
+mpi_init.c: In function `myexit':
+mpi_init.c:851: warning: unused variable `i'
+mpi_init.c:851: warning: unused variable `j'
+mpi_init.c:851: warning: unused variable `k'
+mpi_init.c:851: warning: unused variable `l'
+mpi_init.c:853: warning: unused variable `faildump'
+mpi_init.c: In function `error_check':
+mpi_init.c:942: warning: unused variable `i'
+mpi_init.c:942: warning: unused variable `j'
+mpi_init.c:942: warning: unused variable `k'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c mpi_fileio.c -lm
+In file included from decs.h:1,
+                 from mpi_fileio.c:1:
+global.h:1557:3: warning: multi-line comment
+mpi_fileio.c: In function `mpiio_minmem':
+mpi_fileio.c:76: warning: unused variable `blinkptr'
+mpi_fileio.c:77: warning: unused variable `cpulinkptr'
+mpi_fileio.c:78: warning: unused variable `datasofar0'
+mpi_fileio.c:78: warning: unused variable `datasofarc0'
+mpi_fileio.c:79: warning: unused variable `done0'
+mpi_fileio.c:80: warning: unused variable `datagot'
+mpi_fileio.c:81: warning: unused variable `bfi'
+mpi_fileio.c:82: warning: unused variable `sii'
+mpi_fileio.c:82: warning: unused variable `uii'
+mpi_fileio.c:87: warning: unused variable `joniooffset'
+mpi_fileio.c:88: warning: unused variable `joniosubmit'
+mpi_fileio.c:90: warning: unused variable `jonio1'
+mpi_fileio.c:91: warning: unused variable `jonio4'
+mpi_fileio.c:92: warning: unused variable `jonio8'
+mpi_fileio.c:93: warning: unused variable `jonio16'
+mpi_fileio.c:94: warning: unused variable `jonio4i'
+mpi_fileio.c:95: warning: unused variable `jonio8i'
+mpi_fileio.c:97: warning: unused variable `mapjoniosorted'
+mpi_fileio.c:97: warning: unused variable `mapjoniounsorted'
+mpi_fileio.c:98: warning: unused variable `datatoget0'
+mpi_fileio.c:98: warning: unused variable `datatogetc0'
+mpi_fileio.c:98: warning: unused variable `datasent0'
+mpi_fileio.c:99: warning: unused variable `doset'
+mpi_fileio.c:100: warning: unused variable `dofull'
+mpi_fileio.c:101: warning: unused variable `dolocal'
+mpi_fileio.c:102: warning: unused variable `doing0'
+mpi_fileio.c:103: warning: unused variable `gi'
+mpi_fileio.c:103: warning: unused variable `gj'
+mpi_fileio.c:103: warning: unused variable `gk'
+mpi_fileio.c:104: warning: unused variable `lastnum'
+mpi_fileio.c:105: warning: unused variable `masterdone'
+mpi_fileio.c:106: warning: unused variable `thisslavedone'
+mpi_fileio.c:108: warning: unused variable `numfiles'
+mpi_fileio.c:109: warning: unused variable `sizeofdatatype'
+mpi_fileio.c:110: warning: unused variable `mypos'
+mpi_fileio.c: In function `mpiioromio_init_combine':
+mpi_fileio.c:793: warning: unused variable `i'
+mpi_fileio.c:814: warning: unused variable `ndims'
+mpi_fileio.c:814: warning: unused variable `array_of_gsizes'
+mpi_fileio.c:814: warning: unused variable `array_of_distribs'
+mpi_fileio.c:815: warning: unused variable `order'
+mpi_fileio.c:815: warning: unused variable `len'
+mpi_fileio.c:816: warning: unused variable `array_of_dargs'
+mpi_fileio.c:816: warning: unused variable `array_of_psizes'
+mpi_fileio.c:817: warning: unused variable `bufcount'
+mpi_fileio.c:817: warning: unused variable `array_size'
+mpi_fileio.c: In function `mpiios_init':
+mpi_fileio.c:1078: warning: unused variable `i'
+mpi_fileio.c:1080: warning: unused variable `sizeofmemory'
+mpi_fileio.c:1081: warning: unused variable `sizeofdatatype'
+mpi_fileio.c:1083: warning: unused variable `jonio16'
+mpi_fileio.c:1084: warning: unused variable `jonio8'
+mpi_fileio.c:1085: warning: unused variable `jonio4'
+mpi_fileio.c:1086: warning: unused variable `jonio1'
+mpi_fileio.c:1087: warning: unused variable `jonio4i'
+mpi_fileio.c:1088: warning: unused variable `jonio8i'
+mpi_fileio.c:1090: warning: unused variable `writebuf16'
+mpi_fileio.c:1091: warning: unused variable `writebuf8'
+mpi_fileio.c:1092: warning: unused variable `writebuf4'
+mpi_fileio.c:1093: warning: unused variable `writebuf1'
+mpi_fileio.c:1094: warning: unused variable `writebuf4i'
+mpi_fileio.c:1095: warning: unused variable `writebuf8i'
+mpi_fileio.c:1097: warning: unused variable `numfiles'
+mpi_fileio.c:1098: warning: unused variable `newfilename'
+mpi_fileio.c: In function `mpimax':
+mpi_fileio.c:1850: warning: unused variable `send'
+mpi_fileio.c: In function `mpiimax':
+mpi_fileio.c:1863: warning: unused variable `send'
+mpi_fileio.c: In function `mpiisum':
+mpi_fileio.c:1875: warning: unused variable `send'
+mpi_fileio.c: In function `mpiisum0':
+mpi_fileio.c:1885: warning: unused variable `send'
+mpi_fileio.c: In function `mpildsum0':
+mpi_fileio.c:1896: warning: unused variable `send'
+mpi_fileio.c: In function `mpimin':
+mpi_fileio.c:1908: warning: unused variable `send'
+mpi_fileio.c: In function `mpifmin':
+mpi_fileio.c:1920: warning: unused variable `send'
+mpi_fileio.c: In function `prminmaxsum':
+mpi_fileio.c:1932: warning: unused variable `maxsend'
+mpi_fileio.c:1932: warning: unused variable `minsend'
+mpi_fileio.c:1932: warning: unused variable `sumsend'
+mpi_fileio.c: In function `myfwrite':
+mpi_fileio.c:2089: warning: unused variable `voidbuf'
+mpi_fileio.c: In function `myfread':
+mpi_fileio.c:2257: warning: unsigned int format, different type arg (arg 3)
+mpi_fileio.c:2194: warning: unused variable `voidbuf'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c boundmpi.c -lm
+In file included from decs.h:1,
+                 from boundmpi.c:1:
+global.h:1557:3: warning: multi-line comment
+boundmpi.c: In function `bound_mpi':
+boundmpi.c:8: warning: unused variable `prim2bound'
+boundmpi.c:9: warning: unused variable `dir'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c boundmpiint.c -lm
+In file included from decs.h:1,
+                 from boundmpiint.c:1:
+global.h:1557:3: warning: multi-line comment
+boundmpiint.c: In function `bound_mpi_int':
+boundmpiint.c:6: warning: unused variable `dir'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c interppoint.c -lm
+In file included from decs.h:1,
+                 from interppoint.c:2:
+global.h:1557:3: warning: multi-line comment
+interppoint.c: In function `slope_lim_pointtype':
+interppoint.c:35: warning: unused variable `yin'
+interppoint.c:36: warning: unused variable `ijkshift'
+interppoint.c: In function `para2':
+interppoint.c:574: warning: unused variable `Dqvanl'
+interppoint.c:574: warning: unused variable `aDqvanl'
+interppoint.c: In function `para3':
+interppoint.c:643: warning: unused variable `Dqvanl'
+interppoint.c:643: warning: unused variable `aDqvanl'
+interppoint.c: In function `para4':
+interppoint.c:743: warning: unused variable `Dqvanl'
+interppoint.c:743: warning: unused variable `aDqvanl'
+interppoint.c: In function `parapl':
+interppoint.c:941: warning: unused variable `P'
+interppoint.c:942: warning: unused variable `rho'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c interpline.c -lm
+In file included from decs.h:1,
+                 from interpline.c:2:
+global.h:1557:3: warning: multi-line comment
+interpline.c: In function `flux_interp':
+interpline.c:46: warning: unused variable `Nvec'
+interpline.c: In function `slope_lim_linetype_c2e':
+interpline.c:533: warning: unused variable `reallim'
+interpline.c:533: warning: unused variable `counter'
+interpline.c: In function `slope_lim_linetype':
+interpline.c:713: warning: unused variable `reallim'
+interpline.c:713: warning: unused variable `counter'
+interpline.c:715: warning: unused variable `is_copy'
+interpline.c:716: warning: unused variable `myi'
+interpline.c: In function `copy_weno5_weights':
+interpline.c:991: warning: unused variable `weight_count'
+interpline.c:992: warning: unused variable `order'
+interpline.c: In function `compute_lower_order_fraction_weno5_weights':
+interpline.c:1005: warning: unused variable `weight_count'
+interpline.c: In function `get_1d_line_c2e':
+interpline.c:1682: warning: unused variable `dir_exception'
+interpline.c: In function `get_1d_line_c2e_gammaeffhydro':
+interpline.c:1765: warning: unused variable `dir_exception'
+interpline.c: In function `causal_shift_order':
+interpline.c:1969: warning: unused variable `temporder'
+interpline.c:1970: warning: unused variable `superdiv'
+interpline.c:1971: warning: unused variable `wspeed0l'
+interpline.c:1971: warning: unused variable `wspeed0r'
+interpline.c:1971: warning: unused variable `wspeed1l'
+interpline.c:1971: warning: unused variable `wspeed1r'
+interpline.c:1972: warning: unused variable `wspeed0ll'
+interpline.c:1972: warning: unused variable `wspeed1ll'
+interpline.c:1974: warning: unused variable `localspeed'
+interpline.c:1975: warning: unused variable `shifttemp'
+interpline.c: In function `compute_df_line_new':
+interpline.c:2258: warning: unused variable `i'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c monointerp.c -lm
+In file included from decs.h:1,
+                 from monointerp.c:2:
+global.h:1557:3: warning: multi-line comment
+monointerp.c: In function `compute_monotonicity_line':
+monointerp.c:17: warning: unused variable `i'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c jmonointerp.c -lm
+In file included from decs.h:1,
+                 from jmonointerp.c:2:
+global.h:1557:3: warning: multi-line comment
+jmonointerp.c: In function `compute_jmonotonicity_line':
+jmonointerp.c:88: warning: unused variable `monoup'
+jmonointerp.c:88: warning: unused variable `monodown'
+jmonointerp.c:92: warning: unused variable `order'
+jmonointerp.c:98: warning: unused variable `cuspindicator'
+jmonointerp.c: In function `check_mono_a2c_c2a_output':
+jmonointerp.c:854: warning: unused variable `fractionalchange'
+gcc: -lm: linker input file unused because linking not done
+gcc -Wall -O0 -g -pg -c smonointerp.c -lm
+In file included from decs.h:1,
+                 from smonointerp.c:4:
+global.h:1557:3: warning: multi-line comment
+smonointerp.c: In function `compute_mono_indicator_average_eno5':
+smonointerp.c:215: warning: unused variable `der2_crit'
+smonointerp.c:216: warning: unused variable `acoeff'
+smonointerp.c:216: warning: unused variable `bcoeff'
+smonointerp.c:216: warning: unused variable `ccoeff'
+smonointerp.c: In function `compute_mono_indicator_point_eno5':
+smonointerp.c:305: warning: unused variable `der2_crit'
+smonointerp.c:306: warning: unused variable `acoeff'
+smonointerp.c:306: warning: unused variable `bcoeff'
+smonointerp.c:306: warning: unused variable `ccoeff'
+smonointerp.c: In function `check_for_cusp_new':
+smonointerp.c:442: warning: unused variable `sqrtnorm'
+smonointerp.c: At top level:
+smonointerp.c:207: warning: `compute_mono_indicator_average_eno5' defined but not used
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c main.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c metric.c -lm
+metric.c: In function `mks_source_conn':
+metric.c:3182: warning: type mismatch with previous implicit declaration
+metric.c:2657: warning: previous implicit declaration of `cot'
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c metric_tools.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c metric_selfgravity_or_evolvemetric.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c coord.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c phys.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c step_ch.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c phys.ffde.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c phys.coldgrmhd.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c eos.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c vchar.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c transforms.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c sources.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c gaussj.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c lubksb.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c ludcmp.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c mnewt.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c nrutil.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c ranc.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c tensor.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprimgen.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c dudp_calc_3vel.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c dudp_calc.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_2d.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_1d.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_1d_opt.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_ldz.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_jon.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_1d_final.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_2d_final.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc -O0 -g -pg -c utoprim_5d2_final.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc    -c freespace.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc      -O0 -g -pg -o grmhd init.o initbase.o restart.o set_arrays.o set_grid.o advance.o reconstructeno.o flux.o wavespeeds.o boundsflux.o fluxct.o fluxcompute.o bounds.o boundsint.o diag.o dump.o dumpgen.o dump_ener.o image.o fail.o fixup.o mpi_init.o mpi_fileio.o boundmpi.o boundmpiint.o interppoint.o interpline.o monointerp.o jmonointerp.o smonointerp.o  main.o metric.o metric_tools.o metric_selfgravity_or_evolvemetric.o coord.o phys.o step_ch.o phys.ffde.o phys.coldgrmhd.o eos.o vchar.o transforms.o sources.o gaussj.o lubksb.o ludcmp.o mnewt.o nrutil.o ranc.o tensor.o utoprimgen.o dudp_calc_3vel.o dudp_calc.o utoprim.o utoprim_2d.o utoprim_1d.o utoprim_1d_opt.o utoprim_ldz.o utoprim_jon.o utoprim_1d_final.o utoprim_2d_final.o utoprim_5d2_final.o freespace.o -lm

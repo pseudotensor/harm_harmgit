@@ -1,0 +1,63 @@
+#
+#
+#echo "Make sure MPICH/GM params set in both global.h and makefile!"
+#echo "Make sure MPICH/GM params set in both global.h and makefile!"
+
+PREP = prep
+CMD=grmhd
+# -lscs_mp for parallel
+# -lcomplib.sgimath_mp for parallel
+LDFLAGS=-lfastm -lm -lmpi -lscs -lcomplib.sgimath
+
+CFLAGS = -64 -r10000 -Ofast=ip27 -TARG:platform=ip27 -mips4 -LNO -IPA=on -OPT:IEEE_arithmetic=3 -OPT:roundoff=3 -OPT:alias=disjoint -LNO:vintr=on -IPA:inline -INLINE:=ON
+
+#CFLAGS = -g -O0 -msg_disable badsubscript -msg_disable subscrbounds  -msg_disable unreachcode -msg_disable noparmlist -msg_disable subscrbounds2
+
+CC=cc $(CFLAGS3) $(CFLAGS2) $(CDEBUG)
+
+SRCS = \
+bounds.c coord.c diag.c dudp_calc.c dump.c fixup.c gaussj.c \
+image.c init.c interp.c lubksb.c ludcmp.c main.c metric.c \
+mnewt.c nrutil.c phys.c ranc.c restart.c set_arrays.c set_grid.c \
+step_ch.c tensor.c utoprim.c vchar.c bltoks.c \
+init_mpi.c boundmpi.c
+ 
+OBJS = \
+bounds.o coord.o diag.o dudp_calc.o dump.o fixup.o gaussj.o \
+image.o init.o interp.o lubksb.o ludcmp.o main.o metric.o \
+mnewt.o nrutil.o phys.o ranc.o restart.o set_arrays.o set_grid.o \
+step_ch.o tensor.o utoprim.o vchar.o bltoks.o \
+init_mpi.o boundmpi.o
+
+all:	$(PREP) $(CMD)
+
+
+$(PREP):
+	( sh ./makedecs.h.sh )
+	( sh ./makempidecs.h.sh )
+
+$(CMD):	$(OBJS) makefile
+	$(CC) $(CFLAGS) -o $(CMD) $(OBJS) $(LDFLAGS)
+
+
+clean:
+	rm *.o
+
+# dependencies
+$(OBJS) : global.h defs.h mympi.h mpidefs.h makefile
+
+OBJB = postmort.o \
+bounds.o coord.o diag.o dudp_calc.o dump.o fixup.o gaussj.o \
+image.o init.o interp.o lubksb.o ludcmp.o metric.o \
+mnewt.o nrutil.o phys.o ranc.o restart.o set_arrays.o set_grid.o \
+step_ch.o tensor.o utoprim.o vchar.o bltoks.o \
+init_mpi.o boundmpi.o
+
+# dependencies
+$(OBJB) : global.h defs.h mympi.h mpidefs.h makefile
+
+
+postmort: $(OBJB) makefile
+	$(CC) $(CFLAGS) -o postmort $(OBJB) -lcxml
+
+

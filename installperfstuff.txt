@@ -1,0 +1,66 @@
+JCM 05/12/2009:
+
+1) Get specific kernel that perfmon has patch to:
+e.g. perfmon-new-base-090219.tar.gz is for patching linux-2.6.28.tar.gz
+
+2) Get patch (e.g. perfmon-new-base-090219.tar.gz)
+
+3) Install Patch
+
+4) Compile kernel as in compilekernel.txt
+
+Ensure to enable PERFMON related options, including specific CPU support.
+Don't enable perfmon debugging.
+
+Setup grub to use new kernel
+
+4.5) Install tDOM (use package manager)
+
+4.6) Install elfutils and its devel stuff (use package manager)
+
+4.7) Install tcl and tcllib if not already there  (use package manager)
+
+5) reboot
+
+6) Get new NVIDIA driver and install since tied to kernel, and install it.  Reload gdm (gdm-restart).
+
+7) Install libpfm-3.8.tar.gz (easy)
+
+8) Install pfmon-3.8.tar.gz
+
+9) Read DOCS: http://perfmon2.sourceforge.net/pfmon_usersguide.html
+
+10) Install PAPI: papi-3.6.2.tar.gz [aprun is created]
+
+[Should be done after kernel and pfmon (perfmon2) are installed]
+
+[Ensure APIC on in kernel]
+
+11) After installing PAPI, seems pfmon and libpfm changed.  So reinstalled those.
+
+
+
+
+
+Perfsuite (I recall psrun being very useful)
+
+1) http://perfsuite.ncsa.uiuc.edu/
+
+FAILS to install with:
+
+/bin/sh ../../../../libtool --tag=CC   --mode=link gcc  -g -O2 -lbfd -liberty -version-info 1:0:0  -o libpsbfd.la -rpath /usr/local/lib/psbfd0.2 libpsbfd_la-Bfd_control.lo libpsbfd_la-Bfd_init.lo libpsbfd_la-Bfd_inquire.lo libpsbfd_la-Bfd_lookup.lo
+gcc -shared  .libs/libpsbfd_la-Bfd_control.o .libs/libpsbfd_la-Bfd_init.o .libs/libpsbfd_la-Bfd_inquire.o .libs/libpsbfd_la-Bfd_lookup.o  -lbfd -liberty  -Wl,-soname -Wl,libpsbfd.so.1 -o .libs/libpsbfd.so.1.0.0
+/usr/bin/ld: /usr/lib/gcc/x86_64-redhat-linux/4.1.2/../../../../lib64/libbfd.a(bfd.o): relocation R_X86_64_32 against `bfd_section_hash_newfunc' can not be used when making a shared object; recompile with -fPIC
+/usr/lib/gcc/x86_64-redhat-linux/4.1.2/../../../../lib64/libbfd.a: could not read symbols: Bad value
+collect2: ld returned 1 exit status
+make[5]: *** [libpsbfd.la] Error 1
+make[4]: *** [all-recursive] Error 1
+make[3]: *** [all-recursive] Error 1
+make[2]: *** [all-recursive] Error 1
+make[1]: *** [all-recursive] Error 1
+make: *** [all] Error 2
+
+
+# not required if have perfmon2
+#2) Install perfctr (where?)
+#   http://sourceforge.net/projects/perfctr/

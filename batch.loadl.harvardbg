@@ -1,0 +1,16 @@
+# @ job_type            = bluegene
+# @ executable          = /usr/bin/mpirun
+# @ arguments           = -exe  ./grmhd -np 2048  -args "32 16 4 1 1"  -cwd /data/scratch/cfa/shafee/q1.653d_oldcode_2048  -mode VN
+# @ error               = grmhd.err
+# @ output              = grmhd.out
+# @ environment         = COPY_ALL
+# @ wall_clock_limit    = unlimited
+# @ notification        = always
+# @ notify_user         = shafee@fas.harvard.edu
+# @ bg_size             = 1024
+# @ class               = restartable
+# @ queue
+
+# run using: llsubmit <thisfile>
+# http://community.crimsongrid.harvard.edu/bluegene/user-information/submitting-jobs-on-blue-gene/
+

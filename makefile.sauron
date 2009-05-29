@@ -1,0 +1,108 @@
+# header
+include makehead.inc
+
+# turns on -mp and -pc64 for USEICC=1
+# causes code to be less accurate: e.g. inversion doesn't reach to 1E-15, but rather 1E-11
+ENFORCEPRECISION=1
+
+ifeq ($(ENFORCEPRECISION),1)
+PRECISE=-mp -pc64
+endif
+ifeq ($(ENFORCEPRECISION),0)
+PRECISE=
+endif
+
+USEICC=1
+USEGCC=0
+USECCC=0
+
+# on sauron, pgcc is a 5% faster than gcc, if not many pows, etc.
+# icc and pgcc about the same unless lots of pow's, etc.
+USEICC=1
+USEGCC=0
+USEPGCC=0
+
+ifeq ($(USEMPI),1)
+
+ifeq ($(USEICC),1)
+MCC = /usr/local/mpich-intel/bin/mpicc
+endif
+
+ifeq ($(USEGCC),1)
+MCC = mpicc.gcc
+endif
+
+ifeq ($(USEPGCC),1)
+MCC=mpicc
+endif    
+
+endif
+
+#
+#
+# Define preprocessor and compile flags, and linked libraries
+
+ifeq ($(USEGCC),1)
+COMP=gcc
+# don't use -ffast_math, causes asymmetries in calculations
+CFLAGSPRE = -O3 -funroll-loops -fargument-noalias -mcpu=k8 -msse2 -mfpmath=sse -static
+LDFLAGS = -lm
+GCCCFLAGS = -Wall -O3
+endif
+
+ifeq ($(USEPGCC),1)
+COMP=pgcc
+#CFLAGSPRE = -B -fastsse
+# below is no faster, but use since larger unroll in general may be good
+#CFLAGSPRE = -B -fastsse -Munroll
+# below is no faster, but generally optimal
+CFLAGSPRE = -B -fastsse -Munroll -Mnontemporal -Mvect=sse,prefetch
+# below is no faster, so don't use in case messy
+#CFLAGSPRE = -B -fastsse -Munroll -Mnontemporal -Mipa
+LDFLAGS = -lm
+GCCCFLAGS = -Wall -O3
+endif
+
+ifeq ($(USEICC),1)
+COMP=icc
+CFLAGSPRENONPRECISE=-O3 -fno-alias -ftz -static -static-libcxa -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572
+LDFLAGS = -lm
+GCCCFLAGS = -Wall -O3 -m32
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+endif
+
+
+
+CFLAGS = $(CFLAGSPRE)
+CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE)
+
+
+#CFLAGSNONPRECISE=-long_double $(CFLAGSPRENONPRECISE)
+#CFLAGS = -long_double $(CFLAGSPRE)
+
+
+include maketail.inc
+
+# new instructions:
+#------------------
+# for real trig/etc long doubles
+# 1) setup code dir
+# mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
+# 2) run sh double2longdouble.sh
+# 3) need to copy that suite into a directory with the code (not original!)
+# cp /home/jondata/ldouble/* .
+# 4) uncomment below 2 CFLAGS -type lines and comment out above CFLAGS line before the include maketail.inc
+# 5) make
+
+
+# for real trig/etc long doubles
+# 1) setup code dir
+# mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
+# 2) run sh double2longdouble.sh
+# 3) need to copy that suite into a directory with the code (not original!)
+# cp /home/jondata/ldouble/* .
+# 4) uncomment below 2 include and next line and comment out above include maketail.inc and it's following line
+# 5) make
+
+#include maketailsuperlong.inc
+

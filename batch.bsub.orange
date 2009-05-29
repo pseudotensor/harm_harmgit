@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# run using: bsub < bsub.batch
+
+
+#BSUB -o output.log
+#BSUB -q kipac-ibq
+#BSUB -a openmpi
+#BSUB -J jon4
+
+#BSUB -n 8
+
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -N
+#BSUB -R span[ptile=4]
+
+date
+
+# at command line could do instead of this script:
+# bsub -n 8 -R span[ptile=4] -q kipac-ibq -a openmpi env OMP_NUM_THREADS=8 ./grmhd 2 4 1
+
+
+#################
+NCPUX1=2
+echo $NCPUX1
+NCPUX2=4
+echo $NCPUX2
+NCPUX3=1
+echo $NCPUX3
+#NTOT=$(($NCPUX1 * $NCPUX2 * $NCPUX3))
+NTOT=8
+echo $NTOT
+FILENAME="grmhd"
+echo $FILENAME
+DIRFILE="/u/ki/jmckinne/nfsslac/orange.runs/jonlatest.4/"
+echo $DIRFILE
+RUNDIR="/u/ki/jmckinne/nfsslac/orange.runs/run1.jonlatest.4/"
+echo $RUNDIR
+
+# must set total number of threads for openmpi
+export OMP_NUM_THREADS=$NTOT
+
+
+
+
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+cp $DIRFILE/$FILENAME .
+#wait
+chmod u+x $FILENAME
+
+# force to fail
+#mkdir dumps
+#mkdir images
+
+################
+# OpenMPI does not use mpirun:
+#
+#./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 1 0 > $FILENAME.so
+./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+
+
+wait
+date
+
+
+#/afs/slac.stanford.edu/package/OpenMPI/bin/mpirun \
+#  --prefix /afs/slac.stanford.edu/package/OpenMPI \
+#  --bynode -np 4 --hostfile ./hostfile \
+#  --mca btl ^gm,openib ./executable [args]

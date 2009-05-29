@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+#  Sample Batch Script for a Mako cluster job
+#
+#  Submit this script using the command: qsub batch.sample
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+# resource limits  walltime: maximum wall clock time (hh:mm:ss)
+#                  nodes: number of 2-processor nodes
+#                  ppn: how many processors per node to use (1 or 2)
+#                      (you are always charged for the entire node)
+#                  pt: production Platinum cluster nodes
+#PBS -l nodes=32:ppn=2
+#
+# queue name
+#PBS -q default
+#
+# export all my environment variables to the job
+#PBS -V
+#
+# [If project is invalid, a valid project will be automatically selected]
+#PBS -A orp
+# 
+# job name (default = name of script file)
+#PBS -N tda0
+#
+# filename for standard output (default = <job_name>.o<job_id>)
+#PBS -o tda0.o
+# 
+# combine standard output and standard error (optional)
+#PBS -j oe
+#
+# send mail when the job begins and ends (optional)
+#PBS -m be
+# End of embedded QSUB options
+
+#set echo               # echo commands before execution; use for debugging
+wait
+date
+#
+# do qsub mako.qsub
+#
+# other commands: qstat, qdel, xpbsmon
+###################
+#
+# setup run
+#
+##################
+export NCPUX1=16
+export NCPUX2=4
+export NTOT=64
+export FILENAME="td2048by256_a0"
+export DIRFILE="/home/jmckinne/td2048by256_a0/"
+export RUNDIR="/raid1/jmckinne/td2048by256_a0/"
+
+
+
+#############
+echo $NCPUX1
+echo $NCPUX2
+echo $NTOT
+echo $FILENAME
+echo $DIRFILE
+echo $RUNDIR
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+cp $DIRFILE/$FILENAME .
+#wait
+chmod u+x $FILENAME
+#wait
+#save node list to a file
+cp $PBS_NODEFILE node.list
+
+# parallel (MPI)
+#/usr/local/mpich-1.2/bin/mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 > $FILENAME.so
+#mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 1 1 > $FILENAME.so
+mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 > $FILENAME.so
+
+wait   # for the ssh's above to complete
+date
+

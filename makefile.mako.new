@@ -1,0 +1,76 @@
+# header
+include makehead.inc
+
+
+# on sauron, pgcc is a 5% faster than gcc, if not many pows, etc.
+# icc and pgcc about the same unless lots of pow's, etc.
+USEICC=0
+USEGCC=1
+USEPGCC=0
+
+ifeq ($(USEMPI),1)
+
+ifeq ($(USEICC),1)
+MCC = mpicc
+endif
+
+ifeq ($(USEGCC),1)
+MCC = mpicc
+#.gcc
+endif
+
+ifeq ($(USEPGCC),1)
+MCC=mpicc
+endif    
+
+endif
+
+LAPACKLIB=lapack
+BLASLIB=blas
+F2CLIB=g2c  #-l$(F2CLIB)
+
+PREP = prep
+CMD=grmhd
+
+
+#
+# Define preprocessor and compile flags, and linked libraries
+
+ifeq ($(USEGCC),1)
+COMP=gcc
+# don't use -ffast_math, causes asymmetries in calculations
+CFLAGSPRE = -O3 
+#-funroll-loops -fargument-noalias -mcpu=k8 -msse2 -mfpmath=sse -static
+LDFLAGS = -lm
+GCCCFLAGS = -Wall -O3
+endif
+
+ifeq ($(USEPGCC),1)
+COMP=pgcc
+#CFLAGSPRE = -B -fastsse
+# below is no faster, but use since larger unroll in general may be good
+#CFLAGSPRE = -B -fastsse -Munroll
+# below is no faster, but generally optimal
+CFLAGSPRE = -B -fastsse -Munroll -Mnontemporal -Mvect=sse,prefetch
+# below is no faster, so don't use in case messy
+#CFLAGSPRE = -B -fastsse -Munroll -Mnontemporal -Mipa
+LDFLAGS = -lm
+GCCCFLAGS = -Wall -O3
+endif
+
+ifeq ($(USEICC),1)
+COMP=icc
+#CFLAGSPRE=-O3 -fno-alias -ftz -static -static-libcxa -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572
+CFLAGSPRE=-O3 -fno-alias -ftz -static -static-libcxa -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310
+LDFLAGS = -lm
+#GCCCFLAGS = -Wall -O3 -m32
+GCCCFLAGS = -Wall -O3
+endif
+
+
+
+
+
+
+CFLAGS=$(CFLAGSPRE)
+include maketail.inc

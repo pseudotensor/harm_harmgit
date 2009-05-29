@@ -1,0 +1,39 @@
+           #
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.4x1
+             #  2.733e-07  4.555e-07      0.864     0.4042     0.1429          0  3.607e-07  1.275e-07
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.8x1
+             #  4.569e-08  7.992e-08     0.1196    0.05039    0.01781          0  6.186e-08  2.187e-08
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.16x1
+             #  3.074e-10  5.124e-10   0.000705  0.0003328  0.0001177          0   4.13e-10   1.46e-10
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.32x1
+             #  5.452e-12  9.087e-12   1.48e-05   6.58e-06  2.327e-06          0  9.004e-12  3.184e-12
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.64x1
+             #  1.216e-12  2.027e-12  1.356e-06  1.141e-06  4.035e-07          0   7.65e-13  2.702e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.128x1
+             #   1.25e-12  2.084e-12  1.418e-06  1.316e-06  4.654e-07          0  7.836e-13  2.771e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.256x1
+             #  1.182e-12   1.97e-12   1.36e-06  1.296e-06   4.58e-07          0  7.834e-13   2.77e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.8x4slab1d
+             #  4.432e-08  7.384e-08    0.09476    0.04555    0.01611  1.042e-14  5.703e-08  2.018e-08
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.16x8slab1d
+             #  3.053e-10  5.086e-10  0.0006986  0.0003299  0.0001166  7.659e-17  4.091e-10   1.45e-10
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.32x16slab1d
+             #  5.095e-12  8.488e-12    1.4e-05  6.486e-06  2.293e-06  1.987e-16  8.581e-12  3.039e-12
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.64x32slab1d
+             #  1.223e-12  2.039e-12  1.311e-06  1.198e-06  4.235e-07  6.893e-16  7.604e-13  2.687e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.128x64slab1d
+             #  1.252e-12  2.087e-12  1.416e-06  1.321e-06   4.67e-07  4.513e-15  7.847e-13  2.772e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.256x128slab1d
+             #  1.185e-12  1.974e-12   1.36e-06  1.297e-06  4.585e-07  1.448e-14  7.845e-13  2.772e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.8x4full2d
+             #   1.51e-07  2.659e-07     0.4447    0.03249    0.07631   1.85e-07  1.945e-07  1.433e-07
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.16x8full2d
+             #  4.277e-08  5.573e-08    0.07816    0.01177    0.02023  3.597e-08  4.162e-08  3.311e-08
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.32x16full2d
+             #  1.047e-10  1.774e-10  0.0002775  2.678e-05  3.356e-05  1.276e-10  1.268e-10  9.812e-11
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.64x32full2d
+             #  1.682e-12  2.807e-12  5.539e-06  9.795e-07  8.498e-07  2.744e-12  2.744e-12   2.28e-12
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.128x64full2d
+             #  1.183e-12  1.968e-12  1.311e-06  6.214e-07  4.321e-07  6.251e-13  6.252e-13  5.519e-13
+             # makedir.test1103truefast.fluxreconpointfieldfullssplitmaem.fluxctstag.256x128full2d
+             #  1.231e-12  2.053e-12  1.313e-06  6.218e-07  4.379e-07  6.138e-13   6.14e-13  5.425e-13

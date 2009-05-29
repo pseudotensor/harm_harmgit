@@ -1,0 +1,7 @@
+0                     ! Test number
+-0.5                  ! Left boundary
+0.5                   ! Right boundary
+0.4                   ! Final time
+4000                 ! Number of grid cell points
+1e-010                ! Accuracy (default = 1e-10)
+0                     ! Verbose ( 0 = least info )

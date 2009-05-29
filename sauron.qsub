@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+#  Sample Batch Script for a Mako cluster job
+#
+#  Submit this script using the command: qsub batch.sample
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+# resource limits  walltime: maximum wall clock time (hh:mm:ss)
+#                  nodes: number of 2-processor nodes
+#                  ppn: how many processors per node to use (1 or 2)
+#                      (you are always charged for the entire node)
+#                  pt: production Platinum cluster nodes
+#PBS -l nodes=8:ppn=2
+#
+# queue name
+#PBS -q batch
+#
+# export all my environment variables to the job
+#PBS -V
+#
+# [If project is invalid, a valid project will be automatically selected]
+#PBS -A orp
+# 
+# job name (default = name of script file)
+#PBS -N rthalf_2x8
+#
+# filename for standard output (default = <job_name>.o<job_id>)
+#PBS -o c.TESTNUMBER.o
+# 
+# combine standard output and standard error (optional)
+#PBS -j oe
+#
+# send mail when the job begins and ends (optional)
+#PBS -m be
+# End of embedded QSUB options
+
+#set echo               # echo commands before execution; use for debugging
+wait
+date
+#
+# do qsub mako.qsub
+#
+# other commands: qstat, qdel, xpbsmon
+###################
+#
+# setup run
+#
+##################
+export NCPUX1=4
+export NCPUX2=4
+export NCPUX3=1
+export NTOT=16
+export FILENAME="grmhd"
+export DIRFILE="/data7/atchekho/code/code.TESTNUMBER/"
+export RUNDIR="/data7/atchekho/run/code.TESTNUMBER/"
+
+
+
+#############
+echo $NCPUX1
+echo $NCPUX2
+echo $NCPUX3
+echo $NTOT
+echo $FILENAME
+echo $DIRFILE
+echo $RUNDIR
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+cp $DIRFILE/$FILENAME .
+cp $DIRFILE/*.dat .
+wait
+#wait
+#wait
+#wait
+chmod u+x $FILENAME
+#wait
+#save node list to a file
+cp $PBS_NODEFILE node.list
+
+# parallel (MPI)
+#/usr/local/mpich-1.2/bin/mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 > $FILENAME.so
+#mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 1 0 > $FILENAME.so
+mpirun -np $NTOT -machinefile node.list $FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+
+#./$FILENAME > $FILENAME.so
+
+wait   # for the ssh's above to complete
+
+#mkdir -p /raid6/atchekho/autoanalysis
+#mkdir -p /raid6/atchekho/autoanalysis/dumps
+#cp $DUMPFILE /raid6/atchekho/autoanalysis/dumps/code.TESTNUMBER
+#cp dumps/gdump /raid6/atchekho/autoanalysis/dumps/code.TESTNUMBER.gdump
+#cp coordparms.dat /raid6/atchekho/autoanalysis/dumps/code.TESTNUMBER.params
+
+date
+

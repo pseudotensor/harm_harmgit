@@ -1,0 +1,2 @@
+bin2txt.o :
+	icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=0 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=0 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c bin2txt.c -lm -lmkl_lapack -lmkl -lguide -lpthread -I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -lv5d

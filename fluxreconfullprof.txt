@@ -1,0 +1,2005 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 15.21     31.69    31.69 54994736     0.00     0.00  Ficalc
+ 13.04     58.87    27.18 96964638     0.00     0.00  compute_cf_stencil_weights
+ 10.09     79.89    21.02  1008796     0.00     0.00  eno_line_reconstruct
+  6.13     92.66    12.78 61633722     0.00     0.00  compute_ac_ca_stencil_weights
+  5.20    103.49    10.83 147747104     0.00     0.00  compute_weights_ratios
+  4.82    113.53    10.04   288900     0.00     0.00  compute_df_line_new
+  4.71    123.34     9.81 96146776     0.00     0.00  compute_mono_indicator_point_eno5
+  4.28    132.25     8.91 96964638     0.00     0.00  compute_optimized_cf_stencil_weights
+  2.91    138.32     6.07  2636480     0.00     0.00  get_1d_line
+  2.81    144.17     5.85 61633722     0.00     0.00  compute_optimized_ac_ca_stencil_weights
+  1.95    148.23     4.06 44447852     0.00     0.00  ffdestresstensor_dir
+  1.51    151.38     3.15 201139312     0.00     0.00  get_limit_slopes
+  1.42    154.34     2.96   719468     0.00     0.00  compute_smonotonicity_line
+  1.41    157.28     2.94 115030716     0.00     0.00  ucon_calc_rel4vel
+  1.39    160.18     2.90 86641636     0.00     0.00  get_state
+  1.11    162.49     2.31 803546400     0.00     0.00  assert_func_empty
+  1.08    164.74     2.25      674     0.00     0.14  slope_lim_linetype_c2e
+  1.00    166.83     2.09   288900     0.00     0.00  get_shock_indicator
+  0.99    168.89     2.06 143279109     0.00     0.00  get_geometry
+  0.97    170.91     2.02 44415084     0.00     0.00  mhd_calc_norestmass
+  0.87    172.72     1.81   288900     0.00     0.00  causal_shift_order
+  0.81    174.40     1.68 56150336     0.00     0.00  compute_1plusud0
+  0.80    176.07     1.67 47058144     0.00     0.00  UtoU
+  0.71    177.54     1.47 370653080     0.00     0.00  min
+  0.52    178.63     1.09   288472     0.00     0.00  minimize_weno5_weights
+  0.51    179.70     1.07 13687632     0.00     0.00  etaicalc
+  0.49    180.72     1.02       84     0.01     1.75  fluxcalc
+  0.48    181.72     1.00    71904     0.00     0.00  eno_line_c2a
+  0.48    182.71     0.99      252     0.00     0.00  fluxcalc_fluxctstag_emf_1d
+  0.47    183.68     0.97   288900     0.00     0.00  get_contact_indicator
+  0.46    184.64     0.96       84     0.01     0.56  interpolate_prim_face2corn
+  0.45    185.58     0.94   145520     0.00     0.00  compute_smonotonicity_line_split
+  0.45    186.51     0.93 493599212     0.00     0.00  sign
+  0.44    187.42     0.91 419258536     0.00     0.00  max
+  0.41    188.28     0.86  1475232     0.00     0.00  dxdxp_numerical
+  0.41    189.14     0.86 146162648     0.00     0.00  choose_weno_order
+  0.40    189.97     0.83      676     0.00     0.00  get_primitive_fluxlocation
+  0.38    190.77     0.80   288900     0.00     0.00  get_df_line_gen_new
+  0.36    191.53     0.76 26523912     0.00     0.00  primtoflux
+  0.35    192.25     0.72      676     0.00     0.13  slope_lim_linetype
+  0.34    192.96     0.72  6610128     0.00     0.00  flux_compute_general
+  0.34    193.66     0.70       84     0.01     2.40  advance_standard
+  0.29    194.27     0.61      168     0.00     0.19  fluxcalc_standard_4fluxctstag
+  0.29    194.87     0.60  6610128     0.00     0.00  flux_compute
+  0.26    195.42     0.55   252092     0.00     0.00  get_1d_line_c2e
+  0.26    195.96     0.54      255     0.00     0.17  flux_interp_multiple
+  0.24    196.47     0.51  5905400     0.00     0.00  func_Eprime
+  0.24    196.98     0.51       85     0.01     0.28  interpolate_pfield_face2cent
+  0.22    197.44     0.46  7672800     0.00     0.00  simplefast
+  0.21    197.88     0.44  6610128     0.00     0.00  getplpr
+  0.21    198.32     0.44        1     0.44     0.44  init_dumps
+  0.21    198.75     0.43  2752512     0.00     0.00  source
+  0.19    199.15     0.40      510     0.00     0.00  bound_prim_user
+  0.19    199.54     0.39                             sign2
+  0.18    199.92     0.39 119429372     0.00     0.00  pressure_rho0_u_idealgas
+  0.18    200.29     0.37  2752512     0.00     0.00  diag_source_comp
+  0.15    200.61     0.32  2752512     0.00     0.00  dUtoU
+  0.15    200.92     0.31      110     0.00     0.00  current_doprecalc
+  0.14    201.21     0.29                             sol
+  0.13    201.49     0.28  2752512     0.00     0.00  source_conn
+  0.13    201.76     0.27  6881124     0.00     0.00  primtoU
+  0.12    202.02     0.26   144664     0.00     0.00  reset_weno5_weights
+  0.12    202.28     0.26       84     0.00     0.39  fluxcalc_flux
+  0.12    202.52     0.24       85     0.00     0.28  interpolate_ustag2fieldcent
+  0.11    202.75     0.23  2752512     0.00     0.00  Utoprimgen
+  0.11    202.97     0.22       32     0.01     0.04  compute_vorticity
+  0.10    203.18     0.21  4712100     0.00     0.00  myfwrite
+  0.10    203.39     0.21 30682789     0.00     0.00  bl_coord
+  0.10    203.60     0.21  2752512     0.00     0.00  find_root_1D_gen_Eprime
+  0.10    203.80     0.20  7672800     0.00     0.00  vchar
+  0.10    204.00     0.20  2752512     0.00     0.00  diag_source_all
+  0.10    204.20     0.20   143808     0.00     0.00  compute_lower_order_fraction_weno5_weights
+  0.09    204.39     0.19 12551700     0.00     0.00  myset
+  0.09    204.58     0.19       84     0.00     0.00  diag_flux
+  0.09    204.76     0.18 15345600     0.00     0.00  raise_vec
+  0.08    204.93     0.17 11810800     0.00     0.00  compute_idwmrho0dp_idealgas
+  0.08    205.10     0.17  7916182     0.00     0.00  c2e_simple_eno
+  0.08    205.26     0.16        2     0.08     1.26  image_dump
+  0.08    205.42     0.16  2752512     0.00     0.00  Wp2prim
+  0.07    205.57     0.15  4003200     0.00     0.00  image_content
+  0.07    205.71     0.14       84     0.00     0.00  fixup_utoprim
+  0.06    205.84     0.13                             csslope
+  0.06    205.96     0.12  2752512     0.00     0.00  compute_setup_quantities
+  0.06    206.08     0.12        1     0.12     0.12  set_arrays
+  0.06    206.20     0.12 111422972     0.00     0.00  pressure_rho0_u
+  0.06    206.32     0.12  2752512     0.00     0.00  flux2dUavg
+  0.05    206.43     0.11       85     0.00     0.52  emforvectorpot_fluxrecon
+  0.05    206.54     0.11                             dfun2fun_kazfull
+  0.04    206.63     0.09  8657912     0.00     0.00  pressure_wmrho0_idealgas
+  0.04    206.72     0.09  2752512     0.00     0.00  set_guess_Wp
+  0.04    206.81     0.09                             u_rho0_p
+  0.04    206.90     0.09  2752512     0.00     0.00  bsq_calc
+  0.04    206.98     0.08   166800     0.00     0.00  dump_content
+  0.04    207.06     0.08       22     0.00     0.00  current_calc_1
+  0.03    207.13     0.07  7079116     0.00     0.00  coord
+  0.03    207.20     0.07                             mhd_calc
+  0.03    207.27     0.07  6610128     0.00     0.00  get_wavespeeds
+  0.03    207.33     0.06 34456008     0.00     0.00  signavoidzero
+  0.03    207.39     0.06                             get_sum_of_elements
+  0.02    207.44     0.05  7839600     0.00     0.00  cs2_compute_idealgas
+  0.02    207.49     0.05  2752512     0.00     0.00  Utoprim_jon_nonrelcompat_inputnorestmass
+  0.02    207.54     0.05                             PtoP
+  0.02    207.59     0.05                             mhd_calc_norestmass_ma
+  0.02    207.63     0.04  7005600     0.00     0.00  get_global_wavespeeds
+  0.02    207.67     0.04  5905400     0.00     0.00  validate_x_1d
+  0.02    207.71     0.04      168     0.00     0.00  global_vchar
+  0.02    207.75     0.04      113     0.00     0.01  dump_gen
+  0.01    207.78     0.03  7839600     0.00     0.00  cs2_compute
+  0.01    207.81     0.03   288900     0.00     0.00  pass_1d_line_multipl_weno
+  0.01    207.84     0.03   166800     0.00     0.00  lowerf
+  0.01    207.87     0.03       96     0.00     0.00  prminmaxsum
+  0.01    207.90     0.03                             compute_dSdrho
+  0.01    207.92     0.03  6682706     0.00     0.00  choose_limiter
+  0.01    207.94     0.02 11810800     0.00     0.00  compute_idrho0dp
+  0.01    207.96     0.02  5505025     0.00     0.00  pickeos_eomtype
+  0.01    207.98     0.02  2752512     0.00     0.00  check_Wp
+  0.01    208.00     0.02   232336     0.00     0.00  setfdivb
+  0.01    208.02     0.02    41716     0.00     0.00  gaussj
+  0.01    208.04     0.02    41700     0.00     0.00  init_dsandvels
+  0.01    208.06     0.02       22     0.00     0.12  diag
+  0.01    208.08     0.02                             boundary_smoother
+  0.01    208.10     0.02                             compute_qdot
+  0.01    208.12     0.02      336     0.00     0.14  slope_lim
+  0.00    208.13     0.01 11810800     0.00     0.00  compute_idwmrho0dp
+  0.00    208.14     0.01  8657912     0.00     0.00  pressure_wmrho0
+  0.00    208.15     0.01  2752512     0.00     0.00  Utoprimgen_pick
+  0.00    208.16     0.01  2752512     0.00     0.00  check_on_inversion
+  0.00    208.17     0.01  2752512     0.00     0.00  sourcephysics
+  0.00    208.18     0.01  1475231     0.00     0.00  dxdxprim
+  0.00    208.19     0.01  1156950     0.00     0.00  setup_nprlocalist
+  0.00    208.20     0.01    83416     0.00     0.00  ludcmp
+  0.00    208.21     0.01    83400     0.00     0.00  compute_temp
+  0.00    208.22     0.01    83400     0.00     0.00  eosdump_content
+  0.00    208.23     0.01    41716     0.00     0.00  matrix_inverse
+  0.00    208.24     0.01      113     0.00     0.00  getsizeofdatatype
+  0.00    208.25     0.01        8     0.00     0.00  constotal
+  0.00    208.26     0.01        8     0.00     0.00  integratel
+  0.00    208.27     0.01        1     0.01     0.98  init_primitives
+  0.00    208.28     0.01                             compute_qdot_idealgas
+  0.00    208.29     0.01                             getPressure
+  0.00    208.30     0.01                             get_cold_W_fromEN
+  0.00    208.31     0.01                             get_roe_averaged_state
+  0.00    208.32     0.01                             pressure_rho0_w
+  0.00    208.33     0.01                             set_zamo_ucovuconplus1ud0
+  0.00    208.33     0.01  6610128     0.00     0.00  remapdq
+  0.00    208.34     0.01  6610128     0.00     0.00  remapplpr
+  0.00    208.34     0.01                             advance_finitevolume
+  0.00    208.34     0.00 11810800     0.00     0.00  compute_idrho0dp_idealgas
+  0.00    208.34     0.00  2752512     0.00     0.00  pick_validate_x
+  0.00    208.34     0.00   719468     0.00     0.00  compute_monotonicity_line
+  0.00    208.34     0.00   505040     0.00     0.00  eno_line_a2c
+  0.00    208.34     0.00   289328     0.00     0.00  apply_bc_line
+  0.00    208.34     0.00   166800     0.00     0.00  compute_entropy
+  0.00    208.34     0.00   166800     0.00     0.00  compute_entropy_idealgas
+  0.00    208.34     0.00   166800     0.00     0.00  lower_vec
+  0.00    208.34     0.00   166800     0.00     0.00  rdump_content
+  0.00    208.34     0.00   125148     0.00     0.00  free_ivector
+  0.00    208.34     0.00   125148     0.00     0.00  ivector
+  0.00    208.34     0.00    83417     0.00     0.00  bl_coord_ijk
+  0.00    208.34     0.00    83416     0.00     0.00  bl_coord_ijk_2
+  0.00    208.34     0.00    83416     0.00     0.00  gcov_func
+  0.00    208.34     0.00    83416     0.00     0.00  gdet_func_singcheck
+  0.00    208.34     0.00    83400     0.00     0.00  compute_allextras_idealgas
+  0.00    208.34     0.00    83400     0.00     0.00  compute_temp_idealgas
+  0.00    208.34     0.00    83400     0.00     0.00  debug_content
+  0.00    208.34     0.00    83400     0.00     0.00  fieldline_content
+  0.00    208.34     0.00    83400     0.00     0.00  fluxdump_content
+  0.00    208.34     0.00    83400     0.00     0.00  get_EOS_parms
+  0.00    208.34     0.00    83400     0.00     0.00  get_EOS_parms_idealgas
+  0.00    208.34     0.00    83400     0.00     0.00  get_extrasprocessed
+  0.00    208.34     0.00    83400     0.00     0.00  get_extrasprocessed_idealgas
+  0.00    208.34     0.00    74468     0.00     0.00  bl2met2metp2v
+  0.00    208.34     0.00    74468     0.00     0.00  gset
+  0.00    208.34     0.00    72760     0.00     0.00  compute_monotonicity_line_indicatoronly
+  0.00    208.34     0.00    72760     0.00     0.00  compute_monotonicity_line_valueonly
+  0.00    208.34     0.00    41710     0.00     0.00  coord_ijk
+  0.00    208.34     0.00    41708     0.00     0.00  gcon_func
+  0.00    208.34     0.00    41700     0.00     0.00  assign_eomfunc
+  0.00    208.34     0.00    41700     0.00     0.00  coordtrans
+  0.00    208.34     0.00    41700     0.00     0.00  gdump_content
+  0.00    208.34     0.00    41700     0.00     0.00  get_compdimen
+  0.00    208.34     0.00    41700     0.00     0.00  idxdxprim_ijk
+  0.00    208.34     0.00    41700     0.00     0.00  ucon_calc_3vel
+  0.00    208.34     0.00    32768     0.00     0.00  mhd_calc_norestmass_em
+  0.00    208.34     0.00     4895     0.00     0.00  myfprintf
+  0.00    208.34     0.00     2366     0.00     0.00  addremovefromnpr
+  0.00    208.34     0.00     1766     0.00     0.00  trifprintf
+  0.00    208.34     0.00     1350     0.00     0.00  set_interp_loop_gen
+  0.00    208.34     0.00      676     0.00     0.00  get_recon_type
+  0.00    208.34     0.00      636     0.00     0.00  integrate
+  0.00    208.34     0.00      510     0.00     0.00  bound_prim_user_after_mpi
+  0.00    208.34     0.00      339     0.00     0.00  bound_pstag_user
+  0.00    208.34     0.00      336     0.00     0.13  flux_interp
+  0.00    208.34     0.00      169     0.00     0.00  bound_pstag
+  0.00    208.34     0.00      168     0.00     0.00  bound_evolveprim
+  0.00    208.34     0.00      106     0.00     0.00  error_check
+  0.00    208.34     0.00       96     0.00     0.00  image_header
+  0.00    208.34     0.00       96     0.00     0.00  logsfprintf
+  0.00    208.34     0.00       87     0.00     0.00  pre_fixup
+  0.00    208.34     0.00       85     0.00     0.00  compute_EOS_parms
+  0.00    208.34     0.00       85     0.00     0.00  compute_EOS_parms_idealgas
+  0.00    208.34     0.00       84     0.00     2.40  advance
+  0.00    208.34     0.00       84     0.00     0.00  bound_pflag
+  0.00    208.34     0.00       84     0.00     0.00  bound_pflag_user
+  0.00    208.34     0.00       84     0.00     0.00  compute_new_metric_substep
+  0.00    208.34     0.00       84     0.00     0.26  field_integrate_fluxrecon
+  0.00    208.34     0.00       84     0.00     0.78  flux_integrate_fluxrecon
+  0.00    208.34     0.00       84     0.00     0.78  flux_point2avg
+  0.00    208.34     0.00       84     0.00     0.58  fluxcalc_fluxctstag
+  0.00    208.34     0.00       84     0.00     0.00  post_fixup
+  0.00    208.34     0.00       84     0.00     0.00  preinterp_flux_point2avg
+  0.00    208.34     0.00       31     0.00     0.00  mpifmin
+  0.00    208.34     0.00       22     0.00     0.00  current_calc
+  0.00    208.34     0.00       22     0.00     0.00  myfclose
+  0.00    208.34     0.00       21     0.00     0.00  control_metric_update
+  0.00    208.34     0.00       21     0.00     0.00  myfopen
+  0.00    208.34     0.00       21     0.00     0.00  postdt
+  0.00    208.34     0.00       21     0.00     0.00  setup_rktimestep
+  0.00    208.34     0.00       21     0.00     9.65  step_ch_full
+  0.00    208.34     0.00       21     0.00     9.65  step_ch_simplempi
+  0.00    208.34     0.00       20     0.00     0.00  mpiisum0
+  0.00    208.34     0.00       16     0.00     0.00  dxdxprim_ijk_2
+  0.00    208.34     0.00       16     0.00     0.00  gcov2gcovprim
+  0.00    208.34     0.00       13     0.00     0.00  dump_header
+  0.00    208.34     0.00       10     0.00     0.00  dualfprintf
+  0.00    208.34     0.00        8     0.00     0.00  eomfunc_func
+  0.00    208.34     0.00        4     0.00     0.01  dump
+  0.00    208.34     0.00        4     0.00     0.01  restart_write
+  0.00    208.34     0.00        4     0.00     0.00  write_restart_header
+  0.00    208.34     0.00        3     0.00     0.00  ranc
+  0.00    208.34     0.00        2     0.00     0.00  bound_allprim
+  0.00    208.34     0.00        2     0.00     0.01  debugdump
+  0.00    208.34     0.00        2     0.00     0.00  divbmaxavg
+  0.00    208.34     0.00        2     0.00     0.00  dmatrix
+  0.00    208.34     0.00        2     0.00     0.01  dump_ener
+  0.00    208.34     0.00        2     0.00     0.01  eosdump
+  0.00    208.34     0.00        2     0.00     0.01  fieldlinedump
+  0.00    208.34     0.00        2     0.00     0.01  fluxdumpdump
+  0.00    208.34     0.00        2     0.00     0.00  mpiFTYPEsum
+  0.00    208.34     0.00        2     0.00     0.00  recompute_fluxpositions
+  0.00    208.34     0.00        2     0.00     0.01  set_dt
+  0.00    208.34     0.00        1     0.00     0.00  bound_prim
+  0.00    208.34     0.00        1     0.00     0.00  conn_func
+  0.00    208.34     0.00        1     0.00     0.00  control_time_store_metric
+  0.00    208.34     0.00        1     0.00     0.00  dvector
+  0.00    208.34     0.00        1     0.00     0.00  dxdxprim_ijk
+  0.00    208.34     0.00        1     0.00     0.01  gdump
+  0.00    208.34     0.00        1     0.00     1.62  init
+  0.00    208.34     0.00        1     0.00     0.01  init_conservatives
+  0.00    208.34     0.00        1     0.00     0.00  init_consts
+  0.00    208.34     0.00        1     0.00     0.00  init_genfiles
+  0.00    208.34     0.00        1     0.00     0.00  init_global
+  0.00    208.34     0.00        1     0.00     0.00  init_grid
+  0.00    208.34     0.00        1     0.00     0.00  init_grid_post_set_grid
+  0.00    208.34     0.00        1     0.00     0.00  init_mpi
+  0.00    208.34     0.00        1     0.00     0.00  init_placeongrid
+  0.00    208.34     0.00        1     0.00     0.00  interp_loop_set
+  0.00    208.34     0.00        1     0.00     0.00  myexit
+  0.00    208.34     0.00        1     0.00     0.01  normalize_field
+  0.00    208.34     0.00        1     0.00     0.01  pi2Uavg
+  0.00    208.34     0.00        1     0.00     0.01  post_init_specific_init
+  0.00    208.34     0.00        1     0.00     0.00  post_par_set
+  0.00    208.34     0.00        1     0.00     0.56  pre_init
+  0.00    208.34     0.00        1     0.00     0.00  pre_init_specific_init
+  0.00    208.34     0.00        1     0.00     0.00  prepre_init_specific_init
+  0.00    208.34     0.00        1     0.00     0.00  set_conn_cartminkmetric
+  0.00    208.34     0.00        1     0.00     0.00  set_coord_parms
+  0.00    208.34     0.00        1     0.00     0.00  set_drsing
+  0.00    208.34     0.00        1     0.00     0.00  set_grid
+  0.00    208.34     0.00        1     0.00     0.00  set_points
+  0.00    208.34     0.00        1     0.00     0.52  vectorpot_fluxreconorfvavg
+  0.00    208.34     0.00        1     0.00     0.80  vpot2field
+  0.00    208.34     0.00        1     0.00     0.00  vpot2field_staggeredfield
+  0.00    208.34     0.00        1     0.00     0.00  write_coord_parms
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.00% of 208.34 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     99.3    0.00  206.97                 main [1]
+                0.00  202.68      21/21          step_ch_full [2]
+                0.02    2.66      22/22          diag [48]
+                0.00    1.62       1/1           init [60]
+                0.00    0.00      40/4895        myfprintf [226]
+                0.00    0.00      25/1766        trifprintf [228]
+                0.00    0.00      20/20          mpiisum0 [248]
+                0.00    0.00       1/1           myexit [268]
+-----------------------------------------------
+                0.00  202.68      21/21          main [1]
+[2]     97.3    0.00  202.68      21         step_ch_full [2]
+                0.00  202.68      21/21          step_ch_simplempi [3]
+                0.00    0.00      21/106         error_check [232]
+                0.00    0.00      21/21          control_metric_update [244]
+                0.00    0.00      21/21          postdt [246]
+-----------------------------------------------
+                0.00  202.68      21/21          step_ch_full [2]
+[3]     97.3    0.00  202.68      21         step_ch_simplempi [3]
+                0.00  201.79      84/84          advance [4]
+                0.30    0.11     105/110         current_doprecalc [92]
+                0.00    0.26     168/168         bound_evolveprim [100]
+                0.00    0.14      84/84          post_fixup [116]
+                0.00    0.08      21/22          current_calc [128]
+                0.00    0.00     273/1766        trifprintf [228]
+                0.00    0.00      84/87          pre_fixup [235]
+                0.00    0.00      84/85          compute_EOS_parms [236]
+                0.00    0.00      84/106         error_check [232]
+                0.00    0.00      21/21          setup_rktimestep [247]
+                0.00    0.00      21/31          mpifmin [242]
+-----------------------------------------------
+                0.00  201.79      84/84          step_ch_simplempi [3]
+[4]     96.9    0.00  201.79      84         advance [4]
+                0.70  201.09      84/84          advance_standard [5]
+-----------------------------------------------
+                0.70  201.09      84/84          advance [4]
+[5]     96.9    0.70  201.09      84         advance_standard [5]
+                1.02  146.07      84/84          fluxcalc [6]
+                0.24   23.48      84/85          interpolate_ustag2fieldcent [25]
+                0.00   21.50      84/84          field_integrate_fluxrecon [27]
+                0.23    2.47 2752512/2752512     Utoprimgen [47]
+                0.43    2.01 2752512/2752512     source [50]
+                0.37    1.17 2752512/2752512     diag_source_comp [61]
+                0.20    0.39 2752512/2752512     diag_source_all [83]
+                0.11    0.39 2752512/6881124     primtoU [66]
+                0.32    0.00 2752512/2752512     dUtoU [96]
+                0.19    0.03      84/84          diag_flux [103]
+                0.09    0.07 2752512/86641636     get_state [40]
+                0.12    0.00 2752512/2752512     flux2dUavg [121]
+                0.12    0.00 8257536/143279109     get_geometry [53]
+                0.00    0.07      84/169         bound_pstag [117]
+                0.00    0.00     420/1766        trifprintf [228]
+                0.00    0.00      84/84          compute_new_metric_substep [240]
+-----------------------------------------------
+                1.02  146.07      84/84          advance_standard [5]
+[6]     70.6    1.02  146.07      84         fluxcalc [6]
+                0.00   65.15      84/84          flux_point2avg [12]
+                0.00   48.52      84/84          fluxcalc_fluxctstag [13]
+                0.26   32.14      84/84          fluxcalc_flux [22]
+                0.00    0.00      84/84          preinterp_flux_point2avg [241]
+                0.00    0.00      84/1766        trifprintf [228]
+-----------------------------------------------
+                0.01   45.93  144236/288900      slope_lim_linetype_c2e [8]
+                0.02   46.07  144664/288900      slope_lim_linetype [10]
+[7]     44.2    0.03   92.00  288900         pass_1d_line_multipl_weno [7]
+                0.00   43.39  505040/505040      eno_line_a2c [18]
+               10.50   32.78  503756/1008796     eno_line_reconstruct [9]
+                1.00    2.78   71904/71904       eno_line_c2a [43]
+                1.09    0.00  288472/288472      minimize_weno5_weights [69]
+                0.26    0.00  144664/144664      reset_weno5_weights [102]
+                0.20    0.00  143808/143808      compute_lower_order_fraction_weno5_weights [107]
+                0.00    0.00  288900/1156950     setup_nprlocalist [184]
+-----------------------------------------------
+                0.56   22.13     168/674         fluxcalc_standard_4fluxctstag [23]
+                0.57   22.39     170/674         interpolate_pfield_face2cent [26]
+                1.12   44.25     336/674         slope_lim [15]
+[8]     43.7    2.25   88.77     674         slope_lim_linetype_c2e [8]
+                0.01   45.93  144236/288900      pass_1d_line_multipl_weno [7]
+                1.04   16.44  144236/288900      get_shock_indicator [20]
+                0.40    9.95  144236/288900      get_df_line_gen_new [28]
+                0.00    9.69  503756/719468      compute_monotonicity_line [30]
+                2.57    0.00 1117936/2636480     get_1d_line [38]
+                0.48    0.72  144236/288900      get_contact_indicator [51]
+                0.90    0.08  144236/288900      causal_shift_order [54]
+                0.55    0.00  252092/252092      get_1d_line_c2e [87]
+                0.00    0.00     674/1156950     setup_nprlocalist [184]
+                0.00    0.00     674/1350        set_interp_loop_gen [229]
+-----------------------------------------------
+               10.50   32.78  503756/1008796     pass_1d_line_multipl_weno [7]
+               10.52   32.87  505040/1008796     eno_line_a2c [18]
+[9]     41.6   21.02   65.65 1008796         eno_line_reconstruct [9]
+               26.95    0.28 96146776/96964638     compute_cf_stencil_weights [24]
+               10.34    0.00 141065072/147747104     compute_weights_ratios [33]
+                9.94    0.14 47943400/61633722     compute_ac_ca_stencil_weights [32]
+                8.83    0.28 96146776/96964638     compute_optimized_cf_stencil_weights [35]
+                4.55    0.14 47943400/61633722     compute_optimized_ac_ca_stencil_weights [39]
+                0.82    2.31 139552520/146162648     choose_weno_order [44]
+                1.08    0.00 376766936/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.36   42.24     336/676         flux_interp [19]
+                0.36   42.74     340/676         flux_interp_multiple [17]
+[10]    41.1    0.72   84.98     676         slope_lim_linetype [10]
+                0.02   46.07  144664/288900      pass_1d_line_multipl_weno [7]
+                1.05   16.49  144664/288900      get_shock_indicator [20]
+                0.40    9.98  144664/288900      get_df_line_gen_new [28]
+                0.00    4.15  215712/719468      compute_monotonicity_line [30]
+                3.50    0.00 1518544/2636480     get_1d_line [38]
+                0.49    0.72  144664/288900      get_contact_indicator [51]
+                0.91    0.08  144664/288900      causal_shift_order [54]
+                0.00    0.57   72760/72760       compute_monotonicity_line_indicatoronly [84]
+                0.00    0.57   72760/72760       compute_monotonicity_line_valueonly [85]
+                0.00    0.00     676/1156950     setup_nprlocalist [184]
+                0.00    0.00  289328/289328      apply_bc_line [208]
+                0.00    0.00     676/676         get_recon_type [230]
+                0.00    0.00     676/1350        set_interp_loop_gen [229]
+-----------------------------------------------
+                0.00   65.15      84/84          flux_point2avg [12]
+[11]    31.3    0.00   65.15      84         flux_integrate_fluxrecon [11]
+                0.11   43.54      84/85          emforvectorpot_fluxrecon [16]
+                0.00   21.50     168/336         flux_interp [19]
+                0.00    0.00     168/2366        addremovefromnpr [227]
+-----------------------------------------------
+                0.00   65.15      84/84          fluxcalc [6]
+[12]    31.3    0.00   65.15      84         flux_point2avg [12]
+                0.00   65.15      84/84          flux_integrate_fluxrecon [11]
+                0.00    0.00      84/1766        trifprintf [228]
+-----------------------------------------------
+                0.00   48.52      84/84          fluxcalc [6]
+[13]    23.3    0.00   48.52      84         fluxcalc_fluxctstag [13]
+                0.96   46.42      84/84          interpolate_prim_face2corn [14]
+                0.99    0.15     252/252         fluxcalc_fluxctstag_emf_1d [68]
+                0.00    0.00     252/1766        trifprintf [228]
+-----------------------------------------------
+                0.96   46.42      84/84          fluxcalc_fluxctstag [13]
+[14]    22.7    0.96   46.42      84         interpolate_prim_face2corn [14]
+                0.02   45.37     336/336         slope_lim [15]
+                0.54    0.00 21016800/115030716     ucon_calc_rel4vel [46]
+                0.45    0.00 31453296/143279109     get_geometry [53]
+                0.04    0.00 20944896/34456008     signavoidzero [134]
+                0.00    0.00     504/6682706     choose_limiter [153]
+-----------------------------------------------
+                0.02   45.37     336/336         interpolate_prim_face2corn [14]
+[15]    21.8    0.02   45.37     336         slope_lim [15]
+                1.12   44.25     336/674         slope_lim_linetype_c2e [8]
+-----------------------------------------------
+                0.00    0.52       1/85          vectorpot_fluxreconorfvavg [88]
+                0.11   43.54      84/85          flux_integrate_fluxrecon [11]
+[16]    21.2    0.11   44.06      85         emforvectorpot_fluxrecon [16]
+                0.54   43.52     255/255         flux_interp_multiple [17]
+                0.00    0.00     510/2366        addremovefromnpr [227]
+-----------------------------------------------
+                0.54   43.52     255/255         emforvectorpot_fluxrecon [16]
+[17]    21.1    0.54   43.52     255         flux_interp_multiple [17]
+                0.36   42.74     340/676         slope_lim_linetype [10]
+                0.42    0.00     340/676         get_primitive_fluxlocation [78]
+                0.00    0.00     680/2366        addremovefromnpr [227]
+-----------------------------------------------
+                0.00   43.39  505040/505040      pass_1d_line_multipl_weno [7]
+[18]    20.8    0.00   43.39  505040         eno_line_a2c [18]
+               10.52   32.87  505040/1008796     eno_line_reconstruct [9]
+-----------------------------------------------
+                0.00   21.50     168/336         field_integrate_fluxrecon [27]
+                0.00   21.50     168/336         flux_integrate_fluxrecon [11]
+[19]    20.6    0.00   43.01     336         flux_interp [19]
+                0.36   42.24     336/676         slope_lim_linetype [10]
+                0.41    0.00     336/676         get_primitive_fluxlocation [78]
+                0.00    0.00     672/2366        addremovefromnpr [227]
+-----------------------------------------------
+                1.04   16.44  144236/288900      slope_lim_linetype_c2e [8]
+                1.05   16.49  144664/288900      slope_lim_linetype [10]
+[20]    16.8    2.09   32.92  288900         get_shock_indicator [20]
+               31.69    1.23 54994736/54994736     Ficalc [21]
+                0.00    0.00  288900/1156950     setup_nprlocalist [184]
+-----------------------------------------------
+               31.69    1.23 54994736/54994736     get_shock_indicator [20]
+[21]    15.8   31.69    1.23 54994736         Ficalc [21]
+                0.87    0.00 219978944/370653080     min [62]
+                0.36    0.00 164984208/419258536     max [76]
+-----------------------------------------------
+                0.26   32.14      84/84          fluxcalc [6]
+[22]    15.6    0.26   32.14      84         fluxcalc_flux [22]
+                0.61   31.53     168/168         fluxcalc_standard_4fluxctstag [23]
+                0.00    0.00     168/1766        trifprintf [228]
+-----------------------------------------------
+                0.61   31.53     168/168         fluxcalc_flux [22]
+[23]    15.4    0.61   31.53     168         fluxcalc_standard_4fluxctstag [23]
+                0.56   22.13     168/674         slope_lim_linetype_c2e [8]
+                0.72    5.98 6610128/6610128     flux_compute_general [36]
+                0.04    1.30 7005600/7005600     get_global_wavespeeds [64]
+                0.44    0.01 6610128/6610128     getplpr [90]
+                0.29    0.00 20225856/143279109     get_geometry [53]
+                0.04    0.02     168/168         global_vchar [133]
+-----------------------------------------------
+                0.23    0.00  817862/96964638     choose_weno_order [44]
+               26.95    0.28 96146776/96964638     eno_line_reconstruct [9]
+[24]    13.2   27.18    0.28 96964638         compute_cf_stencil_weights [24]
+                0.28    0.00 96964638/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.00    0.28       1/85          vpot2field [79]
+                0.24   23.48      84/85          advance_standard [5]
+[25]    11.5    0.24   23.76      85         interpolate_ustag2fieldcent [25]
+                0.51   23.01      85/85          interpolate_pfield_face2cent [26]
+                0.15    0.00 10633500/143279109     get_geometry [53]
+                0.00    0.07      85/169         bound_pstag [117]
+                0.02    0.00 10633500/34456008     signavoidzero [134]
+-----------------------------------------------
+                0.51   23.01      85/85          interpolate_ustag2fieldcent [25]
+[26]    11.3    0.51   23.01      85         interpolate_pfield_face2cent [26]
+                0.57   22.39     170/674         slope_lim_linetype_c2e [8]
+                0.05    0.00 3544500/143279109     get_geometry [53]
+                0.00    0.00     170/6682706     choose_limiter [153]
+-----------------------------------------------
+                0.00   21.50      84/84          advance_standard [5]
+[27]    10.3    0.00   21.50      84         field_integrate_fluxrecon [27]
+                0.00   21.50     168/336         flux_interp [19]
+                0.00    0.00     336/2366        addremovefromnpr [227]
+-----------------------------------------------
+                0.40    9.95  144236/288900      slope_lim_linetype_c2e [8]
+                0.40    9.98  144664/288900      slope_lim_linetype [10]
+[28]     9.9    0.80   19.92  288900         get_df_line_gen_new [28]
+               10.04    6.73  288900/288900      compute_df_line_new [29]
+                3.15    0.00 201139312/201139312     get_limit_slopes [45]
+                0.00    0.00  288900/1156950     setup_nprlocalist [184]
+-----------------------------------------------
+               10.04    6.73  288900/288900      get_df_line_gen_new [28]
+[29]     8.1   10.04    6.73  288900         compute_df_line_new [29]
+                1.88    1.44 56150336/86641636     get_state [40]
+                1.68    0.00 56150336/56150336     compute_1plusud0 [58]
+                0.81    0.00 56150336/143279109     get_geometry [53]
+                0.36    0.00 166717608/419258536     max [76]
+                0.06    0.18 56150336/111422972     pressure_rho0_u [89]
+                0.22    0.00 55572536/370653080     min [62]
+                0.11    0.00 56150336/493599212     sign [75]
+-----------------------------------------------
+                0.00    4.15  215712/719468      slope_lim_linetype [10]
+                0.00    9.69  503756/719468      slope_lim_linetype_c2e [8]
+[30]     6.6    0.00   13.83  719468         compute_monotonicity_line [30]
+                2.96   10.87  719468/719468      compute_smonotonicity_line [31]
+-----------------------------------------------
+                2.96   10.87  719468/719468      compute_monotonicity_line [30]
+[31]     6.6    2.96   10.87  719468         compute_smonotonicity_line [31]
+                9.81    0.28 96146776/96146776     compute_mono_indicator_point_eno5 [34]
+                0.62    0.00 327119928/493599212     sign [75]
+                0.17    0.00 7916182/7916182     c2e_simple_eno [113]
+-----------------------------------------------
+                1.41    0.02 6825840/61633722     eno_line_c2a [43]
+                1.42    0.02 6864482/61633722     choose_weno_order [44]
+                9.94    0.14 47943400/61633722     eno_line_reconstruct [9]
+[32]     6.2   12.78    0.18 61633722         compute_ac_ca_stencil_weights [32]
+                0.18    0.00 61633722/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.49    0.00 6682032/147747104     eno_line_c2a [43]
+               10.34    0.00 141065072/147747104     eno_line_reconstruct [9]
+[33]     5.2   10.83    0.00 147747104         compute_weights_ratios [33]
+-----------------------------------------------
+                9.81    0.28 96146776/96146776     compute_smonotonicity_line [31]
+[34]     4.8    9.81    0.28 96146776         compute_mono_indicator_point_eno5 [34]
+                0.28    0.00 96146776/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.08    0.00  817862/96964638     choose_weno_order [44]
+                8.83    0.28 96146776/96964638     eno_line_reconstruct [9]
+[35]     4.4    8.91    0.28 96964638         compute_optimized_cf_stencil_weights [35]
+                0.28    0.00 96964638/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.72    5.98 6610128/6610128     fluxcalc_standard_4fluxctstag [23]
+[36]     3.2    0.72    5.98 6610128         flux_compute_general [36]
+                0.76    3.73 26440512/26523912     primtoflux [41]
+                0.44    0.34 13220256/86641636     get_state [40]
+                0.60    0.00 6610128/6610128     flux_compute [82]
+                0.07    0.04 6610128/6610128     get_wavespeeds [122]
+-----------------------------------------------
+                0.31    0.66 6881124/44415084     primtoU [66]
+                0.50    1.05 11010048/44415084     source_conn [55]
+                1.21    2.54 26523912/44415084     primtoflux [41]
+[37]     3.0    2.02    4.25 44415084         mhd_calc_norestmass [37]
+                4.06    0.00 44415084/44447852     ffdestresstensor_dir [42]
+                0.05    0.14 44415084/111422972     pressure_rho0_u [89]
+-----------------------------------------------
+                2.57    0.00 1117936/2636480     slope_lim_linetype_c2e [8]
+                3.50    0.00 1518544/2636480     slope_lim_linetype [10]
+[38]     2.9    6.07    0.00 2636480         get_1d_line [38]
+-----------------------------------------------
+                0.65    0.02 6825840/61633722     eno_line_c2a [43]
+                0.65    0.02 6864482/61633722     choose_weno_order [44]
+                4.55    0.14 47943400/61633722     eno_line_reconstruct [9]
+[39]     2.9    5.85    0.18 61633722         compute_optimized_ac_ca_stencil_weights [39]
+                0.18    0.00 61633722/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.00    0.00   32768/86641636     normalize_field [187]
+                0.00    0.00   41700/86641636     pi2Uavg [168]
+                0.00    0.00   83400/86641636     set_dt [150]
+                0.00    0.00   83400/86641636     fieldline_content [142]
+                0.01    0.00  166800/86641636     dump_content [97]
+                0.01    0.01  265440/86641636     diag_flux [103]
+                0.04    0.03 1334400/86641636     image_dump [49]
+                0.09    0.07 2752512/86641636     advance_standard [5]
+                0.09    0.07 2752512/86641636     source [50]
+                0.09    0.07 2752512/86641636     Utoprimgen [47]
+                0.23    0.18 7005600/86641636     get_global_wavespeeds [64]
+                0.44    0.34 13220256/86641636     flux_compute_general [36]
+                1.88    1.44 56150336/86641636     compute_df_line_new [29]
+[40]     2.5    2.90    2.21 86641636         get_state [40]
+                2.21    0.00 86641636/115030716     ucon_calc_rel4vel [46]
+-----------------------------------------------
+                0.00    0.01   83400/26523912     fieldline_content [142]
+                0.76    3.73 26440512/26523912     flux_compute_general [36]
+[41]     2.2    0.76    3.74 26523912         primtoflux [41]
+                1.21    2.54 26523912/44415084     mhd_calc_norestmass [37]
+-----------------------------------------------
+                0.00    0.00   32768/44447852     mhd_calc_norestmass_em [193]
+                4.06    0.00 44415084/44447852     mhd_calc_norestmass [37]
+[42]     1.9    4.06    0.00 44447852         ffdestresstensor_dir [42]
+-----------------------------------------------
+                1.00    2.78   71904/71904       pass_1d_line_multipl_weno [7]
+[43]     1.8    1.00    2.78   71904         eno_line_c2a [43]
+                1.41    0.02 6825840/61633722     compute_ac_ca_stencil_weights [32]
+                0.65    0.02 6825840/61633722     compute_optimized_ac_ca_stencil_weights [39]
+                0.49    0.00 6682032/147747104     compute_weights_ratios [33]
+                0.04    0.11 6610128/146162648     choose_weno_order [44]
+                0.04    0.00 13435968/803546400     assert_func_empty [52]
+-----------------------------------------------
+                0.04    0.11 6610128/146162648     eno_line_c2a [43]
+                0.82    2.31 139552520/146162648     eno_line_reconstruct [9]
+[44]     1.6    0.86    2.42 146162648         choose_weno_order [44]
+                1.42    0.02 6864482/61633722     compute_ac_ca_stencil_weights [32]
+                0.65    0.02 6864482/61633722     compute_optimized_ac_ca_stencil_weights [39]
+                0.23    0.00  817862/96964638     compute_cf_stencil_weights [24]
+                0.08    0.00  817862/96964638     compute_optimized_cf_stencil_weights [35]
+-----------------------------------------------
+                3.15    0.00 201139312/201139312     get_df_line_gen_new [28]
+[45]     1.5    3.15    0.00 201139312         get_limit_slopes [45]
+-----------------------------------------------
+                0.00    0.00   32768/115030716     bl2met2metp2v [138]
+                0.07    0.00 2752512/115030716     bsq_calc [114]
+                0.12    0.00 4587000/115030716     current_doprecalc [92]
+                0.54    0.00 21016800/115030716     interpolate_prim_face2corn [14]
+                2.21    0.00 86641636/115030716     get_state [40]
+[46]     1.4    2.94    0.00 115030716         ucon_calc_rel4vel [46]
+-----------------------------------------------
+                0.23    2.47 2752512/2752512     advance_standard [5]
+[47]     1.3    0.23    2.47 2752512         Utoprimgen [47]
+                0.01    1.70 2752512/2752512     Utoprimgen_pick [56]
+                0.11    0.39 2752512/6881124     primtoU [66]
+                0.09    0.07 2752512/86641636     get_state [40]
+                0.10    0.00 2752512/47058144     UtoU [59]
+                0.00    0.00 2752512/34456008     signavoidzero [134]
+-----------------------------------------------
+                0.02    2.66      22/22          main [1]
+[48]     1.3    0.02    2.66      22         diag [48]
+                0.16    2.36       2/2           image_dump [49]
+                0.00    0.03       4/4           restart_write [144]
+                0.00    0.03       2/2           dump_ener [151]
+                0.00    0.02       2/2           fieldlinedump [164]
+                0.00    0.02       2/2           debugdump [162]
+                0.00    0.02       2/4           dump [143]
+                0.00    0.02       2/2           fluxdumpdump [165]
+                0.00    0.02       2/2           eosdump [163]
+                0.00    0.01       1/1           gdump [185]
+                0.00    0.00      20/1766        trifprintf [228]
+                0.00    0.00       8/21          myfopen [245]
+                0.00    0.00       8/4895        myfprintf [226]
+                0.00    0.00       8/22          myfclose [243]
+-----------------------------------------------
+                0.16    2.36       2/2           diag [48]
+[49]     1.2    0.16    2.36       2         image_dump [49]
+                0.22    1.02      32/32          compute_vorticity [65]
+                0.03    0.71      96/113         dump_gen [77]
+                0.05    0.19 1334400/6881124     primtoU [66]
+                0.04    0.03 1334400/86641636     get_state [40]
+                0.03    0.00      96/96          prminmaxsum [147]
+                0.02    0.00 1334400/143279109     get_geometry [53]
+                0.00    0.00     192/1766        trifprintf [228]
+                0.00    0.00      96/96          logsfprintf [234]
+-----------------------------------------------
+                0.43    2.01 2752512/2752512     advance_standard [5]
+[50]     1.2    0.43    2.01 2752512         source [50]
+                0.28    1.55 2752512/2752512     source_conn [55]
+                0.09    0.07 2752512/86641636     get_state [40]
+                0.01    0.00 2752512/2752512     sourcephysics [172]
+-----------------------------------------------
+                0.48    0.72  144236/288900      slope_lim_linetype_c2e [8]
+                0.49    0.72  144664/288900      slope_lim_linetype [10]
+[51]     1.2    0.97    1.43  288900         get_contact_indicator [51]
+                1.07    0.36 13687632/13687632     etaicalc [63]
+                0.00    0.00  288900/1156950     setup_nprlocalist [184]
+-----------------------------------------------
+                0.04    0.00 13435968/803546400     eno_line_c2a [43]
+                0.18    0.00 61633722/803546400     compute_optimized_ac_ca_stencil_weights [39]
+                0.18    0.00 61633722/803546400     compute_ac_ca_stencil_weights [32]
+                0.28    0.00 96146776/803546400     compute_mono_indicator_point_eno5 [34]
+                0.28    0.00 96964638/803546400     compute_optimized_cf_stencil_weights [35]
+                0.28    0.00 96964638/803546400     compute_cf_stencil_weights [24]
+                1.08    0.00 376766936/803546400     eno_line_reconstruct [9]
+[52]     1.1    2.31    0.00 803546400         assert_func_empty [52]
+-----------------------------------------------
+                0.00    0.00       1/143279109     set_grid [200]
+                0.00    0.00   32768/143279109     normalize_field [187]
+                0.00    0.00   32768/143279109     gset [139]
+                0.00    0.00   41700/143279109     pi2Uavg [168]
+                0.00    0.00   74468/143279109     bl2met2metp2v [138]
+                0.00    0.00   83400/143279109     set_dt [150]
+                0.00    0.00   83400/143279109     fieldline_content [142]
+                0.00    0.00  125100/143279109     vpot2field_staggeredfield [194]
+                0.00    0.00  166800/143279109     dump_content [97]
+                0.01    0.00  530880/143279109     diag_flux [103]
+                0.02    0.00 1334400/143279109     image_dump [49]
+                0.05    0.00 3544500/143279109     interpolate_pfield_face2cent [26]
+                0.12    0.00 8257536/143279109     advance_standard [5]
+                0.15    0.00 10508400/143279109     fluxcalc_fluxctstag_emf_1d [68]
+                0.15    0.00 10633500/143279109     interpolate_ustag2fieldcent [25]
+                0.29    0.00 20225856/143279109     fluxcalc_standard_4fluxctstag [23]
+                0.45    0.00 31453296/143279109     interpolate_prim_face2corn [14]
+                0.81    0.00 56150336/143279109     compute_df_line_new [29]
+[53]     1.0    2.06    0.00 143279109         get_geometry [53]
+-----------------------------------------------
+                0.90    0.08  144236/288900      slope_lim_linetype_c2e [8]
+                0.91    0.08  144664/288900      slope_lim_linetype [10]
+[54]     0.9    1.81    0.16  288900         causal_shift_order [54]
+                0.11    0.00 26663440/370653080     min [62]
+                0.06    0.00 26663440/419258536     max [76]
+-----------------------------------------------
+                0.28    1.55 2752512/2752512     source [50]
+[55]     0.9    0.28    1.55 2752512         source_conn [55]
+                0.50    1.05 11010048/44415084     mhd_calc_norestmass [37]
+-----------------------------------------------
+                0.01    1.70 2752512/2752512     Utoprimgen [47]
+[56]     0.8    0.01    1.70 2752512         Utoprimgen_pick [56]
+                0.05    1.65 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+-----------------------------------------------
+                0.05    1.65 2752512/2752512     Utoprimgen_pick [56]
+[57]     0.8    0.05    1.65 2752512         Utoprim_jon_nonrelcompat_inputnorestmass [57]
+                0.21    0.82 2752512/2752512     find_root_1D_gen_Eprime [71]
+                0.09    0.17 2752512/2752512     set_guess_Wp [101]
+                0.16    0.03 2752512/2752512     Wp2prim [108]
+                0.12    0.00 2752512/2752512     compute_setup_quantities [119]
+                0.02    0.00 2752512/2752512     check_Wp [157]
+                0.02    0.00 5505024/5505025     pickeos_eomtype [156]
+                0.01    0.00 2752512/2752512     check_on_inversion [171]
+-----------------------------------------------
+                1.68    0.00 56150336/56150336     compute_df_line_new [29]
+[58]     0.8    1.68    0.00 56150336         compute_1plusud0 [58]
+-----------------------------------------------
+                0.01    0.00  265440/47058144     diag_flux [103]
+                0.10    0.00 2752512/47058144     Utoprimgen [47]
+                0.39    0.00 11010048/47058144     diag_source_all [83]
+                1.17    0.00 33030144/47058144     diag_source_comp [61]
+[59]     0.8    1.67    0.00 47058144         UtoU [59]
+-----------------------------------------------
+                0.00    1.62       1/1           main [1]
+[60]     0.8    0.00    1.62       1         init [60]
+                0.01    0.97       1/1           init_primitives [73]
+                0.00    0.56       1/1           pre_init [86]
+                0.01    0.01       5/110         current_doprecalc [92]
+                0.00    0.02       2/4           dump [143]
+                0.00    0.01       1/1           post_init_specific_init [166]
+                0.00    0.01       1/2           set_dt [150]
+                0.00    0.01       1/1           init_conservatives [167]
+                0.00    0.00       1/22          current_calc [128]
+                0.00    0.00       1/2           bound_allprim [192]
+                0.00    0.00       1/1           set_grid [200]
+                0.00    0.00      11/1766        trifprintf [228]
+                0.00    0.00       1/1           prepre_init_specific_init [271]
+                0.00    0.00       1/1           pre_init_specific_init [270]
+                0.00    0.00       1/1           init_global [262]
+                0.00    0.00       1/1           init_consts [260]
+                0.00    0.00       1/1           write_coord_parms [275]
+                0.00    0.00       1/1           set_coord_parms [273]
+                0.00    0.00       1/1           init_grid [263]
+                0.00    0.00       1/1           post_par_set [269]
+                0.00    0.00       1/1           init_grid_post_set_grid [264]
+                0.00    0.00       1/87          pre_fixup [235]
+                0.00    0.00       1/85          compute_EOS_parms [236]
+                0.00    0.00       1/106         error_check [232]
+                0.00    0.00       1/2           recompute_fluxpositions [256]
+-----------------------------------------------
+                0.37    1.17 2752512/2752512     advance_standard [5]
+[61]     0.7    0.37    1.17 2752512         diag_source_comp [61]
+                1.17    0.00 33030144/47058144     UtoU [59]
+-----------------------------------------------
+                0.11    0.00 26663440/370653080     causal_shift_order [54]
+                0.22    0.00 55572536/370653080     compute_df_line_new [29]
+                0.27    0.00 68438160/370653080     etaicalc [63]
+                0.87    0.00 219978944/370653080     Ficalc [21]
+[62]     0.7    1.47    0.00 370653080         min [62]
+-----------------------------------------------
+                1.07    0.36 13687632/13687632     get_contact_indicator [51]
+[63]     0.7    1.07    0.36 13687632         etaicalc [63]
+                0.27    0.00 68438160/370653080     min [62]
+                0.09    0.00 41062896/419258536     max [76]
+-----------------------------------------------
+                0.04    1.30 7005600/7005600     fluxcalc_standard_4fluxctstag [23]
+[64]     0.6    0.04    1.30 7005600         get_global_wavespeeds [64]
+                0.18    0.71 7005600/7672800     vchar [74]
+                0.23    0.18 7005600/86641636     get_state [40]
+-----------------------------------------------
+                0.22    1.02      32/32          image_dump [49]
+[65]     0.6    0.22    1.02      32         compute_vorticity [65]
+                0.01    0.91 1307136/1475231     dxdxprim [70]
+                0.06    0.00 6535680/7079116     coord [131]
+                0.04    0.00 6535680/30682789     bl_coord [106]
+-----------------------------------------------
+                0.00    0.01   41700/6881124     pi2Uavg [168]
+                0.05    0.19 1334400/6881124     image_dump [49]
+                0.11    0.39 2752512/6881124     advance_standard [5]
+                0.11    0.39 2752512/6881124     Utoprimgen [47]
+[66]     0.6    0.27    0.97 6881124         primtoU [66]
+                0.31    0.66 6881124/44415084     mhd_calc_norestmass [37]
+-----------------------------------------------
+                0.47    0.10   72760/145520      compute_monotonicity_line_valueonly [85]
+                0.47    0.10   72760/145520      compute_monotonicity_line_indicatoronly [84]
+[67]     0.6    0.94    0.21  145520         compute_smonotonicity_line_split [67]
+                0.21    0.00 110328948/493599212     sign [75]
+-----------------------------------------------
+                0.99    0.15     252/252         fluxcalc_fluxctstag [13]
+[68]     0.5    0.99    0.15     252         fluxcalc_fluxctstag_emf_1d [68]
+                0.15    0.00 10508400/143279109     get_geometry [53]
+-----------------------------------------------
+                1.09    0.00  288472/288472      pass_1d_line_multipl_weno [7]
+[69]     0.5    1.09    0.00  288472         minimize_weno5_weights [69]
+-----------------------------------------------
+                0.00    0.00       8/1475231     set_grid [200]
+                0.00    0.03   41700/1475231     gdump_content [141]
+                0.00    0.09  126387/1475231     init_primitives [73]
+                0.01    0.91 1307136/1475231     compute_vorticity [65]
+[70]     0.5    0.01    1.02 1475231         dxdxprim [70]
+                0.86    0.16 1475231/1475232     dxdxp_numerical [72]
+-----------------------------------------------
+                0.21    0.82 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[71]     0.5    0.21    0.82 2752512         find_root_1D_gen_Eprime [71]
+                0.51    0.27 5905400/5905400     func_Eprime [80]
+                0.04    0.00 5905400/5905400     validate_x_1d [140]
+                0.00    0.00 2752512/2752512     pick_validate_x [207]
+-----------------------------------------------
+                0.00    0.00       1/1475232     dxdxprim_ijk [203]
+                0.86    0.16 1475231/1475232     dxdxprim [70]
+[72]     0.5    0.86    0.16 1475232         dxdxp_numerical [72]
+                0.16    0.00 23603712/30682789     bl_coord [106]
+-----------------------------------------------
+                0.01    0.97       1/1           init [60]
+[73]     0.5    0.01    0.97       1         init_primitives [73]
+                0.00    0.80       1/1           vpot2field [79]
+                0.00    0.09  126387/1475231     dxdxprim [70]
+                0.00    0.04   74468/74468       bl2met2metp2v [138]
+                0.02    0.00   41700/41700       init_dsandvels [154]
+                0.00    0.01       1/1           normalize_field [187]
+                0.00    0.00       1/2           bound_allprim [192]
+                0.00    0.00  126387/7079116     coord [131]
+                0.00    0.00  126387/30682789     bl_coord [106]
+                0.00    0.00       1/1           bound_prim [197]
+                0.00    0.00       7/1766        trifprintf [228]
+                0.00    0.00       2/87          pre_fixup [235]
+-----------------------------------------------
+                0.00    0.02  166800/7672800     set_dt [150]
+                0.01    0.05  500400/7672800     dump_content [97]
+                0.18    0.71 7005600/7672800     get_global_wavespeeds [64]
+[74]     0.5    0.20    0.78 7672800         vchar [74]
+                0.46    0.18 7672800/7672800     simplefast [81]
+                0.03    0.07 7672800/7839600     cs2_compute [123]
+                0.01    0.02 7672800/111422972     pressure_rho0_u [89]
+-----------------------------------------------
+                0.11    0.00 56150336/493599212     compute_df_line_new [29]
+                0.21    0.00 110328948/493599212     compute_smonotonicity_line_split [67]
+                0.62    0.00 327119928/493599212     compute_smonotonicity_line [31]
+[75]     0.4    0.93    0.00 493599212         sign [75]
+-----------------------------------------------
+                0.04    0.00 19830384/419258536     get_wavespeeds [122]
+                0.06    0.00 26663440/419258536     causal_shift_order [54]
+                0.09    0.00 41062896/419258536     etaicalc [63]
+                0.36    0.00 164984208/419258536     Ficalc [21]
+                0.36    0.00 166717608/419258536     compute_df_line_new [29]
+[76]     0.4    0.91    0.00 419258536         max [76]
+-----------------------------------------------
+                0.00    0.01       1/113         gdump [185]
+                0.00    0.01       2/113         debugdump [162]
+                0.00    0.01       2/113         fieldlinedump [164]
+                0.00    0.01       2/113         fluxdumpdump [165]
+                0.00    0.01       2/113         eosdump [163]
+                0.00    0.03       4/113         restart_write [144]
+                0.00    0.03       4/113         dump [143]
+                0.03    0.71      96/113         image_dump [49]
+[77]     0.4    0.04    0.84     113         dump_gen [77]
+                0.08    0.22  166800/166800      dump_content [97]
+                0.15    0.06 4003200/4003200     image_content [104]
+                0.21    0.00 4712100/4712100     myfwrite [105]
+                0.00    0.04   41700/41700       gdump_content [141]
+                0.00    0.03   83400/83400       fieldline_content [142]
+                0.01    0.02   83400/83400       eosdump_content [152]
+                0.01    0.00     113/113         getsizeofdatatype [170]
+                0.00    0.01  166800/166800      rdump_content [188]
+                0.00    0.00   83400/83400       debug_content [195]
+                0.00    0.00   83400/83400       fluxdump_content [196]
+                0.00    0.00      13/13          dump_header [204]
+                0.00    0.00      96/96          image_header [233]
+                0.00    0.00       4/4           write_restart_header [252]
+-----------------------------------------------
+                0.41    0.00     336/676         flux_interp [19]
+                0.42    0.00     340/676         flux_interp_multiple [17]
+[78]     0.4    0.83    0.00     676         get_primitive_fluxlocation [78]
+-----------------------------------------------
+                0.00    0.80       1/1           init_primitives [73]
+[79]     0.4    0.00    0.80       1         vpot2field [79]
+                0.00    0.52       1/1           vectorpot_fluxreconorfvavg [88]
+                0.00    0.28       1/85          interpolate_ustag2fieldcent [25]
+                0.00    0.00       1/1           vpot2field_staggeredfield [194]
+-----------------------------------------------
+                0.51    0.27 5905400/5905400     find_root_1D_gen_Eprime [71]
+[80]     0.4    0.51    0.27 5905400         func_Eprime [80]
+                0.01    0.17 11810800/11810800     compute_idwmrho0dp [111]
+                0.01    0.06 5905400/8657912     pressure_wmrho0 [125]
+                0.02    0.00 11810800/11810800     compute_idrho0dp [155]
+-----------------------------------------------
+                0.46    0.18 7672800/7672800     vchar [74]
+[81]     0.3    0.46    0.18 7672800         simplefast [81]
+                0.18    0.00 15345600/15345600     raise_vec [110]
+-----------------------------------------------
+                0.60    0.00 6610128/6610128     flux_compute_general [36]
+[82]     0.3    0.60    0.00 6610128         flux_compute [82]
+-----------------------------------------------
+                0.20    0.39 2752512/2752512     advance_standard [5]
+[83]     0.3    0.20    0.39 2752512         diag_source_all [83]
+                0.39    0.00 11010048/47058144     UtoU [59]
+-----------------------------------------------
+                0.00    0.57   72760/72760       slope_lim_linetype [10]
+[84]     0.3    0.00    0.57   72760         compute_monotonicity_line_indicatoronly [84]
+                0.47    0.10   72760/145520      compute_smonotonicity_line_split [67]
+-----------------------------------------------
+                0.00    0.57   72760/72760       slope_lim_linetype [10]
+[85]     0.3    0.00    0.57   72760         compute_monotonicity_line_valueonly [85]
+                0.47    0.10   72760/145520      compute_smonotonicity_line_split [67]
+-----------------------------------------------
+                0.00    0.56       1/1           init [60]
+[86]     0.3    0.00    0.56       1         pre_init [86]
+                0.44    0.00       1/1           init_dumps [91]
+                0.12    0.00       1/1           set_arrays [120]
+                0.00    0.00       1/5505025     pickeos_eomtype [156]
+                0.00    0.00       1/3           ranc [253]
+                0.00    0.00       1/1           init_mpi [265]
+                0.00    0.00       1/2           recompute_fluxpositions [256]
+-----------------------------------------------
+                0.55    0.00  252092/252092      slope_lim_linetype_c2e [8]
+[87]     0.3    0.55    0.00  252092         get_1d_line_c2e [87]
+-----------------------------------------------
+                0.00    0.52       1/1           vpot2field [79]
+[88]     0.2    0.00    0.52       1         vectorpot_fluxreconorfvavg [88]
+                0.00    0.52       1/85          emforvectorpot_fluxrecon [16]
+-----------------------------------------------
+                0.00    0.00  166800/111422972     dump_content [97]
+                0.00    0.00  265440/111422972     diag_flux [103]
+                0.00    0.01 2752512/111422972     set_guess_Wp [101]
+                0.01    0.02 7672800/111422972     vchar [74]
+                0.05    0.14 44415084/111422972     mhd_calc_norestmass [37]
+                0.06    0.18 56150336/111422972     compute_df_line_new [29]
+[89]     0.2    0.12    0.36 111422972         pressure_rho0_u [89]
+                0.36    0.00 111422972/119429372     pressure_rho0_u_idealgas [95]
+-----------------------------------------------
+                0.44    0.01 6610128/6610128     fluxcalc_standard_4fluxctstag [23]
+[90]     0.2    0.44    0.01 6610128         getplpr [90]
+                0.01    0.00 6610128/6610128     remapdq [189]
+                0.01    0.00 6610128/6610128     remapplpr [190]
+-----------------------------------------------
+                0.44    0.00       1/1           pre_init [86]
+[91]     0.2    0.44    0.00       1         init_dumps [91]
+                0.00    0.00      19/1766        trifprintf [228]
+-----------------------------------------------
+                0.01    0.01       5/110         init [60]
+                0.30    0.11     105/110         step_ch_simplempi [3]
+[92]     0.2    0.31    0.12     110         current_doprecalc [92]
+                0.12    0.00 4587000/115030716     ucon_calc_rel4vel [46]
+-----------------------------------------------
+                0.00    0.00       1/510         bound_prim [197]
+                0.00    0.00       2/510         bound_allprim [192]
+                0.13    0.00     168/510         bound_evolveprim [100]
+                0.27    0.00     339/510         bound_pstag_user [99]
+[93]     0.2    0.40    0.00     510         bound_prim_user [93]
+-----------------------------------------------
+                                                 <spontaneous>
+[94]     0.2    0.39    0.00                 sign2 [94]
+-----------------------------------------------
+                0.00    0.00  166800/119429372     compute_entropy_idealgas [199]
+                0.03    0.00 7839600/119429372     cs2_compute_idealgas [130]
+                0.36    0.00 111422972/119429372     pressure_rho0_u [89]
+[95]     0.2    0.39    0.00 119429372         pressure_rho0_u_idealgas [95]
+-----------------------------------------------
+                0.32    0.00 2752512/2752512     advance_standard [5]
+[96]     0.2    0.32    0.00 2752512         dUtoU [96]
+-----------------------------------------------
+                0.08    0.22  166800/166800      dump_gen [77]
+[97]     0.1    0.08    0.22  166800         dump_content [97]
+                0.10    0.00 6338400/12551700     myset [109]
+                0.01    0.05  500400/7672800     vchar [74]
+                0.03    0.00  166800/166800      lowerf [145]
+                0.01    0.00  166800/232336      setfdivb [158]
+                0.01    0.00  166800/86641636     get_state [40]
+                0.00    0.00  166800/143279109     get_geometry [53]
+                0.00    0.00  166800/7839600     cs2_compute [123]
+                0.00    0.00  166800/7079116     coord [131]
+                0.00    0.00  166800/30682789     bl_coord [106]
+                0.00    0.00  166800/111422972     pressure_rho0_u [89]
+                0.00    0.00  166800/166800      compute_entropy [198]
+                0.00    0.00  166800/166800      lower_vec [209]
+-----------------------------------------------
+                                                 <spontaneous>
+[98]     0.1    0.29    0.00                 sol [98]
+-----------------------------------------------
+                0.00    0.00       2/339         bound_allprim [192]
+                0.00    0.13     168/339         bound_evolveprim [100]
+                0.00    0.13     169/339         bound_pstag [117]
+[99]     0.1    0.00    0.27     339         bound_pstag_user [99]
+                0.27    0.00     339/510         bound_prim_user [93]
+-----------------------------------------------
+                0.00    0.26     168/168         step_ch_simplempi [3]
+[100]    0.1    0.00    0.26     168         bound_evolveprim [100]
+                0.13    0.00     168/510         bound_prim_user [93]
+                0.00    0.13     168/339         bound_pstag_user [99]
+                0.00    0.00     336/510         bound_prim_user_after_mpi [231]
+-----------------------------------------------
+                0.09    0.17 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[101]    0.1    0.09    0.17 2752512         set_guess_Wp [101]
+                0.09    0.07 2752512/2752512     bsq_calc [114]
+                0.00    0.01 2752512/111422972     pressure_rho0_u [89]
+-----------------------------------------------
+                0.26    0.00  144664/144664      pass_1d_line_multipl_weno [7]
+[102]    0.1    0.26    0.00  144664         reset_weno5_weights [102]
+-----------------------------------------------
+                0.19    0.03      84/84          advance_standard [5]
+[103]    0.1    0.19    0.03      84         diag_flux [103]
+                0.01    0.01  265440/86641636     get_state [40]
+                0.01    0.00  265440/47058144     UtoU [59]
+                0.01    0.00  530880/143279109     get_geometry [53]
+                0.00    0.00  265440/111422972     pressure_rho0_u [89]
+-----------------------------------------------
+                0.15    0.06 4003200/4003200     dump_gen [77]
+[104]    0.1    0.15    0.06 4003200         image_content [104]
+                0.06    0.00 4003200/12551700     myset [109]
+-----------------------------------------------
+                0.21    0.00 4712100/4712100     dump_gen [77]
+[105]    0.1    0.21    0.00 4712100         myfwrite [105]
+-----------------------------------------------
+                0.00    0.00       1/30682789     bl_coord_ijk [205]
+                0.00    0.00       1/30682789     dxdxprim_ijk [203]
+                0.00    0.00       8/30682789     set_grid [200]
+                0.00    0.00   41700/30682789     gdump_content [141]
+                0.00    0.00  126387/30682789     init_primitives [73]
+                0.00    0.00  166800/30682789     dump_content [97]
+                0.00    0.00  208500/30682789     init_dsandvels [154]
+                0.04    0.00 6535680/30682789     compute_vorticity [65]
+                0.16    0.00 23603712/30682789     dxdxp_numerical [72]
+[106]    0.1    0.21    0.00 30682789         bl_coord [106]
+-----------------------------------------------
+                0.20    0.00  143808/143808      pass_1d_line_multipl_weno [7]
+[107]    0.1    0.20    0.00  143808         compute_lower_order_fraction_weno5_weights [107]
+-----------------------------------------------
+                0.16    0.03 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[108]    0.1    0.16    0.03 2752512         Wp2prim [108]
+                0.00    0.03 2752512/8657912     pressure_wmrho0 [125]
+-----------------------------------------------
+                0.00    0.00   83400/12551700     debug_content [195]
+                0.00    0.00   83400/12551700     fluxdump_content [196]
+                0.01    0.00  333600/12551700     rdump_content [188]
+                0.01    0.00  333600/12551700     eosdump_content [152]
+                0.01    0.00  458700/12551700     gdump_content [141]
+                0.01    0.00  917400/12551700     fieldline_content [142]
+                0.06    0.00 4003200/12551700     image_content [104]
+                0.10    0.00 6338400/12551700     dump_content [97]
+[109]    0.1    0.19    0.00 12551700         myset [109]
+-----------------------------------------------
+                0.18    0.00 15345600/15345600     simplefast [81]
+[110]    0.1    0.18    0.00 15345600         raise_vec [110]
+-----------------------------------------------
+                0.01    0.17 11810800/11810800     func_Eprime [80]
+[111]    0.1    0.01    0.17 11810800         compute_idwmrho0dp [111]
+                0.17    0.00 11810800/11810800     compute_idwmrho0dp_idealgas [112]
+-----------------------------------------------
+                0.17    0.00 11810800/11810800     compute_idwmrho0dp [111]
+[112]    0.1    0.17    0.00 11810800         compute_idwmrho0dp_idealgas [112]
+-----------------------------------------------
+                0.17    0.00 7916182/7916182     compute_smonotonicity_line [31]
+[113]    0.1    0.17    0.00 7916182         c2e_simple_eno [113]
+-----------------------------------------------
+                0.09    0.07 2752512/2752512     set_guess_Wp [101]
+[114]    0.1    0.09    0.07 2752512         bsq_calc [114]
+                0.07    0.00 2752512/115030716     ucon_calc_rel4vel [46]
+-----------------------------------------------
+                0.14    0.00      84/84          post_fixup [116]
+[115]    0.1    0.14    0.00      84         fixup_utoprim [115]
+-----------------------------------------------
+                0.00    0.14      84/84          step_ch_simplempi [3]
+[116]    0.1    0.00    0.14      84         post_fixup [116]
+                0.14    0.00      84/84          fixup_utoprim [115]
+                0.00    0.00      84/84          bound_pflag [238]
+-----------------------------------------------
+                0.00    0.07      84/169         advance_standard [5]
+                0.00    0.07      85/169         interpolate_ustag2fieldcent [25]
+[117]    0.1    0.00    0.13     169         bound_pstag [117]
+                0.00    0.13     169/339         bound_pstag_user [99]
+                0.00    0.00     169/510         bound_prim_user_after_mpi [231]
+-----------------------------------------------
+                                                 <spontaneous>
+[118]    0.1    0.13    0.00                 csslope [118]
+-----------------------------------------------
+                0.12    0.00 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[119]    0.1    0.12    0.00 2752512         compute_setup_quantities [119]
+-----------------------------------------------
+                0.12    0.00       1/1           pre_init [86]
+[120]    0.1    0.12    0.00       1         set_arrays [120]
+                0.00    0.00       2/1766        trifprintf [228]
+-----------------------------------------------
+                0.12    0.00 2752512/2752512     advance_standard [5]
+[121]    0.1    0.12    0.00 2752512         flux2dUavg [121]
+-----------------------------------------------
+                0.07    0.04 6610128/6610128     flux_compute_general [36]
+[122]    0.1    0.07    0.04 6610128         get_wavespeeds [122]
+                0.04    0.00 19830384/419258536     max [76]
+-----------------------------------------------
+                0.00    0.00  166800/7839600     dump_content [97]
+                0.03    0.07 7672800/7839600     vchar [74]
+[123]    0.1    0.03    0.08 7839600         cs2_compute [123]
+                0.05    0.03 7839600/7839600     cs2_compute_idealgas [130]
+-----------------------------------------------
+                                                 <spontaneous>
+[124]    0.1    0.11    0.00                 dfun2fun_kazfull [124]
+-----------------------------------------------
+                0.00    0.03 2752512/8657912     Wp2prim [108]
+                0.01    0.06 5905400/8657912     func_Eprime [80]
+[125]    0.0    0.01    0.09 8657912         pressure_wmrho0 [125]
+                0.09    0.00 8657912/8657912     pressure_wmrho0_idealgas [126]
+-----------------------------------------------
+                0.09    0.00 8657912/8657912     pressure_wmrho0 [125]
+[126]    0.0    0.09    0.00 8657912         pressure_wmrho0_idealgas [126]
+-----------------------------------------------
+                                                 <spontaneous>
+[127]    0.0    0.09    0.00                 u_rho0_p [127]
+-----------------------------------------------
+                0.00    0.00       1/22          init [60]
+                0.00    0.08      21/22          step_ch_simplempi [3]
+[128]    0.0    0.00    0.08      22         current_calc [128]
+                0.08    0.00      22/22          current_calc_1 [129]
+-----------------------------------------------
+                0.08    0.00      22/22          current_calc [128]
+[129]    0.0    0.08    0.00      22         current_calc_1 [129]
+-----------------------------------------------
+                0.05    0.03 7839600/7839600     cs2_compute [123]
+[130]    0.0    0.05    0.03 7839600         cs2_compute_idealgas [130]
+                0.03    0.00 7839600/119429372     pressure_rho0_u_idealgas [95]
+-----------------------------------------------
+                0.00    0.00       1/7079116     bl_coord_ijk [205]
+                0.00    0.00       1/7079116     dxdxprim_ijk [203]
+                0.00    0.00       8/7079116     set_grid [200]
+                0.00    0.00      39/7079116     dump_header [204]
+                0.00    0.00   41700/7079116     gdump_content [141]
+                0.00    0.00  126387/7079116     init_primitives [73]
+                0.00    0.00  166800/7079116     dump_content [97]
+                0.00    0.00  208500/7079116     init_dsandvels [154]
+                0.06    0.00 6535680/7079116     compute_vorticity [65]
+[131]    0.0    0.07    0.00 7079116         coord [131]
+-----------------------------------------------
+                                                 <spontaneous>
+[132]    0.0    0.07    0.00                 mhd_calc [132]
+-----------------------------------------------
+                0.04    0.02     168/168         fluxcalc_standard_4fluxctstag [23]
+[133]    0.0    0.04    0.02     168         global_vchar [133]
+                0.02    0.00 6682032/6682706     choose_limiter [153]
+-----------------------------------------------
+                0.00    0.00  125100/34456008     vpot2field_staggeredfield [194]
+                0.00    0.00 2752512/34456008     Utoprimgen [47]
+                0.02    0.00 10633500/34456008     interpolate_ustag2fieldcent [25]
+                0.04    0.00 20944896/34456008     interpolate_prim_face2corn [14]
+[134]    0.0    0.06    0.00 34456008         signavoidzero [134]
+-----------------------------------------------
+                                                 <spontaneous>
+[135]    0.0    0.06    0.00                 get_sum_of_elements [135]
+-----------------------------------------------
+                                                 <spontaneous>
+[136]    0.0    0.05    0.00                 PtoP [136]
+-----------------------------------------------
+                                                 <spontaneous>
+[137]    0.0    0.05    0.00                 mhd_calc_norestmass_ma [137]
+-----------------------------------------------
+                0.00    0.04   74468/74468       init_primitives [73]
+[138]    0.0    0.00    0.04   74468         bl2met2metp2v [138]
+                0.00    0.04   74468/74468       gset [139]
+                0.00    0.00   74468/143279109     get_geometry [53]
+                0.00    0.00   32768/115030716     ucon_calc_rel4vel [46]
+                0.00    0.00   41700/41700       ucon_calc_3vel [225]
+                0.00    0.00   41700/41700       coordtrans [222]
+                0.00    0.00   41700/41700       idxdxprim_ijk [224]
+-----------------------------------------------
+                0.00    0.04   74468/74468       bl2met2metp2v [138]
+[139]    0.0    0.00    0.04   74468         gset [139]
+                0.00    0.03   41700/41708       gcon_func [149]
+                0.00    0.01   83400/83416       gdet_func_singcheck [173]
+                0.00    0.00   32768/143279109     get_geometry [53]
+                0.00    0.00   83400/83417       bl_coord_ijk [205]
+                0.00    0.00   83400/83416       gcov_func [213]
+                0.00    0.00   41700/41710       coord_ijk [220]
+                0.00    0.00   41700/41700       assign_eomfunc [221]
+-----------------------------------------------
+                0.04    0.00 5905400/5905400     find_root_1D_gen_Eprime [71]
+[140]    0.0    0.04    0.00 5905400         validate_x_1d [140]
+-----------------------------------------------
+                0.00    0.04   41700/41700       dump_gen [77]
+[141]    0.0    0.00    0.04   41700         gdump_content [141]
+                0.00    0.03   41700/1475231     dxdxprim [70]
+                0.01    0.00  458700/12551700     myset [109]
+                0.00    0.00   41700/7079116     coord [131]
+                0.00    0.00   41700/30682789     bl_coord [106]
+-----------------------------------------------
+                0.00    0.03   83400/83400       dump_gen [77]
+[142]    0.0    0.00    0.03   83400         fieldline_content [142]
+                0.00    0.01   83400/26523912     primtoflux [41]
+                0.01    0.00  917400/12551700     myset [109]
+                0.00    0.00   83400/86641636     get_state [40]
+                0.00    0.00   83400/143279109     get_geometry [53]
+-----------------------------------------------
+                0.00    0.02       2/4           init [60]
+                0.00    0.02       2/4           diag [48]
+[143]    0.0    0.00    0.03       4         dump [143]
+                0.00    0.03       4/113         dump_gen [77]
+                0.00    0.00       8/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.03       4/4           diag [48]
+[144]    0.0    0.00    0.03       4         restart_write [144]
+                0.00    0.03       4/113         dump_gen [77]
+                0.00    0.00       8/1766        trifprintf [228]
+-----------------------------------------------
+                0.03    0.00  166800/166800      dump_content [97]
+[145]    0.0    0.03    0.00  166800         lowerf [145]
+-----------------------------------------------
+                0.00    0.00       8/41716       set_grid [200]
+                0.01    0.02   41708/41716       gcon_func [149]
+[146]    0.0    0.01    0.02   41716         matrix_inverse [146]
+                0.02    0.00   41716/41716       gaussj [159]
+                0.00    0.00       1/2           dmatrix [254]
+-----------------------------------------------
+                0.03    0.00      96/96          image_dump [49]
+[147]    0.0    0.03    0.00      96         prminmaxsum [147]
+-----------------------------------------------
+                                                 <spontaneous>
+[148]    0.0    0.03    0.00                 compute_dSdrho [148]
+-----------------------------------------------
+                0.00    0.00       8/41708       set_grid [200]
+                0.00    0.03   41700/41708       gset [139]
+[149]    0.0    0.00    0.03   41708         gcon_func [149]
+                0.01    0.02   41708/41716       matrix_inverse [146]
+-----------------------------------------------
+                0.00    0.01       1/2           post_init_specific_init [166]
+                0.00    0.01       1/2           init [60]
+[150]    0.0    0.00    0.03       2         set_dt [150]
+                0.00    0.02  166800/7672800     vchar [74]
+                0.00    0.00   83400/86641636     get_state [40]
+                0.00    0.00   83400/143279109     get_geometry [53]
+                0.00    0.00      10/31          mpifmin [242]
+                0.00    0.00      10/10          dualfprintf [251]
+-----------------------------------------------
+                0.00    0.03       2/2           diag [48]
+[151]    0.0    0.00    0.03       2         dump_ener [151]
+                0.00    0.01     636/636         integrate [175]
+                0.01    0.00       8/8           integratel [177]
+                0.00    0.01       2/2           divbmaxavg [186]
+                0.00    0.00    4844/4895        myfprintf [226]
+                0.00    0.00      70/1766        trifprintf [228]
+                0.00    0.00      13/21          myfopen [245]
+                0.00    0.00      13/22          myfclose [243]
+-----------------------------------------------
+                0.01    0.02   83400/83400       dump_gen [77]
+[152]    0.0    0.01    0.02   83400         eosdump_content [152]
+                0.01    0.00   83400/83400       compute_temp [169]
+                0.01    0.00  333600/12551700     myset [109]
+                0.00    0.00   83400/83400       get_EOS_parms [216]
+                0.00    0.00   83400/83400       get_extrasprocessed [218]
+-----------------------------------------------
+                0.00    0.00     170/6682706     interpolate_pfield_face2cent [26]
+                0.00    0.00     504/6682706     interpolate_prim_face2corn [14]
+                0.02    0.00 6682032/6682706     global_vchar [133]
+[153]    0.0    0.03    0.00 6682706         choose_limiter [153]
+-----------------------------------------------
+                0.02    0.00   41700/41700       init_primitives [73]
+[154]    0.0    0.02    0.00   41700         init_dsandvels [154]
+                0.00    0.00  208500/7079116     coord [131]
+                0.00    0.00  208500/30682789     bl_coord [106]
+                0.00    0.00   41700/41700       get_compdimen [223]
+-----------------------------------------------
+                0.02    0.00 11810800/11810800     func_Eprime [80]
+[155]    0.0    0.02    0.00 11810800         compute_idrho0dp [155]
+                0.00    0.00 11810800/11810800     compute_idrho0dp_idealgas [206]
+-----------------------------------------------
+                0.00    0.00       1/5505025     pre_init [86]
+                0.02    0.00 5505024/5505025     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[156]    0.0    0.02    0.00 5505025         pickeos_eomtype [156]
+-----------------------------------------------
+                0.02    0.00 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[157]    0.0    0.02    0.00 2752512         check_Wp [157]
+-----------------------------------------------
+                0.01    0.00   65536/232336      divbmaxavg [186]
+                0.01    0.00  166800/232336      dump_content [97]
+[158]    0.0    0.02    0.00  232336         setfdivb [158]
+-----------------------------------------------
+                0.02    0.00   41716/41716       matrix_inverse [146]
+[159]    0.0    0.02    0.00   41716         gaussj [159]
+                0.00    0.00  125148/125148      ivector [211]
+                0.00    0.00  125148/125148      free_ivector [210]
+-----------------------------------------------
+                                                 <spontaneous>
+[160]    0.0    0.02    0.00                 boundary_smoother [160]
+-----------------------------------------------
+                                                 <spontaneous>
+[161]    0.0    0.02    0.00                 compute_qdot [161]
+-----------------------------------------------
+                0.00    0.02       2/2           diag [48]
+[162]    0.0    0.00    0.02       2         debugdump [162]
+                0.00    0.01       2/113         dump_gen [77]
+                0.00    0.00       4/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.02       2/2           diag [48]
+[163]    0.0    0.00    0.02       2         eosdump [163]
+                0.00    0.01       2/113         dump_gen [77]
+                0.00    0.00       4/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.02       2/2           diag [48]
+[164]    0.0    0.00    0.02       2         fieldlinedump [164]
+                0.00    0.01       2/113         dump_gen [77]
+                0.00    0.00       4/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.02       2/2           diag [48]
+[165]    0.0    0.00    0.02       2         fluxdumpdump [165]
+                0.00    0.01       2/113         dump_gen [77]
+                0.00    0.00       4/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.01       1/1           init [60]
+[166]    0.0    0.00    0.01       1         post_init_specific_init [166]
+                0.00    0.01       1/2           set_dt [150]
+                0.00    0.00       3/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.01       1/1           init [60]
+[167]    0.0    0.00    0.01       1         init_conservatives [167]
+                0.00    0.01       1/1           pi2Uavg [168]
+-----------------------------------------------
+                0.00    0.01       1/1           init_conservatives [167]
+[168]    0.0    0.00    0.01       1         pi2Uavg [168]
+                0.00    0.01   41700/6881124     primtoU [66]
+                0.00    0.00   41700/86641636     get_state [40]
+                0.00    0.00   41700/143279109     get_geometry [53]
+-----------------------------------------------
+                0.01    0.00   83400/83400       eosdump_content [152]
+[169]    0.0    0.01    0.00   83400         compute_temp [169]
+                0.00    0.00   83400/83400       compute_temp_idealgas [215]
+-----------------------------------------------
+                0.01    0.00     113/113         dump_gen [77]
+[170]    0.0    0.01    0.00     113         getsizeofdatatype [170]
+-----------------------------------------------
+                0.01    0.00 2752512/2752512     Utoprim_jon_nonrelcompat_inputnorestmass [57]
+[171]    0.0    0.01    0.00 2752512         check_on_inversion [171]
+-----------------------------------------------
+                0.01    0.00 2752512/2752512     source [50]
+[172]    0.0    0.01    0.00 2752512         sourcephysics [172]
+-----------------------------------------------
+                0.00    0.00       8/83416       set_grid [200]
+                0.00    0.00       8/83416       eomfunc_func [201]
+                0.00    0.01   83400/83416       gset [139]
+[173]    0.0    0.00    0.01   83416         gdet_func_singcheck [173]
+                0.01    0.00   83416/83416       ludcmp [174]
+                0.00    0.00       1/2           dmatrix [254]
+-----------------------------------------------
+                0.01    0.00   83416/83416       gdet_func_singcheck [173]
+[174]    0.0    0.01    0.00   83416         ludcmp [174]
+                0.00    0.00       1/1           dvector [259]
+-----------------------------------------------
+                0.00    0.01     636/636         dump_ener [151]
+[175]    0.0    0.00    0.01     636         integrate [175]
+                0.01    0.00       8/8           constotal [176]
+-----------------------------------------------
+                0.01    0.00       8/8           integrate [175]
+[176]    0.0    0.01    0.00       8         constotal [176]
+-----------------------------------------------
+                0.01    0.00       8/8           dump_ener [151]
+[177]    0.0    0.01    0.00       8         integratel [177]
+-----------------------------------------------
+                                                 <spontaneous>
+[178]    0.0    0.01    0.00                 compute_qdot_idealgas [178]
+-----------------------------------------------
+                                                 <spontaneous>
+[179]    0.0    0.01    0.00                 getPressure [179]
+-----------------------------------------------
+                                                 <spontaneous>
+[180]    0.0    0.01    0.00                 get_cold_W_fromEN [180]
+-----------------------------------------------
+                                                 <spontaneous>
+[181]    0.0    0.01    0.00                 get_roe_averaged_state [181]
+-----------------------------------------------
+                                                 <spontaneous>
+[182]    0.0    0.01    0.00                 pressure_rho0_w [182]
+-----------------------------------------------
+                                                 <spontaneous>
+[183]    0.0    0.01    0.00                 set_zamo_ucovuconplus1ud0 [183]
+-----------------------------------------------
+                0.00    0.00     674/1156950     slope_lim_linetype_c2e [8]
+                0.00    0.00     676/1156950     slope_lim_linetype [10]
+                0.00    0.00  288900/1156950     pass_1d_line_multipl_weno [7]
+                0.00    0.00  288900/1156950     get_df_line_gen_new [28]
+                0.00    0.00  288900/1156950     get_shock_indicator [20]
+                0.00    0.00  288900/1156950     get_contact_indicator [51]
+[184]    0.0    0.01    0.00 1156950         setup_nprlocalist [184]
+-----------------------------------------------
+                0.00    0.01       1/1           diag [48]
+[185]    0.0    0.00    0.01       1         gdump [185]
+                0.00    0.01       1/113         dump_gen [77]
+                0.00    0.00       2/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.01       2/2           dump_ener [151]
+[186]    0.0    0.00    0.01       2         divbmaxavg [186]
+                0.01    0.00   65536/232336      setfdivb [158]
+                0.00    0.00       2/4895        myfprintf [226]
+-----------------------------------------------
+                0.00    0.01       1/1           init_primitives [73]
+[187]    0.0    0.00    0.01       1         normalize_field [187]
+                0.00    0.00   32768/32768       mhd_calc_norestmass_em [193]
+                0.00    0.00   32768/86641636     get_state [40]
+                0.00    0.00   32768/143279109     get_geometry [53]
+                0.00    0.00       2/2           mpiFTYPEsum [255]
+                0.00    0.00       1/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.01  166800/166800      dump_gen [77]
+[188]    0.0    0.00    0.01  166800         rdump_content [188]
+                0.01    0.00  333600/12551700     myset [109]
+-----------------------------------------------
+                0.01    0.00 6610128/6610128     getplpr [90]
+[189]    0.0    0.01    0.00 6610128         remapdq [189]
+-----------------------------------------------
+                0.01    0.00 6610128/6610128     getplpr [90]
+[190]    0.0    0.01    0.00 6610128         remapplpr [190]
+-----------------------------------------------
+                                                 <spontaneous>
+[191]    0.0    0.01    0.00                 advance_finitevolume [191]
+-----------------------------------------------
+                0.00    0.00       1/2           init_primitives [73]
+                0.00    0.00       1/2           init [60]
+[192]    0.0    0.00    0.00       2         bound_allprim [192]
+                0.00    0.00       2/510         bound_prim_user [93]
+                0.00    0.00       2/339         bound_pstag_user [99]
+                0.00    0.00       4/510         bound_prim_user_after_mpi [231]
+-----------------------------------------------
+                0.00    0.00   32768/32768       normalize_field [187]
+[193]    0.0    0.00    0.00   32768         mhd_calc_norestmass_em [193]
+                0.00    0.00   32768/44447852     ffdestresstensor_dir [42]
+-----------------------------------------------
+                0.00    0.00       1/1           vpot2field [79]
+[194]    0.0    0.00    0.00       1         vpot2field_staggeredfield [194]
+                0.00    0.00  125100/143279109     get_geometry [53]
+                0.00    0.00  125100/34456008     signavoidzero [134]
+-----------------------------------------------
+                0.00    0.00   83400/83400       dump_gen [77]
+[195]    0.0    0.00    0.00   83400         debug_content [195]
+                0.00    0.00   83400/12551700     myset [109]
+-----------------------------------------------
+                0.00    0.00   83400/83400       dump_gen [77]
+[196]    0.0    0.00    0.00   83400         fluxdump_content [196]
+                0.00    0.00   83400/12551700     myset [109]
+-----------------------------------------------
+                0.00    0.00       1/1           init_primitives [73]
+[197]    0.0    0.00    0.00       1         bound_prim [197]
+                0.00    0.00       1/510         bound_prim_user [93]
+                0.00    0.00       1/510         bound_prim_user_after_mpi [231]
+-----------------------------------------------
+                0.00    0.00  166800/166800      dump_content [97]
+[198]    0.0    0.00    0.00  166800         compute_entropy [198]
+                0.00    0.00  166800/166800      compute_entropy_idealgas [199]
+-----------------------------------------------
+                0.00    0.00  166800/166800      compute_entropy [198]
+[199]    0.0    0.00    0.00  166800         compute_entropy_idealgas [199]
+                0.00    0.00  166800/119429372     pressure_rho0_u_idealgas [95]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[200]    0.0    0.00    0.00       1         set_grid [200]
+                0.00    0.00       8/41716       matrix_inverse [146]
+                0.00    0.00       8/41708       gcon_func [149]
+                0.00    0.00       8/1475231     dxdxprim [70]
+                0.00    0.00       8/8           eomfunc_func [201]
+                0.00    0.00       8/83416       gdet_func_singcheck [173]
+                0.00    0.00       1/1           set_drsing [202]
+                0.00    0.00       8/7079116     coord [131]
+                0.00    0.00       8/30682789     bl_coord [106]
+                0.00    0.00       1/143279109     get_geometry [53]
+                0.00    0.00       8/83417       bl_coord_ijk [205]
+                0.00    0.00       9/41710       coord_ijk [220]
+                0.00    0.00       8/83416       gcov_func [213]
+                0.00    0.00       1/1           control_time_store_metric [258]
+                0.00    0.00       1/1           set_points [274]
+                0.00    0.00       1/1766        trifprintf [228]
+                0.00    0.00       1/1           conn_func [257]
+-----------------------------------------------
+                0.00    0.00       8/8           set_grid [200]
+[201]    0.0    0.00    0.00       8         eomfunc_func [201]
+                0.00    0.00       8/83416       gdet_func_singcheck [173]
+                0.00    0.00       8/83417       bl_coord_ijk [205]
+                0.00    0.00       8/83416       gcov_func [213]
+-----------------------------------------------
+                0.00    0.00       1/1           set_grid [200]
+[202]    0.0    0.00    0.00       1         set_drsing [202]
+                0.00    0.00       1/1           dxdxprim_ijk [203]
+                0.00    0.00       1/83417       bl_coord_ijk [205]
+                0.00    0.00       1/41710       coord_ijk [220]
+-----------------------------------------------
+                0.00    0.00       1/1           set_drsing [202]
+[203]    0.0    0.00    0.00       1         dxdxprim_ijk [203]
+                0.00    0.00       1/1475232     dxdxp_numerical [72]
+                0.00    0.00       1/7079116     coord [131]
+                0.00    0.00       1/30682789     bl_coord [106]
+-----------------------------------------------
+                0.00    0.00      13/13          dump_gen [77]
+[204]    0.0    0.00    0.00      13         dump_header [204]
+                0.00    0.00      39/7079116     coord [131]
+-----------------------------------------------
+                0.00    0.00       1/83417       set_drsing [202]
+                0.00    0.00       8/83417       set_grid [200]
+                0.00    0.00       8/83417       eomfunc_func [201]
+                0.00    0.00   83400/83417       gset [139]
+[205]    0.0    0.00    0.00   83417         bl_coord_ijk [205]
+                0.00    0.00       1/7079116     coord [131]
+                0.00    0.00       1/30682789     bl_coord [106]
+-----------------------------------------------
+                0.00    0.00 11810800/11810800     compute_idrho0dp [155]
+[206]    0.0    0.00    0.00 11810800         compute_idrho0dp_idealgas [206]
+-----------------------------------------------
+                0.00    0.00 2752512/2752512     find_root_1D_gen_Eprime [71]
+[207]    0.0    0.00    0.00 2752512         pick_validate_x [207]
+-----------------------------------------------
+                0.00    0.00  289328/289328      slope_lim_linetype [10]
+[208]    0.0    0.00    0.00  289328         apply_bc_line [208]
+-----------------------------------------------
+                0.00    0.00  166800/166800      dump_content [97]
+[209]    0.0    0.00    0.00  166800         lower_vec [209]
+-----------------------------------------------
+                0.00    0.00  125148/125148      gaussj [159]
+[210]    0.0    0.00    0.00  125148         free_ivector [210]
+-----------------------------------------------
+                0.00    0.00  125148/125148      gaussj [159]
+[211]    0.0    0.00    0.00  125148         ivector [211]
+-----------------------------------------------
+                0.00    0.00   83416/83416       gcov_func [213]
+[212]    0.0    0.00    0.00   83416         bl_coord_ijk_2 [212]
+-----------------------------------------------
+                0.00    0.00       8/83416       set_grid [200]
+                0.00    0.00       8/83416       eomfunc_func [201]
+                0.00    0.00   83400/83416       gset [139]
+[213]    0.0    0.00    0.00   83416         gcov_func [213]
+                0.00    0.00   83416/83416       bl_coord_ijk_2 [212]
+                0.00    0.00      16/16          gcov2gcovprim [250]
+-----------------------------------------------
+                0.00    0.00   83400/83400       get_extrasprocessed_idealgas [219]
+[214]    0.0    0.00    0.00   83400         compute_allextras_idealgas [214]
+-----------------------------------------------
+                0.00    0.00   83400/83400       compute_temp [169]
+[215]    0.0    0.00    0.00   83400         compute_temp_idealgas [215]
+-----------------------------------------------
+                0.00    0.00   83400/83400       eosdump_content [152]
+[216]    0.0    0.00    0.00   83400         get_EOS_parms [216]
+                0.00    0.00   83400/83400       get_EOS_parms_idealgas [217]
+-----------------------------------------------
+                0.00    0.00   83400/83400       get_EOS_parms [216]
+[217]    0.0    0.00    0.00   83400         get_EOS_parms_idealgas [217]
+-----------------------------------------------
+                0.00    0.00   83400/83400       eosdump_content [152]
+[218]    0.0    0.00    0.00   83400         get_extrasprocessed [218]
+                0.00    0.00   83400/83400       get_extrasprocessed_idealgas [219]
+-----------------------------------------------
+                0.00    0.00   83400/83400       get_extrasprocessed [218]
+[219]    0.0    0.00    0.00   83400         get_extrasprocessed_idealgas [219]
+                0.00    0.00   83400/83400       compute_allextras_idealgas [214]
+-----------------------------------------------
+                0.00    0.00       1/41710       set_drsing [202]
+                0.00    0.00       9/41710       set_grid [200]
+                0.00    0.00   41700/41710       gset [139]
+[220]    0.0    0.00    0.00   41710         coord_ijk [220]
+-----------------------------------------------
+                0.00    0.00   41700/41700       gset [139]
+[221]    0.0    0.00    0.00   41700         assign_eomfunc [221]
+-----------------------------------------------
+                0.00    0.00   41700/41700       bl2met2metp2v [138]
+[222]    0.0    0.00    0.00   41700         coordtrans [222]
+-----------------------------------------------
+                0.00    0.00   41700/41700       init_dsandvels [154]
+[223]    0.0    0.00    0.00   41700         get_compdimen [223]
+-----------------------------------------------
+                0.00    0.00   41700/41700       bl2met2metp2v [138]
+[224]    0.0    0.00    0.00   41700         idxdxprim_ijk [224]
+-----------------------------------------------
+                0.00    0.00   41700/41700       bl2met2metp2v [138]
+[225]    0.0    0.00    0.00   41700         ucon_calc_3vel [225]
+-----------------------------------------------
+                0.00    0.00       1/4895        myexit [268]
+                0.00    0.00       2/4895        divbmaxavg [186]
+                0.00    0.00       8/4895        diag [48]
+                0.00    0.00      40/4895        main [1]
+                0.00    0.00    4844/4895        dump_ener [151]
+[226]    0.0    0.00    0.00    4895         myfprintf [226]
+-----------------------------------------------
+                0.00    0.00     168/2366        flux_integrate_fluxrecon [11]
+                0.00    0.00     336/2366        field_integrate_fluxrecon [27]
+                0.00    0.00     510/2366        emforvectorpot_fluxrecon [16]
+                0.00    0.00     672/2366        flux_interp [19]
+                0.00    0.00     680/2366        flux_interp_multiple [17]
+[227]    0.0    0.00    0.00    2366         addremovefromnpr [227]
+-----------------------------------------------
+                0.00    0.00       1/1766        normalize_field [187]
+                0.00    0.00       1/1766        pre_init_specific_init [270]
+                0.00    0.00       1/1766        set_grid [200]
+                0.00    0.00       1/1766        init_mpi [265]
+                0.00    0.00       1/1766        init_genfiles [261]
+                0.00    0.00       1/1766        myexit [268]
+                0.00    0.00       2/1766        set_arrays [120]
+                0.00    0.00       2/1766        gdump [185]
+                0.00    0.00       3/1766        post_init_specific_init [166]
+                0.00    0.00       4/1766        post_par_set [269]
+                0.00    0.00       4/1766        debugdump [162]
+                0.00    0.00       4/1766        fieldlinedump [164]
+                0.00    0.00       4/1766        fluxdumpdump [165]
+                0.00    0.00       4/1766        eosdump [163]
+                0.00    0.00       4/1766        init_placeongrid [266]
+                0.00    0.00       7/1766        init_primitives [73]
+                0.00    0.00       8/1766        restart_write [144]
+                0.00    0.00       8/1766        write_restart_header [252]
+                0.00    0.00       8/1766        dump [143]
+                0.00    0.00      11/1766        init [60]
+                0.00    0.00      19/1766        init_dumps [91]
+                0.00    0.00      20/1766        diag [48]
+                0.00    0.00      25/1766        main [1]
+                0.00    0.00      70/1766        dump_ener [151]
+                0.00    0.00      80/1766        recompute_fluxpositions [256]
+                0.00    0.00      84/1766        fluxcalc [6]
+                0.00    0.00      84/1766        flux_point2avg [12]
+                0.00    0.00     168/1766        fluxcalc_flux [22]
+                0.00    0.00     192/1766        image_dump [49]
+                0.00    0.00     252/1766        fluxcalc_fluxctstag [13]
+                0.00    0.00     273/1766        step_ch_simplempi [3]
+                0.00    0.00     420/1766        advance_standard [5]
+[228]    0.0    0.00    0.00    1766         trifprintf [228]
+-----------------------------------------------
+                0.00    0.00     674/1350        slope_lim_linetype_c2e [8]
+                0.00    0.00     676/1350        slope_lim_linetype [10]
+[229]    0.0    0.00    0.00    1350         set_interp_loop_gen [229]
+-----------------------------------------------
+                0.00    0.00     676/676         slope_lim_linetype [10]
+[230]    0.0    0.00    0.00     676         get_recon_type [230]
+-----------------------------------------------
+                0.00    0.00       1/510         bound_prim [197]
+                0.00    0.00       4/510         bound_allprim [192]
+                0.00    0.00     169/510         bound_pstag [117]
+                0.00    0.00     336/510         bound_evolveprim [100]
+[231]    0.0    0.00    0.00     510         bound_prim_user_after_mpi [231]
+-----------------------------------------------
+                0.00    0.00       1/106         init [60]
+                0.00    0.00      21/106         step_ch_full [2]
+                0.00    0.00      84/106         step_ch_simplempi [3]
+[232]    0.0    0.00    0.00     106         error_check [232]
+-----------------------------------------------
+                0.00    0.00      96/96          dump_gen [77]
+[233]    0.0    0.00    0.00      96         image_header [233]
+-----------------------------------------------
+                0.00    0.00      96/96          image_dump [49]
+[234]    0.0    0.00    0.00      96         logsfprintf [234]
+-----------------------------------------------
+                0.00    0.00       1/87          init [60]
+                0.00    0.00       2/87          init_primitives [73]
+                0.00    0.00      84/87          step_ch_simplempi [3]
+[235]    0.0    0.00    0.00      87         pre_fixup [235]
+-----------------------------------------------
+                0.00    0.00       1/85          init [60]
+                0.00    0.00      84/85          step_ch_simplempi [3]
+[236]    0.0    0.00    0.00      85         compute_EOS_parms [236]
+                0.00    0.00      85/85          compute_EOS_parms_idealgas [237]
+-----------------------------------------------
+                0.00    0.00      85/85          compute_EOS_parms [236]
+[237]    0.0    0.00    0.00      85         compute_EOS_parms_idealgas [237]
+-----------------------------------------------
+                0.00    0.00      84/84          post_fixup [116]
+[238]    0.0    0.00    0.00      84         bound_pflag [238]
+                0.00    0.00      84/84          bound_pflag_user [239]
+-----------------------------------------------
+                0.00    0.00      84/84          bound_pflag [238]
+[239]    0.0    0.00    0.00      84         bound_pflag_user [239]
+-----------------------------------------------
+                0.00    0.00      84/84          advance_standard [5]
+[240]    0.0    0.00    0.00      84         compute_new_metric_substep [240]
+-----------------------------------------------
+                0.00    0.00      84/84          fluxcalc [6]
+[241]    0.0    0.00    0.00      84         preinterp_flux_point2avg [241]
+-----------------------------------------------
+                0.00    0.00      10/31          set_dt [150]
+                0.00    0.00      21/31          step_ch_simplempi [3]
+[242]    0.0    0.00    0.00      31         mpifmin [242]
+-----------------------------------------------
+                0.00    0.00       1/22          myexit [268]
+                0.00    0.00       8/22          diag [48]
+                0.00    0.00      13/22          dump_ener [151]
+[243]    0.0    0.00    0.00      22         myfclose [243]
+-----------------------------------------------
+                0.00    0.00      21/21          step_ch_full [2]
+[244]    0.0    0.00    0.00      21         control_metric_update [244]
+-----------------------------------------------
+                0.00    0.00       8/21          diag [48]
+                0.00    0.00      13/21          dump_ener [151]
+[245]    0.0    0.00    0.00      21         myfopen [245]
+-----------------------------------------------
+                0.00    0.00      21/21          step_ch_full [2]
+[246]    0.0    0.00    0.00      21         postdt [246]
+-----------------------------------------------
+                0.00    0.00      21/21          step_ch_simplempi [3]
+[247]    0.0    0.00    0.00      21         setup_rktimestep [247]
+-----------------------------------------------
+                0.00    0.00      20/20          main [1]
+[248]    0.0    0.00    0.00      20         mpiisum0 [248]
+-----------------------------------------------
+                0.00    0.00      16/16          gcov2gcovprim [250]
+[249]    0.0    0.00    0.00      16         dxdxprim_ijk_2 [249]
+-----------------------------------------------
+                0.00    0.00      16/16          gcov_func [213]
+[250]    0.0    0.00    0.00      16         gcov2gcovprim [250]
+                0.00    0.00      16/16          dxdxprim_ijk_2 [249]
+-----------------------------------------------
+                0.00    0.00      10/10          set_dt [150]
+[251]    0.0    0.00    0.00      10         dualfprintf [251]
+-----------------------------------------------
+                0.00    0.00       4/4           dump_gen [77]
+[252]    0.0    0.00    0.00       4         write_restart_header [252]
+                0.00    0.00       8/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/3           pre_init_specific_init [270]
+                0.00    0.00       1/3           init_global [262]
+                0.00    0.00       1/3           pre_init [86]
+[253]    0.0    0.00    0.00       3         ranc [253]
+-----------------------------------------------
+                0.00    0.00       1/2           matrix_inverse [146]
+                0.00    0.00       1/2           gdet_func_singcheck [173]
+[254]    0.0    0.00    0.00       2         dmatrix [254]
+-----------------------------------------------
+                0.00    0.00       2/2           normalize_field [187]
+[255]    0.0    0.00    0.00       2         mpiFTYPEsum [255]
+-----------------------------------------------
+                0.00    0.00       1/2           init [60]
+                0.00    0.00       1/2           pre_init [86]
+[256]    0.0    0.00    0.00       2         recompute_fluxpositions [256]
+                0.00    0.00      80/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/1           set_grid [200]
+[257]    0.0    0.00    0.00       1         conn_func [257]
+                0.00    0.00       1/1           set_conn_cartminkmetric [272]
+-----------------------------------------------
+                0.00    0.00       1/1           set_grid [200]
+[258]    0.0    0.00    0.00       1         control_time_store_metric [258]
+-----------------------------------------------
+                0.00    0.00       1/1           ludcmp [174]
+[259]    0.0    0.00    0.00       1         dvector [259]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[260]    0.0    0.00    0.00       1         init_consts [260]
+-----------------------------------------------
+                0.00    0.00       1/1           init_mpi [265]
+[261]    0.0    0.00    0.00       1         init_genfiles [261]
+                0.00    0.00       1/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[262]    0.0    0.00    0.00       1         init_global [262]
+                0.00    0.00       1/3           ranc [253]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[263]    0.0    0.00    0.00       1         init_grid [263]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[264]    0.0    0.00    0.00       1         init_grid_post_set_grid [264]
+-----------------------------------------------
+                0.00    0.00       1/1           pre_init [86]
+[265]    0.0    0.00    0.00       1         init_mpi [265]
+                0.00    0.00       1/1           init_placeongrid [266]
+                0.00    0.00       1/1           init_genfiles [261]
+                0.00    0.00       1/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/1           init_mpi [265]
+[266]    0.0    0.00    0.00       1         init_placeongrid [266]
+                0.00    0.00       4/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/1           post_par_set [269]
+[267]    0.0    0.00    0.00       1         interp_loop_set [267]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[268]    0.0    0.00    0.00       1         myexit [268]
+                0.00    0.00       1/1766        trifprintf [228]
+                0.00    0.00       1/22          myfclose [243]
+                0.00    0.00       1/4895        myfprintf [226]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[269]    0.0    0.00    0.00       1         post_par_set [269]
+                0.00    0.00       4/1766        trifprintf [228]
+                0.00    0.00       1/1           interp_loop_set [267]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[270]    0.0    0.00    0.00       1         pre_init_specific_init [270]
+                0.00    0.00       1/3           ranc [253]
+                0.00    0.00       1/1766        trifprintf [228]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[271]    0.0    0.00    0.00       1         prepre_init_specific_init [271]
+-----------------------------------------------
+                0.00    0.00       1/1           conn_func [257]
+[272]    0.0    0.00    0.00       1         set_conn_cartminkmetric [272]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[273]    0.0    0.00    0.00       1         set_coord_parms [273]
+-----------------------------------------------
+                0.00    0.00       1/1           set_grid [200]
+[274]    0.0    0.00    0.00       1         set_points [274]
+-----------------------------------------------
+                0.00    0.00       1/1           init [60]
+[275]    0.0    0.00    0.00       1         write_coord_parms [275]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+  [21] Ficalc                [151] dump_ener              [25] interpolate_ustag2fieldcent
+ [136] PtoP                   [77] dump_gen              [211] ivector
+  [59] UtoU                  [204] dump_header           [234] logsfprintf
+  [57] Utoprim_jon_nonrelcompat_inputnorestmass [259] dvector [209] lower_vec
+  [47] Utoprimgen             [72] dxdxp_numerical       [145] lowerf
+  [56] Utoprimgen_pick        [70] dxdxprim              [174] ludcmp
+ [108] Wp2prim               [203] dxdxprim_ijk          [146] matrix_inverse
+ [227] addremovefromnpr      [249] dxdxprim_ijk_2         [76] max
+   [4] advance                [16] emforvectorpot_fluxrecon [132] mhd_calc
+ [191] advance_finitevolume   [18] eno_line_a2c           [37] mhd_calc_norestmass
+   [5] advance_standard       [43] eno_line_c2a          [193] mhd_calc_norestmass_em
+ [208] apply_bc_line           [9] eno_line_reconstruct (reconstructeno.c) [137] mhd_calc_norestmass_ma
+  [52] assert_func_empty     [201] eomfunc_func           [62] min
+ [221] assign_eomfunc        [163] eosdump                [69] minimize_weno5_weights (reconstructeno.c)
+ [138] bl2met2metp2v         [152] eosdump_content       [255] mpiFTYPEsum
+ [106] bl_coord              [232] error_check           [242] mpifmin
+ [205] bl_coord_ijk           [63] etaicalc              [248] mpiisum0
+ [212] bl_coord_ijk_2         [42] ffdestresstensor_dir  [268] myexit
+ [192] bound_allprim          [27] field_integrate_fluxrecon [243] myfclose
+ [100] bound_evolveprim      [142] fieldline_content     [245] myfopen
+ [238] bound_pflag           [164] fieldlinedump         [226] myfprintf
+ [239] bound_pflag_user       [71] find_root_1D_gen_Eprime (utoprim_jon.c) [105] myfwrite
+ [197] bound_prim            [115] fixup_utoprim         [109] myset
+  [93] bound_prim_user       [121] flux2dUavg            [187] normalize_field
+ [231] bound_prim_user_after_mpi [82] flux_compute         [7] pass_1d_line_multipl_weno
+ [117] bound_pstag            [36] flux_compute_general  [168] pi2Uavg
+  [99] bound_pstag_user       [11] flux_integrate_fluxrecon [207] pick_validate_x (utoprim_jon.c)
+ [160] boundary_smoother      [19] flux_interp           [156] pickeos_eomtype
+ [114] bsq_calc               [17] flux_interp_multiple  [116] post_fixup
+ [113] c2e_simple_eno         [12] flux_point2avg        [166] post_init_specific_init
+  [54] causal_shift_order      [6] fluxcalc              [269] post_par_set
+ [157] check_Wp               [22] fluxcalc_flux         [246] postdt
+ [171] check_on_inversion (utoprim_jon.c) [13] fluxcalc_fluxctstag [235] pre_fixup
+ [153] choose_limiter         [68] fluxcalc_fluxctstag_emf_1d [86] pre_init
+  [44] choose_weno_order (reconstructeno.c) [23] fluxcalc_standard_4fluxctstag [270] pre_init_specific_init
+  [58] compute_1plusud0      [196] fluxdump_content      [241] preinterp_flux_point2avg
+ [236] compute_EOS_parms     [165] fluxdumpdump          [271] prepre_init_specific_init
+ [237] compute_EOS_parms_idealgas [210] free_ivector      [89] pressure_rho0_u
+  [32] compute_ac_ca_stencil_weights (reconstructeno.c) [80] func_Eprime (utoprim_jon.c) [95] pressure_rho0_u_idealgas
+ [214] compute_allextras_idealgas [159] gaussj           [182] pressure_rho0_w
+  [24] compute_cf_stencil_weights (reconstructeno.c) [149] gcon_func [125] pressure_wmrho0
+ [148] compute_dSdrho        [250] gcov2gcovprim         [126] pressure_wmrho0_idealgas
+  [29] compute_df_line_new   [213] gcov_func              [66] primtoU
+ [198] compute_entropy       [173] gdet_func_singcheck    [41] primtoflux
+ [199] compute_entropy_idealgas [185] gdump              [147] prminmaxsum
+ [155] compute_idrho0dp      [141] gdump_content         [110] raise_vec
+ [206] compute_idrho0dp_idealgas [179] getPressure       [253] ranc
+ [111] compute_idwmrho0dp     [38] get_1d_line           [188] rdump_content
+ [112] compute_idwmrho0dp_idealgas [87] get_1d_line_c2e  [256] recompute_fluxpositions
+ [107] compute_lower_order_fraction_weno5_weights (reconstructeno.c) [216] get_EOS_parms [189] remapdq
+  [34] compute_mono_indicator_point_eno5 (interpline.smono.c) [217] get_EOS_parms_idealgas [190] remapplpr
+  [30] compute_monotonicity_line [180] get_cold_W_fromEN [102] reset_weno5_weights (reconstructeno.c)
+  [84] compute_monotonicity_line_indicatoronly [223] get_compdimen [144] restart_write
+  [85] compute_monotonicity_line_valueonly [51] get_contact_indicator [120] set_arrays
+ [240] compute_new_metric_substep [28] get_df_line_gen_new [272] set_conn_cartminkmetric
+  [39] compute_optimized_ac_ca_stencil_weights (reconstructeno.c) [218] get_extrasprocessed [273] set_coord_parms
+  [35] compute_optimized_cf_stencil_weights (reconstructeno.c) [219] get_extrasprocessed_idealgas [202] set_drsing
+ [161] compute_qdot           [53] get_geometry          [150] set_dt
+ [178] compute_qdot_idealgas  [64] get_global_wavespeeds [200] set_grid
+ [119] compute_setup_quantities [45] get_limit_slopes    [101] set_guess_Wp
+  [31] compute_smonotonicity_line [78] get_primitive_fluxlocation [229] set_interp_loop_gen
+  [67] compute_smonotonicity_line_split [230] get_recon_type [274] set_points
+ [169] compute_temp          [181] get_roe_averaged_state [183] set_zamo_ucovuconplus1ud0
+ [215] compute_temp_idealgas  [20] get_shock_indicator   [158] setfdivb
+  [65] compute_vorticity      [40] get_state             [184] setup_nprlocalist
+  [33] compute_weights_ratios (reconstructeno.c) [135] get_sum_of_elements [247] setup_rktimestep
+ [257] conn_func             [122] get_wavespeeds         [75] sign
+ [176] constotal              [90] getplpr                [94] sign2
+ [244] control_metric_update [170] getsizeofdatatype     [134] signavoidzero
+ [258] control_time_store_metric [133] global_vchar       [81] simplefast
+ [131] coord                 [139] gset                   [15] slope_lim
+ [220] coord_ijk             [224] idxdxprim_ijk          [10] slope_lim_linetype
+ [222] coordtrans            [104] image_content           [8] slope_lim_linetype_c2e
+ [123] cs2_compute            [49] image_dump             [98] sol
+ [130] cs2_compute_idealgas  [233] image_header           [50] source
+ [118] csslope                [60] init                   [55] source_conn
+ [128] current_calc          [167] init_conservatives    [172] sourcephysics
+ [129] current_calc_1        [260] init_consts             [2] step_ch_full
+  [92] current_doprecalc     [154] init_dsandvels          [3] step_ch_simplempi
+  [96] dUtoU                  [91] init_dumps            [228] trifprintf
+ [195] debug_content         [261] init_genfiles         [127] u_rho0_p
+ [162] debugdump             [262] init_global           [225] ucon_calc_3vel
+ [124] dfun2fun_kazfull      [263] init_grid              [46] ucon_calc_rel4vel
+  [48] diag                  [264] init_grid_post_set_grid [140] validate_x_1d (utoprim_jon.c)
+ [103] diag_flux             [265] init_mpi               [74] vchar
+  [83] diag_source_all       [266] init_placeongrid       [88] vectorpot_fluxreconorfvavg
+  [61] diag_source_comp       [73] init_primitives        [79] vpot2field
+ [186] divbmaxavg            [175] integrate             [194] vpot2field_staggeredfield
+ [254] dmatrix               [177] integratel            [275] write_coord_parms
+ [251] dualfprintf           [267] interp_loop_set       [252] write_restart_header
+ [143] dump                   [26] interpolate_pfield_face2cent
+  [97] dump_content           [14] interpolate_prim_face2corn

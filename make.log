@@ -1,0 +1,2178 @@
+makehead.inc:47: default goal is grmhd
+makehead.inc:48: goal is grmhd
+makehead.inc:49: MPITARGETS is  grmhd grmhdldouble liaison prep prepgrmhdldouble 
+makehead.inc:87: USEMPI is 1
+makehead.inc:88: USEOPENMP is 1
+maketail.inc:49: COMP is icc -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp
+maketail.inc:50: MMCOMP is mpicc -cc=icc -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp   
+maketail.inc:51: CC is mpicc -cc=icc -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp   
+maketail.inc:52: CC2 is mpicc -cc=gcc -Wall -O2 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1
+maketail.inc:53: CCGENERATEFINAL is mpicc -cc=icc -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp   
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c init.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c init.tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+init.tools.c(331): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+init.tools.c(326): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+init.tools.c(371): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+init.tools.c(366): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c initbase.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+initbase.c(2602): (col. 4) remark: LOOP WAS VECTORIZED.
+initbase.c(2562): (col. 3) remark: LOOP WAS VECTORIZED.
+initbase.c(2445): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+initbase.c(2432): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+initbase.c(2501): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+initbase.c(2492): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+initbase.c(504): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+initbase.c(495): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+initbase.c(418): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+initbase.c(418): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+initbase.c(68): (col. 5) remark: LOOP WAS VECTORIZED.
+initbase.c(915): (col. 7) remark: LOOP WAS VECTORIZED.
+initbase.c(920): (col. 2) remark: LOOP WAS VECTORIZED.
+initbase.c(921): (col. 20) remark: LOOP WAS VECTORIZED.
+initbase.c(926): (col. 5) remark: LOOP WAS VECTORIZED.
+initbase.c(928): (col. 36) remark: LOOP WAS VECTORIZED.
+initbase.c(943): (col. 15) remark: LOOP WAS VECTORIZED.
+initbase.c(946): (col. 26) remark: LOOP WAS VECTORIZED.
+initbase.c(1115): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c initbase.enerregions.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+initbase.enerregions.c(128): (col. 5) remark: LOOP WAS VECTORIZED.
+initbase.enerregions.c(140): (col. 3) remark: BLOCK WAS VECTORIZED.
+initbase.enerregions.c(145): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c initbase.tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c initbase.gridsectioning.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+initbase.gridsectioning.c(118): remark #111: statement is unreachable
+    dualfprintf(fail_file,"Should not be in bound_gridsectioning EVER: deprecated code\n");
+    ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c restart.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+restart.rebeccaoldcode.c(431): (col. 5) remark: LOOP WAS VECTORIZED.
+restart.rebeccaoldcode.c(437): (col. 18) remark: LOOP WAS VECTORIZED.
+restart.c(826): (col. 5) remark: LOOP WAS VECTORIZED.
+restart.c(829): (col. 43) remark: LOOP WAS VECTORIZED.
+restart.c(832): (col. 18) remark: LOOP WAS VECTORIZED.
+restart.rebeccaoldcode.c(156): (col. 41) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c restart.checks.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c set_arrays.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c set_arrays_perpoint_perline.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c set_arrays_multidimen.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+set_arrays_multidimen.c(86): warning #175: subscript out of range
+    GLOBALPOINT(fluxstate) = (struct of_state PTRMACP2A0(fluxstate,FILL,NUMLEFTRIGHT,N1M,N2M,N3M)) (&(BASEMACP2A0(fluxstate,-1,0,N1BND,N2BND,N3BND)));
+                                                                                                      ^
+
+set_arrays_multidimen.c(152): warning #175: subscript out of range
+    GLOBALPOINT(vconemf) = (FTYPE PTRMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1)) (&(BASEMACP0A1(vconemf,N1BND,N2BND,N3BND,-U1)));
+                                                                             ^
+
+set_arrays_multidimen.c(175): warning #175: subscript out of range
+    GLOBALPOINT(wspeed) = (FTYPE PTRMACP2A0(wspeed,FILL,NUMCS,N1M,N2M,N3M)) (&(BASEMACP2A0(wspeed,-1,0,N1BND,N2BND,N3BND))); // shifted so wspeed[1,2,3] accesses the memory
+                                                                               ^
+
+set_arrays_multidimen.c(263): warning #175: subscript out of range
+    GLOBALPOINT(gp_l) = (FTYPE PTRMACP1A1(gp_l,FILL,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP1A1(gp_l,-1,N1BND,N2BND,N3BND,0)));
+                                                                                ^
+
+set_arrays_multidimen.c(264): warning #175: subscript out of range
+    GLOBALPOINT(gp_r) = (FTYPE PTRMACP1A1(gp_r,FILL,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP1A1(gp_r,-1,N1BND,N2BND,N3BND,0)));
+                                                                                ^
+
+set_arrays_multidimen.c(294): warning #175: subscript out of range
+    GLOBALPOINT(pbcorninterp) = (FTYPE PTRMACP3A0(pbcorninterp,FILL,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP3A0(pbcorninterp,-1,-B1,0,N1BND,N2BND,N3BND)));
+                                                                                                                        ^
+
+set_arrays_multidimen.c(294): warning #175: subscript out of range
+    GLOBALPOINT(pbcorninterp) = (FTYPE PTRMACP3A0(pbcorninterp,FILL,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP3A0(pbcorninterp,-1,-B1,0,N1BND,N2BND,N3BND)));
+                                                                                                                        ^
+
+set_arrays_multidimen.c(295): warning #175: subscript out of range
+    GLOBALPOINT(pvcorninterp) = (FTYPE PTRMACP4A0(pvcorninterp,FILL,COMPDIM,NUMCS,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP4A0(pvcorninterp,-1,-U1,0,0,N1BND,N2BND,N3BND)));
+                                                                                                                              ^
+
+set_arrays_multidimen.c(295): warning #175: subscript out of range
+    GLOBALPOINT(pvcorninterp) = (FTYPE PTRMACP4A0(pvcorninterp,FILL,COMPDIM,NUMCS,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP4A0(pvcorninterp,-1,-U1,0,0,N1BND,N2BND,N3BND)));
+                                                                                                                              ^
+
+set_arrays_multidimen.c(297): warning #175: subscript out of range
+    GLOBALPOINT(geomcornglobal) = (FTYPE PTRMACP1A0(geomcornglobal,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP1A0(geomcornglobal,-1,N1BND,N2BND,N3BND))); // geomcornglobal[1,2,3 for CORN1,2,3]
+                                                                                                              ^
+
+set_arrays_multidimen.c(147): (col. 23) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(153): (col. 3) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(176): (col. 29) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(316): (col. 3) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(320): (col. 5) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(321): (col. 5) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(399): (col. 3) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(402): (col. 3) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(406): (col. 3) remark: LOOP WAS VECTORIZED.
+set_arrays_multidimen.c(429): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_set_arrays.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpi_set_arrays.c(31): warning #175: subscript out of range
+    workbc = (FTYPE(*)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM]) (&(workbca[-1][0][0]));
+                                                                             ^
+
+mpi_set_arrays.c(33): warning #175: subscript out of range
+    workbc_int =(PFTYPE(*)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM]) (&(workbc_inta[-1][0][0]));
+                                                                                          ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c set_grid.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+set_grid.c(166): (col. 5) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+set_grid.c(166): (col. 5) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+set_grid.c(166): (col. 5) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+set_grid.c(166): (col. 5) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+set_grid.c(186): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+set_grid.c(186): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+set_grid.c(198): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+set_grid.c(198): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c advance.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+advance.c(274): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(304): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(484): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(504): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(913): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(943): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(1059): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if(dt!=0.0){
+               ^
+
+advance.c(1163): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(1180): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(1428): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+advance.c(1650): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( 0.0 != fraction_input_value ){
+               ^
+
+advance.c(328): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+advance.c(315): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+advance.c(636): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+advance.c(622): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+advance.c(647): (col. 2) remark: LOOP WAS VECTORIZED.
+advance.c(971): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+advance.c(956): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+advance.c(1033): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+advance.c(1017): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+advance.c(1315): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+advance.c(1301): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+advance.c(1254): (col. 5) remark: LOOP WAS VECTORIZED.
+advance.c(1255): (col. 5) remark: LOOP WAS VECTORIZED.
+advance.c(1256): (col. 5) remark: LOOP WAS VECTORIZED.
+advance.c(1324): (col. 7) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c copyandinit_functions.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+copyandinit_functions.c(668): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(663): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(695): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(695): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(627): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(622): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(651): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(651): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(595): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(590): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(436): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(477): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(412): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(407): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(460): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(460): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(389): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(366): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(324): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(319): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(350): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(350): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(297): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(292): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(255): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(250): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(282): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(282): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(170): (col. 7) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(185): (col. 7) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(197): (col. 7) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(210): (col. 7) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(152): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(518): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(518): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(493): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(487): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(553): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(553): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(532): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(528): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+copyandinit_functions.c(567): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+copyandinit_functions.c(562): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c reconstructeno.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+reconstructeno.c(598): remark #1572: floating-point equality and inequality comparisons are unreliable
+          if( monoind_val == 0.0 ) {
+                             ^
+
+reconstructeno.c(863): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( order == 3 && monoindicator[0] > 0.0 && monoindicator[0] < 1.0 ){ 
+                 ^
+
+reconstructeno.c(948): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( stencil_weights[shift] != 0.0 ) {  //SASMARK: if values just outside the boundary are NAN's, then zero time NAN gives a NAN, and the code fails, so use isfinite() or != 0.0 to check for that.
+                                    ^
+
+reconstructeno.c(1438): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(*monoindicator0==1){// then equal weights
+                        ^
+
+reconstructeno.c(1455): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(*monoindicator0==0 && *monoindicator1!=0) { //cusp
+                             ^
+
+reconstructeno.c(1455): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(*monoindicator0==0 && *monoindicator1!=0) { //cusp
+                                                   ^
+
+reconstructeno.c(1612): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(monoindicator[0]==1){// then equal weights
+                         ^
+
+reconstructeno.c(1617): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(monoindicator[0]==-1){// then 0 weight
+                              ^
+
+reconstructeno.c(1759): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(*monoindicator0==1){// then equal weights
+                        ^
+
+reconstructeno.c(1767): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(*monoindicator0==0 && *monoindicator1!=0) { //cusp
+                             ^
+
+reconstructeno.c(1767): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(*monoindicator0==0 && *monoindicator1!=0) { //cusp
+                                                   ^
+
+reconstructeno.c(1965): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(monoindicator[0]==1){// then equal weights
+                         ^
+
+reconstructeno.c(1968): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(monoindicator[0]==-1){// then 0 weight
+                              ^
+
+reconstructeno.c(2184): remark #1572: floating-point equality and inequality comparisons are unreliable
+         (sign(ddf[-1])==-sign(ddf[0]))&&
+                         ^
+
+reconstructeno.c(2185): remark #1572: floating-point equality and inequality comparisons are unreliable
+         (sign(ddf[1])==-sign(ddf[0]))&&
+                        ^
+
+reconstructeno.c(2186): remark #1572: floating-point equality and inequality comparisons are unreliable
+         (sign(ddf[-1])==sign(ddf[1]))&&
+                         ^
+
+reconstructeno.c(2187): remark #1572: floating-point equality and inequality comparisons are unreliable
+         (sign(df[-1])==-sign(df[1]))
+                        ^
+
+reconstructeno.weightmin.c(1216): remark #111: statement is unreachable
+    copy_weno5_weights(preforder, weno_weights_in, stencil_weights_array_other);
+    ^
+
+reconstructeno.debug.c(19): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( (pl < U1 && yin[i+bs] != yin[bf-i]) || (pl == U1 && yin[i+bs] != - yin[bf-i]) ) {
+                                   ^
+
+reconstructeno.debug.c(19): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( (pl < U1 && yin[i+bs] != yin[bf-i]) || (pl == U1 && yin[i+bs] != - yin[bf-i]) ) {
+                                                                           ^
+
+reconstructeno.debug.c(48): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
+  	                                              ^
+
+reconstructeno.debug.c(54): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + maxorder-1-j] ) {
+  	                                                       ^
+
+reconstructeno.debug.c(63): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( (pl < U1 && yout[0][i+ps] != yout[0][pf-i]) || (pl == U1 && yout[0][i+ps] != - yout[0][pf-i]) ) {
+                                         ^
+
+reconstructeno.debug.c(63): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( (pl < U1 && yout[0][i+ps] != yout[0][pf-i]) || (pl == U1 && yout[0][i+ps] != - yout[0][pf-i]) ) {
+                                                                                         ^
+
+reconstructeno.debug.c(76): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	 (pl < U1 && yout[0][i+ps] != yout[1][pf-i]) || 
+  	                              ^
+
+reconstructeno.debug.c(77): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	 (pl == U1 && yout[0][i+ps] != - yout[1][pf-i]) ) {
+  	                               ^
+
+reconstructeno.debug.c(81): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
+  	                                                ^
+
+reconstructeno.debug.c(87): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] ) {
+  	                                                         ^
+
+reconstructeno.debug.c(98): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] || monoindicator[MONOYIN][i+ps] != monoindicator[MONOYIN][pf-i] ) {
+  	                                              ^
+
+reconstructeno.debug.c(98): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] || monoindicator[MONOYIN][i+ps] != monoindicator[MONOYIN][pf-i] ) {
+  	                                                                                                                                   ^
+
+reconstructeno.debug.c(104): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] && monoindicator[MONOYIN][i+ps] != 1.0 ) {
+  	                                                       ^
+
+reconstructeno.debug.c(104): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] && monoindicator[MONOYIN][i+ps] != 1.0 ) {
+  	                                                                                                                                                         ^
+
+reconstructeno.c(1441): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1489): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1519): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1519): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1535): (col. 31) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1535): (col. 31) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1545): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1558): (col. 17) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1558): (col. 17) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1572): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1572): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1762): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1796): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1812): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1858): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1858): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1875): (col. 31) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1875): (col. 31) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1886): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1900): (col. 17) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1900): (col. 17) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1913): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1913): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1642): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1653): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1659): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1659): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1660): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1660): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1662): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1977): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1984): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1984): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1985): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1985): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(193): (col. 2) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(231): (col. 2) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(268): (col. 2) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(1116): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(1141): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(747): (col. 19) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(721): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(820): (col. 19) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(626): (col. 13) remark: PARTIAL LOOP WAS VECTORIZED.
+reconstructeno.c(626): (col. 13) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(626): (col. 13) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(704): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(900): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.weightmin.c(1026): (col. 5) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(2847): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1184): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+reconstructeno.c(1184): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1184): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1184): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1185): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+reconstructeno.c(1185): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1185): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1185): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1063): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1072): (col. 9) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1098): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1098): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1089): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1089): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1001): (col. 3) remark: LOOP WAS VECTORIZED.
+reconstructeno.c(1001): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c paraenohybrid.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+paraenohybrid.c(79): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if(monoindicator[LEFTYOUT][i]==0.0) yout_left[i]=0.0;
+                                       ^
+
+paraenohybrid.c(80): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if(monoindicator[RIGHTYOUT][i]==0.0) yout_right[i]=0.0;
+                                        ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c flux.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+flux.c(1595): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(1586): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(788): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(778): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(958): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(935): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(996): (col. 2) remark: LOOP WAS VECTORIZED.
+flux.c(1249): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(1233): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(1458): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(1436): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(1358): (col. 5) remark: LOOP WAS VECTORIZED.
+flux.c(579): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(568): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(547): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(537): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(518): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(508): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(487): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(479): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(458): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(450): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(269): (col. 17) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(269): (col. 17) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+flux.c(413): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+flux.c(346): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c flux.mergedc2ea2cmethod.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+flux.mergedc2ea2cmethod.c(533): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c higherorder_pointavg.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+higherorder_pointavg.c(2247): (col. 7) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2281): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2284): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2287): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2357): (col. 3) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2357): (col. 3) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2357): (col. 3) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2056): (col. 5) remark: PARTIAL LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1890): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1891): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2587): (col. 3) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1952): (col. 5) remark: PARTIAL LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1325): (col. 5) remark: BLOCK WAS VECTORIZED.
+higherorder_pointavg.c(1348): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1415): (col. 41) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1765): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1766): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1059): (col. 4) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1060): (col. 4) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1127): (col. 8) remark: PARTIAL LOOP WAS VECTORIZED.
+higherorder_pointavg.c(791): (col. 3) remark: BLOCK WAS VECTORIZED.
+higherorder_pointavg.c(838): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(839): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(884): (col. 6) remark: PARTIAL LOOP WAS VECTORIZED.
+higherorder_pointavg.c(578): (col. 3) remark: BLOCK WAS VECTORIZED.
+higherorder_pointavg.c(618): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(619): (col. 2) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(263): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(264): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(469): (col. 23) remark: PARTIAL LOOP WAS VECTORIZED.
+higherorder_pointavg.c(45): (col. 3) remark: BLOCK WAS VECTORIZED.
+higherorder_pointavg.c(1571): (col. 7) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(1572): (col. 7) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2149): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2150): (col. 5) remark: LOOP WAS VECTORIZED.
+higherorder_pointavg.c(2151): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c wavespeeds.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+wavespeeds.c(328): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+wavespeeds.c(312): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+wavespeeds.c(258): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+wavespeeds.c(244): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+wavespeeds.c(272): (col. 3) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+wavespeeds.c(272): (col. 3) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c boundsflux.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fluxct.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+fluxct.c(657): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,jm1mac(j),k  ,B3)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) -
+  	                                   ^
+
+fluxct.c(658): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,jm1mac(j),k  ,B2)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U3) ;
+  	                                   ^
+
+fluxct.c(660): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B3)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U2) -
+  	                                         ^
+
+fluxct.c(661): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B2)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U3) ;
+  	                                         ^
+
+fluxct.c(663): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,km1mac(k),B3)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U2) -
+  	                                   ^
+
+fluxct.c(664): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,km1mac(k),B2)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) ;
+  	                                   ^
+
+fluxct.c(666): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,k  ,B3)*MACP0A1(vconemf,i  ,j  ,k  ,U2) -
+  	                             ^
+
+fluxct.c(667): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,k  ,B2)*MACP0A1(vconemf,i  ,j  ,k  ,U3) ;
+  	                             ^
+
+fluxct.c(673): warning #175: subscript out of range
+  	  MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U3) -
+  	                                   ^
+
+fluxct.c(676): warning #175: subscript out of range
+  	  MACP0A1(pb,im1mac(i),j  ,km1mac(k),B1)*MACP0A1(vconemf,im1mac(i),j  ,km1mac(k),U3) -
+  	                                         ^
+
+fluxct.c(679): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,km1mac(k),B1)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) -
+  	                                   ^
+
+fluxct.c(682): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U3) -
+  	                             ^
+
+fluxct.c(690): warning #175: subscript out of range
+  	  MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U2) ;
+  	                                   ^
+
+fluxct.c(693): warning #175: subscript out of range
+  	  MACP0A1(pb,im1mac(i),jm1mac(j),k  ,B1)*MACP0A1(vconemf,im1mac(i),jm1mac(j),k  ,U2) ;
+  	                                         ^
+
+fluxct.c(696): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,jm1mac(j),k  ,B1)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) ;
+  	                                   ^
+
+fluxct.c(699): warning #175: subscript out of range
+  	  MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U2) ;
+  	                             ^
+
+fluxct.c(232): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(221): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(281): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(271): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(500): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(484): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(373): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(356): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(640): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(622): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(803): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(763): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(1189): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(1177): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(1125): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(1109): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(702): (col. 2) remark: LOOP WAS VECTORIZED.
+fluxct.c(722): (col. 2) remark: LOOP WAS VECTORIZED.
+fluxct.c(108): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(134): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(159): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxct.c(82): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxct.c(39): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fluxctstag.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+fluxctstag.c(763): (col. 3) remark: BLOCK WAS VECTORIZED.
+fluxctstag.c(919): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(935): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(951): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(865): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(1150): (col. 5) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(1150): (col. 5) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(1239): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(1295): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(1167): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(1138): (col. 5) remark: LOOP WAS VECTORIZED.
+fluxctstag.c(430): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(414): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(386): (col. 3) remark: BLOCK WAS VECTORIZED.
+fluxctstag.c(457): (col. 28) remark: LOOP WAS VECTORIZED.
+fluxctstag.c(1722): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(1936): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(1619): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(1535): (col. 5) remark: LOOP WAS VECTORIZED.
+fluxctstag.c(124): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(144): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(163): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxctstag.c(102): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxctstag.c(87): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fluxvpot.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+fluxvpot.c(939): remark #111: statement is unreachable
+    Nvec[0]=0;
+    ^
+
+fluxvpot.c(1139): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(1130): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxvpot.c(1063): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(1055): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxvpot.c(795): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(827): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(858): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(768): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxvpot.c(748): (col. 3) remark: BLOCK WAS VECTORIZED.
+fluxvpot.c(596): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(590): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxvpot.c(560): (col. 3) remark: BLOCK WAS VECTORIZED.
+fluxvpot.c(455): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(439): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fluxvpot.c(385): (col. 3) remark: BLOCK WAS VECTORIZED.
+fluxvpot.c(1234): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fluxvpot.c(1229): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c bounds.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+bounds.c(240): (col. 7) remark: LOOP WAS VECTORIZED.
+bounds.c(218): (col. 5) remark: LOOP WAS VECTORIZED.
+bounds.c(221): (col. 5) remark: LOOP WAS VECTORIZED.
+bounds.c(222): (col. 5) remark: LOOP WAS VECTORIZED.
+bounds.c(42): (col. 3) remark: LOOP WAS VECTORIZED.
+bounds.c(19): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c bounds.tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+bounds.tools.c(2550): remark #111: statement is unreachable
+    if( DOGRIDSECTIONING==0) {  //don't do anything if sectioning not done
+    ^
+
+bounds.tools.c(2555): remark #111: statement is unreachable
+    if(BCtype[X1DN]==FIXEDUSEPANALYTIC || BCtype[X1UP]==FIXEDUSEPANALYTIC){
+    ^
+
+bounds.tools.c(2646): remark #111: statement is unreachable
+    if( DOGRIDSECTIONING==0) {  //don't do anything if sectioning not done
+    ^
+
+bounds.tools.c(2651): remark #111: statement is unreachable
+    if(BCtype[X1DN]==FIXEDUSEPANALYTIC || BCtype[X1UP]==FIXEDUSEPANALYTIC){
+    ^
+
+bounds.tools.c(2731): remark #111: statement is unreachable
+    dimen = 1;
+    ^
+
+bounds.tools.c(2816): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	singfound+=(localgdet[0]!=0.0);
+  	                          ^
+
+bounds.tools.c(2883): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	singfound+=(localgdet[0]!=0.0);
+  	                          ^
+
+bounds.tools.c(1137): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(1111): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(1026): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(1049): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(1000): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(2131): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(2479): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(905): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(877): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(786): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(809): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(762): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(658): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(631): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(545): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(569): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(518): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(390): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(354): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(224): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+bounds.tools.c(188): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+bounds.tools.c(1601): (col. 5) remark: LOOP WAS VECTORIZED.
+bounds.tools.c(1638): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c boundsint.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c diag.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+diag.c(648): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if((DOAREAMAPDIAG)&&(localt != tlastareamap)&&(dofailmap)&&(localnstep>=steptofailmap)){
+                                   ^
+
+diag.c(661): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTDUMP])&&(localt >= tdumpgen[DTDUMP] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  ){
+                                                      ^
+
+diag.c(666): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( ((DODEBUG)&&(DOENODEBUGEVERYSUBSTEP||DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTDEBUG])&&(localt >= tdumpgen[DTDEBUG] || call_code==FINAL_OUT))) )  ){
+                                                                           ^
+
+diag.c(672): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if((DOAVGDIAG)&&((localt!=tlastgen[DTAVG])&&(localt >= tdumpgen[DTAVG] || call_code==FINAL_OUT))){
+                              ^
+
+diag.c(679): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(DOENERDIAG&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTENER])&&( (localt >= tdumpgen[DTENER])||(call_code==INIT_OUT)||(call_code==FINAL_OUT)||firsttime)))){
+                                                  ^
+
+diag.c(686): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if((DOIMAGEDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTIMAGE])&&(localt >= tdumpgen[DTIMAGE] || call_code==FINAL_OUT))) ){
+                                                     ^
+
+diag.c(694): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if((DOFIELDLINE)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTFIELDLINE])&&(localt >= tdumpgen[DTFIELDLINE] || call_code==FINAL_OUT))) ){
+                                                     ^
+
+diag.c(752): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
+  	                           ^
+
+diag.c(755): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
+  	                           ^
+
+diag.c(766): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i+N1,j,k,pl)){
+  	                                  ^
+
+diag.c(769): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i,j+N2,k,pl)){
+  	                                  ^
+
+diag.c(812): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
+  	                           ^
+
+diag.c(815): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
+  	                           ^
+
+diag.c(2157): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(2191): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(2199): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(2233): (col. 7) remark: LOOP WAS VECTORIZED.
+diag.c(2014): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(2020): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1970): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(1976): (col. 2) remark: PARTIAL LOOP WAS VECTORIZED.
+diag.c(1747): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(1749): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(1751): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(1753): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(1780): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1842): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1669): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1695): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1566): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1275): (col. 7) remark: LOOP WAS VECTORIZED.
+diag.c(1339): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1359): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1372): (col. 8) remark: LOOP WAS VECTORIZED.
+diag.c(1374): (col. 8) remark: LOOP WAS VECTORIZED.
+diag.c(1376): (col. 8) remark: LOOP WAS VECTORIZED.
+diag.c(1378): (col. 8) remark: LOOP WAS VECTORIZED.
+diag.c(1050): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1135): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1155): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1159): (col. 4) remark: LOOP WAS VECTORIZED.
+diag.c(1189): (col. 2) remark: LOOP WAS VECTORIZED.
+diag.c(523): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+diag.c(535): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+diag.c(545): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+diag.c(516): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+diag.c(72): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(79): (col. 7) remark: LOOP WAS VECTORIZED.
+diag.c(91): (col. 7) remark: LOOP WAS VECTORIZED.
+diag.c(1630): (col. 5) remark: LOOP WAS VECTORIZED.
+diag.c(1656): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c dump.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+dump.c(1055): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(q.ucon[RR]!=0.0){
+                   ^
+
+dump.c(1005): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(1007): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(1009): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(1011): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(62): (col. 3) remark: BLOCK WAS VECTORIZED.
+dump.c(119): (col. 3) remark: BLOCK WAS VECTORIZED.
+dump.c(339): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(341): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(343): (col. 7) remark: LOOP WAS VECTORIZED.
+dump.c(345): (col. 7) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c dumpgen.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c dump_ener.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+dump_ener.c(339): remark #1572: floating-point equality and inequality comparisons are unreliable
+  		     U_init[pl]!=0.0 ? ftemp0/U_init[pl] : 0.0,
+  		                 ^
+
+dump_ener.c(341): remark #1572: floating-point equality and inequality comparisons are unreliable
+  		     U_init[pl]!=0.0 ? ftemp1/U_init[pl] : 0.0,
+  		                 ^
+
+dump_ener.c(956): (col. 3) remark: LOOP WAS VECTORIZED.
+dump_ener.c(962): (col. 7) remark: LOOP WAS VECTORIZED.
+dump_ener.c(1021): (col. 8) remark: LOOP WAS VECTORIZED.
+dump_ener.c(1021): (col. 8) remark: LOOP WAS VECTORIZED.
+dump_ener.c(301): (col. 7) remark: LOOP WAS VECTORIZED.
+dump_ener.c(301): (col. 7) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c image.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+image.c(312): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if (lmax != lmin)
+                ^
+
+image.c(187): (col. 4) remark: LOOP WAS VECTORIZED.
+image.c(220): (col. 4) remark: LOOP WAS VECTORIZED.
+image.c(374): (col. 6) remark: LOOP WAS VECTORIZED.
+image.c(374): (col. 6) remark: LOOP WAS VECTORIZED.
+image.c(113): (col. 9) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fail.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fixup.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+fixup.c(2342): remark #111: statement is unreachable
+    limgen=MAX(MAX(lim[1],lim[2]),lim[3]); // not reached if((LIMADJUST==0)&&(FLUXADJUST==0))
+    ^
+
+fixup.c(2527): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if((gamma > realgammamax && (gamma!=1.0))) {    
+                                        ^
+
+fixup.c(3033): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(3079): (col. 5) remark: LOOP WAS VECTORIZED.
+fixup.c(2915): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(2924): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(2945): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(2963): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(268): (col. 4) remark: LOOP WAS VECTORIZED.
+fixup.c(271): (col. 4) remark: LOOP WAS VECTORIZED.
+fixup.c(286): (col. 4) remark: LOOP WAS VECTORIZED.
+fixup.c(290): (col. 4) remark: LOOP WAS VECTORIZED.
+fixup.c(2977): (col. 10) remark: LOOP WAS VECTORIZED.
+fixup.c(2977): (col. 10) remark: LOOP WAS VECTORIZED.
+fixup.c(2977): (col. 10) remark: LOOP WAS VECTORIZED.
+fixup.c(2977): (col. 10) remark: LOOP WAS VECTORIZED.
+fixup.c(2518): (col. 3) remark: LOOP WAS VECTORIZED.
+fixup.c(1057): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fixup.c(1038): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fixup.c(1076): (col. 2) remark: LOOP WAS VECTORIZED.
+fixup.c(1140): (col. 8) remark: LOOP WAS VECTORIZED.
+fixup.c(1210): (col. 9) remark: LOOP WAS VECTORIZED.
+fixup.c(1788): (col. 5) remark: LOOP WAS VECTORIZED.
+fixup.c(1800): (col. 20) remark: LOOP WAS VECTORIZED.
+fixup.c(1806): (col. 20) remark: LOOP WAS VECTORIZED.
+fixup.c(1813): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(698): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fixup.c(688): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fixup.c(741): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fixup.c(728): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fixup.c(400): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+fixup.c(400): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+fixup.c(507): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(509): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(535): (col. 7) remark: LOOP WAS VECTORIZED.
+fixup.c(588): (col. 14) remark: LOOP WAS VECTORIZED.
+fixup.c(346): (col. 2) remark: LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: PARTIAL LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: PARTIAL LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: LOOP WAS VECTORIZED.
+fixup.c(135): (col. 8) remark: LOOP WAS VECTORIZED.
+fixup.c(94): (col. 5) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+fixup.c(94): (col. 5) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+fixup.c(94): (col. 5) remark: LOOP WAS VECTORIZED.
+fixup.c(94): (col. 5) remark: LOOP WAS VECTORIZED.
+fixup.c(94): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_init.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpi_init.c(1766): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpi_init.c(448): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(465): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(468): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(69): (col. 20) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpi_init.c(70): (col. 25) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpi_init.c(71): (col. 25) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpi_init.c(72): (col. 25) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpi_init.c(570): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(574): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(586): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(586): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(586): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init.c(678): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_init_grmhd.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpi_init_grmhd.c(42): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_init_grmhd.c(107): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_fileio.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2197): (col. 3) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(1601): (col. 4) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2698): (col. 5) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2701): (col. 5) remark: LOOP WAS VECTORIZED.
+mpi_fileio.c(2716): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_fprintfs.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c boundmpi.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c boundmpiint.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mpi_grmhd_grray_liaison.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interppoint.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interppoint.c(214): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+interppoint.c(193): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+interppoint.c(152): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+interppoint.c(122): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interppoint.para.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interppoint.para.c(1011): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interpline.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interpline.c(2204): warning #175: subscript out of range
+      gamma = MACP0A1(p2interp,i2,j2,k2,VSQ);  //Lorentz factor
+              ^
+
+interpline.c(3382): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(3391): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(3400): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(3018): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2963): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2970): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2996): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2187): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2093): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(1992): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(1120): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1120): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1120): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1132): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1132): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1132): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1133): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1133): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1133): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1136): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1136): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1136): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(688): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+interpline.c(679): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+interpline.c(773): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(856): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(886): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1186): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1186): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1186): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1203): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1203): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1203): (col. 30) remark: LOOP WAS VECTORIZED.
+interpline.c(1206): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1206): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(1206): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(3122): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(3179): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(3202): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(2618): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(275): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+interpline.c(267): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+interpline.c(378): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.c(416): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.c(421): (col. 28) remark: LOOP WAS VECTORIZED.
+interpline.c(445): (col. 28) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interpline.para.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interpline.mono.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interpline.mono.c(369): (col. 5) remark: LOOP WAS VECTORIZED.
+interpline.mono.c(274): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interpline.jmono.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interpline.jmono.c(245): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if((USESHOCKINDICATOR||(USECUSPINDICATOR==2))&&(monoindicator[MONOINDTYPE][i]==1)){
+                                                                                       ^
+
+interpline.jmono.c(511): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if(monoindicator[MONOINDTYPE][i]==1){
+                                          ^
+
+interpline.jmono.c(1050): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(badtype1 || badtype2 ){
+                   ^
+
+interpline.jmono.c(1050): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(badtype1 || badtype2 ){
+                   ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c interpline.smono.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+interpline.smono.c(186): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if(monoindicator[MONOINDTYPE][i] != 0 ) {
+  	                                      ^
+
+interpline.smono.c(254): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if(monoindicator[MONOINDTYPE][i] != 0 ){
+  	                                      ^
+
+interpline.smono.c(341): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if( monoindicator[MONOINDTYPE][i] != 0 ){
+  	                                       ^
+
+interpline.smono.c(653): remark #1572: floating-point equality and inequality comparisons are unreliable
+    assert( x1 == x2, "transition_function(): cannot have transition values x1 equal x2\n" );
+                  ^
+
+interpline.smono.c(239): (col. 16) remark: LOOP WAS VECTORIZED.
+interpline.smono.c(49): (col. 7) remark: LOOP WAS VECTORIZED.
+interpline.smono.c(29): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c initbase.boundloop.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+initbase.boundloop.c(454): (col. 3) remark: BLOCK WAS VECTORIZED.
+initbase.boundloop.c(155): (col. 3) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c main.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mytime.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mytime.c(137): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(DTstep!=0.0) NDTCCHECK=(int)((SFTYPE)(diffnstep)*DTstep/walltime);
+  	           ^
+
+mytime.c(138): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(DTstepdot!=0.0) NDTDOTCCHECK=(int)((SFTYPE)(diffnstep)*DTstepdot/walltime);
+  	              ^
+
+mytime.c(139): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(DTperf!=0.0) NZCCHECK=(int)((SFTYPE)(diffnstep)*DTperf/walltime);
+  	           ^
+
+mytime.c(140): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(DTgocheck!=0.0) NGOCHECK=(int)((SFTYPE)(diffnstep)*DTgocheck/walltime);
+  	              ^
+
+mytime.c(141): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if(DTperfdump!=0.0) NDTPERFDUMPCHECK=(int)((SFTYPE)(diffnstep)*DTperfdump/diagwalltime);
+  	               ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c metric.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+metric.c(1652): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(s2!=0.0){
+           ^
+
+metric.c(1999): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(MBH!=1.0){
+            ^
+
+metric.c(2209): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(MBH!=1.0){
+            ^
+
+metric.c(2671): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(MBH!=1.0){
+            ^
+
+metric.c(2724): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(2252): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(2036): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(1804): (col. 5) remark: LOOP WAS VECTORIZED.
+metric.c(1775): (col. 5) remark: LOOP WAS VECTORIZED.
+metric.c(634): (col. 5) remark: LOOP WAS VECTORIZED.
+metric.c(628): (col. 5) remark: LOOP WAS VECTORIZED.
+metric.c(310): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(327): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(346): (col. 3) remark: LOOP WAS VECTORIZED.
+metric.c(365): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c metric_tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+metric_tools.c(89): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if (h == 0.0) nrerror("h must be nonzero in dfridr.");
+               ^
+
+metric_tools.c(1796): remark #1572: floating-point equality and inequality comparisons are unreliable
+        Xhgen[k][k] += MYDELTAh(truedelta[k],k);
+                       ^
+
+metric_tools.c(1797): remark #1572: floating-point equality and inequality comparisons are unreliable
+        Xlgen[k][k] += MYDELTAl(truedelta[k],k);
+                       ^
+
+metric_tools.c(1357): (col. 3) remark: BLOCK WAS VECTORIZED.
+metric_tools.c(93): (col. 5) remark: LOOP WAS VECTORIZED.
+metric_tools.c(116): (col. 7) remark: LOOP WAS VECTORIZED.
+metric_tools.c(117): (col. 7) remark: LOOP WAS VECTORIZED.
+metric_tools.c(1604): (col. 3) remark: BLOCK WAS VECTORIZED.
+metric_tools.c(1626): (col. 5) remark: LOOP WAS VECTORIZED.
+metric_tools.c(1694): (col. 7) remark: LOOP WAS VECTORIZED.
+metric_tools.c(1704): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+metric_tools.c(1293): (col. 3) remark: LOOP WAS VECTORIZED.
+metric_tools.c(1170): (col. 3) remark: LOOP WAS VECTORIZED.
+metric_tools.c(843): (col. 3) remark: LOOP WAS VECTORIZED.
+metric_tools.c(843): (col. 3) remark: LOOP WAS VECTORIZED.
+metric_tools.c(632): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c math_tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c metric_selfgravity_or_evolvemetric.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+metric_selfgravity_or_evolvemetric.c(424): remark #111: statement is unreachable
+    get_new_metric_parms(&MBHpar, &apar, &QBHpar);
+    ^
+
+metric_selfgravity_or_evolvemetric.c(608): remark #111: statement is unreachable
+    return(1);
+    ^
+
+metric_selfgravity_or_evolvemetric.c(908): remark #128: loop is not reachable from preceding code
+    for (loc = NPG - 1; loc >= 0; loc--) {
+    ^
+
+metric_selfgravity_or_evolvemetric.c(1182): remark #111: statement is unreachable
+    set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
+    ^
+
+metric_selfgravity_or_evolvemetric.c(2403): remark #111: statement is unreachable
+    return(1); // shouldn't get here
+    ^
+
+metric_selfgravity_or_evolvemetric.c(2623): (col. 4) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c coord.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+coord.c(1943): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(1953): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(1964): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(1977): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(1992): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(2002): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(npow==1.0){
+               ^
+
+coord.c(2591): (col. 5) remark: LOOP WAS VECTORIZED.
+coord.c(2591): (col. 5) remark: LOOP WAS VECTORIZED.
+coord.c(2520): (col. 5) remark: LOOP WAS VECTORIZED.
+coord.c(2520): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c phys.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+phys.c(392): remark #111: statement is unreachable
+    geom->EOMFUNCMAC(RHO)=geom->gdet;
+    ^
+
+phys.c(950): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+phys.c(937): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+phys.c(805): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+phys.c(754): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+phys.c(668): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+phys.c(632): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+phys.c(609): (col. 5) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+phys.c(609): (col. 5) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+phys.c(498): (col. 1) remark: OpenMP DEFINED LOOP WAS PARALLELIZED.
+phys.c(459): (col. 1) remark: OpenMP DEFINED REGION WAS PARALLELIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c phys.tools.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+phys.tools.c(93): warning #175: subscript out of range
+    if(fundir!=TT) fluxinputma[FLUXSPLITPMA(fluxdir)]=fluxdiag;
+                              ^
+
+phys.tools.c(2963): (col. 7) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(2977): (col. 7) remark: LOOP WAS VECTORIZED.
+phys.tools.c(2980): (col. 2) remark: LOOP WAS VECTORIZED.
+phys.tools.c(2926): (col. 7) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(2940): (col. 7) remark: LOOP WAS VECTORIZED.
+phys.tools.c(2943): (col. 2) remark: LOOP WAS VECTORIZED.
+phys.tools.c(2427): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(2466): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1476): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1781): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1755): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1715): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1692): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1669): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1643): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1600): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1546): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1461): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1437): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(860): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(996): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(996): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(997): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(997): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(997): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1000): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(893): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(893): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1108): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1117): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1330): (col. 15) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1349): (col. 26) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1261): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1179): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(1144): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(912): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(912): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(913): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(913): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(913): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(916): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.tools.c(223): (col. 5) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.tools.c(223): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.tools.c(380): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c step_ch.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+step_ch.c(121): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just "passing through"
+           ^
+
+step_ch.c(154): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just passing through
+           ^
+
+step_ch.c(175): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just passing through
+           ^
+
+step_ch.c(202): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just passing through
+           ^
+
+step_ch.c(394): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){
+           ^
+
+step_ch.c(409): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just passing through
+           ^
+
+step_ch.c(433): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(dt!=0.0){ // don't do if just passing through
+           ^
+
+step_ch.c(1104): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(TIMEORDER==4 && dt!=0.0){
+                           ^
+
+step_ch.c(1139): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(TIMEORDER==3  && dt!=0.0){
+                                 ^
+
+step_ch.c(1165): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(TIMEORDER==2  && dt!=0.0){
+                                 ^
+
+step_ch.c(1209): remark #1572: floating-point equality and inequality comparisons are unreliable
+    else if(TIMEORDER==1 ||  dt==0.0){
+                                 ^
+
+step_ch.c(1482): (col. 5) remark: LOOP WAS VECTORIZED.
+step_ch.c(1356): (col. 7) remark: LOOP WAS VECTORIZED.
+step_ch.c(1299): (col. 5) remark: LOOP WAS VECTORIZED.
+step_ch.c(1280): (col. 3) remark: LOOP WAS VECTORIZED.
+step_ch.c(1268): (col. 3) remark: LOOP WAS VECTORIZED.
+step_ch.c(1246): (col. 3) remark: LOOP WAS VECTORIZED.
+step_ch.c(1234): (col. 3) remark: LOOP WAS VECTORIZED.
+step_ch.c(926): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+step_ch.c(1022): (col. 2) remark: LOOP WAS VECTORIZED.
+step_ch.c(507): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+step_ch.c(742): (col. 5) remark: LOOP WAS VECTORIZED.
+step_ch.c(742): (col. 5) remark: LOOP WAS VECTORIZED.
+step_ch.c(88): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+step_ch.c(88): (col. 3) remark: LOOP WAS VECTORIZED.
+step_ch.c(88): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c fluxcompute.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+fluxcompute.c(305): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(cmax+cmin!=0.0){
+                    ^
+
+fluxcompute.c(361): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(cmax+cmin!=0.0){
+                  ^
+
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c phys.ffde.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+phys.ffde.c(994): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(AA==0.0){
+           ^
+
+phys.ffde.c(1001): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(BB==0.0){
+           ^
+
+phys.ffde.c(603): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(604): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(951): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(951): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.ffde.c(951): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.ffde.c(1497): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(191): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(367): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(369): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(369): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1099): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1116): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1116): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.ffde.c(1116): (col. 3) remark: PARTIAL LOOP WAS VECTORIZED.
+phys.ffde.c(1151): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1152): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1154): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(1155): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(894): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(898): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(909): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(912): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(916): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(925): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(836): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(772): (col. 3) remark: BLOCK WAS VECTORIZED.
+phys.ffde.c(697): (col. 3) remark: BLOCK WAS VECTORIZED.
+phys.ffde.c(658): (col. 3) remark: BLOCK WAS VECTORIZED.
+phys.ffde.c(423): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(429): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(556): (col. 5) remark: LOOP WAS VECTORIZED.
+phys.ffde.c(556): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c phys.coldgrmhd.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+phys.coldgrmhd.c(79): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(79): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(82): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(82): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(100): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(144): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+phys.coldgrmhd.c(526): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c eos.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+kazfulleos.c(1301): warning #175: subscript out of range
+      AA = 0.5*(tfptr[0][1][kkk][lll]-tfptr[0][-1][kkk][lll]);
+                                              ^
+
+kazfulleos.c(1302): warning #175: subscript out of range
+      BB = 0.5*(tfptr[0][1][kkk][lll]+tfptr[0][-1][kkk][lll]-2.0*tfptr[0][0][kkk][lll]);
+                                              ^
+
+kazfulleos.c(1316): warning #175: subscript out of range
+      AA = 0.5*(tfptr[0][0][1][lll]-tfptr[0][0][-1][lll]);
+                                               ^
+
+kazfulleos.c(1317): warning #175: subscript out of range
+      BB = 0.5*(tfptr[0][0][1][lll]+tfptr[0][0][-1][lll]-2.0*tfptr[0][0][0][lll]);
+                                               ^
+
+kazfulleos.c(1329): warning #175: subscript out of range
+    AA = 0.5*(tfptr[0][0][0][1]-tfptr[0][0][0][-1]);
+                                              ^
+
+kazfulleos.c(1330): warning #175: subscript out of range
+    BB = 0.5*(tfptr[0][0][0][1]+tfptr[0][0][0][-1]-2.0*tfptr[0][0][0][0]);
+                                              ^
+
+kazfulleos.c(1538): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(tdist[iii]==0.0){
+                     ^
+
+kazfulleos.c(1794): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(totaldist==0.0){
+                  ^
+
+kazfulleos.c(1969): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(totaldist==0.0){
+                  ^
+
+f2c.h(15): remark #344: typedef name has already been declared (with same type)
+  typedef double doublereal;
+                 ^
+
+kazfulleos.c(3809): remark #128: loop is not reachable from preceding code
+    COMPFULLLOOP{
+    ^
+
+kazfulleos.c(3871): warning #175: subscript out of range
+      MACP0A1(EOSextra,i,j,k,UNUGLOBAL) =  rho_nu;
+      ^
+
+kazfulleos.c(3872): warning #175: subscript out of range
+      MACP0A1(EOSextra,i,j,k,PNUGLOBAL) =  p_nu;
+      ^
+
+kazfulleos.c(3873): warning #175: subscript out of range
+      MACP0A1(EOSextra,i,j,k,SNUGLOBAL) =  s_nu;
+      ^
+
+kazfulleos.c(3560): (col. 3) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3572): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(2984): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(2985): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3011): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3206): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3207): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(2150): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3703): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3731): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3728): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3765): (col. 7) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(2875): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(2898): (col. 3) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(3450): (col. 3) remark: LOOP WAS VECTORIZED.
+grbpwf99eos.c(236): (col. 3) remark: LOOP WAS VECTORIZED.
+grbpwf99eos.c(220): (col. 5) remark: LOOP WAS VECTORIZED.
+mignoneeos.c(235): (col. 3) remark: LOOP WAS VECTORIZED.
+mignoneeos.c(219): (col. 5) remark: LOOP WAS VECTORIZED.
+idealgaseos.c(197): (col. 3) remark: LOOP WAS VECTORIZED.
+idealgaseos.c(181): (col. 5) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(106): (col. 3) remark: BLOCK WAS VECTORIZED.
+kazfulleos.c(119): (col. 3) remark: BLOCK WAS VECTORIZED.
+kazfulleos.c(132): (col. 3) remark: BLOCK WAS VECTORIZED.
+kazfulleos.c(618): (col. 38) remark: LOOP WAS VECTORIZED.
+kazfulleos.c(728): (col. 4) remark: BLOCK WAS VECTORIZED.
+kazfulleos.c(741): (col. 4) remark: BLOCK WAS VECTORIZED.
+kazfulleos.c(776): (col. 4) remark: BLOCK WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c vchar.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+vchar.c(553): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(555): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(560): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(574): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(579): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(255): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(259): (col. 3) remark: LOOP WAS VECTORIZED.
+vchar.c(148): (col. 8) remark: LOOP WAS VECTORIZED.
+vchar.c(148): (col. 8) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c transforms.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+transforms.c(558): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(559): (col. 21) remark: LOOP WAS VECTORIZED.
+transforms.c(543): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(543): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(519): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(505): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(490): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(475): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(464): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(451): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(422): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(404): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(340): (col. 3) remark: BLOCK WAS VECTORIZED.
+transforms.c(344): (col. 3) remark: BLOCK WAS VECTORIZED.
+transforms.c(355): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(278): (col. 3) remark: BLOCK WAS VECTORIZED.
+transforms.c(282): (col. 3) remark: BLOCK WAS VECTORIZED.
+transforms.c(292): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(196): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(196): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(196): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(201): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(201): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(201): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(209): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(225): (col. 5) remark: BLOCK WAS VECTORIZED.
+transforms.c(225): (col. 5) remark: BLOCK WAS VECTORIZED.
+transforms.c(225): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(228): (col. 5) remark: BLOCK WAS VECTORIZED.
+transforms.c(228): (col. 5) remark: BLOCK WAS VECTORIZED.
+transforms.c(228): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(146): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(146): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(146): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(149): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(149): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(149): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(157): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(99): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(99): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(99): (col. 3) remark: LOOP WAS VECTORIZED.
+transforms.c(52): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(52): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(52): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(56): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(56): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(56): (col. 5) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+transforms.c(15): (col. 10) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c sources.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c rescale_interp.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c gaussj.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+gaussj.c(40): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if (a[icol][icol] == 0.0) {
+                           ^
+
+gaussj.c(13): (col. 3) remark: LOOP WAS VECTORIZED.
+gaussj.c(46): (col. 5) remark: LOOP WAS VECTORIZED.
+gaussj.c(48): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c lubksb.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+lubksb.c(15): remark #1572: floating-point equality and inequality comparisons are unreliable
+      else if (sum)
+               ^
+
+lubksb.c(13): (col. 7) remark: LOOP WAS VECTORIZED.
+lubksb.c(21): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c ludcmp.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+ludcmp.c(32): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if (big == 0.0) {
+                 ^
+
+ludcmp.c(76): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if (a[j][j] == 0.0)
+                     ^
+
+ludcmp.c(29): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c mnewt.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mnewt.c(141): (col. 3) remark: LOOP WAS VECTORIZED.
+mnewt.c(194): (col. 7) remark: LOOP WAS VECTORIZED.
+mnewt.c(225): (col. 2) remark: LOOP WAS VECTORIZED.
+mnewt.c(241): (col. 7) remark: LOOP WAS VECTORIZED.
+mnewt.c(246): (col. 7) remark: LOOP WAS VECTORIZED.
+mnewt.c(260): (col. 2) remark: LOOP WAS VECTORIZED.
+mnewt.c(286): (col. 2) remark: LOOP WAS VECTORIZED.
+mnewt.c(294): (col. 7) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c nrutil.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+nrutil.c(212): (col. 3) remark: LOOP WAS VECTORIZED.
+nrutil.c(140): (col. 3) remark: LOOP WAS VECTORIZED.
+nrutil.c(122): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c ranc.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c tensor.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c tetrad.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+tetrad.c(190): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(sign(tetr[j][j])!=sign(mink(j,j))){
+                           ^
+
+tetrad.c(70): (col. 10) remark: LOOP WAS VECTORIZED.
+tetrad.c(73): (col. 3) remark: LOOP WAS VECTORIZED.
+tetrad.c(245): (col. 8) remark: LOOP WAS VECTORIZED.
+tetrad.c(275): (col. 3) remark: LOOP WAS VECTORIZED.
+tetrad.c(303): (col. 3) remark: LOOP WAS VECTORIZED.
+tetrad.c(304): (col. 3) remark: LOOP WAS VECTORIZED.
+tetrad.c(46): (col. 8) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprimgen.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprimgen.c(860): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(ptest1[pl]!=0.0) test=fabs(ptest1[pl]-ptest2[pl])/ptest1[pl]>ERRORCONST;
+                     ^
+
+utoprimgen.c(863): remark #1572: floating-point equality and inequality comparisons are unreliable
+        dualfprintf(fail_file,"utoprimdiff: %d %ld :: %d %d %d :: %d ::  %21.15g   %21.15g   %21.15g %21.15g :: %d %d :: %21.15g %21.15g\n",steppart,nstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,pl,ptest1[pl]-ptest2[pl],(ptest1[pl]!=0.0) ? fabs(ptest1[pl]-ptest2[pl])/ptest1[pl] : ptest1[pl]-ptest2[pl],ptest1[pl],ptest2[pl],lntries1,lntries2,lerrx1,lerrx2);
+                                                                                                                                                                                                                                                                      ^
+
+utoprimgen.c(114): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(841): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(984): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(945): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(946): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(948): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(958): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(916): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(917): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(922): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(923): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(924): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(925): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(926): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprimgen.c(763): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c dudp_calc_3vel.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+dudp_calc_3vel.c(55): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc_3vel.c(64): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc_3vel.c(69): (col. 5) remark: LOOP WAS VECTORIZED.
+dudp_calc_3vel.c(75): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc_3vel.c(91): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc_3vel.c(95): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c dudp_calc.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+dudp_calc.c(87): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(89): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(91): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(91): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(91): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(91): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(93): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(93): (col. 3) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(277): (col. 5) remark: LOOP WAS VECTORIZED.
+dudp_calc.c(282): (col. 33) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim.orig.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_2d.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_2d.c(92): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	       i, U_tmp[i], i, U_tmp2[i], i, fabs( (U_tmp[i]-U_tmp2[i]) / ( (U_tmp2[i]!=0.) ? U_tmp2[i] : 1. ) )  ); 
+  	                                                                                ^
+
+utoprim_2d.c(255): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (ret != 0) || (W == FAIL_VAL) ) {
+                            ^
+
+utoprim_2d.c(693): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	errx  += (x[id]==0.) ?  fabs(dx[id]) : fabs(dx[id]/x[id]);
+  	                 ^
+
+utoprim_2d.c(702): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx < MIN_NEWT_TOL) )  errx = -errx;
+                           ^
+
+utoprim_2d.c(702): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx < MIN_NEWT_TOL) )  errx = -errx;
+                                                    ^
+
+utoprim_2d.c(69): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(72): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(78): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(81): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(85): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(683): (col. 2) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(690): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_2d.c(711): (col. 7) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_1d.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_1d.h(8): warning #47: incompatible redefinition of macro "NEWT_DIM" (declared at line 27 of "utoprim_jon.h")
+  #define NEWT_DIM 1
+          ^
+
+utoprim_1d.c(265): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (ret != 0) || (W == FAIL_VAL) ) {
+                            ^
+
+utoprim_1d.c(577): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( resid_norm == 0.0 ) resid_norm = 1.0;
+                          ^
+
+utoprim_1d.c(694): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_1d.c(697): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_1d.c(721): remark #1572: floating-point equality and inequality comparisons are unreliable
+        errx  += (x[id]==0.) ?  fabs(dx[id]) : fabs(dx[id]/x[id]);
+                         ^
+
+utoprim_1d.c(731): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL) )  errx = -errx;
+                         ^
+
+utoprim_1d.c(731): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL) )  errx = -errx;
+                                                  ^
+
+utoprim_1d.c(1086): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_1d.c(1139): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_1d.c(1153): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_1d.c(1243): remark #111: statement is unreachable
+    if( first_call ) {
+    ^
+
+utoprim_1d.c(58): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(61): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(68): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(71): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_1d_opt.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_1d_opt.h(21): warning #47: incompatible redefinition of macro "USE_LINE_SEARCH" (declared at line 28 of "utoprim_jon.h")
+  #define USE_LINE_SEARCH 0
+          ^
+
+utoprim_1d_opt.h(72): warning #47: incompatible redefinition of macro "NEWT_DIM" (declared at line 27 of "utoprim_jon.h")
+  #define NEWT_DIM 1
+          ^
+
+utoprim_1d_opt.c(276): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (ret != 0) || (W == FAIL_VAL) ) {
+                            ^
+
+utoprim_1d_opt.c(619): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( resid_norm == 0.0 ) resid_norm = 1.0;
+                          ^
+
+utoprim_1d_opt.c(733): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_1d_opt.c(736): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_1d_opt.c(758): remark #1572: floating-point equality and inequality comparisons are unreliable
+        errx  += (x[id]==0.) ?  fabs(dx[id]) : fabs(dx[id]/x[id]);
+                         ^
+
+utoprim_1d_opt.c(767): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL) )  errx = -errx;
+                         ^
+
+utoprim_1d_opt.c(767): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL) )  errx = -errx;
+                                                  ^
+
+utoprim_1d_opt.c(1063): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_1d_opt.c(1111): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_1d_opt.c(1123): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_1d_opt.c(59): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(62): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(68): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(71): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_opt.c(75): (col. 9) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_ldz.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_ldz.c(413): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if(fabs(f)==1E30){
+                    ^
+
+utoprim_ldz.c(423): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if(fabs(f)==1E30){// then physics failure, output data
+  	              ^
+
+utoprim_ldz.c(568): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(Wc+Bsq==0.0){
+                 ^
+
+utoprim_ldz.c(587): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(1.+ 2. * w1 * (Wc - ee)==0.0){
+                                  ^
+
+utoprim_ldz.c(695): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (xl == rts)
+                  ^
+
+utoprim_ldz.c(702): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (temp == rts)
+                    ^
+
+utoprim_ldz.c(115): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_ldz.c(119): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_ldz.c(121): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_ldz.c(196): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_jon.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+global.general.h(128): remark #344: typedef name has already been declared (with same type)
+  typedef double doublereal;
+                 ^
+
+utoprim_jon.c(1047): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (retval != 0) || (Wp == FAIL_VAL) ) {
+                                ^
+
+utoprim_jon.c(1658): remark #111: statement is unreachable
+    return(0); // shouldn't get here -- only used if coldgrhd() used
+    ^
+
+utoprim_jon.c(1785): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+                                  ^
+
+utoprim_jon.c(1793): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(p_tmp!=p_tmp || result!=result) result=-VERYBIG; // indicates still problem
+                ^
+
+utoprim_jon.c(1793): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(p_tmp!=p_tmp || result!=result) result=-VERYBIG; // indicates still problem
+                                 ^
+
+utoprim_jon.c(1820): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks for nan
+                                  ^
+
+utoprim_jon.c(1832): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
+               ^
+
+utoprim_jon.c(1832): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
+                            ^
+
+utoprim_jon.c(1832): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
+                                        ^
+
+utoprim_jon.c(1832): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
+                                                      ^
+
+utoprim_jon.c(1832): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
+                                                                       ^
+
+utoprim_jon.c(1857): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(utsq<UTSQNEGLIMIT || utsq!=utsq){
+                                  ^
+
+utoprim_jon.c(1865): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                ^
+
+utoprim_jon.c(1865): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                                 ^
+
+utoprim_jon.c(1897): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if(utsq<UTSQNEGLIMIT || utsq!=utsq){
+                                  ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+               ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                            ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                                        ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                                                      ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                                                                      ^
+
+utoprim_jon.c(1912): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || p_tmp!=p_tmp || result!=result) result=0.0; // indicates still problem
+                                                                                       ^
+
+utoprim_jon.c(3259): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( resid_norm == 0.0 ) resid_norm = 1.0;
+  	                  ^
+
+utoprim_jon.c(3342): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_jon.c(3345): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_jon.c(3377): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0	    
+  	                                         ^
+
+utoprim_jon.c(3395): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	    if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0	    
+  	                                           ^
+
+utoprim_jon.c(3449): remark #1572: floating-point equality and inequality comparisons are unreliable
+      errx  = (wglobal[0]==0.) ?  fabs(dx_old[0]) : fabs(dx_old[0]/MAX(fabs(wglobal[0]),fabs(x[0])));
+                           ^
+
+utoprim_jon.c(3783): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_jon.c(3843): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_jon.c(3856): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_jon.c(238): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(250): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(253): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(662): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(1233): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(1427): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(1435): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(1439): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_jon.c(1467): (col. 5) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_1d_final.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_1d_final.c(5): warning #47: incompatible redefinition of macro "METHODTYPE" (declared at line 26 of "utoprim_jon.h")
+  #define METHODTYPE  0  
+          ^
+
+utoprim_1d_final.c(6): warning #47: incompatible redefinition of macro "NEWT_DIM" (declared at line 27 of "utoprim_jon.h")
+  #define NEWT_DIM 1
+          ^
+
+global.general.h(128): remark #344: typedef name has already been declared (with same type)
+  typedef double doublereal;
+                 ^
+
+utoprim_jon.h(26): warning #47: incompatible redefinition of macro "METHODTYPE" (declared at line 5 of "utoprim_1d_final.c")
+  #define METHODTYPE  3
+          ^
+
+utoprim_jon.h(27): warning #47: incompatible redefinition of macro "NEWT_DIM" (declared at line 6 of "utoprim_1d_final.c")
+  #define NEWT_DIM 2 // actually maximum # of dimensions
+          ^
+
+utoprim_1d_final.c(312): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (retval != 0) || (W == FAIL_VAL) ) {
+                               ^
+
+utoprim_1d_final.c(560): warning #147: declaration is incompatible with "int general_newton_raphson(double *, int, int, void (*)(double *, double *, double *, double (*)[1], double *, double *, int), double (*)(double *))" (declared at line 25)
+  static int general_newton_raphson( FTYPE x[], int n, int do_line_search, void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int),  FTYPE (*res_func) (FTYPE []) )
+             ^
+
+utoprim_1d_final.c(639): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( resid_norm == 0.0 ) resid_norm = 1.0;
+  	                  ^
+
+utoprim_1d_final.c(723): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_1d_final.c(726): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_1d_final.c(771): remark #1572: floating-point equality and inequality comparisons are unreliable
+      errx  = (x[0]==0.) ?  fabs(dx[0]) : fabs(dx[0]/x[0]);
+                     ^
+
+utoprim_1d_final.c(941): warning #147: declaration is incompatible with "void func_1d_orig(double *, double *, double *, double (*)[1], double *, double *, int)" (declared at line 21)
+  static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n)
+              ^
+
+utoprim_1d_final.c(1114): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_1d_final.c(1172): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_1d_final.c(1185): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_1d_final.c(104): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(109): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(112): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_1d_final.c(116): (col. 9) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_2d_final.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+global.general.h(128): remark #344: typedef name has already been declared (with same type)
+  typedef double doublereal;
+                 ^
+
+utoprim_2d_final.c(330): remark #1572: floating-point equality and inequality comparisons are unreliable
+    if( (retval != 0) || (W == FAIL_VAL) ) {
+                               ^
+
+utoprim_2d_final.c(826): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( resid_norm == 0.0 ) resid_norm = 1.0;
+  	                  ^
+
+utoprim_2d_final.c(908): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_2d_final.c(911): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_2d_final.c(940): remark #1572: floating-point equality and inequality comparisons are unreliable
+      errx  = (x[0]==0.) ?  fabs(dx[0]) : fabs(dx[0]/x[0]);
+                     ^
+
+utoprim_2d_final.c(1378): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_2d_final.c(1438): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_2d_final.c(1451): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_2d_final.c(92): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(104): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(107): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: PARTIAL LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(111): (col. 9) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(836): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(843): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(1000): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprim_2d_final.c(1376): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c utoprim_5d2_final.c -lm -lmkl_lapack -lmkl -lguide -lpthread
+utoprim_5d2_final.c(5): warning #47: incompatible redefinition of macro "METHODTYPE" (declared at line 26 of "utoprim_jon.h")
+  #define METHODTYPE  10 
+          ^
+
+utoprim_5d2_final.c(6): warning #47: incompatible redefinition of macro "NEWT_DIM" (declared at line 27 of "utoprim_jon.h")
+  #define NEWT_DIM 5
+          ^
+
+utoprim_5d2_final.c(258): remark #1572: floating-point equality and inequality comparisons are unreliable
+      residnorm = (residnorm == 0.) ? 1. : 1./residnorm;
+                                ^
+
+utoprim_5d2_final.c(441): remark #1572: floating-point equality and inequality comparisons are unreliable
+      normret = ( normret == 0. )  ?  1.  : 1./normret;
+                             ^
+
+utoprim_5d2_final.c(525): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( absmax == 0. ) { 
+                    ^
+
+utoprim_5d2_final.c(601): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if( (j == (n-2)) && (A[j][j+1] == 0.) ) {
+                                          ^
+
+utoprim_5d2_final.c(632): remark #1572: floating-point equality and inequality comparisons are unreliable
+      if( A[j][j] == 0. ) { 
+                     ^
+
+utoprim_5d2_final.c(829): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if( resid_norm == 0.0 ) resid_norm = 1.0;
+  	                  ^
+
+utoprim_5d2_final.c(912): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+  	                          ^
+
+utoprim_5d2_final.c(915): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+  	                    ^
+
+utoprim_5d2_final.c(945): remark #1572: floating-point equality and inequality comparisons are unreliable
+      errx  = (W==0.) ?  fabs(W-W_old) : fabs((W-W_old)/W);
+                  ^
+
+utoprim_5d2_final.c(1135): remark #1572: floating-point equality and inequality comparisons are unreliable
+      temp= (xold[i] == 0.) ? fabs(p[i]) :  fabs(p[i]/xold[i]);
+                        ^
+
+utoprim_5d2_final.c(1187): remark #1572: floating-point equality and inequality comparisons are unreliable
+        if (alam == 1.0) {
+                    ^
+
+utoprim_5d2_final.c(1200): remark #1572: floating-point equality and inequality comparisons are unreliable
+  	if (a == 0.0) tmplam = -slope/(2.0*b);
+  	         ^
+
+utoprim_5d2_final.c(416): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(417): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(439): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(183): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(188): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(189): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(194): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(254): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(282): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(296): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(296): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(647): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(95): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(102): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(775): (col. 3) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(815): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(839): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(846): (col. 7) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(911): (col. 2) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(1005): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(1129): (col. 5) remark: LOOP WAS VECTORIZED.
+utoprim_5d2_final.c(1133): (col. 3) remark: LOOP WAS VECTORIZED.
+mpicc -cc=gcc -Wall -O2 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -Wall -O2 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c freespace.c -lm  -lmkl_lapack -lmkl -lguide -lpthread
+In file included from global.general.h:81,
+                 from global.grmhd.h:5,
+                 from decs.h:1,
+                 from freespace.c:1:
+global.storage.h:391:1: warning: multi-line comment
+In file included from global.general.h:92,
+                 from global.grmhd.h:5,
+                 from decs.h:1,
+                 from freespace.c:1:
+global.structs.h:41:3: warning: multi-line comment
+In file included from global.general.h:102,
+                 from global.grmhd.h:5,
+                 from decs.h:1,
+                 from freespace.c:1:
+global.funcdeclare.h:274:1: warning: multi-line comment
+gcc: -lm: linker input file unused because linking not done
+gcc: -lmkl_lapack: linker input file unused because linking not done
+gcc: -lmkl: linker input file unused because linking not done
+gcc: -lguide: linker input file unused because linking not done
+gcc: -lpthread: linker input file unused because linking not done
+In file included from decs.h:5,
+                 from freespace.c:2:
+decs.general.h:362: warning: ignoring #pragma omp threadprivate
+gcc: -lm: linker input file unused because linking not done
+gcc: -lmkl_lapack: linker input file unused because linking not done
+gcc: -lmkl: linker input file unused because linking not done
+gcc: -lguide: linker input file unused because linking not done
+gcc: -lpthread: linker input file unused because linking not done
+mpicc -cc=gcc -Wall -O2 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -Wall -O2 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c tau_neededbyharm.c -lm
+gcc: -lm: linker input file unused because linking not done
+gcc: -lm: linker input file unused because linking not done
+mpicc -cc=icc -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp     -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1  -DUSINGORANGE=0 -DUSINGMPI=1 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -o grmhd init.o init.tools.o initbase.o initbase.enerregions.o initbase.tools.o initbase.gridsectioning.o restart.o restart.checks.o set_arrays.o set_arrays_perpoint_perline.o set_arrays_multidimen.o mpi_set_arrays.o set_grid.o advance.o copyandinit_functions.o reconstructeno.o paraenohybrid.o flux.o  flux.mergedc2ea2cmethod.o higherorder_pointavg.o wavespeeds.o boundsflux.o fluxct.o fluxctstag.o fluxvpot.o bounds.o bounds.tools.o boundsint.o diag.o dump.o dumpgen.o dump_ener.o image.o fail.o fixup.o mpi_init.o mpi_init_grmhd.o  mpi_fileio.o mpi_fprintfs.o boundmpi.o boundmpiint.o mpi_grmhd_grray_liaison.o interppoint.o interppoint.para.o interpline.o interpline.para.o interpline.mono.o interpline.jmono.o interpline.smono.o  initbase.boundloop.o main.o mytime.o metric.o metric_tools.o math_tools.o metric_selfgravity_or_evolvemetric.o coord.o phys.o phys.tools.o step_ch.o fluxcompute.o phys.ffde.o phys.coldgrmhd.o eos.o vchar.o transforms.o sources.o rescale_interp.o gaussj.o lubksb.o ludcmp.o mnewt.o nrutil.o ranc.o tensor.o tetrad.o utoprimgen.o dudp_calc_3vel.o dudp_calc.o utoprim.orig.o utoprim_2d.o utoprim_1d.o utoprim_1d_opt.o utoprim_ldz.o utoprim_jon.o utoprim_1d_final.o utoprim_2d_final.o utoprim_5d2_final.o freespace.o tau_neededbyharm.o -lm  -lmkl_lapack -lmkl -lguide -lpthread
+tetrad.o: In function `tetr_func':
+tetrad.c:(.text+0x291): undefined reference to `dsyev_'
+tetrad.o: In function `compute_tetrcon_frommetric':
+tetrad.c:(.text+0x1078): undefined reference to `dsyev_'
+make: *** [grmhd] Error 1

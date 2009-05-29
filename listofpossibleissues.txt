@@ -1,0 +1,63 @@
+1) coord.c : GENDXDELTA(k)
+2) coord.c : dxdxp[3][3] and V[3] issue?
+3) eomfunc
+4) coord_ijk vs. coord() type stuff even for no stored position data?xsy
+
+NOT:
+1) flux.c fluxcompute.c
+2) fixup.c or set_atmosphere in init.c/fixup.c
+3) advance.c w/ new source call
+4) bounds.c, boundsint.c
+5) fluxct.c
+6) diag.c, dump.c, dump_ener.c -- unlikely
+7) utoprimgen.c utoprim_jon.c
+8) phys.c, sources.c, phys_ffde.c
+9) eos.c : compute_EOS_global(), etc. : EOS stuff or picking EOS in inversion or elsewhere
+10) step_ch.c
+11) dxdxp_numerical() in coord.c
+12) coord.c : at least everything except calls to _ijk functions that may be wrong as calls themselves
+13) transforms.c
+14) init.h by itself
+
+CAUSE:
+2) metric.c set_grid.c (and matrix_inverse changed to old in transforms.c and coord.c)
+
+
+unknown:
+5) set_arrays.c
+10) defs.h definit.h global.h
+
+
+3) initbase.c -- unlikely
+5) image.c -- unlikely
+6) metric_tools.c  -- unlikely
+
+
+
+Rebecca code:
+1) dxdxp[3][3], blcoordsimple()
+
+
+
+
+ #include "global.h"
+! #include "mpidefs.h"
+
+
+  /*
+--- 1,5 ----
+  #include "global.h"
+! #include "mpidecs.h"
+
+
+
+
+
+
+
+
+
+
+MORE PROBLEMS:
+
+1) phys.c, source.c, phys.ffde.c, utoprimgen.c, utoprim_jon.c

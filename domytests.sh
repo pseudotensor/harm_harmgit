@@ -1,0 +1,1 @@
+(sh doforetests.sh $1 $2 $3; sh doforetests.sh $4 $5 $6; sh doforetests.sh $7 $8 $9)&

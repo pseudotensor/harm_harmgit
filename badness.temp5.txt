@@ -1,0 +1,707 @@
+bin2txt.c:// note, for HDF, dim0,1,2,3,... means the array element array[dim0][dim1][dim2][dim3], which means dimN where N is the dimensionality of the vector, is most quickly iterated.
+bin2txt.c:// so a loop like for(k) for(j) for(i) would be used on array[k][j][i]
+bounds.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ff.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ff.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.fishmon.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.fishmon.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.grb.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.grb.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.backup2.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.backup2.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.backup.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.backup.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.ns.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.nsold.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.nsold.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.rebecca.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.rebecca.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.sasha.c:	y[pl][0][myi] = - y[pl][0][myi];
+bounds.sasha.c:	y[pl][0][myi] = - y[pl][0][myi];
+diag.c:      FLLOOP(fl) localpdotterms[dir][fl][pl]=0;
+diag.c:      if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0;
+diag.c:	  FLLOOP(fl) localpdotterms[dir][fl][pl]=0;
+diag.c:	  if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0;
+diag.c:	      localpdotterms[dir][0][pl]+=ftemp0; // only one part
+diag.c:	      if(condjet2) pdottermsjet2[dir][0][pl]+=ftemp0; // only one part
+diag.c:	      localpdotterms[dir][0][pl]+=ftemp0;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+diag.c:	      localpdotterms[dir][1][pl]+=ftemp1;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+diag.c:	      localpdotterms[dir][2][pl]+=ftemp2;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][2][pl]+=ftemp2;
+diag.c:	      localpdotterms[dir][3][pl]+=ftemp3;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][3][pl]+=ftemp3;
+diag.c:	      localpdotterms[dir][4][pl]+=ftemp4;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][4][pl]+=ftemp4;
+diag.c:	      localpdotterms[dir][5][pl]+=ftemp5;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][5][pl]+=ftemp5;
+diag.c:	      localpdotterms[dir][6][pl]+=ftemp6;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][6][pl]+=ftemp6;
+diag.c:	      localpdotterms[dir][0][pl]+=ftemp0;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+diag.c:	      localpdotterms[dir][1][pl]+=ftemp1;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+diag.c:	      localpdotterms[dir][0][pl]+=ftemp0;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+diag.c:	      localpdotterms[dir][1][pl]+=ftemp1;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+diag.c:	      localpdotterms[dir][0][pl]+=ftemp0;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+diag.c:	      localpdotterms[dir][1][pl]+=ftemp1;
+diag.c:	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+dump_ener.c:  SFTYPE pdottermsjet2_tot[COMPDIM*2][NUMFLUXTERMS][NPR];
+dump_ener.c:      if(integrate((COMPDIM*2)*NUMFLUXTERMS*NPR,&pdotterms[0][0][0],&pdotterms_tot[0][0][0],SURFACETYPE,enerregion)>=1) return(1);
+dump_ener.c:	if(integrate((COMPDIM*2)*NUMFLUXTERMS*NPR,&pdottermsjet2[0][0][0],&pdottermsjet2_tot[0][0][0],SURFACETYPE,enerregion)>=1) return(1);
+dump_ener.c:      DIRLOOP(dir) PDUMPLOOP(pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdotterms_tot[dir][fl][pl]);
+dump_ener.c:	for(dir=0;dir<=1;dir++) PDUMPLOOP(pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdottermsjet2_tot[dir][fl][pl]); // jet/pole values only
+flux.c:  struct of_loop cent2faceloop[NDIM],face2cornloop[NDIM][NDIM][NDIM];
+fluxctstag.c://    alpha_x^+ = max(0,wspeed[dir corresponding to x][CMAX][index],wspeed[dir corresponding to x][CMAX][index-1 in y direction])
+fluxctstag.c:	slope_lim_face2corn(realisinterp, interpdir,idel,jdel,kdel,pr,p2interp,dqvec[interpdir],pleft,pright, &(face2cornloop[edgedir][EMFodir1][EMFodir2]));
+fluxctstag.c:	//      pvcorn[EMFdir][whichvel][l/r in EMFodir1][u/d in EMFodir2]
+fluxctstag.c:        ijkcorn[ijkdimen][m][l]=i;
+fluxctstag.c:	ijkcorn[ijkdimen][m][l]=j;
+fluxctstag.c:	ijkcorn[ijkdimen][m][l]=k;
+fluxctstag.c:  ijkcorn[odir1][RIGHT4EMF][LEFT4EMF]+=NNOT1vec[odir1];
+fluxctstag.c:  ijkcorn[odir2][LEFT4EMF][RIGHT4EMF]+=NNOT1vec[odir2];
+fluxctstag.c:  ijkcorn[odir1][RIGHT4EMF][RIGHT4EMF]+=NNOT1vec[odir1];
+fluxctstag.c:  ijkcorn[odir2][RIGHT4EMF][RIGHT4EMF]+=NNOT1vec[odir2];
+fluxctstag.c:  vcon[odir1][CENT4EMF][CENT4EMF]=MAC(fluxstatecent,i,j,k).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
+fluxctstag.c:  vcon[odir2][CENT4EMF][CENT4EMF]=MAC(fluxstatecent,i,j,k).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
+fluxctstag.c:  gdetBcon[odir1][CENT4EMF][CENT4EMF]=MAC(fluxstatecent,i,j,k).gdetBcon[odir1]; // \detg B^{odir1}
+fluxctstag.c:  gdetBcon[odir2][CENT4EMF][CENT4EMF]=MAC(fluxstatecent,i,j,k).gdetBcon[odir2]; // \detg B^{odir2}
+fluxctstag.c:  vcon[odir1][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
+fluxctstag.c:  vcon[odir2][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
+fluxctstag.c:  gdetBcon[odir1][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir1]; // // \detg B^{odir1}
+fluxctstag.c:  gdetBcon[odir2][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir2]; // // \detg B^{odir2}
+fluxctstag.c:  vcon[odir1][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
+fluxctstag.c:  vcon[odir2][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
+fluxctstag.c:  gdetBcon[odir1][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).gdetBcon[odir1];
+fluxctstag.c:  gdetBcon[odir2][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).gdetBcon[odir2];
+fluxctstag.c:  vcon[odir1][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).vcon[odir1];
+fluxctstag.c:  vcon[odir2][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).vcon[odir2];
+fluxctstag.c:  gdetBcon[odir1][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir1];
+fluxctstag.c:  gdetBcon[odir2][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir2];
+fluxctstag.c:  vcon[odir1][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).vcon[odir1];
+fluxctstag.c:  vcon[odir2][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).vcon[odir2];
+fluxctstag.c:  gdetBcon[odir1][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).gdetBcon[odir1];
+fluxctstag.c:  gdetBcon[odir2][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).gdetBcon[odir2];
+fluxctstag.c:  ii=ijkcorn[1][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  vcon[odir1][LEFT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,RIGHT4EMF,RIGHT4EMF,ii,jj,kk);
+fluxctstag.c:  vcon[odir2][LEFT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,RIGHT4EMF,RIGHT4EMF,ii,jj,kk);
+fluxctstag.c:  ii=ijkcorn[1][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  vcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,LEFT4EMF,RIGHT4EMF,ii,jj,kk);
+fluxctstag.c:  vcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,LEFT4EMF,RIGHT4EMF,ii,jj,kk);
+fluxctstag.c:  ii=ijkcorn[1][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  vcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,RIGHT4EMF,LEFT4EMF,ii,jj,kk);
+fluxctstag.c:  vcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,RIGHT4EMF,LEFT4EMF,ii,jj,kk);
+fluxctstag.c:  ii=ijkcorn[1][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  vcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,LEFT4EMF,LEFT4EMF,ii,jj,kk);
+fluxctstag.c:  vcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,LEFT4EMF,LEFT4EMF,ii,jj,kk);
+fluxctstag.c:  ii=ijkcorn[1][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][LEFT4EMF][LEFT4EMF];
+fluxctstag.c:  gdetBcon[odir1][LEFT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  gdetBcon[odir2][LEFT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  ii=ijkcorn[1][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][RIGHT4EMF][LEFT4EMF];
+fluxctstag.c:  gdetBcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  gdetBcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  ii=ijkcorn[1][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][LEFT4EMF][RIGHT4EMF];
+fluxctstag.c:  gdetBcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  gdetBcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  ii=ijkcorn[1][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  jj=ijkcorn[2][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  kk=ijkcorn[3][RIGHT4EMF][RIGHT4EMF];
+fluxctstag.c:  gdetBcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:  gdetBcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+fluxctstag.c:      vcon[jj][positer]=vcon9[jj][odir1pos][odir2pos];
+fluxctstag.c:      gdetBcon[jj][positer]=gdetBcon9[jj][odir1pos][odir2pos];
+flux.mergedc2ea2cmethod.c:			   gdetBcon[firstodir][CENT4EMF][CENT4EMF],gdetBcon[firstodir][LEFT4EMF][LEFT4EMF],gdetBcon[firstodir][RIGHT4EMF][LEFT4EMF],gdetBcon[firstodir][LEFT4EMF][RIGHT4EMF],gdetBcon[firstodir][RIGHT4EMF][RIGHT4EMF],gdetBcon[firstodir][LEFT4EMF][CENT4EMF],gdetBcon[firstodir][RIGHT4EMF][CENT4EMF],gdetBcon[firstodir][CENT4EMF][LEFT4EMF],gdetBcon[firstodir][CENT4EMF][RIGHT4EMF]
+flux.mergedc2ea2cmethod.c:			   ,vcon[secondodir][CENT4EMF][CENT4EMF],vcon[secondodir][LEFT4EMF][LEFT4EMF],vcon[secondodir][RIGHT4EMF][LEFT4EMF],vcon[secondodir][LEFT4EMF][RIGHT4EMF],vcon[secondodir][RIGHT4EMF][RIGHT4EMF],vcon[secondodir][LEFT4EMF][CENT4EMF],vcon[secondodir][RIGHT4EMF][CENT4EMF],vcon[secondodir][CENT4EMF][LEFT4EMF],vcon[secondodir][CENT4EMF][RIGHT4EMF]
+initbase.c:	FLLOOP(fl) pdotterms[dir][fl][pl]=0;
+initbase.c:	if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0; // needed for other not-flux cpus!
+initbase.enerregions.c:	  totaldiff += abs(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]);
+initbase.enerregions.c:	  if(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]>Nbndvec[dimen]){
+initbase.enerregions.c:	  if(enerregiondef[updowniter][dimen]-global_enerregiondef[enerregion][updowniter][dimen]>Nbndvec[dimen]){
+initbase.enerregions.c:    }// if previously set global_enerregiondef[][][]
+initbase.enerregions.c:	global_enerregiondef[enerregion][updowniter][dimen] = enerregiondef[updowniter][dimen];
+initbase.enerregions.c:    // now note that previously set global_enerregiondef[][][] so can operate checks
+initbase.gridsectioning.c:	if(global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] < - MAXBND || global_enerregiondef[ACTIVEREGION][POINTUP][dimen] > totalsize[dimen] + MAXBND-1 || global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] >= global_enerregiondef[ACTIVEREGION][POINTUP][dimen]){
+init.sasha.c:  FTYPE prinit[2][2][NPR];  //array to hold the initial primitives
+init.sasha.c:      PLOOP( p_no ) prinit[ti][tj][p_no] = 0.0;
+init.sasha.c:  prinit[0][0][UU] = 0.3 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 0.5323;
+init.sasha.c:  prinit[0][1][UU] = 0.029 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 0.138;
+init.sasha.c:  prinit[1][0][UU] = 1.5 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 1.5;
+init.sasha.c:  prinit[1][1][UU] = 0.3 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 0.5323;
+init.sasha.c:  prinit[0][0][UU] = 0.35 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 0.5065;
+init.sasha.c:  prinit[0][1][UU] = 1.1 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 1.1;
+init.sasha.c:  prinit[1][0][UU] = 1.1 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 1.1;
+init.sasha.c:  prinit[1][1][UU] = 0.35 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 0.5065;
+init.sasha.c:  prinit[0][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 2.0;
+init.sasha.c:  prinit[0][1][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 1.0;
+init.sasha.c:  prinit[1][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 1.0;
+init.sasha.c:  prinit[1][1][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 3.0;
+init.sasha.c:  prinit[0][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 1.0;
+init.sasha.c:  prinit[0][1][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 0.8;
+init.sasha.c:  prinit[1][0][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 0.5313;
+init.sasha.c:  prinit[1][1][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 1.0;
+init.sasha.c:  prinit[0][0][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 0.5197;
+init.sasha.c:  prinit[0][1][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 0.8;
+init.sasha.c:  prinit[1][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 1.0;
+init.sasha.c:  prinit[1][1][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 0.5313;
+init.sasha.c:  prinit[0][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 2.0;
+init.sasha.c:  prinit[0][1][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 1.0625;
+init.sasha.c:  prinit[1][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][0][RHO] = 1.0;
+init.sasha.c:  prinit[1][1][UU] = 0.4 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 0.5197;
+init.sasha.c:  prinit[1][0][RHO] = 0.1;
+init.sasha.c:  prinit[1][0][UU] = 0.01 / (gam - 1);
+init.sasha.c:  prinit[0][0][RHO] = 0.1;
+init.sasha.c:  prinit[0][0][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[0][1][RHO] = 0.5;
+init.sasha.c:  prinit[0][1][UU] = 1.0 / (gam - 1);
+init.sasha.c:  prinit[1][1][RHO] = 0.1;
+init.sasha.c:  prinit[1][1][UU] = 1.0 / (gam - 1);
+interpline.c:#define LINETYPEDEFINESOTHER FTYPE a_youtpolycoef[NPR2INTERP][MAXSPACEORDER][NBIGM];
+interpline.c:#define LINETYPEDEFINESOTHER FTYPE a_youtpolycoef[1][1][1]; //VS complained about defining zero-size object
+interpline.c:	FTYPE a_yin[NPR2INTERP][2][NBIGM];\
+interpline.c:	FTYPE a_ystencilvar[NPR2INTERP][2][NBIGM];\
+interpline.c:	FTYPE a_yprim[NPR2INTERP][2][NBIGM];\
+interpline.c:	FTYPE a_yout[NPR2INTERP][2][NBIGM];\
+interpline.c:	FTYPE a_df[NPR2INTERP][NUMDFS][NBIGM];\
+interpline.c:	FTYPE a_dfformono[NPR2INTERP][NUMDFS][NBIGM];\
+interpline.c:	FTYPE a_monoindicator[NPR2INTERP][NUMMONOINDICATORS][NBIGM];\
+interpline.c:#define LINETYPESHIFTS   {yin =(FTYPE (*)[2][NBIGM]) (&(a_yin[0][0][NBIGBND]));\
+interpline.c:	ystencilvar =(FTYPE (*)[2][NBIGM]) (&(a_ystencilvar[0][0][NBIGBND]));\
+interpline.c:	yprim =(FTYPE (*)[2][NBIGM]) (&(a_yprim[0][0][NBIGBND]));\
+interpline.c:	yout=(FTYPE (*)[2][NBIGM]) (&(a_yout[0][0][NBIGBND]));\
+interpline.c:	df=(FTYPE (*)[NUMDFS][NBIGM]) (&(a_df[0][0][NBIGBND]));\
+interpline.c:	dfformono=(FTYPE (*)[NUMDFS][NBIGM]) (&(a_dfformono[0][0][NBIGBND]));\
+interpline.c:	monoindicator=(FTYPE (*)[NUMMONOINDICATORS][NBIGM]) (&(a_monoindicator[0][0][NBIGBND]));\
+interpline.c:        youtpolycoef=(FTYPE (*)[MAXSPACEORDER][NBIGM]) (&(a_youtpolycoef[0][0][NBIGBND]));}
+interpline.c:      NUMPRIMLOOP(pl) for(yiter=bs;yiter<=be;yiter++) ystencilvar[pl][0][yiter]=yin[pl][0][yiter];
+interpline.c:      NUMPRIMLOOP(pl) for(yiter=bs;yiter<=be;yiter++) for(dfiter=0;dfiter<NUMDFS;dfiter++) dfformono[pl][dfiter][yiter]=df[pl][dfiter][yiter];
+interpline.c:	  monoindicator[pl][MONOINDTYPE][monoi]=1;
+interpline.c:	  monoindicator[pl][MONOLEFTSET][monoi]=1; // or center
+interpline.c:	  monoindicator[pl][MONORIGHTSET][monoi]=1;
+interpline.c:	  ystencilvar[pl][0][yiter]=yin[pl][0][yiter];
+interpline.c:	  ystencilvar[pl][1][yiter]=yin[pl][1][yiter];
+interpline.c:	NUMPRIMLOOP(pl) for(yiter=bs;yiter<=be;yiter++) for(dfiter=0;dfiter<NUMDFS;dfiter++) dfformono[pl][dfiter][yiter]=df[pl][dfiter][yiter];
+interpline.c:	  if(recontype==CVT_C2E && (monoindicator[pl][0][0]!=monoindicator[pl][0][0+N1*idel+N2*jdel+N3*kdel] || monoindicator[pl][1][0]!=monoindicator[pl][1][0+N1*idel+N2*jdel+N3*kdel] || monoindicator[pl][2][0]!=monoindicator[pl][2][0+N1*idel+N2*jdel+N3*kdel])
+interpline.c:	     (monoindicator[pl][0][0]!=monoindicator[pl][0][0+N1*idel+N2*jdel+N3*kdel] || monoindicator[pl][1][0]!=monoindicator[pl][1][0+N1*idel+N2*jdel+N3*kdel])
+interpline.c:	    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",monoindicator[pl][0][0],monoindicator[pl][0][0+N1*idel+N2*jdel+N3*kdel], monoindicator[pl][1][0],monoindicator[pl][1][0+N1*idel+N2*jdel+N3*kdel],monoindicator[pl][2][0],monoindicator[pl][2][0+N1*idel+N2*jdel+N3*kdel]);
+interpline.c:      yin[pl][0][yiniter] = 0;
+interpline.c:      yin[pl][0][yiniter]=MACP0A1(p2interp,i2,j2,k2,pl);
+interpline.c:    PALLREALLOOP(pl) myprim[pl] = yrealin[pl][0][num];
+interpline.c:    //    V[yiniter]=(ptrgeom->g)*yrealin[RHO][0][iii]*yrealin[UU+dir][0][iii];
+interpline.c:    V[yiniter]=(ptrgeom->gdet)*yrealin[RHO][0][num]*(q.ucon[dir]);
+interpline.c:    P[yiniter]=pressure_rho0_u(yrealin[RHO][0][iii],yrealin[UU][0][iii]);
+interpline.c:    PALLREALLOOP(pl) myprim[pl] = yprim[pl][0][num];
+interpline.c:    Vline[num]=(ptrgeom->gdet)*yprim[RHO][0][num]*q.ucon[dir];
+interpline.c:      PALLREALLOOP(pl) myprim[pl] = yprim[pl][0][num];
+interpline.c:    PALLREALLOOP(pl) myprim[pl] = yprim[pl][0][num];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result0,ii,jj,kk,pl) = yout[pl][0][l];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result1,ii,jj,kk,pl) = yout[pl][1][l];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result0,ii,jj,kk,pl) = yout[pl][0][l];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result1,ii,jj,kk,pl) = yout[pl][1][l];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result0,ii,jj,kk,pl) = yout[pl][0][l];
+interpline.c:      NUMPRIMLOOP(pl) MACP0A1(result1,ii,jj,kk,pl) = yout[pl][1][l];
+interpline.mono.c:      monoindicator[pl][MONOINDTYPE][i]=0;
+interpline.mono.c:      monoindicator[pl][MONOLEFTSET][i]=0; // or center
+interpline.mono.c:      monoindicator[pl][MONORIGHTSET][i]=0;
+interpline.mono.c:      monoindicator[pl][MONOINDTYPE][i]=monoindicator[plstart][MONOINDTYPE][i];
+interpline.mono.c:      monoindicator[pl][MONOLEFTSET][i]=monoindicator[plstart][MONOLEFTSET][i];
+interpline.mono.c:      monoindicator[pl][MONORIGHTSET][i]=monoindicator[plstart][MONORIGHTSET][i];
+interpline.mono.c:      monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoindicator[plstart][MONOINDTYPE][i]);
+interpline.mono.c:      monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoindicator[plstart][MONOLEFTSET][i]);
+interpline.mono.c:      monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoindicator[plstart][MONORIGHTSET][i]);
+interpline.mono.c:	monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoindicator[plstart][MONOINDTYPE][i]);
+interpline.mono.c:	monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoindicator[plstart][MONOLEFTSET][i]);
+interpline.mono.c:	monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoindicator[plstart][MONORIGHTSET][i]);
+interpline.mono.c:	monoall[MONOINDTYPE]=monoindicator[pl][MONOINDTYPE][i];
+interpline.mono.c:	monoall[MONOLEFTSET]=monoindicator[pl][MONOLEFTSET][i];
+interpline.mono.c:	monoall[MONORIGHTSET]=monoindicator[pl][MONORIGHTSET][i];
+interpline.mono.c:	  monoindicator[pl][MONOINDTYPE][i]=1.0;
+interpline.mono.c:	  monoindicator[pl][MONOLEFTSET][i]=1.0;
+interpline.mono.c:	  monoindicator[pl][MONORIGHTSET][i]=1.0;
+interpline.mono.c:	monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoall[MONOINDTYPE]);
+interpline.mono.c:	monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoall[MONOLEFTSET]);
+interpline.mono.c:	monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoall[MONORIGHTSET]);
+interpline.mono.c:    monoall[MONOINDTYPE]=monoindicator[plstart][MONOINDTYPE][i];
+interpline.mono.c:    monoall[MONOLEFTSET]=monoindicator[plstart][MONOLEFTSET][i];
+interpline.mono.c:    monoall[MONORIGHTSET]=monoindicator[plstart][MONORIGHTSET][i];
+interpline.mono.c:      monoall[MONOINDTYPE]=MIN(monoall[MONOINDTYPE],monoindicator[pl][MONOINDTYPE][i]);
+interpline.mono.c:      monoall[MONOLEFTSET]=MIN(monoall[MONOLEFTSET],monoindicator[pl][MONOLEFTSET][i]);
+interpline.mono.c:      monoall[MONORIGHTSET]=MIN(monoall[MONORIGHTSET],monoindicator[pl][MONORIGHTSET][i]);
+interpline.mono.c:      monoindicator[pl][MONOINDTYPE][i]=monoall[MONOINDTYPE];
+interpline.mono.c:      monoindicator[pl][MONOLEFTSET][i]=monoall[MONOLEFTSET];
+interpline.mono.c:      monoindicator[pl][MONORIGHTSET][i]=monoall[MONORIGHTSET];
+interpline.para.c:    paracont(df[pl][DF2OFMONO][i], &yin[pl][0][i], &facecont[pl][i]);
+interpline.para.c:    //    yout[pl][0][i]=facecont[pl][i];
+interpline.para.c:    //    yout[pl][1][i]=facecont[pl][i+1];
+interpline.para.c:    jonparasmooth_compute(realisinterp,dqrange,pl,&yin[pl][0][i],&df[pl][DFONESIDED][i],&df[pl][DFCENT][i],&left,&right,&smooth);
+interpline.para.c:    if(smooth==0) parasteepgen(pl,etai[pl][i],&V[i],&P[i],&yin[pl][0][i],&df[pl][DFMONO][i],&left,&right);
+interpline.para.c:    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[i],&left,&right);
+interpline.para.c:    checkparamonotonicity(smooth, dqrange, pl, &yin[pl][0][i], &df[pl][DF2OFMONO][i], &df[pl][DFMONO][i], &left,&right,&left,&right);
+interpline.para.c:    if(monoindicator[pl][MONOLEFTSET][i]==0.0) yout[pl][0][i]=0.0;
+interpline.para.c:    if(monoindicator[pl][MONORIGHTSET][i]==0.0) yout[pl][1][i]=0.0;
+interpline.para.c:    mymono=min(max(monoindicator[pl][MONOINDTYPE][i],0.0),1.0);
+interpline.para.c:    yout[pl][0][i] = left * (1.0-mymono) + yout[pl][0][i] * mymono;
+interpline.para.c:    yout[pl][1][i] = right * (1.0-mymono) + yout[pl][1][i] * mymono;
+interpline.para.c:    yout[pl][0][i] = left;
+interpline.para.c:    yout[pl][1][i] = right;
+interpline.para.c:    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[i],&yout[pl][0][i],&yout[pl][1][i]);
+jon_interp.c:      olddata0 = f3matrix(-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[i][j][k]
+jon_interp.c:      newdata  = f3matrix(-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[i][j][k]
+jon_interp.c:	    olddata0[i][j][k]=(FTYPE)tempuc;
+jon_interp.c:	    if(olddata0[i][j][k]>totalmax) totalmax=olddata0[i][j][k];
+jon_interp.c:	    if(olddata0[i][j][k]<totalmin) totalmin=olddata0[i][j][k];
+jon_interp.c:	    fread(&oldimage0[i][j][k], sizeof(unsigned char), 1, stdin) ;
+jon_interp.c:	    if(oldimage0[i][j][k]>totalmax) totalmax=oldimage0[i][j][k];
+jon_interp.c:	    if(oldimage0[i][j][k]<totalmin) totalmin=oldimage0[i][j][k];
+jon_interp.c:	    for(k=-numbc[3];k<0;k++) olddata0[i][j][k]=olddata0[i][j][k+oN3];
+jon_interp.c:	    for(k=oN3;k<oN3+numbc[3];k++) olddata0[i][j][k]=olddata0[i][j][k-oN3];
+jon_interp.c:	    for(k=-numbc[3];k<0;k++) oldimage0[i][j][k]=oldimage0[i][j][k+oN3];
+jon_interp.c:	    for(k=oN3;k<oN3+numbc[3];k++) oldimage0[i][j][k]=oldimage0[i][j][k-oN3];
+jon_interp.c:      olddata0 = f3matrix(-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[i][j][k]
+jon_interp.c:      newdata  = f3matrix(-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[i][j][k]
+jon_interp.c:	  fscanf(stdin,SCANARG,&olddata0[i][j][k]) ;
+jon_interp.c:	  compute_preprocess(gdumpin, &olddata0[i][j][k]);
+jon_interp.c:	if(olddata0[i][j][k]>totalmax) totalmax=olddata0[i][j][k];
+jon_interp.c:	if(olddata0[i][j][k]<totalmin) totalmin=olddata0[i][j][k];
+jon_interp.c:	    for(k=-numbc[3];k<0;k++) olddata0[i][j][k]=olddata0[i][j][k+oN3];
+jon_interp.c:	    for(k=oN3;k<oN3+numbc[3];k++) olddata0[i][j][k]=olddata0[i][j][k-oN3];
+jon_interp.c:      fwrite(&newimage[i][j][k], sizeof(unsigned char), 1, stdout) ;
+jon_interp.c:	ftemp=newdata[i][j][k];
+jon_interp.c:	  //fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[i][j][k]); fflush(stderr);
+jon_interp.c:	  fprintf(stdout,"%22.16g\n",newdata[i][j][k]) ;
+jon_interp.c:	  fprintf(stdout,"%15.7g\n",newdata[i][j][k]) ;
+jon_interp.c:	fwrite(&image[i][j][k], sizeof(unsigned char), 1, out) ;
+jon_interp.c:	//      fprintf(out, "%c",(unsigned char)((int)image[i][j][k]));
+jon_interp_computepreprocess.c:  FTYPE conn[NDIM][NDIM][NDIM];
+jon_interp_computepreprocess.c:  DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) fscanf(in,SCANARG,&conn[jj][kk][ll]);
+jon_interp_filter.c:    if(DATATYPE==0) oldimage[i][j][0]=(unsigned char)ftemp[i][j]; // only overwrites filtered parts, assumes rest still there // GODMARK3D
+jon_interp_filter.c:    else if(DATATYPE==1) olddata[i][j][0]=ftemp[i][j]; // GODMARK3D
+jon_interp_interpolationitself.c:  if(DATATYPE==0) LOOPINTERP newimage[i][j][k]=oldimage[i][j][k];
+jon_interp_interpolationitself.c:  else if(DATATYPE==1) LOOPINTERP newdata[i][j][k]=olddata[i][j][k];
+jon_interp_interpolationitself.c:	olddata[ii][jj]=olddata3d[ii][jj][kold];
+jon_interp_interpolationitself.c:	newimage[i][j][k] = defaultvalue ;
+jon_interp_interpolationitself.c:	  newimage[i][j][k] = defaultvalue ;
+jon_interp_interpolationitself.c:	newdata[i][j][k]=defaultvalue;
+jon_interp_interpolationitself.c:	  newdata[i][j][k]=defaultvalue;
+jon_interp_interpolationitself.c:      if(DATATYPE==0) newimage[i][j][k] = FLOAT2IMAGE(ftemp);
+jon_interp_interpolationitself.c:      else newdata[i][j][k] = (FTYPE)(ftemp) ;
+jon_interp_interpolationitself.c:      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdata[i][j][k]);
+jon_interp_interpolationitself.c:	fprintf(stderr,"newim:%d %d %d %d %c\n",i,j,iold,jold,newimage[i][j][k]) ;
+jon_interp_interpolationitself.c:      if(DATATYPE==0)      newimage[i][j][k] = defaultvalue ;
+jon_interp_interpolationitself.c:      else newdata[i][j][k]=defaultvalue;
+jon_interp_interpolationitself.c:  fprintf(stderr,"Problem?: iold=%d jold=%d kold=%d oN1=%d oN2=%d oN3=%d :: %21.15g\n",iold,jold,kold,oN1,oN2,oN3,olddata[iold][jold][kold]);
+jon_interp_interpolationitself.c:  if(DATATYPE==0)			newvalue=(FTYPE)oldimage[iold][jold][kold] ;
+jon_interp_interpolationitself.c:  else 			newvalue=(FTYPE)olddata[iold][jold][kold] ;
+jon_interp_interpolationitself.c:	ya[j][k]=(FTYPE)oldimage[j][k][kold]; // GODMARK3D -- nearest neighbor in k-direction
+jon_interp_interpolationitself.c:	ya[j][k]=olddata[j][k][kold]; // GODMARK3D -- nearest neighbor in k-direction
+jon_interp_interpolationitself.c:	for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) oldimage[i][j][k]=oldimage0[i][j][k];
+jon_interp_interpolationitself.c:	for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) olddata[i][j][k]=olddata0[i][j][k];
+jon_interp_interpolationitself.c:	for(k=0;k<roN3;k++) for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) oldimage[i][j][k]=oldimage0[i][j][k];
+jon_interp_interpolationitself.c:	for(k=0;k<roN3;k++)  for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) olddata[i][j][k]=olddata0[i][j][k];
+jon_interp_interpolationitself.c:      if(DATATYPE==0) Ilowc[il][jl]=oldimage[il][jl][0];// GODMARK3D
+jon_interp_interpolationitself.c:      else if(DATATYPE==1) Ilowf[il][jl]=olddata[il][jl][0]; // GODMARK3D
+jon_interp_interpolationitself.c:	ya[j][k]=(FTYPE)oldimage[j][k][0]; // GODMARK3D
+jon_interp_interpolationitself.c:	ya[j][k]=olddata[j][k][0]; // GODMARK3D
+jon_interp_interpolationitself.c:    ftemp=olddata[il][jl][0]; // GODMARK3D
+jon_interp_interpolationitself.c:    oldimage[ih][jh][0]=uctemp; // GODMARK3D
+jon_interp_interpolationitself.c:      if(DATATYPE==0) oldimage[ih][jh][0]=(unsigned char)ftemp;// GODMARK3D
+jon_interp_interpolationitself.c:      else olddata[ih][jh][0]=ftemp; // GODMARK3D
+jon_interp_interpolationitself.c:      //fprintf(stderr,"olddata[%d][%d][%d]=%g\n",ih,jh,0,olddata[ih][jh][0]); // GODMARK3D
+jon_interp_interpolationitself.c:	    ftemp=olddata[ih][jh][0];// GODMARK3D
+jon_interp_interpolationitself.c:	    oldimage[ih][jh][0]=uctemp; // GODMARK3D
+jon_interp_interpolationitself.c:      Ihigh[jh*nxhigh+ih]=olddata[ih][jh][0]; // GODMARK3D
+jon_interp_interpolationitself.c:      olddata[il][jl][0]=Ilow[jl*nxlow+il]/IlowW[jl*nxlow+il]; // GODMARK3D
+kazfulleos.c:FTYPE inputtablelimits[NUMTBLS][NUMEOSINDEPS][TBLITEMS];
+kazfulleos.c:FTYPE tablelimits[NUMTBLS][NUMEOSINDEPS][TBLITEMS];
+kazfulleos.c:FTYPE lineartablelimits[NUMTBLS][NUMEOSINDEPS][TBLLINEARITEMS];
+kazfulleos.c: 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][0]);
+kazfulleos.c:	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][1]);
+kazfulleos.c:	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][2]);
+kazfulleos.c:	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][4]); // base of log offset
+kazfulleos.c:	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][5]); // linear offset
+kazfulleos.c:	tablelimits[tableiter][ii][0] = log10(pow(10.0,inputtablelimits[tableiter][ii][0])-inputtablelimits[tableiter][ii][5])/log10(inputtablelimits[tableiter][ii][4]);
+kazfulleos.c:	tablelimits[tableiter][ii][1] = log10(pow(10.0,inputtablelimits[tableiter][ii][1])-inputtablelimits[tableiter][ii][5])/log10(inputtablelimits[tableiter][ii][4]);
+kazfulleos.c:	tablelimits[tableiter][ii][4]=inputtablelimits[tableiter][ii][4]; // just copy base, assumed to always be log_base() where the base itself is in base 10 format
+kazfulleos.c:	tablelimits[tableiter][ii][5]=inputtablelimits[tableiter][ii][5]; // shouldn't need to use linear version of offset, but just copy for now
+kazfulleos.c:	if(fabs(inputtablelimits[tableiter][ii][2])<SMALL || tablesize[tableiter][ii]==1 ){
+kazfulleos.c:	  inputtablelimits[tableiter][ii][2] = 1.0;
+kazfulleos.c:	  tablelimits[tableiter][ii][2] = 0.0; // forced
+kazfulleos.c:	  tablelimits[tableiter][ii][3] = 0.0; // forced so index=0 always
+kazfulleos.c:	  tablelimits[tableiter][ii][2] = (tablelimits[tableiter][ii][1]-tablelimits[tableiter][ii][0])/((FTYPE)tablesize[tableiter][ii]-1.0);
+kazfulleos.c:	  //	tablelimits[tableiter][ii][3] = ((FTYPE)tablesize[tableiter][ii]-1.0)/(tablelimits[tableiter][ii][1] - tablelimits[tableiter][ii][0]);
+kazfulleos.c:	  tablelimits[tableiter][ii][3] = 1.0/tablelimits[tableiter][ii][2];
+kazfulleos.c:	lineartablelimits[tableiter][ii][0]=pow(10.0,inputtablelimits[tableiter][ii][0]); // linear inner
+kazfulleos.c:	lineartablelimits[tableiter][ii][1]=pow(10.0,inputtablelimits[tableiter][ii][1]); // linear outer
+kazfulleos.c:	lineartablelimits[tableiter][ii][2]=1.0/log10(inputtablelimits[tableiter][ii][4]); // 1.0 divided by "normal log(base)" (used for mapping)
+kazfulleos.c:	lineartablelimits[tableiter][ii][3]=inputtablelimits[tableiter][ii][5]; // linear offset
+kazfulleos.c:	    //	    lstepdep = (-tablelimits[tableiter][ii][0])/((FTYPE)tablesize[tableiter][ii]-1.0);
+kazfulleos.c:	    lstepdep = inputtablelimits[tableiter][ii][2];
+kazfulleos.c:	    diff = fabs(lstepdep - tablelimits[tableiter][ii][2])/(fabs(lstepdep)+fabs(tablelimits[tableiter][ii][2]));
+kazfulleos.c:	      dualfprintf(fail_file,"Grid step size is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-value=%21.15g lstepdep=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,tablelimits[tableiter][ii][2],lstepdep);
+kazfulleos.c:	      dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g tablelimits[%d][%d][1]=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],tableiter,ii,tablelimits[tableiter][ii][1]);
+kazfulleos.c:	    lindep=log10(indep[ii]-lineartablelimits[tableiter][ii][3])*lineartablelimits[tableiter][ii][2];
+kazfulleos.c:	    lindeptry=tablelimits[tableiter][ii][0] + totalindex[ii]*lstepdep;
+kazfulleos.c:	      dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g totalindex[%d]=%d lstepdep=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],ii,totalindex[ii],lstepdep);
+kazfulleos.c:	      dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",log10(indep[ii]),lineartablelimits[tableiter][ii][3],lineartablelimits[tableiter][ii]);
+kazfulleos.c:	  if(rho0unittype==0) lineartablelimits[tableiter][RHOEOS][jj]/=rhounit;
+kazfulleos.c:	  else lineartablelimits[tableiter][RHOEOS][jj]/=rhomassunit;
+kazfulleos.c:	  lineartablelimits[tableiter][UEOS][jj]/=Pressureunit;
+kazfulleos.c:	  lineartablelimits[tableiter][PEOS][jj]/=Pressureunit;
+kazfulleos.c:	  lineartablelimits[tableiter][CHIEOS][jj]/=Pressureunit;
+kazfulleos.c:	  if(whichrnpmethod[tableiter]==0) lineartablelimits[tableiter][TEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_e
+kazfulleos.c:	  if(whichynumethod[tableiter]==0) lineartablelimits[tableiter][YNUEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_\nu
+kazfulleos.c:	  lineartablelimits[tableiter][HEOS][jj]/=Lunit;
+kazfulleos.c:	tablelimits[tableiter][jj][ii]=log10(lineartablelimits[tableiter][jj][ii]-lineartablelimits[tableiter][jj][3])*lineartablelimits[tableiter][jj][2];
+kazfulleos.c:      //      if(rho0unittype==0) tablelimits[tableiter][RHOEOS][2]=log10(pow(10.0,tablelimits[tableiter][RHOEOS][2])/rhounit);
+kazfulleos.c:      //      else tablelimits[tableiter][RHOEOS][2]=log10(pow(10.0,tablelimits[tableiter][RHOEOS][2])/rhomassunit);
+kazfulleos.c:      //      tablelimits[tableiter][UEOS][2]=log10(pow(10.0,tablelimits[tableiter][UEOS][2])/Pressureunit);
+kazfulleos.c:      //      tablelimits[tableiter][TEOS][2]=log10(pow(10.0,tablelimits[tableiter][TEOS][2])/Tunit);
+kazfulleos.c:      //      tablelimits[tableiter][YNUEOS][2]=log10(pow(10.0,tablelimits[tableiter][YNUEOS][2])/Tunit);
+kazfulleos.c:      //      tablelimits[tableiter][HEOS][2]=log10(pow(10.0,tablelimits[tableiter][HEOS][2])/Lunit);
+kazfulleos.c:	tablelimits[tableiter][jj][3] = ((FTYPE)tablesize[tableiter][ii]-1.0)/(tablelimits[tableiter][ii][1] - tablelimits[tableiter][ii][0]);
+kazfulleos.c:	for(ii=0;ii<TBLLINEARITEMS;ii++) trifprintf("lineartablelimits[%d][%d][%d]=%21.15g\n",tableiter,jj,ii,lineartablelimits[tableiter][jj][ii]);
+kazfulleos.c:	for(ii=0;ii<TBLITEMS;ii++) trifprintf("tablelimits[%d][%d][%d]=%21.15g\n",tableiter,jj,ii,tablelimits[tableiter][jj][ii]);
+kazfulleos.c:  MPI_Bcast(&inputtablelimits[0][0][0],1,MPI_FTYPE,NUMTBLS*NUMEOSINDEPS*TBLITEMS,MPI_COMM_GRMHD);
+kazfulleos.c:  MPI_Bcast(&tablelimits[0][0][0],1,MPI_FTYPE,NUMTBLS*NUMEOSINDEPS*TBLITEMS,MPI_COMM_GRMHD);
+kazfulleos.c:  MPI_Bcast(&lineartablelimits[0][0][0],1,MPI_FTYPE,NUMTBLS*NUMEOSINDEPS*TBLLINEARITEMS,MPI_COMM_GRMHD);
+kazfulleos.c:      dualfprintf(fail_file,"lin0=%g lin1=%g\n",lineartablelimits[SIMPLETABLE][RHOEOS][0],lineartablelimits[SIMPLETABLE][RHOEOS][1]);
+kazfulleos.c:  FTYPE totalf[3][3][3][3]; // 3 values for parabolic interpolation
+kazfulleos.c:  tfptr=(FTYPE (*)[3][3][3]) (&(totalf[1][1][1][1])); // so tfptr[-1,0,1]
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eossimplezoomtable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegensimplezoomtable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eossimpletable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegensimpletable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eostable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegentable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:      //      dualfprintf(fail_file,"tabledimen=%d degentable=%d whichtable=%d whichfun=%d whichdegenfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d :: f=%21.15g dist=%21.15g totalf=%21.15g\n",tabledimen, degentable, whichtable,whichfun,whichdegenfun,ii,iii,jj,jjj,kk,kkk,ll,lll,f[iii][jjj][kkk][lll],dist[iii][jjj][kkk][lll],totalf);
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eossimplezoomtable,whichfun,0,llo+lll,kko+kkk,jjo+jjj,iio+iii);
+kazfulleos.c:	else  tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegensimplezoomtable,whichdegenfun,0,llo+lll,kko+kkk,0,iio+iii);
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eossimpletable,whichfun,0,llo+lll,kko+kkk,jjo+jjj,iio+iii);
+kazfulleos.c:	else  tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegensimpletable,whichdegenfun,0,llo+lll,kko+kkk,0,iio+iii);
+kazfulleos.c:	if(degentable==0) tfptr[iii][jjj][kkk][lll] = EOSMAC(eostable,whichfun,0,llo+lll,kko+kkk,jjo+jjj,iio+iii);
+kazfulleos.c:	else tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegentable,whichdegenfun,0,llo+lll,kko+kkk,0,iio+iii);
+kazfulleos.c:	//	if(tfptr[iii][jjj][kkk][lll]<=0.0){
+kazfulleos.c:	tfptr[iii][jjj][kkk][lll] = log10(tfptr[iii][jjj][kkk][lll]);
+kazfulleos.c:    //    totalfptr=(FTYPE (*)[3][3][3]) (&(totalf[1][1][1][1])); // so tfptr[-1,0,1]
+kazfulleos.c:    // have tfptr[iii][jjj][kkk][lll] @ iii=-1,0,1 with i=0 meaning ii and offset being ROUND2INT(ieos)
+kazfulleos.c:    AA = 0.5*(tfptr[1][jjj][kkk][lll]-tfptr[-1][jjj][kkk][lll]);
+kazfulleos.c:    BB = 0.5*(tfptr[1][jjj][kkk][lll]+tfptr[-1][jjj][kkk][lll]-2.0*tfptr[0][jjj][kkk][lll]);
+kazfulleos.c:    tfptr[0][jjj][kkk][lll] = tfptr[0][jjj][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
+kazfulleos.c:    if(!isfinite(tfptr[0][jjj][kkk][lll])){
+kazfulleos.c:    AA = 0.5*(tfptr[0][1][kkk][lll]-tfptr[0][-1][kkk][lll]);
+kazfulleos.c:    BB = 0.5*(tfptr[0][1][kkk][lll]+tfptr[0][-1][kkk][lll]-2.0*tfptr[0][0][kkk][lll]);
+kazfulleos.c:    tfptr[0][0][kkk][lll] = tfptr[0][0][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
+kazfulleos.c:    if(!isfinite(tfptr[0][0][kkk][lll])){
+kazfulleos.c:    AA = 0.5*(tfptr[0][0][1][lll]-tfptr[0][0][-1][lll]);
+kazfulleos.c:    BB = 0.5*(tfptr[0][0][1][lll]+tfptr[0][0][-1][lll]-2.0*tfptr[0][0][0][lll]);
+kazfulleos.c:    tfptr[0][0][0][lll] = tfptr[0][0][0][lll] + AA*xmx0 + BB*xmx0*xmx0;
+kazfulleos.c:    if(!isfinite(tfptr[0][0][0][lll])){
+kazfulleos.c:  AA = 0.5*(tfptr[0][0][0][1]-tfptr[0][0][0][-1]);
+kazfulleos.c:  BB = 0.5*(tfptr[0][0][0][1]+tfptr[0][0][0][-1]-2.0*tfptr[0][0][0][0]);
+kazfulleos.c:  tfptr[0][0][0][0] = tfptr[0][0][0][0] + AA*xmx0 + BB*xmx0*xmx0;
+kazfulleos.c:  if(!isfinite(tfptr[0][0][0][0])){
+kazfulleos.c:  dualfprintf(fail_file,"4finite, icurr=%d :: %d %d %d : %21.15g\n",icurr,0,0,0,tfptr[0][0][0][0]);
+kazfulleos.c:  totalffinal=tfptr[0][0][0][0];
+kazfulleos.c:  FTYPE dist[2][2][2],f[2][2][2];
+kazfulleos.c:      tdist[iii] += dist[jjj][kkk][lll] = dj[jjj]*dk[kkk]*dl[lll];
+kazfulleos.c:	if(degentable==0) f[jjj][kkk][lll] = EOSMAC(eossimplezoomtable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[jjj][kkk][lll] = EOSMAC(eosdegensimplezoomtable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) f[jjj][kkk][lll] = EOSMAC(eossimpletable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[jjj][kkk][lll] = EOSMAC(eosdegensimpletable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) f[jjj][kkk][lll] = EOSMAC(eostable,whichfun,0,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[jjj][kkk][lll] = EOSMAC(eosdegentable,whichdegenfun,0,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	f[jjj][kkk][lll] = log10(f[jjj][kkk][lll]);
+kazfulleos.c:      //dualfprintf(fail_file,"f[%d][%d][%d][%d]=%21.15g\n",iii,jjj,kkk,lll,f[jjj][kkk][lll]);
+kazfulleos.c:      tfptr[iii] +=f[jjj][kkk][lll]*dist[jjj][kkk][lll];
+kazfulleos.c:      //      dualfprintf(fail_file,"tabledimen=%d degentable=%d whichtable=%d whichfun=%d whichdegenfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d :: f=%21.15g dist=%21.15g totalf=%21.15g\n",tabledimen, degentable, whichtable,whichfun,whichdegenfun,ii,iii,jj,jjj,kk,kkk,ll,lll,f[iii][jjj][kkk][lll],dist[iii][jjj][kkk][lll],totalf);
+kazfulleos.c:  FTYPE dist[2][2][2][2][2],f[2][2][2][2][2];
+kazfulleos.c:      totaldist += dist[iii][jjj][kkk][lll][mmm] = di[iii]*dj[jjj]*dk[kkk]*dl[lll]*dl[mmm];
+kazfulleos.c:	if(degentable==0) f[iii][jjj][kkk][lll][mmm] = EOSMAC(eossimplezoomtable,whichfun,mm+mmm,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[iii][jjj][kkk][lll][mmm] = EOSMAC(eosdegensimplezoomtable,whichdegenfun,mm+mmm,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) f[iii][jjj][kkk][lll][mmm] = EOSMAC(eossimpletable,whichfun,mm+mmm,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[iii][jjj][kkk][lll][mmm] = EOSMAC(eosdegensimpletable,whichdegenfun,mm+mmm,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	if(degentable==0) f[iii][jjj][kkk][lll][mmm] = EOSMAC(eostable,whichfun,mm+mmm,ll+lll,kk+kkk,jj+jjj,ii+iii);
+kazfulleos.c:	else f[iii][jjj][kkk][lll][mmm] = EOSMAC(eosdegentable,whichdegenfun,mm+mmm,ll+lll,kk+kkk,0,ii+iii);
+kazfulleos.c:	f[iii][jjj][kkk][lll][mmm] = log10(f[iii][jjj][kkk][lll][mmm]);
+kazfulleos.c:      //dualfprintf(fail_file,"f[%d][%d][%d][%d]=%21.15g\n",iii,jjj,kkk,lll,f[iii][jjj][kkk][lll]);
+kazfulleos.c:      totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
+kazfulleos.c:      //      dualfprintf(fail_file,"tabledimen=%d degentable=%d whichtable=%d whichfun=%d whichdegenfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d :: f=%21.15g dist=%21.15g totalf=%21.15g\n",tabledimen, degentable, whichtable,whichfun,whichdegenfun,ii,iii,jj,jjj,kk,kkk,ll,lll,f[iii][jjj][kkk][lll],dist[iii][jjj][kkk][lll],totalf);
+kazfulleos.c:    qfloor[2]   = MIN(lineartablelimits[FULLTABLE][whichindep][0],lineartablelimits[SIMPLETABLE][whichindep][0]);
+kazfulleos.c:    qfloor[2]   = lineartablelimits[primarytable][whichindep][0];
+kazfulleos.c:	    qarray[2]=1.001*lineartablelimits[primarytable][whichindep][0]; // can't be negative and use log10 interpolation, so assume very small.  This works well when using degen tables since q2~0 corresponds to T~0
+kazfulleos.c:    if(GLOBALMACP1A0(EOSglobal,YNUGLOBAL,i,j,k)>0.999*lineartablelimits[primarytable][YNUEOS][1]) GLOBALMACP1A0(EOSglobal,YNUGLOBAL,i,j,k) = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+kazfulleos.c:    if(GLOBALMACP1A0(EOSglobal,YNUGLOBAL,i,j,k)<1.001*lineartablelimits[primarytable][YNUEOS][0]) GLOBALMACP1A0(EOSglobal,YNUGLOBAL,i,j,k) = 1.001*lineartablelimits[primarytable][YNUEOS][0];
+kazfulleos.c:  if(TDYNORYEtouse>lineartablelimits[primarytable][TEOS][1]) TDYNORYEtouse = lineartablelimits[primarytable][TEOS][1];
+kazfulleos.c:  if(TDYNORYEtouse<lineartablelimits[primarytable][TEOS][0]) TDYNORYEtouse = lineartablelimits[primarytable][TEOS][0];
+kazfulleos.c:  if(YNUtouse>lineartablelimits[primarytable][YNUEOS][1]) YNUtouse = lineartablelimits[primarytable][YNUEOS][1];
+kazfulleos.c:  if(YNUtouse<lineartablelimits[primarytable][YNUEOS][0]) YNUtouse = lineartablelimits[primarytable][YNUEOS][0];
+kazfulleos.c:      if(Htouse[hi]>lineartablelimits[primarytable][HEOS][1]) Htouse[hi] = lineartablelimits[primarytable][HEOS][1];
+kazfulleos.c:      if(Htouse[hi]<lineartablelimits[primarytable][HEOS][0]) Htouse[hi] = lineartablelimits[primarytable][HEOS][0];
+kazfulleos.c:	if(GLOBALMACP1A0(EOSglobal,HGLOBAL+hi,i,j,k)>0.999*lineartablelimits[primarytable][HEOS][1]) GLOBALMACP1A0(EOSglobal,HGLOBAL+hi,i,j,k) = 0.999*lineartablelimits[primarytable][HEOS][1];
+kazfulleos.c:	if(GLOBALMACP1A0(EOSglobal,HGLOBAL+hi,i,j,k)<1.001*lineartablelimits[primarytable][HEOS][0]) GLOBALMACP1A0(EOSglobal,HGLOBAL+hi,i,j,k) = 1.001*lineartablelimits[primarytable][HEOS][0];
+kazfulleos.c:    if(TDYNORYEtouse>0.999*lineartablelimits[primarytable][TEOS][1]) TDYNORYEtouse = 0.999*lineartablelimits[primarytable][TEOS][1];
+kazfulleos.c:    if(TDYNORYEtouse<1.001*lineartablelimits[primarytable][TEOS][0]) TDYNORYEtouse = 1.001*lineartablelimits[primarytable][TEOS][0];
+kazfulleos.c:    if(YNUtouse>0.999*lineartablelimits[primarytable][YNUEOS][1]) YNUtouse = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+kazfulleos.c:    if(YNUtouse<1.001*lineartablelimits[primarytable][YNUEOS][0]) YNUtouse = 1.001*lineartablelimits[primarytable][YNUEOS][0];
+metric.c:	  conn[i][j][k] = 0.;
+metric.c:    conn[PH][RR][PH]=1.0 / X[1]; //1.0/gdetmid; //apparently, wrong because should not care about the 2nd dimension  SUPERSASMARK
+metric.c:    conn[PH][PH][RR]=1.0 / X[1]; //1.0/gdetmid; //apparently, wrong because should not care about the 2nd dimension  SUPERSASMARK
+metric.c:    conn[RR][PH][PH]= - X[1] * dxdxp[3][3] * dxdxp[3][3]; //-gdetmid;
+metric.c:	  conn[i][j][k] = 0.;
+metric.c:  dualfprintf(fail_file,"%30.20Lg %30.20Lg\n",DELTA,conn[0][2][3]); fflush(fail_file);
+metric.c:  //      dualfprintf(fail_file,"%21.15g %21.15g\n",DELTA,conn[0][2][3]); fflush(fail_file);
+metric.c:  FTYPE tmp[NDIM][NDIM][NDIM];
+metric.c:  FTYPE ghgen[NDIM][NDIM][NDIM];
+metric.c:  FTYPE glgen[NDIM][NDIM][NDIM];
+metric.c:	//if(i==j) conn[i][j][k] = (gcovperth[i] - gcovpertl[i]) / (Xh[k] - Xl[k]);
+metric.c:	conn[i][j][k] = signdXgen[k]*(ghgen[k][i][j] - glgen[k][i][j]) / (Xhgen[k][k] - Xlgen[k][k]);
+metric.c:	conn[i][j][k] = dfridr(gcov_func_mcoord,geom,X,i,j,k);
+metric.c:	tmp[i][j][k] =
+metric.c:	  0.5 * (conn[j][i][k] + conn[k][i][j] - conn[k][j][i]);
+metric.c:	conn[i][j][k] = 0.;
+metric.c:	  conn[i][j][k] += geom->gcon[i][l] * tmp[l][j][k];
+metric.c:      DLOOPA(jj) conndiag[kk] += conn[jj][kk][jj];
+metric.c:    //    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) for (k = 0; k < NDIM; k++) conn[i][j][k] += -0.25*(conndiag[j] - conndiag2[j])*delta(i,k);
+metric.c:    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) conn[i][j][i] += -0.25*(conndiag[j] - conndiag2[j]);
+metric.c:    dualfprintf(fail_file,"i=%d conn[0][0][0]=%21.15g\n",geom->i,conn[0][0][0]);
+metric.c:  conn[0][0][0]=(-2.*r*sigma + 4.*pow(r,3.))*pow(sigma,-3.);
+metric.c:  conn[0][0][1]=dxdxp[1]*(2.*r + sigma)*(-1.*sigma + 2.*pow(r,2.))*
+metric.c:  conn[0][0][2]=-1.*dxdxp[2]*r*pow(a,2.)*pow(sigma,-2.)*sin(2.*th);
+metric.c:  conn[0][0][3]=-2.*a*r*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)*
+metric.c:  conn[0][1][0]=dxdxp[1]*(2.*r + sigma)*(-1.*sigma + 2.*pow(r,2.))*
+metric.c:  conn[0][1][1]=2.*(r + sigma)*pow(dxdxp[1],2.)*
+metric.c:  conn[0][1][2]=-1.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-2.)*
+metric.c:  conn[0][1][3]=dxdxp[1]*a*(2.*r + sigma)*(sigma - 2.*pow(r,2.))*
+metric.c:  conn[0][2][0]=-1.*dxdxp[2]*r*pow(a,2.)*pow(sigma,-2.)*sin(2.*th);
+metric.c:  conn[0][2][1]=-1.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-2.)*
+metric.c:  conn[0][2][2]=-2.*pow(dxdxp[2],2.)*pow(r,2.)*pow(sigma,-1.);
+metric.c:  conn[0][2][3]=2.*dxdxp[2]*r*cos(th)*pow(a,3.)*pow(sigma,-2.)*
+metric.c:  conn[0][3][0]=-2.*a*r*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)*
+metric.c:  conn[0][3][1]=dxdxp[1]*a*(2.*r + sigma)*(sigma - 2.*pow(r,2.))*
+metric.c:  conn[0][3][2]=2.*dxdxp[2]*r*cos(th)*pow(a,3.)*pow(sigma,-2.)*
+metric.c:  conn[0][3][3]=2.*r*pow(sigma,-3.)*pow(sin(th),2.)*
+metric.c:  conn[1][0][0]=pow(dxdxp[1],-1.)*(-1.*sigma + 2.*pow(r,2.))*
+metric.c:  conn[1][0][1]=0.5*(4.*r - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
+metric.c:  conn[1][0][2]=0.;
+metric.c:  conn[1][0][3]=0.5*a*pow(dxdxp[1],-1.)*
+metric.c:  conn[1][1][0]=0.5*(4.*r - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
+metric.c:  conn[1][1][1]=pow(sigma,-3.)*
+metric.c:  conn[1][1][2]=-1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)
+metric.c:  conn[1][1][3]=0.5*a*(pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
+metric.c:  conn[1][2][0]=0.;
+metric.c:  conn[1][2][1]=-1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)
+metric.c:  conn[1][2][2]=-1.*r*pow(dxdxp[1],-1.)*pow(dxdxp[2],2.)*
+metric.c:  conn[1][2][3]=0.;
+metric.c:  conn[1][3][0]=0.5*a*pow(dxdxp[1],-1.)*
+metric.c:  conn[1][3][1]=0.5*a*(pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
+metric.c:  conn[1][3][2]=0.;
+metric.c:  conn[1][3][3]=-1.*pow(dxdxp[1],-1.)*pow(sigma,-3.)*pow(sin(th),2.)*
+metric.c:  conn[2][0][0]=-1.*r*pow(dxdxp[2],-1.)*pow(a,2.)*pow(sigma,-3.)*
+metric.c:  conn[2][0][1]=-1.*dxdxp[1]*r*pow(dxdxp[2],-1.)*pow(a,2.)*
+metric.c:  conn[2][0][2]=0.;
+metric.c:  conn[2][0][3]=2.*a*r*cos(th)*pow(dxdxp[2],-1.)*pow(sigma,-3.)*
+metric.c:  conn[2][1][0]=-1.*dxdxp[1]*r*pow(dxdxp[2],-1.)*pow(a,2.)*
+metric.c:  conn[2][1][1]=-1.*r*pow(dxdxp[1],2.)*pow(dxdxp[2],-1.)*pow(a,2.)*
+metric.c:  conn[2][1][2]=dxdxp[1]*r*pow(sigma,-1.);
+metric.c:  conn[2][1][3]=dxdxp[1]*a*pow(dxdxp[2],-1.)*pow(sigma,-3.)*sin(th)*
+metric.c:  conn[2][2][0]=0.;
+metric.c:  conn[2][2][1]=dxdxp[1]*r*pow(sigma,-1.);
+metric.c:  conn[2][2][2]=4.*(M_PI*X[2] - 1.*th)*pow(dxdxp[2],-1.)*
+metric.c:  conn[2][2][3]=0.;
+metric.c:  conn[2][3][0]=2.*a*r*cos(th)*pow(dxdxp[2],-1.)*pow(sigma,-3.)*
+metric.c:  conn[2][3][1]=dxdxp[1]*a*pow(dxdxp[2],-1.)*pow(sigma,-3.)*sin(th)*
+metric.c:  conn[2][3][2]=0.;
+metric.c:  conn[2][3][3]=-1.*cos(th)*pow(dxdxp[2],-1.)*pow(sigma,-3.)*
+metric.c:  conn[3][0][0]=a*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.);
+metric.c:  conn[3][0][1]=dxdxp[1]*a*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)
+metric.c:  conn[3][0][2]=-2.*dxdxp[2]*a*r*cot(th)*pow(sigma,-2.);
+metric.c:  conn[3][0][3]=-1.*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)*
+metric.c:  conn[3][1][0]=dxdxp[1]*a*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)
+metric.c:  conn[3][1][1]=a*pow(dxdxp[1],2.)*(-1.*sigma + 2.*pow(r,2.))*
+metric.c:  conn[3][1][2]=-1.*dxdxp[1]*dxdxp[2]*a*(2.*r + sigma)*cot(th)*
+metric.c:  conn[3][1][3]=dxdxp[1]*pow(sigma,-3.)*
+metric.c:  conn[3][2][0]=-2.*dxdxp[2]*a*r*cot(th)*pow(sigma,-2.);
+metric.c:  conn[3][2][1]=-1.*dxdxp[1]*dxdxp[2]*a*(2.*r + sigma)*cot(th)*
+metric.c:  conn[3][2][2]=-1.*a*r*pow(dxdxp[2],2.)*pow(sigma,-1.);
+metric.c:  conn[3][2][3]=dxdxp[2]*
+metric.c:  conn[3][3][0]=-1.*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)*
+metric.c:  conn[3][3][1]=dxdxp[1]*pow(sigma,-3.)*
+metric.c:  conn[3][3][2]=dxdxp[2]*
+metric.c:  conn[3][3][3]=pow(sigma,-3.)*
+metric.c:  FTYPE r,th,sigma,dxdxp[NDIM][NDIM],dxdxp_dxp[NDIM][NDIM][NDIM];
+metric.c:    dxdxp_dxp[i][j][k]=0.0;
+metric.c:  conn[0][0][0] = -2.0*t7*t8*t1*t17;
+metric.c:  conn[0][0][1] = -M*(-t23-2.0*t26+(2.0*t28*t31+2.0*t34*t35+(t39+2.0*t40*t42)*t11)*t11)*t17;
+metric.c:  conn[0][0][2] = -M*(-t53-2.0*t25*t52+(2.0*t28*t57+2.0*t34*t60+(t63+2.0*t64*t57)*t11)*t11)*t17;
+metric.c:  conn[0][0][3] = -2.0*t78*a*t1*t8*t17;
+metric.c:  conn[0][1][0] = conn[0][0][1];
+metric.c:  conn[0][1][1] = -2.0*(t83*t84-t21*t86-t25*t86+(2.0*t89*t91+2.0*t83*t21*t12+
+metric.c:  conn[0][1][2] = -2.0*(-t25*t114+t116*t84-t23*t52+(t119*t91+t34*t121+2.0*
+metric.c:  conn[0][1][3] = -(2.0*t25*t102+t23*t29+(-t148-2.0*t34*t149+t154+(-t156-t157+t161)*t11)*t11)*M*t169;
+metric.c:  conn[0][2][0] = conn[0][0][2];
+metric.c:  conn[0][2][1] = conn[0][1][2];
+metric.c:  conn[0][2][2] = -2.0*(-t172*t24-t171*t21+t175*t84+(t172*t177+2.0*t119*t126+
+metric.c:  conn[0][2][3] = (-2.0*t25*t129-t53*t29+(-t203+2.0*t34*t204+t208+(t209-t212+t214)*t11)*t11)*M*t169;
+metric.c:  conn[0][3][0] = conn[0][0][3];
+metric.c:  conn[0][3][1] = conn[0][1][3];
+metric.c:  conn[0][3][2] = conn[0][2][3];
+metric.c:  conn[0][3][3] = -2.0*t236*t34*t17;
+metric.c:  conn[1][0][0] = -(-t242+t243+(t245-t247+t250+t246-t251*t11)*t11)*M*t261;
+metric.c:  conn[1][0][1] = -t263*t271;
+metric.c:  conn[1][0][2] = -t273*t271;
+metric.c:  conn[1][0][3] = (-2.0*t276+2.0*t278+t280+(t283-t285+t288+t289-t56*t11*t284)*t11)*M*t297;
+metric.c:  conn[1][1][0] = conn[1][0][1];
+metric.c:  t299 = dxdxp_dxp[TH][1][1];
+metric.c:  t306 = dxdxp_dxp[RR][1][1] ;
+metric.c:  conn[1][1][1] = -(-t300*t84-2.0*t303+t305*t306-t310+(-t243*t86+t313-2.0*t314*t86*M)*M
+metric.c:  t399 = dxdxp_dxp[TH][1][2]; 
+metric.c:  t402 = dxdxp_dxp[RR][1][2]; 
+metric.c:  conn[1][1][2] = (t400*t84-t305*t402+t405+t406*t221+t409+(-t411+t412*t23+2.0*t114*t241)*M
+metric.c:  conn[1][1][3] = t501*t22*t297;
+metric.c:  conn[1][2][0] = conn[1][0][2];
+metric.c:  conn[1][2][1] = conn[1][1][2];
+metric.c:  t507 = dxdxp_dxp[TH][2][2];
+metric.c:  t510 = dxdxp_dxp[RR][2][2];
+metric.c:  conn[1][2][2] = -(-2.0*t504*t221-t508*t84+t305*t510-t512*t309
+metric.c:  conn[1][2][3] = t501*t52*t297;
+metric.c:  conn[1][3][0] = conn[1][0][3];
+metric.c:  conn[1][3][1] = conn[1][1][3];
+metric.c:  conn[1][3][2] = conn[1][2][3];
+metric.c:  conn[1][3][3] = -(-t56*t309*t29+t286*t84+2.0*t240*t588
+metric.c:  conn[2][0][0] = -(-t627+t630+(t632-t634-t631-t636+t637*t11)*t11)*M*t261;
+metric.c:  conn[2][0][1] = t263*t651;
+metric.c:  conn[2][0][2] = t273*t651;
+metric.c:  conn[2][0][3] = (2.0*t652-2.0*t654-t656+(t657-t659-t661-t662+t30*t11*t284)*t11)*M*t297;
+metric.c:  conn[2][1][0] = conn[2][0][1];
+metric.c:  conn[2][1][1] = -(2.0*t670*t221-t673*t306+t675*t84+t677*t309+(-2.0*t677*t84+t627*t86+2.0*t670*t25)*M
+metric.c:  conn[2][1][2] = -(t303+t310-t673*t402+t748*t84+t346*t221
+metric.c:  conn[2][1][3] = -t816*t22*t297;
+metric.c:  conn[2][2][0] = conn[2][0][2];
+metric.c:  conn[2][2][1] = conn[2][1][2];
+metric.c:  conn[2][2][2] = -(-t673*t510+2.0*t409+t405+t822*t84+(t406*t21-t411+2.0*t406*t25)*M
+metric.c:  conn[2][2][3] = -t816*t52*t297;
+metric.c:  conn[2][3][0] = conn[2][0][3];
+metric.c:  conn[2][3][1] = conn[2][1][3];
+metric.c:  conn[2][3][2] = conn[2][2][3];
+metric.c:  conn[2][3][3] = (t794*t84+2.0*t628*t588-t30*t309*t29
+metric.c:  conn[3][0][0] = -t7*t917*t17;
+metric.c:  conn[3][0][1] = -t917*(-t920+t148+(t156+t149)*t11)*t916;
+metric.c:  conn[3][0][2] = -t917*(t208-t928+(t214+t204)*t11)*t916;
+metric.c:  conn[3][0][3] = -t78*M*t11*t17;
+metric.c:  conn[3][1][0] = conn[3][0][1];
+metric.c:  conn[3][1][1] = -(t940*t221+2.0*t794*t627+(4.0*t794*t891-t946*t10)*M
+metric.c:  conn[3][1][2] = -(t116*t970+t286*t627+t794*t243
+metric.c:  conn[3][1][3] = (t3*t30*t84+t970*t22+(3.0*t42*t21+2.0*t275*t35
+metric.c:  conn[3][2][0] = conn[3][0][2];
+metric.c:  conn[3][2][1] = conn[3][1][2];
+metric.c:  conn[3][2][2] = -(2.0*t286*t243+t1035*t221+(-t1037*t10+4.0*t286*t314)*M
+metric.c:  conn[3][2][3] = -(-t970*t52-t831*t84+(-2.0*t275*t60-3.0*t845*t21
+metric.c:  conn[3][3][0] = conn[3][0][3];
+metric.c:  conn[3][3][1] = conn[3][1][3];
+metric.c:  conn[3][3][2] = conn[3][2][3];
+metric.c:  conn[3][3][3] = -t236*a*t17;
+mpi_fileio.c:	    // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
+mpi_fileio.c:	    // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
+mpi_init.c:  DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDPRIMTYPE][dir][pl]=primgridpos[BOUNDPRIMSIMPLETYPE][dir][pl]=CENTGRID;
+mpi_init.c:      primgridpos[BOUNDPSTAGTYPE][dir][pl]=primgridpos[BOUNDPSTAGSIMPLETYPE][dir][pl]=STAGGRID;
+mpi_init.c:      primgridpos[BOUNDPSTAGTYPE][dir][pl]=primgridpos[BOUNDPSTAGSIMPLETYPE][dir][pl]=CENTGRID;
+mpi_init.c:  DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDFLUXTYPE][dir][pl]=primgridpos[BOUNDFLUXSIMPLETYPE][dir][pl]=CENTGRID;
+mpi_init.c:  DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDINTTYPE][dir][pl]=CENTGRID;
+mpi_init.c:	    primfactor[bti][dir][gridpos][PACK][pl]=1.0;
+mpi_init.c:	    primfactor[bti][dir][gridpos][UNPACK][pl]=1.0;
+mpi_init.c:		primfactor[bti][dir][gridpos][PACK][U2]=primfactor[bti][dir][gridpos][PACK][B2]=-1.0;
+mpi_init.c:		PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0;
+mpi_init.c:		primfactor[bti][dir][gridpos][PACK][U2]=1.0; // \detg T^2_2 is symmetric.
+mpi_init.c:		primfactor[bti][dir][gridpos][PACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+mpi_init.c:		primfactor[bti][dir][gridpos][UNPACK][U2]=primfactor[bti][dir][gridpos][UNPACK][B2]=-1.0;
+mpi_init.c:		PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0;
+mpi_init.c:		primfactor[bti][dir][gridpos][UNPACK][U2]=1.0; // \detg T^2_2 is symmetric.
+mpi_init.c:		primfactor[bti][dir][gridpos][UNPACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+nrutil2.c:	  // m[i][j][k]=m[z][r][c]
+nrutil2.c:	  // m[i][j][k]=m[z][r][c]
+phys.ffde.c:    prin[pl]=p[itest][jtest][pl];
+reconstructeno.c:      yin[pl][1][i] = yin[pl][0][i] = 1 + i + pow(i,2)/2. + pow(i,3)/6. + pow(i,4)/24. + 0 * pow(i,5)/120.; 
+reconstructeno.c:      ystencilvar[pl][1][i] = ystencilvar[pl][0][i] = yin[pl][0][i];
+reconstructeno.c:      monoindicator[pl][0][i] = 0.0;
+reconstructeno.c:      monoindicator[pl][1][i] = 0.0;
+reconstructeno.c:      monoindicator[pl][2][i] = 0.0;
+reconstructeno.debug.c:  FTYPE a_allpl_yin[NPR][2][NBIGM];
+reconstructeno.debug.c:  FTYPE (*allpl_yin)[2][NBIGM] = (FTYPE (*)[2][NBIGM]) (&(a_allpl_yin[0][0][NBIGM]));
+reconstructeno.weightmin.c:      //	    dualfprintf(fail_file,"ps=%d pe=%d :: i=%d yin=%21.15g %21.15g :: yout=%21.15g %21.15g\n",ps,pe,i,yin[pl][0][i],yin[pl][1][i],yout[pl][0][i],yout[pl][1][i]);
+reconstructeno.weightmin.c:      //	    yout[pl][0][i]=yout[pl][1][i]=0.0;
+reconstructeno.weightmin.c:      //      normalystencilvar[pl][i] =  MAX(MAX(MAX(fabs(ystencilvar[stencilpl][0][i] - ystencilvar[stencilpl][0][i-1]),fabs(ystencilvar[stencilpl][0][i+1] - ystencilvar[stencilpl][0][i])),fabs(ystencilvar[stencilpl][0][i+2] - ystencilvar[stencilpl][0][i+1])),fabs(ystencilvar[stencilpl][0][i-1] - ystencilvar[stencilpl][0][i-2]));
+restart.c:  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&pcumreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*(COMPDIM*2)*NPR, MPI_SFTYPE,headerptr);
+restart.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) pcumreg[enerregion][dir][k]=pcumreg_tot[enerregion][dir][k];
+restart.rebeccaoldcode.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) fread(&pcumreg_tot[enerregion][dir][k],sizeof(FTYPE),1,headerptr);
+restart.rebeccaoldcode.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) fscanf(headerptr,HEADEROLDONEIN,&pcumreg_tot[enerregion][dir][k]);
+restart.rebeccaoldcode.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) pcumreg[enerregion][dir][k]=pcumreg_tot[enerregion][dir][k];
+restart.rebeccaoldcode.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) fwrite(&pcumreg_tot[enerregion][dir][k],sizeof(FTYPE),1,headerptr);
+restart.rebeccaoldcode.c:    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(k) fprintf(headerptr,HEADEROLDONEOUT,pcumreg_tot[enerregion][dir][k]);
+defs.general.h:int global_enerregiondef[NUMENERREGIONS][NUMUPDOWN][NDIM];
+defs.general.h:SFTYPE pdottermsjet2[COMPDIM*2][NUMFLUXTERMS][NPR];
+defs.general.h:SFTYPE fladdtermsreg[NUMENERREGIONS][NUMFAILFLOORFLAGS][NPR];
+defs.general.h:SFTYPE fladdtermsreg_tot[NUMENERREGIONS][NUMFAILFLOORFLAGS][NPR];
+defs.general.h:SFTYPE pcumreg[NUMENERREGIONS][COMPDIM*2][NPR];
+defs.general.h:SFTYPE pcumreg_tot[NUMENERREGIONS][COMPDIM*2][NPR];
+defs.general.h:SFTYPE pdotreg[NUMENERREGIONS][COMPDIM*2][NPR];
+defs.general.h:SFTYPE pdottermsreg[NUMENERREGIONS][COMPDIM*2][NUMFLUXTERMS][NPR];
+defs.general.h:SFTYPE sourceaddtermsreg[NUMENERREGIONS][NUMSOURCES][NPR];
+defs.general.h:SFTYPE sourceaddtermsreg_tot[NUMENERREGIONS][NUMSOURCES][NPR];
+defs.general.h:SFTYPE pdotreg_tot[NUMENERREGIONS][COMPDIM*2][NPR];
+defs.general.h:SFTYPE pdottermsreg_tot[NUMENERREGIONS][COMPDIM*2][NUMFLUXTERMS][NPR];
+global.storage.h:// That is, definition a[N1M][N2M][N3M] with access a[i][j][k] with code association r(i) theta(j) phi(k)
+global.storage.h:#define GENEOSTABLEMAC(prefix,name,a1,a2,a3,a4,a5,a6) prefix##name[a1][a2][a3][a4][a5][a6]
+global.storage.h:#define GENMACP3A0(prefix,name,argp1,argp2,argp3,i,j,k) prefix##name[argp1][argp2][argp3][STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)]
+global.storage.h:#define GENMACP4A0(prefix,name,argp1,argp2,argp3,argp4,i,j,k) prefix##name[argp1][argp2][argp3][argp4][STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)]
+global.storage.h:#define GENMACP3A1(prefix,name,argp1,argp2,argp3,i,j,k,arga1) prefix##name[argp1][argp2][argp3][STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)][arga1]
+global.storage.h:// a) name[loc][i][j][k] -> GLOBALMACP1A0(name,loc,i,j,k):
+global.storage.h:// 3) a[i][j][k]: Replace remaining pointers in code that access memory with MACP?A?()
+mpidefs.h:int primgridpos[NUMBOUNDTYPES][COMPDIM*2][MAXNPR];
+mpidefs.h:FTYPE primfactor[NUMBOUNDTYPES][COMPDIM*2][NUMPRIMGRIDPOS][1+NUMPACKUNPACK][MAXNPR];
+reconstructeno_static.h:static FTYPE dpos_array[8][2][3] = //d[order-2][shift]  
+reconstructeno_static.h:static FTYPE dneg_array[8][2][3] = //d[order-2][shift]
+supermpidefs.h:FTYPE workbca[NUMPACKUNPACK][COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM];	// [1=out/2=in][0=right,2=up,1=left,3=down,4=out,5=in][datawidth]
+supermpidefs.h:PFTYPE workbc_inta[NUMPACKUNPACK][COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM];	// [1=out/2=in][0=right,2=up,1=left,3=down,4=out,5=in][datawidth]

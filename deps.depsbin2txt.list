@@ -1,0 +1,1 @@
+bin2txt.o: bin2txt.c

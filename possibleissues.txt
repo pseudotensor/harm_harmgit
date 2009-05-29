@@ -1,0 +1,47 @@
+
+2) bounds.c new features may cause super long loops or something
+
+HORIZONEXTRAP 1
+OUTEREXTRAP 0
+old poledeath code
+
+3) dissdump()
+
+e.g. DTdissd too small?
+
+
+
+
+
+
+#########################
+SEEMS UNLIKELY
+#########################
+
+7) new PARA
+
+only faster
+
+4) diss_compute()?  many enerregions each with over diss versions
+
+But only done each full step
+
+5) DODISS and DODISSVSR integrations in dump_ener.c
+
+#account for restart file issue --  now should be must faster 
+
+####
+
+6) TIMEORDER
+
+1) boundmpi.c does per direction
+
+#####8) main.c step outputs?  NAH! -- apparently not since taken out
+
+9) UtoU avoid 1/0 ? NAH, stupid
+
+10) DOENTROPY DONOENTROPY -- probably not
+
+11) MPI_Barrier around MPI_Reduce() -- probably not
+
+

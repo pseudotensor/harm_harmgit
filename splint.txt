@@ -1,0 +1,694 @@
+init.c initbase.c restart.c set_arrays.c set_grid.c advance.c reconstructeno.c flux.c wavespeeds.c boundsflux.c fluxct.c fluxcompute.c bounds.c boundsint.c diag.c dump.c dumpgen.c dump_ener.c image.c fail.c fixup.c mpi_init.c mpi_fileio.c boundmpi.c boundmpiint.c interppoint.c interpline.c monointerp.c jmonointerp.c smonointerp.c main.c metric.c metric_tools.c metric_selfgravity_or_evolvemetric.c coord.c phys.c step_ch.c phys.ffde.c phys.coldgrmhd.c eos.c vchar.c transforms.c sources.c gaussj.c lubksb.c ludcmp.c mnewt.c nrutil.c ranc.c tensor.c utoprimgen.c dudp_calc_3vel.c dudp_calc.c utoprim.c utoprim_2d.c utoprim_1d.c utoprim_1d_opt.c utoprim_ldz.c utoprim_jon.c utoprim_1d_final.c utoprim_2d_final.c utoprim_5d2_final.c
+global.h:6: Include file <unistd.h> matches the name of a POSIX library, but
+    the POSIX library is not being used.  Consider using +posixlib or
+    +posixstrictlib to select the POSIX library, or -warnposix to suppress this
+    message.
+  Header name matches a POSIX header, but the POSIX library is not selected.
+  (Use -warnposixheaders to inhibit warning)
+decs.h:103:56: Comment starts inside comment
+  A comment open sequence (/*) appears within a comment.  This usually means an
+  earlier comment was not closed. (Use -nestcomment to inhibit warning)
+   In file included from init.c:11
+init.c:703:57: Comment starts inside comment
+reconstructeno.c:1197:123: Comment starts inside comment
+reconstructeno.c:1491:125: Comment starts inside comment
+fluxct.c:563:50: Comment starts inside comment
+fluxct.c:637:50: Comment starts inside comment
+interppoint.c:421:38: Comment starts inside comment
+interppoint.c:562:42: Comment starts inside comment
+interppoint.c:563:30: Comment starts inside comment
+interppoint.c:629:42: Comment starts inside comment
+interppoint.c:630:30: Comment starts inside comment
+interppoint.c:723:42: Comment starts inside comment
+interppoint.c:724:30: Comment starts inside comment
+interpline.c:1449:19: Comment starts inside comment
+jmonointerp.c:448:31: Comment starts inside comment
+defs.h:103:49: Comment starts inside comment
+   In file included from main.c:2
+metric.c:4006:70: Comment starts inside comment
+phys.ffde.c:1344:70: Comment starts inside comment
+u2p_defs.h:40:106: Comment starts inside comment
+   In file included from phys.coldgrmhd.c:3
+utoprim_ldz.c:179:20: Comment starts inside comment
+utoprim_jon.c:751:22: Comment starts inside comment
+utoprim_2d_final.c:719:70: Comment starts inside comment
+mympi.h:355:60: Function parameter prim is incomplete type (inner array must
+                   have bounds): double [][][][8]
+  A formal parameter is declared with an incomplete type. (Use -incompletetype
+  to inhibit warning)
+mympi.h:355:130: Function parameter F1 is incomplete type (inner array must
+                    have bounds): double [][][][8]
+mympi.h:355:198: Function parameter F2 is incomplete type (inner array must
+                    have bounds): double [][][][8]
+mympi.h:355:266: Function parameter F3 is incomplete type (inner array must
+                    have bounds): double [][][][8]
+mympi.h:357:46: Function parameter prim is incomplete type (inner array must
+                   have bounds): int [][][][5]
+mympi.h:358:49: Function parameter prim is incomplete type (inner array must
+                   have bounds): double [][][][8]
+mympi.h:358:118: Function parameter workbc is incomplete type (inner array must
+                    have bounds): double [][6][]
+mympi.h:359:51: Function parameter workbc is incomplete type (inner array must
+                   have bounds): double [][6][]
+mympi.h:359:1049: Function parameter prim is incomplete type (inner array must
+                     have bounds): double [][][][8]
+mympi.h:360:34: Function parameter prim is incomplete type (inner array must
+                   have bounds): int [][][][5]
+mympi.h:360:102: Function parameter workbc_int is incomplete type (inner array
+                    must have bounds): int [][6][]
+mympi.h:361:36: Function parameter workbc_int is incomplete type (inner array
+                   must have bounds): int [][6][]
+mympi.h:361:1031: Function parameter prim is incomplete type (inner array must
+                     have bounds): int [][][][5]
+global.h:1939:31: Function parameter p is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:1989:32: Function parameter p is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2022:30: Function parameter A is incomplete type (inner array must
+                     have bounds): double [][][][]
+global.h:2022:176: Function parameter p is incomplete type (inner array must
+                      have bounds): double [][][][8]
+global.h:2030:38: Function parameter dUcomp declared as manifest array (size
+                     constant is meaningless)
+  A formal parameter is declared as an array with size.  The size of the array
+  is ignored in this context, since the array formal parameter is treated as a
+  pointer. (Use -fixedformalarray to inhibit warning)
+global.h:2103:46: Function parameter prim is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2104:44: Function parameter primbase is incomplete type (inner array
+                     must have bounds): int [][][][5]
+global.h:2131:60: Function parameter gdet is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2207:31: Function parameter unew is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2207:100: Function parameter pf is incomplete type (inner array must
+                      have bounds): double [][][][8]
+global.h:2208:31: Function parameter pi is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2208:98: Function parameter unew is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2234:14: Function parameter Uacomp declared as manifest array (size
+                     constant is meaningless)
+global.h:2243:37: Function parameter var is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2251:52: Function parameter pv is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2252:46: Function parameter pv is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2252:114: Function parameter pbackup is incomplete type (inner array
+                      must have bounds): double * [][][8]
+global.h:2253:42: Function parameter pv is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2253:110: Function parameter pbackup is incomplete type (inner array
+                      must have bounds): double * [][][8]
+global.h:2254:42: Function parameter pv is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2255:45: Function parameter pv is incomplete type (inner array must
+                     have bounds): double * [][][8]
+global.h:2283:84: Function parameter prim is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2293:33: Function parameter cfaraday is incomplete type (inner array
+                     must have bounds): double [][][][6][3]
+global.h:2294:48: Function parameter p is incomplete type (inner array must
+                     have bounds): double [][][][8]
+global.h:2353:53: Function parameter dxdxp declared as manifest array (size
+                     constant is meaningless)
+init.c:137:31: Function parameter p is incomplete type (inner array must have
+                  bounds): double [][][][8]
+init.c:137:98: Function parameter Utemp is incomplete type (inner array must
+                  have bounds): double [][][][8]
+init.c:137:169: Function parameter U is incomplete type (inner array must have
+                   bounds): double [][][][8]
+init.c: (in function init_conservatives)
+init.c:139:31: Function parameter prim is incomplete type (inner array must
+                  have bounds): double * [][][8]
+init.c:139:102: Function parameter Upoint is incomplete type (inner array must
+                   have bounds): double * [][][8]
+init.c:139:175: Function parameter Uavg is incomplete type (inner array must
+                   have bounds): double * [][][8]
+init.c:139:237: Declaration using extern inside function scope:
+    int pi2Uavg(double * [][][8], double * [][][8], double * [][][8])
+  An extern declaration is used inside a function scope. (Use -nestedextern to
+  inhibit warning)
+init.c:142:3: Return value (type int) ignored: pi2Uavg(p, Utemp, U)
+  Result returned by function call is not used. If this is intended, can cast
+  result to (void) to eliminate message. (Use -retvalint to inhibit warning)
+init.c: (in function init_consts)
+init.c:159:38: Declaration using extern inside function scope:
+                  void get_stellar_data(void)
+init.c:160:41: Declaration using extern inside function scope:
+                  void read_setup_eostable(void)
+init.c:198:11: Unrecognized identifier: M_PI
+  Identifier used in code has not been declared. (Use -unrecog to inhibit
+  warning)
+init.c:264:5: Return value (type int) ignored: myexit(26629)
+init.c:268:5: Return value (type int) ignored: myexit(26630)
+init.c:272:5: Return value (type int) ignored: myexit(26631)
+init.c:159:15: Function get_stellar_data declared but not used
+  A function is declared but not used. Use /*@unused@*/ in front of function
+  header to suppress message. (Use -fcnuse to inhibit warning)
+init.c:160:15: Function read_setup_eostable declared but not used
+init.c: (in function init_grid)
+init.c:427:10: Variable rh declared but not used
+  A variable is declared but never used. Use /*@unused@*/ in front of
+  declaration to suppress message. (Use -varuse to inhibit warning)
+init.c: (in function init_global)
+init.c:620:3: Return value (type double) ignored: ranc(7)
+  Result returned by function call is not used. If this is intended, can cast
+  result to (void) to eliminate message. (Use -retvalother to inhibit warning)
+init.c: (in function init_atmosphere)
+init.c:737:28: Passed storage realgeom contains 9 undefined fields:
+                  gcov, gcon, g, gcovpert, ...
+  Storage derivable from a parameter, return value or global is not defined.
+  Use /*@out@*/ to denote passed or returned storage which need not be defined.
+  (Use -compdef to inhibit warning)
+init.c:738:33: Passed storage pratm not completely defined (*pratm is
+                  undefined): set_atmosphere (..., pratm)
+init.c:738:3: Return value (type int) ignored: set_atmosphere(-...
+init.c:748:13: Only storage realgeom.gcovpert (type double *) derived from
+                  variable declared in this scope is not released (memory leak)
+  A storage leak due to incomplete deallocation of a structure or deep pointer
+  is suspected. Unshared storage that is reachable from a reference that is
+  being deallocated has not yet been deallocated. Splint assumes when an object
+  is passed as an out only void pointer that the outer object will be
+  deallocated, but the inner objects will not. (Use -compdestroy to inhibit
+  warning)
+init.c:733:27: Variable geom declared but not used
+init.c: (in function init_grid_post_set_grid)
+init.c:773:23: Passed storage X not completely defined (*X is undefined):
+                  coord (..., X)
+init.c:774:19: Passed storage V not completely defined (*V is undefined):
+                  bl_coord (..., V)
+init.c:805:28: Function parameter p is incomplete type (inner array must have
+                  bounds): double [][][][8]
+init.c: (in function init_primitives)
+init.c:813:34: Function parameter p is incomplete type (inner array must have
+                  bounds): double [][][][8]
+init.c:814:31: Function parameter p is incomplete type (inner array must have
+                  bounds): double [][][][8]
+init.c:816:30: Function parameter p is incomplete type (inner array must have
+                  bounds): double [][][][8]
+init.c:818:7: Function init_atmosphere shadows outer declaration
+  An outer declaration is shadowed by the local declaration. (Use -shadow to
+  inhibit warning)
+   init.c:751:1: Previous definition of init_atmosphere:
+   [function (int *, int *, int, int, int, double *) returns int]
+init.c:819:30: Function parameter A is incomplete type (inner array must have
+                  bounds): double [][][][]
+init.c:819:176: Function parameter pr is incomplete type (inner array must have
+                   bounds): double [][][][8]
+init.c:838:16: Variable init_dsandvels used before definition
+  An rvalue is used that may not be initialized to a value on some execution
+  path. (Use -usedef to inhibit warning)
+init.c:838:31: Passed storage &whichvel not completely defined:
+                  init_dsandvels (&whichvel, ...)
+init.c:838:42: Passed storage &whichcoord not completely defined:
+                  init_dsandvels (..., &whichcoord, ...)
+init.c:862:3: Variable normalize_densities used before definition
+init.c:862:3: Return value (type int) ignored: normalize_densit...
+init.c:877:16: Variable init_atmosphere used before definition
+init.c:877:32: Passed storage &whichvel not completely defined:
+                  init_atmosphere (&whichvel, ...)
+init.c:877:43: Passed storage &whichcoord not completely defined:
+                  init_atmosphere (..., &whichcoord, ...)
+init.c:971:23: Variable init_vpot used before definition
+init.c:971:23: Return value (type int) ignored: init_vpot(l, i, ...
+init.c:977:3: Variable init_vpot2field used before definition
+init.c:977:3: Return value (type int) ignored: init_vpot2field(...
+init.c:983:3: Variable normalize_field used before definition
+init.c:983:3: Return value (type int) ignored: normalize_field(p)
+init.c:810:18: Variable geom declared but not used
+init.c:811:10: Variable r declared but not used
+init.c:811:12: Variable th declared but not used
+init.c:811:15: Variable X declared but not used
+init.c:811:20: Variable V declared but not used
+init.c:814:7: Function getmax_densities declared but not used
+init.c: (in function init_dsandvels)
+init.c:1020:3: Variable init_uniformdensity used before definition
+init.c:1020:3: Return value (type int) ignored: init_uniformdens...
+init.c:1009:7: Function init_disk declared but not used
+init.c:1010:7: Function init_star declared but not used
+init.c: (in function init_disk)
+init.c:1042:25: Variable rho shadows outer declaration
+   init.c:17:15: Previous definition of rho: double [10000]
+init.c:1058:5: Return value (type int) ignored: myexit(7724)
+init.c:1077:7: Variable lfish_calc used before definition
+init.c:1077:18: Variable rmax used before definition
+init.c:1086:21: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1087:15: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1114:9: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS *
+    SS) * DD / (AA * sth * AA * sth))) / (SS * DD / AA)) - 0.5 * sqrt(1. + 4. *
+    (l * l * SS * SS) * DD / (AA * AA * sth * sth))
+  Code has unspecified behavior. Order of evaluation of function parameters or
+  subexpressions is not defined, so if a value is used and modified in
+  different places not separated by a sequence point constraining evaluation
+  order, then the result of the expression is unspecified. (Use -evalorder to
+  inhibit warning)
+init.c:1114:9: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) *
+    DD / (AA * sth * AA * sth))) / (SS * DD / AA)) - 0.5 * sqrt(1. + 4. * (l *
+    l * SS * SS) * DD / (AA * AA * sth * sth))
+init.c:1125:10: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SSin *
+    SSin) * DDin / (AAin * AAin * sthin * sthin))) / (SSin * DDin / AAin)) -
+    0.5 * sqrt(1. + 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin * sthin *
+    sthin))
+init.c:1125:10: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SSin *
+    SSin) * DDin / (AAin * AAin * sthin * sthin))) / (SSin * DDin / AAin)) -
+    0.5 * sqrt(1. + 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin * sthin *
+    sthin))
+init.c:1118:7: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS *
+    SS) * DD / (AA * sth * AA * sth))) / (SS * DD / AA)) - 0.5 * sqrt(1. + 4. *
+    (l * l * SS * SS) * DD / (AA * AA * sth * sth)) - 2. * jbh * r * l / AA -
+    (0.5 * log((1. + sqrt(1. + 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin
+    * sthin * sthin))) / (SSin * DDin / AAin)) - 0.5 * sqrt(1. + 4. * (l * l *
+    SSin * SSin) * DDin / (AAin * AAin * sthin * sthin)) - 2. * jbh * rin * l /
+    AAin)
+init.c:1118:7: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) *
+    DD / (AA * sth * AA * sth))) / (SS * DD / AA)) - 0.5 * sqrt(1. + 4. * (l *
+    l * SS * SS) * DD / (AA * AA * sth * sth)) - 2. * jbh * r * l / AA - (0.5 *
+    log((1. + sqrt(1. + 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+    sthin * sthin))) / (SSin * DDin / AAin)) - 0.5 * sqrt(1. + 4. * (l * l *
+    SSin * SSin) * DDin / (AAin * AAin * sthin * sthin)) - 2. * jbh * rin * l /
+    AAin)
+init.c:1166:48: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 2. * jbh * r * sqrt(1. + up1 * up1) / sqrt(AA *
+    SS * DD)
+init.c:1166:48: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): 2. * jbh * r * sqrt(1. + up1 * up1) / sqrt(AA * SS
+    * DD)
+init.c:1167:7: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 2. * jbh * r * sqrt(1. + up1 * up1) / sqrt(AA *
+    SS * DD) + sqrt(SS / AA) * up1 / sth
+init.c:1167:7: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): 2. * jbh * r * sqrt(1. + up1 * up1) / sqrt(AA * SS
+    * DD) + sqrt(SS / AA) * up1 / sth
+init.c:1044:18: Variable realgeom declared but not used
+init.c:1044:27: Variable geom declared but not used
+init.c:1050:10: Variable rh declared but not used
+init.c: (in function init_uniformdensity)
+init.c:1200:5: Return value (type int) ignored: myexit(7723)
+init.c:1208:21: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1209:15: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1195:18: Variable realgeom declared but not used
+init.c:1195:27: Variable geom declared but not used
+init.c: (in function init_vpot)
+init.c:1243:23: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1244:17: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1233:18: Variable geom declared but not used
+init.c:1327:28: Function parameter A is incomplete type (inner array must have
+                   bounds): double [][][][]
+init.c:1327:174: Function parameter pr is incomplete type (inner array must
+                    have bounds): double [][][][8]
+init.c: (in function init_vpot2field)
+init.c:1329:32: Function parameter A is incomplete type (inner array must have
+                   bounds): double [][][][]
+init.c:1329:178: Function parameter p is incomplete type (inner array must have
+                    bounds): double [][][][8]
+init.c:1329:14: Function vpot2field shadows outer declaration
+   global.h:2022:12: Previous declaration of vpot2field:
+   [function (double [][][][], double [][][][8]) returns int]
+init.c:1329:238: Declaration using extern inside function scope:
+                    int vpot2field(double [][][][], double [][][][8])
+init.c:1341:32: Function parameter p is incomplete type (inner array must have
+                   bounds): double [][][][8]
+init.c: (in function normalize_densities)
+init.c:1351:23: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1352:17: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1378:29: Function parameter p is incomplete type (inner array must have
+                   bounds): double [][][][8]
+init.c: (in function getmax_densities)
+init.c:1387:23: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1388:17: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1409:28: Function parameter p is incomplete type (inner array must have
+                   bounds): double [][][][8]
+init.c: (in function normalize_field)
+init.c:1413:10: Variable bsq_max shadows outer declaration
+   init.c:27:24: Previous definition of bsq_max: double
+init.c:1419:3: Variable get_maxes used before definition
+init.c:1419:13: Passed storage &bsq_max not completely defined:
+                   get_maxes (&bsq_max, ...)
+init.c:1419:23: Passed storage &mypgmax not completely defined:
+                   get_maxes (..., &mypgmax)
+init.c:1419:3: Return value (type int) ignored: get_maxes(&bsq_m...
+init.c:1435:3: Return value (type int) ignored: get_maxes(&bsq_m...
+init.c:1412:10: Variable bsq_ij declared but not used
+init.c: (in function get_maxes)
+init.c:1466:30: Passed storage geom contains 9 undefined fields:
+                   gcov, gcon, g, gcovpert, ...
+init.c:1469:25: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1470:19: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1476:34: Passed storage &bsq_ij not completely defined:
+                   bsq_calc (..., &bsq_ij)
+init.c:1477:192: Only storage geom.gcovpert (type double *) derived from
+    variable declared in this scope is not released (memory leak)
+init.c:1483:25: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1484:19: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1485:20: Passed storage dxdxp not completely defined (*dxdxp is
+                   undefined): dxdxprim (..., dxdxp)
+init.c:1494:34: Passed storage &bsq_ij not completely defined:
+                   bsq_calc (..., &bsq_ij)
+init.c:1495:192: Only storage geom.gcovpert (type double *) derived from
+    variable declared in this scope is not released (memory leak)
+init.c:1504:39: Passed storage &bsq_ij not completely defined:
+                   bsq_calc (..., &bsq_ij)
+init.c:1505:190: Only storage geom.gcovpert (type double *) derived from
+    variable declared in this scope is not released (memory leak)
+init.c:1516:5: Return value (type int) ignored: myexit(111)
+init.c: (in function lfish_calc)
+init.c:1539:25: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr)
+init.c:1539:25: Expression has undefined behavior (left operand modifies errno,
+                   used by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr)
+init.c:1539:49: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2)
+init.c:1539:49: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr, 2)
+init.c:1540:41: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr)
+init.c:1540:41: Expression has undefined behavior (left operand modifies errno,
+                   used by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr)
+init.c:1540:65: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2)
+init.c:1540:65: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr, 2)
+init.c:1541:6: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): (-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh *
+    sqrt(newr) + pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) *
+    newr)
+init.c:1541:6: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): (-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh *
+    sqrt(newr) + pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) *
+    newr)
+init.c:1543:8: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(newr, 3) + pow(jbh, 2) * (2. + newr)
+init.c:1543:8: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): pow(newr, 3) + pow(jbh, 2) * (2. + newr)
+init.c:1542:43: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): (jbh + (-2. + newr) * sqrt(newr)) * (pow(newr,
+    3) + pow(jbh, 2) * (2. + newr))
+init.c:1542:43: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): (jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) +
+    pow(jbh, 2) * (2. + newr))
+init.c:1544:33: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr,
+    3) + pow(jbh, 2) * (2. + newr))) / sqrt(1 + (2. * jbh) / pow(newr, 1.5) -
+    3. / newr)
+init.c:1544:33: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3)
+    + pow(jbh, 2) * (2. + newr))) / sqrt(1 + (2. * jbh) / pow(newr, 1.5) - 3. /
+    newr)
+init.c:1542:6: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): (-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh *
+    sqrt(newr) + pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) *
+    newr) + ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) *
+    (2. + newr))) / sqrt(1 + (2. * jbh) / pow(newr, 1.5) - 3. / newr)
+init.c:1542:6: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): (-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh *
+    sqrt(newr) + pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) *
+    newr) + ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) *
+    (2. + newr))) / sqrt(1 + (2. * jbh) / pow(newr, 1.5) - 3. / newr)
+init.c:1540:5: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): (pow(jbh, 2) - 2. * jbh * sqrt(newr) +
+    pow(newr, 2)) * ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) +
+    pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) + ((jbh
+    + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) * (2. + newr)))
+    / sqrt(1 + (2. * jbh) / pow(newr, 1.5) - 3. / newr))
+init.c:1540:5: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): (pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2)) * ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) + ((jbh + (-2. +
+    newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) * (2. + newr))) / sqrt(1
+    + (2. * jbh) / pow(newr, 1.5) - 3. / newr))
+init.c:1556:22: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) +
+    (-3. + newr) * newr)
+init.c:1556:22: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) + (-3. +
+    newr) * newr)
+init.c:1557:7: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) +
+    (-3. + newr) * newr) * (pow(jbh, 2) + (-2. + newr) * newr)
+init.c:1557:7: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) + (-3. +
+    newr) * newr) * (pow(jbh, 2) + (-2. + newr) * newr)
+init.c:1556:6: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): ((pow(jbh, 2) - 2. * jbh * sqrt(newr) +
+    pow(newr, 2)) * ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) +
+    pow(newr, 2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) + ((jbh
+    + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) * (2. + newr)))
+    / sqrt(1 + (2. * jbh) / pow(newr, 1.5) - 3. / newr))) / (pow(newr, 3) *
+    sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) * (pow(jbh, 2) + (-2. +
+    newr) * newr))
+init.c:1556:6: Expression has undefined behavior (left operand modifies errno,
+    used by right operand): ((pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2)) * ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr,
+    2))) / sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) + ((jbh + (-2. +
+    newr) * sqrt(newr)) * (pow(newr, 3) + pow(jbh, 2) * (2. + newr))) / sqrt(1
+    + (2. * jbh) / pow(newr, 1.5) - 3. / newr))) / (pow(newr, 3) * sqrt(2. *
+    jbh * sqrt(newr) + (-3. + newr) * newr) * (pow(jbh, 2) + (-2. + newr) *
+    newr))
+init.c: (in function set_atmosphere)
+init.c:1574:10: Variable set_atmosphere_grb1 used before definition
+init.c:1570:7: Function set_atmosphere_grb2 declared but not used
+init.c: (in function set_atmosphere_grb2)
+init.c:1586:29: Parameter whichcond not used
+  A function parameter is not used in the body of the function. If the argument
+  is needed for type compatibility or future plans, use /*@unused@*/ in the
+  argument declaration. (Use -paramuse to inhibit warning)
+init.c:1586:44: Parameter whichvel not used
+init.c:1640:56: Function parameter dxdxp declared as manifest array (size
+                   constant is meaningless)
+init.c: (in function set_phi_velocity_grb1)
+init.c:1642:10: Variable omegak declared but not used
+init.c:1642:17: Variable omega declared but not used
+init.c:1642:23: Variable lspecific declared but not used
+init.c:1640:35: Parameter X not used
+init.c: (in function set_atmosphere_grb1)
+init.c:1695:10: Variable rho shadows outer declaration
+   init.c:17:15: Previous definition of rho: double [10000]
+init.c:1701:7: Function set_zamo_velocity shadows outer declaration
+   init.c:1635:1: Previous definition of set_zamo_velocity:
+   [function (int, struct of_geom *, double *) returns int]
+init.c:1702:58: Function parameter dxdxp declared as manifest array (size
+                   constant is meaningless)
+init.c:1702:7: Function set_phi_velocity_grb1 shadows outer declaration
+   init.c:1677:1: Previous definition of set_phi_velocity_grb1:
+   [function (double *, double *, double [4][4], struct of_geom *, double *)
+   returns int]
+init.c:1710:57: Passed storage X not completely defined (*X is undefined):
+                   coord (..., X)
+init.c:1711:14: Passed storage V not completely defined (*V is undefined):
+                   bl_coord (..., V)
+init.c:1712:16: Passed storage dxdxp not completely defined (*dxdxp is
+                   undefined): dxdxprim (..., dxdxp)
+init.c:1763:3: Variable set_zamo_velocity used before definition
+init.c:1763:3: Return value (type int) ignored: set_zamo_velocit...
+init.c:1764:3: Variable set_phi_velocity_grb1 used before definition
+init.c:1764:3: Return value (type int) ignored: set_phi_velocity...
+init.c:1775:7: Return value (type int) ignored: myexit(1)
+init.c:1695:10: Variable rho declared but not used
+init.c:1695:14: Variable u declared but not used
+init.c:1695:16: Variable ur declared but not used
+init.c:1695:19: Variable uh declared but not used
+init.c:1695:22: Variable up declared but not used
+init.readdata.c: (in function init_star)
+init.readdata.c:6:7: Function set_zamo_velocity shadows outer declaration
+   init.c:1635:1: Previous definition of set_zamo_velocity:
+   [function (int, struct of_geom *, double *) returns int]
+init.readdata.c:24:5: Return value (type int) ignored: myexit(7725)
+init.readdata.c:44:3: Variable set_stellar_solution used before definition
+init.readdata.c:44:30: Passed storage prstellar not completely defined
+    (*prstellar is undefined): set_stellar_solution (..., prstellar)
+init.readdata.c:52:24: Passed storage geom contains 9 undefined fields:
+                          gcov, gcon, g, gcovpert, ...
+init.readdata.c:54:21: Passed storage X not completely defined (*X is
+                          undefined): coord (..., X)
+init.readdata.c:55:14: Passed storage V not completely defined (*V is
+                          undefined): bl_coord (..., V)
+init.readdata.c:56:16: Passed storage dxdxp not completely defined (*dxdxp is
+                          undefined): dxdxprim (..., dxdxp)
+init.readdata.c:72:3: Variable set_phi_velocity_grb2 used before definition
+init.readdata.c:72:3: Return value (type int) ignored: set_phi_velocity...
+init.readdata.c:85:5: Variable set_zamo_velocity used before definition
+init.readdata.c:85:5: Return value (type int) ignored: set_zamo_velocit...
+init.readdata.c:87:11: Array element pratm[0] used before definition
+init.readdata.c:100:20: Passed storage geombl contains 9 undefined fields:
+                           gcov, gcon, g, gcovpert, ...
+init.readdata.c:121:211: Only storage geombl.gcovpert (type double *) derived
+    from variable declared in this scope is not released (memory leak)
+init.readdata.c:121:211: Only storage geom.gcovpert (type double *) derived
+    from variable declared in this scope is not released (memory leak)
+init.readdata.c:129:11: Array element pratm[0] used before definition
+init.readdata.c:157:13: Only storage geom.gcovpert (type double *) derived from
+    variable declared in this scope is not released (memory leak)
+init.readdata.c: (in function set_phi_velocity_grb2)
+init.readdata.c:168:10: Variable R0 shadows outer declaration
+   decs.h:468:20: Previous declaration of R0: double
+init.readdata.c:167:10: Variable roR0 declared but not used
+init.readdata.c:168:10: Variable R0 declared but not used
+init.readdata.c: (in function get_stellar_data)
+init.readdata.c:331:7: Return value (type int) ignored: myexit(100)
+init.readdata.c:355:12: Possibly null storage indata passed as non-null param:
+                           fscanf (indata, ...)
+  A possibly null pointer is passed as a parameter corresponding to a formal
+  parameter with no /*@null@*/ annotation.  If NULL may be used for this
+  parameter, add a /*@null@*/ annotation to the function parameter declaration.
+  (Use -nullpass to inhibit warning)
+   init.readdata.c:329:17: Storage indata may become null
+init.readdata.c:355:5: Return value (type int) ignored: fscanf(indata, "...
+init.readdata.c:359:7: Return value (type int) ignored: myexit(7)
+init.readdata.c:373:7: Return value (type int) ignored: fscanf(indata, "...
+init.readdata.c: (in function set_stellar_solution)
+init.readdata.c:442:24: Passed storage X not completely defined (*X is
+                           undefined): coord (..., X)
+init.readdata.c:443:15: Passed storage V not completely defined (*V is
+                           undefined): bl_coord (..., V)
+init.readdata.c:453:3: Variable interpfun used before definition
+init.readdata.c:453:32: Passed storage &myrho not completely defined:
+                           interpfun (..., &myrho)
+init.readdata.c:454:31: Passed storage &myie not completely defined:
+                           interpfun (..., &myie)
+init.readdata.c:455:31: Passed storage &myvr not completely defined:
+                           interpfun (..., &myvr)
+init.readdata.c:427:18: Variable geom declared but not used
+init.readdata.c:428:10: Variable x2 declared but not used
+init.readdata.c:430:14: Variable firsttime declared but not used
+init.readdata.c: (in function interpfun)
+init.readdata.c:532:34: Expression has undefined behavior (left operand uses
+    errno, modified by right operand): log(fun[i] / fun[i - 1]) / log(xfun[i] /
+    xfun[i - 1])
+init.readdata.c:532:34: Expression has undefined behavior (left operand
+    modifies errno, used by right operand):
+    log(fun[i] / fun[i - 1]) / log(xfun[i] / xfun[i - 1])
+init.readdata.c:536:46: Expression has undefined behavior (left operand uses
+    errno, modified by right operand): slope * log(pos / xfun[i - 1]) +
+    log(-fun[i - 1])
+init.readdata.c:536:46: Expression has undefined behavior (left operand
+    modifies errno, used by right operand):
+    slope * log(pos / xfun[i - 1]) + log(-fun[i - 1])
+init.readdata.c:538:48: Expression has undefined behavior (left operand uses
+    errno, modified by right operand): slope * log(pos / xfun[i - 1]) +
+    log(fun[i - 1])
+init.readdata.c:538:48: Expression has undefined behavior (left operand
+    modifies errno, used by right operand):
+    slope * log(pos / xfun[i - 1]) + log(fun[i - 1])
+init.c:19:12: File static variable INDEXN declared but not used
+initbase.c: (in function init)
+initbase.c:7:32: Declaration using extern inside function scope:
+                    int prepre_init(void)
+initbase.c:8:47: Declaration using extern inside function scope:
+                    int pre_init(int, char * [])
+initbase.c:9:33: Declaration using extern inside function scope:
+                    int init_defgrid(void)
+initbase.c:10:35: Declaration using extern inside function scope:
+                     int init_defglobal(void)
+initbase.c:11:35: Declaration using extern inside function scope:
+                     int init_defconsts(void)
+initbase.c:12:14: Function init_grid_post_set_grid shadows outer declaration
+   init.c:792:1: Previous definition of init_grid_post_set_grid:
+   [function (void) returns int]
+initbase.c:12:44: Declaration using extern inside function scope:
+                     int init_grid_post_set_grid(void)
+initbase.c:13:33: Declaration using extern inside function scope:
+                     int post_par_set(void)
+initbase.c:14:37: Function parameter p is incomplete type (inner array must
+                     have bounds): double [][][][8]
+initbase.c:14:14: Function init_primitives shadows outer declaration
+   init.c:1001:1: Previous definition of init_primitives:
+   [function (double [][][][8]) returns int]
+initbase.c:14:97: Declaration using extern inside function scope:
+                     int init_primitives(double [][][][8])
+initbase.c:15:59: Declaration using extern inside function scope:
+                     void filterffde(int, int, int, double *)
+initbase.c:16:65: Declaration using extern inside function scope:
+                     void filter_coldgrmhd(int, int, int, double *)
+initbase.c:17:30: Function parameter prim is incomplete type (inner array must
+                     have bounds): double * [][][8]
+initbase.c:17:104: Declaration using extern inside function scope:
+                      int set_dt(double * [][][8], double *)
+initbase.c:19:40: Function parameter p is incomplete type (inner array must
+                     have bounds): double [][][][8]
+initbase.c:19:107: Function parameter Utemp is incomplete type (inner array
+                      must have bounds): double [][][][8]
+initbase.c:19:178: Function parameter U is incomplete type (inner array must
+                      have bounds): double [][][][8]
+initbase.c:19:14: Function init_conservatives shadows outer declaration
+   init.c:147:1: Previous definition of init_conservatives:
+   [function (double [][][][8], double [][][][8], double [][][][8]) returns
+   int]
+initbase.c:19:238: Declaration using extern inside function scope:
+    int init_conservatives(double [][][][8], double [][][][8], double
+    [][][][8])
+initbase.c:20:30: Declaration using extern inside function scope:
+                     int post_init(void)
+initbase.c:21:92: Declaration using extern inside function scope:
+    int compute_new_metric_and_prims(int, double, double, double)
+initbase.c:28:35: Return value (type int) ignored: fflush(stderr)
+initbase.c:30:3: Return value (type int) ignored: prepre_init()
+initbase.c:31:3: Return value (type int) ignored: prepre_init_spec...
+initbase.c:32:3: Return value (type int) ignored: pre_init(argc, argv)
+initbase.c:34:3: Return value (type int) ignored: pre_init_specifi...
+initbase.c:49:5: Return value (type int) ignored: init_defglobal()
+initbase.c:50:5: Return value (type int) ignored: init_defconsts()
+initbase.c:51:5: Return value (type int) ignored: init_consts()
+initbase.c:52:5: Return value (type int) ignored: init_global()
+initbase.c:54:5: Return value (type int) ignored: init_defgrid()
+initbase.c:55:5: Return value (type int) ignored: init_grid()
+initbase.c:63:16: Null storage passed as non-null param: set_grid (..., 0, ...)
+initbase.c:63:18: Null storage passed as non-null param: set_grid (..., 0)
+initbase.c:68:5: Return value (type int) ignored: init_grid_post_s...
+initbase.c:77:5: Return value (type int) ignored: post_par_set()
+initbase.c:149:3: Return value (type int) ignored: post_init()
+initbase.c:151:3: Return value (type int) ignored: post_init_specif...
+initbase.c:156:8: Test expression for if not boolean, type int: 1
+  Test expression type is not boolean or int. (Use -predboolint to inhibit
+  warning)
+initbase.c:157:7: Return value (type int) ignored: init_conservativ...
+initbase.c:160:7: Return value (type int) ignored: init_conservativ...
+initbase.c:165:8: Test expression for if not boolean, type int: 1
+initbase.c:176:6: Test expression for if not boolean, type int: 1
+initbase.c:181:5: Return value (type int) ignored: compute_new_metr...
+initbase.c:190:3: Return value (type int) ignored: set_dt(p, &dt)
+initbase.c:15:15: Function filterffde declared but not used
+initbase.c: (in function pre_init)
+initbase.c:250:32: Declaration using extern inside function scope:
+                      void set_arrays(void)
+initbase.c:258:3: Return value (type double) ignored: ranc(0)
+initbase.c:303:3: Return value (type int) ignored: pickeos_eomtype(2)
+initbase.c:306:3: Return value (type int) ignored: init_dumps()
+initbase.c:337:8: Test expression for if not boolean, type int: 1
+initbase.c:339:8: Test expression for if not boolean, type int: 1
+initbase.c:352:6: Test expression for if not boolean, type int: 1
+initbase.c: (in function init_defconsts)
+initbase.c:591:25: Expression has undefined behavior (left operand uses errno,
+    modified by right operand): 8. * pow(M_PI, 5.0) * pow(kb, 4.0)
+initbase.c:591:25: Expression has undefined behavior (left operand modifies
+    errno, used by right operand): 8. * pow(M_PI, 5.0) * pow(kb, 4.0)
+initbase.c:645:25: Function parameter A is incomplete type (inner array must
+                      have bounds): double * [][][]
+initbase.c:645:170: Function parameter p is incomplete type (inner array must
+                       have bounds): double [][][][8]
+initbase.c: (in function vpot2field)
+initbase.c:689:32: Passed storage geom contains 9 undefined fields:
+                      gcov, gcon, g, gcovpert, ...

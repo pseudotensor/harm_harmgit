@@ -1,0 +1,107 @@
+#
+#
+#echo "Make sure MPICH params set in both global.h and makefile!"
+#echo "Make sure MPICH params set in both global.h and makefile!"
+USEINT=1
+USEPGI=0
+USEGCC=0
+USEKCC=0
+
+PREP = prep
+CMD=grmhd
+
+
+
+ifeq ($(USEINT),1)
+CC = icc
+CFLAGS=-I/usr/local/vmi/mpich/include -O3 -tpp7 -axiMKW -ipo -unroll -w1 -wd=175
+# LD_LIBRARY_PATH
+#LDFLAGS=-L/usr/local/vmi/mpich/lib/icc -L/usr/local/opt/intel/mkl/lib/32 -lmkl_def -lmkl_lapack -lmkl_lapack32 -lmkl_p3 -lmkl_p4 -lmkl_vml_p3 -lvml -lmpich -lvmi -ldl -lpthread
+# below works
+#LDFLAGS=-L/usr/local/opt/intel/mkl/lib/32 -lF90 -lmkl -lmkl_lapack -L/usr/local/vmi/mpich/lib/icc -lmpich -lvmi -ldl -lpthread
+# below for p3
+#LDFLAGS=-L/usr/local/opt/intel/mkl/lib/32 -lF90 -lmkl_p3
+# -lmkl_lapack -L/usr/local/vmi/mpich/lib/icc -lmpich -lvmi -ldl -lpthread
+LDFLAGS=  -L/usr/local/vmi/mpich/lib/icc -lmpich -lvmi -ldl -lpthread -lm
+# /usr/local/opt/intel/mkl/doc
+# Platinum is 1Ghz P3
+# icc compiler opts (icc -help)
+# -w2 or -r, show all warnings
+# -ax<i/M/K/W> i=ppro/p2 M=mmx K=SIMD W=P4 (needed when using -O3)
+# -x<""> ""
+# -ip, -ipo, -wp_ipo Interprocedural Opt (each higher opt)
+# -tpp7 for P4
+# -tpp6 for Ppro,P2,P3
+# -tpp5 for Pentium
+# -rcd fast float-to-int conversions
+# -unroll[n]
+# -prof_use : profiling data
+endif
+
+ifeq ($(USEPGI),1)
+CC = pgCC
+CFLAGS = -fast -Minline=levels:10 --no_exceptions
+LDFLAGS = -L/usr/local/vmi/mpich/lib/pgi -lm -lmpich -lvmi -ldl -lpthread -lblas -llapack
+endif
+
+ifeq ($(USEGCC),1)
+CC = gcc
+CFLAGS = -I/usr/local/vmi/mpich/include -Wall -O3 -ffast-math -finline-functions -funroll-loops
+LDFLAGS = -lm -L/usr/apps/math/lapack/intel -lblas_intel32 -llapack_intel32 -ltmglib_intel32 -L/usr/local/vmi/mpich/lib/gcc -lmpich -lvmi -ldl -lpthread
+endif
+
+ifeq ($(USEKCC),1)
+CC = /usr/apps/tools/kai/kcc4.0f2/KCC_BASE/bin/KCC
+CFLAGS = -I/usr/local/vmi/mpich/include
+LDFLAGS = -lm -L/usr/local/vmi/mpich/lib/gcc -lmpich -lvmi -ldl -lpthread  
+endif
+
+
+SRCS = \
+bounds.c boundsint.c coord.c diag.c dudp_calc_3vel.c dudp_calc.c dump.c fixup.c gaussj.c \
+image.c initbase.c init.c interp.c lubksb.c ludcmp.c main.c metric.c \
+mnewt.c nrutil.c phys.c ranc.c restart.c set_arrays.c set_grid.c \
+step_ch.c tensor.c utoprim.c vchar.c transforms.c fail.c utoprim_ldz.c \
+init_mpi.c boundmpi.c boundmpiint.c sources.c
+
+OBJS = \
+bounds.o boundsint.o coord.o diag.o dudp_calc_3vel.o dudp_calc.o dump.o fixup.o gaussj.o \
+image.o initbase.o init.o interp.o lubksb.o ludcmp.o main.o metric.o \
+mnewt.o nrutil.o phys.o ranc.o restart.o set_arrays.o set_grid.o \
+step_ch.o tensor.o utoprim.o vchar.o transforms.o fail.o utoprim_ldz.o \
+init_mpi.o boundmpi.o boundmpiint.o sources.o
+
+all:	$(PREP) $(CMD)
+
+
+$(PREP):
+	( sh ./makedecs.h.sh )
+	( sh ./makempidecs.h.sh )
+
+$(CMD):	$(OBJS) makefile.pt
+	$(CC) $(CFLAGS) -o $(CMD) $(OBJS) $(LDFLAGS)
+
+
+clean:
+	rm *.o
+
+# dependencies
+$(OBJS) : global.h defs.h mympi.h mpidefs.h makefile.pt
+metric.o : metric.h
+transforms.o : metric.h
+
+OBJB = postmort.o \
+bounds.o coord.o diag.o dudp_calc.o dump.o fixup.o gaussj.o \
+image.o init.o interp.o lubksb.o ludcmp.o metric.o \
+mnewt.o nrutil.o phys.o ranc.o restart.o set_arrays.o set_grid.o \
+step_ch.o tensor.o utoprim.o vchar.o transforms.o \
+init_mpi.o boundmpi.o prepostinit.o cool.o
+
+# dependencies
+$(OBJB) : global.h defs.h mympi.h mpidefs.h makefile.pt
+
+
+postmort: $(OBJB) makefile.pt
+	$(CC) $(CFLAGS) -o postmort $(OBJB) $(LDFLAGS)
+
+

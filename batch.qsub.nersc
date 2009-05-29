@@ -1,0 +1,161 @@
+#!/bin/bash
+#
+#  Sample Batch Script for a Mako cluster job
+#
+#  Submit this script using the command: qsub batch.sample
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+# resource limits  walltime: maximum wall clock time (hh:mm:ss)
+#                  nodes: number of 2-processor nodes
+#                  ppn: how many processors per node to use (1 or 2)
+#                      (you are always charged for the entire node)
+#                  pt: production Platinum cluster nodes
+#
+# To compile code use:
+# module load xtpe-quadcore
+# OR:
+# module unload xtpe-quadcore
+# THEN:
+# cc
+#
+# For OpenMP compile with "-mp=nonuma" and then use "-mppnppn=1 -mppdepth=numcores" below,
+# Then for aprun use "OMP_NUM_THREADS <numcores>" and use "-N 1"
+#
+#
+# For new quad-core systems:
+# http://www.nersc.gov/nusers/systems/franklin/quadcore_upgrade.php
+# 1) at command line run: "module load xtpe-quadcore"
+# 2) In batch set "PBS -l feature=quad" and "PBS -l mppnppn=4"
+# 3) In batch run program using "aprun -n <numcores> -N 4"
+#
+# For old dual-core systems:
+# 1) at command line run: "module unload xtpe-quadcore"
+# 2) In batch set "PBS -l feature=dual" and "PBS -l mppnppn=2"
+# 3) In batch run program using "aprun -n <numcores> -N 2"
+#
+#
+# To submit job:
+# qsub <thisbatchfilename>
+#
+#
+#
+#
+# COMMENT: -l feature=quad
+# COMMENT: -l mppnppn=4
+#PBS -l feature=dual
+#PBS -l mppnppn=2
+#
+#
+# number of cores:
+#PBS -l mppwidth=1024
+#
+#PBS -l walltime=36:00:00
+#
+# queue name (premium, regular, debug, interactive)
+#PBS -q regular
+#
+# export all my environment variables to the job
+#PBS -V
+#
+# [If project is invalid, a valid project will be automatically selected]
+#PBS -A m106
+# 
+# job name (default = name of script file)
+#PBS -N quad1024sq
+#
+# output files
+#PBS -o job2.out
+#
+#PBS -e job2.err
+# 
+# combine standard output and standard error (optional)
+#PBS -j oe
+#
+# send mail when the job begins and ends (optional)
+#PBS -m abe
+# End of embedded QSUB options
+
+#set echo               # echo commands before execution; use for debugging
+wait
+date
+#
+# do qsub mako.qsub
+#
+# other commands: qstat, qdel, xpbsmon
+###################
+#
+# setup run
+#
+##################
+# below is 2 or 4
+export NUMCORESPERNODE=2
+export NCPUX1=32
+export NCPUX2=32
+export NCPUX3=1
+export NTOT=1024
+export FILENAME="grmhd"
+export DIRFILE="/u0/j/jmckinne/harm3d/quad1024sq/"
+export RUNDIR=$SCRATCH/quad1024sq/
+#export RUNDIR=$PBS_O_WORKDIR
+
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+# RESTARTING, then comment below 4 lines
+#cp $DIRFILE/$FILENAME .
+#cp $DIRFILE/*.dat .
+#cp $DIRFILE/*.txt .
+#chmod u+x $FILENAME
+
+wait
+#wait
+#wait
+#wait
+#wait
+#save node list to a file
+#cp $PBS_NODEFILE node.list
+
+#/home/atchekho/bin/lndup 32 2 <node.list >nodemult.list
+
+# parallel (MPI)
+#/usr/local/mpich-1.2/bin/mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 > $FILENAME.so
+#mpirun -np $NTOT $FILENAME $NCPUX1 $NCPUX2 1 0 > $FILENAME.so
+#mpirun -np $NTOT -machinefile nodemult.list $FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+#mpirun -np $NTOT -machinefile node.list $FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+
+export MPICH_PTL_UNEX_EVENTS=1000000                                                                              
+export MPICH_UNEX_BUFFER_SIZE=800M  
+
+# RESTARTING:
+aprun -n $NTOT -N $NUMCORESPERNODE ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 1 0 > $FILENAME.so 2>&1
+
+# FRESH START:
+#aprun -n $NTOT -N $NUMCORESPERNODE ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
+
+#./$FILENAME > $FILENAME.so
+
+wait   # for the ssh's above to complete
+
+date

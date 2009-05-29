@@ -1,0 +1,40 @@
+XVFB
+You can get Xvfb for Linux from ftp.xfree86.org. Distributions for other Unix systems can also be found at ftp.xfree86.org. You can also get Xvfb source at ftp.x.org and compile it.
+
+1. Install Xvfb in a directory on your linux computer
+2. Run Xvfb by typing in ./Xvfb :0 where 0 is the X-windows display number.
+3. Set the DISPLAY variable to point to localhost:0
+
+The Xvfb should now be installed properly. You can now run graphical servlets such as EasyChart's ChartServlet on a headless Linux server.
+
+For more information about Xvfb check http://www.xfree86.org/4.0.1/Xvfb.1.html
+
+Xvnc -localhost :2    
+
+
+#############
+# WORKS:
+Xvfb -ac :2  -screen 0 1024x768x24
+
+(nohup Xvfb -ac :2  -screen 0 1024x768x24 &)   
+#############
+
+
+# NOT WORK:
+
+
+Xvnc :2 -desktop ki-rh42.slac.stanford.edu:2  -httpd /usr/share/vnc/classes -auth /tmp/.gdmB2NXHU -geometry 1024x768 -depth 16 -rfbwait 30000 -rfbauth /home/jon/.vnc/passwd -rfbport 5920 -pn
+
+# below works for using vncviewer on ki-rh39, but not normal xterm call
+Xvnc :2 -desktop ki-rh42.slac.stanford.edu:2 -securitytypes=none
+
+Xvnc :2 -desktop ki-rh42.slac.stanford.edu:2 -httpd /usr/share/vnc/classes -auth /tmp/.gdmB2NXHU -geometry 1024x768 -depth 16 -rfbwait 30000 -pn
+
+Xvfb :2
+
+OR: 
+
+Xvnc :2
+
+
+vis5d ./v5d/ifieldline0550.v5d -offscreen -script 3dmovie.test.tcl              

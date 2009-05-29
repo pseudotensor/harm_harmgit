@@ -1,0 +1,142 @@
+#!/bin/bash
+#  Sample Batch Script for a MVAPICH-Intel job
+#
+# http://www.ncsa.uiuc.edu/UserInfo/Resources/Hardware/Intel64Cluster/Doc/Jobs.html
+#
+# REMEMBER for HARM code:
+# 1) PRODUCTION 1 in init.h
+# 2) Set N1,N2,N3, and MAXBND in init.h
+# 3) set lim[] in init.c
+# 4) tar cvzf <name.tgz> <files> ; msscmd put <name.tgz>
+# e.g. tar cvzf quadlarge1.tgz grmhd *.txt *.dat ; msscmd put quadlarge1.tgz
+#
+#
+# $HOME/.soft contains:
+#
+#  @teragrid-basic
+#  @globus-4.0
+#  @teragrid-dev
+#
+# $HOME/.mpd.conf contains:
+#
+#  MPD_SECRETWORD=XXXXXXX     # random alphanumeric chars
+#                             # (MUST contain at least one alphabetic char)
+#
+# (make sure the file .mpd.conf has permissions 700)
+#
+#  Submit this script using the command: qsub <script_name>
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+# walltime : maximum wall clock time (hh:mm:ss)
+#PBS -l walltime=48:00:00
+#
+# nodes: number of 8-core nodes
+#   ppn: how many cores per node to use (1 through 8)
+#       (you are always charged for the entire node)
+#PBS -l nodes=64:ppn=8
+#
+# export all my environment variables to the job
+#PBS -V
+#
+# job name (default = name of script file)
+#PBS -N quadlarge1
+#
+#
+# filename for standard output (default = <job_name>.o<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -o quadlarge1.out
+#
+# filename for standard error (default = <job_name>.e<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -e quadlarge1.err
+#
+# End of embedded QSUB options
+#
+# set echo               # echo commands before execution; use for debugging
+#
+
+cd $SCR                # change to job scratch directory, 
+                       # use cdjob <jobid> to go to this directory once
+                       # the job has started
+
+###################
+#
+# setup run
+#
+##################
+# below is 2 or 4
+export NCPUX1=16
+export NCPUX2=8
+export NCPUX3=4
+export NTOT=512
+export FILENAME="grmhd"
+export DIRFILE="/u/ac/jmckinne/harm3d/stag_fixing60_disslumfixed"
+export RUNDIR=$SCR/$JOB_NAME/
+
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+# get executable and input files from mass storage
+#msscmd cd dir1, get a.out, mget *.input
+msscmd get quadlarge1.tgz
+# untar
+tar xvzf quadlarge1.tgz
+
+#cp $DIRFILE/$FILENAME .
+#cp $DIRFILE/*.dat .
+#cp $DIRFILE/*.txt .
+wait
+chmod u+x $FILENAME
+#wait
+
+##################################################
+#
+#   ABE SPECIFIC start job and send resulting data to mss
+#
+##################################################
+mvapich2-start-mpd
+export NP=`wc -l ${PBS_NODEFILE} | cut -d'/' -f1`
+export MV2_SRQ_SIZE=4000
+
+# FRESH START
+# DOCS say cannot use pipe > to output
+mpirun -np ${NP} ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3
+
+# The mpirun syntax above will assign ranks to nodes in round-robin fashion.
+# To get ranks *packed* into nodes, use this syntax:
+#
+#  mpirun  -machinefile ${PBS_NODEFILE} -np ${NP} a.out
+
+mpdallexit
+
+# save output files back to mass storage
+#msscmd cd dir1, mput *.output     
+tar cvzf $JOB_NAME.tgz *
+msscmd put $JOB_NAME.tgz
+
+
+
