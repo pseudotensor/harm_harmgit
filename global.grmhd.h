@@ -520,3 +520,14 @@
 // http://software.intel.com/en-us/intel-vtune/
 
 
+
+// SVN comments:
+//
+// Initial HARM import:
+// svn import harmjon http://harm.unfuddle.com/svn/harm_harm/ -m "Initial import"
+// Additional directory import:
+// svn import r8toras http://harm.unfuddle.com/svn/harm_harm/r8toras/ -m "r8toras import"
+// Other imports:
+// svn import sm2_4_1_jon http://harm.unfuddle.com/svn/harm_sm/ -m "Initial import"
+// svn import vis5dplus_jon http://harm.unfuddle.com/svn/harm_vis5dplus/ -m "Initial import"
+// svn import otherjoncodes http://harm.unfuddle.com/svn/harm_utilities/ -m "Initial import of other utilities"
