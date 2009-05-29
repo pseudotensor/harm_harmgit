@@ -2255,7 +2255,6 @@ void low2high(int nxlow, int nylow, int nzlow, int nxhigh, int nyhigh, int nzhig
   //  fprintf(stderr,"got here3\n"); fflush(stderr);
 
   
-  //  fprintf(stderr,"fuck %d %d %d %d\n",nxlow,nylow,nxhigh,nyhigh); fflush(stderr);
   /*
     if(DATATYPE==1){
     if(1){ // needs to be set
