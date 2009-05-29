@@ -531,3 +531,18 @@
 // svn import sm2_4_1_jon http://harm.unfuddle.com/svn/harm_sm/ -m "Initial import"
 // svn import vis5dplus_jon http://harm.unfuddle.com/svn/harm_vis5dplus/ -m "Initial import"
 // svn import otherjoncodes http://harm.unfuddle.com/svn/harm_utilities/ -m "Initial import of other utilities"
+//
+//
+// Then checkout to start svn tracking:
+//
+// svn checkout http://harm.unfuddle.com/svn/harm_harm/
+//
+//
+// Added "r8toras" directory with files already inside:
+//
+// svn import r8toras http://harm.unfuddle.com/svn/harm_harm/r8toras/ -m "r8toras import"
+// rm -rf r8toras
+// svn update
+//
+//
+//
