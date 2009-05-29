@@ -95,6 +95,8 @@ superclean:
 	rm -rf depssmcalc depsliaison depsjoninterp deps.depssmcalc.list deps.depsbin2txt.list depsbin2txt
 # below are just links
 	rm -rf global.h defs.h
+	rm -rf extractnonfunc
+
 
 
 cleani:
