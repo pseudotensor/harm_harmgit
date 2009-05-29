@@ -1,2 +1,0 @@
-smcalc.o :
-	icc -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=0 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -openmp -O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 -DUSINGICC=1 -DUSINGORANGE=0 -DUSINGMPI=0 -DUSINGOPENMP=1 -DUSINGMPIAVOIDFORK=0 -DUSINGLAPACK=1 -c smcalc.c -lm -lmkl_lapack -lmkl -lguide -lpthread
