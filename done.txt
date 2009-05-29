@@ -1,1 +1,0 @@
-"Done with GRMHD run DEFAULT : done with `pwd`" 
