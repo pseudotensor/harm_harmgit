@@ -88,6 +88,41 @@ $(warning USEMPI is $(USEMPI))
 $(warning USEOPENMP is $(USEOPENMP))
 
 
+# turns on -mp and -pc64 for USEICC=1
+# Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
+# causes code to be less accurate: e.g. inversion doesn't reach to 1E-15, but rather 1E-11
+# for some simple linear wave tests with small amplitude can cause significant problems if any  noise exists in intial solution
+ENFORCEPRECISION=0
+
+
+###################
+# LAPACK
+# can easily see if MKL already setup by doing:
+# echo ${MKLROOT}
+# in bash and see if defined
+#
+# otherwise must do "source" command below before compiling with lapack:
+# on 64-bit emulated machines (most intel/amd machines):
+# source /opt/intel/mkl/10.0.3.020/tools/environment/mklvarsem64t.sh
+# For true 64-bit machines and 32-bit machines different source
+# true 64-bit:
+# source /opt/intel/mkl/10.0.3.020/tools/environment/mklvars64.sh
+# true 32-bit:
+# source /opt/intel/mkl/10.0.3.020/tools/environment/mklvars32.sh
+# and recall the directory will be different on each machine
+#
+# on ki-rh39 and orange:
+# source /u/ki/jmckinne/intel/mkl/10.0.5.025/tools/environment/mklvarsem64t.sh
+#
+# also see:
+# http://www.netlib.org/eispack/
+# http://www.netlib.org/lapack/double/dsyev.f
+#
+USELAPACK=1
+#
+####################
+
+
 #END
 
 
