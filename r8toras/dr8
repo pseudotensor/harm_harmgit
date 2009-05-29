@@ -1,0 +1,4 @@
+#!/bin/sh
+# view r8 $1: inputfilename $2: nx $3: ny see r8toras.c for more info
+r8torasjon 2 /home/jon/research/current/bin/i/genimages.pal $1 $2 $3
+#
