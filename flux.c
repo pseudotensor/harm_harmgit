@@ -1096,7 +1096,7 @@ void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int 
     // if storing pl_ct and pr_ct, then copy 1D result in case used in some way not associated with whether dimension exists or not (not expensive)
     // For example, this is used for FLUXCTSTAG method in case dimension doesn't exist (Nvec[dir]==1) but still access gp_{l,r} instead of special conditions
     ////////COMPFULLLOOP PINTERPLOOP(pliter,pl) MACP1A1(pl_ct,dir,i,j,k,pl)=MACP1A1(pr_ct,dir,i,j,k,pl)=MACP0A1(pr,i,j,k,pl);
-    copy_3dnpr2interp_2ptrs_fullloop(pl_ct[dir],pr_ct[dir],pr);
+    copy_3dnpr2interp_2ptrs_fullloop(pr,pl_ct[dir],pr_ct[dir]);
   }
  
   

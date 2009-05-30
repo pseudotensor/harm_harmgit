@@ -324,6 +324,9 @@ static int advance_standard(
       FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR],dUcomp[NUMSOURCES][NPR];
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
+      struct of_state qdontuse2;
+      struct of_state *qptr2=&qdontuse2; // different qptr since call normal and special get_state()
+
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -368,7 +371,7 @@ static int advance_standard(
 	
 	// get state since both source() and dUtodt() need same state
 	// From pb, so different than state for Ui(pi)
-	MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr) ,"advance.c:()", "get_state() dir=0", 1);
+	MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
       
 
 	// note that uf and ucum are initialized inside setup_rktimestep() before first substep
@@ -376,7 +379,7 @@ static int advance_standard(
 
 	// find dU(pb)
 	// source() doesn't actually use CUf[2]=dt right now
-	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
 	// assumes final dUcomp is nonzero and representative of source term over this timestep
 	
 
@@ -414,7 +417,7 @@ static int advance_standard(
 #endif
 	  {
 	    // geometry is post-metric update, but should still give good estimate of future dt
-	    dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
+	    dUtodt(ptrgeom, qptr2, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
 
 #pragma omp critical
 	    {
@@ -1469,6 +1472,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
   int is_convergence_failure;
   int avgschemeatall;
   int finalstep;
+  FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_geom *geom, FTYPE *pin, FTYPE *pout );
 
 
   finalstep=timeorder == numtimeorders-1;
@@ -1909,9 +1913,9 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
 
 
 #if(PRODUCTION==0)
-#if(0)// turned off by default since even with PRODUCTION==0, then FLUXB==FLUXCTSTAG extended loop causes output
-  PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, Cunew, Ui,  Uf, ucum);
-#endif
+  if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
+    PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, Cunew, Ui,  Uf, ucum);
+  }
 #endif
 
 
@@ -1959,7 +1963,7 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
   showfluxes=0;
 
   if(!isfinite(ucum[pl])){
-    dualfprintf(fail_file,"dUtoU after: nan found for ucum[%d]=%21.15g\n",pl,ucum[pl]);
+    dualfprintf(fail_file,"ucum_check: nan found for ucum[%d]=%21.15g\n",pl,ucum[pl]);
     showfluxes=1;
   }
 
