@@ -1,0 +1,26 @@
+From: Xiaoyue Guan [guan1@uiuc.edu]
+Sent: Tuesday, November 09, 2004 7:23 PM
+To: Scott Noble
+Subject: ppm routin
+
+Attachments: step_ch_para.c; para.c
+
+Hello Scott,
+
+   In step_ch_para.c I changed both the time and spacial interpolation to 4-th order. 
+
+   For parabolic interpolation, in decs.h something should be changed.
+
+   1. NGhost=3 (so all zone-centered-variables' arrays change to [NX+2*NGhost][NP] form, in linear case NGhost=2)
+
+   2. add global variables 
+      extern double a_Ip_l[NX+2*NGhost][NP]
+      extern double a_Ip_r[NX+2*NGhost][NP]
+
+   3. add statement for subroutine para()
+      void para(double x1, double x2, double x3, double x4, double x5, double *lout, double *rout)
+
+  If you have and problem with this please tell me! Have fun! =)
+
+Best,
+Xiaoyue
