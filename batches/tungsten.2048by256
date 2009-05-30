@@ -1,0 +1,19 @@
+#!/bin/csh
+#BSUB -n 256              # Specify 4 processes
+#BSUB -W 48:00           # Specify job run time limit of 1 hour
+#BSUB -o td2048.%J.o   # Store the standard output and standard error of the
+                        # job in file testjob.jobid.o (optional)
+#BSUB -P nri
+#BSUB -J td2048-0        # Specify job name (optional)
+#BSUB -N
+#BSUB -q normal
+
+# End of embedded BSUB options
+#
+#cd /scratch/batch/$LSB_JOBID
+cd $SCR
+msscmd "cd binary, get grmhd2048by256"
+chmod u+x grmhd2048by256
+cmpirun -verbose -np 256 -lsf grmhd2048by256 32 8
+msscmd "mkdir dirgrmhd2048by256, cd dirgrmhd2048by256,tar cvf grmhd2048by256-0.tar ."
+
