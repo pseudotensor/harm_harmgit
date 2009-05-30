@@ -1,8 +1,20 @@
+########################
+#
+# START of maketail.inc
+#
+########################
 
 # for long doubles -m96bit-long-double 
 ##CFLAGSGCCOTHER= -O2 -m128bit-long-double -Wall -Wuninitialized -fno-builtin -DUSINGICC=0
 ##CFLAGSOTHER= -O3 -long-double -unroll -Wall -Wuninitialized -fno-builtin -DUSINGICC=0
 
+
+
+########################
+#
+# Setup CC and CC2 and MMCOMP
+#
+########################
 
 ifeq ($(USEMPI),1)
 
@@ -36,6 +48,13 @@ endif
 
 
 
+
+########################
+#
+# How to compile generatenprs
+#
+########################
+
 ifeq ($(USESPECIAL4GENERATE),1)
 CCGENERATEFINAL=$(CCGENERATE)
 endif
@@ -45,13 +64,24 @@ CCGENERATEFINAL=$(CC)
 endif
 
 
-########## REPORTS
+########################
+#
+# REPORTS
+#
+########################
+
 $(warning COMP is $(COMP))
 $(warning MMCOMP is $(MMCOMP))
 $(warning CC is $(CC))
 $(warning CC2 is $(CC2))
 $(warning CCGENERATEFINAL is $(CCGENERATEFINAL))
 
+
+########################
+#
+# INCLUDES
+#
+########################
 
 # when adding C files, only need to modify the below
 include maketail.harm.inc
@@ -78,15 +108,37 @@ include maketail.smcalc.inc
 #MYCOMMANDS2 := $(shell cat objsmanypoints.cmd.list ) 
 
 
+########################
+#
+# PRIMARY MAKE CALL:
+#
+########################
+
 #all:	$(PREP) $(CMD) $(FINISH)
 all:	$(CMD) $(FINISH)
 
 
-clean:
-	rm *.o
+########################
+#
+# CLEANUP:
+#
+########################
+# CAREFUL with spaces below -- don't put space in front of "*":
 
-superclean:
-	rm -rf $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(BIN2TXTCMD) $(SMCALCCMD) *.o $(PREP) $(PREPLD) $(PREPLIAISON) $(PREPJONINTERP) deps.onepoint.list deps.manypoints.list objsmanypoints.cmd.list objsonepoint.cmd.list objslong.cmd.list global.defnprs.h generatenprs libml.a
+cleanbackup:
+	rm *~
+
+clean:
+	rm -rf *.o
+
+cleani: clean
+	rm -rf *.il
+
+cleanall: cleani
+	rm -rf *~
+
+superclean: cleanall
+	rm -rf $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(BIN2TXTCMD) $(SMCALCCMD) $(PREP) $(PREPLD) $(PREPLIAISON) $(PREPJONINTERP) deps.onepoint.list deps.manypoints.list objsmanypoints.cmd.list objsonepoint.cmd.list objslong.cmd.list global.defnprs.h generatenprs libml.a
 	rm -rf objsonepoint.cmd.list objsmanypoints.cmd.list objslong.cmd.list objsdepsliaison.cmd.list objsdepsjoninterp.cmd.list
 	rm -rf deps.manypoints.list deps.onepoint.list deps.long.list deps.depsliaison.list deps.depsjoninterp.list
 	rm -rf objsonepoint objsmanypoints onepoint manypoints
@@ -100,20 +152,28 @@ superclean:
 	rm -rf prepbin2txt prepsmcalc
 	rm -rf initbase.defaultnprlists.c
 	
-cleani:
-	rm *.o *.il
+# removes in addition the links to user code
+# useful when wanting to compare with SVN that has no such files
+ultraclean: superclean
+	    rm -rf init.h init.c bounds.c
+	
 
-cleanall:
-	rm *.o *.il *~
-
-cleanbackup:
-	rm *~
-
+########################
+#
+# Setup how to create global.defnprs.h using generatenprs
+#
+########################
 
 	# make defnprs.h
 global.defnprs.h : global.realdef.h global.nondepnmemonics.h definit.h init.h generatenprs.c
 	$(CCGENERATEFINAL) -o generatenprs generatenprs.c ; ./generatenprs
 
+
+########################
+#
+# Prepare to make GRMHD code
+#
+########################
 
 
 $(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.grmhd.h defs.general.h mpidefs.h superdefs.h superdefs.pointers.h supermpidefs.h global.defnprs.h
@@ -171,6 +231,11 @@ $(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc make
 	#
 
 
+########################
+#
+# Prepare to make long double version of GRMHD code
+#
+########################
 
  	#
 $(PREPLD): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.grmhd.h mpidefs.h superdefs.h superdefs.pointers.h supermpidefs.h global.defnprs.h
@@ -208,6 +273,11 @@ $(PREPLD): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc ma
 
 
 
+########################
+#
+# Prepare to make liaison code
+#
+########################
 
 $(PREPLIAISON): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.liaison.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.liaison.h mpidefs.h superdefs.h superdefs.pointers.h supermpidefs.h defs.liaison.h liaison.defs.h global.defnprs.h
  	############################################
@@ -245,6 +315,13 @@ $(PREPLIAISON): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.l
 	#
 
 
+########################
+#
+# Prepare to make iinterp code
+#
+########################
+
+
 $(PREPJONINTERP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.jon_interp.h global.h global.defnprs.h
  	############################################
 	#below is for jon_interp code
@@ -272,6 +349,12 @@ $(PREPJONINTERP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail
 	( echo	$(OBJSJONINTERP) > $(PREPJONINTERP) )
 	#
 
+########################
+#
+# Prepare to make bin2txt code
+#
+########################
+
 $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc
  	############################################
 	#below is for bin2txt code
@@ -292,6 +375,12 @@ $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc mak
   	# 	create prep file for make to know to recompile or prep again
 	( echo	$(OBJSBIN2TXT) > $(PREPBIN2TXT) )
 	#
+
+########################
+#
+# Prepare to make smcalc code
+#
+########################
 
 $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc
  	############################################
@@ -319,6 +408,11 @@ $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc make
 
 
 
+########################
+#
+# COMMANDS to compile codes:
+#
+########################
 
 
 $(FINISH):
@@ -354,6 +448,12 @@ $(SMCALCCMD): $(PREPSMCALC) $(OBJSSMCALC) makefile
 	       $(CC)  $(CFLAGS)  -o $(SMCALCCMD) $(OBJSSMCALC) $(LDFLAGS) $(LDFLAGSOTHER) 
 
  
+########################
+#
+# Includes of object lists and dependencies autogenerated during prepare step
+# Note that if one does just "make" after changing the makefile, the below are included *before* the automatically-called prep command changes them. So not consistent.  Have to do "make prep ; make" if one changes the makefile itself.
+#
+########################
 
 
 ifeq ($(MYMAKECMDGOALS),$(filter $(MYMAKECMDGOALS),$(BINARYTARGETS)))
@@ -394,6 +494,11 @@ endif
 #-include maketail.ldouble.deps.inc
 
 
+########################
+#
+# How to compile other non-standard parts of code.
+#
+########################
 
 freespace.o : freespace.c $(PREP) makefile maketail.inc defs.h defs.general.h
 	    $(CC2) $(GCCCFLAGS) -c freespace.c $(LDFLAGS)
@@ -403,6 +508,12 @@ tau_neededbyharm.o : tau_neededbyharm.c $(PREP) makefile maketail.inc defs.h def
 
 
 
+
+########################
+#
+# how to compile long double library
+#
+########################
 
 
 # Use $(OBJS) in ar command for libml.a if possible; else *.o
@@ -417,3 +528,8 @@ libml.a: $(OBJSOTHER) mconf.h objslong.cmd.list deps.long.list
 
 
 
+########################
+#
+# END of maketail.inc
+#
+########################
