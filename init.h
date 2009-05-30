@@ -165,7 +165,7 @@
 #define MCOORD KSCOORDS
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
-#define FIELDSTAGMEM 1 // testing
+#define FIELDSTAGMEM 0 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0
@@ -190,9 +190,9 @@
 #define LIMITDTWITHSOURCETERM 0 // doesn't work right
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
-#define DODISS 1
-#define DOLUMVSR 1
-#define DODISSVSR 1
+#define DODISS 0
+#define DOLUMVSR 0
+#define DODISSVSR 0
 #define DOSELFGRAVVSR 0
 #define DOFIELDLINE 1
 #define ROEAVERAGEDWAVESPEED 0

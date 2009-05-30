@@ -13,7 +13,7 @@ int pl,pliter;
 
 
 
-nprstart=0; nprend=8;
+nprstart=0; nprend=7;
 nprlist[0]=0;
 nprlist[1]=1;
 nprlist[2]=2;
@@ -22,7 +22,6 @@ nprlist[4]=4;
 nprlist[5]=5;
 nprlist[6]=6;
 nprlist[7]=7;
-nprlist[8]=8;
 
 npr2interpstart=0; npr2interpend=7;
 npr2interplist[0]=0;
@@ -46,7 +45,7 @@ nprboundlist[5]=5;
 nprboundlist[6]=6;
 nprboundlist[7]=7;
 
-nprfluxboundstart=0; nprfluxboundend=8;
+nprfluxboundstart=0; nprfluxboundend=7;
 nprfluxboundlist[0]=0;
 nprfluxboundlist[1]=1;
 nprfluxboundlist[2]=2;
@@ -55,7 +54,6 @@ nprfluxboundlist[4]=4;
 nprfluxboundlist[5]=5;
 nprfluxboundlist[6]=6;
 nprfluxboundlist[7]=7;
-nprfluxboundlist[8]=8;
 
 nprdumpstart=0; nprdumpend=7;
 nprdumplist[0]=0;

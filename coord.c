@@ -135,7 +135,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
   }
   else if (defcoordlocal == JET3COORDS) {
-    npow=5.0;
+    npow=1.0;
 
     // must be same as in dxdxp()
     if(0){ // first attempt
