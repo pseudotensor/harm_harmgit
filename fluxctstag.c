@@ -424,8 +424,6 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     FTYPE topwave[COMPDIM-1],bottomwave[COMPDIM-1];
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
     
-    // generally ptr's are different inside parallel block
-    ptrgeom=&geomdontuse;
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
@@ -843,7 +841,6 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
 // if dimension doesn't exist, then ustag and pstag are really at CENT effectively
 int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
-  void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
   int Nvec[NDIM];
   
 
@@ -864,6 +861,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
 
 #pragma omp parallel 
   {
+    void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
     extern void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke);
     int i,j,k,pl,pliter;
     int dir;
@@ -993,8 +991,15 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
   // get geometry for face pre-interpolated values
   get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
+
+#if(NEWMETRICSTORAGE==0)
   set_igdetsimple(ptrgeomf[dir]);
-  igdetgnosing = ptrgeomf[dir]->igdetnosing;      
+  igdetgnosing = ptrgeomf[dir]->igdetnosing;
+#else
+  // else value already determined
+  igdetgnosing = ptrgeomf[dir]->igdetnosing;
+#endif
+
   MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
 
 
@@ -1108,8 +1113,6 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 //
 int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
-  void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2centloop);
-  extern int choose_limiter(int dir, int i, int j, int k, int pl);
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -1166,6 +1169,8 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORGEOMNPR2INTERP
   {
+    extern int choose_limiter(int dir, int i, int j, int k, int pl);
+    void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2centloop);
     int pl,pliter;
     int idel,jdel,kdel;
     int i,j,k;
@@ -1245,7 +1250,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	  // get ucent if required
 	  if(ucent!=NULL){// OPTMARK: Is this expensive?
 	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
-	    get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
+	    get_geometry_gdetonly(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
 	    MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
 	  }// end if ucent!=NULL
 
@@ -1515,7 +1520,6 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 			       FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
 				 int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP])
 {
-  void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2cornloop);
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -1618,6 +1622,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORUCONANDGEOMNPR2INTERP
   {
+    void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2cornloop);
     int pl,pliter;
     int idel,jdel,kdel;
     int idel1,jdel1,kdel1;
@@ -1976,9 +1981,15 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 && CORNGDETVERSION==1)
+
+
+#if(NEWMETRICSTORAGE==0)
 	  // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
 	  set_igdetsimple(ptrgeomcorn);
+#endif
 	  igdetgnosing = ptrgeomcorn->igdetnosing;
+
+
 #elif(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==0 && CORNGDETVERSION==0)
 	  // then add gdet now since will not multiply geometry once have final EMF
 	  igdetgnosing = ptrgeomcorn->gdet; // here igdet really is just geom
