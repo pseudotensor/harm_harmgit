@@ -1014,7 +1014,10 @@ int jet_set_myid(void)
   else{
 
     // Can choose to rearrange MPI tasks
+
     // Assume TACC Ranger affinity order for MPI tasks by rank.
+    // http://services.tacc.utexas.edu/index.php/ranger-user-guide
+
     // Assume we use "8way" option on Ranger so that tasks are originally:
     // rank0 -> Socket0
     // rank1 -> Socket0
@@ -1049,6 +1052,9 @@ int jet_set_myid(void)
       }
     }// end over rankk
 
+
+    // Note that unlike TACC Ranger, TACC Lonestar has 2 sockets with 2 cores per socket, but sockets *share* main memory.  So no special socket association is required for optimal memory use.
+    // http://services.tacc.utexas.edu/index.php/lonestar-user-guide
 
  
 
