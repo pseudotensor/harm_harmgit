@@ -116,7 +116,11 @@ chmod u+x $FILENAME
 # export OMP_NUM_THREADS=4
 
 # FRESH START:
-ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
+#ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
+
+# Must use below to ensure affinity with sockets
+# Below assumed when doing GRIDSECTIONING and overloading node
+ibrun tacc_affinity ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
 
 #./$FILENAME > $FILENAME.so
 
