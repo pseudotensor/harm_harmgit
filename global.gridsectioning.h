@@ -217,12 +217,15 @@ extern int setsashawind_set_enerregiondef(int initialcall, int timeorder, int nu
 extern int sashawind_set_enerregionupdate(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int *updateeverynumsteps, int *everynumsteps);
 
 extern int torus_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] );
+
 extern int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] );
+extern int jet_set_myid(void);
 
 
 // general functions to be created by users
 extern int theproblem_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM]);
 extern int theproblem_set_enerregionupdate(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int *updateeverynumsteps, int *everynumsteps);
+extern int theproblem_set_myid(void);
 
 
 // GRIDSECTIONING:

@@ -63,13 +63,10 @@ int init_MPI_general(int *argc, char **argv[])
 
 // general initialization for OpenMP
 // Nothing required before user arguments read-in setting number of threads
-int init_OPENMP_general(int whichfile)
+int init_OPENMP_general(FILE *out)
 {
 
-  if(whichfile==0) get_report_openmp_thread_info(stderr);
-  else if(whichfile==1) get_report_openmp_thread_info(logfull_file);
-  else if(whichfile==2) get_report_openmp_thread_info(log_file);
-  else if(whichfile==3) get_report_openmp_thread_info(fail_file);
+  get_report_openmp_thread_info(out);
 
   return(0);
 }

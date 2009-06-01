@@ -968,3 +968,22 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
 
   return(0);
 }
+
+
+// specify MPI task rank ordering
+// example user-dependent code
+int theproblem_set_myid(void)
+{
+  int retval;
+ 
+  // default is to do nothing
+  //  retval=jet_set_myid();
+  retval=0;
+
+  // do other things?
+
+  return(retval);
+
+}
+
+

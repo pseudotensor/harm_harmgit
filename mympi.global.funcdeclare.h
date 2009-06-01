@@ -15,7 +15,7 @@
 ////////////////////////////////////////////
 
 
-int init_OPENMP_general(int whichfile);
+int init_OPENMP_general(FILE *out);
 int init_OPENMP_sets_fromargs(void);
 void get_report_openmp_thread_info(FILE * out);
 
@@ -45,6 +45,7 @@ extern int init_MPI_general(int *argc, char **argv[]);
 extern int init_MPI_GRMHD(int *argc, char **argv[]);
 extern int init_default_MPI_GRMHD_myid(void);
 extern int init_MPI_GRMHD_myid(void);
+extern int report_myid(FILE *out);
 extern void init_MPI_setupfilesandgrid(int argc, char *argv[]);
 extern void init_placeongrid(void);
 extern int myexit(int call_code);

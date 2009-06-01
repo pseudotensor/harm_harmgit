@@ -948,6 +948,9 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
 
 
 
+
+
+
 // check whether chosen radii and computed indices suggest should stop calculation
 int check_limitsinbox(FTYPE rlo, FTYPE rhi, int iloabs, int ihiabs, int doreport)
 {
@@ -986,3 +989,72 @@ int check_limitsinbox(FTYPE rlo, FTYPE rhi, int iloabs, int ihiabs, int doreport
 
 
 
+
+
+
+
+
+
+
+
+
+
+// specify MPI task rank ordering
+// example user-dependent code
+int jet_set_myid(void)
+{
+  
+  if(USEMPI==0){
+    return(0); // nothing to do ever
+  }
+
+  if(DOGRIDSECTIONING==0){
+    return(0); // nothing to do so far as I can tell
+  }
+  else{
+
+    // Can choose to rearrange MPI tasks
+    // Assume TACC Ranger affinity order for MPI tasks by rank.
+    // Assume we use "8way" option on Ranger so that tasks are originally:
+    // rank0 -> Socket0
+    // rank1 -> Socket0
+    // rank2 -> Socket1
+    // rank3 -> Socket1
+    // rank4 -> Socket2
+    // rank5 -> Socket2
+    // rank6 -> Socket3
+    // rank7 -> Socket4
+
+    // We want ranks ordered such that upper-half of physical grid has even ranks and lower half has odd ranks.
+
+    // reorder MPI ranks so that each socket has 2 MPI tasks
+
+
+    int ranki,rankj,rankk,origid,newid;
+    for(rankk=0;rankk<ncpux3;rankk++){
+      for(rankj=0;rankj<ncpux2;rankj++){
+	for(ranki=0;ranki<ncpux1;ranki++){
+	  origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
+	  if(ranki<ncpux1/2){
+	    newid=ranki + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
+	    // converts 0,1,2,3,4,... -> 0,2,4,6,8,...
+	    MPIid[origid]=newid*2;
+	  }
+	  else if(ranki>=ncpux1/2){
+	    newid=(ranki-ncpux1/2) + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
+	    // converts 0,1,2,3,4,... -> 1,3,5,7,9,...
+	    MPIid[origid]=newid*2+1;
+	  }
+	}
+      }
+    }// end over rankk
+
+
+ 
+
+  }
+
+
+
+  return(0);
+}

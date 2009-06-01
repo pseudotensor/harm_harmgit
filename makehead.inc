@@ -1,10 +1,8 @@
+###################
 #
+# see makefile.notes for detailed comments/notes
 #
-#echo "Make sure MPICH/GM params set in both global.h and makefile!"
-#echo "Make sure MPICH/GM params set in both global.h and makefile!"
-
-
-
+###################
 
 
 ########################
