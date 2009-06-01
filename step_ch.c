@@ -237,6 +237,9 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
 	dt = tf - t;
 	onemorestep=1;
       }
+      else if (t + dt == tf){
+	reallaststep=1;
+      }
       // make sure don't get pathological case of dt=0 on last step
       if(dt<SMALL){
 	reallaststep=1;
@@ -244,6 +247,12 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
       }
     }
 
+  }
+  else{
+    if (t>=tf){
+      // somehow got here, then finish
+      reallaststep=1;
+    }
   }
 
 
