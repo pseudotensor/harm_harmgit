@@ -615,13 +615,16 @@ int step_ch_simplempi(int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][N
       nprlist[2]=B3;
       // choice for range of PLOOPINTERP
       // but interpolate everything on first pass (GODMARK: in reality only need to do field on timeorder=0 since last field update is next field pbb??? -- probably only true if doing simple RK methods (1,2))
-      npr2interpstart=0;
-      npr2interpend=NPR2INTERP-1;
-      for(pl=npr2interpstart;pl<=npr2interpend;pl++)  npr2interplist[pl]=pl;
-      // choice for range of PLOOPNOTINTERP
-      npr2notinterpstart=0;
-      npr2notinterpend=-1;
-      npr2notinterplist[0]=0;
+#pragma omp parallel private(pl)
+      {
+	npr2interpstart=0;
+	npr2interpend=NPR2INTERP-1;
+	for(pl=npr2interpstart;pl<=npr2interpend;pl++)  npr2interplist[pl]=pl;
+	// choice for range of PLOOPNOTINTERP
+	npr2notinterpstart=0;
+	npr2notinterpend=-1;
+	npr2notinterplist[0]=0;
+      }
       advancepassnumber=0;
 
 
@@ -657,18 +660,21 @@ int step_ch_simplempi(int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][N
       }
       // choice for range of PLOOPINTERP
       // Interpolation of only fields on second pass since want to use updated field to compute flux and so at end of both steps first updated field and non-field quantites are fed to inversion for consistent P(Bnew) and Bnew is used
-      npr2interpstart=0;
-      npr2interpend=2;
-      npr2interplist[0]=B1;
-      npr2interplist[1]=B2;
-      npr2interplist[2]=B3;
-      // choice for range of PLOOPNOTINTERP
-      // what not interpolating (all non-field):
-      npr2notinterpstart=0;
-      npr2notinterpend=NPR-1-3; // no field
-      for(pl=npr2notinterpstart;pl<=npr2notinterpend;pl++){
-	if(pl>=B1) npr2notinterplist[pl]=pl+3; // skip field
-	else npr2notinterplist[pl]=pl;
+#pragma omp parallel private(pl)
+      {
+	npr2interpstart=0;
+	npr2interpend=2;
+	npr2interplist[0]=B1;
+	npr2interplist[1]=B2;
+	npr2interplist[2]=B3;
+	// choice for range of PLOOPNOTINTERP
+	// what not interpolating (all non-field):
+	npr2notinterpstart=0;
+	npr2notinterpend=NPR-1-3; // no field
+	for(pl=npr2notinterpstart;pl<=npr2notinterpend;pl++){
+	  if(pl>=B1) npr2notinterplist[pl]=pl+3; // skip field
+	  else npr2notinterplist[pl]=pl;
+	}
       }
       advancepassnumber=1;
 
@@ -686,14 +692,17 @@ int step_ch_simplempi(int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][N
       nprstart=0;
       nprend=NPR-1;
       for(pl=nprstart;pl<=nprend;pl++) nprlist[pl]=pl;
-      // choice for range of PLOOPINTERP
-      npr2interpstart=0;
-      npr2interpend=NPR2INTERP-1;
-      for(pl=npr2interpstart;pl<=npr2interpend;pl++) npr2interplist[pl]=pl;
-      // choice for range of PLOOPNOTINTERP
-      npr2notinterpstart=0;
-      npr2notinterpend=-1;
-      npr2notinterplist[0]=0;
+#pragma omp parallel private(pl)
+      {
+	// choice for range of PLOOPINTERP
+	npr2interpstart=0;
+	npr2interpend=NPR2INTERP-1;
+	for(pl=npr2interpstart;pl<=npr2interpend;pl++) npr2interplist[pl]=pl;
+	// choice for range of PLOOPNOTINTERP
+	npr2notinterpstart=0;
+	npr2notinterpend=-1;
+	npr2notinterplist[0]=0;
+      }
       advancepassnumber=-1;
 
       // default choice for range of PLOOPMPI

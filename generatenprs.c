@@ -253,16 +253,20 @@ int main(void)
   }
   
   // 2interp
+  fprintf(defout,"\n#pragma omp parallel\n{// must set npr2interp stuff inside parallel region since threadprivate\n");
   fprintf(defout,"\n%s=%d; %s=%d;\n","npr2interpstart",orignpr2interpstart,"npr2interpend",orignpr2interpend);
   for(pl=orignpr2interpstart;pl<=orignpr2interpend;pl++){
     fprintf(defout,"%s[%d]=%d;\n","npr2interplist",pl,orignpr2interplist[pl]);
   }
+  fprintf(defout,"\n}\n");
 
   // 2notinterp (should always just give default -1 to 0 range)
+  fprintf(defout,"\n#pragma omp parallel\n{// must set npr2interp stuff inside parallel region since threadprivate\n");
   fprintf(defout,"\n%s=%d; %s=%d;\n","npr2notinterpstart",orignpr2notinterpstart,"npr2notinterpend",orignpr2notinterpend);
   for(pl=orignpr2notinterpstart;pl<=orignpr2notinterpend;pl++){
     fprintf(defout,"%s[%d]=%d;\n","npr2notinterplist",pl,orignpr2notinterplist[pl]);
   }
+  fprintf(defout,"\n}\n");
 
   // bound
   fprintf(defout,"\n%s=%d; %s=%d;\n","nprboundstart",orignprboundstart,"nprboundend",orignprboundend);

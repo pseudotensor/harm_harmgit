@@ -11,6 +11,8 @@
 //     Hence, if make something threadprivate then MUST copyin() if that is used *at all* regardless of if it was changed within parallel region.
 // only need to copyin() things that *change*, rest are *shared* and set outside parallel regions
 //
+// 2) All threadprivate variables should NOT be *set* to something *outside* a parallel region.  Should always set them inside parallel region otherwise tid!=0 threads will not be set since outside parallel region only sets tid==0 thread.
+//
 ////////////////////////
 //#define OPENMPGLOBALPRIVATEPLOOPFULL nprstart,nprend,nprlist
 #define OPENMPGLOBALPRIVATEPLOOP2INTERPFULL npr2interpstart,npr2interpend,npr2interplist
@@ -27,7 +29,7 @@
 //#define OPENMPGLOBALPRIVATEOTHER2 icurr,jcurr,kcurr,pcurr
 //#define OPENMPGLOBALPRIVATEOTHER3 ifail,jfail,kfail // these don't change in parallel regions
 
-#if(WHICHVEL==VEL3)
+#if(WHICHVEL==VEL3 && USEOPENMP==1)
 #define OPENMPGLOBALPRIVATEOTHER uttdiscr // ignored for now
 #error Setup openmpthreadprivates for the above quantity, neglected for now in the below copyins
 #endif

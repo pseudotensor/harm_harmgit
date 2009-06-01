@@ -1358,13 +1358,16 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
     PMAXNPRLOOP(pl) nprlocallist[pl]=npr2interplist[pl];
 
 
-    // choice for range of PLOOPINTERP
-    // check if wanted to interpolate B along dir, and if so remove
-    for(pl=npr2interpstart;pl<=npr2interpend;pl++){
-      if(npr2interplist[pl]==B1+dir-1){
-	for(pl2=pl+1;pl2<=npr2interpend;pl2++) npr2interplist[pl2-1]=npr2interplist[pl2]; // moving upper to lower index
-	npr2interpend--; // lost field along dir, so one less thing to do
-	break;
+#pragma omp parallel private(pl,pl2)
+    { // must set npr2interp stuff inside parallel region since threadprivate
+      // choice for range of PLOOPINTERP
+      // check if wanted to interpolate B along dir, and if so remove
+      for(pl=npr2interpstart;pl<=npr2interpend;pl++){
+	if(npr2interplist[pl]==B1+dir-1){
+	  for(pl2=pl+1;pl2<=npr2interpend;pl2++) npr2interplist[pl2-1]=npr2interplist[pl2]; // moving upper to lower index
+	  npr2interpend--; // lost field along dir, so one less thing to do
+	  break;
+	}
       }
     }
 
@@ -1527,9 +1530,12 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
     ////////////////////////////////////////////
     //
     // restore choice for interpolations
-    npr2interpstart=nprlocalstart;
-    npr2interpend=nprlocalend;
-    PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
+#pragma omp parallel private(pl)
+    { // must set npr2interp stuff inside parallel region since threadprivate
+      npr2interpstart=nprlocalstart;
+      npr2interpend=nprlocalend;
+      PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
+    }
   }
   
 

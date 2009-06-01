@@ -56,7 +56,7 @@
 
 
 
-static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR]);
+static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP]);
 
 
 
@@ -991,14 +991,8 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
   // get geometry for face pre-interpolated values
   get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-
-#if(NEWMETRICSTORAGE==0)
   set_igdetsimple(ptrgeomf[dir]);
   igdetgnosing = ptrgeomf[dir]->igdetnosing;
-#else
-  // else value already determined
-  igdetgnosing = ptrgeomf[dir]->igdetnosing;
-#endif
 
   MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
 
@@ -1014,7 +1008,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 #define IFNOTRESCALETHENUSEGDET 1 // should be 1
 
 // wrapper for rescale() used for staggered field
-static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR])
+static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
 {
 
 
@@ -1374,8 +1368,9 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
   ////////////////////////////////////////////
   //
   // restore choice for interpolations from global variables
-  {
-    int pl,pliter;
+#pragma omp parallel
+  { // must set npr2interp stuff inside parallel region since threadprivate
+    int pl;
     npr2interpstart=nprlocalstart;
     npr2interpend=nprlocalend;
     PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
@@ -1983,10 +1978,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 && CORNGDETVERSION==1)
 
 
-#if(NEWMETRICSTORAGE==0)
 	  // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
 	  set_igdetsimple(ptrgeomcorn);
-#endif
 	  igdetgnosing = ptrgeomcorn->igdetnosing;
 
 
@@ -2048,8 +2041,9 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
   // restore choice for interpolations
   //
   ///////////////////////////////////////////
-  {
-    int pl,pliter;
+#pragma omp parallel
+  { // must set npr2interp stuff inside parallel region since threadprivate
+    int pl;
     npr2interpstart=nprlocalstart;
     npr2interpend=nprlocalend;
     PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
