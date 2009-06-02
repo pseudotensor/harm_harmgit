@@ -189,7 +189,7 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
 
 
 #if(PRODUCTION==0)
-  trifprintf( "d");
+  trifprintf( "[d]");
 #endif
 
   /* check timestep
@@ -317,11 +317,19 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   // post_fixup() will use previous time step pff boundary values to fixup_utoprim() if this is not called.
   // bound advanced values before post_fixup() so fixup_utoprim() has updated boundary values to base fixup on.
 
+#if(PRODUCTION==0)
+  trifprintf("[b1");
+#endif
+
   MYFUN(bound_beforeevolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 1);
+
+#if(PRODUCTION==0)
+  trifprintf("]");
+#endif
 
 
 #if(PRODUCTION==0)
-  trifprintf("b");
+  trifprintf("[x");
 #endif
 
   // done when all timeorders are completed, so stencil used doesn't matter
@@ -332,7 +340,7 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   MYFUN(post_fixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup()", 1);
 
 #if(PRODUCTION==0)
-  trifprintf( "x");
+  trifprintf( "]");
 #endif
 
 
@@ -361,12 +369,24 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 
 
 
+#if(PRODUCTION==0)
+  trifprintf("[rf");
+#endif
 
   if( DOGRIDSECTIONING){
     // this must come before last bound() call so boundary conditions set consistently with new section so next step has all values needed in ghost cells
     // redo all such enerregions since may be time-dependent
     recompute_fluxpositions(0,timeorder, numtimeorders, nstep,t);
   }
+
+#if(PRODUCTION==0)
+  trifprintf("]");
+#endif
+
+
+#if(PRODUCTION==0)
+  trifprintf( "[b2");
+#endif
 
 
   /////////////////////////////////////
@@ -379,6 +399,9 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 
   //#endif
 
+#if(PRODUCTION==0)
+  trifprintf( "]");
+#endif
 
 
   ////////////////
@@ -419,6 +442,11 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 
     if(dumpingnext[0] || dumpingnext[1]){
 #if(CALCFARADAYANDCURRENTS)
+
+#if(PRODUCTION==0)
+      trifprintf( "[cu");
+#endif
+
       if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2)){
 	// puts J at the time center, but hard to know if RK is at mid point in time except for midpoint method
 	// compute current_doprecalc if near half-step in time
@@ -428,6 +456,11 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 	   )
 	  current_doprecalc(CURTYPET,pf); // should be called using half-time step data
       }
+
+#if(PRODUCTION==0)
+      trifprintf( "]");
+#endif
+
 #endif
     }
 

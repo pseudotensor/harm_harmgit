@@ -110,6 +110,7 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
   static int firsttime=1;
   static int previouslysetglobal_enerregiondef[NUMENERREGIONS];
   int totaldiff;
+  int SHIFTdimen[NDIM];
 
 
 #if(USEOPENMP)
@@ -246,6 +247,10 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
   // If dimension doesn't exist, then no such outer flux or outer boundary, so stay on same boundary (e.g., i=0) rather than i=N.
 
 
+  SHIFTdimen[0]=0;
+  SHIFTdimen[1]=SHIFT1;
+  SHIFTdimen[2]=SHIFT2;
+  SHIFTdimen[3]=SHIFT3;
 
 
   /////////////////////
@@ -266,9 +271,9 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     if(whichregion!=NULLENERREGIONS){
       //active section interacts with the current processor
       rind=localenerpos[DIRFROMDIMEN(dimen,dirsign)] = MAX( 0, local_enerregiondef[POINTDOWN][dimen] );
-      if( Nvec[dimen]>1 && rind >= 0 && rind <= Nvec[dimen] ){
+      if( Nvec[dimen]>1 && rind >= 0 && rind < Nvec[dimen] ){
 	localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind;
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign));
+	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
       }
       else localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -276,9 +281,9 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
 
     if(whichbndregion!=NULLENERREGIONS){
       rindglobal=localenerposglobal[DIRFROMDIMEN(dimen,dirsign)] = MAX( -Nbndvec[dimen], local_enerregiondef[POINTDOWN][dimen]-Nbndvec[dimen] );
-      if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal <= Nvec[dimen]+Nbndvec[dimen] ){
+      if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal < Nvec[dimen]+Nbndvec[dimen] ){
 	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal;
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d sectionflux %d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign));
+	if(doprintout) trifprintf("proc: %d doing enerregion=%d sectionflux %d rindglobal=%d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign),rindglobal);
       }
       else localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -288,17 +293,18 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     if(whichregion!=NULLENERREGIONS){
       rind = localenerpos[DIRFROMDIMEN(dimen,dirsign)] = MIN( Nvec[dimen]-1, local_enerregiondef[POINTUP][dimen] );
       //(local_enerregiondef[POINTUP][dimen]+1) is the location of face index
-      if( Nvec[dimen]>1 && rind >= 0 && rind <= Nvec[dimen] ){
-	localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind + 1;  //need to add 1 to get upper edge index for the face given rind is cell center index
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign));
+      if( Nvec[dimen]>1 && rind >= 0 && rind < Nvec[dimen] ){
+	localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rind is cell center index
+	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
       }
       else localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
 
     if(whichbndregion!=NULLENERREGIONS){
       rindglobal = localenerposglobal[DIRFROMDIMEN(dimen,dirsign)] = MIN( Nvec[dimen]-1+Nbndvec[dimen], local_enerregiondef[POINTUP][dimen]+Nbndvec[dimen] );
-      if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal <= Nvec[dimen]+Nbndvec[dimen] ){
-	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal + 1;  //need to add 1 to get upper edge index for the face given rindglobal is cell center index
+      if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal < Nvec[dimen]+Nbndvec[dimen] ){
+	//	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rindglobal is cell center index
+	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal; // +1 value isn't set generally by BC's.  flux for this type of quantity not useful once beyond box anyways
 	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign));
       }
       else localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
