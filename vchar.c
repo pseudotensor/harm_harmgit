@@ -106,13 +106,24 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   //  PLOOP(pliter,pl) dualfprintf( fail_file, "%21.15g\n", pr[pl] );
   //}
 
-  /* check on it! */
+  /////////////////////////////
+  //
+  // check on it!
+  //
+  /////////////////////////////
+  if(cms2!=cms2){
+    // then nan
+    if (fail(i,j,k,loc,FAIL_COEFF_NEG) >= 1){
+      dualfprintf(fail_file,"cms2=NaN: dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
+      return (1);
+    }
+  }
+
   if(cms2<0.0){
-    
     if (cms2/(cs2+va2) > -NUMEPSILON*100.0) cms2=0.0;
     else{
       if (fail(i,j,k,loc,FAIL_COEFF_NEG) >= 1){
-	dualfprintf(fail_file,"dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
+	dualfprintf(fail_file,"cms2<0.0 : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
 	return (1);
       }
     }
@@ -122,13 +133,14 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
     if (cms2 < 1.0+NUMEPSILON*100.0) cms2=1.0;
     else if (rho<0.0) cms2=1.0;
     else{
-      dualfprintf(fail_file,"dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
+      dualfprintf(fail_file,"cms2>1.0 : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
       if (fail(i,j,k,loc,FAIL_COEFF_SUP) >= 1) return (1);
     }
   }
   
-  if(TRUEFAST==1){
 
+
+  if(TRUEFAST==1){
 #if(0)
     // DEBUG
     if((ilocal==32)&&(jlocal==40)&&(klocal==32)){
@@ -141,15 +153,19 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 
     if(realfast(dir,geom,q,EF,cs2,cms2,va2,q->ucon,q->bcon,geom->gcon,vmin,vmax)>=1){
       dualfprintf(fail_file,"vchar.c: truefast() failed\n");
+      dualfprintf(fail_file,"truefast() failed : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
       return(1);
     }
   }
   else if(TRUEFAST==0){
     if(simplefast(dir,geom, q, cms2,vmin,vmax)>=1){
       dualfprintf(fail_file,"vchar.c: simplefast() failed\n");
+      dualfprintf(fail_file,"simplefast() failed : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
       return(1);
     }
   }
+
+
   
 #if(0)
   if(realfast(dir,geom,q,EF,cs2,cms2,va2,q->ucon,q->bcon,geom->gcon,vmin,vmax)>=1) return(1);
@@ -158,6 +174,8 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   if(simplefast(dir,geom, q, cms2,vmin,vmax)>=1) return(1);
   fprintf(stderr,"sf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
 #endif
+
+
 
 #if(BOUNDARYSMOOTHER)
   boundary_smoother(geom,vmax,vmin,ignorecourant);

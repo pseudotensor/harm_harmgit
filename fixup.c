@@ -1607,7 +1607,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
 
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: i=%d j=%d k=%d\n",i,j,k); // not too much
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: startpl=%d endpl=%d :: i=%d j=%d k=%d\n",startpl,endpl,i,j,k); // not too much
 
 
   if(( mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 ) ){

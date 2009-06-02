@@ -1929,6 +1929,10 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"******SUPERWARNING******: If reveal region with Toth method, then divb can't be preserved due to how fluxes are averaged.\n");
   }
 
+  if(DOGRIDSECTIONING && FLUXB==FLUXCTSTAG){
+    dualfprintf(fail_file,"******SUPERWARNING******: divb won't be zero for absorbed regions when using AVOIDADVANCESHIFTX???==1 as required since need those regions to inject solution with arbitrary velocity profile.\n");
+  }
+
   
 
 

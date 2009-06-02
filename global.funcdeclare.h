@@ -143,10 +143,11 @@ extern int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom 
 
 
 extern void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR]);
+extern void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR]);
 
-extern void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke);
-extern void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke);
-extern void get_flux_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke);
+extern void get_inversion_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke);
+extern void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke);
+extern void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke);
 
 
 extern int avg2cen_interp(int *locpl, int *whichpltoavg,  int *ifnotavgthencopy, int whichquantity, int whichavg2cen, FTYPE (*prims_from_avg_cons)[NSTORE2][NSTORE3][NPR], FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR]);

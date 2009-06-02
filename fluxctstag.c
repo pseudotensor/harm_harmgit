@@ -862,7 +862,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
 #pragma omp parallel 
   {
     void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
-    extern void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke);
+    extern void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke);
     int i,j,k,pl,pliter;
     int dir;
     FTYPE igdetgnosing;
@@ -910,7 +910,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     // do pl==B1
     pl=B1;
     dir=1;
-    get_stag_startendindices(dir, &is,&ie,&js,&je,&ks,&ke);
+    get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -926,7 +926,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     // do pl==B2
     pl=B2;
     dir=2;
-    get_stag_startendindices(dir, &is,&ie,&js,&je,&ks,&ke);
+    get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -942,7 +942,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     // do pl==B3
     pl=B3;
     dir=3;
-    get_stag_startendindices(dir, &is,&ie,&js,&je,&ks,&ke);
+    get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -1288,7 +1288,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	// using COMPZSLOOP since final CENT quantity is used wherever centered primitive is needed for flux (which is sometimes transverse direction)
 	// do maximal loop but avoid going out of bounds when accessing dqvec,pleft,pright
 	// NOW do constrained loop
-	get_advance_startendindices(&is,&ie,&js,&je,&ks,&ke);
+	get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 	////////      COMPZSLOOP(is,ie,js,je,ks,ke){
 	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)

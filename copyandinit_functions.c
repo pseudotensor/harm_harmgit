@@ -15,7 +15,7 @@
 
 
 // loop range for inversion or final centered field primitive
-void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke)
+void get_inversion_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
 
 
@@ -53,20 +53,28 @@ void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke
   else *ke=Uconsevolveloop[FKE]+SHIFT3;
 #else
 
+  // this loop range must be equal to that used in copy_tempucum_finalucum() for centered quantities there (i.e. ignore FLUXB==FLUXCTSTAG in that function as compared to here).
+  *is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+  *ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+  *js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+  *je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+  *ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+  *ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
   // new method is always centered inversion or primitive for field
-  *is=Uconsevolveloop[FIS];
-  *ie=Uconsevolveloop[FIE];
-  *js=Uconsevolveloop[FJS];
-  *je=Uconsevolveloop[FJE];
-  *ks=Uconsevolveloop[FKS];
-  *ke=Uconsevolveloop[FKE];
+  //*is=loop[FIS];
+  //  *ie=loop[FIE];
+  //  *js=loop[FJS];
+  //  *je=loop[FJE];
+  //  *ks=loop[FKS];
+  //  *ke=loop[FKE];
 
 #endif
 
 }
 
 // determine loop range for ustagpoint2pstag() in fluxctstag.c
-void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke)
+void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
   
   // must constrain result since this is final centered value of field and only have enough information to be well-defined on the current computational box over a finite range
@@ -74,23 +82,23 @@ void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,i
 
   // 1|| for same reason as for centered quantities as discussed above.
   // if(subgrid inner boundary>global active grid inner boundary)
-  if(AVOIDADVANCESHIFTX1DN||enerposreg[ACTIVEREGION][X1DN]>enerposreg[ACTIVEREGION][X1DN]) *is=Uconsevolveloop[FIS];
-  else *is=Uconsevolveloop[FIS]-SHIFT1;
+  if(AVOIDADVANCESHIFTX1DN||enerposreg[ACTIVEREGION][X1DN]>enerposreg[ACTIVEREGION][X1DN]) *is=loop[FIS];
+  else *is=loop[FIS]-SHIFT1;
 
-  if(AVOIDADVANCESHIFTX1UP||enerposreg[ACTIVEREGION][X1UP]<enerposreg[ACTIVEREGION][X1UP]) *ie=Uconsevolveloop[FIE]+SHIFT1*(dir==1);
-  else *ie=Uconsevolveloop[FIE]+SHIFT1;
+  if(AVOIDADVANCESHIFTX1UP||enerposreg[ACTIVEREGION][X1UP]<enerposreg[ACTIVEREGION][X1UP]) *ie=loop[FIE]+SHIFT1*(dir==1);
+  else *ie=loop[FIE]+SHIFT1;
 
-  if(AVOIDADVANCESHIFTX2DN||enerposreg[ACTIVEREGION][X2DN]>enerposreg[ACTIVEREGION][X2DN]) *js=Uconsevolveloop[FJS];
-  else *js=Uconsevolveloop[FJS]-SHIFT2;
+  if(AVOIDADVANCESHIFTX2DN||enerposreg[ACTIVEREGION][X2DN]>enerposreg[ACTIVEREGION][X2DN]) *js=loop[FJS];
+  else *js=loop[FJS]-SHIFT2;
 
-  if(AVOIDADVANCESHIFTX2UP||enerposreg[ACTIVEREGION][X2UP]<enerposreg[ACTIVEREGION][X2UP]) *je=Uconsevolveloop[FJE]+SHIFT2*(dir==2);
-  else *je=Uconsevolveloop[FJE]+SHIFT2;
+  if(AVOIDADVANCESHIFTX2UP||enerposreg[ACTIVEREGION][X2UP]<enerposreg[ACTIVEREGION][X2UP]) *je=loop[FJE]+SHIFT2*(dir==2);
+  else *je=loop[FJE]+SHIFT2;
 
-  if(AVOIDADVANCESHIFTX3DN||enerposreg[ACTIVEREGION][X3DN]>enerposreg[ACTIVEREGION][X3DN]) *ks=Uconsevolveloop[FKS];
-  else *ks=Uconsevolveloop[FKS]-SHIFT3;
+  if(AVOIDADVANCESHIFTX3DN||enerposreg[ACTIVEREGION][X3DN]>enerposreg[ACTIVEREGION][X3DN]) *ks=loop[FKS];
+  else *ks=loop[FKS]-SHIFT3;
 
-  if(AVOIDADVANCESHIFTX3UP||enerposreg[ACTIVEREGION][X3UP]<enerposreg[ACTIVEREGION][X3UP]) *ke=Uconsevolveloop[FKE]+SHIFT3*(dir==3);
-  else *ke=Uconsevolveloop[FKE]+SHIFT3;
+  if(AVOIDADVANCESHIFTX3UP||enerposreg[ACTIVEREGION][X3UP]<enerposreg[ACTIVEREGION][X3UP]) *ke=loop[FKE]+SHIFT3*(dir==3);
+  else *ke=loop[FKE]+SHIFT3;
 
 }
 
@@ -111,24 +119,28 @@ void get_stag_startendindices(int dir, int *is,int *ie,int *js,int *je,int *ks,i
 // Also ensures divb=0 and flux conservation under any case since always take into account fluxes through the well-defined computational box
 // must constrain result since this is final centered value of field and only have enough information to be well-defined on the current computational box over a finite range
 // Only expand if on outer edge of not-evolved region in order to (primarily) preserve divb=0
-void get_flux_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke)
+void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
+
+  // this loop range must be equal or larger than that used in copy_tempucum_finalucum()
+  *is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+  *ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+  *js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+  *je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+  *ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+  *ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
+
   if(FLUXB==FLUXCTSTAG){
     // generic shift upwards to compute necessary things for staggered field.  In end presume however shifted here, ucum and final primitives are computed on highly controlled locations only
-    *is=Uconsevolveloop[FIS];
-    *ie=Uconsevolveloop[FIE]+SHIFT1;
-    *js=Uconsevolveloop[FJS];
-    *je=Uconsevolveloop[FJE]+SHIFT2;
-    *ks=Uconsevolveloop[FKS];
-    *ke=Uconsevolveloop[FKE]+SHIFT3;
+
+    // overrides:
+    *ie=loop[FIE]+SHIFT1;
+    *je=loop[FJE]+SHIFT2;
+    *ke=loop[FKE]+SHIFT3;
   }
   else{
-    *is=Uconsevolveloop[FIS];
-    *ie=Uconsevolveloop[FIE];
-    *js=Uconsevolveloop[FJS];
-    *je=Uconsevolveloop[FJE];
-    *ks=Uconsevolveloop[FKS];
-    *ke=Uconsevolveloop[FKE];
+    // default is good
   }
 }
 
@@ -156,7 +168,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
     int is,ie,js,je,ks,ke;
     extern void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum);
 
-    // put here instead of before parallel region start so avoid having to firstprivate(is,ie,js,je,ks,ke) or private(i,j,k,pl) them
+    // loop range where final ucum is set from scratch ucum that may have been set outside desired region for simplicity of loop structures
     is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
     ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
     js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
@@ -171,6 +183,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
 
 #if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
 	PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
 	PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
@@ -178,6 +191,90 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #endif
 
 
+
+      // do pl==B1
+      pl=B1;
+      ie=loop[FIE]+SHIFT1; // always shift - override
+      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
+
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+      COMPZSLOOP(is,ie,js,je,ks,ke){
+	ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
+      }
+#endif
+
+
+      // do pl==B2
+      pl=B2;
+      je=loop[FJE]+SHIFT2;
+      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
+
+
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+      COMPZSLOOP(is,ie,js,je,ks,ke){
+	ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
+      }
+#endif
+
+
+      // do pl==B3
+      pl=B3;
+      ke=loop[FKE]+SHIFT3;
+      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
+
+
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+      COMPZSLOOP(is,ie,js,je,ks,ke){
+	ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
+      }
+#endif
+
+
+      // now ucum is assigned only where should be changed
+
+    }
+    else{
+      // nothing to do since tempucum is ucum and all at CENT
+      // just check
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+      COMPZSLOOP(is,ie,js,je,ks,ke){
+	PLOOP(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+      }
+#endif
+    }
+
+  }// end parallel region (with implicit barrier)
+
+}
+
+
+// like copy_tempucum_finalucum() but for field only
+// Used for setting up point value of field in advance.c
+void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR])
+{
+
+
+#pragma omp parallel  // just copying, only need PLOOP even for ucum_check()
+  {
+    int i,j,k;
+    int pl,pliter;
+    int is,ie,js,je,ks,ke;
+    extern void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum);
+
+    // loop range where final ucum is set from scratch ucum that may have been set outside desired region for simplicity of loop structures
+    is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+    ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+    js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+    je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+    ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+    ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
+
+    if(FLUXB==FLUXCTSTAG){
 
       // do pl==B1
       pl=B1;
@@ -225,7 +322,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
       // just check
 #if(PRODUCTION==0)
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	PLOOP(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+	PLOOPBONLY(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
       }
 #endif
     }

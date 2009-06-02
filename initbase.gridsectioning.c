@@ -789,7 +789,7 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
 
   }
   else{
-    velgrid=1.0; // move at speed of light
+    velgrid=1.1; // move slight faster than speed of light so that relativistic flow doesn't ram into outer partially reflecting wall
     rhi = Routt0 + velgrid*MAX(0,thetime - t_transition_out);
 
     // GODMARK: If were to change rhi (Rout), worry about exposing monopoles.  Is this taken care of?

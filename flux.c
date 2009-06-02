@@ -380,34 +380,44 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 	ke=loop[FKE]+(dir==3)*SHIFT3;
 
 
-	// E1: Needed: i==0..N1-1 j=0..N2   k=0..N3
-	// E2: Needed: i==0..N1   j=0..N2-1 k=0..N3
-	// E3: Needed: i==0..N1   j=0..N2   k=0..N3-1
-	// Note Fi[Bi]=0 always and should already be set everywhere
+	if(FLUXB==FLUXCTSTAG){
+ 	  // E1: Needed: i==0..N1-1 j=0..N2   k=0..N3
+	  // E2: Needed: i==0..N1   j=0..N2-1 k=0..N3
+	  // E3: Needed: i==0..N1   j=0..N2   k=0..N3-1
+	  // Note Fi[Bi]=0 always and should already be set everywhere
 
-	// B1
-	B1is=loop[FIS];
-	B1ie=loop[FIE]+(dir==1 || dir==2 || dir==3)*SHIFT1; // for F1[B1],F2[B1]=E3,F3[B1]=E2
-	B1js=loop[FJS];
-	B1je=loop[FJE]+(dir==1 || dir==2)*SHIFT2; // for F1[B1],F2[B1]=E3
-	B1ks=loop[FKS];
-	B1ke=loop[FKE]+(dir==1 || dir==3)*SHIFT3; // for F1[B1],F3[B1]=E2
+	  // B1
+	  B1is=loop[FIS];
+	  B1ie=loop[FIE]+(dir==1 || dir==2 || dir==3)*SHIFT1; // for F1[B1],F2[B1]=E3,F3[B1]=E2
+	  B1js=loop[FJS];
+	  B1je=loop[FJE]+(dir==1 || dir==2)*SHIFT2; // for F1[B1],F2[B1]=E3
+	  B1ks=loop[FKS];
+	  B1ke=loop[FKE]+(dir==1 || dir==3)*SHIFT3; // for F1[B1],F3[B1]=E2
 
-	// B2
-	B2is=loop[FIS];
-	B2ie=loop[FIE]+(dir==1 || dir==2)*SHIFT1; // for F1[B2]=E3,F2[B2],F3[B2]=E1
-	B2js=loop[FJS];
-	B2je=loop[FJE]+(dir==1 || dir==2 || dir==3)*SHIFT2; // for F1[B2]=E3,F2[B2],F3[B2]=E1
-	B2ks=loop[FKS];
-	B2ke=loop[FKE]+(dir==2 || dir==3)*SHIFT3; // for F2[B2],F3[B2]=E1
+	  // B2
+	  B2is=loop[FIS];
+	  B2ie=loop[FIE]+(dir==1 || dir==2)*SHIFT1; // for F1[B2]=E3,F2[B2],F3[B2]=E1
+	  B2js=loop[FJS];
+	  B2je=loop[FJE]+(dir==1 || dir==2 || dir==3)*SHIFT2; // for F1[B2]=E3,F2[B2],F3[B2]=E1
+	  B2ks=loop[FKS];
+	  B2ke=loop[FKE]+(dir==2 || dir==3)*SHIFT3; // for F2[B2],F3[B2]=E1
 
-	// B3
-	B3is=loop[FIS];
-	B3ie=loop[FIE]+(dir==1 || dir==3)*SHIFT1; // for F1[B3]=E2,F3[B3]
-	B3js=loop[FJS];
-	B3je=loop[FJE]+(dir==2 || dir==3)*SHIFT2; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
-	B3ks=loop[FKS];
-	B3ke=loop[FKE]+(dir==1 || dir==2 || dir==3)*SHIFT3; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
+	  // B3
+	  B3is=loop[FIS];
+	  B3ie=loop[FIE]+(dir==1 || dir==3)*SHIFT1; // for F1[B3]=E2,F3[B3]
+	  B3js=loop[FJS];
+	  B3je=loop[FJE]+(dir==2 || dir==3)*SHIFT2; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
+	  B3ks=loop[FKS];
+	  B3ke=loop[FKE]+(dir==1 || dir==2 || dir==3)*SHIFT3; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
+	}
+	else{
+	  B1is=B2is=B3is=is;
+	  B1ie=B2ie=B3ie=ie;
+	  B1js=B2js=B3js=js;
+	  B1je=B2je=B3je=je;
+	  B1ks=B2ks=B3ks=ks;
+	  B1ke=B2ke=B3ke=ke;
+	}
 
 	////      COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately

@@ -241,7 +241,7 @@ static int advance_standard(
   // Setup loops [+1 extra compared to normal comp region if doing FLUXCTSTAG]
   //
   ////////////////////////////////////////////
-  get_flux_startendindices(&is,&ie,&js,&je,&ks,&ke);
+  get_flux_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 
 
 
@@ -589,6 +589,7 @@ static int advance_standard(
 
     // first copy over all quantities as point, which is true except for fields if FLUXRECON active
     // copy utoinvert -> myupoint
+    // copy all pl's since myupoint eventually used to invert rest of non-field quantities
     copy_tempucum_finalucum(Uconsevolveloop,utoinvert,myupoint);
 
 
@@ -623,7 +624,7 @@ static int advance_standard(
 
 
   // get loop range
-  get_advance_startendindices(&is,&ie,&js,&je,&ks,&ke);
+  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORINVERSION
   {
@@ -872,7 +873,7 @@ static int advance_finitevolume(int stage,
   // Setup loops
   //
   ////////////////////////////////////////////
-  get_flux_startendindices(&is,&ie,&js,&je,&ks,&ke);
+  get_flux_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 
 
 
@@ -1302,7 +1303,7 @@ static int advance_finitevolume(int stage,
 
 
   // get loop range
-  get_advance_startendindices(&is,&ie,&js,&je,&ks,&ke);
+  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORINVERSION
   {
@@ -1963,7 +1964,7 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
   showfluxes=0;
 
   if(!isfinite(ucum[pl])){
-    dualfprintf(fail_file,"ucum_check: nan found for ucum[%d]=%21.15g\n",pl,ucum[pl]);
+    dualfprintf(fail_file,"ucum_check: nan found at i=%d j=%d k=%d loc=%d for ucum[pl=%d]=%21.15g\n",i,j,k,loc,pl,ucum[pl]);
     showfluxes=1;
   }
 

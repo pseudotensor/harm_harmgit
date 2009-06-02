@@ -933,7 +933,7 @@ static int set_guess_Wp(PFTYPE *lpflag, FTYPE *prim, struct of_geom *ptrgeom, FT
       break;
     }
     else{
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g D=%21.15g\n",*W_last,*Wp_last,utsq,D);
+      if(debugfail>=2) dualfprintf(fail_file,"Initial guess [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g D=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,D);
       *Wp_last = MAX(*Wp_last*10.0,fabs(D));
       *W_last = *Wp_last + (D);
     }

@@ -958,13 +958,26 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
   // Setup update period
   //
   ///////////////////
+
+  ////////
+  //
+  // number of steps after which position/size of active section is updated
+  //
+  ////////
 #if(N3==1)
-  *updateeverynumsteps=100;
+  //  *updateeverynumsteps=100;
+  *updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
 #else
-  *updateeverynumsteps=10;
+  //  *updateeverynumsteps=10;
+  *updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
 #endif
-  //number of steps after which position/size of active section is updated
-  *everynumsteps = *updateeverynumsteps;
+
+  ////////
+  //
+  //number of steps after which position/size of active section is reported to file
+  //
+  ////////
+  *everynumsteps = *updateeverynumsteps*100;
 
   return(0);
 }
