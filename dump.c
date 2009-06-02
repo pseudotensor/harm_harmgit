@@ -202,7 +202,15 @@ int dump_header(int bintxt, FILE *headerptr)
   int realtotalsize[NDIM];
   FTYPE realstartx[NDIM];
   FTYPE X[NDIM];
+  int is,ie,js,je,ks,ke;
 
+  // set computational domain for output header
+  is=Uconsevolveloop[FIS]+SHIFTX1DN;
+  ie=Uconsevolveloop[FIE]+SHIFTX1UP;
+  js=Uconsevolveloop[FJS]+SHIFTX2DN;
+  je=Uconsevolveloop[FJE]+SHIFTX2UP;
+  ks=Uconsevolveloop[FKS]+SHIFTX3DN;
+  ke=Uconsevolveloop[FKE]+SHIFTX3UP;
 
 
   // get real startx's (assumes rectangular grid)
@@ -254,9 +262,9 @@ int dump_header(int bintxt, FILE *headerptr)
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
 #endif
   }
   fflush(headerptr);
