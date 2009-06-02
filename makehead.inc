@@ -86,7 +86,7 @@ $(warning USEMPI is $(USEMPI))
 $(warning USEOPENMP is $(USEOPENMP))
 
 
-# turns on -mp and -pc64 for USEICC=1
+# turns on -mp and -pc64 for USEICC?????=1
 # Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
 # causes code to be less accurate: e.g. inversion doesn't reach to 1E-15, but rather 1E-11
 # for some simple linear wave tests with small amplitude can cause significant problems if any  noise exists in intial solution

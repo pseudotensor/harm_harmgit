@@ -17,8 +17,9 @@ endif
 #####################
 # WATCH OUT FOR SPACES, etc. AFTER ASSIGNMENTS!!!!
 USEBG=0
-# USEABE -> USEICC is used
-USEICC=1
+# USEABE -> USEICCGENERIC is used
+USEICCGENERIC=0
+USEICCINTEL=1
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -63,7 +64,13 @@ AVOIDFORK=1
 MCC = cc
 endif
 
-ifeq ($(USEICC),1)
+ifeq ($(USEICCGENERIC),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC = mpicc
+endif
+
+ifeq ($(USEICCINTEL),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
 MCC = mpicc
@@ -189,8 +196,31 @@ endif
 
 
 
+ifeq ($(USEICCGENERIC),1)
 
-ifeq ($(USEICC),1)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+LONGDOUBLECOMMAND=-long_double
+
+
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
+
+CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+
+
+
+LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGSOTHER=
+
+endif
+
+
+
+# Intel machine specific
+ifeq ($(USEICCINTEL),1)
 
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
 LONGDOUBLECOMMAND=-long_double
@@ -284,6 +314,7 @@ LDFLAGSOTHER=
 
 
 endif
+
 
 
 
