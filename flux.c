@@ -308,10 +308,10 @@ int fluxcalc(int stage,
   FULLLOOP{
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-	PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
+	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
       }
       else{
-	PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0;
+	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0;
       }
     }
   }    

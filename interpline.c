@@ -2789,7 +2789,7 @@ int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, in
     localk=trueijkp->k+dk*num;
     localloc=trueijkp->p;
 
-    MACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=shockindicator[yiniter];
+    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=shockindicator[yiniter];
 
 #endif
 
@@ -3270,9 +3270,9 @@ int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int 
     localk=trueijkp->k+dk*num;
     localloc=trueijkp->p;
 
-    MACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=stifffactor;
-    MACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + UU)=stiffindicator[num];
-    MACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + U1)=veff;
+    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=stifffactor;
+    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + UU)=stiffindicator[num];
+    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + U1)=veff;
 
     //    dualfprintf(fail_file,"%ld %d :: dir=%d :: ijkcurr=%d %d %d :: %21.15g %21.15g %21.15g\n",nstep,steppart,dir,locali,localj,localk,stifffactor,stiffindicator[num],veff);
 

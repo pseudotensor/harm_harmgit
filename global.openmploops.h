@@ -108,13 +108,16 @@
 #define OPENMPBCLOOPVARSDEFINELOOPX3DIR int nxsize, nxshift, nysize, nyshift, nzsize, nzshift, blocksize, blockijk, fook
 
 // LOOPX1dir equivalent (assumes use foo variable for i iterator to not conflict with true i iterator)
+// Note like in global.loops.boundaries.h, assume X1-direction is done first since uses innormal and outnormal first
 #define OPENMPBCLOOPSETUPLOOPX1DIR OPENMPBCLOOPSETUP(0,0,innormalloop[2],outnormalloop[2],innormalloop[3],outnormalloop[3])
 
 // LOOPX2dir equivalent (assumes use foo variable for j iterator to not conflict with true j iterator)
-#define OPENMPBCLOOPSETUPLOOPX2DIR OPENMPBCLOOPSETUP(innormalloop[1],outnormalloop[1],0,0,innormalloop[3],outnormalloop[3])
+// Note like in global.loops.boundaries.h, assume X2-direction is done second
+#define OPENMPBCLOOPSETUPLOOPX2DIR OPENMPBCLOOPSETUP(inboundloop[1],outboundloop[1],0,0,innormalloop[3],outnormalloop[3])
 
 // LOOPX3dir equivalent (assumes use foo variable for k iterator to not conflict with true k iterator)
-#define OPENMPBCLOOPSETUPLOOPX3DIR OPENMPBCLOOPSETUP(innormalloop[1],outnormalloop[1],innormalloop[2],outnormalloop[2],0,0)
+// Note like in global.loops.boundaries.h, assume X3-direction is done last
+#define OPENMPBCLOOPSETUPLOOPX3DIR OPENMPBCLOOPSETUP(inboundloop[1],outboundloop[1],inboundloop[2],outboundloop[2],0,0)
 
 #define OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k) OPENMP3DLOOPBLOCK2IJK(fooi,j,k);
 

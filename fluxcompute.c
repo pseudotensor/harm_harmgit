@@ -157,14 +157,14 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
   int pl,pliter;
 
 #if(FLUXDUMP)
-  PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*1 + pl)=F_l[pl];
-  PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*2 + pl)=F_r[pl];
-  PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*3 + pl)=p_l[pl];
-  PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*4 + pl)=p_r[pl];
+  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*1 + pl)=F_l[pl];
+  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*2 + pl)=F_r[pl];
+  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*3 + pl)=p_l[pl];
+  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*4 + pl)=p_r[pl];
 
   if(0 && dir==2 && j==0 && i==N1/2){ // just pick one point on polar axis
     PLOOP(pliter,pl){
-      dualfprintf(fail_file,"n=%ld sp=%d pl=%d :: F_l=%21.15g F_r=%21.15g U_l=%21.15g U_r=%21.15g p_l=%21.15g p_r=%21.15g\n",nstep,steppart,pl,F_l[pl],F_r[pl],U_l[pl],U_r[pl],p_l[pl],p_r[pl]);
+      //      dualfprintf(fail_file,"n=%ld sp=%d pl=%d :: F_l=%21.15g F_r=%21.15g U_l=%21.15g U_r=%21.15g p_l=%21.15g p_r=%21.15g\n",nstep,steppart,pl,F_l[pl],F_r[pl],U_l[pl],U_r[pl],p_l[pl],p_r[pl]);
     }
   }
 #endif

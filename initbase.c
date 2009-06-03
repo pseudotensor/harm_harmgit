@@ -1937,6 +1937,10 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"******SUPERWARNING******: If far from black hole, even with apparently g^{t\\phi}\\sim 0 at the 10^{-34} level, still leads to exponential spurious growth in u^3 u_3 and B^3 to catastrophic levels!!  For KS metric with a\\neq 0, best to use analytical gcon that leads to exactly g^{t\\phi}=0 and so \\beta[\\phi]=0.\n");
   }
 
+  if(CONNDERTYPE!=DIFFNUMREC){
+    dualfprintf(fail_file,"Using inaccurate CONNDERTYPE can lead to problems, such as force errors near poles can lead to secular errors growing.\n");
+  }
+
   
 
 

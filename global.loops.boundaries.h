@@ -32,13 +32,13 @@
 #define BOUNDLOOPF(i,in,out) for(i=in;i<=out;i++)
 
 
-// for X1-dir
+// for X1-dir [Note always uses innormal and outnormal so assumed to use this X1-dir loop first]
 #define LOOPX1dir LOOPORDER1(,BOUNDLOOPF(j,innormalloop[2],outnormalloop[2]),BOUNDLOOPF(k,innormalloop[3],outnormalloop[3])) LOOPORDER2(,BOUNDLOOPF(j,innormalloop[2],outnormalloop[2]),BOUNDLOOPF(k,innormalloop[3],outnormalloop[3])) LOOPORDER3(,BOUNDLOOPF(j,innormalloop[2],outnormalloop[2]),BOUNDLOOPF(k,innormalloop[3],outnormalloop[3]))
 
-// for X2-dir
+// for X2-dir [Note innormal and outnormal for 3rd direction and full inbound and outbound for 1st direction, so assume 1st came first and 3rd comes next]
 #define LOOPX2dir LOOPORDER1(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),,BOUNDLOOPF(k,innormalloop[3],outnormalloop[3])) LOOPORDER2(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),,BOUNDLOOPF(k,innormalloop[3],outnormalloop[3])) LOOPORDER3(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),,BOUNDLOOPF(k,innormalloop[3],outnormalloop[3]))
 
-// for X3-dir
+// for X3-dir [ Note only use of inbound and outbound, so assumes 1st and 2nd directions came first]
 #define LOOPX3dir LOOPORDER1(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),BOUNDLOOPF(j,inboundloop[2],outboundloop[2]),) LOOPORDER2(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),BOUNDLOOPF(j,inboundloop[2],outboundloop[2]),) LOOPORDER3(BOUNDLOOPF(i,inboundloop[1],outboundloop[1]),BOUNDLOOPF(j,inboundloop[2],outboundloop[2]),)
 
 

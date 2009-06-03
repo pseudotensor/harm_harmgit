@@ -445,16 +445,16 @@ static int advance_standard(
 
 #if(FLUXDUMP)
 	// DEBUG - DIAG:
-	PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
+	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
 
-	if(N1>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
-	else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
+	if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
+	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
 		
-	if(N2>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
-	else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
+	if(N2>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
+	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
 
-	if(N3>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
-	else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
+	if(N3>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
+	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
 #endif
 
       } // end COMPZLOOP :: end looping to obtain dUriemann and full unew update
@@ -1138,16 +1138,16 @@ static int advance_finitevolume(int stage,
 
 
 #if(FLUXDUMP)
-      PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
+      PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
 
-      if(N1>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
-      else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
+      if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
+      else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
 		
-      if(N2>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
-      else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
+      if(N2>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
+      else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
 
-      if(N3>1) PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
-      else PLOOP(pliter,pl) MACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
+      if(N3>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
+      else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
 #endif
   
 
