@@ -763,3 +763,27 @@
 #define NUMPOTHER 0
 
 
+
+
+
+// delta is simply how big the differencing is, should be small, but not so small to lead to errors due to erros in the metric itself (i.e. keep larger than machine precision)
+//#define DELTA (NUMEPSILON*1000.0)
+//#define DELTA 1.e-5
+//#define DELTA 1.e-5
+//#define DELTA (pow(NUMEPSILON,1.0/3.0))
+//#define DELTA NUMSQRTEPSILON // as in NR's fdjac() -- smaller isn't always better
+// how to generically set this?  Too high, even slightly (10^{-10} for long doubles) and connection is screwed)
+
+// Avery mentions that long double trig. functions only return double precision answer.  see ~/research/utils/triglongdouble.c
+
+#if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
+//#define CONNDELTA (dx[1])
+#define CONNDELTA (MY1EM5) // default -- seems to work pretty good generally to reduce max error
+//#define CONNDELTA 5.4E-5 // default -- seems to work pretty good
+//#define CONNDELTA 4.6E-5 // min of error for a specific case, but apparently not generally good
+#elif(REALTYPE==LONGDOUBLETYPE)
+//#define CONNDELTA 7.17E-6 // based on min of error for specific case
+#define CONNDELTA (MY1EM5) // based on min of error for specific case
+// polar region likes 6.5E-8 (min of error for specific case)
+#endif
+// GODMARK: Should really choose CONNDELTA as (totalsize[jj]*dx[jj]*MY1EM5)
