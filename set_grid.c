@@ -538,12 +538,14 @@ static void set_grid_metrics(void)
 	GLOBALMETMACP1A0(compgeom,loc,i,j,k).p=ptrgeom->p;
 
 
+	// go ahead and assign eomfunc as per variable as either original eomfunc or gdet
+	// Must come *before* set_igdet_old() that sets 1/eomfunc
+	assign_eomfunc(&GLOBALMETMACP1A0(compgeom,loc,i,j,k), &(GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(0)));
+
 	// then store extra things in global geom structure
 	// refer to "_old" version so really computs it
 	set_igdet_old(&GLOBALMETMACP1A0(compgeom,loc,i,j,k)); // full 1/gdet and 1/EOMFUNCMAC(pl)
 
-	// go ahead and assign eomfunc as per variable as either original eomfunc or gdet
-	assign_eomfunc(&GLOBALMETMACP1A0(compgeom,loc,i,j,k), &(GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(0)));
 
 
 	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;

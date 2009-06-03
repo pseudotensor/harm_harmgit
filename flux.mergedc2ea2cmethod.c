@@ -191,7 +191,7 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
   // loop over all i,j,k
   COMPZSLOOP(is,ie,js,je,ks,ke){
       
-    // assume ptrgeom->g all that's needed, not ptrgeom->EOMFUNCMAC(pl) since for field ptrgeom->e's must be consistent!
+    // assume ptrgeom->g all that's needed, not ptrgeom->EOMFUNCMAC(pl) since for field ptrgeom->EOMFUNCMAC's must be consistent!
     get_geometry_gdetonly(i, j, k, CORN1-1+corner, ptrgeomcorn); // at CORN[dir]
       
     // then need to store geometry for merged method
@@ -758,11 +758,11 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
   //
   ///////////////////
 
-#if(WHICHEOM!=WITHGDET)
+#if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
   // need gdet for each variable
-  gdetl=stateleft->e[RHO];
-  gdetc=statecent->e[RHO];
-  gdetr=stateright->e[RHO];
+  gdetl=stateleft->EOMFUNCMAC(RHO);
+  gdetc=statecent->EOMFUNCMAC(RHO);
+  gdetr=stateright->EOMFUNCMAC(RHO);
 #endif
 
 #if(MERGEDC2EA2CMETHOD)
@@ -821,11 +821,11 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
 
   DLOOPA(jj){
 
-#if(WHICHEOM!=WITHGDET)
+#if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
     // need gdet for each variable
-    gdetl=stateleft->e[UU+jj];
-    gdetc=statecent->e[UU+jj];
-    gdetr=stateright->e[UU+jj];
+    gdetl=stateleft->EOMFUNCMAC(UU+jj);
+    gdetc=statecent->EOMFUNCMAC(UU+jj);
+    gdetr=stateright->EOMFUNCMAC(UU+jj);
 #endif
 
 
@@ -1146,11 +1146,11 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, struct of_state *st
     jj=myloop[iter];
 
 
-#if(WHICHEOM!=WITHGDET)
+#if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
     // need gdet for each variable
-    gdetl=stateleft->e[UU+jj];
-    gdetc=statecent->e[UU+jj];
-    gdetr=stateright->e[UU+jj];
+    gdetl=stateleft->EOMFUNCMAC(UU+jj);
+    gdetc=statecent->EOMFUNCMAC(UU+jj);
+    gdetr=stateright->EOMFUNCMAC(UU+jj);
 #endif
     
     // initialize as we loop over terms that are simply part of sum that has no extra coupling for deconvolution
@@ -1212,11 +1212,11 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, struct of_state *st
   ////////////////////////
   jj=dir;
 
-#if(WHICHEOM!=WITHGDET)
+#if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
   // need gdet for each variable
-  gdetl=stateleft->e[UU+jj];
-  gdetc=statecent->e[UU+jj];
-  gdetr=stateright->e[UU+jj];
+  gdetl=stateleft->EOMFUNCMAC(UU+jj);
+  gdetc=statecent->EOMFUNCMAC(UU+jj);
+  gdetr=stateright->EOMFUNCMAC(UU+jj);
 #endif
    
   // initialize as we loop over terms that are simply part of sum that has no extra coupling for deconvolution
@@ -1290,11 +1290,11 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, struct of_state *st
     for(iter=1;iter<=NDIM-1;iter++){
       jj=myloop[iter]; // term is jj-EOM, not flux in jj direction
 
-#if(WHICHEOM!=WITHGDET)
+#if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
       // need gdet for each variable
-      gdetl=stateleft->e[B1-1+jj];
-      gdetc=statecent->e[B1-1+jj];
-      gdetr=stateright->e[B1-1+jj];
+      gdetl=stateleft->EOMFUNCMAC(B1-1+jj);
+      gdetc=statecent->EOMFUNCMAC(B1-1+jj);
+      gdetr=stateright->EOMFUNCMAC(B1-1+jj);
 #endif
 
 

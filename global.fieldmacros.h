@@ -14,7 +14,7 @@
 
 #if(MCOORD!=CARTMINKMETRIC)
 // e.g. MYGDET(i,j,k,CENT)
-// GODMARK: assumes WHICHEOM==WITHGDET for field EOMs
+// GODMARK: assumes field EOMs have WHICHEOM==WITHGDET or NOGDETB?=0
 #define MYGDET(i,j,k,p) (GLOBALMETMACP1A0(compgeom,p,i,j,k).gdet)
 #else
 #define MYGDET(i,j,k,p) (GLOBALMETMACP1A0(compgeom,p,0,0,0).gdet)

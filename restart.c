@@ -350,8 +350,8 @@ int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebu
       myset(datatype,tempcompgeom->gcovpert,0,NDIM,writebuf);
       myset(datatype,&(tempcompgeom->gdet),0,1,writebuf);
 #if(WHICHEOM!=WITHGDET)
-      myset(datatype,tempcompgeom->e,0,NPR,writebuf);
-      myset(datatype,tempcompgeom->ienosing,0,NPR,writebuf);
+      myset(datatype,&(tempcompgeom->EOMFUNCMAC(0)),0,NPR,writebuf);
+      myset(datatype,&(tempcompgeom->IEOMFUNCNOSINGMAC(0)),0,NPR,writebuf);
 #endif
 #if(GDETVOLDIFF)
       myset(datatype,&(tempcompgeom->gdetvol),0,1,writebuf);
@@ -480,8 +480,8 @@ int rmetricdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *wr
     myget(datatype,tempcompgeom->gcovpert,0,NDIM,writebuf);
     myget(datatype,&(tempcompgeom->gdet),0,1,writebuf);
 #if(WHICHEOM!=WITHGDET)
-    myget(datatype,tempcompgeom->e,0,NPR,writebuf);
-    myget(datatype,tempcompgeom->ienosing,0,NPR,writebuf);
+    myget(datatype,&(tempcompgeom->EOMFUNCMAC(0)),0,NPR,writebuf);
+    myget(datatype,&(tempcompgeom->IEOMFUNCNOSINGMAC(0)),0,NPR,writebuf);
 #endif
 #if(GDETVOLDIFF)
     myget(datatype,&(tempcompgeom->gdetvol),0,1,writebuf);

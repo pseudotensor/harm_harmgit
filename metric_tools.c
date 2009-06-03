@@ -2033,8 +2033,8 @@ FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
   FTYPE gcovmcoord[SYMMATRIXNDIM];
   FTYPE gcovpertcoord[NDIM];
   FTYPE toreturn;
-  FTYPE eomfuncnochange[NPR];
-  FTYPE *eomfuncptr=eomfuncnochange;
+  FTYPE eomfunc[NPR]; // don't change this as related to WHICHEOM==WITHGDET
+  FTYPE *eomfuncptr=eomfunc; // don't change this as related to WHICHEOM==WITHGDET
   FTYPE gdet;
   FTYPE V[NDIM];
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
@@ -2042,7 +2042,7 @@ FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
   gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
   eomfunc_func(ptrgeom,1,MCOORD,X,EOMFUNCPTR);
 
-  bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
+  bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
   // GODMARK: assumes all RHO, etc. use same eomfunc if using 2nd connection
   toreturn=log(EOMFUNCMAC(RHO)/gdet_func_metric(MCOORD,V,gcovmcoord));
 
@@ -2060,7 +2060,7 @@ FTYPE gdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
 
   gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
 
-  bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
+  bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
   toreturn=gdet_func_metric(MCOORD,V,gcovmcoord);
 
   return(toreturn);
@@ -2077,7 +2077,7 @@ FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE
 
   //  gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
 
-  bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
+  bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
   toreturn=gdet_func_metric(MCOORD,V,gcovmcoord);
 
   return(toreturn);

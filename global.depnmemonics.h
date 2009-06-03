@@ -75,6 +75,7 @@
 #if(WHICHEOM!=WITHGDET)
 #define EOMFUNCNAME eomfunc // requires special care within code -- only used when doing eomfunc_func()
 #define EOMFUNCASSIGN(pl) eomfunc[pl] // requires special care within code -- only used when doing eomfunc_func()#define EOMFUNCPTR eomfuncptr // requires special care within code -- only used when doing eomfunc_func()
+#define EOMFUNCPTR eomfuncptr
 #define EOMFUNCMAC(pl) eomfunc[pl]
 #define LOCALEOMFUNCMAC(pl) localeomfunc[pl] // used when did GETLOCALMETRIC
 #define IEOMFUNCNOSINGMAC(pl) ieomfuncnosing[pl]

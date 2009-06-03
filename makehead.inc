@@ -90,6 +90,9 @@ $(warning USEOPENMP is $(USEOPENMP))
 # Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
 # causes code to be less accurate: e.g. inversion doesn't reach to 1E-15, but rather 1E-11
 # for some simple linear wave tests with small amplitude can cause significant problems if any  noise exists in intial solution
+# With OpenMP and icc 10.1 20080602 this feature with:
+#      -O2 -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS) -g
+# caused the fluxcalc_fluxctstag_emf_1d() function fail to work properly.  It would cause NaN's to random appear in different places. I tried to find any associated bug, but could not.  Reverting to -O0 leads to no problems.
 ENFORCEPRECISION=0
 
 

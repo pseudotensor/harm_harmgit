@@ -1043,7 +1043,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
       npr2interpstart=npr2interpend=0; npr2interplist[0]=pl; // B1,B2,B3 each
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // p2interp[B1,B2,B3] set independently
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) // NO, rescale() may set arbitrary p2interp's //nowait // p2interp[B1,B2,B3] set independently
       OPENMP3DLOOPBLOCK{
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

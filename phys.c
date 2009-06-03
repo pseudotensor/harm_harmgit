@@ -439,6 +439,49 @@ void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME)
 #endif
 
 
+
+
+
+#if(NEWMETRICSTORAGE)
+  // assign inverses (should already be set if PRIMECOORDS)
+  // this only changes (overrides) to use igdetnosing since otherwise already should be set
+
+  // now set each EOM
+#if(NOGDETRHO==0)
+  geom->IEOMFUNCNOSINGMAC(RHO)=geom->igdetnosing;
+#endif
+#if(NOGDETU0==0)
+  geom->IEOMFUNCNOSINGMAC(UU)=geom->igdetnosing;
+#endif
+#if(NOGDETU1==0)
+  geom->IEOMFUNCNOSINGMAC(U1)=geom->igdetnosing;
+#endif
+#if(NOGDETU2==0)
+  geom->IEOMFUNCNOSINGMAC(U2)=geom->igdetnosing;
+#endif
+#if(NOGDETU3==0)
+  geom->IEOMFUNCNOSINGMAC(U3)=geom->igdetnosing;
+#endif
+
+#if(NOGDETB1==0)
+  geom->IEOMFUNCNOSINGMAC(B1)=geom->igdetnosing;
+#endif
+#if(NOGDETB2==0)
+  geom->IEOMFUNCNOSINGMAC(B2)=geom->igdetnosing;
+#endif
+#if(NOGDETB3==0)
+  geom->IEOMFUNCNOSINGMAC(B3)=geom->igdetnosing;
+#endif
+
+#if(DOENTROPY)
+#if(NOGDETENTROPY==0)
+  geom->IEOMFUNCNOSINGMAC(ENTROPY)=geom->igdetnosing;
+#endif
+#endif
+
+
+#endif // end if NEWMETRICSTORAGE==1
+
 }
 
 
