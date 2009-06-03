@@ -1967,3 +1967,78 @@ FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE
 
 
 
+
+int metric_checks(struct of_geom *ptrgeom)
+{
+  FTYPE delta[NDIM][NDIM];
+  FTYPE V[NDIM],X[NDIM];
+  int i,j,k,loc;
+  int jj,kk,pp;
+
+
+  i=ptrgeom->i;
+  j=ptrgeom->j;
+  k=ptrgeom->k;
+  loc=ptrgeom->p;
+
+  ////////////////
+  //
+  // delta^jj_kk = gcov_{kk pp} gcon^{pp jj}
+  //
+  ////////////////
+  DLOOP(jj,kk){
+    delta[jj][kk]=0.0;
+    DLOOPA(pp){
+      delta[jj][kk]+= ptrgeom->gcov[GIND(jj,pp)]* ptrgeom->gcon[GIND(pp,kk)];
+    }
+
+    if(PRODUCTION==0){
+      if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*100.0){
+	if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
+	  dualfprintf(fail_file,"Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk]);
+	}
+      }
+    }
+
+    if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*1000.0){
+      if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
+	dualfprintf(fail_file,"MAJOR Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk]);
+      }
+    }
+  }
+
+  
+
+  // check if near static limit since can't divide by the below in ucon_calc
+  // GODMARK
+  if (fabs(ptrgeom->gcon[GIND(TT,TT)]) < SMALL) {
+    bl_coord_ijk_2(i,j,k,loc,X,V);
+    dualfprintf(fail_file, "grid location too near g_{tt}==0: %d %d %d : r=%21.15g th=%21.15g phi=%21.15g : Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,ptrgeom->gcon[GIND(TT,TT)]);
+    myexit(1);
+  }
+  if (0 && fabs(ptrgeom->gcon[GIND(RR,RR)]) < SMALL) {
+    bl_coord_ijk_2(i,j,k,loc,X,V);
+    dualfprintf(fail_file, "grid location too near g^{rr}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,ptrgeom->gcon[GIND(RR,RR)]);
+    myexit(1);
+  }
+  if (0 && fabs(ptrgeom->gcon[GIND(TH,TH)]) < SMALL) {
+    bl_coord_ijk_2(i,j,k,loc,X,V);
+    dualfprintf(fail_file,"grid location too near g^{\\theta\\theta}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,ptrgeom->gcon[GIND(TH,TH)]);
+    myexit(1);
+  }
+  if (0 && fabs(ptrgeom->gcon[GIND(PH,PH)]) < SMALL) {
+    bl_coord_ijk_2(i,j,k,loc,X,V);
+    dualfprintf(fail_file,"grid location too near g^{\\phi\\phi}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,ptrgeom->gcon[GIND(PH,PH)]);
+    myexit(1);
+  }
+
+  // what about g_{tt}==0? Do I ever divide by g_{tt}?
+  // Yes, for ucon[TT] for 4 velocity, which is done if WHICHVEL==VEL4 or init.c
+  // what about g^{rr}==0? Do I ever divide by g^{rr}?
+  // Doesn't appear so
+  // g^{pp} inf taken care of in metric.c by avoiding theta=0,Pi
+
+
+  return(0);
+
+}

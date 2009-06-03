@@ -1933,6 +1933,10 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"******SUPERWARNING******: divb won't be zero for absorbed regions when using AVOIDADVANCESHIFTX???==1 as required since need those regions to inject solution with arbitrary velocity profile.\n");
   }
 
+  if(ANALYTICGCON==0){
+    dualfprintf(fail_file,"******SUPERWARNING******: If far from black hole, even with apparently g^{t\phi}\sim 0 at the 10^{-34} level, still leads to exponential spurious growth in u^3 u_3 and B^3 to catastrophic levels!!  For KS metric with a\neq 0, best to use analytical gcon that leads to exactly g^{t\phi}=0 and so \beta[\phi]=0.\n");
+  }
+
   
 
 

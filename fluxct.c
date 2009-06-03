@@ -96,7 +96,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
     /////////////////
     //
-    // A_1
+    // B^1
     //
     /////////////////
 
@@ -122,7 +122,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
     /////////////////
     //
-    // A_2
+    // B^2
     //
     /////////////////
     
@@ -147,7 +147,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
     /////////////////
     //
-    // A_3
+    // B^3
     //
     /////////////////
 

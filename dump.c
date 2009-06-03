@@ -307,7 +307,8 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   int pl,pliter;
   FTYPE r, th, vmin[NDIM], vmax[NDIM];
   int ignorecourant;
-  struct of_state q;
+  struct of_state qdontuse;
+  struct of_state *qptr=&qdontuse;
   FTYPE X[NDIM],V[NDIM];
   FTYPE divb;
   FTYPE b[NDIM],ucon[NDIM];
@@ -332,36 +333,36 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   get_geometry(i, j, k, loc, ptrgeom);
 
   if (!failed) {
-    if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1)
+    if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1)
       FAILSTATEMENT("dump.c:dump()", "get_state() dir=0", 1);
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
       FAILSTATEMENT("dump.c:dump()", "vchar() dir=1or2", 1);
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
       FAILSTATEMENT("dump.c:dump()", "vchar() dir=1or2", 2);
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
       FAILSTATEMENT("dump.c:dump()", "vchar() dir=1or2", 3);
   }
   else {// do a per zone check, otherwise set to 0
     whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
-    if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1){
+    if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1){
       for (pl = 0; pl < NDIM; pl++)
-	q.ucon[pl]=0;
+	qptr->ucon[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	q.ucov[pl]=0;
+	qptr->ucov[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	q.bcon[pl]=0;
+	qptr->bcon[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	q.bcov[pl]=0;
+	qptr->bcov[pl]=0;
     }
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
       vmax[1]=vmin[1]=0;
     }
     
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1){
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1){
       vmax[2]=vmin[2]=0;
     }
 
-    if (vchar(GLOBALMAC(pdump,i,j,k), &q, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1){
+    if (vchar(GLOBALMAC(pdump,i,j,k), qptr, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1){
       vmax[3]=vmin[3]=0;
     }
 
@@ -423,13 +424,13 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&divb,0,1,writebuf); // 1
 
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(q.ucon[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->ucon[pl]),0,1,writebuf);
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(q.ucov[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->ucov[pl]),0,1,writebuf);
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(q.bcon[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->bcon[pl]),0,1,writebuf);
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(q.bcov[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->bcov[pl]),0,1,writebuf);
   // 4*4
     
   myset(datatype,&vmin[1],0,1,writebuf);

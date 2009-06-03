@@ -454,6 +454,7 @@ extern int vcon2pr(int whichvel, FTYPE *vcon, struct of_geom *geom, FTYPE *pr);
 
 
 // metric stuff
+extern int metric_checks(struct of_geom *ptrgeom);
 extern void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, struct of_geom *geom);
 extern void gset(int getprim, int whichcoord, int i, int j, int k, struct of_geom *geom);
 extern FTYPE gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov);

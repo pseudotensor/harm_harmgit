@@ -315,6 +315,7 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
   FTYPE Unormalnew[NPR],Unormalold[NPR];
   FTYPE fdiff[NPR];
   struct of_state q;
+  int pl,pliter;
   int j,k,jj;
   FTYPE errornorm;
 
@@ -340,9 +341,9 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     //
     /////////////
     // assume default value assignment for normalized version of U
-    PLOOP(pliter,k){
-      Unormalold[k] = Uold[k];
-      Unormalnew[k] = Unew[k];
+    PLOOP(pliter,pl){
+      Unormalold[pl] = Uold[pl];
+      Unormalnew[pl] = Unew[pl];
     }      
 
 #if(REMOVERESTMASSFROMUU==2)
@@ -362,19 +363,19 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     // now check for errors
     //
     //////////////////////////////
-    PLOOP(pliter,k){
+    PLOOP(pliter,pl){
 
       // default is to assume nothing wrong
-      fdiff[k]=0.0;
+      fdiff[pl]=0.0;
 
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
-      if(EOMTYPE==EOMFFDE && (k==RHO || k==UU) ) continue;
-      if(EOMTYPE==EOMCOLDGRMHD  && (k==UU) ) continue;
+      if(EOMTYPE==EOMFFDE && (pl==RHO || pl==UU) ) continue;
+      if(EOMTYPE==EOMCOLDGRMHD  && (pl==UU) ) continue;
       // leave geometry out of it
-      //      Unormalnew[k]*=ptrgeom->gdet;
-      //      Unormalold[k]*=ptrgeom->gdet;
-      if(k==RHO || k==UU) fdiff[k] = fabs(Unormalnew[k]-Unormalold[k])/(fabs(Unormalnew[k])+fabs(Unormalold[k])+SMALL);
-      else if(k==U1 || k==U2 || k==U3){
+      //      Unormalnew[pl]*=ptrgeom->gdet;
+      //      Unormalold[pl]*=ptrgeom->gdet;
+      if(pl==RHO || pl==UU) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+      else if(pl==U1 || pl==U2 || pl==U3){
 
 	errornorm  = THIRD*(fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
 #if(REMOVERESTMASSFROMUU==2)
@@ -382,27 +383,27 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
 	errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
 #endif
 			  
-	fdiff[k] = fabs(Unormalnew[k]-Unormalold[k]) / (errornorm+SMALL);
+	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
 
       }
-      else if(k==B1 || k==B2 || k==B3){
-	fdiff[k] = fabs(Unormalnew[k]-Unormalold[k])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
+      else if(pl==B1 || pl==B2 || pl==B3){
+	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
       }
     }
     
     // broke loop to check multiple directions
 
-    PLOOP(pliter,k){
-      if((*lpflag)!=0 || fdiff[k]>CHECKONINVFRAC){
+    PLOOP(pliter,pl){
+      if((*lpflag)!=0 || fdiff[pl]>CHECKONINVFRAC){
 	if(
-	   ( (k>=RHO)&&(k<=B3)&&((fabs(Unormalold[k])>SMALL)&&(fabs(Unormalnew[k])>SMALL)) )
+	   ( (pl>=RHO)&&(pl<=B3)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
 	    ){
 	  badinversion++;
-	  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",k,fdiff[k],Unormalold[k],Unormalnew[k]);
+	  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
 	}
       }
-      if(fdiff[k]>CHECKONINVFRACFAIL){
-	if((k>=RHO)&&(k<=B3)&&((fabs(Unormalold[k])>SMALL)&&(fabs(Unormalnew[k])>SMALL))){
+      if(fdiff[pl]>CHECKONINVFRACFAIL){
+	if((pl>=RHO)&&(pl<=B3)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL))){
 	  badinversionfail++;
 	}
       }
@@ -416,7 +417,7 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     if(badinversion){
       dualfprintf(fail_file,"Bad inversion (or possibly Bad U(p) calculation):\n");
       dualfprintf(fail_file,"t=%21.15g nstep=%ld stepart=%d :: i=%d j=%d :: lntries=%d lerrx=%21.15g\n",t,nstep,steppart,ptrgeom->i,ptrgeom->j,newtonstats->lntries,newtonstats->lerrx);
-      PLOOP(pliter,k) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Uold[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g)\n",k,Uold[k],k,Uold[k]*ptrgeom->gdet,k,pr[k],k,pr0[k]);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Uold[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g)\n",pl,Uold[pl],pl,Uold[pl]*ptrgeom->gdet,pl,pr[pl],pl,pr0[pl]);
       
       dualfprintf(fail_file,"g=%21.15g\n",ptrgeom->gdet);
       

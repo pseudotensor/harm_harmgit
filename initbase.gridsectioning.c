@@ -751,6 +751,7 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
 
 
   // see advance.c: Whether to allow shift in evolved quantities to preserve conservation and divb=0.  Set to zero if exposing that surface in time.  Set to 1 if absorbing that surface in time and relying on it to inject a solution.
+  // We don't preserve divb inside boundary being absorbed since missing inside-boundary EMF could have cancelled active emf at edge of grid leading to very different (say) B2 just inside boundary that determines inside-boundary divb value.
   AVOIDADVANCESHIFTX1DN= 1;
   AVOIDADVANCESHIFTX1UP= 0;
   AVOIDADVANCESHIFTX2DN= 1;

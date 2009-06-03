@@ -358,12 +358,16 @@ static void set_grid_metrics(void)
     FTYPE V[NDIM];
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
+    struct of_geom geomdontusetest;
+    struct of_geom *ptrgeomtest=&geomdontusetest;
     int loc;
     extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
     extern void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);
     extern void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *EOMFUNCNAME);
     void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME);
     LOCALMETRICTEMPVARS;
+
+
 
 
     //////////    COMPFULLLOOPP1
@@ -444,51 +448,15 @@ static void set_grid_metrics(void)
 	// GODMARK: then unless want to create independent storage area, computed each time needed
 #endif
 
-	/////////////
+
+
+	////////////
 	//
-	// Fill global gdetgeom structure
-	
-
-
-	//      if(loc==FACE2){
-	//	dualfprintf(fail_file,"i=%d V1=%21.15g V[2]=%21.15g gdet=%21.15g\n",i,V[1],V[2],localgdet[0]);
-	//      }
-
-
-	//      if(loc==FACE1){
-	//dualfprintf(fail_file,"i=%d V1=%21.15g gdet=%21.15g\n",i,V[1],GLOBALMETMACP1A0(gdet,FACE1,i,j,k));
-	//	DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcov,FACE1,i,j,k,jj,kk));
-	//	DLOOP(jj,kk) dualfprintf(fail_file,"gcon[%d][%d]=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcon,FACE1,i,j,k,jj,kk));
-	//}
-
-	// check if near static limit since can't divide by the below in ucon_calc
-	// GODMARK
-	if (fabs(localgcon[GIND(TT,TT)]) < SMALL) {
-	  bl_coord_ijk(i,j,k,X,V);
-	  dualfprintf(fail_file, "grid location too near g_{tt}==0: %d %d %d : r=%21.15g th=%21.15g phi=%21.15g : Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(TT,TT)]);
-	  myexit(1);
-	}
-	if (0 && fabs(localgcon[GIND(RR,RR)]) < SMALL) {
-	  bl_coord_ijk(i,j,k,X,V);
-	  dualfprintf(fail_file, "grid location too near g^{rr}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(RR,RR)]);
-	  myexit(1);
-	}
-	if (0 && fabs(localgcon[GIND(TH,TH)]) < SMALL) {
-	  bl_coord_ijk(i,j,k,X,V);
-	  dualfprintf(fail_file,"grid location too near g^{\\theta\\theta}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(TH,TH)]);
-	  myexit(1);
-	}
-	if (0 && fabs(localgcon[GIND(PH,PH)]) < SMALL) {
-	  bl_coord_ijk(i,j,k,X,V);
-	  dualfprintf(fail_file,"grid location too near g^{\\phi\\phi}==0:  %d %d %d : r=%21.15g th=%21.15g phi=%21.15g :  Rin=%21.15g %21.15g\n", i,j,k,V[1],V[2],V[3],Rin,localgcon[GIND(PH,PH)]);
-	  myexit(1);
-	}
-
-	// what about g_{tt}==0? Do I ever divide by g_{tt}?
-	// Yes, for ucon[TT] for 4 velocity, which is done if WHICHVEL==VEL4 or init.c
-	// what about g^{rr}==0? Do I ever divide by g^{rr}?
-	// Doesn't appear so
-	// g^{pp} inf taken care of in metric.c by avoiding theta=0,Pi
+	// metric checks
+	//
+	////////////
+	get_geometry(i,j,k,loc,ptrgeomtest);
+	metric_checks(ptrgeomtest);
 
       }// end over location
     }// end 3D LOOP
