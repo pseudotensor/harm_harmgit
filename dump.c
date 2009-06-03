@@ -930,21 +930,21 @@ int gdump_content(int i, int j, int k, MPI_Datatype datatype, void *writebuf)
   }
 
     
-  ptrftemp=(FTYPE*)(&generalmatrixupper[0][0]);
+  ptrftemp=&generalmatrixupper[0][0];
   myset(datatype,ptrftemp,0,NDIM*NDIM,writebuf);
-  ptrftemp=(FTYPE*)(&generalmatrixlower[0][0]);
+  ptrftemp=&generalmatrixlower[0][0];
   myset(datatype,ptrftemp,0,NDIM*NDIM,writebuf);
-  ptrftemp=(FTYPE*)(&localgdet);
+  ptrftemp=&localgdet[0];
   myset(datatype,ptrftemp,0,1,writebuf);
   //ptrftemp=(FTYPE*)(&localgdetvol); // can take a peek if GDETVOLDIFF==1
   //  myset(datatype,ptrftemp,0,1,writebuf);
 
     
-  ptrftemp=(FTYPE*)(&GLOBALMETMACP0A1(conn2,myii,myjj,mykk,0));
+  ptrftemp=&GLOBALMETMACP0A1(conn2,myii,myjj,mykk,0);
   myset(datatype,ptrftemp,0,NDIM,writebuf);
 
   // 4*4
-  ptrftemp=(FTYPE*)(&dxdxp[0][0]);
+  ptrftemp=&dxdxp[0][0];
   myset(datatype,ptrftemp,0,NDIM*NDIM,writebuf);
 
 

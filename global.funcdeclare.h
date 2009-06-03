@@ -730,7 +730,11 @@ extern int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *g
 
 extern int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep);
 extern int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+extern int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+
 extern int post_fixup(int stage, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep);
+extern int post_fixup_nofixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep);
+
 extern int pre_fixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]);
 extern int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]);
 

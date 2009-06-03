@@ -4,9 +4,17 @@
 
 static void set_position_stores(void);
 static void set_grid_metrics(void);
+static void set_grid_metrics_withsymmetrization(void);
 static void set_connection(void);
 static void set_idxvol(void);
+static void symmetrize_connection(void);
+static void symmetrize_gcov(void);
+static void set_grid_metrics_gcov(void);
+static void set_grid_metrics_others(void);
+static void symmetrize_X_V_dxdxp_idxdxp(void);
 
+
+#define ATTEMPTSYMMETRIZATION 1
 
 // translate compgeom to some local quantities at loc,i,j,k
 int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
@@ -156,6 +164,10 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
     }
 
 
+    if(ATTEMPTSYMMETRIZATION){
+      trifprintf("Will attempt to symmetrize coordinate/metric/connection type quantities\n");
+    }
+
     //////////////
     //
     // set positional stores
@@ -183,10 +195,16 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   // if here, then doing over again
   if(whichtime==0) trifprintf("set_grid_metrics() BEGIN\n");
   didstoremetricdata=0;
-  set_grid_metrics();
+  if(ATTEMPTSYMMETRIZATION==0){
+    set_grid_metrics();
+  }
+  else{
+    set_grid_metrics_withsymmetrization();
+  }
   // if here, then did store new metric data
   didstoremetricdata=1;
   if(whichtime==0) trifprintf("set_grid_metrics() END\n");
+
 
 
   //////////////
@@ -232,6 +250,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
     store_old_metric();
     if(whichtime==0) trifprintf("store_old_metric() END\n");
   }
+
 
 
 
@@ -313,14 +332,109 @@ static void set_position_stores(void)
     }// end over locations
   }// end parallel region (and implied barrier)
 
+
+  if(ATTEMPTSYMMETRIZATION) symmetrize_X_V_dxdxp_idxdxp();
+  
 }
 
 
 
 
+// set positional stores
+static void symmetrize_X_V_dxdxp_idxdxp(void)
+{
+
+  // symmetrize gcov
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+
+#pragma omp parallel 
+    {
+      int i, j, k;
+      int jj,kk;
+      int loc;
 
 
 
+      // over grid locations needing these quantities
+      for (loc = NPG - 1; loc >= 0; loc--) {
+
+	
+	if(loc==FACE2 || loc==CORN1 || loc==CORN3 || loc==CORNT){
+
+	  //////////    COMPFULLLOOPP1
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+
+	    if(j>=N2/2){
+	      DLOOP(jj,kk){
+		GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(dxdxpstore,loc,i,N2-j,k,jj,kk);
+		GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(idxdxpstore,loc,i,N2-j,k,jj,kk);
+	      }
+
+	      DLOOP(jj,kk){
+		if(jj==2 && kk!=2 || jj!=2 && kk==2){
+		  GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk) *= -1.0;
+		  GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk) *= -1.0;
+		}
+	      }
+
+	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-j,k,TH);
+	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH);
+
+	    }// end over upper hemisphere
+	  
+	  }// end 3D LOOP
+	}// end if symmetrizing FACE2-like positions
+	else{
+
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+	    if(j>=N2/2){
+	      DLOOP(jj,kk){
+		GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(dxdxpstore,loc,i,N2-1-j,k,jj,kk);
+		GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(idxdxpstore,loc,i,N2-1-j,k,jj,kk);
+	      }
+
+	      DLOOP(jj,kk){
+		if(jj==2 && kk!=2 || jj!=2 && kk==2){
+		  GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk) *= -1.0;
+		  GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk) *= -1.0;
+		}
+	      }
+
+	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
+	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH);
+
+
+	    }// end over upper hemisphere
+	  }// end 3D LOOP
+	}// end if over CENT-like w.r.t. FACE2
+
+      }// end over locations
+    }// end parallel region
+  }// end if can symmetrize
+
+
+
+}
 
 
 
@@ -404,8 +518,8 @@ static void set_grid_metrics(void)
 	gcov_func(ptrgeom,1,MCOORD,X, localgcov,localgcovpert);
 	localgdet[0] = gdet_func_metric(MCOORD,V,localgcov);
 	gcon_func(ptrgeom,1,MCOORD,X,localgcov,localgcon);
-#if(WHICHEOM!=WITHGDET || NEWMETRICSTORAGE==1)
-	// this is consistent with EOMFUNCMAC stuff as long as eomfunc_func() has been macrofied
+#if(WHICHEOM!=WITHGDET)
+	// don't need (want) to recompute gdet that is just where localeomfunc points to if WHICHEOM==WITHGDET
 	eomfunc_func(ptrgeom,1,MCOORD,X,localeomfunc);
 #endif
 	alphalapse_func(ptrgeom,1,MCOORD,X,localgcov,localgcon,localalphalapse);
@@ -467,10 +581,338 @@ static void set_grid_metrics(void)
 
 
 
+// assumes gcov only raw input (i.e. GCONANALYTIC==0) and symmetrize only gcov so that all resulting quantities should be symmetric
+static void set_grid_metrics_withsymmetrization(void)
+{
+
+
+  
+  //  dualfprintf(fail_file,"Computing metric stuff\n");
+
+  
+  set_grid_metrics_gcov();
+
+  if(ATTEMPTSYMMETRIZATION) symmetrize_gcov();
+
+  set_grid_metrics_others();
+
+}
 
 
 
 
+
+
+
+// sets gcov
+static void set_grid_metrics_gcov(void)
+{
+
+  
+  //  dualfprintf(fail_file,"Computing metric stuff\n");
+
+
+#pragma omp parallel 
+  {
+    int i, j, k, l, m;
+    int ii, jj, kk, ll;
+    int pl,pliter;
+    FTYPE X[NDIM];
+    FTYPE V[NDIM];
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    int loc;
+    extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
+    LOCALMETRICTEMPVARS;
+
+
+
+
+    //////////    COMPFULLLOOPP1
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+      // doesn't depend on position, only store/use 1 value
+      if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+      // over grid locations needing these quantities
+      for (loc = NPG - 1; loc >= 0; loc--) {
+
+	bl_coord_ijk_2(i,j,k,loc,X, V);
+	/////////////////
+	//
+	// (1,MCOORD) here actually means PRIMCOORDS since the "1" means convert MCOORD to PRIMCOORDS.
+
+	// fake geom just for indices
+	ptrgeom->i=i;
+	ptrgeom->j=j;
+	ptrgeom->k=k;
+	ptrgeom->p=loc;
+
+	// get local metric quantities for this loc,i,j,k
+	GETLOCALMETRIC(loc,i,j,k);
+
+	// get metric terms and anything in struct of_geom
+	gcov_func(ptrgeom,1,MCOORD,X, localgcov,localgcovpert);
+	localgdet[0] = gdet_func_metric(MCOORD,V,localgcov);
+
+      }// end over location
+    }// end 3D LOOP
+  }// end parallel region
+
+
+}
+
+
+
+
+
+
+
+
+static void set_grid_metrics_others(void)
+{
+
+
+
+#pragma omp parallel 
+  {
+    int i, j, k, l, m;
+    int ii, jj, kk, ll;
+    int pl,pliter;
+    FTYPE X[NDIM];
+    FTYPE V[NDIM];
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    struct of_geom geomdontusetest;
+    struct of_geom *ptrgeomtest=&geomdontusetest;
+    int loc;
+    extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
+    extern void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);
+    extern void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *EOMFUNCNAME);
+    void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME);
+    LOCALMETRICTEMPVARS;
+
+
+
+
+    //////////    COMPFULLLOOPP1
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+      // doesn't depend on position, only store/use 1 value
+      if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+      // over grid locations needing these quantities
+      for (loc = NPG - 1; loc >= 0; loc--) {
+
+	bl_coord_ijk_2(i,j,k,loc,X, V);
+	/////////////////
+	//
+	// (1,MCOORD) here actually means PRIMCOORDS since the "1" means convert MCOORD to PRIMCOORDS.
+
+	// fake geom just for indices
+	ptrgeom->i=i;
+	ptrgeom->j=j;
+	ptrgeom->k=k;
+	ptrgeom->p=loc;
+
+	// get local metric quantities for this loc,i,j,k
+	GETLOCALMETRIC(loc,i,j,k);
+
+
+	// get metric terms and anything in struct of_geom
+	gcon_func(ptrgeom,1,MCOORD,X,localgcov,localgcon);
+#if(WHICHEOM!=WITHGDET)
+	eomfunc_func(ptrgeom,1,MCOORD,X,localeomfunc);
+#endif
+	alphalapse_func(ptrgeom,1,MCOORD,X,localgcov,localgcon,localalphalapse);
+	betasqoalphasq_func(ptrgeom,1,MCOORD,X,localgcov,localgcon,localbetasqoalphasq);
+	beta_func(ptrgeom,1,MCOORD,X,localgcov,localgcon,*localalphalapse,localbeta);
+	if(GDETVOLDIFF){
+	  // uses X,V (not det) from all locations
+	  gdetvol_func(ptrgeom,localgdet,localeomfunc,localgdetvol);
+	}
+
+
+#if(NEWMETRICSTORAGE)
+	GLOBALMETMACP1A0(compgeom,loc,i,j,k).i=ptrgeom->i;
+	GLOBALMETMACP1A0(compgeom,loc,i,j,k).j=ptrgeom->j;
+	GLOBALMETMACP1A0(compgeom,loc,i,j,k).k=ptrgeom->k;
+	GLOBALMETMACP1A0(compgeom,loc,i,j,k).p=ptrgeom->p;
+
+
+	// then store extra things in global geom structure
+	// refer to "_old" version so really computs it
+	set_igdet_old(&GLOBALMETMACP1A0(compgeom,loc,i,j,k)); // full 1/gdet and 1/EOMFUNCMAC(pl)
+
+	// go ahead and assign eomfunc as per variable as either original eomfunc or gdet
+	assign_eomfunc(&GLOBALMETMACP1A0(compgeom,loc,i,j,k), &(GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(0)));
+
+
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;
+
+
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing;
+
+
+	PLOOP(pliter,pl){
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(pl);
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).IEOMFUNCNOSINGMAC(pl);
+	}
+	//      exit(0);
+	
+#else
+	// GODMARK: then unless want to create independent storage area, computed each time needed
+#endif
+
+
+
+	////////////
+	//
+	// metric checks
+	//
+	////////////
+	get_geometry(i,j,k,loc,ptrgeomtest);
+	metric_checks(ptrgeomtest);
+#if(0)
+	if(startpos[1]+i>totalsize[1]/2){
+	  
+	  //ptrgeomtest->gcon[GIND(PH,TT)]=0.0; // doesn't matter
+	  ptrgeomtest->gcon[GIND(PH,RR)]=0.0; // matters
+	  //ptrgeomtest->gcon[GIND(TT,RR)]=0.0; // doesn't matter
+	  ptrgeomtest->gcon[GIND(PH,TH)]=0.0; //  matters
+
+	  ptrgeomtest->gcov[GIND(PH,TT)]=0.0; // matters
+	  ptrgeomtest->gcov[GIND(PH,RR)]=0.0; // matters
+	  ///	  ptrgeomtest->gcov[GIND(TT,RR)]=0.0; // doesn't matter
+
+	  //	  ptrgeomtest->beta[TT]=0.0; // doesn't matter
+	  //	  ptrgeomtest->beta[RR]=0.0; // doesn't matter
+	  //	  ptrgeomtest->beta[TH]=0.0; // doesn't matter
+	  //	  ptrgeomtest->beta[PH]=0.0; // doesn't matter as long as gcon analytic!
+
+	  dualfprintf(fail_file,"i=%d j=%d beta[PH]=%21.15g\n",i,j,ptrgeomtest->beta[PH]);
+	}
+#endif
+
+      }// end over location
+    }// end 3D LOOP
+  }// end parallel region
+
+
+
+
+}
+
+
+
+
+
+
+// symmetrize gcov
+// symmetrize gdet too since gdet calculation depends on ordering of + and - quantities
+static void symmetrize_gcov(void)
+{
+
+
+#if(NEWMETRICSTORAGE==1)
+
+  // symmetrize gcov
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+
+#pragma omp parallel 
+    {
+      int i, j, k;
+      int jj,kk;
+      int loc;
+
+
+
+      // over grid locations needing these quantities
+      for (loc = NPG - 1; loc >= 0; loc--) {
+
+	
+	if(loc==FACE2 || loc==CORN1 || loc==CORN3 || loc==CORNT){
+
+	  //////////    COMPFULLLOOPP1
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+
+	    if(j>=N2/2){
+	      DLOOP(jj,kk) GLOBALMETMACP1A0(compgeom,loc,i,j,k).gcov[GIND(jj,kk)] = GLOBALMETMACP1A0(compgeom,loc,i,N2-j,k).gcov[GIND(jj,kk)];
+
+	      for(jj=0;jj<NDIM;jj++){
+		for(kk=0;kk<=jj;kk++){ // must avoid duplication
+		  if(jj==2 && kk!=2 || jj!=2 && kk==2){
+		    GLOBALMETMACP1A0(compgeom,loc,i,j,k).gcov[GIND(jj,kk)] *= -1.0;
+		  }
+		}
+	      }
+
+	      GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet = GLOBALMETMACP1A0(compgeom,loc,i,N2-j,k).gdet;
+
+	    }// end over upper hemisphere
+	  
+	  }// end 3D LOOP
+	}// end if symmetrizing FACE2-like positions
+	else{
+
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+
+	    if(j>=N2/2){
+	      DLOOP(jj,kk) GLOBALMETMACP1A0(compgeom,loc,i,j,k).gcov[GIND(jj,kk)] = GLOBALMETMACP1A0(compgeom,loc,i,N2-1-j,k).gcov[GIND(jj,kk)];
+	    
+	      for(jj=0;jj<NDIM;jj++){
+		for(kk=0;kk<=jj;kk++){ // must avoid duplication
+		  if(jj==2 && kk!=2 || jj!=2 && kk==2){
+		    GLOBALMETMACP1A0(compgeom,loc,i,j,k).gcov[GIND(jj,kk)] *= -1.0;
+		  }
+		}
+	      }
+
+	      GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet = GLOBALMETMACP1A0(compgeom,loc,i,N2-1-j,k).gdet;
+
+	    }// end over upper hemisphere
+	  }// end 3D LOOP
+	}// end if over CENT-like w.r.t. FACE2
+
+      }// end over locations
+    }// end parallel region
+  }// end if can symmetrize
+
+#endif
+
+}
 
 
 ///////////////////
@@ -516,6 +958,54 @@ static void set_connection(void)
       conn_func(MCOORD,X, ptrgeom, GLOBALMETMAC(conn,i,j,k),GLOBALMETMAC(conn2,i,j,k));
     }// end 3D LOOP
   }// end parallel region
+
+
+
+  if(ATTEMPTSYMMETRIZATION) symmetrize_connection();
+
+}
+
+
+
+
+static void symmetrize_connection(void)
+{
+
+
+
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+    // symmetrize
+#pragma omp parallel 
+    {
+      int i, j, k;
+      int jj,kk,pp;
+
+      //////////    COMPFULLLOOP
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	// doesn't depend on position, only store/use 1 value
+	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+
+ 
+	if(j>=N2/2){
+	  DLOOP(jj,kk) DLOOPA(pp) GLOBALMETMACP0A3(conn,i,j,k,jj,kk,pp) = GLOBALMETMACP0A3(conn,i,N2-1-j,k,jj,kk,pp); // N2-1-j because at loc=CENT
+	  DLOOP(jj,kk) DLOOPA(pp){
+	    if(jj==2 && kk!=2 && pp!=2 || jj!=2 && kk==2 && pp!=2 || jj!=2 && kk!=2 && pp==2 || jj==2 && kk==2 && pp==2){
+	      GLOBALMETMACP0A3(conn,i,j,k,jj,kk,pp) *= -1.0;
+	    }
+	  }
+	}
+
+      }// end 3D LOOP
+    }// end parallel region
+  } // end symmetrization
+
 
 }
 

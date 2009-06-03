@@ -3,35 +3,29 @@
 
 
 #if(0) // uniformly low values although not always lower than original version
-#define MAXITER 50
+#define MAXITER 5
 #define NRANSI
 #define CON 1.1
 #define CON2 (CON*CON)
 //#define NTAB 130 // number of function evaluations is 2XNTAB
 #define NTAB 30 // number of function evaluations is 2XNTAB
+
 #define SAFE 2.0
-//#define NRHMAX 1 // maximum size where metric changes substantially
-#define NRHMAX 1.e-1
 #define TRYTOL (trytollocal) // attempted tolerance
-#define OKTOL 1e-1 // error must be below this
-#define MINH (minhlocal) // minimum h
+#define OKTOL 1e-5 // error must be below this to avoid report
 //#define HSTARTCHANGE 10.0
-#define HSTARTCHANGE 2.0
 #endif
 
 #if(1) // original version (gets pretty damn low for many, but not all, derivatives -- some 1E-6 rather than 1E-13)
-#define MAXITER 128
+#define MAXITER 5
 #define NRANSI
 #define CON 1.3
 #define CON2 (CON*CON)
 #define NTAB 10 // number of function evaluations is 2XNTAB
+
 #define SAFE 2.0
-//#define NRHMAX 1 // maximum size where metric changes substantially
-#define NRHMAX 1E-2
 #define TRYTOL 1E-10 // attempted tolerance
-#define OKTOL 1e-5 // error must be below this
-#define MINH 1E-15 // minimum h
-#define HSTARTCHANGE 4.0
+#define OKTOL 1e-5 // error must be below this to avoid report
 #endif
 
 // whether to turn on extensive recent debugging
@@ -40,8 +34,10 @@
 // whether to output matrix of derivative and extrapolations of various orders
 #define DEBUGOUTPUTAMATRIX 0
 
-// whether to use Jon's additional starting "h" checks [can be very expensive]
+// whether to use Jon's additional starting "h" checks [about 2X-3X more expensive in typical cases]
 #define USEJONEXTENSION 1
+
+
 
 // jon's version of NR's dfridr modified to accept more general, needed, function
 FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk)
@@ -50,7 +46,7 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
   FTYPE errt,fac,hh,**a,ans;
   FTYPE dX[NDIM],Xh[NDIM],Xl[NDIM];
   FTYPE h,err;
-  FTYPE hstart;
+  FTYPE firsthstart,hstart;
   FTYPE newdx,temp;
   int shit;
   int iter;
@@ -58,11 +54,10 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
   FTYPE hhlist[MAXITER];
   FTYPE anslist[MAXITER];
   FTYPE minerror,minerrorhstart;
-  FTYPE hstartfrac;
   int miniter;
   int iterdebug;
   FTYPE minans;
-  FTYPE trytollocal,minhlocal;
+  FTYPE trytollocal;
   int lasti;
   int Nvec[NDIM];
   int goodi,goodj;
@@ -74,17 +69,10 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 
 
   trytollocal=NUMEPSILONPOW23;
-  minhlocal=NUMEPSILONPOW23;
-  hstartfrac=HSTARTCHANGE; // starting fractional drop in hstart
+  //  minhlocal=NUMEPSILONPOW23;
 	
   // allocate memory
   a=dmatrix(1,NTAB,1,NTAB);
-
-  //    hstart=NRHMAX;
-  //  hstart=MAX(dx[kk],NRHMAX);
-  //  hstart=MIN(NRHMAX,hstart*10.0);
-
-  //  hstart=1.0;
 
   // starting delta shouldn't be so large to cross interesting boundaries (like pole or r=0), but should be large enough to allow convergence to answer at smaller intervals.
   Nvec[0]=0;
@@ -97,13 +85,14 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 
 
 
+  firsthstart=hstart;
   miniter=0; // didn't find minimum is assumed, which means first is minimum!
   iter=0;
   minerror=BIG;
   minans=BIG;
   truecon=CON;
   truecon2=CON2;
-  goodhh=-1.0; // indicates if ever found goodhh
+  goodhh=-1.0; // -1.0 indicates if ever found goodhh
 
 
   //////////////////////
@@ -179,16 +168,6 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 	errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]));
 	errt/=MAX(MAX(MAX(fabs(a[j][i]),fabs(a[j-1][i])),MAX(fabs(a[j][i]),fabs(a[j-1][i-1]))),SMALL);
 
-#if(DEBUGDF)
-	// debug
-	//	if(ii==3 && jj==3 && kk==2){
-	//	if(ii==2 && jj==2 && kk==2){
-	//	if(ii==1 && jj==1 && kk==1){
-	    dualfprintf(fail_file,"a11=%21.15g a[%d][%d]=%21.15g errt=%21.15g fac=%21.15g\n",a[1][1],i,j,a[i][j],errt,fac);
-	    //	  }
-	    //	}
-#endif
-
 	if (errt <= err) {
 	  err=errt;
 	  ans=a[j][i];
@@ -211,7 +190,7 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 	nrgoodj=goodj;
 	nrgoodi=goodi;
 	nrgoodhh=goodhh;
-#if(0) // NR breaks a bit early
+#if(0) // NR breaks a bit early -- found solution can sometimes be better if wait -- so just do whole NTAB
 	break;
 #endif
       }// end NR early termination check
@@ -290,72 +269,48 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
     anslist[iter]=ans; // store result
 
     if(err>TRYTOL){ // TRYTOL is error we are attempting to reach
-      if(hstart<MINH){ // see if starting h is below minimum h allowed
-	if(err<OKTOL) break; // if h<MINH and err<OKTOL, then fine, so quit
-	else{
 
-	  if(miniter>=0){
-	    if(minerror<OKTOL){
-	      ans=minans;
-	      break;	      // then accept as answer
-	    }
-	  }
-	  else{ // then must fail
-	    dualfprintf(fail_file,"never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",OKTOL,err,ii,jj,kk);
-	    dualfprintf(fail_file,"gi=%d gj=%d gk=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-	    dualfprintf(fail_file,"miniter=%d errlist[miniter]=%21.15g hhlist[miniter]=%21.15g\n",miniter,errlist[miniter],hhlist[miniter]);	    
-	    dualfprintf(fail_file,"minerror=%21.15g minans=%21.15g\n",minerror,minans);
-	  
-	    for(iterdebug=0;iterdebug<=iter;iterdebug++){
-	      dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
-	    }
-	    myexit(66);
-	  }
-	}
+      if(errlist[iter]<minerror){
+	// store min error event
+	minerror=errlist[iter];
+	minerrorhstart=hhlist[iter];
+	miniter=iter;
+	minans=ans;
+#if(DEBUGDF)
+	dualfprintf(fail_file,"minerr=%21.15g minhstart=%21.15g miniter=%d minans=%21.15g\n",minerror,minerrorhstart,miniter,minans);
+#endif
       }
-      else{ // keep going since not below MINH
-	if(errlist[iter]<minerror){
-	  // store min error event
-	  minerror=errlist[iter];
-	  minerrorhstart=hhlist[iter];
-	  miniter=iter;
-	  minans=ans;
+      else{
+	// if did no better through bisecting hhgood, then probably done
+	ans=minans;
 #if(DEBUGDF)
-	  dualfprintf(fail_file,"minerr=%21.15g minhstart=%21.15g miniter=%d minans=%21.15g\n",minerror,minerrorhstart,miniter,minans);
+	if(iter==1) dualfprintf(fail_file,"Done with no better error (iter=%d)\n",iter);
+	else dualfprintf(fail_file,"Did better on multiple iterations (iter=%d)\n",iter);
 #endif
-	}
-	else{
-	  // if did no better through bisecting hhgood, then probably done
-	  ans=minans;
-#if(DEBUGDF)
-	  if(iter==1) dualfprintf(fail_file,"Done with no better error (iter=%d)\n",iter);
-	  else dualfprintf(fail_file,"Did better on multiple iterations (iter=%d)\n",iter);
-#endif
-	  break;
-	}
+	break;
+      }
 
-	// if here, then not done yet with bisecting on hh
-	// try h around goodh, but narrow down the factor by which hh changes so don't skip over better hh than goodhh
-	// NTAB entries, and want to go back to prior hh before goodhh, but need to cross to goodhh/truecon
-	// so change on truecon is fixed to be:
-	FTYPE htop,hbottom;
-	htop=goodhh*truecon;
-	hbottom=goodhh/truecon;
-	truecon= pow(hbottom,-1.0/NTAB) * pow(htop,1.0/NTAB);
-	truecon2=truecon*truecon; // reset truecon2
-	// now set new hstart:
-	hstart=htop;
-	// so start at htop and will exponentially approach hbottom after NTAB entries.
+      // if here, then not done yet with bisecting on hh
+      // try h around goodh, but narrow down the factor by which hh changes so don't skip over better hh than goodhh
+      // NTAB entries, and want to go back to prior hh before goodhh, but need to cross to goodhh/truecon
+      // so change on truecon is fixed to be:
+      FTYPE htop,hbottom;
+      htop=goodhh*truecon;
+      hbottom=goodhh/truecon;
+      truecon= pow(hbottom,-1.0/NTAB) * pow(htop,1.0/NTAB);
+      truecon2=truecon*truecon; // reset truecon2
+      // now set new hstart:
+      hstart=htop;
+      // so start at htop and will exponentially approach hbottom after NTAB entries.
 #if(DEBUGDF)
-	dualfprintf(fail_file,"iter=%d err=%21.15g goodhh=%21.15g lasti=%d truecon=%21.15g htop=%21.15g hbottom=%21.15g\n",iter,err,goodhh,lasti,truecon,htop,hbottom);
+      dualfprintf(fail_file,"iter=%d err=%21.15g goodhh=%21.15g lasti=%d truecon=%21.15g htop=%21.15g hbottom=%21.15g\n",iter,err,goodhh,lasti,truecon,htop,hbottom);
 #endif
 
-	if(truecon==1.0){
-	  ans=minans;
-	  break; // can't do any better
-	}
+      if(truecon==1.0){
+	ans=minans;
+	break; // can't do any better
+      }
 
-      } // end of keep going part
     }// end if err > TRYTOL
     else break; // then error<TRYTOL!  GOOD!
 
@@ -390,13 +345,17 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
   }// end while loop
 
 
-
-
-
   // done
   free_dmatrix(a,1,NTAB,1,NTAB);
-  //  dualfprintf(fail_file,"hfinal=%21.15g errfinal=%21.15g\n",hh,err);
-  //fflush(fail_file);
+
+
+  if(err<OKTOL){
+    // then good, nothing to report
+  }
+  else{
+    if(debugfail>=2) dualfprintf(fail_file,"Bad NUMREC error at i=%d j=%d k=%d ii=%d jj=%d kk=%d error=%21.15g ans=%21.15g :: iter=%d lasti=%d minerrorhstart=%21.15g firsthstart=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ii,jj,kk,err,ans,iter,lasti,minerrorhstart,firsthstart);
+  }
+
   return ans;
 
        
@@ -1802,16 +1761,16 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 	conn2[k]=0.0; // no 2nd connection then
       }
 
+
+      // answer is symmetric on i,j since uses g_{ij}, so only do part of work
       for (i = 0; i < NDIM; i++){
-	for (j = 0; j < NDIM; j++){
+	for (j = 0; j <=i; j++){
 	  // d(1+g_{tt}) -> dg_{tt}, so can use 1+g_{tt} for accurate non-relativistic gravity
 	  //if(i==j) conn[i][j][k] = (gcovperth[i] - gcovpertl[i]) / (Xh[k] - Xl[k]);
 	  // else 
-	  
 	  conn[i][j][k] = signdXgen[k]*(ghgen[k][GIND(i,j)] - glgen[k][GIND(i,j)]) / (Xhgen[k][k] - Xlgen[k][k]);
-					
-	}//end over j
-      } // end over i
+	}
+      }
       
     }// end over k
 
@@ -1824,7 +1783,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     localptrgeom->k=geom->k;
     localptrgeom->p=NOWHERE; // informs rest of calls that X will generally be arbitrary
 
-    dualfprintf(fail_file,"DIFFNUMREC: doing i=%d j=%d\n",geom->i,geom->j);
+    //    dualfprintf(fail_file,"DIFFNUMREC: doing i=%d j=%d\n",geom->i,geom->j);
     for (k = 0; k < NDIM; k++) {
 
       if(WHICHEOM!=WITHGDET){
@@ -1832,11 +1791,29 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
       }
       else conn2[k]=0.0; // then no 2nd connection
 
-      for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++){
-	conn[i][j][k] = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k);
+      // answer is symmetric on i,j since uses g_{ij}, so only do part of work
+      for (i = 0; i < NDIM; i++){
+	for (j = 0; j <=i; j++){
+	  conn[i][j][k] = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k);
+	}
+      }
+
+    }// end over k
+
+  }// end if CONNDERTYPE==DIFFNUMREC
+
+
+  ////////////////////////////////////////////////////
+  //  
+  // fill in rest of conn[i][j][k] (or enforce symmetry of connection)
+  //
+  ////////////////////////////////////////////////////
+  for (k = 0; k < NDIM; k++) {
+    for (i = 0; i < NDIM; i++){
+      for (j = i+1; j <NDIM; j++){
+	conn[i][j][k] = conn[j][i][k]; 
       }
     }
-
   }
 
 

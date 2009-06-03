@@ -344,6 +344,12 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 #endif
 
 
+#else
+
+  // just report problems, don't fix them
+  // Then no need for boundary calls
+  MYFUN(post_fixup_nofixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup_nofixup()", 1);
+
 #endif
 
 

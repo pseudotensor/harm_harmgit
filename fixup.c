@@ -46,6 +46,8 @@ int pre_fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
   return(0);
 }
 
+
+
 // operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
 // this function actually changes primitives
 int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
@@ -66,6 +68,8 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
 
   if(SIMULBCCALC>=1) boundstage=STAGE0;
   else boundstage=STAGEM1;
+
+
   for(stage=stagei;stage<=stagef;stage++){
 
 
@@ -118,6 +122,20 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
 
   return(0);
 }
+
+
+// this function just reports problems, but doesn't fix them
+int post_fixup_nofixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
+{
+
+  fixup_utoprim_nofixup(STAGEM1,pv,pbackup,ucons,finalstep);
+
+  return(0);
+}
+
+
+
+
 
 #if(JONFIXUP==1)
 
@@ -1244,6 +1262,74 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 	  
 	  
+	  
+      }// end if mypflag>UTOPRIMNOFAIL (i.e. failure)
+    }// end over COMPZLOOP loop
+  }// end over parallel region
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+// fix the bad solution as determined by utoprim() and fixup_checksolution()
+// needs fail flag over -1..N, but uses p at 0..N-1
+int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+{
+  FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
+
+  // this average only works if using 4 velocity since only then guaranteed solution is good after interpolation
+  if(WHICHVEL==VEL3) return(0); // just stick with static, best can do
+  if(EOMTYPE==EOMFFDE) return(0); // nothing to do
+  //  if(EOMTYPE==EOMCOLDGRMHD) return(0); // nothing to do
+
+
+  ///////////////////////////////////
+  //
+  // Just loop over and only report problems
+  //
+  //////////////////////////////////
+  
+  ptoavg=pv;
+
+
+  /////////  COMPZLOOP
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // accounting requires state stuff
+  {
+    int i,j,k,pl,pliter;
+    FTYPE pr0[NPR];
+    PFTYPE mypflag;
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+
+
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+      // get failure flag
+      mypflag=GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL);
+
+
+      if( mypflag>UTOPRIMNOFAIL ){ // <UTOPRIMNOFAIL means no fail or old fail
+	
+	PALLLOOP(pl)    pr0[pl]=MACP0A1(ptoavg,i,j,k,pl);
+	get_geometry(i,j,k,CENT,ptrgeom);
+	
+	/////////////////////////////////
+	//
+	// ACCOUNTING (static or average)
+	//
+	/////////////////////////////////
+	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 	  
       }// end if mypflag>UTOPRIMNOFAIL (i.e. failure)
     }// end over COMPZLOOP loop

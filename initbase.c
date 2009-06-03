@@ -1938,7 +1938,10 @@ void check_bnd_num(void)
   }
 
   if(CONNDERTYPE!=DIFFNUMREC){
-    dualfprintf(fail_file,"Using inaccurate CONNDERTYPE can lead to problems, such as force errors near poles can lead to secular errors growing.\n");
+    dualfprintf(fail_file,"WARNING: Using inaccurate CONNDERTYPE can lead to problems, such as force errors near poles can lead to secular errors growing.\n");
+  }
+  else{
+    dualfprintf(fail_file,"WARNING: Using DIFFNUMREC can be very slow, but more accurate than DIFFGAMMIE.\n");
   }
 
   
