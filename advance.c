@@ -1978,17 +1978,16 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
 static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
 {
     if(N1>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F1[i]=%21.15g F1[i+1]=%21.15g \n",pl,i,j,k,MACP0A1(F1,i,j,k,pl),MACP0A1(F1,i+SHIFT1,j,k,pl));
+      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F1[i]=%21.15g F1[i+1]=%21.15g dF1/dx1=%21.15g \n",pl,i,j,k,MACP0A1(F1,i,j,k,pl),MACP0A1(F1,i+SHIFT1,j,k,pl),(MACP0A1(F1,i+SHIFT1,j,k,pl)-MACP0A1(F1,i,j,k,pl))/dx[1]);
     }
     if(N2>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F2[j]=%21.15g F2[j+1]=%21.15g \n",pl,i,j,k,MACP0A1(F2,i,j,k,pl),MACP0A1(F2,i,j+SHIFT2,k,pl));
+      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F2[j]=%21.15g F2[j+1]=%21.15g dF2/dx2=%21.15g\n",pl,i,j,k,MACP0A1(F2,i,j,k,pl),MACP0A1(F2,i,j+SHIFT2,k,pl),(MACP0A1(F2,i,j+SHIFT2,k,pl)-MACP0A1(F2,i,j,k,pl))/dx[2]);
     }
     if(N3>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F3[k]=%21.15g F3[k+1]=%21.15g \n",pl,i,j,k,MACP0A1(F3,i,j,k,pl),MACP0A1(F3,i,j,k+SHIFT3,pl));
+      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F3[k]=%21.15g F3[k+1]=%21.15g dF3/dx3=%21.15g \n",pl,i,j,k,MACP0A1(F3,i,j,k,pl),MACP0A1(F3,i,j,k+SHIFT3,pl),(MACP0A1(F3,i,j,k+SHIFT3,pl)-MACP0A1(F3,i,j,k,pl))/dx[3]);
     }
 
 }
-
 
 
 
