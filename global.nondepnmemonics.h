@@ -137,8 +137,8 @@
 // for WHICHEOM
 #define NOGDETRHO 0
 #define NOGDETU0 0
-#define NOGDETU1 0
-#define NOGDETU2 0
+#define NOGDETU1 1 // U1 and U2 are only reasonable choices in SPC
+#define NOGDETU2 1
 #define NOGDETU3 0
 #define NOGDETB1 0
 #define NOGDETB2 0

@@ -27,7 +27,8 @@
 
 // whether to use internal parabola when -1,0,+1 dq's are central
 // for density field, look at -2..+2 if possible (PARAFLAT or PARALINE) to ensure moving contact preserved in few points
-#define JONPARASMOOTH 0 // default 1
+// This leads to more stable and accurate evolution for relatively smooth flows, but leads to much more dissipation in turbulent flows like accretion disks.
+#define JONPARASMOOTH 0 // default 0
 
 /////////////////////////
 //
