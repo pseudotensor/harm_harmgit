@@ -20,12 +20,19 @@ ifeq ($(USEMPI),1)
 
 ifeq ($(USEMCCSWITCH),1)
 CC=$(MCC) -cc=$(COMP) $(CFLAGS3) $(CFLAGS2) $(CDEBUG)
-CC2=$(MCC) -cc=gcc $(GCCCFLAGS)
 endif
 
 ifeq ($(USEMCCSWITCH),0)
 CC=$(MCC) $(CFLAGS3) $(CFLAGS2) $(CDEBUG)
-CC2=$(MCC) $(GCCCFLAGS)
+endif
+
+ifeq ($(USEMCCSWITCHFORGCC),1)
+CC=$(MCC) -cc=$(COMP) $(CFLAGS3) $(CFLAGS2) $(CDEBUG)
+CC2=$(MCC) -cc=gcc $(GCCCFLAGS)
+endif
+
+ifeq ($(USEMCCSWITCHFORGCC),0)
+CC2=gcc $(GCCCFLAGS)
 endif
 
 MMCOMP=$(CC)
@@ -498,13 +505,21 @@ endif
 #
 # How to compile other non-standard parts of code.
 #
+# Old Intel compiler wouldn't compile freespace properly due to sys/vfs.h stuff.
+# Old Intel compiler wouldn't compile tau_needbyharm properly due to f2c conversion.  Now tau_neededbyharm doesn't contain anything that requires f2c libraries.
+#
+# So, now (06/04/09) seems fine.
+#
+# This all was spurred by trying to avoid gcc since on TACC's Ranger, their gcc changed with mpicc -cc=gcc error due to -i-dynamic not recognized by gcc.  Stupid Intel specific commands in their mpicc.
+#
 ########################
 
-freespace.o : freespace.c $(PREP) makefile maketail.inc defs.h defs.general.h
-	    $(CC2) $(GCCCFLAGS) -c freespace.c $(LDFLAGS)
-
-tau_neededbyharm.o : tau_neededbyharm.c $(PREP) makefile maketail.inc defs.h defs.general.h
-	    $(CC2) $(GCCCFLAGS) -c tau_neededbyharm.c -lm
+#freespace.o : freespace.c $(PREP) makefile maketail.inc defs.h defs.general.h
+#	    $(CC2) $(GCCCFLAGS) -c freespace.c $(LDFLAGS)
+#
+#tau_neededbyharm.o : tau_neededbyharm.c $(PREP) makefile maketail.inc defs.h defs.general.h
+##	    $(CC2) $(GCCCFLAGS) -c tau_neededbyharm.c -lm
+##	    $(CC2) $(GCCCFLAGS) -c tau_neededbyharm.c -lf2c -lm
 
 
 

@@ -35,7 +35,8 @@ vchar.c transforms.c sources.c rescale_interp.c \
 gaussj.c lubksb.c ludcmp.c mnewt.c nrutil.c ranc.c tensor.c tetrad.c \
 utoprimgen.c dudp_calc_3vel.c dudp_calc.c \
 utoprim.orig.c utoprim_2d.c utoprim_1d.c utoprim_1d_opt.c utoprim_ldz.c \
-utoprim_jon.c utoprim_1d_final.c utoprim_2d_final.c utoprim_5d2_final.c
+utoprim_jon.c utoprim_1d_final.c utoprim_2d_final.c utoprim_5d2_final.c \
+freespace.c tau_needebyharm.c
 #END
 
 OBJSONEPOINT=\

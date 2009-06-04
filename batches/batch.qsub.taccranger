@@ -9,10 +9,13 @@
 # login:
 # ssh tg802609@ranger.tacc.utexas.edu
 
-# To get environment:
+# To get environment (should do before compile as well):
 module unload mvapich2 pgi
-module load intel/10.1
+module load intel
 module load mvapich2
+module load mkl
+
+# do "module avail" to see other things that are available
 
 # Docs:
 # http://www.tacc.utexas.edu/services/userguides/ranger/
@@ -28,10 +31,10 @@ module load mvapich2
 ################
 #
 #     -pe 16way 32 means 16cores/node and 32 cores total
-#$ -pe 16way 16
+#$ -pe 4way 16
 #
 #     job name (default = name of script file)
-#$ -N harm3drun1
+#$ -N harm3dnewtest1
 #
 #     -l h_rt=01:30:00 means 1.5 hours
 #$ -l h_rt=00:10:00
@@ -73,13 +76,16 @@ date
 # setup run
 #
 ##################
-# below is 2 or 4
-export NCPUX1=4
-export NCPUX2=4
+# below is number of OpenMP Threads
+export NOPENMPI=4
+# below is number of MPI rasks in each spatial direction
+export NCPUX1=2
+export NCPUX2=2
 export NCPUX3=1
-export NTOT=16
-export FILENAME="grmhd"
-export DIRFILE="/share/home/01014/tg802609/harm3d/code1"
+# below is total number of MPI tasks
+export NTOT=4
+export FILENAME="grmhdperf"
+export DIRFILE="/share/home/01014/tg802609/perftest/"
 export RUNDIR=$WORK/$JOB_NAME/
 
 
@@ -113,14 +119,17 @@ chmod u+x $FILENAME
 #cp $PBS_NODEFILE node.list
 
 # below means 4 thread/task, to be used with -pe 4way 32 (e.g.) instead of -pe 16way 32
-# export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=$NOPENMPI
+
+# true number of tasks launched (only needed if not multiple of 16)
+#export MY_NSLOTS=$NTOT
 
 # FRESH START:
 #ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
 
 # Must use below to ensure affinity with sockets
 # Below assumed when doing GRIDSECTIONING and overloading node
-ibrun tacc_affinity ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
+ibrun tacc_affinity ./$FILENAME $NOPENMPI $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so 2>&1
 
 #./$FILENAME > $FILENAME.so
 

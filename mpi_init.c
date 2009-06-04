@@ -1317,6 +1317,7 @@ void init_placeongrid(void)
   fprintf(log_file,"myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
 #endif
   trifprintf("\nnumprocs(MPI)=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d\n",numprocs,ncpux1,ncpux2,ncpux3,numopenmpthreads);
+  trifprintf("\n Per MPI Task: N1=%d N2=%d N3=%d\n",N1,N2,N3);
   fprintf(log_file,"per: %d %d\n", periodicx1, periodicx2);
 
   for (m = 1; m <= COMPDIM; m++) {

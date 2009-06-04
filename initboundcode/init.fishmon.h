@@ -210,8 +210,8 @@
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1
 #define WHICHVEL VELREL4
-//#define WHICHEOM WITHGDET
-#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles.
+#define WHICHEOM WITHGDET
+//#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles. // still seems wrong -- need to test.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
 #define EOMTYPE EOMGRMHD

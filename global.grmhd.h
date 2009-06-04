@@ -190,6 +190,11 @@
 // MAXBND==4 PARALINE 16x8:    50K   48K    48K    48K       [so kinda hits memory]
 // MAXBND==4 PARALINE 32x16:   56K   55K    36K    31K       [so 32x16*(2cores) is ok in cache, but not more (i.e. not this run with 32*16*3 or 32*16*4)]
 // This suggests an optimal OpenMP choice is N1*N2*N3=32*32 per *node* to avoid memory contention and stay within L2 cache.  For elongated cells this is 512x2 in 2D or 256x2x2 in 3D.  But small cells leads to inefficiency in extra computations near boundary cells.  So probably want 256x4 in 2D and 64x4x4 in 3D.  On Ranger have to take (1/2) of this since L2+L3 is half the size!  So on Ranger use 128x4 in 2D and 32x4x4 in 3D with fit into L2+L3 cache.
+//
+//
+// For above, probably good 4 core performance because staying in *L1* cache mostly, not L2.  This is consistent with below results.
+// Then hit is because ki-rh42's 4 cores feed off 2 L2 cache's so that bandwidth is half when 3-4 cores are running.
+//
 ///////////////////////////////////////////////////////
 //
 //
@@ -288,6 +293,41 @@
 // TODO:
 // 1) if limiting interpolation (e.g. for stag or rescale in stag), then pass that fact rather than using global npr2interp.  Ensure all interior loops use that passed data rather than globals.
 // 2) For KAZ stuff, probably fine.
+//
+//
+// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTTOTH:
+//
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+//
+// 64x64:      1       1             1        1x1x1       35K  100%
+// 64x64:      1       4             4        2x2x1      403K   72%
+// 64x64:      1       1            16        4x4x1      407K   73%
+// 64x64:      1      16             1        1x1x1       71K   13%
+// 64x64:      1       8             2        2x1x1      215K   39%
+// 64x64:      2       1            32        8x4x1      940K   84%
+// 64x64:      2       4             8        4x2x1      950K   85%
+// 64x64:      2       1            64        8x8x1     1793K   80%
+// 64x64:      2       4            16        4x4x1     1862K   83%
+// 64x64:      2       1           256        16x16x1     
+// 64x64:      2       4           64         8x8x1     
+
+//
+// 64x16:      1       1             1        1x1x1       35K
+// 64x16:      1       4             4        2x2x1      406K
+// 64x16:      1       1            16        4x4x1      471K   84%
+// 64x16:      1      16             1        1x1x1       55K
+// 64x16:      1       8             2        2x1x1      191K
+// 64x16:      2       1            32        8x4x1      907K   81%
+// 64x16:      2       4             8        4x2x1      777K   70%
+//
+// So each Ranger core is almost 2X slower than ki-rh42.  That's AMD for you!
+// So clearly bad to cross on PCI bus with memory as OpenMP has to when more than 4 threads with 1 thread per core.
+// MPI seems to be doing fine at 64^2 on one node.
+//
+//
+//
+//
+//
 //
 ///////////////////////////////////////////////////////
 //

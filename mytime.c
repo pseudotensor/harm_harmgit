@@ -321,22 +321,22 @@ int timecheck(int whichlocation, SFTYPE comptstart)
       if(walltime<1E-5) walltime=1E-5;
   
 
-      fprintf(logfull_file,"#allproc: steps: %10ld wtime: %10.2g zcycles: %10d t: %10.2g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart)) ;
+      fprintf(logfull_file,"#allproc: steps: %10ld wtime: %10.2g tzcycles: %10d t: %10.2g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart)) ;
 #ifndef WIN32
       fprintf(logfull_file,"#(sec) walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
 #endif
       fprintf(stderr,"#(sec) walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
 
       if(DOLOGPERF){
-	myfprintf(logperf_file,"#done: steps: %10ld wtime: %10.2g zcycles: %10d t: %10.2g tu/hour: %10.5g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart),(t-comptstart)/(walltime*SEC2HOUR)) ;
+	myfprintf(logperf_file,"#done: steps: %10ld wtime: %10.2g tzcycles: %10d t: %10.2g tu/hour: %10.5g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart),(t-comptstart)/(walltime*SEC2HOUR)) ;
       }
       if(PERFTEST){
 	myfprintf(perfout,"%10d\n",(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime)) ;
-	myfprintf(stderr,"perf: N3: %d N2: %d N1: %d RTZ: %d ZCPS: %d steps: %ld walltime: %15.10g\n",N3,N2,N1,realtotalzones,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),nstep,walltime) ;
+	myfprintf(stderr,"perf: N3: %d N2: %d N1: %d RTZ: %d tZCPS: %d steps: %ld walltime: %15.10g\n",N3,N2,N1,realtotalzones,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),nstep,walltime) ;
 	fclose(perfout);
       }
       if(DOLOGSTEP){
-	myfprintf(logstep_file,"#done: steps: %10ld wtime: %10.2g zcycles: %10d t: %10.2g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart)) ;
+	myfprintf(logstep_file,"#done: steps: %10ld wtime: %10.2g tzcycles: %10d t: %10.2g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart)) ;
       }
 
     }

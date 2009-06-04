@@ -29,6 +29,7 @@ USETACCRANGER=0
 
 # default
 USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
 AVOIDFORK=0
 USESPECIAL4GENERATE=0
 CCGENERATE=gcc
@@ -40,6 +41,7 @@ ifeq ($(USEMPI),1)
 
 # override with new default
 USEMCCSWITCH=1
+USEMCCSWITCHFORGCC=1
 
 
 ifeq ($(USEBG),1)
@@ -78,6 +80,7 @@ endif
 
 ifeq ($(USETACCRANGER),1)
 # don't have to avoid fork/system calls
+USEMCCSWITCHFORGCC=0
 AVOIDFORK=0
 MCC = mpicc
 endif
@@ -323,22 +326,28 @@ endif
 ifeq ($(USETACCLONESTAR),1)
 LONGDOUBLECOMMAND=-long_double
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
-COMP=icc $(DFLAGS)  $(OPMPFLAGS)
+COMP=icc $(DFLAGS)  $(OPMPFLAGS) -I$(TACC_MKL_INC)
 CFLAGSPRENONPRECISE=-O2 -xT -finline -finline-functions -ip -fno-alias -unroll -openmp -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
-GCCCFLAGSPRE= -Wall -O2 -L$ICC_LIB -lirc $(DFLAGS)
-LDFLAGS = -lm  $(LAPACKLDFLAGS)
+# below only needed if compiling main() function file with gcc
+#GCCCFLAGSPRE= -Wall -O2 -L$ICC_LIB -lirc $(DFLAGS)
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+LDFLAGS = -lm -Wl,-rpath,$(TACC_MKL_LIB) -L$(TACC_MKL_LIB) -lmkl_em64t
 LDFLAGSOTHER=
 endif
 
 ifeq ($(USETACCRANGER),1)
+# http://services.tacc.utexas.edu/index.php/ranger-user-guide#Compiling_Code
+# and see batch.qsub.taccranger
 LONGDOUBLECOMMAND=-long_double
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
-COMP=icc $(DFLAGS) $(OPMPFLAGS)
+COMP=icc $(DFLAGS) $(OPMPFLAGS) -I$(TACC_MKL_INC)
 CFLAGSPRENONPRECISE=-xW -O2 -finline -finline-functions -ip -fno-alias -unroll -openmp -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
-GCCCFLAGSPRE= -Wall -O2 -L$ICC_LIB -lirc $(DFLAGS)
-LDFLAGS = -lm $(LAPACKLDFLAGS)
+# below only needed if compiling main() function file with gcc
+#GCCCFLAGSPRE= -Wall -O2 -L$ICC_LIB -lirc $(DFLAGS)
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+LDFLAGS = -lm  -Wl,-rpath,$(TACC_MKL_LIB) -L$(TACC_MKL_LIB) -lmkl_em64t
 LDFLAGSOTHER=
 endif
 
