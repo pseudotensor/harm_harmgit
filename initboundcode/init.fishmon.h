@@ -210,7 +210,8 @@
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1
 #define WHICHVEL VELREL4
-#define WHICHEOM WITHGDET
+//#define WHICHEOM WITHGDET
+#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
 #define EOMTYPE EOMGRMHD
@@ -258,7 +259,8 @@
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFGAMMIE // DEBUG
+#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1

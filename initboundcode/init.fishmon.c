@@ -713,7 +713,9 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*prim)[NS
 
     /* vertical field version*/
     if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISKVERT)){
-      vpot += 0.5*r*sin(th)*sin(th) ;
+      FTYPE rpow;
+      rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+      vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
     }
 
 

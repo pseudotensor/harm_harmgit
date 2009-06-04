@@ -392,14 +392,13 @@
 // which velocity to compute in (init can be anything (see init.c's for transformations)
 
 
-// if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
-#define REMOVERESTMASSFROMUU 1
 // whether to subtract rest-mass from energy equation for divT=0 equation of motion
 // 0: use MHD stress tensor with explicit rest-mass included
 // 1: as 0, but subtract out rest-mass from conservation and flux terms for evolution
 // 2: use MHD stress tensor withOUT rest-mass
 // this changes mhd_calc() in phys.c and assumes rest of code uses mhd stress-energy tensor without restmass also!!
 // DIAGNOSTICS also without rest-mass for UU terms.
+#define REMOVERESTMASSFROMUU 1
 
 #define RELTYPE RELEOM
 
@@ -513,12 +512,14 @@
 // whether to store X,V,dxdxp in case are expensive to compute
 
 // which derivative type to use when computing connection coefficients
-#define CONNDERTYPE DIFFGAMMIE
+//#define CONNDERTYPE DIFFGAMMIE
+#define CONNDERTYPE DIFFNUMREC // improved now and much more accurate then DIFFGAMMIE in general. However this is too slow to be used when time-dependent metric is cycling near substeps.
 
 // whether to correct connection so body forces are 0 when p=constant
 // only makes sense for non-higher order scheme
 #define CONNMACHINEBODY 0
 
+// if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
 #define WHICHEOM WITHGDET
 //#define WHICHEOM WITHNOGDET
 

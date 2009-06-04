@@ -212,7 +212,12 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   // set connection
   //
   //////////////
-  if(whichtime==0) trifprintf("set_connection() BEGIN\n");
+  if(whichtime==0){
+    trifprintf("set_connection() BEGIN\n");
+    if(CONNDERTYPE==DIFFNUMREC){
+      trifprintf("set_connection() will take a while with CONNDERTYPE==DIFFNUMREC.  Be patient ...\n");
+    }
+  }
   set_connection();
   if(whichtime==0) trifprintf("set_connection() END\n");
   

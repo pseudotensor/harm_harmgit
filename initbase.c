@@ -1944,6 +1944,9 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"WARNING: Using DIFFNUMREC can be very slow, but more accurate than DIFFGAMMIE.\n");
   }
 
+  if(WHICHEOM==WITHGDET){
+    dualfprintf(fail_file,"WARNING: WHICHEOM==WITHGDET is inferior to WHICHEOM==WITHNOGDET and setting NOGDETU1=NOGDETU2=1 near the poles where force balance is difficult to ensure.  If pressure constant, then NOGDET method ensures force balance between flux and source terms.\n");
+  }
   
 
 
