@@ -290,6 +290,9 @@
 // MAXBND==4 PARALINE  64x16:  59K   99K  122K  128K  ["" -- roughly]
 // MAXBND==4 PARALINE  32x16:  59K   90K  115K  119K  [Linux probably doesn't schedule processes based upon L2 cache association with cores, so can flip around and almost as bad as all 4 cores sharing L2 cache.]
 //
+//
+// Perf with STAG+DISS+DISSVSR+LUMVSR = 30K -- so about 2X slower.
+//
 // TODO:
 // 1) if limiting interpolation (e.g. for stag or rescale in stag), then pass that fact rather than using global npr2interp.  Ensure all interior loops use that passed data rather than globals.
 // 2) For KAZ stuff, probably fine.
@@ -308,21 +311,24 @@
 // 64x64:      2       4             8        4x2x1      950K   85%
 // 64x64:      2       1            64        8x8x1     1793K   80%
 // 64x64:      2       4            16        4x4x1     1862K   83%
-// 64x64:      2       1           256        16x16x1     
-// 64x64:      2       4           64         8x8x1     
+// 64x64:      2       1           256        16x16x1   7098K   80%   
+// 64x64:      2       4           64         8x8x1     6766K   76%
 
 //
 // 64x16:      1       1             1        1x1x1       35K
-// 64x16:      1       4             4        2x2x1      406K
+// 64x16:      1       4             4        2x2x1      406K   72%
 // 64x16:      1       1            16        4x4x1      471K   84%
-// 64x16:      1      16             1        1x1x1       55K
-// 64x16:      1       8             2        2x1x1      191K
+// 64x16:      1      16             1        1x1x1       55K   10%
+// 64x16:      1       8             2        2x1x1      191K   34%
 // 64x16:      2       1            32        8x4x1      907K   81%
-// 64x16:      2       4             8        4x2x1      777K   70%
+// 64x16:      2       4             8        4x2x1      777K   70% [repeated run got same result!?]
+// 64x16:      2       1            64        8x8x1     1730K   77%
+// 64x16:      2       4            16        4x4x1     1488K   66%
 //
 // So each Ranger core is almost 2X slower than ki-rh42.  That's AMD for you!
 // So clearly bad to cross on PCI bus with memory as OpenMP has to when more than 4 threads with 1 thread per core.
 // MPI seems to be doing fine at 64^2 on one node.
+// Unclear why OpenMP is actually slower even for 64x16, which worked better on ki-rh42 by 2X!
 //
 //
 //

@@ -216,7 +216,7 @@ int bound_x1dn_outflow(
     if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
 
 
-      if (mycpupos[1] <= horizoncpupos1) { // now all CPUs inside CPU with horizon will be using this (GODMARK: reference value needs to be chosen somehow for CPUs not on active grid)
+      if ( (totalsize[1]>1) && (mycpupos[1] <= horizoncpupos1)) { // now all CPUs inside CPU with horizon will be using this (GODMARK: reference value needs to be chosen somehow for CPUs not on active grid)
 	/* inner r boundary condition: u, just copy */
 
 	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -382,7 +382,7 @@ int bound_x1up_outflow(
     if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
 
       // outer r BC:
-      if (mycpupos[1] == ncpux1 - 1) {
+      if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
 
 
 	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -537,60 +537,63 @@ int bound_x1dn_sym(
 
 
       /* inner radial BC (preserves u^t rho and u) */
-      if (mycpupos[1] == 0) {
+      if ( (totalsize[1]>1) && (mycpupos[1] == 0)) {
 	////////	LOOPX1dir{
 
-	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	////////	LOOPX1dir{
+	{ // start block
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+	  OPENMPBCLOOPBLOCK{
+	    OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
-	  rj=j;
-	  rk=k;
-	  LOOPBOUND1IN{
-	    PBOUNDLOOP(pliter,pl){
-	      // SECTIONMARK: assume r=0 singularity can't move
-	      if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ) ri = -i; // FACE1 values
-	      else ri=-i-1; // "CENT" values for purposes of this BC
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	    }// over pl
-	  }// over boundary zones
-	}
-      }
+	    rj=j;
+	    rk=k;
+	    LOOPBOUND1IN{
+	      PBOUNDLOOP(pliter,pl){
+		// SECTIONMARK: assume r=0 singularity can't move
+		if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ) ri = -i; // FACE1 values
+		else ri=-i-1; // "CENT" values for purposes of this BC
+		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	      }// over pl
+	    }// over boundary zones
+	  }
+	}// end block
 
-      if((BCtype[X1DN]==R0SING)||(BCtype[X1DN]==ASYMM) ){
 
-	/* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
-	////	LOOPX1dir{
 
-	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	////////	LOOPX1dir{
+	if((BCtype[X1DN]==R0SING)||(BCtype[X1DN]==ASYMM) ){
+
+	  /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
+	  ////	LOOPX1dir{
+
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+	  OPENMPBCLOOPBLOCK{
+	    OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
-	  // SECTIONMARK: assume r=0 singularity can't move
-	  i=0;
-	  PBOUNDLOOP(pliter,pl){
-	    if(pl==U1 || pl==B1){
-	      if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
-		MACP0A1(prim,i,j,k,pl) = 0.0;
-	      }
-	    }// else don't do this pl
-	  } // end over pl
-	
-	  LOOPBOUND1IN {
+	    // SECTIONMARK: assume r=0 singularity can't move
+	    i=0;
 	    PBOUNDLOOP(pliter,pl){
 	      if(pl==U1 || pl==B1){
-		MACP0A1(prim,i,j,k,pl) *= -1.;
-	      }// end if right pl
+		if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
+		  MACP0A1(prim,i,j,k,pl) = 0.0;
+		}
+	      }// else don't do this pl
 	    } // end over pl
-	  } // end over boundary zones
-	}// end loop 23
-      }
-
+	
+	    LOOPBOUND1IN {
+	      PBOUNDLOOP(pliter,pl){
+		if(pl==U1 || pl==B1){
+		  MACP0A1(prim,i,j,k,pl) *= -1.;
+		}// end if right pl
+	      } // end over pl
+	    } // end over boundary zones
+	  }// end loop 23
+	}
+      } //end if inner CPU wall
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
@@ -648,7 +651,7 @@ int bound_x2dn_polaraxis_full3d(
     if(BCtype[X2DN]==POLARAXIS && special3dspc){
 
       /* inner polar BC (preserves u^t rho and u) */
-      if (mycpupos[2] == 0) {
+      if ( (totalsize[2]>1) && (mycpupos[2] == 0) ) {
 
 	if(ncpux3==1){
 	  // if ncpux3>1 then this is handled by MPI
@@ -780,7 +783,7 @@ int bound_x2dn_polaraxis(
     if((BCtype[X2DN]==POLARAXIS)||(BCtype[X2DN]==SYMM)||(BCtype[X2DN]==ASYMM) ){
 
 
-      if (mycpupos[2] == 0){
+      if (  (totalsize[2]>1) && (mycpupos[2] == 0) ){
 
 	/////      LOOPX2dir{
 
@@ -902,7 +905,7 @@ int bound_x2up_polaraxis_full3d(
     if(BCtype[X2UP]==POLARAXIS && special3dspc){
 	
 
-      if (mycpupos[2] == ncpux2-1) {
+      if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
 
 	if(ncpux3==1){
@@ -1030,7 +1033,7 @@ int bound_x2up_polaraxis(
     if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==SYMM)||(BCtype[X2UP]==ASYMM) ){
 
 
-      if (mycpupos[2] == ncpux2-1) {
+      if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
 	//////      LOOPX2dir{
 	{// block region
@@ -1144,7 +1147,7 @@ int bound_x3_periodic(
 
 
       // periodic x3
-      if ( (mycpupos[3] == 0)&&(mycpupos[3] == ncpux3 - 1) ) {
+      if ( (totalsize[3]>1) && (mycpupos[3] == 0)&&(mycpupos[3] == ncpux3 - 1) ) {
 	// just copy from one side to another
 
 	////	LOOPX3dir{
@@ -1164,8 +1167,8 @@ int bound_x3_periodic(
 
 	    
 #if(DEBUGINOUTLOOPS)		
-	    dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+1+k,i,j,k);
-	    if(!isfinite(MACP0A1(prim,ri,rj,rk+1+k,pl))){
+	    dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+SHIFT3+k,i,j,k);
+	    if(!isfinite(MACP0A1(prim,ri,rj,rk+SHIFT3+k,pl))){
 	      dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
 	    }
 #endif
@@ -1235,7 +1238,7 @@ int bound_x1dn_r0singfixinterior(
 
 
 
-  if(BCtype[X1DN]==R0SING){ // global condition that all CPUs know about
+  if(  (totalsize[1]>1) && BCtype[X1DN]==R0SING){ // global condition that all CPUs know about
 
     /////////////////
     //
