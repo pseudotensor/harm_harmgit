@@ -904,7 +904,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
   extern void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
   extern void parasteep(int dir, int pl, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *l, FTYPE *r);
   extern void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r);
-  extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P, FTYPE **ypl);
+  extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
   extern void checkparamonotonicity(int smooth, int dqrange, int pl, FTYPE *y, FTYPE *ddq, FTYPE *dq, FTYPE *lin, FTYPE *rin, FTYPE *lout, FTYPE *rout);
   int pl,pliter;
   int dqrange;
@@ -1002,7 +1002,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
 
   // computed only once for all variables
 #if( DOUSEPARAFLAT )
-  Fi = Ficalc(dir,V,P,ypl);
+  Fi = Ficalc(dir,V,P);
 #else
   Fi = 0.0;
 #endif

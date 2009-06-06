@@ -43,6 +43,9 @@ static FTYPE r1jet,njet,rpjet;
 // for defcoord=JET3COORDS
 static FTYPE r0jet,rsjet,Qjet;
 
+// for defcoord=JET6COORDS
+static FTYPE ntheta,htheta,rsjet2,r0jet2;
+
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
 
@@ -159,6 +162,41 @@ void set_coord_parms_nodeps(int defcoordlocal)
       rsjet=80.0;
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
     }
+  }
+  else if (defcoordlocal == JET6COORDS) {
+
+    // see jet3coords_checknew.nb
+    npow=1.0;
+
+    // must be same as in dxdxp()
+    if(0){ // first attempt
+      r1jet=2.8;
+      njet=0.3;
+      r0jet=7.0;
+      rsjet=21.0;
+      Qjet=1.7;
+    }
+    else if(0){ // chosen to resolve disk then resolve jet
+      r1jet=2.8;
+      njet=0.3;
+      r0jet=20.0;
+      rsjet=80.0;
+      Qjet=1.8;
+    }
+    else if(1){
+      r1jet=2.8;
+      njet=0.3;
+      r0jet=20.0;
+      rsjet=80.0;
+      Qjet=1.3; // chosen to help keep jet resolved even within disk region
+    }
+
+    // see fix_3dpoledtissue.nb
+    ntheta=21.0;
+    htheta=0.15;
+    rsjet2=5.0;
+    r0jet2=2.0;
+
   }
   else if (defcoordlocal == JET5COORDS) {
     // exp grid merged with exp-exp grid
@@ -348,6 +386,8 @@ void set_coord_parms_deps(int defcoordlocal)
   }
   else if (defcoordlocal == JET3COORDS) {
   }
+  else if (defcoordlocal == JET6COORDS) {
+  }
   else if (defcoordlocal == JET5COORDS) {
   }
   else if (defcoordlocal == PULSARCOORDS) {
@@ -449,6 +489,9 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET3COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
+      else if (defcoordlocal == JET6COORDS) {
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2);
+      }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g\n",r1jet,njet,r0jet,rsjet,Qjet);
@@ -537,6 +580,9 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == JET3COORDS) {
 	fscanf(in,HEADER6IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet);
+      }
+      else if (defcoordlocal == JET6COORDS) {
+	fscanf(in,HEADER10IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -629,6 +675,18 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  }
+  else if (defcoordlocal == JET6COORDS) {
+    MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&ntheta, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&htheta, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rsjet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0jet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -861,6 +919,32 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else{
       V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
     }
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+  }
+  else if (defcoord == JET6COORDS) {
+
+    // JET3COORDS-like radial grid
+    V[1] = R0+exp(pow(X[1],npow)) ;
+
+
+    FTYPE theta1,theta2,arctan2;
+
+    // JET3COORDS-based:
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+    
+    // fix_3dpoledtissue.nb based:
+    theta2 = M_PI*0.5*(htheta*(2.0*X[2]-1.0)+(1.0-htheta)*pow(2.0*X[2]-1.0,ntheta)+1.0);
+
+    // generate interpolation factor
+    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-rsjet2)/r0jet2) );
+
+    // now interpolate between them
+    V[2] = theta2 + arctan2*(theta1-theta2);
+    
+
+
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
   }
@@ -1302,8 +1386,13 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     
 
   }
+  else if(defcoord == JET6COORDS){
+    dualfprintf(fail_file,"Should not be computing JET6COORDS analytically\n");
+    myexit(34698346);
+    dxdxp[3][3] = 2.0*M_PI;    
+  }
   else if(defcoord == JET5COORDS){
-    dualfprintf(fail_file,"Should be computing JET5COORDS analytically\n");
+    dualfprintf(fail_file,"Should not be computing JET5COORDS analytically\n");
     myexit(34698346);
     dxdxp[3][3] = 2.0*M_PI;
   }
@@ -1777,6 +1866,14 @@ void set_points()
     dx[2] = 1. / totalsize[2];
     dx[3] = 1.0/totalsize[3];
   } 
+  else if (defcoord == JET6COORDS) { // same as JET3COORDS since radial grid same
+    startx[1] = pow(log(Rin-R0),1.0/npow);
+    startx[2] = 0.;
+    startx[3] = 0.;
+    dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
+    dx[2] = 1. / totalsize[2];
+    dx[3] = 1.0/totalsize[3];
+  } 
   else if (defcoord == JET5COORDS) {
     startx[1] = 0.0;
     startx[2] = 0.0;
@@ -1961,6 +2058,17 @@ FTYPE setRin(int ihor)
   }
   else if(defcoord == JET3COORDS){
     // see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+    if(npow==1.0){
+      ftemp=ihoradjust/(FTYPE)totalsize[1];
+      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    }
+    else{
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+    }
+  }
+  else if(defcoord == JET6COORDS){
+    // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
       return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));

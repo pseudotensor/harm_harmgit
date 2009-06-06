@@ -291,14 +291,15 @@
 // MAXBND==4 PARALINE  32x16:  59K   90K  115K  119K  [Linux probably doesn't schedule processes based upon L2 cache association with cores, so can flip around and almost as bad as all 4 cores sharing L2 cache.]
 //
 //
-// Perf with STAG+DISS+DISSVSR+LUMVSR = 30K -- so about 2X slower.
+// Perf with STAG+DISS+DISSVSR+LUMVSR    = 30K -- so about 2X slower.
+// Perf with STAG+DISS+DISSVSR+LUMVSR+3D = 11K -- so about 6X slower.
 //
 // TODO:
 // 1) if limiting interpolation (e.g. for stag or rescale in stag), then pass that fact rather than using global npr2interp.  Ensure all interior loops use that passed data rather than globals.
 // 2) For KAZ stuff, probably fine.
 //
 //
-// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTTOTH:
+// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTTOTH and DODISS=DODISSVSR=DOLUMVSR=0:
 //
 // N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
 //
@@ -332,7 +333,23 @@
 //
 //
 //
+// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTSTAG and DODISS=DODISSVSR=DOLUMVSR=1:
 //
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+//
+// 64x32x8:    1       1             1        1x1x1        6K
+// 64x32x8:    4       4             4        2x2x1       41K   43%
+// 64x32x8:   16       1            16        4x4x1       84K   88%
+// 64x32x8:   64       4            64        8x8x1      617K   40%
+// 64x32x8:  256       1           256        8x8x4     1278K   83%
+//
+//
+// On ki-rh42 with new code:
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+// 64x32x8:    1       1             1        1x1x1       17K
+//
+// From 11K -> 17K -- not that big a difference after a day of pain.
+// 
 //
 //
 ///////////////////////////////////////////////////////

@@ -169,8 +169,8 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
 {
   int is,ie,js,je,ks,ke,di,dj,dk;
   int i,j,k;
-  struct of_geom geomcorndontuse;
-  struct of_geom *ptrgeomcorn=&geomcorndontuse;
+  struct of_gdetgeom geomcorndontuse;
+  struct of_gdetgeom *ptrgeomcorn=&geomcorndontuse;
 
 
 
@@ -218,10 +218,10 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
 // NEWMARK: Need to work out signature issues
 //
 int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		    //		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 		    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		    struct of_state (*fluxstate)[NUMLEFTRIGHT][NSTORE1][NSTORE2][NSTORE3],
+		    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 		    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 		    FTYPE (*vcon)[NUMCS+1][NUMCS+1],
 		    FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
@@ -239,9 +239,9 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 #if(MERGEDC2EA2CMETHOD)
 
   // face and cent values
-  // MACP2A0(fluxstate,dimen,ISLEFT,i,j,k)
+  // MACP1A1(fluxstate,dimen,i,j,k,ISLEFT)
   // MAC(fluxstatecent,i,j,k)
-  // MACP2A0(fluxstate,dimen,ISRIGHT,i,j,k)
+  // MACP1A1(fluxstate,dimen,i,j,k,ISRIGHT)
 
 
   // OPTMARK: Should compute these things outside ijk loop and pass to this function
@@ -296,32 +296,32 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   gdetBcon[odir2][CENT4EMF][CENT4EMF]=MAC(fluxstatecent,i,j,k).gdetBcon[odir2]; // \detg B^{odir2}
 
   // left-center (note: As in flux.mergedc2ea2cmethod.c, position of left value is stored in local cell's ISRIGHT)
-  vcon[odir1][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
-  vcon[odir2][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
+  vcon[odir1][LEFT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,ileft,jleft,kleft,ISRIGHT).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
+  vcon[odir2][LEFT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,ileft,jleft,kleft,ISRIGHT).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
 
-  gdetBcon[odir1][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir1]; // // \detg B^{odir1}
-  gdetBcon[odir2][LEFT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir2]; // // \detg B^{odir2}
+  gdetBcon[odir1][LEFT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,ileft,jleft,kleft,ISRIGHT).gdetBcon[odir1]; // // \detg B^{odir1}
+  gdetBcon[odir2][LEFT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,ileft,jleft,kleft,ISRIGHT).gdetBcon[odir2]; // // \detg B^{odir2}
 
   // right-center
-  vcon[odir1][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
-  vcon[odir2][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
+  vcon[odir1][RIGHT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,irightodir1,jrightodir1,krightodir1,ISLEFT).vcon[odir1]; // v^{odir1} = u^{odir1}/u^t
+  vcon[odir2][RIGHT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,irightodir1,jrightodir1,krightodir1,ISLEFT).vcon[odir2]; // v^{odir2} = u^{odir2}/u^t
 
-  gdetBcon[odir1][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).gdetBcon[odir1];
-  gdetBcon[odir2][RIGHT4EMF][CENT4EMF]=MACP2A0(fluxstate,odir1,ISLEFT,irightodir1,jrightodir1,krightodir1).gdetBcon[odir2];
+  gdetBcon[odir1][RIGHT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,irightodir1,jrightodir1,krightodir1,ISLEFT).gdetBcon[odir1];
+  gdetBcon[odir2][RIGHT4EMF][CENT4EMF]=MACP1A1(fluxstate,odir1,irightodir1,jrightodir1,krightodir1,ISLEFT).gdetBcon[odir2];
 
   // center-left
-  vcon[odir1][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).vcon[odir1];
-  vcon[odir2][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).vcon[odir2];
+  vcon[odir1][CENT4EMF][LEFT4EMF]=MACP1A1(fluxstate,odir2,ileft,jleft,kleft,ISRIGHT).vcon[odir1];
+  vcon[odir2][CENT4EMF][LEFT4EMF]=MACP1A1(fluxstate,odir2,ileft,jleft,kleft,ISRIGHT).vcon[odir2];
 
-  gdetBcon[odir1][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir1];
-  gdetBcon[odir2][CENT4EMF][LEFT4EMF]=MACP2A0(fluxstate,odir2,ISRIGHT,ileft,jleft,kleft).gdetBcon[odir2];
+  gdetBcon[odir1][CENT4EMF][LEFT4EMF]=MACP1A1(fluxstate,odir2,ileft,jleft,kleft,ISRIGHT).gdetBcon[odir1];
+  gdetBcon[odir2][CENT4EMF][LEFT4EMF]=MACP1A1(fluxstate,odir2,ileft,jleft,kleft,ISRIGHT).gdetBcon[odir2];
 
   // right-center
-  vcon[odir1][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).vcon[odir1];
-  vcon[odir2][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).vcon[odir2];
+  vcon[odir1][CENT4EMF][RIGHT4EMF]=MACP1A1(fluxstate,odir2,irightodir2,jrightodir2,krightodir2,ISLEFT).vcon[odir1];
+  vcon[odir2][CENT4EMF][RIGHT4EMF]=MACP1A1(fluxstate,odir2,irightodir2,jrightodir2,krightodir2,ISLEFT).vcon[odir2];
 
-  gdetBcon[odir1][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).gdetBcon[odir1];
-  gdetBcon[odir2][CENT4EMF][RIGHT4EMF]=MACP2A0(fluxstate,odir2,ISLEFT,irightodir2,jrightodir2,krightodir2).gdetBcon[odir2];
+  gdetBcon[odir1][CENT4EMF][RIGHT4EMF]=MACP1A1(fluxstate,odir2,irightodir2,jrightodir2,krightodir2,ISLEFT).gdetBcon[odir1];
+  gdetBcon[odir2][CENT4EMF][RIGHT4EMF]=MACP1A1(fluxstate,odir2,irightodir2,jrightodir2,krightodir2,ISLEFT).gdetBcon[odir2];
 
 
 
@@ -330,8 +330,6 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   // CORNER lab-frame 3-velocity: v^i and B^i
   //
   //////////////////
-  //	  + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
-  //	  - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
   // pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
   // pbcorn[which corner][which component in pl form][+-remaining direction that is not corn nor pl-dir]
   // for example, emf3[+-x][+-y] = By[+-x]*vx[+-x][+-y] - Bx[+-y]*vy[+-x][+-y]
@@ -341,29 +339,29 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   ii=ijkcorn[1][LEFT4EMF][LEFT4EMF];
   jj=ijkcorn[2][LEFT4EMF][LEFT4EMF];
   kk=ijkcorn[3][LEFT4EMF][LEFT4EMF];
-  vcon[odir1][LEFT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,RIGHT4EMF,RIGHT4EMF,ii,jj,kk);
-  vcon[odir2][LEFT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,RIGHT4EMF,RIGHT4EMF,ii,jj,kk);
+  vcon[odir1][LEFT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,RIGHT4EMF,RIGHT4EMF);
+  vcon[odir2][LEFT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,RIGHT4EMF,RIGHT4EMF);
 
   // +odir1 -odir2
   ii=ijkcorn[1][RIGHT4EMF][LEFT4EMF];
   jj=ijkcorn[2][RIGHT4EMF][LEFT4EMF];
   kk=ijkcorn[3][RIGHT4EMF][LEFT4EMF];
-  vcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,LEFT4EMF,RIGHT4EMF,ii,jj,kk);
-  vcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,LEFT4EMF,RIGHT4EMF,ii,jj,kk);
+  vcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,LEFT4EMF,RIGHT4EMF);
+  vcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,LEFT4EMF,RIGHT4EMF);
 
   // -odir1 +odir2
   ii=ijkcorn[1][LEFT4EMF][RIGHT4EMF];
   jj=ijkcorn[2][LEFT4EMF][RIGHT4EMF];
   kk=ijkcorn[3][LEFT4EMF][RIGHT4EMF];
-  vcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,RIGHT4EMF,LEFT4EMF,ii,jj,kk);
-  vcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,RIGHT4EMF,LEFT4EMF,ii,jj,kk);
+  vcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,RIGHT4EMF,LEFT4EMF);
+  vcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,RIGHT4EMF,LEFT4EMF);
 
   // +odir1 +odir2
   ii=ijkcorn[1][RIGHT4EMF][RIGHT4EMF];
   jj=ijkcorn[2][RIGHT4EMF][RIGHT4EMF];
   kk=ijkcorn[3][RIGHT4EMF][RIGHT4EMF];
-  vcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir1,LEFT4EMF,LEFT4EMF,ii,jj,kk);
-  vcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP4A0(pvcorn,corner,U1-1+odir2,LEFT4EMF,LEFT4EMF,ii,jj,kk);
+  vcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,LEFT4EMF,LEFT4EMF);
+  vcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,LEFT4EMF,LEFT4EMF);
 
   //////////////////
   //
@@ -393,8 +391,8 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   // means pbcorn has \detg already
   localgeomcorn=1.0;
 #endif
-  gdetBcon[odir1][LEFT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
-  gdetBcon[odir2][LEFT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+  gdetBcon[odir1][LEFT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,NUMCS,RIGHT4EMF)*localgeomcorn;
+  gdetBcon[odir2][LEFT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,NUMCS,RIGHT4EMF)*localgeomcorn;
 
   // +odir1 -odir2 w.r.t. cell center i,j,k
   ii=ijkcorn[1][RIGHT4EMF][LEFT4EMF];
@@ -407,8 +405,8 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   // means pbcorn has \detg already
   localgeomcorn=1.0;
 #endif
-  gdetBcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
-  gdetBcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+  gdetBcon[odir1][RIGHT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,NUMCS,RIGHT4EMF)*localgeomcorn;
+  gdetBcon[odir2][RIGHT4EMF][LEFT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,NUMCS,LEFT4EMF)*localgeomcorn;
 
   // -odir1 +odir2 w.r.t. cell center i,j,k
   ii=ijkcorn[1][LEFT4EMF][RIGHT4EMF];
@@ -421,8 +419,8 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   // means pbcorn has \detg already
   localgeomcorn=1.0;
 #endif
-  gdetBcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,LEFT4EMF,ii,jj,kk)*localgeomcorn;
-  gdetBcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,RIGHT4EMF,ii,jj,kk)*localgeomcorn;
+  gdetBcon[odir1][LEFT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,NUMCS,LEFT4EMF)*localgeomcorn;
+  gdetBcon[odir2][LEFT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,NUMCS,RIGHT4EMF)*localgeomcorn;
 
   // +odir1 +odir2 w.r.t. cell center i,j,k
   ii=ijkcorn[1][RIGHT4EMF][RIGHT4EMF];
@@ -435,8 +433,8 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   // means pbcorn has \detg already
   localgeomcorn=1.0;
 #endif
-  gdetBcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir1,LEFT4EMF,ii,jj,kk)*localgeomcorn;
-  gdetBcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP3A0(pbcorn,corner,B1-1+odir2,LEFT4EMF,ii,jj,kk)*localgeomcorn;
+  gdetBcon[odir1][RIGHT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir1,NUMCS,LEFT4EMF)*localgeomcorn;
+  gdetBcon[odir2][RIGHT4EMF][RIGHT4EMF]=MACP1A3(pvbcorn,corner,ii,jj,kk,odir2,NUMCS,LEFT4EMF)*localgeomcorn;
 
 
 
@@ -453,20 +451,20 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 // used to obtain 1-D line in case where EMF only varies in one transverse direction rather than 2 transverse directions
 // OPTMARK: for now don't optimize, just get full 9 value and return along needed line
 int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		    //		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 		    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		    struct of_state (*fluxstate)[NUMLEFTRIGHT][NSTORE1][NSTORE2][NSTORE3],
+		    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 		    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 		    FTYPE (*vcon)[NUMCS+1],
 		    FTYPE (*gdetBcon)[NUMCS+1]
 		    )
 {
   int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		      FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		      FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		      //		      FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		      FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 		      struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		      struct of_state (*fluxstate)[NUMLEFTRIGHT][NSTORE1][NSTORE2][NSTORE3],
+		      struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 		      FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 		      FTYPE (*vcon)[NUMCS+1][NUMCS+1],
 		      FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
@@ -479,7 +477,7 @@ int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
   int odir1pos,odir2pos;
 
 
-  setup_9value_vB(corner, odir1, odir2 , Nvec, NNOT1vec, i,j,k, pbcorn, pvcorn,fluxstatecent,fluxstate,geomcorn, vcon9 ,gdetBcon9 );
+  setup_9value_vB(corner, odir1, odir2 , Nvec, NNOT1vec, i,j,k, pvbcorn,fluxstatecent,fluxstate,geomcorn, vcon9 ,gdetBcon9 );
 		      
   // choose starting position for positer loop
   //  This chooses relevant odir direction for positer loop below
@@ -592,7 +590,7 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 	// And note that fluxvec is single-valued at face and so naturally identified by [i] for cell [i]
 	// So Fleft modifies fluxvec[i] and Fright modifies fluxvec[i+1]
 	//
-	deconvolve_flux(dimen, odimen1, odimen2, &GLOBALMACP2A0(fluxstate,dimen,ISRIGHT,ileft,jleft,kleft), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP2A0(fluxstate,dimen,ISLEFT,iright,jright,kright), Fleft, Fright);
+	deconvolve_flux(dimen, odimen1, odimen2, &GLOBALMACP1A1(fluxstate,dimen,ileft,jleft,kleft,ISRIGHT), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,iright,jright,kright,ISLEFT), Fleft, Fright);
 
 	// Now realize that at faces each correction is applied ultimately as average of 2 fluxes for non-EMF terms
 	// ultimately if smooth, then is actually full correction since both sides of face will contribute same correction
@@ -1344,7 +1342,7 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
 
 
   // get 3x3 matrix of values for 2D deconvolution
-  setup_9value_vB(corner, odir1, odir2, Nvec, NNOT1vec, i, j, k, GLOBALPOINT(pbcorninterp), GLOBALPOINT(pvcorninterp), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), vcon, gdetBcon);
+  setup_9value_vB(corner, odir1, odir2, Nvec, NNOT1vec, i, j, k, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), vcon, gdetBcon);
 
 
   // get corrections for both terms in EMF
@@ -1419,7 +1417,7 @@ static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *N
 
 
   // set 3 values in correct non-trivial transverse direction
-  setup_3value_vB(corner, odir1, odir2, Nvec, NNOT1vec, i, j, k, GLOBALPOINT(pbcorninterp), GLOBALPOINT(pvcorninterp), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), vcon, gdetBcon);
+  setup_3value_vB(corner, odir1, odir2, Nvec, NNOT1vec, i, j, k, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), vcon, gdetBcon);
 
   // perform 1D deconvolution using 2-product version twice
 

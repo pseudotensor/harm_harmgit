@@ -91,14 +91,14 @@ extern int fluxcalc(int stage,
 		    );
 
 extern int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			       FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			       //			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 			       FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3],
 			       FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
 			       FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
 			       FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
 			       struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-			       struct of_state (*fluxstate)[NUMLEFTRIGHT][NSTORE1][NSTORE2][NSTORE3],
+			       struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 			       FTYPE (*geomcornglobal)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			       int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM]);
 
@@ -624,8 +624,8 @@ extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrc
 
 #define get_geometry(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,ii,jj,kk);
 #define get_geometry_gdetmix(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP0A1(gdetgeom,ii,jj,kk,pp);
-#define get_geometry_gdetonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,ii,jj,kk);
-#define get_geometry_geomeonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,ii,jj,kk);
+#define get_geometry_gdetonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(gdetgeomnormal,pp,ii,jj,kk);
+#define get_geometry_geomeonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(gdetgeomnormal,pp,ii,jj,kk);
 #define set_igdet(arg)
 #define set_igdetsimple(arg)
 
@@ -633,8 +633,8 @@ extern int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrc
 
 #define get_geometry(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,0,0,0);
 #define get_geometry_gdetmix(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP0A1(gdetgeom,0,0,0,pp);
-#define get_geometry_gdetonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,0,0,0);
-#define get_geometry_geomeonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(compgeom,pp,0,0,0);
+#define get_geometry_gdetonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(gdetgeomnormal,pp,0,0,0);
+#define get_geometry_geomeonly(ii,jj,kk,pp,ptrgeom) ptrgeom=&GLOBALMETMACP1A0(gdetgeomnormal,pp,0,0,0);
 #define set_igdet(arg)
 #define set_igdetsimple(arg)
 
@@ -784,8 +784,8 @@ extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux,
 
 // line types:
 extern void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
-extern void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
-extern void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+//extern void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+//extern void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 // point types:
 extern int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);

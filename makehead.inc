@@ -53,6 +53,26 @@ else
 MYMAKECMDGOALS=$(MAKECMDGOALS)
 endif
 
+
+########################
+#
+# PERFORMANCE CHECKS WITH GPROF
+#
+########################
+# default should be 0 since has large performance hit.
+USEGPROF=0
+
+
+########################
+#
+# Debug information in binary
+#
+########################
+# Generally ok to have, no performance hit
+# Required for using pfmon with intelligent output
+USEDEBUG=1
+
+
 ########################
 #
 # MPI CHOICE

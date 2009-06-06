@@ -83,7 +83,7 @@ void set_arrays_multidimen()
 
 
 #if(STOREFLUXSTATE)
-  GLOBALPOINT(fluxstate) = (struct of_state PTRMACP2A0(fluxstate,FILL,NUMLEFTRIGHT,N1M,N2M,N3M)) (&(BASEMACP2A0(fluxstate,-1,0,N1BND,N2BND,N3BND)));
+  GLOBALPOINT(fluxstate) = (struct of_state PTRMACP1A1(fluxstate,FILL,N1M,N2M,N3M,NUMLEFTRIGHT)) (&(BASEMACP1A1(fluxstate,-1,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(fluxstatecent) = (struct of_state PTRMACP0A0(fluxstatecent,N1M,N2M,N3M)) (&(BASEMACP0A0(fluxstatecent,N1BND,N2BND,N3BND)));
 
   for(isleftright=0;isleftright<NUMLEFTRIGHT+1;isleftright++){
@@ -107,7 +107,7 @@ void set_arrays_multidimen()
 	  myfluxstatetempptr = &GLOBALMACP0A0(fluxstatecent,i,j,k);
 	}
 	else{
-	  myfluxstatetempptr = &GLOBALMACP2A0(fluxstate,dimen,isleftright,i,j,k);
+	  myfluxstatetempptr = &GLOBALMACP1A1(fluxstate,dimen,i,j,k,isleftright);
 	}
 
 
@@ -174,6 +174,11 @@ void set_arrays_multidimen()
   GLOBALPOINT(wspeedtemp) = (FTYPE PTRMACP0A1(wspeedtemp,N1M,N2M,N3M,NUMCS)) (&(BASEMACP0A1(wspeedtemp,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(wspeed) = (FTYPE PTRMACP2A0(wspeed,FILL,NUMCS,N1M,N2M,N3M)) (&(BASEMACP2A0(wspeed,-1,0,N1BND,N2BND,N3BND))); // shifted so wspeed[1,2,3] accesses the memory
   FULLLOOP PLOOP(pliter,pl) for(l=1;l<=COMPDIM;l++) for(m=0;m<NUMCS;m++) GLOBALMACP2A0(wspeed,l,m,i,j,k) = valueinit;
+#endif
+  
+#if(STORESHOCKINDICATOR)
+  GLOBALPOINT(shockindicatorarray) = (FTYPE PTRMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M)) (&(BASEMACP1A0(shockindicatorarray,-SHOCKPLDIR1,N1BND,N2BND,N3BND)));
+  FULLLOOP for(l=SHOCKPLDIR1;l<SHOCKPLDIR1+NUMSHOCKPLS;l++) GLOBALMACP1A0(shockindicatorarray,l,i,j,k) = valueinit;
 #endif
   
 
@@ -291,8 +296,8 @@ void set_arrays_multidimen()
   GLOBALPOINT(pstagglobal) = (FTYPE PTRMACP0A1(pstagglobal,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(pstagglobal,N1BND,N2BND,N3BND,0)));
   
   // -B1 and -U1 are so pbcorninterp[][B1] accesses 0th element of original memory (same for pvcorninterp)
-  GLOBALPOINT(pbcorninterp) = (FTYPE PTRMACP3A0(pbcorninterp,FILL,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP3A0(pbcorninterp,-1,-B1,0,N1BND,N2BND,N3BND)));
-  GLOBALPOINT(pvcorninterp) = (FTYPE PTRMACP4A0(pvcorninterp,FILL,COMPDIM,NUMCS,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP4A0(pvcorninterp,-1,-U1,0,0,N1BND,N2BND,N3BND)));
+  //  GLOBALPOINT(pbcorninterp) = (FTYPE PTRMACP3A0(pbcorninterp,FILL,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP3A0(pbcorninterp,-1,-B1,0,N1BND,N2BND,N3BND)));
+  GLOBALPOINT(pvbcorninterp) = (FTYPE PTRMACP1A3(pvbcorninterp,COMPDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,COMPDIM,NUMCS+1,NUMCS)) (&(BASEMACP1A3(pvbcorninterp,-1,N1BND,N2BND,N3BND,-1,0,0))); // only shift by -1 since holds both U1+dir-1 and B1+dir-1 for dir=1,2,3 that will now just be accessed via "dir" alone
 
   GLOBALPOINT(geomcornglobal) = (FTYPE PTRMACP1A0(geomcornglobal,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP1A0(geomcornglobal,-1,N1BND,N2BND,N3BND))); // geomcornglobal[1,2,3 for CORN1,2,3]
 
@@ -317,8 +322,8 @@ void set_arrays_multidimen()
 
   // corner things that have extra at top
   FULLLOOPP1{
-    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=U1;pl<=U3;pl++) for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP4A0(pvcorninterp,pl2,pl,m,l,i,j,k)=valueinit;
-    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++)   GLOBALMACP3A0(pbcorninterp,pl2,pl,l,i,j,k)=valueinit;
+    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
+    //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++)   GLOBALMACP3A0(pbcorninterp,pl2,pl,l,i,j,k)=valueinit;
 
     for(pl2=1;pl2<=COMPDIM;pl2++) GLOBALMACP1A0(geomcornglobal,pl2,i,j,k)=valueinit;
   }
@@ -330,11 +335,11 @@ void set_arrays_multidimen()
 
   ////////////////////////////////////////////////
   //
-  // OLD SPATIAL INTERPOLATION
+  // OLD SPATIAL INTERPOLATION (and new way to store shock indicator for paraflag or paraline)
   //
   ////////////////////////////////////////////////
 
-#if(DODQMEMORY)
+#if(DODQMEMORY||STORESHOCKINDICATOR)
 #if(N1>1)
   GLOBALPOINT(dq1) = (FTYPE PTRMACP0A1(dq1,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(dq1,N1BND,N2BND,N3BND,0)));
   FULLLOOP PINTERPLOOP(pliter,pl) GLOBALMACP0A1(dq1,i,j,k,pl) = valueinit;
@@ -493,6 +498,8 @@ void set_arrays_multidimen()
 #if(NEWMETRICSTORAGE)
   // new way
   GLOBALPOINT(gdetgeom) = (struct of_gdetgeom PTRMETMACP0A1(gdetgeom,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NPG)) (&(BASEMETMACP0A1(gdetgeom,N1BND,N2BND,N3BND,0)));
+
+  GLOBALPOINT(gdetgeomnormal) = (struct of_gdetgeom PTRMETMACP1A0(gdetgeomnormal,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMETMACP1A0(gdetgeomnormal,0,N1BND,N2BND,N3BND)));
 
   GLOBALPOINT(compgeom) = (struct of_compgeom PTRMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMETMACP1A0(compgeom,0,N1BND,N2BND,N3BND)));
 #if(DOEVOLVEMETRIC)

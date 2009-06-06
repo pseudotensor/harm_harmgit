@@ -80,7 +80,7 @@ FTYPE BASEMACP0A1(ucumformetric,N1M,N2M,N3M,NPR);
 FTYPE BASEMACP1A0(emf,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);	/* space for emf */
 
 #if(STOREFLUXSTATE)
-struct of_state BASEMACP2A0(fluxstate,COMPDIM,NUMLEFTRIGHT,N1M,N2M,N3M);
+struct of_state BASEMACP1A1(fluxstate,COMPDIM,N1M,N2M,N3M,NUMLEFTRIGHT);
 struct of_state BASEMACP0A0(fluxstatecent,N1M,N2M,N3M); // pb-like (not pi-like)
 #endif
 
@@ -101,6 +101,12 @@ FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 // below is used within substeps but not across
 FTYPE BASEMACP0A1(wspeedtemp,N1M,N2M,N3M,NUMCS); // temporarily store wspeed in case not just copying but averaging before putting into wspeed array
 FTYPE BASEMACP2A0(wspeed,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right)
+#endif
+
+
+#if(STORESHOCKINDICATOR)
+// below is used within substeps but not across
+FTYPE BASEMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M);
 #endif
 
 
@@ -190,8 +196,8 @@ FTYPE BASEMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP);	/* rescaled primitives, also used
 //FTYPE BASEMACP2A0(wspeedcorn,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right) at corner (not true corner)
 FTYPE BASEMACP0A1(pstagglobal,N1M,N2M,N3M,NPR); // for interpolate_pfield_face2cent() -- only contains fields
 // below has more memory than needed for 2nd COMPDIM (can be 2) but leave as 3 for simplicity in accessing array
-FTYPE BASEMACP3A0(pbcorninterp,COMPDIM,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // holds field corner interpolations
-FTYPE BASEMACP4A0(pvcorninterp,COMPDIM,COMPDIM,NUMCS,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // holds velocity corner interpolations
+//FTYPE BASEMACP3A0(pbcorninterp,COMPDIM,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // holds field corner interpolations
+FTYPE BASEMACP1A3(pvbcorninterp,COMPDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,COMPDIM,NUMCS+1,NUMCS); // holds velocity corner interpolations (NUMCS+1) has +1 part that holds old pbcorninterp
 FTYPE BASEMACP1A0(geomcornglobal,COMPDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // really for merged method with FLUXCTSTAG
 
 #if(HIGHERORDERMEM)
@@ -363,6 +369,9 @@ FTYPE BASEMACP0A1(atudtavg,N1M,N2M,N3M,NUMSTRESSTERMS);
 
 // below used for cases when need gdet or eomfunc[] at multiple grid locations:  Created to avoid cache misses with flux_ct()
 struct of_gdetgeom BASEMETMACP0A1(gdetgeom,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NPG);
+
+// below created for simple gdet calls since faster to have storage like this sometimes
+struct of_gdetgeom BASEMETMACP1A0(gdetgeomnormal,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 
 // new memory-local way (avoids major cache misses)
 struct of_compgeom BASEMETMACP1A0(compgeom,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);

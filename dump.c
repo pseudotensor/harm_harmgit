@@ -463,8 +463,8 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     for(l=1;l<=COMPDIM;l++) myset(datatype,GLOBALMACP1A0(pl_ctdump,l,i,j,k),0,NPR2INTERP,writebuf); // 3*8 = 24
     for(l=1;l<=COMPDIM;l++) myset(datatype,GLOBALMACP1A0(pr_ctdump,l,i,j,k),0,NPR2INTERP,writebuf); // 3*8 = 24
     myset(datatype,GLOBALMAC(pstagdump,i,j,k),0,NPR,writebuf); // 8 // GODMARK: use of globals
-    for(dir=1;dir<=COMPDIM;dir++) for(pl=B1;pl<=B3;pl++) for(n=0;n<=1;n++) myset(datatype,&GLOBALMACP3A0(pbcorninterp,dir,pl,n,i,j,k),0,1,writebuf); // 3*3*2 = 18
-    for(dir=1;dir<=COMPDIM;dir++) for(pl=U1;pl<=U3;pl++) for(n=0;n<=1;n++) for(o=0;o<=1;o++) myset(datatype,&GLOBALMACP4A0(pvcorninterp,dir,pl,n,o,i,j,k),0,1,writebuf); // 3*3*2*2 = 36
+    //    for(dir=1;dir<=COMPDIM;dir++) for(pl=B1;pl<=B3;pl++) for(n=0;n<=1;n++) myset(datatype,&GLOBALMACP3A0(pbcorninterp,dir,pl,n,i,j,k),0,1,writebuf); // 3*3*2 = 18
+    for(dir=1;dir<=COMPDIM;dir++) for(pl=1;pl<=COMPDIM;pl++) for(n=0;n<NUMCS+1;n++) for(o=0;o<NUMCS;o++) myset(datatype,&GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,pl,n,o),0,1,writebuf); // 3*3*(2+1)*2 = 54 (was 36)
   }
 
   return (0);

@@ -1209,7 +1209,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
   FTYPE a_P[10];
   FTYPE *V,*P;
-  FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P, FTYPE **ypl);
+  FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
   int pl,pliter;
   FTYPE Fi;
   int dqrange;
@@ -1248,7 +1248,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
   // computed only once for all variables
 #if( DOPPMREDUCE )
-  Fi = Ficalc(dir,V,P,ypl);
+  Fi = Ficalc(dir,V,P);
 #else
   Fi = 0.0;
 #endif
@@ -1313,7 +1313,7 @@ void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r)
 
 
 // PPM FLATTENER parameter
-FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs, FTYPE **ypl )
+FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
 {
   FTYPE Ftilde,Ftilde1,Ftilde2;
   FTYPE Sp;
@@ -1353,15 +1353,15 @@ FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs, FTYPE **ypl )
 
 
 // PPM FLATTENERS (final formula)
-FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P, FTYPE **ypl)
+FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P)
 {
-  FTYPE ftilde( int dir, int shift, FTYPE *P, FTYPE *V, FTYPE **ypl );
+  FTYPE ftilde( int dir, int shift, FTYPE *P, FTYPE *V);
   int signdP;
   FTYPE Fi;
 
   signdP = (P[1] - P[-1] > 0) * 2 - 1;
   // FLASH Equation 48
-  Fi = max( ftilde(dir, 0, V,P,ypl), ftilde(dir, -signdP, V,P,ypl) );
+  Fi = max( ftilde(dir, 0, V,P), ftilde(dir, -signdP, V,P) );
 
   return(Fi);
 }

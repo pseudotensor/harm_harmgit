@@ -159,7 +159,7 @@ int fluxcalc(int stage,
     myexit(175106);
 #endif
 
-    MYFUN(fluxcalc_fluxctstag(stage, pr, pstag, pl_ct, pr_ct, GLOBALPOINT(pbcorninterp), GLOBALPOINT(pvcorninterp), GLOBALPOINT(wspeed), GLOBALPOINT(prc), GLOBALPOINT(pleft), GLOBALPOINT(pright), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), Nvec, dqvec, ptrfluxvec, CUf, cent2faceloop, face2cornloop),"flux.c:fluxcalc()", "fluxcalc_fluxctstag", 0);
+    MYFUN(fluxcalc_fluxctstag(stage, pr, pstag, pl_ct, pr_ct, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(wspeed), GLOBALPOINT(prc), GLOBALPOINT(pleft), GLOBALPOINT(pright), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), Nvec, dqvec, ptrfluxvec, CUf, cent2faceloop, face2cornloop),"flux.c:fluxcalc()", "fluxcalc_fluxctstag", 0);
 
     //////////////////////////////
     //
@@ -1562,7 +1562,7 @@ void compute_and_store_fluxstate_assign(int dimeninput, int dimenoutput, int isl
 {
 
   // copy entire structure
-  GLOBALMACP2A0(fluxstate,dimenoutput,isleftrightoutput,i,j,k)=GLOBALMACP2A0(fluxstate,dimeninput,isleftrightinput,i,j,k);
+  GLOBALMACP1A1(fluxstate,dimenoutput,i,j,k,isleftrightoutput)=GLOBALMACP1A1(fluxstate,dimeninput,i,j,k,isleftrightinput);
 
 }
 
@@ -1573,7 +1573,7 @@ void compute_and_store_fluxstate(int dimen, int isleftright, int i, int j, int k
   int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
 
   // get state
-  pureget_stateforfluxcalc(pr,geom,&GLOBALMACP2A0(fluxstate,dimen,isleftright,i,j,k));
+  pureget_stateforfluxcalc(pr,geom,&GLOBALMACP1A1(fluxstate,dimen,i,j,k,isleftright));
 
 }
 
@@ -1582,8 +1582,25 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 {
   int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int is,ie,js,je,ks,ke,di,dj,dk;
+  int Nvec[NDIM];
+  //  FTYPE (*shocktemparray)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*shocktemparray)[NSTORE1+SHIFT1][NSTORE2+SHIFT2][NSTORE3+SHIFT3];
+  int startorderi,endorderi;
+  extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
 
 
+  Nvec[0]=0;
+  Nvec[1]=N1;
+  Nvec[2]=N2;
+  Nvec[3]=N3;
+
+  //  shocktemparray = GLOBALPOINT(ptemparray);
+  shocktemparray = GLOBALPOINT(emf);
+  //GLOBALPOINT(wspeedtemp)
+  //GLOBALPOINT(pimage)=GLOBALPOINT(dUgeomarray);
+  //  velvec[1]=GLOBALPOINT(dq1);
+  //  velvec[2]=GLOBALPOINT(dq2);
+  //  velvec[3]=GLOBALPOINT(dq3);
 
 
 
@@ -1591,6 +1608,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
   set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
 
+
+
+#if(STOREFLUXSTATE||STORESHOCKINDICATOR)
 
   /////////////////////////
   //
@@ -1604,6 +1624,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
     int i,j,k;
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
+    int dir;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
     
@@ -1620,29 +1641,234 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       // get state
       pureget_stateforfluxcalcorsource(MAC(pr,i,j,k),ptrgeom,&GLOBALMAC(fluxstatecent,i,j,k));
 
+
+
+
+#if(STORESHOCKINDICATOR)
+      // see more details in interpline.c:get_V_and_P()
+
+#if(N1>1)
+      dir=1;
+#if(VLINEWITHGDETRHO==0)
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
+#else
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+#endif
+#endif // end if N1>1
+
+#if(N2>1)
+      dir=2;
+#if(VLINEWITHGDETRHO==0)
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
+#else
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+#endif
+#endif // end if N2>1
+
+#if(N3>1)
+      dir=3;
+#if(VLINEWITHGDETRHO==0)
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
+#else
+      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+#endif
+#endif // end if N3>1
+
+      // get total pressure
+      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
+
+#endif // end if STORESHOCKINDICATOR
+
+
+
+
+
+
+
+#if(STOREFLUXSTATE)
+
       // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
       // If doing staggered field method, then also assumes left,right stored like pl_ct and pr_ct are stored
       // note we are copying entire structure here
 #if(N1==1 || FIELDSTAGMEM)
       // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
-      GLOBALMACP2A0(fluxstate,1,ISLEFT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP2A0(fluxstate,1,ISRIGHT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,1,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,1,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
 #endif
 #if(N2==1 || FIELDSTAGMEM)
       // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen,ISLEFT,ISRIGHT]
-      GLOBALMACP2A0(fluxstate,2,ISLEFT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP2A0(fluxstate,2,ISRIGHT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,2,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,2,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
 #endif
 #if(N3==1 || FIELDSTAGMEM)
       // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen,ISLEFT,ISRIGHT]
-      GLOBALMACP2A0(fluxstate,3,ISLEFT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP2A0(fluxstate,3,ISRIGHT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,3,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
+      GLOBALMACP1A1(fluxstate,3,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
 #endif
+
+#endif// end if STOREFLUXSTATE
 
     
 
     }// end 3D loop
   }// end parallel region  
+  
+#endif// end if STOREFLUXSTATE|| STORESHOCKINDICATOR
+
+
+
+
+
+
+  {// begin block
+
+    int dir;
+
+
+#if(STORESHOCKINDICATOR)
+    // OPTMARK: Consider storing temporary velvec aligned with extraction direction (dir) .  Although ptot scalar has no preferred choice and final pr should have standard choice.
+    // Ficalc() requires vel and p exist +-2 beyond where shock indicator is computed.
+    // Assume shock indicator required at largest possible domain, which is then 2-inwards from outer boundaries only in each direction.
+      
+#if(MAXBND<4)
+    dualfprintf(fail_file,"MAXBND should be 4 for shockindicator???\n");
+    myexit(8465684);
+#endif
+  
+    startorderi = - (7)/2; // order=7 fixed for shock detector
+    endorderi   = - startorderi;
+
+  
+
+
+#if(N1>1)
+    dir=1;
+
+#pragma omp parallel
+    {
+      int i,j,k,l;
+      int pl;
+      OPENMP3DLOOPVARSDEFINE;
+      //    FTYPE *primptr[MAXNPR]; // number of pointers
+      FTYPE *velptr,*ptotptr;
+      //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
+      FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
+
+
+      // shift pointer
+      //    PALLREALLOOP(pl){
+      //      primptr[pl] = a_primstencil[pl] - startorderi;
+      //    }
+      velptr = a_velstencil - startorderi;
+      ptotptr = a_ptotstencil - startorderi;
+
+
+      OPENMP3DLOOPSETUPFULLINOUT2DIR1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+	// extract stencil of data for Ficalc()
+	for(l=startorderi;l<=endorderi;l++){
+	  //	PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
+	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
+	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
+	}
+      
+	//      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+
+      }// end 3D loop
+    }// end parallel region  
+#endif // end if N1>1
+
+
+#if(N2>1)
+    dir=2;
+
+#pragma omp parallel
+    {
+      int i,j,k,l;
+      OPENMP3DLOOPVARSDEFINE;
+      FTYPE *velptr,*ptotptr;
+      FTYPE a_velstencil[10],a_ptotstencil[10]; // Shouldn't need anymore than 10
+
+      // shift stencils
+      velptr = a_velstencil - startorderi;
+      ptotptr = a_ptotstencil - startorderi;
+
+      OPENMP3DLOOPSETUPFULLINOUT2DIR2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+	// extract stencil of data for Ficalc()
+	for(l=startorderi;l<=endorderi;l++){
+	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j+l,k);
+	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j+l,k);
+	}
+      
+	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+      
+      }// end 3D loop
+    }// end parallel region  
+#endif // end if N2>1
+
+
+
+
+#if(N3>1)
+    dir=3;
+
+#pragma omp parallel
+    {
+      int i,j,k,l;
+      OPENMP3DLOOPVARSDEFINE;
+      FTYPE *velptr,*ptotptr;
+      FTYPE a_velstencil[10],a_ptotstencil[10]; // Shouldn't need anymore than 10
+
+      // shift stencils
+      velptr = a_velstencil - startorderi;
+      ptotptr = a_ptotstencil - startorderi;
+
+      OPENMP3DLOOPSETUPFULLINOUT2DIR3;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+	// extract stencil of data for Ficalc()
+	for(l=startorderi;l<=endorderi;l++){
+	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k+l);
+	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k+l);
+	}
+      
+	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+
+      }// end 3D loop
+    }// end parallel region  
+#endif // end if N3>1
+
+
+
+    // if want to use contact steepener methods, then store that too.
+    //  if(CONTACTINDICATOR){
+    ///////////////////
+    //
+    // 1D GET CONTACT INDICATOR
+    //
+    ////////////////////
+    //use primitive values that correspond to the quantities being interpolated
+    //  }
+
+
+
+    // GODMARK: At end, could combine into multi-dimensional shock indicator.
+
+
+#endif // end if STORESHOCKINDICATOR
+  }// end block
+
+
 
 }
 

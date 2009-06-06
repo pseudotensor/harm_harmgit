@@ -107,8 +107,8 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
     FTYPE igdetgnosing[NDIM];
     int odir1,odir2;
     int jj;
-    struct of_geom geomfdontuse[NDIM];
-    struct of_geom *ptrgeomf[NDIM];
+    struct of_gdetgeom geomfdontuse[NDIM];
+    struct of_gdetgeom *ptrgeomf[NDIM];
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL; // doesn't depend upon dir, but blockijk must be private
 
 
@@ -200,18 +200,21 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 // 2) loop over dimensions setting field flux dimension-by-dimension using multi-D interpolated CORN quantities
 // At present, original flux as emf is computed like normal flux even if overwritten here, and shouldn't be much more expensive doing that there since primary cost is interpolation whose results are required and used here
 int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			//			FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 			FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3],
 			FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
 			FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
 			FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
 			struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-			struct of_state (*fluxstate)[NUMLEFTRIGHT][NSTORE1][NSTORE2][NSTORE3],
+			struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 			FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM])
 {
-  int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
+  int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+				 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+				 struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
 				 FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
 				 FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
 				 FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
@@ -220,8 +223,8 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
   int idel, jdel, kdel, face;
   int is, ie, js, je, ks, ke;
   int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
-				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-				 FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+				 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 				 FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3]);
   int edgedir, odir1,odir2;
   //  static int firsttime=1;
@@ -244,7 +247,7 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
   // This can't be done per dimension since flux needs multi-D quantities for 2D Riemann problem...hence why stored and outside dimenloop
   //
   ////////////////////////////
-  interpolate_prim_face2corn(pr, pl_ct, pr_ct, pbcorn, pvcorn, cent2faceloop, face2cornloop,prc,pleft,pright,Nvec,dqvec);
+  interpolate_prim_face2corn(pr, pl_ct, pr_ct, pvbcorn, cent2faceloop, face2cornloop,prc,pleft,pright,Nvec,dqvec);
 
 
 
@@ -289,7 +292,7 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 
 
     // dir corrsponds to *edge,emf* NOT face
-    MYFUN(fluxcalc_fluxctstag_emf_1d(stage, pr, dir, odir1, odir2, is, ie, js, je, ks, ke, fluxvec, CUf, face2cornloop[edgedir],pbcorn,pvcorn,wspeed),"flux.c:fluxcalc()", "fluxcalc_fluxctstag_1d", dir);
+    MYFUN(fluxcalc_fluxctstag_emf_1d(stage, pr, dir, odir1, odir2, is, ie, js, je, ks, ke, fluxvec, CUf, face2cornloop[edgedir],pvbcorn,wspeed),"flux.c:fluxcalc()", "fluxcalc_fluxctstag_1d", dir);
 
 #if(PRODUCTION==0)
     trifprintf("%d",dir);
@@ -364,12 +367,12 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 //    
 
 // pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c
-//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=U1;pl<=U3;pl++) for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++)  MACP4A0(pvcorn,pl2,pl,m,l,i,j,k)=valueinit;
-//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++)  MACP3A0(pbcorn,pl2,pl,l,i,j,k)=valueinit;
+//   for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
+
 
 int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
-			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			       FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			       //			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 			       FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
   int idel1,jdel1,kdel1;
@@ -414,8 +417,8 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 #pragma omp parallel 
   {
     int i,j,k,pl,pliter;
-    struct of_geom geomdontuse;
-    struct of_geom *ptrgeom=&geomdontuse;
+    struct of_gdetgeom gdetgeomdontuse;
+    struct of_gdetgeom *ptrgdetgeom=&gdetgeomdontuse;
     int m,l;
     FTYPE emf2d[COMPDIM-1][COMPDIM-1],c2d[NUMCS][COMPDIM-1];
     FTYPE dB[COMPDIM-1],ctop[COMPDIM-1];
@@ -431,8 +434,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
     
       // pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c
-      //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=U1;pl<=U3;pl++) for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++)  MACP4A0(pvcorn,pl2,pl,m,l,i,j,k)=valueinit;
-      //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++)  MACP3A0(pbcorn,pl2,pl,l,i,j,k)=valueinit;
+      //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 
 
       /////////////////////////////////
@@ -470,8 +472,10 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 	  // pbcorn[which corner][which component in pl form][+-remaining direction that is not corn nor pl-dir]
 
 	  emf2d[m][l] = 
-	    + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
-	    - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
+	    //	    + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
+	    //	    - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
+	    + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
+	    - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
 	}
 
       
@@ -518,9 +522,11 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // "upper" minus "lower" fields
       // dB[?] corresponds to ? meaning field direction, not interpolation or any other direction
       // dB[0] corresponds to dB["odir1"]
-      dB[0] = MACP3A0(pbcorn,dir,B1-1+odir1,1,i,j,k) - MACP3A0(pbcorn,dir,B1-1+odir1,0,i,j,k) ;
+      //      dB[0] = MACP3A0(pbcorn,dir,B1-1+odir1,1,i,j,k) - MACP3A0(pbcorn,dir,B1-1+odir1,0,i,j,k) ;
+      dB[0] = MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,1) - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,0) ;
       // dB[1] corresponds to dB["odir2"]
-      dB[1] = MACP3A0(pbcorn,dir,B1-1+odir2,1,i,j,k) - MACP3A0(pbcorn,dir,B1-1+odir2,0,i,j,k) ;
+      //      dB[1] = MACP3A0(pbcorn,dir,B1-1+odir2,1,i,j,k) - MACP3A0(pbcorn,dir,B1-1+odir2,0,i,j,k) ;
+      dB[1] = MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,1) - MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,0) ;
 
 
 
@@ -597,11 +603,11 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       //          Same ambiguity exists in fluxct.c
 #if(CORNGDETVERSION==1)
       // even though only want geom.e, geom.e calculation could depend upon many things
-      get_geometry_geomeonly(i, j, k, CORN1-1+dir, ptrgeom); // get geometry at CORN[dir] where emf is located
+      get_geometry_geomeonly(i, j, k, CORN1-1+dir, ptrgdetgeom); // get geometry at CORN[dir] where emf is located
 
       // GODMARK: why use ptrgeom->e here and ptrgeom->g in most other places?
-      geomcornodir1=ptrgeom->EOMFUNCMAC(B1-1+odir1); // which field ptrgeom->e doesn't matter as mentioned below
-      geomcornodir2=ptrgeom->EOMFUNCMAC(B1-1+odir2);
+      geomcornodir1=ptrgdetgeom->EOMFUNCMAC(B1-1+odir1); // which field ptrgeom->e doesn't matter as mentioned below
+      geomcornodir2=ptrgdetgeom->EOMFUNCMAC(B1-1+odir2);
 #else
       geomcornodir1=1.0;
       geomcornodir2=1.0;
@@ -618,51 +624,6 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 #if((WHICHEOM==WITHNOGDET)&&(NOGDETB1>0)||(NOGDETB2>0)||(NOGDETB3>0))
       dualfprintf(fail_file,"Makes no sense to have field with different geometry factor since flux,emf mixes those factors\n");
       myexit(196826);
-#endif
-
-
-
-#if(0)
-      if(i==N1 || i==0){
-	dualfprintf(fail_file,"dir=%d i=%d EMF=%21.15g\n",dir,i,emffinal);
-      }
-#endif
-
-
-
-
-
-#if(0)
-      // DEBUG:
-      if(i<=0){
-	for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++){
-	    dualfprintf(fail_file,"i=%d j=%d k=%d m=%d l=%d :: dir=%d odir1=%d odir2=%d :: emf2d[m][l]=%21.15g :: %21.15g %21.15g %21.15g %21.15g\n",i,j,k,m,l,dir,odir1,odir2,emf2d[m][l],MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k),MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k),MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k),MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k));
-	  }
-	dualfprintf(fail_file,"dB[0]=%21.15g dB[1]=%21.15g\n",dB[0],dB[1]);
-	if(dir==3){
-	  // below are things used to get pbcorn[3][B2][m=1] at 0,0,0
-	  dualfprintf(fail_file,"pstag[B2]= %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.51g\n",MACP0A1(pstagglobal,-3,0,0,B2),MACP0A1(pstagglobal,-2,0,0,B2),MACP0A1(pstagglobal,-1,0,0,B2),MACP0A1(pstagglobal,0,0,0,B2),MACP0A1(pstagglobal,1,0,0,B2),MACP0A1(pstagglobal,2,0,0,B2),MACP0A1(pstagglobal,3,0,0,B2));
-	  dualfprintf(fail_file,"pl_ct[2][B2]= %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.51g\n",MACP1A1(pl_ct,2,-3,0,0,B2),MACP1A1(pl_ct,2,-2,0,0,B2),MACP1A1(pl_ct,2,-1,0,0,B2),MACP1A1(pl_ct,2,0,0,0,B2),MACP1A1(pl_ct,2,1,0,0,B2),MACP1A1(pl_ct,2,2,0,0,B2),MACP1A1(pl_ct,2,3,0,0,B2));
-	  dualfprintf(fail_file,"pr_ct[2][B2]= %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.51g\n",MACP1A1(pr_ct,2,-3,0,0,B2),MACP1A1(pr_ct,2,-2,0,0,B2),MACP1A1(pr_ct,2,-1,0,0,B2),MACP1A1(pr_ct,2,0,0,0,B2),MACP1A1(pr_ct,2,1,0,0,B2),MACP1A1(pr_ct,2,2,0,0,B2),MACP1A1(pr_ct,2,3,0,0,B2));
-	  dualfprintf(fail_file,"BADFLUX: %21.15g %21.15g\n",MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2),MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1));
-	}
-	
-
-	// m=1 means odir2 on upper side (for B2 this is same as m=0)
-	// so MACP3A0(pbcorn,3,B2,m=1,0,0,0) is nan
-	// so MACP4A0(pvcorn,3,U1,m=1,0,1,0,0,0) is nan
-	//
-	// so MACP3A0(pbcorn,3,B1,l=0,1,0,0,0) is fine
-	// so MACP4A0(pvcorn,3,U2,m=0,1,l=0,1,0,0,0) is fine
- 
-
-	//i=0 j=0 k=0 m=0 l=0 :: dir=3 odir1=1 odir2=2 :: emf2d[m][l]=                   -0 ::                     0    -0.452342295124171                     0                     0
-	//i=0 j=0 k=0 m=0 l=1 :: dir=3 odir1=1 odir2=2 :: emf2d[m][l]=                   -0 ::                     0    -0.452342295124171                     0                     0
-	//i=0 j=0 k=0 m=1 l=0 :: dir=3 odir1=1 odir2=2 :: emf2d[m][l]=                  nan ::                   nan                   nan                     0                     0
-	//i=0 j=0 k=0 m=1 l=1 :: dir=3 odir1=1 odir2=2 :: emf2d[m][l]=                  nan ::                   nan                   nan                     0                     0
-	//BADFLUX:                   nan                   nan
-
-      }
 #endif
 
       // done!
@@ -867,15 +828,15 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     int dir;
     FTYPE igdetgnosing;
     int is,ie,js,je,ks,ke;
-    struct of_geom geomfdontuse[NDIM];
-    struct of_geom *ptrgeomf[NDIM];
+    struct of_gdetgeom gdetgeomfdontuse[NDIM];
+    struct of_gdetgeom *ptrgdetgeomf[NDIM];
     int jj;
 
     OPENMP3DLOOPVARSDEFINE;
 
 
     // generally ptr's are different inside parallel block
-    DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
+    DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
 
 #if(USTAG2PSTAGCONSTRAINEDLOOP==0)
@@ -892,9 +853,9 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
 	// get geometry for face pre-interpolated values
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-	set_igdetsimple(ptrgeomf[dir]);
-	igdetgnosing = ptrgeomf[dir]->igdetnosing;      
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+	set_igdetsimple(ptrgdetgeomf[dir]);
+	igdetgnosing = ptrgdetgeomf[dir]->igdetnosing;      
 	MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
       }
     }
@@ -979,20 +940,20 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 {
   FTYPE igdetgnosing;
   int pl,pliter;
-  struct of_geom geomfdontuse[NDIM];
-  struct of_geom *ptrgeomf[NDIM];
+  struct of_gdetgeom gdetgeomfdontuse[NDIM];
+  struct of_gdetgeom *ptrgdetgeomf[NDIM];
   int jj;
 
   // assign memory
-  DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
+  DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
 
   pl=B1-1+dir;
 
   // get geometry for face pre-interpolated values
-  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-  set_igdetsimple(ptrgeomf[dir]);
-  igdetgnosing = ptrgeomf[dir]->igdetnosing;
+  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+  set_igdetsimple(ptrgdetgeomf[dir]);
+  igdetgnosing = ptrgdetgeomf[dir]->igdetnosing;
 
   MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
 
@@ -1020,6 +981,8 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     int pl,dir;
     struct of_geom geomfdontuse[NDIM];
     struct of_geom *ptrgeomf[NDIM];
+    struct of_gdetgeom gdetgeomfdontuse[NDIM];
+    struct of_gdetgeom *ptrgdetgeomf[NDIM];
     extern int rescale(int which, int dir, FTYPE *pr, struct of_geom *geom,FTYPE*newvar);
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
@@ -1028,6 +991,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     // generally ptr's are different inside parallel block
     // assign memory
     DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
+    DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
 
     // LOOP over faces (dimensions)
@@ -1054,8 +1018,8 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
 #elif(IFNOTRESCALETHENUSEGDET)
 	// get geometry for face pre-interpolated values
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-	MACP0A1(p2interp,i,j,k,pl) = (ptrgeomf[dir]->gdet)*MACP0A1(pstag,i,j,k,pl);
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+	MACP0A1(p2interp,i,j,k,pl) = (ptrgdetgeomf[dir]->gdet)*MACP0A1(pstag,i,j,k,pl);
 #endif
 	
       }// end COMPFULLLOOP
@@ -1182,12 +1146,17 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     struct of_geom *ptrgeomc=&geomcdontuse;
     struct of_geom geomfdontuse[NDIM];
     struct of_geom *ptrgeomf[NDIM];
+    struct of_gdetgeom gdetgeomcdontuse;
+    struct of_gdetgeom *ptrgdetgeomc=&gdetgeomcdontuse;
+    struct of_gdetgeom gdetgeomfdontuse[NDIM];
+    struct of_gdetgeom *ptrgdetgeomf[NDIM];
     int jj;
 
     OPENMP3DLOOPVARSDEFINE;
 
     // assign memory
     DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
+    DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
     // Setup rescale pointer reference
 #if(RESCALEINTERP)
@@ -1244,8 +1213,8 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	  // get ucent if required
 	  if(ucent!=NULL){// OPTMARK: Is this expensive?
 	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
-	    get_geometry_gdetonly(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
-	    MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
+	    get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
+	    MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
 	  }// end if ucent!=NULL
 
 	}// end 3D LOOP
@@ -1322,9 +1291,9 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
 
 #elif(IFNOTRESCALETHENUSEGDET)
-	  get_geometry_gdetonly(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
-	  set_igdetsimple(ptrgeomc);
-	  igdetgnosing=ptrgeomc->igdetnosing;
+	  get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
+	  set_igdetsimple(ptrgdetgeomc);
+	  igdetgnosing=ptrgdetgeomc->igdetnosing;
 
 	  // Assign \detg B^i
 	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl]); // go ahead and assign ucent if this method
@@ -1337,9 +1306,9 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 #else
 	  if(ucent!=NULL){
 	    // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
-	    get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
+	    get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
 	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
-	    MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
+	    MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
 	  }
 	  
 #endif
@@ -1409,17 +1378,27 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
   extern void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
   extern void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
   int pl,pliter;
+  int interporflux;
 
 
+  if(extrazones4emf){
+    interporflux=ENOINTERPTYPE4EMF;
+    
+  }
+  else{
+    interporflux=ENOINTERPTYPE;
+  }
 
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     // ENOPRIMITIVE below means primitives instead of conserved quantities
-    slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, ENOINTERPTYPE4EMF, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
+    get_loop(INTERPLINETYPE, interporflux, dir, face2cornloop);
+    slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, interporflux, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
   }
   else{
+    get_loop(INTERPPOINTTYPE, interporflux, dir, face2cornloop);
     PINTERPLOOP(pliter,pl){
-      slope_lim_pointtype(ENOINTERPTYPE4EMF,realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+      slope_lim_pointtype(interporflux,realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
     }
   }
 
@@ -1489,15 +1468,13 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
 // so odir1 is forward cyclic
 // so odir2 is backward cyclic
-//	emf2d[m][l] = 
-//	  + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
-//	  - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
-//      }
+//	  emf2d[m][l] = 
+//	    + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
+//	    - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // pvcorn and pbcorn are defined to be used like below initializaiton in set_arrays.c
-//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=U1;pl<=U3;pl++) for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++)  MACP4A0(pvcorn,pl2,pl,m,l,i,j,k)=valueinit;
-//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++)  MACP3A0(pbcorn,pl2,pl,l,i,j,k)=valueinit;
+//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 //
 
 // LEAVE AS 0 since makes no sense to have as 1
@@ -1509,7 +1486,10 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // OPENMPOPTMARK: prc (used for p2interp in funny way), pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright/p2interp
 // Note: wavespeeds already stored, so don't worry about wspeedtmp being only 1 dir at a time.  Further, don't use wavespeeds here, only used directly in EMF calculation
 //
-int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pvcorn)[COMPDIM][NUMCS][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
+int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+			       //FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+			       struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
 			       FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
 			       FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
 			       FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
@@ -1623,12 +1603,19 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
     int idel1,jdel1,kdel1;
     int idel2,jdel2,kdel2;
     int i,j,k;
+
     struct of_geom geomfdontuse;
     struct of_geom *ptrgeomf=&geomfdontuse;
-    struct of_geom geomcdontuse;
-    struct of_geom *ptrgeomc=&geomcdontuse;
-    struct of_geom geomcorndontuse;
-    struct of_geom *ptrgeomcorn=&geomcorndontuse;
+
+    struct of_gdetgeom gdetgeomfdontuse;
+    struct of_gdetgeom *ptrgdetgeomf=&gdetgeomfdontuse;
+
+    struct of_gdetgeom gdetgeomcdontuse;
+    struct of_gdetgeom *ptrgdetgeomc=&gdetgeomcdontuse;
+
+    struct of_gdetgeom gdetgeomcorndontuse;
+    struct of_gdetgeom *ptrgdetgeomcorn=&gdetgeomcorndontuse;
+
     int dir,interpdir,edgedir;
     int locallim;
     FTYPE pstore_l[NPR2INTERP],pstore_r[NPR2INTERP];
@@ -1710,6 +1697,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
       //     COMPZSLOOP( -N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND ){
       // But, need loops to be controlled to don't access beyond where left-right faces set since ucon can fail with arbitrary input or nan's unlike other types of calculations
       // cent2faceloop is over CENT positions, which now since accessing the faces needs to be transcribed to FACE values interior to those CENT values
+      // One shifts up in interpdir (dir) flux direction because interpolated -1 extra CENT cell and N CENT cell to get flux at 0 and N.
       is=cent2faceloop[dir].is + SHIFT1*(dir==1);
       ie=cent2faceloop[dir].ie;
       js=cent2faceloop[dir].js + SHIFT2*(dir==2);
@@ -1737,8 +1725,17 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #else
 
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
+	myexit(968276);
+#endif
+
 	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf); // at face[dir]
+	//	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+	ptrgeomf->i=i;
+	ptrgeomf->j=j;
+	ptrgeomf->k=k;
+	ptrgeomf->p=FACE1-1+dir;
 
 	get_stateforfluxcalc(dir, ISLEFT, MACP1A0(primface_l,dir,i,j,k), ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, MACP1A0(primface_r,dir,i,j,k), ptrgeomf, &ptrqr);
@@ -1788,7 +1785,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
 
-      // MACP4A0(pvcorn,corner/emf/edge dir,which velocity,l/r,u/d,i,j,k)
+      // MACP4A0(pvcorn,corner/emf/edge dir,i,j,k,which velocity,l/r,u/d)
       // note that emf[+- in EMFodir1][+- in EMFodir2] implies pvcorn[l/r][u/d] =  pvcorn[l/r in EMFodir1][u/d in EMFodir2] since have matching [l][m] when accessing emf[] and pvcorn[] where in this comment edgedir=dir and odir1 and odir2 are interpdir and dir (order?)
       //
       // translation:
@@ -1929,10 +1926,23 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	// no HORIZONSUPERFAST here
 	locallim=choose_limiter(interpdir, 0,0,0,B1);
 	usedq=(locallim<PARA)&&(LIMADJUST==0);
+
+	// face2corn is at effective-CENT relative to edgedir
+	// loop below will be at effective-FACEs, so extended in interpdir direction
+	// One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
+	is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
+	ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
+	js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
+	je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
+	ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
+	ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
+
+	//	dualfprintf(fail_file,"edgedir=%d EMFodir1=%d EMFodir2=%d :: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",edgedir,EMFodir1,EMFodir2,is,ie,js,je,ks,ke);
 	
 	// Could use face2cornloop-> to better constrain the below
 	///////	COMPZSLOOP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND ){
-	OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
+	//	OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
+	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) //nowait // Don't wait since each direction is independent // NO: use of pleft, pright, and some use of p2interp (that depend on each dir) from loop above makes not possible to use "nowait"
 	OPENMP3DLOOPBLOCK{
 	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -1966,50 +1976,41 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  //
 	  // Set lab-frame 3-magnetic field at CORN
 	  //
-	  // MACP3A0(pbcorn,corner/emf/edge dir,which field,+-present interpdir,i,j,k)
+	  // MACP1A3(pbcorn,corner/emf/edge dir,i,j,k,which field,+-present interpdir)
 
 
-
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 && CORNGDETVERSION==1 || INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==0 && CORNGDETVERSION==0)
-	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgeomcorn); // at CORN[dir]
-#endif
 
 
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 && CORNGDETVERSION==1)
 
-
+	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
 	  // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
-	  set_igdetsimple(ptrgeomcorn);
-	  igdetgnosing = ptrgeomcorn->igdetnosing;
-
+	  set_igdetsimple(ptrgdetgeomcorn);
+	  igdetgnosing = ptrgdetgeomcorn->igdetnosing;
 
 #elif(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==0 && CORNGDETVERSION==0)
+	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
 	  // then add gdet now since will not multiply geometry once have final EMF
-	  igdetgnosing = ptrgeomcorn->gdet; // here igdet really is just geom
+	  igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
 #else
 	  // nothing to do
 	  igdetgnosing = 1.0;
 #endif
 
 
-	  MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k) = p2interp_l[npr2interplist[0]]*igdetgnosing;
-	  MACP3A0(pbcorn,edgedir,B1-1+dir,1,i,j,k) = p2interp_r[npr2interplist[0]]*igdetgnosing;
+	  //	  MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k) = p2interp_l[npr2interplist[0]]*igdetgnosing;
+	  //	  MACP3A0(pbcorn,edgedir,B1-1+dir,1,i,j,k) = p2interp_r[npr2interplist[0]]*igdetgnosing;
+	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0) = p2interp_l[npr2interplist[0]]*igdetgnosing;
+	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1) = p2interp_r[npr2interplist[0]]*igdetgnosing;
 
 
 
-#if(0)
-	  // DEBUG:
-	  if(edgedir==3 && dir==2 && i==0 && j==0 && k==0){
-	    dualfprintf(fail_file,"GOD1: interpdir=%d whichodir=%d list0=%d :: %21.15g %21.15g %21.15g\n",interpdir,whichodir,npr2interplist[0],MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k),MACP3A0(pbcorn,edgedir,B1-1+dir,1,i,j,k),igdetgnosing);
-	    dualfprintf(fail_file,"pleft=%21.15g\n",MACP0A1(pleft,i,j,k,npr2interplist[0)]);
-	  }
-#endif
 
 	  ////////////////////
 	  //
 	  // Set lab-frame 3-velocity at CORN
 	  //
-	  //      pvcorn[EMFdir][whichvel][l/r in EMFodir1][u/d in EMFodir2]
+	  //      pvcorn[EMFdir][i][j][k][whichvel][l/r in EMFodir1][u/d in EMFodir2]
 	  //
 	  // for example:
 	  // edgedir=1: EMFodir1=2 EMFodir2=3 then emf[0][0] is emf[left for EMFodir1][left for EMFodir2]
@@ -2017,10 +2018,10 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	  // npr2interplist[1,2] constains [u,d for velocity in interpdir direction]	
 
-	  MACP4A0(pvcorn,edgedir,U1-1+interpdir,Aodir1,Aodir2,i,j,k) = p2interp_l[npr2interplist[1]]; // current p_l for previous p_l 
-	  MACP4A0(pvcorn,edgedir,U1-1+interpdir,Bodir1,Bodir2,i,j,k) = p2interp_r[npr2interplist[1]]; // current p_r for previous p_l
-	  MACP4A0(pvcorn,edgedir,U1-1+interpdir,Codir1,Codir2,i,j,k) = p2interp_l[npr2interplist[2]]; // current p_l for previous p_r
-	  MACP4A0(pvcorn,edgedir,U1-1+interpdir,Dodir1,Dodir2,i,j,k) = p2interp_r[npr2interplist[2]]; // current p_r for previous p_r
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2) = p2interp_l[npr2interplist[1]]; // current p_l for previous p_l 
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]]; // current p_r for previous p_l
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]]; // current p_l for previous p_r
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]]; // current p_r for previous p_r
 	}// endCOMPZSLOOP
   
       }// end loop over other directions // at end of loop, have pbcorn,pvcorn for this 1 face interpolated to 2 corners
@@ -2048,116 +2049,6 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
     npr2interpend=nprlocalend;
     PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
   }
-
-
-
-
-
-
-
-
-
-  ////////////////////////////////////////////
-  //
-  // DEBUG:
-  //
-  ///////////////////////////////////////////
-
-#if(0)
-
-  int pl2,m,l;
-  int ri,rj,rk;
-
-  for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=U1;pl<=U3;pl++) for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++){
-	  // periodic x1
-	  if ( (mycpupos[1] == 0)&&(mycpupos[1] == ncpux1 - 1) ) {
-	    if( (BCtype[X1DN]==PERIODIC)&&(BCtype[X1UP]==PERIODIC) ){
-	      // just copy from one side to another
-
-	      LOOPFP12 LOOPFP13{ // debug only
-
-		// copy from upper side to lower boundary zones
-		ri=N1;
-		rj=j;
-		rk=k;
-		LOOPBOUND1IN MACP4A0(pvcorn,pl2,pl,m,l,i,j,k) = MACP4A0(pvcorn,pl2,pl,m,l,ri+i,rj,rk);
-
-		// copy from lower side to upper boundary zones
-		ri=0;
-		rj=j;
-		k=k;
-		LOOPBOUND1OUT MACP4A0(pvcorn,pl2,pl,m,l,i,j,k) = MACP4A0(pvcorn,pl2,pl,m,l,ri+(i-N1),rj,rk);
-	      }
-	    }
-	  }
-	  // periodic x2
-	  if ( (mycpupos[2] == 0)&&(mycpupos[2] == ncpux2 - 1) ) {
-	    if( (BCtype[X2DN]==PERIODIC)&&(BCtype[X2UP]==PERIODIC) ){
-	      // just copy from one side to another
-
-	      LOOPFP11 LOOPFP13{ // debug only
-
-		// copy from upper side to lower boundary zones
-		ri=i;
-		rj=N2;
-		rk=k;
-		LOOPBOUND2IN MACP4A0(pvcorn,pl2,pl,m,l,i,j,k) = MACP4A0(pvcorn,pl2,pl,m,l,ri,rj+j,rk);
-
-		// copy from lower side to upper boundary zones
-		ri=i;
-		rj=0;
-		rk=k;
-		LOOPBOUND2OUT MACP4A0(pvcorn,pl2,pl,m,l,i,j,k) = MACP4A0(pvcorn,pl2,pl,m,l,ri,rj+(j-N2),rk);
-	      }
-	    }
-	  }
-	}
-
-  for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=B1;pl<=B3;pl++) for(l=0;l<NUMCS;l++){
-	// periodic x1
-	if ( (mycpupos[1] == 0)&&(mycpupos[1] == ncpux1 - 1) ) {
-	  if( (BCtype[X1DN]==PERIODIC)&&(BCtype[X1UP]==PERIODIC) ){
-	    // just copy from one side to another
-
-	    LOOPFP12 LOOPFP13{ // debug only
-
-	      // copy from upper side to lower boundary zones
-	      ri=N1;
-	      rj=j;
-	      rk=k;
-	      LOOPBOUND1IN MACP3A0(pbcorn,pl2,pl,l,i,j,k) = MACP3A0(pbcorn,pl2,pl,l,ri+i,rj,rk);
-
-	      // copy from lower side to upper boundary zones
-	      ri=0;
-	      rj=j;
-	      k=k;
-	      LOOPBOUND1OUT MACP3A0(pbcorn,pl2,pl,l,i,j,k) = MACP3A0(pbcorn,pl2,pl,l,ri+(i-N1),rj,rk);
-	    }
-	  }
-	}
-	// periodic x2
-	if ( (mycpupos[2] == 0)&&(mycpupos[2] == ncpux2 - 1) ) {
-	  if( (BCtype[X2DN]==PERIODIC)&&(BCtype[X2UP]==PERIODIC) ){
-	    // just copy from one side to another
-
-	    LOOPFP11 LOOPFP13{ // debug only
-
-	      // copy from upper side to lower boundary zones
-	      ri=i;
-	      rj=N2;
-	      rk=k;
-	      LOOPBOUND2IN MACP3A0(pbcorn,pl2,pl,l,i,j,k) = MACP3A0(pbcorn,pl2,pl,l,ri,rj+j,rk);
-
-	      // copy from lower side to upper boundary zones
-	      ri=i;
-	      rj=0;
-	      rk=k;
-	      LOOPBOUND2OUT MACP3A0(pbcorn,pl2,pl,l,i,j,k) = MACP3A0(pbcorn,pl2,pl,l,ri,rj+(j-N2),rk);
-	    }
-	  }
-	}
-      }
-#endif
 
 
 

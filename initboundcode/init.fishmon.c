@@ -170,7 +170,7 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM 2 // choice
+#define WHICHPROBLEM 0 // choice
 
 
 int init_defcoord(void)
@@ -178,7 +178,7 @@ int init_defcoord(void)
   
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // define coordinate type
-  defcoord = 9;
+  defcoord = JET3COORDS;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -625,7 +625,7 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
 
-#define FIELDTYPE BLANDFORDQUAD
+#define FIELDTYPE DISKFIELD
 
 FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower)
 {

@@ -24,7 +24,7 @@
 #define MAXCPUS 10000
 
 // maximum number of OpenMP threads
-#define MAXOPENMPTHREADS MAXCPUs
+#define MAXOPENMPTHREADS MAXCPUS
 
 
 

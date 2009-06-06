@@ -553,15 +553,15 @@ static void set_grid_metrics(void)
 
 
 
-	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;
 
 
-	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing;
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).igdetnosing=GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing;
 
 
 	PLOOP(pliter,pl){
-	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(pl);
-	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).IEOMFUNCNOSINGMAC(pl);
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(pl);
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).IEOMFUNCNOSINGMAC(pl);
 	}
 	//      exit(0);
 	
@@ -767,15 +767,15 @@ static void set_grid_metrics_others(void)
 	assign_eomfunc(&GLOBALMETMACP1A0(compgeom,loc,i,j,k), &(GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(0)));
 
 
-	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).gdet=GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet;
 
 
-	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing;
+	GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).igdetnosing=GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing;
 
 
 	PLOOP(pliter,pl){
-	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(pl);
-	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).IEOMFUNCNOSINGMAC(pl);
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).EOMFUNCMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).EOMFUNCMAC(pl);
+	  GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).IEOMFUNCNOSINGMAC(pl)=GLOBALMETMACP1A0(compgeom,loc,i,j,k).IEOMFUNCNOSINGMAC(pl);
 	}
 	//      exit(0);
 	

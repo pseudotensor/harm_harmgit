@@ -182,6 +182,9 @@
 // whether to store get_state() data into array for later use since expensive to compute get_geometry() and ucon_calc() type things
 #define STOREFLUXSTATE 1
 
+// whether to compute and store Shock (and other indicators) just once rather than for every call to slope_lim().  Since there can be many (e.g. 33 in 3D for staggered field method) that would be overly expensive for a simple diffusive check or correction that it itself is not higher-order!
+#define STORESHOCKINDICATOR 1
+
 // whether to define Toth memory stuff
 //#define FIELDTOTHMEM (!FIELDSTAGMEM) // CHANGINGMARK
 #define FIELDTOTHMEM 1 // CHANGINGMARK
@@ -712,6 +715,7 @@
 
 // whether PARALINE uses MONO or not
 #define PARALINEUSESMONO 0
+
 
 // whether to use appropriately centered primitive
 // GODMARK: averaging is diffusive, so diffuses shock -- may make indicator weak

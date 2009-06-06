@@ -35,6 +35,7 @@ USESPECIAL4GENERATE=0
 CCGENERATE=gcc
 
 
+
 #################### IF USEMPI
 
 ifeq ($(USEMPI),1)
@@ -48,7 +49,7 @@ ifeq ($(USEBG),1)
 # override again
 USEMCCSWITCH=0
 AVOIDFORK=1
-MCC = mpicc
+MCC=mpicc
 CCGENERATE=gcc
 USESPECIAL4GENERATE=1
 endif
@@ -56,43 +57,43 @@ endif
 ifeq ($(USETACCLONESTAR),1)
 # override again
 AVOIDFORK=1
-MCC = mpicc
+MCC=mpicc
 endif
 
 ifeq ($(USENERSC),1)
 # override again
 USEMCCSWITCH=0
 AVOIDFORK=1
-MCC = cc
+MCC=cc
 endif
 
 ifeq ($(USEICCGENERIC),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
-MCC = mpicc
+MCC=mpicc
 endif
 
 ifeq ($(USEICCINTEL),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
-MCC = mpicc
+MCC=mpicc
 endif
 
 ifeq ($(USETACCRANGER),1)
 # don't have to avoid fork/system calls
 USEMCCSWITCHFORGCC=0
 AVOIDFORK=0
-MCC = mpicc
+MCC=mpicc
 endif
 
 ifeq ($(USEORANGE),1)
 # orange can't have -static
 AVOIDFORK=1 # recently seems to be a problem, but not before
-MCC = mpicc -I/afs/slac/package/OpenMPI/include/ -L/afs/slac/package/OpenMPI/lib/
+MCC=mpicc -I/afs/slac/package/OpenMPI/include/ -L/afs/slac/package/OpenMPI/lib/
 endif
 
 ifeq ($(USEGCC),1)
-MCC = mpicc
+MCC=mpicc
 #.gcc
 endif
 
@@ -102,6 +103,33 @@ endif
 
 endif    
 #################### DONE IF USEMPI
+
+
+
+#################### IF USEGPROF
+ifeq ($(USEGPROF),1)
+# Noticed problem sometimes with mpi_init.c:myexit():system() calls where program doesn't exit and just stals on fork() with -g -pg
+AVOIDFORK=1
+#-pg
+#-pg -g  source lines
+#-pg -g -a   line count
+# gprof -l <file> > out.txt
+# gprof -A -I<sourcedir>
+# gprof -l -A -x s
+GPROFFLAG=-g -pg
+endif
+ifeq ($(USEGPROF),0)
+GPROFFLAG=
+endif
+
+
+#################### IF USEDEBUG
+ifeq ($(USEDEBUG),1)
+DEBUGFLAG=-g
+endif
+ifeq ($(USEDEBUG),0)
+DEBUGFLAG=
+endif
 
 
 
@@ -120,15 +148,20 @@ endif
 
 
 # default extra flags to pass to compiler
-EXTRA=-DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) -DUSINGMPIAVOIDFORK=$(AVOIDFORK) -DUSINGLAPACK=$(USELAPACK)
+EXTRA=$(DEBUGFLAG) $(GPROFFLAG) -DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) -DUSINGMPIAVOIDFORK=$(AVOIDFORK) -DUSINGLAPACK=$(USELAPACK)
 
 
 
 
 
 
+#############################################################################
 #
-# Define preprocessor and compile flags, and linked libraries
+# Define preprocessor and compile flags, and linked libraries for each compiler or system type
+#
+#############################################################################
+
+
 
 ifeq ($(USEGCC),1)
 LONGDOUBLECOMMAND=-m128bit-long-double
@@ -150,9 +183,6 @@ COMP=gcc $(DFLAGS)
 #
 #
 #
-# for DEBUG:
-#CFLAGSPRE = -Wall -O0 -g -pg  $(DFLAGS)
-#CFLAGSPRENONPRECISE=-O0 -g -pg $(DFLAGS)
 
 CFLAGSPRE = -Wall -O3 $(DFLAGS)
 CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
@@ -167,12 +197,6 @@ CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
 #CFLAGS=-O0 -g -Wall -wunused-label -wunused-parameter
 #CFLAGS=-O0 -g -Wall
 #CFLAGS = -Wall -mcpu=pentiumpro -march=pentiumpro -O4 -malign-loops=2 -malign-jumps=2 -malign-functions=2 -ffast-math -finline-functions -g
-#-pg
-#-pg -g  source lines
-#-pg -g -a   line count
-# gprof -l <file> > out.txt
-# gprof -A -I<sourcedir>
-# gprof -l -A -x s
 
 #below is typical flags for double precision...can take -pg off for no profile
 #add -mstack-align-double if using pgcc
@@ -212,7 +236,6 @@ CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 
 GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
-
 
 
 LDFLAGS=-lm  $(LAPACKLDFLAGS)
@@ -267,13 +290,6 @@ CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -fin
 # DEBUG BELOW
 #########################
 #CFLAGSPRENONPRECISE=-O0 -g -openmp $(DFLAGS)
-#
-#
-#CFLAGSPRENONPRECISE=
-#########################
-# USE BELOW FOR DEBUG
-#########################
-#CFLAGSPRENONPRECISE=-O0 -g
 #
 #
 #
@@ -336,6 +352,7 @@ LDFLAGS = -lm -Wl,-rpath,$(TACC_MKL_LIB) -L$(TACC_MKL_LIB) -lmkl_em64t
 LDFLAGSOTHER=
 endif
 
+
 ifeq ($(USETACCRANGER),1)
 # http://services.tacc.utexas.edu/index.php/ranger-user-guide#Compiling_Code
 # and see batch.qsub.taccranger
@@ -350,8 +367,6 @@ GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 LDFLAGS = -lm  -Wl,-rpath,$(TACC_MKL_LIB) -L$(TACC_MKL_LIB) -lmkl_em64t
 LDFLAGSOTHER=
 endif
-
-
 
 
 ifeq ($(USECCC),1)
@@ -409,7 +424,6 @@ endif
 
 
 
-
 ifeq ($(USENERSC),1)
 LONGDOUBLECOMMAND=
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
@@ -430,7 +444,11 @@ endif
 
 
 
-
+#########################
+#
+# Setup flags to pass to compiler/linker
+#
+#########################
 
 
 ifeq ($(MYMAKECMDGOALS),$(CMD2))
@@ -450,6 +468,11 @@ BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -lv5
 # must also change #include "hdf" stuff and remove forward hdf/
 
 
-
+#############################
+#
+# Include primary makefile that includes "prep" and "clean" and all other build operations
+#
+#############################
 include maketail.inc
+
 

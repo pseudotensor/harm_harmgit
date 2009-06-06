@@ -75,7 +75,7 @@ int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][N
   // Compute and Store (globally) the get_state() data for the CENT position to avoid computing later and for merged-higher-order method
   //
   /////////////////////////////////////
-#if(STOREFLUXSTATE)
+#if(STOREFLUXSTATE||STORESHOCKINDICATOR)
   // NOTE: This is done before advance since always needed, and only needed once for all dimensions, and don't here instead of inside advance() since needed during fluxcalc() that is called first before any use of get_geometry() that we would use to put this call with
   compute_and_store_fluxstatecent(pb);
   // now flux_compute() and other flux-position-related things will obtain get_state() data for p_l and p_r from global arrays

@@ -348,7 +348,6 @@
 
 
 
-
 #define NMAXBOUND ((NPRBOUND>NFLUXBOUND) ? NPRBOUND : NFLUXBOUND)
 
 
@@ -498,6 +497,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER8IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER9IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
+#define HEADER10IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define RESTARTHEADER "%d %d %d "\
 	      "%Lf %Lf %ld %Lf %Lf %Lf %Lf %Lf "\
 	      "%Lf %d %d %d %d %d %d %d %d "\
@@ -514,6 +514,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%lf %lf %lf %lf %lf %lf %lf"
 #define HEADER8IN "%lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER9IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define HEADER10IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define RESTARTHEADER "%d %d %d "\
 	      "%Lf %Lf %ld %Lf %Lf %Lf %lf %lf "\
 	      "%Lf %d %d %d %d %d %d %d %d "\
@@ -530,6 +531,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%f %f %f %f %f %f %f"
 #define HEADER8IN "%f %f %f %f %f %f %f %f"
 #define HEADER9IN "%f %f %f %f %f %f %f %f %f"
+#define HEADER10IN "%f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "\
 	      "%Lf %Lf %ld %Lf %Lf %Lf %f %f "\
 	      "%Lf %d %d %d %d %d %d %d %d "\
@@ -551,6 +553,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%lf %lf %lf %lf %lf %lf %lf"
 #define HEADER8IN "%lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER9IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define HEADER10IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define RESTARTHEADER "%d %d %d "\
 	      "%lf %lf %ld %lf %lf %lf %lf %lf "\
 	      "%lf %d %d %d %d %d %d %d %d "\
@@ -567,6 +570,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%f %f %f %f %f %f %f"
 #define HEADER8IN "%f %f %f %f %f %f %f %f"
 #define HEADER9IN "%f %f %f %f %f %f %f %f %f"
+#define HEADER10IN "%f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "\
 	      "%lf %lf %ld %lf %lf %lf %f %f "\
 	      "%lf %d %d %d %d %d %d %d %d "\
@@ -590,6 +594,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER7IN "%f %f %f %f %f %f %f"
 #define HEADER8IN "%f %f %f %f %f %f %f %f"
 #define HEADER9IN "%f %f %f %f %f %f %f %f %f"
+#define HEADER10IN "%f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "\
 	      "%f %f %ld %f %f %f %f %f "\
 	      "%f %d %d %d %d %d %d %d %d "\

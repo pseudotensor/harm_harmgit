@@ -119,6 +119,8 @@
 
 // maximum char size of filenames or directories or commands
 #define MAXFILENAME 200
+// for longer file names
+#define MAXFILENAMELONG 2000
 
 // for WHICHVEL
 // 0: 4-velocity (leads to ambiguous u^t +- discr part)
@@ -841,6 +843,19 @@
 #define B1	5
 #define B2	6
 #define B3	7
+
+// for STORESHOCKINDICATOR
+#define NUMSHOCKPLS 3
+#define SHOCKPLDIR1 0
+#define SHOCKPLDIR2 SHOCKPLDIR1+1
+#define SHOCKPLDIR3 SHOCKPLDIR2+1
+
+// for STORESHOCKINDICATOR for temp storage
+// assumes no more than NDIM in list!
+#define SHOCKPLSTOREPTOT 0
+#define SHOCKPLSTOREVEL1 1
+#define SHOCKPLSTOREVEL2 SHOCKPLSTOREVEL1+1
+#define SHOCKPLSTOREVEL3 SHOCKPLSTOREVEL2+1
 
 
 // primitive type

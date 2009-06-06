@@ -80,8 +80,8 @@
 #define DOFICALC 4
 
 
-static FTYPE Ficalc(int dimen, FTYPE *V, FTYPE *P, FTYPE (*ypl)[20]);
-static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs, FTYPE (*ypl)[20] );
+static FTYPE Ficalc(int dimen, FTYPE *V, FTYPE *P);
+static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs);
 
 
 int main(
@@ -611,7 +611,8 @@ int main(
 	  }
 
 	  // now compute Ficalc for all k
-	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P, Ypl);
+	  //	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P, Ypl);
+	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P);
 	  //	  fprintf(stderr,"dimen=%d ficalc=%21.15g\n",dimen,ficalc[MAPFICALC(dimen-1)]);
 	}
 	else{
@@ -722,7 +723,7 @@ int main(
 
 
 // PPM FLATTENER parameter
-static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs, FTYPE (*ypl)[20] )
+static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs)
 {
   FTYPE Ftilde,Ftilde1,Ftilde2;
   FTYPE Sp;
@@ -765,15 +766,15 @@ static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs, FTYPE (*ypl
 
 
 // PPM FLATTENERS (final formula)
-static FTYPE  Ficalc(int dimen, FTYPE *V, FTYPE *P, FTYPE (*ypl)[20])
+static FTYPE  Ficalc(int dimen, FTYPE *V, FTYPE *P)
 {
-  FTYPE ftilde( int dimen, int shift, FTYPE *P, FTYPE *V, FTYPE (*ypl)[20] );
+  FTYPE ftilde( int dimen, int shift, FTYPE *P, FTYPE *V);
   int signdP;
   FTYPE Fi;
 
   signdP = (P[1] - P[-1] > 0) * 2 - 1;
   // FLASH Equation 48
-  Fi = max( ftilde(dimen, 0, V,P,ypl), ftilde(dimen, -signdP, V,P,ypl) );
+  Fi = max( ftilde(dimen, 0, V,P), ftilde(dimen, -signdP, V,P) );
 
   return(Fi);
 }

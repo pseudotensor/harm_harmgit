@@ -1403,15 +1403,14 @@ int myexit(int call_code)
   int i, j, k, l;
   int cleanfinish,dofaildump;
   FILE *faildump;
-  char mysys[MAXFILENAME];
+  char mysys[MAXFILENAMELONG];
   char binarytype[MAXFILENAME];
   void set_binarytype(char *binarytype);
   int inparallel,tid;
 
 
 
-  trifprintf("proc: %s : Exiting cc: %d nstep: %ld\n", myidtxt,
-	  call_code, nstep);
+  trifprintf("proc: %s : Exiting cc: %d nstep: %ld\n", myidtxt, call_code, nstep);
 
 
 #if(USEOPENMP)
@@ -1491,9 +1490,11 @@ int myexit(int call_code)
     // first cleanup any prior MPI non-blocking calls by making fake write call
     //
     ////////////////////////////////
+#if(USEMPI)
     if(cleanfinish && USEROMIO==1 && MPIVERSION==2 ){
       fakedump();
     }
+#endif
 
 
 
@@ -1503,24 +1504,25 @@ int myexit(int call_code)
     //
     ////////////////////////////////
     if (call_code >= 0) {
-      if (fail_file)
-	fclose(fail_file);
-      if (log_file)
-	fclose(log_file);
+      if (fail_file) fclose(fail_file);
+      if (log_file) fclose(log_file);
       myfclose(&logfull_file,"Can't close logfull_file\n");
     }
 
 
 
     if(cleanfinish){
-      fprintf(stderr,
-	      "Ending Computation on proc: %s, holding for other cpus\n",
-	      myidtxt);
+      fprintf(stderr, "Ending Computation on proc: %s, holding for other cpus\n", myidtxt);
     }
 
 
     myfprintf(stderr, "Ended Computation on all processors\n");
-    final_myexit();
+    //final_myexit(); // Don't want to Abort if don't have to
+    fprintf(stderr, "END\n");
+    fflush(stderr);
+    exit(0);
+
+
 
   }// end if master thread
 

@@ -34,7 +34,7 @@ int get_stateforfluxcalc(int dimen, int isleftright, FTYPE *pr, struct of_geom *
     *qptr=&(GLOBALMAC(fluxstatecent,MYII,MYJJ,MYKK));
   }
   else{
-    *qptr=&(GLOBALMACP2A0(fluxstate,dimen,isleftright,MYII,MYJJ,MYKK));
+    *qptr=&(GLOBALMACP1A1(fluxstate,dimen,MYII,MYJJ,MYKK,isleftright));
   }
 
 #else // else if not storing fluxstate
