@@ -224,10 +224,11 @@ int init_MPI_GRMHD_myid(void)
   //  truempiid=MPIid[myid];
 
 
-  // Call user function
+  // Call user function [can have myid==0 setup all CPUs or just have all CPUs do same setup]
   theproblem_set_myid();
 
-  
+  // Might have myid==0 setup al CPUs, but not MPIid[0] since unknown by all CPUs at first and might change.  So use myid==0 as broadcast in case myid==0 setup all CPUs.
+  MPI_Bcast(MPIid,MAXCPUS,MPI_INT,myid,MPI_COMM_GRMHD);
 
   return(0);
   
