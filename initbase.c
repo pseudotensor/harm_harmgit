@@ -2542,6 +2542,11 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 void makedirs(void)
 {
 
+#if( USINGMPIAVOIDMKDIR ) 
+  //AT: for certain systems, neither way works to create dirs, 
+  //    so not create them at all
+  //fprintf(stderr,"USEMPIAVOIDMKDIR==1: User must create dumps and images\n");
+#else
   if ((mpicombine && (myid == 0)) || (mpicombine == 0)) {
     
     if(USEMPI && (!MPIAVOIDFORK) || USEMPI==0){
@@ -2565,7 +2570,8 @@ void makedirs(void)
   // all cpus wait for directory to be created
   MPI_Barrier(MPI_COMM_GRMHD);
 #endif
-  
+#endif  //USINGMPIAVOIDMKDIR
+
 }
 
 
