@@ -113,6 +113,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   /////////////////////////////
   if(cms2!=cms2){
     // then nan
+    PLOOP(pliter,pl) dualfprintf( fail_file, "pr[%d]=%21.15g\n", pl, pr[pl] ); //print out offensive primitives
     if (fail(i,j,k,loc,FAIL_COEFF_NEG) >= 1){
       dualfprintf(fail_file,"cms2=NaN: dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
       return (1);
