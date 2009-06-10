@@ -756,3 +756,45 @@ void writeimage(char * name, unsigned char *** image,int nx, int ny, int nz)
 
 }
 
+
+void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc)
+{
+
+  // filler function so can use metric_tools.c
+}
+
+void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon)
+{
+
+  // filler function so can use metric_tools.c
+}
+
+void get_geometry(int ii, int jj, int kk, int pp, struct of_geom *geom)
+{
+  // filler function so can use metric_tools.c
+
+  geom->i=ii;
+  geom->j=jj;
+  geom->k=kk;
+  geom->p=pp;
+
+}
+
+
+// filler function so can use metric_tools.c
+void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *EOMFUNCNAME)
+{
+  int pl,pliter;
+
+  PLOOP(pliter,pl) EOMFUNCASSIGN(pl)=1.0;
+
+
+}
+
+
+void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME)
+{
+  int pl,pliter;
+
+  PLOOP(pliter,pl) geom->EOMFUNCMAC(pl)=geom->gdet;
+}

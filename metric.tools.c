@@ -1151,6 +1151,122 @@ FTYPE rhor_calc(int which)
 // 
 /////////////////////////////////////////////////////////////
 
+// presume get_geometry() only necessarily feeds back pointer where geometry is located
+// still required to have pointer point to physical allocated memory in general
+void get_and_copy_geometry(int i, int j, int k, int loc, struct of_geom *ptrgeom)
+{
+  struct of_geom *ptrgeomorig;
+  
+  ptrgeomorig=ptrgeom;
+  
+  get_geometry(i,j,k,loc,ptrgeom); // potentially overwrites ptrgeom
+  
+  if(ptrgeom!=ptrgeomorig){
+    // direct copy of geometry structure
+    *ptrgeomorig=*ptrgeom;
+  }
+  
+}
+
+
+
+// set igdet part of geometry since more expensive and not always needed
+void set_igdet_old(struct of_geom *geom)
+{
+  int pl,pliter;
+
+  //////////////
+  // avoids 0.0 for any sign of ptrgeom->e[pl]
+#if(GDETVOLDIFF==0)
+
+  geom->igdetnosing = sign(geom->gdet)/(fabs(geom->gdet)+SMALL);
+
+  // use PALLLOOP so compiler can optimize
+#if(WHICHEOM!=WITHGDET)
+  PALLLOOP(pl) geom->IEOMFUNCNOSINGMAC(pl) = sign(geom->EOMFUNCMAC(pl))/(fabs(geom->EOMFUNCMAC(pl))+SMALL);
+#else
+  // required to set to something since in general refer to this
+  PALLLOOP(pl) geom->IEOMFUNCNOSINGMAC(pl)=geom->igdetnosing;
+#endif
+
+
+#else
+
+  // volume regularization (correct to second order) // GODMARK: NOT FOR FINITE VOLUME WENO METHOD
+  igdetnosing = sign(geom->gdetvol)/(fabs(geom->gdetvol)+SMALL);
+  geom->igdetnosing = igdetnosing;
+  // use PALLLOOP so compiler can optimize
+  PALLLOOP(pl) geom->IEOMFUNCNOSINGMAC(pl) = igdetnosing;
+#endif
+
+
+}
+// set igdet part of geometry since more expensive and not always needed
+void set_igdetsimple_old(struct of_geom *geom)
+{
+  int pl,pliter;
+
+
+#if(WHICHEOM!=WITHGDET)
+  dualfprintf(fail_file,"Using set_igdetsimple() but WHICHEOM!=WITHGDET\n");
+  myexit(342968347);
+#endif
+
+
+  //////////////
+  // avoids 0.0 for any sign of ptrgeom->e[pl]
+#if(GDETVOLDIFF==0)
+  geom->igdetnosing = sign(geom->gdet)/(fabs(geom->gdet)+SMALL);
+#else
+
+  // volume regularization (correct to second order) // GODMARK: NOT FOR FINITE VOLUME WENO METHOD
+  igdetnosing = sign(geom->gdetvol)/(fabs(geom->gdetvol)+SMALL);
+  geom->igdetnosing = igdetnosing;
+#endif
+
+}
+
+
+
+// obtain prime or non-prime alphalapse
+void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *alphalapse)
+{
+
+  // set alpha -- fabs just for roundoff error
+  // Note ptrgeom only has i,j,k,loc at this point
+  *alphalapse = 1.0/sqrt(fabs(-gcon[GIND(TT,TT)]));
+
+}
+
+// obtain \beta^2
+void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *betasqoalphasq)
+{
+  int j;
+
+  // \beta^i \beta_i / \alpha^2 = g^{ti} g_{ti}
+  *betasqoalphasq = 0.0;
+  SLOOPA(j) *betasqoalphasq += (gcov[GIND(TT,j)])*(gcon[GIND(TT,j)]);
+  
+}
+
+// obtain \beta^i
+void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE alphalapse, FTYPE *beta)
+{
+  int j;
+  FTYPE alphasq;
+
+  alphasq=alphalapse*alphalapse;
+
+  // \beta^\mu = {0,\alpha^2 g^{ti}}
+  beta[TT]=0.0;
+  SLOOPA(j) beta[j] = gcon[GIND(TT,j)]*alphasq ;
+
+  
+}
+
+
+
+
 
 // find the con/cov forms of the chosen metric
 void gset(int getprim, int whichcoord, int i, int j, int k, struct of_geom *ptrgeom)
@@ -1162,6 +1278,7 @@ void gset(int getprim, int whichcoord, int i, int j, int k, struct of_geom *ptrg
   gset_genloc(getprim, whichcoord, i, j, k, loc, ptrgeom);
 
 }
+
 
 // find the con/cov forms of the chosen metric
 // fills in information like get_geometry but for arbitrary metric not just PRIMECOORDS

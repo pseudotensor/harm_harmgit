@@ -1,5 +1,7 @@
 #include "global.jon_interp.h"
 
+#include "rancdefs.h"
+
 int calledranc;
 FTYPE NUMEPSILONPOW23;
 FTYPE Xmax[NDIM];

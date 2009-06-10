@@ -513,42 +513,6 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 
-// obtain prime or non-prime alphalapse
-void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *alphalapse)
-{
-
-  // set alpha -- fabs just for roundoff error
-  // Note ptrgeom only has i,j,k,loc at this point
-  *alphalapse = 1.0/sqrt(fabs(-gcon[GIND(TT,TT)]));
-
-}
-
-// obtain \beta^2
-void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *betasqoalphasq)
-{
-  int j;
-
-  // \beta^i \beta_i / \alpha^2 = g^{ti} g_{ti}
-  *betasqoalphasq = 0.0;
-  SLOOPA(j) *betasqoalphasq += (gcov[GIND(TT,j)])*(gcon[GIND(TT,j)]);
-  
-}
-
-// obtain \beta^i
-void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE alphalapse, FTYPE *beta)
-{
-  int j;
-  FTYPE alphasq;
-
-  alphasq=alphalapse*alphalapse;
-
-  // \beta^\mu = {0,\alpha^2 g^{ti}}
-  beta[TT]=0.0;
-  SLOOPA(j) beta[j] = gcon[GIND(TT,j)]*alphasq ;
-
-  
-}
-
 
 
 

@@ -935,6 +935,7 @@ static int root_find1(FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
 // finds X for a given r,theta
 static int root_find2(FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
 {
+  int jj;
   int ntrial,mintrial;
   FTYPE tolx,tolf,tolxallowed,tolfallowed,tolxreport,tolfreport;
   FTYPE Xtrial[NDIM];

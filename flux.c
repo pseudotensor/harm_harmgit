@@ -1584,7 +1584,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
   int is,ie,js,je,ks,ke,di,dj,dk;
   int Nvec[NDIM];
   //  FTYPE (*shocktemparray)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*shocktemparray)[NSTORE1+SHIFT1][NSTORE2+SHIFT2][NSTORE3+SHIFT3];
+  FTYPE (*shocktemparray)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
   int startorderi,endorderi;
   extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
 

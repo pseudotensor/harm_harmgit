@@ -29,7 +29,7 @@ interppoint.o interppoint.para.o interpline.o interpline.para.o interpline.mono.
 
 SRCSONEPOINT=\
 initbase.boundloop.c \
-main.c mytime.c metric.c metric_tools.c math_tools.c metric_selfgravity_or_evolvemetric.c coord.c phys.c phys.tools.c step_ch.c fluxcompute.c \
+main.c mytime.c metric.c metric.tools.c math.tools.c metric_selfgravity_or_evolvemetric.c coord.c phys.c phys.tools.c step_ch.c fluxcompute.c \
 phys.ffde.c phys.coldgrmhd.c eos.c \
 vchar.c transforms.c sources.c rescale_interp.c \
 gaussj.c lubksb.c ludcmp.c mnewt.c nrutil.c ranc.c tensor.c tetrad.c \
@@ -41,7 +41,7 @@ freespace.c tau_needebyharm.c
 
 OBJSONEPOINT=\
 initbase.boundloop.o \
-main.o mytime.o metric.o metric_tools.o math_tools.o metric_selfgravity_or_evolvemetric.o coord.o phys.o phys.tools.o step_ch.o fluxcompute.o \
+main.o mytime.o metric.o metric.tools.o math.tools.o metric_selfgravity_or_evolvemetric.o coord.o phys.o phys.tools.o step_ch.o fluxcompute.o \
 phys.ffde.o phys.coldgrmhd.o eos.o \
 vchar.o transforms.o sources.o rescale_interp.o \
 gaussj.o lubksb.o ludcmp.o mnewt.o nrutil.o ranc.o tensor.o tetrad.o \

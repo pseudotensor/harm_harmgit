@@ -14,6 +14,14 @@
 
 
 
+
+
+
+
+
+
+
+
 // Calculate fluxes in direction dir and conserved variable U
 // returntype==0 : flux with geometric factor geom->e (used by evolution code)
 // returntype==1 : flux with physical geometry factor geom->gdet (used by diagnostics)
@@ -1291,143 +1299,6 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
 }
 
 
-/* add in source terms related to geometry to equations of motion */
-int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
-		struct of_state *q,FTYPE *dU)
-{
-  VARSTATIC int i, j, k, l;
-  VARSTATIC int pl,pliter;
-  VARSTATIC FTYPE dUconn[NPR];
-  VARSTATIC FTYPE todo[NPR];
-  VARSTATIC FTYPE ftemp;
-  VARSTATIC FTYPE mhd[NDIM][NDIM];
-  VARSTATIC FTYPE flux[NDIM][NPR];
-  int primtofullflux(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE (*flux)[NPR]);
-  void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
-  void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
-  VARSTATIC int myii,myjj,mykk;
-
-
-
-  if((ANALYTICSOURCE)&&(defcoord==LOGRSINTH)&&(MCOORD==KSCOORDS)){
-    // have both WHICHEOM==WITHGDET and WHICHEOM==WITHNOGDET
-    mks_source_conn(pr,ptrgeom, q, dU); // returns without geometry prefactor
-    PLOOP(pliter,pl) dU[pl]*=ptrgeom->EOMFUNCMAC(pl);
-  }
-  else { // general non-analytic form, which uses an analytic or numerical origin for conn/conn2 (see set_grid.c)
-
-
-    /////////////////////
-    //
-    // define first connection
-    //
-    // notice mhd_calc(), rather than primtoflux(), is used because this is a special connection only operated on the (at most) 4 energy-momentum EOMs.
-    //
-    // notice that mhd_calc_0 is used, which includes rest-mass since connection coefficient source term has rest-mass.  The rest-mass was only subtracted out of conserved quantity and flux term.
-    // SUPERGODMARK: problem in non-rel gravity for below term
-    //DLOOPA(j)  mhd_calc_0(pr, j, ptrgeom, q, mhd[j]);
-    // 
-    DLOOPA(j) mhd_calc(pr, j, ptrgeom, q, mhd[j]);
-
-    /* contract mhd stress tensor with connection */
-    // mhd^{dir}_{comp} = mhd^j_k
-    // dU^{l} = T^j_k C^{k}_{l j}
-    PLOOP(pliter,pl) dUconn[pl]=0;
-
-
-#if(MCOORD!=CARTMINKMETRIC)
-    myii=ptrgeom->i;
-    myjj=ptrgeom->j;
-    mykk=ptrgeom->k;
-#else
-    myii=0;
-    myjj=0;
-    mykk=0;
-#endif
-
-
-    for(l=0;l<NDIM;l++)  DLOOP(j,k){
-      dUconn[UU+l] += mhd[j][k] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
-    }
-
-#if(REMOVERESTMASSFROMUU==2)
-    // then need to add-in density term to source (used to avoid non-rel problems)
-    // GODMARK: for no non-rel problems one must make sure conn^t_{lj} is computed accurately.
-    for(l=0;l<NDIM;l++)  DLOOPA(j){
-      dUconn[UU+l] += - pr[RHO] * q->ucon[j] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,TT,l,j);
-    }
-#endif
-
-
-    ////////////////////////////
-    //
-    // use first connection
-    //
-    // true as long as UU->U3 are not added/subtracted from other EOMs
-    // Note that UtoU is ignorant of this connection term and additions/subtractions of various EOMs to/from another must account for this connection here.
-    PLOOP(pliter,pl) dU[pl]+=ptrgeom->EOMFUNCMAC(pl)*dUconn[pl]; 
-
-
- 
-
-    ///////////////////
-    //
-    // second connection
-    //
-
-#if(WHICHEOM!=WITHGDET)
-
-    // d_t(f T^t_\nu) = -d_x^j (f F^j_\nu) + (f F^j_\nu)(d_x^j(\ln(f/\detg))) + f T^\lambda_\kappa \Gamma^\kappa_{\nu\lambda}
-
-    // conn2_j = (d_x^j(\ln(f/\detg)))
-
-    // deal with second connection.  Now can use general flux as defined by primtofullflux since all EOMs operate similarly with respect to second connection
-    primtofullflux(UEVOLVE,pr,q,ptrgeom,flux); // returns with geometry prefactor (f F^j_\nu)
-
-
-    // todo = whether that EOM has the NOGDET form.  If so, then need 2nd connection.  Do this instead of different connection2 for each EOM since each spatial component is actually the same.
-
-    todo[RHO]=(NOGDETRHO>0) ? 1 : 0;
-    todo[UU]=(NOGDETU0>0) ? 1 : 0;
-    todo[U1]=(NOGDETU1>0) ? 1 : 0;
-    todo[U2]=(NOGDETU2>0) ? 1 : 0;
-    todo[U3]=(NOGDETU3>0) ? 1 : 0;
-    todo[B1]=(NOGDETB1>0) ? 1 : 0;
-    todo[B2]=(NOGDETB2>0) ? 1 : 0;
-    todo[B3]=(NOGDETB3>0) ? 1 : 0;
-    if(DOENTROPY) todo[ENTROPY]=(NOGDETENTROPY>0) ? 1 : 0;
-
-    // conn2 is assumed to take care of sign
-    // conn2 has geom->e and normal d(ln(gdet)) factors combined
-
-    if(REMOVERESTMASSFROMUU){
-      if(todo[RHO]!=todo[UU]){
-	dualfprintf(fail_file,"Mixed form of REMOVERESTMASSFROMUU and NOGDET's not allowed.\n");
-	myexit(1);
-      }
-    }
-
-    //////////////////////////////////
-    //
-    // notice that we assume equations are differenced first, then one manipulates the connections.
-    // Thus, the manipulation of connections applies to final form of EOMs afer differencing or adding.
-    // This agrees with how code evolves conserved quantities, so simplest choice to make.
-    //
-    // Alternatively stated, UtoU() controls this ordering issue.
-
-    PLOOP(pliter,pl) DLOOPA(j) dU[pl] += todo[pl]*(flux[j][pl] * GLOBALMETMACP0A1(conn2,myii,myjj,mykk,j)); // (f F^j_\nu) conn2_j
-
-
-
-#endif // end if (WHICHEOM!=WITHGDET)
-
-  }
-
-
-
-  /* done! */
-  return (0);
-}
 
 /* returns b^2 (i.e., twice magnetic pressure) */
 int bsq_calc_general(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *bsq)
