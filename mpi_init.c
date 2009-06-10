@@ -181,6 +181,7 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
 void myargs(int argc, char *argv[])
 {
   int argi,numargs,numextraargs;
+  int i;
 
   // default:
   ncpux1 = 1;
@@ -198,7 +199,7 @@ void myargs(int argc, char *argv[])
   if(USEMPI && USEOPENMP){
     numargs=1+3+1;
 
-    if(argc<numargs || argc>=numargs+numextraargs){
+    if(argc<numargs || argc>numargs+numextraargs){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
@@ -216,7 +217,7 @@ void myargs(int argc, char *argv[])
   else if(USEMPI){
     numargs=1+3;
 
-    if(argc<numargs || argc>=numargs+numextraargs){
+    if(argc<numargs || argc>numargs+numextraargs){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
@@ -233,7 +234,7 @@ void myargs(int argc, char *argv[])
   else if(USEOPENMP){
     numargs=1+1;
 
-    if(argc<numargs || argc>=numargs+numextraargs){
+    if(argc<numargs || argc>numargs+numextraargs){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
@@ -248,7 +249,7 @@ void myargs(int argc, char *argv[])
   else{
     numargs=1;
 
-    if(argc<numargs || argc>=numargs+numextraargs){
+    if(argc<numargs || argc>numargs+numextraargs){
       if(myid==0){
 	fprintf(stderr,"<progname>\n");
 	fprintf(stderr,"OR\n");
@@ -257,7 +258,6 @@ void myargs(int argc, char *argv[])
       exit(1);
     }
   }// end if single CPU mode
-
 
   ///////////////////////
   //
@@ -279,6 +279,7 @@ void myargs(int argc, char *argv[])
   // General checks (that work if MPI or OpenMP not used)
   //
   /////////////////
+  /* Commented out by atchekh since seems wrong
   if(ncpux1>N1){
     fprintf(stderr,"Cannot have ncpux1=%d>N1=%d\n",ncpux1,N1);
     exit(1);
@@ -291,6 +292,7 @@ void myargs(int argc, char *argv[])
     fprintf(stderr,"Cannot have ncpux3=%d>N3=%d\n",ncpux3,N3);
     exit(1);
   }
+  */
 
   if(numopenmpthreads>N1*N2*N3) fprintf(stderr,"OpenMP threads (%d) larger than total number of points (%d), so parallelization will be poor\n",numopenmpthreads,N1*N2*N3);
 
