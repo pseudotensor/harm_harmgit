@@ -31,6 +31,7 @@ int startpos[NDIM];
 int totalsize[NDIM];
 long realnstep,nstep;
 FTYPE readnstep;
+int is,ie,js,je,ks,ke;
 
 // number of boundary cells for \phi interpolation
 int totalbc,numbc[NDIM];

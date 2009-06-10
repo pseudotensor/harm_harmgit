@@ -165,20 +165,21 @@
 #define SCANARG4VEC "%f %f %f %f"
 // 16 args
 // 21 args after going to 3D and doing MBH/QBH
-#define SCANHEADER "%f %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f"
+// 6 more args
+#define SCANHEADER "%f %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %d %d %d %d %d %d"
 #elif(REALTYPE==DOUBLETYPE)
 #define SCANARG "%lf"
 #define SCANARGVEC "%lf %lf %lf"
 #define SCANARG4VEC "%lf %lf %lf %lf"
-#define SCANHEADER "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf"
+#define SCANHEADER "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %d %d %d %d %d %d"
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define SCANARG "%Lf"
 #define SCANARGVEC "%Lf %Lf %Lf"
 #define SCANARG4VEC "%Lf %Lf %Lf %Lf"
-#define SCANHEADER "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf "
+#define SCANHEADER "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %d %d %d %d %d %d "
 #endif
 
-#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g\n"
+#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g %d %d %d %d %d %d\n"
 
 
 
