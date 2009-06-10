@@ -630,6 +630,7 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
   long long int wordtotal;
   long long int badwordtotal;
   long long int databytesize;
+  long long int fullheaderbytesize;
   int get_word_count(long long int databytesize, long long int *wordtotal, FILE *stream);
   unsigned char mychar;
   int gopastlinebreak(FILE *stream);
@@ -637,6 +638,7 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
   // get position of stream, which indicates size of header in bytes
   onlyheaderbytesize=ftell(stream);
+
 
   // find transition between header and data
   if(readwrite==READFILE){
@@ -647,6 +649,27 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
   // up to and including '\n' minus just beyond header
   // will be same as onlyheaderbytesize if nothing between header and data or if binary
   uptodatabytesize=ftell(stream);
+
+  // get number of bytes up to first \n
+  if(readwrite==READFILE){
+    if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
+      fseek(stream,0,SEEK_SET);
+      gopastlinebreak(stream);
+    }
+  }
+  fullheaderbytesize=ftell(stream);
+
+
+  // see if header is really up to first \n and not multiple \n
+  if(fullheaderbytesize!=uptodatabytesize){
+    dualfprintf(fail_file,"restart read found \\n mismatch: fullheaderbytesize=%lld uptodatabytesize=%lld\n",fullheaderbytesize,uptodatabytesize);
+    return(1);
+  }
+
+
+
+  // go back to where was before getting up to first \n
+  fseek(stream,uptodatabytesize,SEEK_SET);
   
   // byte size of transition region
   withintransitionbytesize = uptodatabytesize - onlyheaderbytesize;
