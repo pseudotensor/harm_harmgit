@@ -181,7 +181,7 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
 void myargs(int argc, char *argv[])
 {
   int argi,numargs,numextraargs;
-  int i;
+
 
   // default:
   ncpux1 = 1;
@@ -279,20 +279,20 @@ void myargs(int argc, char *argv[])
   // General checks (that work if MPI or OpenMP not used)
   //
   /////////////////
-  /* Commented out by atchekh since seems wrong
-  if(ncpux1>N1){
+
+  if(ncpux1>1 && N1==1){
     fprintf(stderr,"Cannot have ncpux1=%d>N1=%d\n",ncpux1,N1);
     exit(1);
   }
-  if(ncpux2>N2){
+  if(ncpux2>1 && N2==1){
     fprintf(stderr,"Cannot have ncpux2=%d>N2=%d\n",ncpux2,N2);
     exit(1);
   }
-  if(ncpux3>N3){
+  if(ncpux3>1 && N3==1){
     fprintf(stderr,"Cannot have ncpux3=%d>N3=%d\n",ncpux3,N3);
     exit(1);
   }
-  */
+
 
   if(numopenmpthreads>N1*N2*N3) fprintf(stderr,"OpenMP threads (%d) larger than total number of points (%d), so parallelization will be poor\n",numopenmpthreads,N1*N2*N3);
 

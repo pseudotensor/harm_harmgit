@@ -858,8 +858,6 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
   trifprintf("\nStart area_map function ... ");
 
 
-  //k=N3/2+SHIFT3; // middle cell // GODMARK : 2D only below //atch: why reset k to the middle cell?  the correct value of k is available
-
 
   if(i-(-N1BND)<size/2) lowersizex1=i-(-N1BND);
   else lowersizex1=size/2;
