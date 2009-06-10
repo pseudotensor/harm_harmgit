@@ -737,7 +737,8 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
       // first start back where ended header that will be first byte of data section
       // don't use uptodatabytesize since want to catch errors in word count (want data to be exactly expected word count -- this checks that header is not too long)
-      fseek(stream,onlyheaderbytesize,SEEK_SET);
+      //fseek(stream,onlyheaderbytesize,SEEK_SET);
+      fseek(stream,uptodatabytesize,SEEK_SET);  //ATCH: otherwise, would miss the last word in dump file since databytesize definition uses uptodatabytesize as data start pos
 
       // get word count
       get_word_count(databytesize, &wordtotal, stream);
