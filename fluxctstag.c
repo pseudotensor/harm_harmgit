@@ -1927,22 +1927,25 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	locallim=choose_limiter(interpdir, 0,0,0,B1);
 	usedq=(locallim<PARA)&&(LIMADJUST==0);
 
-
-        if(!(Nvec[interpdir]==1)){
-          // face2corn is at effective-CENT relative to edgedir
-          // loop below will be at effective-FACEs, so extended in interpdir direction
-          // One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
-          is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
-          ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
-          js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
-          je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
-          ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
-          ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
-        }
-        else {
-          OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
-        }
-
+	// face2corn is at effective-CENT relative to edgedir
+	// loop below will be at effective-FACEs, so extended in interpdir direction
+	// One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
+	if(!(Nvec[interpdir]==1)){
+	  is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
+	  ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
+	  js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
+	  je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
+	  ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
+	  ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
+	}
+	else{
+	  is=-N1BND+idel;
+	  ie=N1-1+N1BND;
+	  js=-N2BND+jdel;
+	  je=N2-1+N2BND;
+	  ks=-N3BND+kdel;
+	  ke=N3-1+N3BND;
+	}
 
 	//	dualfprintf(fail_file,"edgedir=%d EMFodir1=%d EMFodir2=%d :: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",edgedir,EMFodir1,EMFodir2,is,ie,js,je,ks,ke);
 	
