@@ -211,9 +211,10 @@ $(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc make
 	# remove and touch (so exists) files to create
 	( rm -rf objsonepoint.cmd.list ; rm -rf onepoint ; touch objsonepoint.cmd.list ; touch onepoint)
 	# create list of prefixes
-	( for fil in `cat objsonepoint` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> onepoint ; done )
+	
+	( for fil in `cat objsonepoint` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> onepoint ; done )
 	# create list of commands
-	( for fil in `cat onepoint` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done )
+	( for fil in `cat onepoint` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.onepoint.list ; touch deps.onepoint.list )
 	# create new dependencies file
@@ -228,9 +229,9 @@ $(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc make
 	# remove and touch (so exists) files to create
 	( rm -rf objsmanypoints.cmd.list ; rm -rf manypoints ; touch objsmanypoints.cmd.list ; touch manypoints)
 	# create list of prefixes
-	( for fil in `cat objsmanypoints` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> manypoints ; done )
+	( for fil in `cat objsmanypoints` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> manypoints ; done )
 	# create list of commands
-	( for fil in `cat manypoints` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done )
+	( for fil in `cat manypoints` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.manypoints.list ; touch deps.manypoints.list )
 	# create new dependencies file
@@ -269,9 +270,9 @@ $(PREPLD): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc ma
 	# remove and touch (so exists) files to create
 	( rm -rf objslong.cmd.list ; rm -rf long ; touch objslong.cmd.list ; touch long)
 	# create list of prefixes
-	( for fil in `cat objslong` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> long ; done )
+	( for fil in `cat objslong` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> long ; done )
 	# create list of commands
-	( for fil in `cat long` ; do echo -e $$fil.o :\\n\\t$(CC2) $(GCCCFLAGS) -c $$fil.c $(LDFLAGS) >> objslong.cmd.list ; done )
+	( for fil in `cat long` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC2) $(GCCCFLAGS) -c $$fil.c $(LDFLAGS) >> objslong.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.long.list ; touch deps.long.list )
 	# create new dependencies file
@@ -312,9 +313,9 @@ $(PREPLIAISON): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.l
 	# remove and touch (so exists) files to create
 	( rm -rf objsdepsliaison.cmd.list ; rm -rf depsliaison ; touch objsdepsliaison.cmd.list ; touch depsliaison)
 	# create list of prefixes
-	( for fil in `cat objsdepsliaison` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> depsliaison ; done )
+	( for fil in `cat objsdepsliaison` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsliaison ; done )
 	# create list of commands
-	( for fil in `cat depsliaison` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsliaison.cmd.list ; done )
+	( for fil in `cat depsliaison` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsliaison.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsliaison.list ; touch deps.depsliaison.list )
 	# create new dependencies file
@@ -348,9 +349,9 @@ $(PREPJONINTERP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail
 	# remove and touch (so exists) files to create
 	( rm -rf objsdepsjoninterp.cmd.list ; rm -rf depsjoninterp ; touch objsdepsjoninterp.cmd.list ; touch depsjoninterp)
 	# create list of prefixes
-	( for fil in `cat objsdepsjoninterp` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> depsjoninterp ; done )
+	( for fil in `cat objsdepsjoninterp` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsjoninterp ; done )
 	# create list of commands
-	( for fil in `cat depsjoninterp` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsjoninterp.cmd.list ; done )
+	( for fil in `cat depsjoninterp` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsjoninterp.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsjoninterp.list ; touch deps.depsjoninterp.list )
 	# create new dependencies file
@@ -375,9 +376,9 @@ $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc mak
 	# remove and touch (so exists) files to create
 	( rm -rf objsdepsbin2txt.cmd.list ; rm -rf depsbin2txt ; touch objsdepsbin2txt.cmd.list ; touch depsbin2txt)
 	# create list of prefixes
-	( for fil in `cat objsdepsbin2txt` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> depsbin2txt ; done )
+	( for fil in `cat objsdepsbin2txt` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsbin2txt ; done )
 	# create list of commands
-	( for fil in `cat depsbin2txt` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) $(BIN2TXTLIBS) >> objsdepsbin2txt.cmd.list ; done )
+	( for fil in `cat depsbin2txt` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) $(BIN2TXTLIBS) >> objsdepsbin2txt.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsbin2txt.list ; touch deps.depsbin2txt.list )
 	# create new dependencies file
@@ -402,9 +403,9 @@ $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc make
 	# remove and touch (so exists) files to create
 	( rm -rf objsdepssmcalc.cmd.list ; rm -rf depssmcalc ; touch objsdepssmcalc.cmd.list ; touch depssmcalc)
 	# create list of prefixes
-	( for fil in `cat objsdepssmcalc` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo -e $$pref >> depssmcalc ; done )
+	( for fil in `cat objsdepssmcalc` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depssmcalc ; done )
 	# create list of commands
-	( for fil in `cat depssmcalc` ; do echo -e $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepssmcalc.cmd.list ; done )
+	( for fil in `cat depssmcalc` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepssmcalc.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depssmcalc.list ; touch deps.depssmcalc.list )
 	# create new dependencies file
