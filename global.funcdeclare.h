@@ -24,6 +24,8 @@ extern void parainitchecks(void);
 extern void myargs(int argc, char *argv[]);
 
 
+extern void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR]);
+
 
 extern int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt);
 

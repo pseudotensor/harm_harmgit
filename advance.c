@@ -50,6 +50,28 @@ static int advance_finitevolume(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FT
 				FTYPE *CUf,FTYPE *Cunew, SFTYPE fluxdt, SFTYPE boundtime,  int stagenow, int numstages, FTYPE *ndt);
 
 
+
+
+// things to do before any interpolation or advance step
+// includes pre-computed things for interpolation and advance that (e.g.) aren't required to perform for each interpolation or advance call or portion of a call
+void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
+{
+
+  /////////////////////////////////////
+  //
+  // Compute and Store (globally) the get_state() data for the CENT position to avoid computing later and for merged-higher-order method
+  //
+  /////////////////////////////////////
+#if(STOREFLUXSTATE||STORESHOCKINDICATOR)
+  // NOTE: This is done before advance since always needed, and only needed once for all dimensions, and don't here instead of inside advance() since needed during fluxcalc() that is called first before any use of get_geometry() that we would use to put this call with
+  compute_and_store_fluxstatecent(pb);
+  // now flux_compute() and other flux-position-related things will obtain get_state() data for p_l and p_r from global arrays
+#endif
+
+
+}
+
+
 // pi: initial values at t=t0 to compute Ui
 // pb: values used to compute flux/source
 // pf: solution using flux(pb) from pi's Ui -> Uf
@@ -70,20 +92,20 @@ int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][N
 {
 
 
-  /////////////////////////////////////
+  ////////////////
   //
-  // Compute and Store (globally) the get_state() data for the CENT position to avoid computing later and for merged-higher-order method
+  // setup state and interpolation stuff for interpolation and advance calls
   //
-  /////////////////////////////////////
-#if(STOREFLUXSTATE||STORESHOCKINDICATOR)
-  // NOTE: This is done before advance since always needed, and only needed once for all dimensions, and don't here instead of inside advance() since needed during fluxcalc() that is called first before any use of get_geometry() that we would use to put this call with
-  compute_and_store_fluxstatecent(pb);
-  // now flux_compute() and other flux-position-related things will obtain get_state() data for p_l and p_r from global arrays
-#endif
+  ////////////////
+  pre_interpolate_and_advance(pb);
 
 
 
-
+  ////////////////
+  //
+  // advance
+  //
+  ////////////////
   if(DOENOFLUX==ENOFINITEVOLUME){
     MYFUN(advance_finitevolume(stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_finitevolume()", 1);
   }

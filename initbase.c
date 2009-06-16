@@ -260,14 +260,14 @@ int init(int *argc, char **argv[])
 	FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
 
-
-
-
-
-
       
       if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1) >= 1)
 	FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+
+
+      // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
+      pre_interpolate_and_advance(GLOBALPOINT(pglobal));
+
       
       if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
 	FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);

@@ -411,19 +411,17 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   /////////////////////////////// 
   trifprintf("Fixup and Bound #1\n");
 
-#if(EOMTYPE!=EOMFFDE)
-  // assume EOMFFDE doesn't use "density/ie" to set field, so no need to bound, and no field definition is bad for EOMFFDE
 #if(FIXUPAFTERINIT)
-  if(fixup(STAGEM1,prim,ucons,0)>=1)
-    FAILSTATEMENT("init.c:init()", "fixup()", 1);
+  if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1) >= 1)
-    FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
+  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
 
-  if(pre_fixup(STAGEM1,prim)>=1)
-    FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-#endif
+  // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
+  pre_interpolate_and_advance(prim);
+
+  if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
+
 
 
   
@@ -461,19 +459,17 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   /////////////////////////////// 
   trifprintf("Fixup and Bound #2\n");
 
-#if(EOMTYPE!=EOMFFDE)
-  // assume EOMFFDE doesn't use "density/ie" to set field, so no need to bound, and no field definition is bad for EOMFFDE
 #if(FIXUPAFTERINIT)
-  if(fixup(STAGEM1,prim,ucons,0)>=1)
-    FAILSTATEMENT("init.c:init()", "fixup()", 1);
+  if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1) >= 1)
-    FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
 
-  if(pre_fixup(STAGEM1,prim)>=1)
-    FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-#endif
+  // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
+  pre_interpolate_and_advance(prim);
+
+
+  if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
 
 
