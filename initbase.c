@@ -456,7 +456,7 @@ int init(int *argc, char **argv[])
       }
     }
   }
-  if(gotnan) myexit(82753487);
+  if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753487);
 
 
   if(FLUXB==FLUXCTSTAG){
@@ -469,7 +469,7 @@ int init(int *argc, char **argv[])
 	}
       }
     }
-    if(gotnan) myexit(82753488);
+    if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753488);
   }
 #endif
 
@@ -488,7 +488,7 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
 
 #if(ANALYTICMEMORY==0)
   dualfprintf(fail_file,"Shouldn't be setting analytic with ANALYTICMEMORY==0\n");
-  myexit(35968346);
+  myexit(ERRORCODEBELOWCLEANFINISH+35968346);
 #endif
 
 
@@ -1574,18 +1574,18 @@ void check_bnd_num(void)
   // checks on parameters so user doesn't do something stupid
   if(FULLOUTPUT&&USEMPI){
     dualfprintf(fail_file,"Cannot use FULLOUTPUT!=0 when USEMPI=1\n");
-    myexit(200);
+    myexit(ERRORCODEBELOWCLEANFINISH+200);
   }
 
   if(DOEVOLVEMETRIC&& (ANALYTICCONNECTION||ANALYTICSOURCE)){
     dualfprintf(fail_file,"Unlikely you have metric in time analytically\n");
-    myexit(201);
+    myexit(ERRORCODEBELOWCLEANFINISH+201);
   }
 
 
   if(DOSELFGRAVVSR && (ANALYTICCONNECTION||ANALYTICSOURCE||ANALYTICGCON)){
     dualfprintf(fail_file,"Unlikely you have metric analytically with self gravity\n");
-    myexit(202);
+    myexit(ERRORCODEBELOWCLEANFINISH+202);
   }
 
   if(GDETVOLDIFF){
@@ -1594,7 +1594,7 @@ void check_bnd_num(void)
     }
     else{
       dualfprintf(fail_file,"GDETVOLDIFF==1 not setup for non-SPC metrics\n");
-      myexit(203);
+      myexit(ERRORCODEBELOWCLEANFINISH+203);
     }
   }
 
@@ -1608,18 +1608,18 @@ void check_bnd_num(void)
 
   if(HIGHERORDERMEM==0 && DOENOFLUX != NOENOFLUX){
     dualfprintf(fail_file,"Need to turn on HIGHERORDERMEM when doing higher order methods (i.e. DOENOFLUX!=NOENOFLUX\n");
-    myexit(204);
+    myexit(ERRORCODEBELOWCLEANFINISH+204);
   }
 
   if(COMPDIM!=3){
     dualfprintf(fail_file,"Code not setup for anything but COMPDIM==3\n");
-    myexit(205);
+    myexit(ERRORCODEBELOWCLEANFINISH+205);
   }
 
 
   if(FIELDSTAGMEM==0 && FLUXB==FLUXCTSTAG){
     dualfprintf(fail_file,"FIELDSTAGMEM should be 1 if FLUXB==FLUXCTSTAG\n");
-    myexit(206);
+    myexit(ERRORCODEBELOWCLEANFINISH+206);
   }
 
   if(FIELDSTAGMEM==1 && FLUXB!=FLUXCTSTAG){
@@ -1628,13 +1628,13 @@ void check_bnd_num(void)
 
   if(FIELDTOTHMEM==0 && FLUXB==FLUXCTTOTH){
     dualfprintf(fail_file,"FIELDTOTHMEM should be 1 if FLUXB==FLUXCTTOTH\n");
-    myexit(207);
+    myexit(ERRORCODEBELOWCLEANFINISH+207);
   }
 
 
   if( (N1%2>0 && N1>1) || (N2%2>0 && N2>1) || (N3%2>0 && N3>1) ){
     dualfprintf(fail_file,"N1, N2, N3 should be even since some parts of code assume so\n");
-    myexit(208);
+    myexit(ERRORCODEBELOWCLEANFINISH+208);
   }
 
 
@@ -1644,40 +1644,40 @@ void check_bnd_num(void)
   
   if(ROEAVERAGEDWAVESPEED || ATHENAROE){
     dualfprintf(fail_file,"ATHENA stuff only for non-rel setup and while was tested hasn't been used or kept up to date\n");
-    myexit(209);
+    myexit(ERRORCODEBELOWCLEANFINISH+209);
   }
 
   if(STOREWAVESPEEDS==0 && FLUXB==FLUXCTSTAG){
     dualfprintf(fail_file,"Must set STOREWAVESPEEDS==1 when doing FLUXCTSTAG\n");
-    myexit(210);
+    myexit(ERRORCODEBELOWCLEANFINISH+210);
   }
 
   if(LIMADJUST!=LIMITERFIXED){
     dualfprintf(fail_file,"LIMADJUST old code\n");
-    myexit(211);
+    myexit(ERRORCODEBELOWCLEANFINISH+211);
   }
 
 
   if(FLUXADJUST!=FLUXFIXED){
     dualfprintf(fail_file,"FLUXADJUST old code\n");
-    myexit(212);
+    myexit(ERRORCODEBELOWCLEANFINISH+212);
   }
 
   if(DOEVOLVEMETRIC&& (WHICHEOM!=WITHGDET )){
     dualfprintf(fail_file,"conn2 not computed for time-dependent metric yet\n");
-    myexit(213);
+    myexit(ERRORCODEBELOWCLEANFINISH+213);
   }
 
   if(CONNMACHINEBODY){
 
     if(CONNDERTYPE!=DIFFFINITE && CONNDERTYPE!=DIFFGAMMIE){
       dualfprintf(fail_file,"Makes no sense to use CONNMACHINEBODY with CONNDERTYPE!=DIFFFINITE/DIFFGAMMIE\n");
-      myexit(214);
+      myexit(ERRORCODEBELOWCLEANFINISH+214);
     }
 
     if(WHICHEOM!=WITHGDET){
       dualfprintf(fail_file,"Not setup for body correction when f is not detg\n");
-      myexit(215);
+      myexit(ERRORCODEBELOWCLEANFINISH+215);
     }
   }
 
@@ -1697,7 +1697,7 @@ void check_bnd_num(void)
 
   if(LIMIT_FLUXC2A_PRIM_CHANGE){
     dualfprintf(fail_file,"LIMIT_FLUXC2A_PRIM_CHANGE doesn't work according to Sasha, so don't use\n");
-    myexit(216);
+    myexit(ERRORCODEBELOWCLEANFINISH+216);
   }
 
   // check if 
@@ -1708,7 +1708,7 @@ void check_bnd_num(void)
 
   if(WENO_EXTRA_A2C_MINIMIZATION==1 && doingenough==0){
     dualfprintf(fail_file,"WENO_EXTRA_A2C_MINIMIZATION==1 and interporder=%d %d %d invalid\n",interporder[avgscheme[1]],interporder[avgscheme[2]],interporder[avgscheme[3]]);
-    myexit(217);
+    myexit(ERRORCODEBELOWCLEANFINISH+217);
   }
 
 
@@ -1726,13 +1726,13 @@ void check_bnd_num(void)
   if(EVOLVEWITHVPOT && !(FLUXB==FLUXCTSTAG && extrazones4emf==0) ){
     // Even with FV or FLUXRECON method that relies on updating non-point fields, can't evolve with A_i since truncation error different rather than just machine error different.  This leads to large errors -- especially at boundaries? GODMARK -- not 100% sure this is the problem for test=1102 and EVOLVEWITHVPOT
     dualfprintf(fail_file,"Cannot evolve field using A_i for FLUXB==FLUXCTHLL or FLUXB==FLUXCTHLL since no single A_i evolved forward in time.  And cannot use with non-point field method since while single A_i updated, the update diverges at truncation error between updating A_i and updating the non-point-field -- this is especially bad for periodic boundary conditions where one must have machine error correct behavior at boundaries\n");
-    myexit(218);
+    myexit(ERRORCODEBELOWCLEANFINISH+218);
   }
 
 
   if(splitmaem==0 && (SPLITPRESSURETERMINFLUXMA || SPLITPRESSURETERMINFLUXEM)){
     dualfprintf(fail_file,"To use SPLITPRESSURE must turn on splitmaem, which requires FLUXRECON\n");
-    myexit(219);
+    myexit(ERRORCODEBELOWCLEANFINISH+219);
   }
 
   if(splitmaem==1){
@@ -1754,11 +1754,11 @@ void check_bnd_num(void)
 
     if(DOLUMVSR){
       dualfprintf(fail_file,"lumvsr requires no boundary zones outputted so dump and lumvsr file can be used together\n");
-      myexit(195815983);
+      myexit(ERRORCODEBELOWCLEANFINISH+195815983);
     }
     if(DODISSVSR){
       dualfprintf(fail_file,"dissvsr requires no boundary zones outputted so dump and dissvsr file can be used together\n");
-      myexit(195815984);
+      myexit(ERRORCODEBELOWCLEANFINISH+195815984);
     }
 
   }
@@ -1767,20 +1767,20 @@ void check_bnd_num(void)
 
   if(2*N1<N1BND || N1BND!=0 && N1==1 || periodicx1==1 && ncpux1>1 && N1<N1BND){
     dualfprintf(fail_file,"Code not setup to handle boundary cells N1BND=%d with only N1=%d\n",N1BND,N1);
-    myexit(246872462);
+    myexit(ERRORCODEBELOWCLEANFINISH+246872462);
   }
   if(2*N2<N2BND || N2BND!=0 && N2==1 || periodicx2==1 && ncpux2>1 && N2<N2BND){
     dualfprintf(fail_file,"Code not setup to handle boundary cells N2BND=%d with only N2=%d\n",N2BND,N2);
-    myexit(246872463);
+    myexit(ERRORCODEBELOWCLEANFINISH+246872463);
   }
   if(2*N3<N3BND || N3BND!=0 && N3==1 || periodicx3==1 && ncpux3>1 && N3<N3BND){
     dualfprintf(fail_file,"Code not setup to handle boundary cells N3BND=%d with only N3=%d\n",N3BND,N3);
-    myexit(246872464);
+    myexit(ERRORCODEBELOWCLEANFINISH+246872464);
   }
 
   if(N1%2 && N1>1 || N2%2 && N2>1 || N3%2 && N3>1){
     dualfprintf(fail_file,"Need even N1,N2,N3 AFAIK N1=%d N2=%d N3=%d\n",N1,N2,N3);
-    myexit(19846286);
+    myexit(ERRORCODEBELOWCLEANFINISH+19846286);
   }
 
 
@@ -1793,7 +1793,7 @@ void check_bnd_num(void)
 #if(MERGEDC2EA2CMETHOD==1)
   //  if(splitmaem){
   //    dualfprintf(fail_file,"MERGEDC2EA2CMETHOD==1 is not setup for splitmaem since it was assumed splitmaem only needed with old a2c method\n");
-  //    myexit(346897346);
+  //    myexit(ERRORCODEBELOWCLEANFINISH+346897346);
   //  }
 #endif
 
@@ -1815,7 +1815,7 @@ void check_bnd_num(void)
 
   if(LIMITDTWITHSOURCETERM){
     dualfprintf(fail_file,"LIMITDTWITHSOURCETERM==1 doesn't work right now\n");
-    myexit(54986456);
+    myexit(ERRORCODEBELOWCLEANFINISH+54986456);
   }
 
   if(DODISS || DOLUMVSR || DODISSVSR || DOENTROPY!=DONOENTROPY){
@@ -1858,23 +1858,23 @@ void check_bnd_num(void)
 
   if(MERGEDC2EA2CMETHOD && DOENOFLUX != NOENOFLUX){
     dualfprintf(fail_file,"Cannot do merged method with older weno-type c2a/a2c methods\n");
-    myexit(289754897);
+    myexit(ERRORCODEBELOWCLEANFINISH+289754897);
   }
 
   if((MERGEDC2EA2CMETHOD==0) && (MERGEDC2EA2CMETHODMA==1 || MERGEDC2EA2CMETHODEM==1) ){
     dualfprintf(fail_file,"MERGEDC2EA2CMETHOD,MA,EM set inconsistently: %d %d %d\n",MERGEDC2EA2CMETHOD,MERGEDC2EA2CMETHODMA,MERGEDC2EA2CMETHODEM);
-    myexit(289754898);
+    myexit(ERRORCODEBELOWCLEANFINISH+289754898);
   }
 
 
   if(IF3DSPCTHENMPITRANSFERATPOLE && FLIPGDETAXIS){
     dualfprintf(fail_file,"Cannot have IF3DSPCTHENMPITRANSFERATPOLE && FLIPGDETAXIS -- code not setup for that situation\n");
-    myexit(83746836);
+    myexit(ERRORCODEBELOWCLEANFINISH+83746836);
   }
 
   if(special3dspc && ncpux3==1 && (N3%2)){
     dualfprintf(fail_file,"Must have even N3 (N3=%d) if special3dspc==1 && ncpux3=1\n",N3);
-    myexit(83746837);
+    myexit(ERRORCODEBELOWCLEANFINISH+83746837);
   }
 
 
@@ -1885,7 +1885,7 @@ void check_bnd_num(void)
 
   if(FLUXB==FLUXCTSTAG && special3dspc && (COORDSINGFIX==0 || SINGSMALL<=0.0)){
     dualfprintf(fail_file,"IF3DSPCTHENMPITRANSFERATPOLE==1 with N3>1 requires COORDSINGFIX>0 and SINGSMALL>0.0 in order for B2 to be evolved properly at the pole\n");
-    myexit(978343943);
+    myexit(ERRORCODEBELOWCLEANFINISH+978343943);
   }
 
   if(FLUXB!=FLUXCTSTAG && COORDSINGFIX==1 ){
@@ -1898,14 +1898,14 @@ void check_bnd_num(void)
 
   if(N1==1 && ncpux1>1 ||N2==1 && ncpux2>1 ||N3==1 && ncpux3>1){
     dualfprintf(fail_file,"Must have N?>1 if ncpux?>1 for code to recognize that dimension\n");
-    myexit(28347525);
+    myexit(ERRORCODEBELOWCLEANFINISH+28347525);
   }
 
 
   DIMENLOOP(dimen){
     if(WENOMEMORY==0 && ( WENOINTERPTYPE(lim[dimen])||WENOINTERPTYPE(avgscheme[dimen]))){
       dualfprintf(fail_file,"Need to turn on WENOMEMORY when lim or avgscheme  = eno or weno\n");
-      myexit(83763463);
+      myexit(ERRORCODEBELOWCLEANFINISH+83763463);
     }
   }
 
@@ -2428,7 +2428,7 @@ int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int di
   }
   else{
     dualfprintf(fail_file,"No such pointorlinetype=%d\n",pointorlinetype);
-    myexit(287687456);
+    myexit(ERRORCODEBELOWCLEANFINISH+287687456);
   }
 
 
@@ -2617,7 +2617,7 @@ int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int
     else if(anynprlist==nprboundlist) num=NPRBOUND;
     else{
       dualfprintf(fail_file,"No such type of list in addremovefromanynpr\n");
-      myexit(7615156);
+      myexit(ERRORCODEBELOWCLEANFINISH+7615156);
     }
 
 
