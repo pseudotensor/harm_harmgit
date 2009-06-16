@@ -1698,6 +1698,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
       // But, need loops to be controlled to don't access beyond where left-right faces set since ucon can fail with arbitrary input or nan's unlike other types of calculations
       // cent2faceloop is over CENT positions, which now since accessing the faces needs to be transcribed to FACE values interior to those CENT values
       // One shifts up in interpdir (dir) flux direction because interpolated -1 extra CENT cell and N CENT cell to get flux at 0 and N.
+      // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
       is=cent2faceloop[dir].is + SHIFT1*(dir==1);
       ie=cent2faceloop[dir].ie;
       js=cent2faceloop[dir].js + SHIFT2*(dir==2);
@@ -1900,6 +1901,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  Dodir1=1; Dodir2=1;
 	}
 
+
+
 	//////////////////////
 	// interpolate    
 	//
@@ -1914,6 +1917,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  slope_lim_face2corn(realisinterp, interpdir,idel,jdel,kdel,pr,p2interp,dqvec[interpdir],pleft,pright, &(face2cornloop[edgedir][EMFodir1][EMFodir2]));
 	}
   
+
 	///////////////////
 	// get p_l p_r
 	//////////////////////////////////////
@@ -1927,6 +1931,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	locallim=choose_limiter(interpdir, 0,0,0,B1);
 	usedq=(locallim<PARA)&&(LIMADJUST==0);
 
+
 	// face2corn is at effective-CENT relative to edgedir
 	// loop below will be at effective-FACEs, so extended in interpdir direction
 	// One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
@@ -1939,17 +1944,24 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
 	}
 	else{
-	  is=-N1BND+idel;
-	  ie=N1-1+N1BND;
-	  js=-N2BND+jdel;
-	  je=N2-1+N2BND;
-	  ks=-N3BND+kdel;
-	  ke=N3-1+N3BND;
+	  // since just copying, revert to locations where interpolated CENT -> FACE
+	  // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
+	  is=cent2faceloop[interpdir].is + SHIFT1*(interpdir==1);
+	  ie=cent2faceloop[interpdir].ie;
+	  js=cent2faceloop[interpdir].js + SHIFT2*(interpdir==2);
+	  je=cent2faceloop[interpdir].je;
+	  ks=cent2faceloop[interpdir].ks + SHIFT3*(interpdir==3);
+	  ke=cent2faceloop[interpdir].ke;
+	  //	  is=-N1BND+idel;
+	  //	  ie=N1-1+N1BND;
+	  //	  js=-N2BND+jdel;
+	  //	  je=N2-1+N2BND;
+	  //	  ks=-N3BND+kdel;
+	  //	  ke=N3-1+N3BND;
 	}
 
 	//	dualfprintf(fail_file,"edgedir=%d EMFodir1=%d EMFodir2=%d :: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",edgedir,EMFodir1,EMFodir2,is,ie,js,je,ks,ke);
 	
-	// Could use face2cornloop-> to better constrain the below
 	///////	COMPZSLOOP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND ){
 	//	OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
 	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
