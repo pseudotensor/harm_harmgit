@@ -33,6 +33,7 @@ SMCALCCMD=smcalc
 
 # different target sets
 MPITARGETS=$(DEFTARGET) $(CMD) $(CMD2) $(LIAISONCMD) $(PREP) $(PREPLD) $(PREPLAISON)
+LAPACKTARGETS=$(DEFTARGET) $(CMD) $(CMD2) $(LIAISONCMD) $(PREP) $(PREPLD) $(PREPLAISON) $(PREPJONINTERP)
 BINARYTARGETS=$(CMD) $(CMD2) $(LIAISONCMD)
 
 ########################
@@ -139,7 +140,13 @@ ENFORCEPRECISION=0
 # http://www.netlib.org/eispack/
 # http://www.netlib.org/lapack/double/dsyev.f
 #
+ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
+# choice for below
 USELAPACK=1
+else
+# NO choice for below
+USELAPACK=0
+endif
 #
 ####################
 

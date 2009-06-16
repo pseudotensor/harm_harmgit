@@ -136,7 +136,7 @@ int main(
     fprintf(stderr,"./smcalc DUMPTYPE CALCTYPE DERTYPE nx ny inname outname <startdump> <enddump>\n");
     fprintf(stderr,"DUMPTYPE: 0=realdump 1=single column >=2 any number of columns specified\n");
     fprintf(stderr,"CALCTYPE: 0=faraday 1=fline 2=derivatives 3=average 4=ficalc1,2\n");
-    fprintf(stderr,"DERTYPE=0->centered when possible 1->numerical backward if possible\n");
+    fprintf(stderr,"DERTYPE=0->centered when possible 1->numerical backward if possible 2=forward if possible 10+ of 0 11=+ of 1 12=+ of 2\n");
     exit(1);
   }
 
@@ -154,7 +154,7 @@ int main(
       fprintf(stderr,"./smcalc DUMPTYPE CALCTYPE nx ny inname outname <startdump> <enddump>\n");
       fprintf(stderr,"DUMPTYPE: 0=realdump 1=single column >=2 any number of columns specified\n");
       fprintf(stderr,"CALCTYPE: 0=faraday 1=fline 2=derivatives 3=average\n");
-      fprintf(stderr,"DERTYPE=0->centered when possible 1->numerical backward if possible\n");
+      fprintf(stderr,"DERTYPE=0->centered when possible 1->numerical backward if possible 2=forward if possible 10+ of 0 11=+ of 1 12=+ of 2\n");
       exit(1);
     }
     startdump=atoi(argv[8]);
@@ -558,18 +558,28 @@ int main(
 #endif
   }
   else if(CALCTYPE==DODER){
+    int signit;
+    if(DERTYPE<10) signit=-1;
+    else signit=1;
+
     for(iii=0;iii<nx*ny;iii++){
       i=indexi=(int)(iii%nx);    j=indexj=(int)(iii/nx);
       // x1
       if(nx>1){
-	if(indexi==0){// forward difference
-	  der[MAPDER(0)]=(p[MAPPIP1(0)]-p[MAPP(0)])/dx[1];
+	if( ((DERTYPE==2 || DERTYPE==12) || (indexi==0))&&(indexi!=nx-1) ){// forward difference
+	  if(signit==-1) der[MAPDER(0)]=(p[MAPPIP1(0)]-p[MAPP(0)])/dx[1];
+	  else  der[MAPDER(0)]=(fabs(p[MAPPIP1(0)])+fabs(p[MAPP(0)]))/dx[1];
 	}
-	else if((DERTYPE==1)||(indexi==nx-1)){// backward difference
-	  der[MAPDER(0)]=(p[MAPP(0)]-p[MAPPIM1(0)])/dx[1];
+	else if( ((DERTYPE==1 || DERTYPE==11)||(indexi==nx-1))&&(indexi!=0) ){// backward difference
+	  if(signit==-1) der[MAPDER(0)]=(p[MAPP(0)]-p[MAPPIM1(0)])/dx[1];
+	  else der[MAPDER(0)]=(fabs(p[MAPP(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
 	}
-	else if(DERTYPE==0) {// centered difference
-	  der[MAPDER(0)]=0.5*(p[MAPPIP1(0)]-p[MAPPIM1(0)])/dx[1];
+	else if(DERTYPE==0 || DERTYPE==10) {// centered difference
+	  if(signit==-1) der[MAPDER(0)]=0.5*(p[MAPPIP1(0)]-p[MAPPIM1(0)])/dx[1];
+	  else der[MAPDER(0)]=0.5*(fabs(p[MAPPIP1(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
+	}
+	else{
+	  der[MAPDER(0)]=0.0;
 	}
       }
       else{
@@ -577,14 +587,20 @@ int main(
       }
       // x2
       if(ny>1){
-	if(indexj==0){// forward difference
-	  der[MAPDER(1)]=(p[MAPPJP1(0)]-p[MAPP(0)])/dx[2];
+	if( ((DERTYPE==2 || DERTYPE==12) || (indexj==0))&&(indexj!=ny-1) ){// forward difference
+	  if(signit==-1) der[MAPDER(1)]=(p[MAPPJP1(0)]-p[MAPP(0)])/dx[2];
+	  else der[MAPDER(1)]=(fabs(p[MAPPJP1(0)])+fabs(p[MAPP(0)]))/dx[2];
 	}
-	else if((DERTYPE==1)||(indexj==ny-1)){// backward difference
-	  der[MAPDER(1)]=(p[MAPP(0)]-p[MAPPJM1(0)])/dx[2];
+	else if( ((DERTYPE==1 || DERTYPE==11)||(indexj==ny-1))&&(indexj!=0) ){// backward difference
+	  if(signit==-1) der[MAPDER(1)]=(p[MAPP(0)]-p[MAPPJM1(0)])/dx[2];
+	  else der[MAPDER(1)]=(fabs(p[MAPP(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
 	}
-	else if(DERTYPE==0){// centered difference
-	  der[MAPDER(1)]=0.5*(p[MAPPJP1(0)]-p[MAPPJM1(0)])/dx[2];
+	else if(DERTYPE==0 || DERTYPE==10){// centered difference
+	  if(signit==-1) der[MAPDER(1)]=0.5*(p[MAPPJP1(0)]+signit*p[MAPPJM1(0)])/dx[2];
+	  else der[MAPDER(1)]=0.5*(fabs(p[MAPPJP1(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
+	}
+	else{
+	  der[MAPDER(0)]=0.0;
 	}
       }
       else{
