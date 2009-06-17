@@ -2047,10 +2047,13 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
       for (j = 0; j < NDIM; j++){
 	if(fabs(conndiag2[j])==0.0) ftemp=1.0;
 	else ftemp=pow((fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL),0.25);
-	conn[i][j][i] *= ftemp;
 	// Note, there is difficulty when sum passes through zero.  Won't matter for pressure term, but each individual term in connection may be far from zero and simply different terms cancel.
 	if(fabs(ftemp-1.0)>0.5){
 	  dualfprintf(fail_file,"WARNING: Large correction for machinebody: i=%d j=%d :: i=%d j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,i,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
+	}
+	else{
+	  // otherwise do correction
+	  conn[i][j][i] *= ftemp;
 	}
       }
     }
