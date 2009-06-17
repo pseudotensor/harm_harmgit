@@ -1670,11 +1670,6 @@ void check_bnd_num(void)
 
   if(CONNMACHINEBODY){
 
-    if(CONNDERTYPE!=DIFFFINITE && CONNDERTYPE!=DIFFGAMMIE){
-      dualfprintf(fail_file,"Makes no sense to use CONNMACHINEBODY with CONNDERTYPE!=DIFFFINITE/DIFFGAMMIE\n");
-      myexit(ERRORCODEBELOWCLEANFINISH+214);
-    }
-
     if(WHICHEOM!=WITHGDET){
       dualfprintf(fail_file,"Not setup for body correction when f is not detg\n");
       myexit(ERRORCODEBELOWCLEANFINISH+215);

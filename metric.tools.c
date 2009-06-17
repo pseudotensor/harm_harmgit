@@ -1382,10 +1382,10 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
   DLOOP(j,k){
     tmpgcov[GIND(j,k)] = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-      // g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
-      // where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
+	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
+	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
 	tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
-    }
+      }
     // use tmpgcov since gcon might be same address as gconprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }
@@ -1427,8 +1427,8 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
     // now add 15 other terms
     ftemp2 = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-      if((l!=q)&&(m!=q)) ftemp2+= gcov[GIND(l,m)] * dxdxp[l][q] * dxdxp[m][q];
-    }
+	if((l!=q)&&(m!=q)) ftemp2+= gcov[GIND(l,m)] * dxdxp[l][q] * dxdxp[m][q];
+      }
     // add other 15 terms to answer for total of 16 terms
     gcovpertprim[q]+=ftemp2;
 
@@ -1462,10 +1462,10 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
   DLOOP(j,k){
     tmpgcov[GIND(j,k)] = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-      // g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
-      // where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
-      tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
-    }
+	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
+	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
+	tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
+      }
     // use tmpgcov since gcon might be same address as gconprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }
@@ -1484,31 +1484,31 @@ void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
 
   /*
   // 4 along diagonal and 6 off-diagonal with 6 other identical values
-#define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)\
-          gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\
-    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\
-    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\
-    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\
-    + 2.0*gcov[GIND(0,1)] * dxdxp[0][a]* dxdxp[1][b]\
-    + 2.0*gcov[GIND(0,2)] * dxdxp[0][a]* dxdxp[2][b]\
-    + 2.0*gcov[GIND(0,3)] * dxdxp[0][a]* dxdxp[3][b]\
-    + 2.0*gcov[GIND(1,2)] * dxdxp[1][a]* dxdxp[2][b]\
-    + 2.0*gcov[GIND(1,3)] * dxdxp[1][a]* dxdxp[3][b]\
-    + 2.0*gcov[GIND(2,3)] * dxdxp[2][a]* dxdxp[3][b]
+  #define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)\
+  gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\
+  +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\
+  +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\
+  +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\
+  + 2.0*gcov[GIND(0,1)] * dxdxp[0][a]* dxdxp[1][b]\
+  + 2.0*gcov[GIND(0,2)] * dxdxp[0][a]* dxdxp[2][b]\
+  + 2.0*gcov[GIND(0,3)] * dxdxp[0][a]* dxdxp[3][b]\
+  + 2.0*gcov[GIND(1,2)] * dxdxp[1][a]* dxdxp[2][b]\
+  + 2.0*gcov[GIND(1,3)] * dxdxp[1][a]* dxdxp[3][b]\
+  + 2.0*gcov[GIND(2,3)] * dxdxp[2][a]* dxdxp[3][b]
   */
 
 
   // 4 along diagonal and 6 off-diagonal with 6 other identical values
-#define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)\
-          gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\
-    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\
-    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\
-    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\
-    +     gcov[GIND(0,1)] * (dxdxp[0][a]* dxdxp[1][b] + dxdxp[1][a]* dxdxp[0][b])\
-    +     gcov[GIND(0,2)] * (dxdxp[0][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[0][b])\
-    +     gcov[GIND(0,3)] * (dxdxp[0][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[0][b])\
-    +     gcov[GIND(1,2)] * (dxdxp[1][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[1][b])\
-    +     gcov[GIND(1,3)] * (dxdxp[1][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[1][b])\
+#define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)					\
+  gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]				\
+    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]			\
+    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]			\
+    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]			\
+    +     gcov[GIND(0,1)] * (dxdxp[0][a]* dxdxp[1][b] + dxdxp[1][a]* dxdxp[0][b]) \
+    +     gcov[GIND(0,2)] * (dxdxp[0][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[0][b]) \
+    +     gcov[GIND(0,3)] * (dxdxp[0][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[0][b]) \
+    +     gcov[GIND(1,2)] * (dxdxp[1][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[1][b]) \
+    +     gcov[GIND(1,3)] * (dxdxp[1][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[1][b]) \
     +     gcov[GIND(2,3)] * (dxdxp[2][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[2][b])
 
 
@@ -1608,7 +1608,8 @@ void setup_delta(int whichfun,int whichdifftype, FTYPE defaultdelta, struct of_g
       ((*localptrgeoml)[jj]).j=((*localptrgeomh)[jj]).j=(geom->j);
       ((*localptrgeoml)[jj]).k=((*localptrgeomh)[jj]).k=(geom->k);
       
-      truedelta[jj]=defaultdelta;
+      // an infinitesimal fraction of total grid difference (so scales with artificial startx and endx)
+      truedelta[jj]=defaultdelta*Diffx[jj];
     }
 #if(DOEVOLVEMETRIC)
     // if evolving metric, then use CENT and gcov_func() will use X[0] to choose if present time or not
@@ -1636,7 +1637,7 @@ void setup_delta(int whichfun,int whichdifftype, FTYPE defaultdelta, struct of_g
 	((*localptrgeomh)[jj]).j=(geom->j) + (jj==2 ? SHIFT2 : 0);
 	((*localptrgeomh)[jj]).k=(geom->k) + (jj==3 ? SHIFT3 : 0);
 	
-	truedelta[jj]=0.5*dx[jj];
+	truedelta[jj]=dx[jj];
       }
     }
     else{
@@ -1683,57 +1684,57 @@ void setup_delta(int whichfun,int whichdifftype, FTYPE defaultdelta, struct of_g
 
 /*
 
-Based upon EOM:
+  Based upon EOM:
 
-$$
-(f_{(\nu)} T^t_\nu)_{,t} 
-= -(f_{(\nu)}T^j_\nu)_{,j} 
-+  f_{(\nu)} [
-     T^\lambda_\nu[\ln(f_{(\nu)}/\detg)]_{,\lambda} 
-   + T^\mu_\lambda \Gamma^\lambda_{\mu\nu} 
-   + \ln(f_{(\nu)})_{,t} T^t_\nu
-]
-$$
+  $$
+  (f_{(\nu)} T^t_\nu)_{,t} 
+  = -(f_{(\nu)}T^j_\nu)_{,j} 
+  +  f_{(\nu)} [
+  T^\lambda_\nu[\ln(f_{(\nu)}/\detg)]_{,\lambda} 
+  + T^\mu_\lambda \Gamma^\lambda_{\mu\nu} 
+  + \ln(f_{(\nu)})_{,t} T^t_\nu
+  ]
+  $$
 
-More compactly (JCM: 05/07/08):
+  More compactly (JCM: 05/07/08):
 
-$$
-d_\mu (f T^\mu_\nu) = f[ T^\lambda_\kappa \Gamma^\kappa_{\nu\lambda} - d_\mu ln (\detg/f) T^\mu_\nu]
-$$
+  $$
+  d_\mu (f T^\mu_\nu) = f[ T^\lambda_\kappa \Gamma^\kappa_{\nu\lambda} - d_\mu ln (\detg/f) T^\mu_\nu]
+  $$
 
-SUPERGODMARK: for  if(WHICHEOM!=WITHGDET) don't yet compute correct conn2 I believe
+  SUPERGODMARK: for  if(WHICHEOM!=WITHGDET) don't yet compute correct conn2 I believe
 
-// to avoid body forces in general, must compute (e.g. through correction):
+  // to avoid body forces in general, must compute (e.g. through correction):
 
-$$
-\Gamma^\kappa_{\nu\lambda}[new] = \Gamma^\kappa_{\nu\lambda}[old] - (1/4)[\Gamma^\alpha_{\nu\alpha} - ( (d_\nu f)/f + d_\nu \ln(\detg/f) )]\delta^\kappa_\lambda
-$$
+  $$
+  \Gamma^\kappa_{\nu\lambda}[new] = \Gamma^\kappa_{\nu\lambda}[old] - (1/4)[\Gamma^\alpha_{\nu\alpha} - ( (d_\nu f)/f + d_\nu \ln(\detg/f) )]\delta^\kappa_\lambda
+  $$
 
-or:
+  or:
 
-$$
-\Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - ( (d_\nu f)/f - conn2_\nu )]\delta^\kappa_\lambda
-$$
+  $$
+  \Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - ( (d_\nu f)/f - conn2_\nu )]\delta^\kappa_\lambda
+  $$
 
-For the WHICHEOM!=WITHGDET version, in general this would require a different \Gamma for each EOM.  For simplicity just assume f=\detg and don't allow this non-body version unless WHICHEOM==WITHGDET, and so then one has:
+  For the WHICHEOM!=WITHGDET version, in general this would require a different \Gamma for each EOM.  For simplicity just assume f=\detg and don't allow this non-body version unless WHICHEOM==WITHGDET, and so then one has:
 
-$$
-\Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - (d_\nu \detg)/\detg ]\delta^\kappa_\lambda
-$$
+  $$
+  \Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - (d_\nu \detg)/\detg ]\delta^\kappa_\lambda
+  $$
 
-The above is only true for second order scheme.  For higher order FLUXRECON scheme one has:
+  The above is only true for second order scheme.  For higher order FLUXRECON scheme one has:
 
-$$
-\Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - (d_\nu a2c_\nu \detg)/\detg ]\delta^\kappa_\lambda
-$$
+  $$
+  \Gamma^\kappa_{\nu\lambda} += - (1/4)[ \Gamma^\alpha_{\nu\alpha} - (d_\nu a2c_\nu \detg)/\detg ]\delta^\kappa_\lambda
+  $$
 
-Problems:
-1) But a2c_\nu would normally be chosen adaptively and so one wouldn't have good cancellation.
-2) Fact that \detg is there means difficult to generally have cancellation otherwise unless use NOGDET
-3) NOGDET not yet setup for EVOLVEMETRIC, but otherwise for spherical polar coordinates should just use NOGDET for r and \theta.
-4) Alternatively, can perform correction every timestep and use same a2c as used for each flux -- expensive
-   Problem is b^2/2 and p will be treated differently for SPLITMAEM unless constant all weights
-5) So seems only solution apart from NOGDET is to use constant all weights that is unstable
+  Problems:
+  1) But a2c_\nu would normally be chosen adaptively and so one wouldn't have good cancellation.
+  2) Fact that \detg is there means difficult to generally have cancellation otherwise unless use NOGDET
+  3) NOGDET not yet setup for EVOLVEMETRIC, but otherwise for spherical polar coordinates should just use NOGDET for r and \theta.
+  4) Alternatively, can perform correction every timestep and use same a2c as used for each flux -- expensive
+  Problem is b^2/2 and p will be treated differently for SPLITMAEM unless constant all weights
+  5) So seems only solution apart from NOGDET is to use constant all weights that is unstable
 
 */
 
@@ -1745,14 +1746,8 @@ Problems:
 #define DELTAFORTIMEh(DELTA) (Xmetricnew[TT]!=Xmetricold[TT] ? (0.0) : 2.0*DELTA)
 #define DELTAFORTIMEl(DELTA) (Xmetricnew[TT]!=Xmetricold[TT] ? (-(Xmetricnew[TT]-Xmetricold[TT])) : DELTA)
 
-// finite volume form
-// doesn't make sense for pole with singularity
-//#define MYDELTAh(DELTA,k) ( k==TT ? DELTAFORTIMEh(DELTA) :  dx[k]*0.5 )
-//#define MYDELTAl(DELTA,k) ( k==TT ? DELTAFORTIMEl(DELTA) : -dx[k]*0.5 )
-
-// finite difference form
-#define MYDELTAh(DELTA,k) ( k==TT ? DELTAFORTIMEh(DELTA) :  DELTA*Diffx[k] )
-#define MYDELTAl(DELTA,k) ( k==TT ? DELTAFORTIMEl(DELTA) : -DELTA*Diffx[k] )
+#define MYDELTAh(DELTA,k) ( k==TT ? DELTAFORTIMEh(DELTA) : +DELTA*0.5 )
+#define MYDELTAl(DELTA,k) ( k==TT ? DELTAFORTIMEl(DELTA) : -DELTA*0.5 )
 
 
 /* NOTE: parameter hides global variable */
@@ -1966,9 +1961,38 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   // now correct for accurate body forces
   // only makes sense for no a2c on flux right now
   //
+  // Idea is that pressure term in stress-energy tensor does not cancel between flux and source term, leading to lack of cancellation leading to secular errors -- especially near pole where flux must vanish so errors in flux are not removed by flux differencing.
+  //
+  // So by looking at $T^\mu_\nu += p_{\rm tot} \delta^\mu_\nu$ term, one can see how to correct the connection so this pressure term (for constant total pressure) cancels between flux and source
+  //
+  // --> $d_t (\detg \delta^t_\nu) = -d_j(\detg \delta^j_\nu) + \detg \delta^k_\lambda \Gamma^\lambda_{\nu\kappa}$
+  //
+  // assume $d_t(\detg)\sim 0$ and $d_j(ptot)\sim 0$, then:
+  //
+  // $0 = -d_\nu(\detg) + \detg \Gamma^\kappa_{\nu\kappa}$
+  // or:
+  // $\Gamma^\kappa_{\nu\kappa} = d_\nu(\detg) / \detg$
+  //
+  // Since source is at center while flux is at faces, we need to subtract off face-related values and add center-related values. The $d_\nu(\detg)$ term is really the only face part related to the flux calculation.  That needs to be removed and then we should add back on the center version
+  //
+  // 1) $[each \kappa]\Gamma^\kappa_{\nu\kappa} -= (1/4) (d_\nu(\detg) @ cent / (\detg @ cent)) = [sum over \kappa] (1/4) \Gamma^\kappa_{\nu\kappa}$
+  // 2) $[each \kappa]\Gamma^\kappa_{\nu\kappa} += (1/4) (\delta_\nu(\detg)/(\Delta_\nu) / (\detg @ cent))$
+  //
+  // No, cannot just completely change each \kappa term like this, since could change dramatically the value
+  //
+  // Instead, Form Q_\nu^4 = ([wanted version, with sum over \kappa] \Gamma^\kappa_{\nu\kappa}) / ([original, with sum over \kappa] \Gamma^\kappa_{\nu\kappa})
+  //
+  // Then to get final \Gamma^\kappa_{\nu\kappa}, multiply *each* \kappa term by Q_\nu
+  // Then one has minimal multiplicative factor that multiplies each term so that sum will be desired value
+  //
   //////////////////////////////////////////////////
   if(doingmachinebody){
 
+    /////////
+    //
+    // First repeat setup for connection calculation but use DIFFFINITE so that metric quantities are evaluated at FACES rather than CENT
+    //
+    /////////
     if(CONNDERTYPE!=DIFFFINITE){
       // Setup finite difference for correction
       // 0 indicates connection type
@@ -1984,30 +2008,53 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 				     ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
 				     ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
 				     );
-      
+     
+      // resetup Xl and Xh and signdX since above "compute" function will have overwritten X positions for non-existent dimensions
+      // if do this, must set truedelta correctly consistent in setup_delta()
+      setup_XlXh(X,truedelta,Xlgen,Xhgen,signdXgen);
+ 
     }
 
     //////////////////
-    // form contracted connection
+    // form original contracted connection
+    //////////////////
     DLOOPA(kk){
       conndiag[kk]=0.0;
       DLOOPA(jj) conndiag[kk] += conn[jj][kk][jj];
     }
 
     /////////////////
-    // form differential \detg
+    // form new finite differential \detg divided by centered \detg
+    /////////////////
     for (k = 0; k < NDIM; k++) {
       conndiag2[k] = signdXgen[k]*(gdethgen[k] - gdetlgen[k]) / (Xhgen[k][k] - Xlgen[k][k]);
       conndiag2[k] /= gdetmid;
     }
 
     //////////////////
-    // now obtain correction 
+    // now obtain correction
     // for Xh-Xl->0 this vanishes as required
     // Plugging this new conn into EOM for T^\mu_\nu = p \delta^\mu_\nu gives exactly cancellation between source and flux differencing of pressure
+    // Note that correction applies to \Gamma^\kappa_{\nu\kappa}, which is a contracted quantity.  So we spread correction across each \kappa=0,1,2,3.  Hence the 0.25
+    // Once later contractions operate and pressure and flux source terms appear, the contracted term involving the pressure will cancel correctly for constant pressure
+    //////////////////
     //    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) for (k = 0; k < NDIM; k++) conn[i][j][k] += -0.25*(conndiag[j] - conndiag2[j])*delta(i,k);
     // apply delta(i,k) directly by setting i=k
-    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) conn[i][j][i] += -0.25*(conndiag[j] - conndiag2[j]);
+    //    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) conn[i][j][i] += -0.25*(conndiag[j] - conndiag2[j]);
+    //    for (i = 0; i < NDIM; i++) for (j = 0; j < NDIM; j++) conn[i][j][i] *= pow(fabs(conndiag2[j])/(fabs(conndiag[j])+SMALL),0.25);
+    FTYPE ftemp;
+    for (i = 0; i < NDIM; i++){
+      for (j = 0; j < NDIM; j++){
+	if(fabs(conndiag2[j])==0.0) ftemp=1.0;
+	else ftemp=pow((fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL),0.25);
+	conn[i][j][i] *= ftemp;
+	// Note, there is difficulty when sum passes through zero.  Won't matter for pressure term, but each individual term in connection may be far from zero and simply different terms cancel.
+	if(fabs(ftemp-1.0)>0.5){
+	  dualfprintf(fail_file,"WARNING: Large correction for machinebody: i=%d j=%d :: i=%d j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,i,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
+	}
+      }
+    }
+
 
   } // end if correcting body forces
 
