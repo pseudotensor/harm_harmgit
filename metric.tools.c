@@ -1978,9 +1978,9 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   // 1) $[each \kappa]\Gamma^\kappa_{\nu\kappa} -= (1/4) (d_\nu(\detg) @ cent / (\detg @ cent)) = [sum over \kappa] (1/4) \Gamma^\kappa_{\nu\kappa}$
   // 2) $[each \kappa]\Gamma^\kappa_{\nu\kappa} += (1/4) (\delta_\nu(\detg)/(\Delta_\nu) / (\detg @ cent))$
   //
-  // No, cannot just completely change each \kappa term like this, since could change dramatically the value
+  // No, cannot just completely change each \kappa term like this, since could change dramatically the value...
   //
-  // Instead, Form Q_\nu^4 = ([wanted version, with sum over \kappa] \Gamma^\kappa_{\nu\kappa}) / ([original, with sum over \kappa] \Gamma^\kappa_{\nu\kappa})
+  // Instead, Form Q_\nu = ([wanted version, with sum over \kappa] \Gamma^\kappa_{\nu\kappa}) / ([original, with sum over \kappa] \Gamma^\kappa_{\nu\kappa})
   //
   // Then to get final \Gamma^\kappa_{\nu\kappa}, multiply *each* \kappa term by Q_\nu
   // Then one has minimal multiplicative factor that multiplies each term so that sum will be desired value
@@ -2046,7 +2046,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     for (i = 0; i < NDIM; i++){
       for (j = 0; j < NDIM; j++){
 	if(fabs(conndiag2[j])==0.0) ftemp=1.0;
-	else ftemp=pow((fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL),0.25);
+	else ftemp=(fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL);
 	// Note, there is difficulty when sum passes through zero.  Won't matter for pressure term, but each individual term in connection may be far from zero and simply different terms cancel.
 	if(fabs(ftemp-1.0)>0.5){
 	  dualfprintf(fail_file,"WARNING: Large correction for machinebody: i=%d j=%d :: i=%d j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,i,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
@@ -2054,6 +2054,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 	else{
 	  // otherwise do correction
 	  conn[i][j][i] *= ftemp;
+	  //	  if(i==0) dualfprintf(fail_file,"machinebody: i=%d j=%d :: j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
 	}
       }
     }

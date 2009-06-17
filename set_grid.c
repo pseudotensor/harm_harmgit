@@ -963,6 +963,56 @@ static void set_connection(void)
 
       //    dualfprintf(fail_file,"conn: i=%d j=%d k=%d\n",i,j,k);
       conn_func(MCOORD,X, ptrgeom, GLOBALMETMAC(conn,i,j,k),GLOBALMETMAC(conn2,i,j,k));
+
+
+
+
+
+
+      // checks
+      if(CONNMACHINEBODY){
+	struct of_geom geomf1dontuse;
+	struct of_geom *ptrgeomf1=&geomf1dontuse;
+	struct of_geom geomf2dontuse;
+	struct of_geom *ptrgeomf2=&geomf2dontuse;
+
+	if(i!=N1+N1BND){
+	  // in geom, only metric thing used is gcon to raise the lower connection.
+	  get_geometry(i, j, k, FACE1, ptrgeomf1);
+	  get_geometry(ip1mac(i), j, k, FACE1, ptrgeomf2);
+	
+	  FTYPE shouldbe = (ptrgeomf2->gdet - ptrgeomf1->gdet)/dx[1]/(ptrgeom->gdet);
+	  FTYPE isbe;
+	  int jj;
+	  isbe=0.0;
+	  DLOOPA(jj) isbe+=GLOBALMETMACP0A3(conn,i,j,k,jj,1,jj);
+	  FTYPE diffbe = fabs(shouldbe-isbe)/(fabs(shouldbe)+fabs(isbe)+SMALL);
+
+	  if(diffbe>NUMEPSILON*100){
+	    dualfprintf(fail_file,"Connection will lead to errors in constant pressure regions: dir=%d i=%d j=%d k=%d : %21.15g %21.15g : %21.15g\n",1,i,j,k,shouldbe,isbe,diffbe);
+	  }
+	}
+	if(j!=N2+N2BND){
+	  // in geom, only metric thing used is gcon to raise the lower connection.
+	  get_geometry(i, j, k, FACE2, ptrgeomf1);
+	  get_geometry(i, jp1mac(j), k, FACE2, ptrgeomf2);
+	
+	  FTYPE shouldbe = (ptrgeomf2->gdet - ptrgeomf1->gdet)/dx[2]/(ptrgeom->gdet);
+	  FTYPE isbe;
+	  int jj;
+	  isbe=0.0;
+	  DLOOPA(jj) isbe+=GLOBALMETMACP0A3(conn,i,j,k,jj,2,jj);
+	  FTYPE diffbe = fabs(shouldbe-isbe)/(fabs(shouldbe)+fabs(isbe)+SMALL);
+
+	  if(diffbe>NUMEPSILON*100){
+	    dualfprintf(fail_file,"Connection will lead to errors in constant pressure regions: dir=%d i=%d j=%d k=%d : %21.15g %21.15g : %21.15g\n",2,i,j,k,shouldbe,isbe,diffbe);
+	  }
+	}
+      }
+
+
+
+
     }// end 3D LOOP
   }// end parallel region
 
