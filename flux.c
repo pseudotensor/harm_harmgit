@@ -1202,7 +1202,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   //
   ////////////////////////////
 
-#if(STOREWAVESPEEDS==1)
+  if(STOREWAVESPEEDS==1){
 #if(SPLITNPR)
     // update wavespeed on FIRST pass
     if(advancepassnumber<=0)
@@ -1210,7 +1210,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
       {
 	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
       }
-#endif // end if storing wavespeeds
+  } // end if storing wavespeeds
 
 
 
