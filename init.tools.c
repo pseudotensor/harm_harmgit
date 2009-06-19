@@ -95,8 +95,8 @@ int user1_init_global(void)
 
   SAFE=1.3;
   //  cour = 0.9;
-  cour=0.8;
-  //  cour = 0.5;
+  //  cour=0.8;
+  cour = 0.4999; // Changed to cour=0.5 because noticed that with STOREWAVESPEEDS==1 that extremely unstable with 0.8 near pole due to larger or smaller wave speeds from max-averaging from CENT to FACE1/2/3.  While may be inconsistency in Riemann solution, LAXF is simply a diffusive solution so shouldn't be so dependent upon exact wave speed.  Noticed that with one setup where instability appeared (large radii 512x32 type run) that forcing timestep to be like STOREWAVESPEEDS==0 led to much more stable solution, but still kinda unstable to a saturation point.  That was with cour=0.83*0.8=664.  For safety, use cour=0.4999.  In any case, this is motivated by fact that only with cour<0.5 will Riemann waves from interface not intersect by a single timestep, and only with non-intersecting waves does Riemann solution make sense.  So cour>0.5 is really too aggressive.  Still keep multi-dimen effective courant reducer since that's there for different reasons of multi-dimen stability issues.
 
   ///////////////////////
   //
