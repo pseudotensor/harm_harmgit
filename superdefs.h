@@ -97,7 +97,7 @@ FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 
 
 
-#if(STOREWAVESPEEDS)
+#if(STOREWAVESPEEDS>0)
 // below is used within substeps but not across
 FTYPE BASEMACP0A1(wspeedtemp,N1M,N2M,N3M,NUMCS); // temporarily store wspeed in case not just copying but averaging before putting into wspeed array
 FTYPE BASEMACP2A0(wspeed,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right)
@@ -191,7 +191,7 @@ FTYPE BASEMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP);	/* rescaled primitives, also used
 // at some point pleft/pright to staggered B field from u(new/last/initial?) so pleft/pright well-defined
 // at some point need to fill p[] with interpolated version of staggered field so p[] well-defined
 // pleftcorn/prightcorn are interpolated from pleft/pright
-// ensure STOREWAVESPEEDS is on
+// ensure STOREWAVESPEEDS is >0
 // assume need not store separate wavespeed for corn, just use stored wspeed when needed during specific flux calculation (no interpolation)
 //FTYPE BASEMACP2A0(wspeedcorn,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right) at corner (not true corner)
 FTYPE BASEMACP0A1(pstagglobal,N1M,N2M,N3M,NPR); // for interpolate_pfield_face2cent() -- only contains fields

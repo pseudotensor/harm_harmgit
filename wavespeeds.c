@@ -30,7 +30,7 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
 
 
 
-#if(USEGLOBALWAVE==0)
+#if(USEGLOBALWAVE==0 || STOREWAVESPEEDS==2)
 
   // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
   MYFUN(vchar(p_l, state_l, dir, ptrgeom, &cminmax_l[CMAX], &cminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
@@ -38,6 +38,13 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
 
   cminmax_calc(cminmax_l[CMIN],cminmax_r[CMIN],cminmax_l[CMAX],cminmax_r[CMAX],&cminmax[CMIN],&cminmax[CMAX],ctopptr);
   // have cmin,cmax,ctop here
+
+#if(STOREWAVESPEEDS==2)
+  // Use fact that always compute flux before need wspeed [GODMARK: Not sure for old interpline use of wspeed, but that's deprecated code]
+  GLOBALMACP2A0(wspeed,dir,CMIN,i,j,k)=cminmax[CMIN];
+  GLOBALMACP2A0(wspeed,dir,CMAX,i,j,k)=cminmax[CMAX];
+#endif
+
 #else
   // other non-local estimate
   cminmax_l[CMIN]=cminmax_r[CMIN]=cminmax[CMIN]=GLOBALMACP2A0(wspeed,dir,CMIN,i,j,k);
@@ -49,7 +56,6 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
   *ctopptr=max(cminmax[CMIN],cminmax[CMAX]);
   // have cmin,cmax,ctop here
 #endif
-
 
 
 

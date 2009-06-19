@@ -632,7 +632,7 @@ int step_ch_simplempi(int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][N
       // 2) dt is minimized twice -- seems second pass will overwrite first pass
       // 3) getting of geometry and state everywhere is duplicated
       //    NOTE OF IMPORTANCE: get_state needs all primitives, so must feed non-PLOOP quantities
-      // 4) get_wavespeeds requires ALL quantities during interpolation -- must set USESTOREDSPEEDSFORFLUX==1 and STOREWAVESPEEDS==1 so computes wave speeds across 2 advance() calls and uses centered speed for interface to avoid needing during interpolation for p_l,p_r->wavespeed@interface
+      // 4) get_wavespeeds requires ALL quantities during interpolation -- must set USESTOREDSPEEDSFORFLUX==1 and STOREWAVESPEEDS>0 so computes wave speeds across 2 advance() calls and uses centered speed for interface to avoid needing during interpolation for p_l,p_r->wavespeed@interface
       //    Basically flux_compute_general(p_l,p_r needs velocities too) for first pass
       // 5) p2SFUevolve's get_state needs velocity -- that is, flux_B(B,v) so have to still interpolate v with B -- save v-interpolation (all interpolations) and avoid interpolations on second pass.
       //    Made pleft and pright [3]X in size to store across advance(), dq is already this way

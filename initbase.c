@@ -1943,6 +1943,10 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"WARNING: WHICHEOM==WITHGDET is inferior to WHICHEOM==WITHNOGDET and setting NOGDETU1=NOGDETU2=1 near the poles where force balance is difficult to ensure.  If pressure constant, then NOGDET method ensures force balance between flux and source terms.\n");
   }
   
+  if(STOREWAVESPEEDS==1){
+    dualfprintf(fail_file,"WARNING: STOREWAVESPEEDS==1 has been found to be unstable due to how Riemann solver uses max-averaged wavespeeds.  You should use STOREWAVESPEEDS==2 or 0 .\n");
+  }
+  
 
 
 

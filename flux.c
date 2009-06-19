@@ -105,7 +105,7 @@ int fluxcalc(int stage,
   // Compute normal flux at face
   // Involves interpolating CENT -> FACE1,2,3
   // Final p_l p_r results of interpolation are stored in pl_ct pr_ct if needed by SPLITNPR or FLUXB==FLUXCTSTAG
-  // Wavespeeds may also be stored globally if STOREWAVESPEEDS==1
+  // Wavespeeds may also be stored globally if STOREWAVESPEEDS>0
   // In all cases wavespeed constraint on timestep is set here
   //
   // assume fluxvec is MA only if splitmaem==1
@@ -153,9 +153,9 @@ int fluxcalc(int stage,
   /////////////////////////////
   if(FLUXB==FLUXCTSTAG){
 #if(STOREWAVESPEEDS==0 || USESTOREDSPEEDSFORFLUX==0)
-    dualfprintf(fail_file,"STOREWAVESPEEDS,USESTOREDSPEEDSFORFLUX must be 1 when FLUXB==FLUXCTSTAG\n");
+    dualfprintf(fail_file,"STOREWAVESPEEDS,USESTOREDSPEEDSFORFLUX must be >0 when FLUXB==FLUXCTSTAG\n");
     // must store because vchar() cannot be computed at CORN since only have partial velocities and partial fields and no densities
-    // really only STOREWAVESPEEDS must be 1, but for now assume both
+    // really only STOREWAVESPEEDS must be >0, but for now assume both
     myexit(175106);
 #endif
 
@@ -813,7 +813,7 @@ void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2inte
 
 
 
-// original flux calculator that gets F in "dir".  At end global pleft,pright,dq also set and if STOREWAVESPEEDS==1 then wavespeeds stored globally
+// original flux calculator that gets F in "dir".  At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
 int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
@@ -896,8 +896,11 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
 
 
+  // STOREWAVESPEEDS==0 : use very local estimate at fluxes FACE?
+  // STOREWAVESPEEDS==1 : use original pre-computed (just below) wavespeed at CENT that is "max-averaged" to FACE?
+  // STOREWAVESPEEDS==2 : use very local estimate at fluxes FACE?, but compute and store during loop 
+  if(STOREWAVESPEEDS==1){
 
-#if(STOREWAVESPEEDS) // otherwise use very local estimate
 #if(SPLITNPR)
     // update wavespeed on FIRST pass
     if(advancepassnumber<=0)
@@ -905,8 +908,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
       {
 	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
       }
-#endif // end if storing wavespeeds
-
+  } // end if storing wavespeeds
 
 
 
@@ -1029,7 +1031,6 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
 
 
-
       //////////////////////////////////
       //
       // actually compute the flux
@@ -1127,7 +1128,7 @@ void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int 
 
 // standard (non-field flux) calculation but setup to store results of interpolation so can be used for fluxctstag calculation
 // set pl_ct and pr_ct with FACE interpolations from CENT (including field face from pstagscratch[])
-// At end global pleft,pright,dq also set and if STOREWAVESPEEDS==1 then wavespeeds stored globally
+// At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
 int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
@@ -1201,7 +1202,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   //
   ////////////////////////////
 
-#if(STOREWAVESPEEDS) // otherwise use very local estimate
+#if(STOREWAVESPEEDS==1)
 #if(SPLITNPR)
     // update wavespeed on FIRST pass
     if(advancepassnumber<=0)
@@ -2231,6 +2232,457 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
 
 
 
+// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
+// To use this, remove "_donor" on function name and rename normal function to be with (e.g.) "_normal" on end of function name.
+//int fluxcalc
+int fluxcalc_donor
+(int stage,
+		  FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+		  FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+		  FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+		  FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		  FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
+		  FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
+		  FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
+		  FTYPE CUf,
+		  FTYPE fluxdt,
+		  FTYPE *ndt1,
+		  FTYPE *ndt2,
+		  FTYPE *ndt3
+		  )
+{
+  int dir,i,j,k,pl,pliter;
+  struct of_geom geomcdontuse;
+  struct of_geom *ptrgeomc=&geomcdontuse;
+
+  struct of_geom geomf1dontuse;
+  struct of_geom *ptrgeomf1=&geomf1dontuse;
+  struct of_geom geomf2dontuse;
+  struct of_geom *ptrgeomf2=&geomf2dontuse;
+
+  struct of_geom geomf1udontuse;
+  struct of_geom *ptrgeomf1u=&geomf1udontuse;
+  struct of_geom geomf2udontuse;
+  struct of_geom *ptrgeomf2u=&geomf2udontuse;
+
+  struct of_geom geomcorn3dontuse;
+  struct of_geom *ptrgeomcorn3=&geomcorn3dontuse;
+  //    FTYPE Flux[3][3][NDIM][NPR];
+  //    FTYPE ctop[3][3][NDIM];
+  FTYPE prim[3][3][NPR];
+  FTYPE uconf1[3][3][NDIM];
+  FTYPE uconf2[3][3][NDIM];
+  FTYPE uconcent[3][3][NDIM];
+  int ii,jj,kk;
+  int shifti,shiftj;
+  FTYPE dtij[NDIM];
+  //GLOBALMAC(F1,ii,jj,k)
+  FTYPE emf2d[3][3],c2d[NUMCS][COMPDIM];
+  FTYPE others[100];
+  struct of_state state;
+  FTYPE cminmax[3][3][NUMCS][NDIM];
+  int ignorecourant=0;
+  FTYPE dB[2],ctop[2],ctoporig[2];
+  FTYPE ctopold[NDIM];
+  FTYPE emffinal;
+  struct of_state state_c, state_l, state_r;
+  struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
+  FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
+  FTYPE U_c[NPR], U_l[NPR], U_r[NPR];
+  FTYPE ocminmax_l[NUMCS], ocminmax_r[NUMCS], ocminmax[NUMCS];
+  extern int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  extern int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
+  FTYPE ctopother[NDIM];
+  FTYPE *ctopptr=&ctopother[0];
+  FTYPE ctopother2[NDIM];
+  FTYPE *ctopptr2=&ctopother2[0];
+  FTYPE F[NPR];
+  FTYPE p_l[NPR],p_r[NPR];
+  FTYPE pvec_l[NDIM][NPR],pvec_r[NDIM][NPR];
+  extern int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
+  int is,ie,js,je,ks,ke;
+
+  // default
+  ptrstate_c = &state_c;
+  ptrstate_l = &state_l;
+  ptrstate_r = &state_r;
+
+  //  COMPFULLLOOP{
+  //  COMPZLOOP{
+  // ODDITY: ADDED EXTRA SHIFT
+  // ODDITY: ADDED EXTRA LOWER SHIFT
+#define MYCOMPLOOPF3 for(k=-SHIFT3+SHIFTX3DN;k<=N3-1+SHIFT3+SHIFT3+SHIFTX3UP;k++)
+#define MYCOMPLOOPF2 for(j=-SHIFT2+SHIFTX2DN;j<=N2-1+SHIFT2+SHIFT2+SHIFTX2UP;j++)
+#define MYCOMPLOOPF1 for(i=-SHIFT1+SHIFTX1DN;i<=N1-1+SHIFT1+SHIFT1+SHIFTX1UP;i++)
+  //#define MYCOMPLOOPF3 for(k=0+SHIFTX3DN;k<=N3-1+SHIFT3+SHIFTX3UP;k++)
+  //#define MYCOMPLOOPF2 for(j=0+SHIFTX2DN;j<=N2-1+SHIFT2+SHIFTX2UP;j++)
+  //#define MYCOMPLOOPF1 for(i=0+SHIFTX1DN;i<=N1-1+SHIFT1+SHIFTX1UP;i++)
+  
+  
+  //#define MYCOMPLOOPF3 for(k=ks+SHIFTX3DN;k<=ke+SHIFTX3UP;k++)
+  //#define MYCOMPLOOPF2 for(j=js+SHIFTX2DN;j<=je+SHIFTX2UP;j++)
+  //#define MYCOMPLOOPF1 for(i=is+SHIFTX1DN;i<=ie+SHIFTX1UP;i++)
+
+#define MYCOMPLOOPF MYCOMPLOOPF3 MYCOMPLOOPF2 MYCOMPLOOPF1
+  
+  MYCOMPLOOPF{
+    // set primitives (effective interpolation)
+    for(ii=im1mac(i);ii<=ip1mac(i);ii++){
+      for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
+	shifti=1+ii-i;
+	shiftj=1+jj-j;
+
+	PLOOP(pliter,pl) prim[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
+	PLOOPBONLY(pl) prim[shifti][shiftj][pl] = MACP0A1(pstag,ii,jj,kk,pl); // replace with face values (should be same really)
+
+	//	if(i==390 && j==1 && k==0){
+	//	  dualfprintf(fail_file,"i=%d j=%d k=%d prim[B2]=%21.15g\n",ii,jj,k,prim[shifti][shiftj][B2]);
+	//	}
+
+	get_geometry(ii,jj,kk, CENT, ptrgeomc);
+	ucon_calc(prim[shifti][shiftj], ptrgeomc, uconcent[shifti][shiftj],others);
+
+	// only geometrical difference compared to above
+	get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+	ucon_calc(prim[shifti][shiftj], ptrgeomf1, uconf1[shifti][shiftj],others);
+
+	// only geometrical difference compared to above
+	get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+	ucon_calc(prim[shifti][shiftj], ptrgeomf2, uconf2[shifti][shiftj],others);
+
+      }
+    }
 
 
 
+    ////////////////////////////////////////////////
+    // set flux at faces (effective flux_compute)
+    dir=1;
+
+    ii=i;
+    jj=j;
+    kk=k;
+    get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+    PLOOP(pliter,pl) p_l[pl] = prim[0][1][pl];
+    PLOOP(pliter,pl) p_r[pl] = prim[1][1][pl];
+    p_l[B1]=p_r[B1]=prim[1][1][B1]; // wasn't enforced at first
+
+
+    get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+    get_geometry(ii,jp1mac(jj),kk, FACE2, ptrgeomf2u);
+    get_geometry(ii,jj,kk, CENT, ptrgeomc);
+    p_r[B2]=0.5*(prim[1][1][B2]*ptrgeomf2->gdet+prim[1][2][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
+    //      if(i==390 && j==1 && k==0){
+    //	dualfprintf(fail_file,"ONE: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[1][1][B2],ptrgeomf2->gdet,prim[1][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
+    //	dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",ii,jj,kk,ii,jp1mac(jj),kk,ii,jj,kk);
+    //      }
+    get_geometry(im1mac(ii),jj,kk, FACE2, ptrgeomf2);
+    get_geometry(im1mac(ii),jp1mac(jj),kk, FACE2, ptrgeomf2u);
+    get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+    p_l[B2]=0.5*(prim[0][1][B2]*ptrgeomf2->gdet+prim[0][2][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
+    //      if(i==390 && j==1 && k==0){
+    //	dualfprintf(fail_file,"TWO: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[0][1][B2],ptrgeomf2->gdet,prim[0][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
+    //	dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",im1mac(ii),jj,kk,im1mac(ii),jp1mac(jj),kk,im1mac(ii),jj,kk);
+    //      }
+
+    PLOOP(pliter,pl) pvec_l[dir][pl]=p_l[pl];
+    PLOOP(pliter,pl) pvec_r[dir][pl]=p_r[pl];
+
+    if(0){
+      // issue with wavespeed?
+      flux_compute_general(i, j, k, dir, ptrgeomf1, CUf, NULL, p_l, p_r, MAC(F1,i,j,k), &ctopptr[dir]);
+    }
+    else{
+
+      MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf1, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+      MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);
+
+      c2d[CMIN][0] = MAX(0.,-ocminmax[CMIN]);
+      c2d[CMAX][0] = MAX(0.,+ocminmax[CMAX]);
+ 
+      // now get flux
+      MYFUN(flux_compute(i, j, k, dir, ptrgeomf1, ocminmax_l,ocminmax_r, ocminmax, ctopptr[1], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+      PLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl)=F[pl];
+
+#if(0)
+      if(i==390 && j==1 && k==0){
+	dualfprintf(fail_file,"\n");
+	PLOOP(pliter,pl) dualfprintf(fail_file,"F1: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+      }
+#endif
+
+      // get lower in j for wave speeds for EMF
+      ii=i;
+      jj=jm1mac(j);
+      kk=k;
+      get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+      PLOOP(pliter,pl) p_l[pl] = prim[0][0][pl];
+      PLOOP(pliter,pl) p_r[pl] = prim[1][0][pl];
+      p_l[B1]=p_r[B1]=prim[1][0][B1]; // wasn't enforced at first
+
+      get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+      get_geometry(ii,jp1mac(jj),kk, FACE2, ptrgeomf2u);
+      get_geometry(ii,jj,kk, CENT, ptrgeomc);
+      p_r[B2]=0.5*(prim[1][0][B2]*ptrgeomf2->gdet+prim[1][1][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
+
+      get_geometry(im1mac(ii),jj,kk, FACE2, ptrgeomf2);
+      get_geometry(im1mac(ii),jp1mac(jj),kk, FACE2, ptrgeomf2u);
+      get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+      p_l[B2]=0.5*(prim[0][0][B2]*ptrgeomf2->gdet+prim[0][1][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
+
+      MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf1, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+      MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
+      // have cmin,cmax,ctop here
+
+      c2d[CMIN][0] = fabs(MAX(c2d[CMIN][0],-ocminmax[CMIN]));
+      c2d[CMAX][0] = fabs(MAX(c2d[CMIN][0],+ocminmax[CMAX]));
+      ctoporig[0]  = MAX(c2d[CMIN][0],c2d[CMAX][0]);
+
+    }
+
+
+    /////////////////////////////////////////
+    //
+    dir=2;
+
+    ii=i;
+    jj=j;
+    kk=k;
+    get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+    PLOOP(pliter,pl) p_l[pl] = prim[1][0][pl];
+    PLOOP(pliter,pl) p_r[pl] = prim[1][1][pl];
+    p_l[B2]=p_r[B2]=prim[1][1][B2]; // wasn't enforced at first
+
+    get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+    get_geometry(ip1mac(ii),jj,kk, FACE1, ptrgeomf1u);
+    get_geometry(ii,jj,kk, CENT, ptrgeomc);
+    p_r[B1]=0.5*(prim[1][1][B1]*ptrgeomf1->gdet+prim[2][1][B1]*ptrgeomf1u->gdet)/(ptrgeomc->gdet);
+
+    get_geometry(ii,jm1mac(jj),kk, FACE1, ptrgeomf1);
+    get_geometry(ip1mac(ii),jm1mac(jj),kk, FACE1, ptrgeomf1u);
+    get_geometry(ii,jm1mac(jj),kk, CENT, ptrgeomc);
+    p_l[B1]=0.5*(prim[1][0][B1]*ptrgeomf1->gdet+prim[2][0][B1]*ptrgeomf1u->gdet)/(ptrgeomc->gdet);
+
+    PLOOP(pliter,pl) pvec_l[dir][pl]=p_l[pl];
+    PLOOP(pliter,pl) pvec_r[dir][pl]=p_r[pl];
+
+    if(0){
+      // issue with wavespeed?
+      flux_compute_general(i, j, k, dir, ptrgeomf2, CUf, NULL, p_l, p_r, MAC(F2,i,j,k), &ctopptr[dir]);
+    }
+    else{
+
+      MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf2, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+      MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
+      // have cmin,cmax,ctop here
+
+      c2d[CMIN][1] = MAX(0.,-ocminmax[CMIN]);
+      c2d[CMAX][1] = MAX(0.,+ocminmax[CMAX]);
+
+
+      // now get flux
+      MYFUN(flux_compute(i, j, k, dir, ptrgeomf2, ocminmax_l,ocminmax_r, ocminmax, ctopptr[2], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+      PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)=F[pl];
+
+#if(0)
+      if(i==390 && j==1 && k==0){
+	dualfprintf(fail_file,"\n");
+	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim: pl=%d prim[1][0]=%21.15g prim[1][1]=%21.15g\n",prim[1][0][pl],prim[1][1][pl]);
+	PLOOP(pliter,pl) dualfprintf(fail_file,"F2: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+      }
+#endif
+
+      // get lower in i for wave speeds for EMF
+      ii=im1mac(i);
+      jj=j;
+      kk=k;
+      get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+      PLOOP(pliter,pl) p_l[pl] = prim[0][0][pl];
+      PLOOP(pliter,pl) p_r[pl] = prim[0][1][pl];
+      p_l[B2]=p_r[B2]=prim[0][1][B2]; // wasn't enforced at first
+
+      get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+      get_geometry(ip1mac(ii),jj,kk, FACE1, ptrgeomf1u);
+      get_geometry(ii,jj,kk, CENT, ptrgeomc);
+      p_r[B1]=0.5*(prim[0][1][B1]*ptrgeomf1->gdet+prim[1][1][B1]*ptrgeomf1u->gdet)/(ptrgeomc->gdet);
+
+      get_geometry(ii,jm1mac(jj),kk, FACE1, ptrgeomf1);
+      get_geometry(ip1mac(ii),jm1mac(jj),kk, FACE1, ptrgeomf1u);
+      get_geometry(ii,jm1mac(jj),kk, CENT, ptrgeomc);
+      p_l[B1]=0.5*(prim[0][0][B1]*ptrgeomf1->gdet+prim[1][0][B1]*ptrgeomf1u->gdet)/(ptrgeomc->gdet);
+
+      MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf2, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+      MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
+      // have cmin,cmax,ctop here
+
+      c2d[CMIN][1] = fabs(MAX(c2d[CMIN][1],-ocminmax[CMIN]));
+      c2d[CMAX][1] = fabs(MAX(c2d[CMIN][1],+ocminmax[CMAX]));
+      ctoporig[1]  = MAX(c2d[CMIN][1],c2d[CMAX][1]);
+
+    }
+    
+
+    // zero-out as test comparison with normal code
+    if(1){
+      dir=1; if(i==389) PLOOP(pliter,pl) if(pl!=U1) MACP0A1(F1,i,j,k,pl)=0.0;
+      dir=1; if(i==419) PLOOP(pliter,pl) if(pl!=U1) MACP0A1(F1,i,j,k,pl)=0.0;
+      dir=2; if(i==0) PLOOP(pliter,pl) if(pl!=U2) MACP0A1(F2,i,j,k,pl)=0.0;
+      dir=2; if(i==N2) PLOOP(pliter,pl) if(pl!=U2) MACP0A1(F2,i,j,k,pl)=0.0;
+    }
+
+
+    ///////////////////
+    // now compute correct staggered EMF at CORN3
+    get_geometry(i,j,k, CORN3, ptrgeomcorn3);
+
+    // EMF3
+    for(ii=im1mac(i);ii<=ip1mac(i);ii++){
+      for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
+	shifti=1+ii-i;
+	shiftj=1+jj-j;
+	  
+	// use uconf1 with B1 since that's how packed for interpolation in normal routine.  Can try alternatives.
+	// emf_3 = gdet(B^2 v^1 - B^1 v^2) = F1[B2] or -F2[B1]
+	emf2d[shifti][shiftj] = (
+				 //				 + prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
+				 //				 - prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
+				 + prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
+				 - prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
+				 );
+
+	// GODMARK: vchar directly at CORN3, which is different than averaging procedure done in normal code
+	get_state(prim[shifti][shiftj], ptrgeomcorn3, &state);
+	dir=1; vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant);
+	dir=2; vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant);
+
+
+	//	dualfprintf(fail_file,"i=%d j=%d k=%d ii=%d jj=%d kk=%d ",i,j,k,ii,jj,kk);
+	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g ",pl,prim[shifti][shiftj][pl]);
+	//	dualfprintf(fail_file,"\n");
+	
+
+      }
+    }
+    //edgedir=3 odir1=1 odir2=2
+    // dB in perp to B-dir at CORN3
+    // dir=1:
+    dB[0] = prim[1][1][B1]-prim[1][0][B1];
+    // dir=2:
+    dB[1] = prim[1][1][B2]-prim[0][1][B2];
+
+
+    if(0){
+      // use vchar generated at CORN3
+      //c[CMIN,CMAX][0=odir1,1=odir2]
+      // dir=1:
+      ctop[0]    = MAX((-cminmax[0][0][CMIN][1]),(-cminmax[1][0][CMIN][1]));
+      ctop[0]    = MAX(ctop[0],(-cminmax[0][1][CMIN][1]));
+      ctop[0]    = MAX(ctop[0],(-cminmax[1][0][CMIN][1]));
+      ctop[0]    = MAX(ctop[0],(-cminmax[1][1][CMIN][1]));
+      ctop[0]    = MAX(ctop[0],0.0);
+    
+      ctop[0]    = MAX(ctop[0],(cminmax[0][0][CMAX][1]));
+      ctop[0]    = MAX(ctop[0],(cminmax[1][0][CMAX][1]));
+      ctop[0]    = MAX(ctop[0],(cminmax[0][1][CMAX][1]));
+      ctop[0]    = MAX(ctop[0],(cminmax[1][1][CMAX][1]));
+
+      // dir=2:
+      ctop[1]    = MAX((-cminmax[0][0][CMIN][2]),(-cminmax[1][0][CMIN][2]));
+      ctop[1]    = MAX(ctop[1],(-cminmax[0][1][CMIN][2]));
+      ctop[1]    = MAX(ctop[1],(-cminmax[1][0][CMIN][2]));
+      ctop[1]    = MAX(ctop[1],(-cminmax[1][1][CMIN][2]));
+      ctop[1]    = MAX(ctop[1],0.0);
+
+      ctop[1]    = MAX(ctop[1],(cminmax[0][0][CMAX][2]));
+      ctop[1]    = MAX(ctop[1],(cminmax[1][0][CMAX][2]));
+      ctop[1]    = MAX(ctop[1],(cminmax[0][1][CMAX][2]));
+      ctop[1]    = MAX(ctop[1],(cminmax[1][1][CMAX][2]));
+    }
+    else{
+      // use vchar generated and "max-averaged" as in normal code
+      ctop[0] = ctoporig[0];
+      ctop[1] = ctoporig[1];
+    }
+
+    emffinal=(ptrgeomcorn3->gdet)*(
+				   + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
+				   - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0])
+				   );
+    
+    // zero-out as test comparison with normal code
+    if(1){
+      if(i==389) emffinal=0.0;
+      if(i==419) emffinal=0.0;
+      // ODDITY: Nan grabbed at 419 with i+1 by ucum_check() [only for field]
+      if(i==419+1) emffinal=0.0;
+      if(j==0) emffinal=0.0;
+      if(j==N2) emffinal=0.0;
+      //      if(i==N2+1) emffinal=0.0;
+    }
+
+    MACP0A1(F1,i,j,k,B2) = emffinal;
+    MACP0A1(F2,i,j,k,B1) = -MACP0A1(F1,i,j,k,B2);
+
+    //    dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d :: %21.15g %21.15g\n",nstep,steppart,i,j,k,MACP0A1(F1,i,j,k,B1),MACP0A1(F2,i,j,k,B2));
+    // ODDLY: required below to preserve divb=0
+    // NOT ODD, diffusive term will be c*(dB1) and c*(dB2) despite zero non-diffusive flux.
+    // Well, diffusive term is zero once set staggered field -> face flux correctly
+    MACP0A1(F1,i,j,k,B1) = 0.0;
+    MACP0A1(F2,i,j,k,B2) = 0.0;
+
+
+    // set dt
+    if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+      //      dualfprintf(fail_file,"INSIDEDTCHECK: nstep=%ld steppart=%d i=%d j=%d k=%d\n",nstep,steppart,i,j,k);
+      dir=1;
+      dtij[dir] = cour * dx[dir] / ctopptr[dir]; // use wave speed from face flux calculation
+      //loop over the interfaces where fluxes are computed -- atch, useCOMPZSLOOP( is, ie, js, je, ks, ke ) { ... }
+      is=fluxloop[dir][FIS]+SHIFTX1DN;
+      ie=fluxloop[dir][FIE]+SHIFTX1UP;
+      js=fluxloop[dir][FJS]+SHIFTX2DN;
+      je=fluxloop[dir][FJE]+SHIFTX2UP;
+      ks=fluxloop[dir][FKS]+SHIFTX3DN;
+      ke=fluxloop[dir][FKE]+SHIFTX3UP;
+      if(dtij[dir]<*ndt1 && i>=is && i<=ie && j>=js && j<=je && k>=ks && k<=ke){ // mimics normal code
+	*ndt1=dtij[dir];
+	dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt1);
+      }
+
+      dir=2;
+      dtij[dir] = cour * dx[dir] / ctopptr[dir]; // use wave speed from face flux calculation
+      is=fluxloop[dir][FIS]+SHIFTX1DN;
+      ie=fluxloop[dir][FIE]+SHIFTX1UP;
+      js=fluxloop[dir][FJS]+SHIFTX2DN;
+      je=fluxloop[dir][FJE]+SHIFTX2UP;
+      ks=fluxloop[dir][FKS]+SHIFTX3DN;
+      ke=fluxloop[dir][FKE]+SHIFTX3UP;
+      if(dtij[dir]<*ndt2 && i>=is && i<=ie && j>=js && j<=je && k>=ks && k<=ke){ // mimics normal code
+	*ndt2=dtij[dir];
+	dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt2);
+      }
+    }
+  }
+
+
+
+
+  return(0);
+
+
+}

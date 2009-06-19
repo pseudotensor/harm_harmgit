@@ -2857,7 +2857,7 @@ static void causal_shift_order(int whichprimtype, int interporflux, int dir, int
 
 
   //#if( (STOREWAVESPEEDS)&& ((VCHARTYPE==GLOBALVCHAR)||(VCHARTYPE==LOCALVCHAR)) ) // this procedure makes no sense with GLOBALVCHAR
-#if( (STOREWAVESPEEDS)&& ((VCHARTYPE==LOCALVCHAR)||(VCHARTYPE==VERYLOCALVCHAR) ) )
+#if( (STOREWAVESPEEDS==1)&& ((VCHARTYPE==LOCALVCHAR)||(VCHARTYPE==VERYLOCALVCHAR) ) )
   // GODMARK: This will use precomputed wave speeds in MACP2A0(wspeed,dir,2,i,j,k)
   // wspeed located at cell interface.  Take this into account when forming shifter.
   // therefore wspeed is wave speeds from interface point of view.  For centered quantities should consider average (or max/min) of wspeed.

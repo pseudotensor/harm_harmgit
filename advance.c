@@ -299,8 +299,15 @@ static int advance_standard(
   if(dt!=0.0){
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-    MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    if(1){ // normal -- must manually override even if using lim[1,2,3]=DONOR to use fluxcalcdonor()
+      MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    }
+    else{
+      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    }
   }
+
+
 
 #if(PRODUCTION==0)
   trifprintf( "1f");
@@ -624,7 +631,14 @@ static int advance_standard(
 
     // first pb entry is used for shock indicator, second is filled with new field
     // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
-    interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+    // first pb entry is used for shock indicator, second is filled with new field
+    // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
+    if(1){ // must manually override to use below donor version
+      interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+    }
+    else{
+      interpolate_ustag2fieldcent_donor(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+    }
 
     ////////////////////    
     // now myupoint contains centered point conserved quantities ready for inversion

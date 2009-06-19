@@ -200,12 +200,12 @@
 
 //set this and the following one to unity to use the DONOR interpolated states for computing wavespeeds
 #if(1 || SPLITNPR==1 || FIELDSTAGMEM==1) // should also be on if FLUXB==FIELDSTAG
-#define STOREWAVESPEEDS 1 // no choice
+#define STOREWAVESPEEDS 2 // no choice
 #else
 #define STOREWAVESPEEDS 0 // choice
 #endif
 
-#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS) // choice really
+#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS>0) // choice really
 
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1

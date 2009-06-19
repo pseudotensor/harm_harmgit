@@ -346,7 +346,7 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 //
 // 1) Wavespeed calculation:
 //
-//    MACP2A0(wspeed,dir,CMIN,CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
+//    MACP2A0(wspeed,dir,CMIN/CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
 //
 //    CMIN,CMAX correspond to left,right going waves at FACEdir
 //    In Del Zanna et al. (2003) equation 43-45, we have
@@ -481,7 +481,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       
       ///////////////////////////
       //
-      // get wave speeds (these are not interpolated yet to CORNER, they start at FACE)
+      // get wave speeds (these are not interpolated yet to CORNER, they start at FACE regardless of STOREWAVESPEEDS==1,2)
       // note wspeed still has sign information as set by global_vchar()
       // c[CMIN,CMAX][0=odir1,1=odir2]
       // need to determine i,j,k to choose based upon odir value
@@ -2091,3 +2091,97 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
 
+// pure DONOR version:
+// upoint is input staggered updated field that needs to be converted to pstag and then "interpolated" to pcent and upoint that is upon output at CENT
+// To use this, just rename this as without "_donor" and rename normal code to have (e.g.) "_normal" on end of function name.
+int interpolate_ustag2fieldcent_donor
+//int interpolate_ustag2fieldcent
+(int stage, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*upoint)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k,pl;
+  int ii,jj,kk;
+  struct of_geom geomcdontuse;
+  struct of_geom *ptrgeomc=&geomcdontuse;
+  struct of_geom geomfdontuse;
+  struct of_geom *ptrgeomf=&geomfdontuse;
+  struct of_geom geomfudontuse;
+  struct of_geom *ptrgeomfu=&geomfudontuse;
+  int finalstep;
+
+  //  COMPFULLLOOP{
+
+  // must carefully replace pstag only on specific locations
+#define MYOCOMPLOOPF3 for(k=SHIFTX3DN;k<=N3-1+SHIFT3+SHIFTX3UP;k++)
+#define MYOCOMPLOOPF2 for(j=SHIFTX2DN;j<=N2-1+SHIFT2+SHIFTX2UP;j++)
+#define MYOCOMPLOOPF1 for(i=SHIFTX1DN;i<=N1-1+SHIFT1+SHIFTX1UP;i++)
+#define MYOCOMPLOOPF MYOCOMPLOOPF3 MYOCOMPLOOPF2 MYOCOMPLOOPF1
+
+  MYOCOMPLOOPF{
+    PLOOPBONLY(pl){
+      get_geometry(i, j, k, FACE1+pl-B1, ptrgeomf);
+
+      // first convert staggered upoint to pstag
+      MACP0A1(pstag,i,j,k,pl)=MACP0A1(upoint,i,j,k,pl)*sign(ptrgeomf->gdet)/(fabs(ptrgeomf->gdet)+SMALL);
+      // GODMARK: Some problem with gdet not being 0 on axis!!  Leads to pstag[B2]=-2E50, but apparently overwritten?
+    }
+  }
+
+  //  COMPZLOOP{
+  //    dualfprintf(fail_file,"DEATH1: i=%d j=%d k=%d :: %21.15g %21.15g %21.15g\n",i,j,k,MACP0A1(pstag,i,j,k,B1),MACP0A1(pstag,i,j,k,B2),MACP0A1(pstag,i,j,k,B3));
+  //  }
+
+  // bound new pstag
+  if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+  bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep);
+
+
+  //  COMPFULLLOOP{
+  //    dualfprintf(fail_file,"DEATH2: i=%d j=%d k=%d :: %21.15g %21.15g %21.15g\n",i,j,k,MACP0A1(pstag,i,j,k,B1),MACP0A1(pstag,i,j,k,B2),MACP0A1(pstag,i,j,k,B3));
+  //  }
+
+  // now can define everything from pstag
+  // GODMARK: this defines pcent and upoint on larger domain than normal code, so may mask problem.
+  //  COMPFULLLOOP{
+
+  // correctly similar constrained loop as in normal code:
+  int is,ie,js,je,ks,ke;
+  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+  COMPZSLOOP(is,ie,js,je,ks,ke){
+
+    get_geometry(i, j, k, CENT, ptrgeomc);
+    PLOOPBONLY(pl){
+      get_geometry(i, j, k, FACE1+pl-B1, ptrgeomf);
+      if(pl==B1){
+	ii=ip1mac(i);
+	jj=j;
+	kk=k;
+      }
+      else if(pl==B2){
+	ii=i;
+	jj=jp1mac(j);
+	kk=k;
+      }
+      else if(pl==B3){
+	ii=i;
+	jj=j;
+	kk=kp1mac(k);
+      }
+
+      if(ii==i && jj==j && kk==k){
+	// then just copy
+	MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+      }
+      else{
+	// now "interpolate" pstag -> pcent
+	get_geometry(ii, jj, kk, FACE1+pl-B1, ptrgeomfu);
+	// below consistent with interpolate_ustag2fieldcent(), but can try different way 
+	MACP0A1(pcent,i,j,k,pl)=0.5*( MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet/ptrgeomc->gdet) + MACP0A1(pstag,ii,jj,kk,pl)*(ptrgeomfu->gdet/ptrgeomc->gdet));
+      }
+
+      // finally get conserved quantity at CENT for inversion
+      MACP0A1(upoint,i,j,k,pl)=MACP0A1(pcent,i,j,k,pl)*(ptrgeomc->gdet);
+    }// end over pl
+  }// end loop
+
+  return(0);
+}
