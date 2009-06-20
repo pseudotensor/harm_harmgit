@@ -2044,7 +2044,7 @@ int interp_loop_set(void)
       avgo[dimen]=(interporder[avgscheme[dimen]]-1)/2;
     }
     else avgo[dimen]=0; // nothing done for this dimension, so no avg zones
-    trifprintf("dimen=%d avgo=%d\n",dimen,avgo[dimen]);
+    trifprintf("dimen=%d lim=%d avgo=%d\n",dimen,lim[dimen],avgo[dimen]);
   }
 
 
