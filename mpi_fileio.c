@@ -1261,7 +1261,7 @@ int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long 
 int set_maxnumsize(int numcolumns, long long int *maxnumsize)
 {
 
-  *maxnumsize=(long long int)(ROUND2LONGLONGINT(ceil(ROUND2INT(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns))*(FTYPE)(numcolumns))));
+  *maxnumsize=(long long int)(ROUND2LONGLONGINT(ceil(ROUND2LONGLONGINT(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns))*(FTYPE)(numcolumns))));
 
   return(0);
 }
