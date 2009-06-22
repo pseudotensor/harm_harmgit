@@ -256,7 +256,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     if(readwrite==WRITEFILE){
       // means we have put what we want into writebuf, now send to cpu=0
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.65 : %lld\n",writebuf); fflush(fail_file);
+      fprintf(fail_file,"got here 0.65 : %lld %lld %d %d\n",writebuf,blinkptr->num,MPIid[0],myid); fflush(fail_file);
 #endif
       // must keep myid>0 cpus stalled until cpu=0 needs their data
       // that is, Wait below continues if data copied out of buffer, but we want pseudo-blocking call here
@@ -409,7 +409,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	// determine amount of data to get from cpu group
 	
 	// limit the amount of data once doing last grab
-	if(datasofar0+joniosize/2>totalsize[1]*totalsize[2]*totalsize[3]*numcolumns) datatogetc0=-datasofar0+totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;
+	if((long long int)datasofar0+(long long int)joniosize/2>(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0=-(long long int)datasofar0+(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
 	else datatogetc0=joniosize/2;
 	// new amount of data (that will be read total)
 	datasofarc0+=datatogetc0;      
@@ -434,6 +434,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  MPI_Wait(&request0,&mpichstatus);
 	  // easiest algorithm/mapping is done using loop over full sorted size, reduced per cpu by if statement and checked
 	  //	  for(sii=0;sii<cpulinkptr->num;sii++){
+
+#if(DEBUGMINMEM)
+	  fprintf(fail_file,"got here 3.52\n"); fflush(fail_file);
+#endif
+
 	  uii=0;
 	  for(sii=0;sii<datatogetc0;sii++){
 	    // gi : global (over all CPUs) i-location
@@ -441,11 +446,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    // gk : "" for k-location
 	    // sii : sorted index
 
-	    mypos=(sii/numcolumns) + (cpulinkptr->ri) + (cpulinkptr->rj)*totalsize[1] + (cpulinkptr->rk)*totalsize[1]*totalsize[2];
+	    mypos=(long long int)(sii/numcolumns) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*totalsize[1] + (long long int)(cpulinkptr->rk)*totalsize[1]*totalsize[2];
 
-	    gi=mypos%totalsize[1];
-	    gj=(int)((mypos%(totalsize[1]*totalsize[2]))/totalsize[1]);
-	    gk=(int)(mypos/(totalsize[1]*totalsize[2]));
+	    gi=(long long int)mypos%((long long int)totalsize[1]);
+	    gj=(long long int)((mypos%((long long int)totalsize[1]*totalsize[2]))/((long long int)totalsize[1]));
+	    gk=(long long int)(mypos/((long long int)totalsize[1]*totalsize[2]));
 
 #if(DEBUGMINMEM)
 	    fprintf(fail_file,"got here 3.55: %lld %lld %lld %lld %lld %lld %lld\n",sii, gi,gj,gk,cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
@@ -1056,9 +1061,14 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 			   array_of_distribs, array_of_dargs,
 			   array_of_psizes, order, datatype, &newtype);
     MPI_Type_commit(&newtype);
-    MPI_Type_size(newtype, &bufcount);
+    MPI_Type_size(newtype, &bufcount); // ULTRASUPERGODMARK: bufcount is int limited to 2GB, while should be allowed to be larger.  Couldn't find info online about how to fix this and suggestions that 2GB is max buffer size of any MPI communication!  That's stupid, since ruins ROMIO ability.
     sizeofmemory=bufcount; //includes type
     bufcount = bufcount/sizeofdatatype; // number of elements of type
+
+    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns*(long long int)sizeofdatatype>=(long long int)(2*1024*1024*1024) && sizeof(int)<=4){
+      dualfprintf(fail_file,"JCM couldn't figure out how to modify ROMIO so would work when sizeof(int)==4 and buffer size is >2GB\n");
+      myexit(867546243);
+    }
 
     // setup file handler
     // setup to append, in case wanted binary header at front
@@ -1222,7 +1232,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long int *sizeofmemory)
 {
   // can't trust that (int)ceil() along will be upper integer
-  *sizeofmemory = sizeofdatatype * (int)ROUND2INT(ceil((FTYPE)N1 * (FTYPE)N2 * (FTYPE)N3 * (FTYPE)NUMBUFFERS/(FTYPE)numcolumns))*numcolumns * numbuff ; // default
+  *sizeofmemory = sizeofdatatype * (long long int)ROUND2LONGLONGINT(ceil((FTYPE)N1 * (FTYPE)N2 * (FTYPE)N3 * (FTYPE)NUMBUFFERS/(FTYPE)numcolumns))*numcolumns * numbuff ; // default
 
   return(0);
 }
@@ -1230,7 +1240,7 @@ int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long 
 int set_maxnumsize(int numcolumns, long long int *maxnumsize)
 {
 
-  *maxnumsize=(int)(ROUND2INT(ceil(ROUND2INT(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns))*(FTYPE)(numcolumns))));
+  *maxnumsize=(long long int)(ROUND2LONGLONGINT(ceil(ROUND2INT(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns))*(FTYPE)(numcolumns))));
 
   return(0);
 }
@@ -1254,7 +1264,7 @@ long long int gcountmod(int numcolumns)
 {
   long long int myval;
   
-  myval=(long long int)ROUND2INT(ceil((double)((FTYPE)N1*(FTYPE)N2*(FTYPE)N3*(FTYPE)NUMBUFFERS/(FTYPE)numcolumns)))*numcolumns;
+  myval=(long long int)ROUND2LONGLONGINT(ceil((double)((FTYPE)N1*(FTYPE)N2*(FTYPE)N3*(FTYPE)NUMBUFFERS/(FTYPE)numcolumns)))*numcolumns;
 
   return(myval);
 }
@@ -1477,7 +1487,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
       myexit(6900);
     }
   }
-  writebufsize=sizeofmemory/sizeofdatatype; // never used currently
+  writebufsize=sizeofmemory/(long long int)sizeofdatatype; // never used currently
   if(datatype==MPI_UNSIGNED_CHAR) *writebuf1=(unsigned char*)malloc(sizeofmemory);
   else if(datatype==MPI_FLOAT) *writebuf4=(float*)malloc(sizeofmemory);
   else if(datatype==MPI_DOUBLE) *writebuf8 =(double*)malloc(sizeofmemory);
@@ -1604,16 +1614,16 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 	    // Note that this storage mapping function forces disk to have i as fastest regardless of order stored in original array.
 	    // This is fully compatible with any ORDERSTORAGE choice since global arrays are still properly accessed and this mapping just forces writebuf to be filled or read with fixed mapping function as desirable, so that user can change ORDERSTORAGE without the files written being changed.
 	    mapvaluejonio =
-	      + ncpux1 * N1 * ncpux2 * N2 * numcolumns * (k + othercpupos[3] * N3)
-	      + ncpux1 * N1 * numcolumns * (j + othercpupos[2] * N2)
-	      + numcolumns * (i + othercpupos[1] * N1)
-	      + col;
+	      + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
+	      + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
+	      + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
+	      + (long long int)col;
 
 	    // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
 	    mapvaluetempbuf =
-	      + k * N1 * N2 * numcolumns
-	      + j * N1 * numcolumns
-	      + i * numcolumns + col;
+	      + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
+	      + (long long int)j * (long long int)N1 * (long long int)numcolumns
+	      + (long long int)i * (long long int)numcolumns + (long long int)col;
 	    
 	    if (datatype == MPI_UNSIGNED_CHAR) jonio1[mapvaluejonio] = writebuf1[mapvaluetempbuf];
 	    else if (datatype == MPI_FLOAT) jonio4[mapvaluejonio] = writebuf4[mapvaluetempbuf];
@@ -1781,23 +1791,23 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
 
 	    // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
 	    mapvaluejonio =
-	      + ncpux1 * N1 * ncpux2 * N2 * numcolumns * (k + othercpupos[3] * N3)
-	      + ncpux1 * N1 * numcolumns * (j + othercpupos[2] * N2)
-	      + numcolumns * (i + othercpupos[1] * N1)
-	      + col;
+	      + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
+	      + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
+	      + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
+	      + (long long int)col;
 
 	    // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
 	    mapvaluetempbuf =
-	      + k * N1 * N2 * numcolumns
-	      + j * N1 * numcolumns
-	      + i * numcolumns + col;
+	      + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
+	      + (long long int)j * (long long int)N1 * (long long int)numcolumns
+	      + (long long int)i * (long long int)numcolumns + (long long int)col;
 	    
 	      // debug check
-	      if((mapvaluetempbuf<0)||(mapvaluetempbuf>=N1*N2*N3*numcolumns)){
+	      if((mapvaluetempbuf<0)||(mapvaluetempbuf>=(long long int)N1*N2*N3*numcolumns)){
 		dualfprintf(fail_file,"mapvaluetempbuf out of range: %d\n",mapvaluetempbuf);
 		myexit(96726);
 	      }
-	      if((mapvaluejonio<0)||(mapvaluejonio>=totalsize[1]*totalsize[2]*totalsize[3]*numcolumns)){
+	      if((mapvaluejonio<0)||(mapvaluejonio>=(long long int)totalsize[1]*totalsize[2]*totalsize[3]*numcolumns)){
 		dualfprintf(fail_file,"mapvaluejonio out of range: %d\n",mapvaluejonio);
 		myexit(6726);
 	      }
@@ -1821,7 +1831,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
     else{
       // chosen CPU to receive data from CPU=0
       
-            MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[0], myid, MPI_COMM_GRMHD, &rrequest);
+      MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[0], myid, MPI_COMM_GRMHD, &rrequest);
       MPI_Wait(&rrequest, &mpichstatus);	// writebuf used until      
     }
   } else if (stage == STAGE2) {
@@ -2558,7 +2568,8 @@ int init_linklists(void)
 {
   struct blink * blinkptr;
   struct blink * cpulinkptr;
-  int i,numlists;
+  int i;
+  long long int numlists;
   long long int numcells;
   int maxnumcolumns;
 
@@ -2608,7 +2619,7 @@ int init_linklists(void)
 	numlists++;
 	blinkptr=blinkptr->np; // next one
       }
-      fprintf(log_file,"i=%d numlists=%d numcells=%lld\n",i,numlists,numcells);
+      fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
       numlists=0;
     }
   }
@@ -2628,7 +2639,7 @@ int init_linklists(void)
 	  numlists++;
 	  cpulinkptr=cpulinkptr->np; // next one
 	}
-	fprintf(log_file,"i=%d numlists=%d numcells=%lld\n",i,numlists,numcells);
+	fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
 	numlists=0;
       }
     }
@@ -2738,9 +2749,9 @@ int setuplinklist(int numcolumns,int which)
     lj=j%N2;
     lk=k%N3;
     // cpu position number
-    pi=(long long int)(i/N1);
-    pj=(long long int)(j/N2);
-    pk=(long long int)(k/N3);
+    pi=(i/(long long int)N1);
+    pj=(j/(long long int)N2);
+    pk=(k/(long long int)N3);
     // cpu id for this data
     pid=pk*ncpux2*ncpux1+pj*ncpux1+pi;
     if(myid==pid) lcount++;
