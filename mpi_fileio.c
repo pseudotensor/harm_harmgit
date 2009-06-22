@@ -930,6 +930,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[2] = totalsize[1];
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
+
+      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[3] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
@@ -954,6 +956,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[2] = romiocolumns;
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
+
+      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -974,6 +978,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
     
       array_of_gsizes[1] = romiocolumns;
       array_of_gsizes[0] = totalsize[1];
+
+      sizeofmemory = (long long int)totalsize[1]*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -993,6 +999,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[2] = totalsize[1];
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
+
+      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3];
       
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1013,6 +1021,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
+
+      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2];
       
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1029,6 +1039,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       order = MPI_ORDER_C;
       
       array_of_gsizes[0] = totalsize[1];
+
+      sizeofmemory = (long long int)totalsize[1];
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
@@ -1061,11 +1073,20 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 			   array_of_distribs, array_of_dargs,
 			   array_of_psizes, order, datatype, &newtype);
     MPI_Type_commit(&newtype);
+
+#if(0)
     MPI_Type_size(newtype, &bufcount); // ULTRASUPERGODMARK: bufcount is int limited to 2GB, while should be allowed to be larger.  Couldn't find info online about how to fix this and suggestions that 2GB is max buffer size of any MPI communication!  That's stupid, since ruins ROMIO ability.
     sizeofmemory=bufcount; //includes type
     bufcount = bufcount/sizeofdatatype; // number of elements of type
+    // could avoid use of MPI_Type_size() and set sizeofmemory and bufcount directly, but still bufcount must be integer when used in MPI functions below, so only helps by sizeofdatatype in size
+#else
+    // then sizeofmemory already set
+    bufcount=(long long int)sizeofmemory/(long long int)sizeofdatatype;
+#endif
 
-    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns*(long long int)sizeofdatatype>=(long long int)(2*1024*1024*1024) && sizeof(int)<=4){
+
+    // fail if MPI functions below can't handle buffer size
+    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2*1024*1024*1024) && sizeof(int)<=4){
       dualfprintf(fail_file,"JCM couldn't figure out how to modify ROMIO so would work when sizeof(int)==4 and buffer size is >2GB\n");
       myexit(867546243);
     }
