@@ -25,6 +25,11 @@ void report_systeminfo(FILE * fileout)
   fprintf(fileout,"Size of double: %lld\n",(long long int)sizeof(double));
   fprintf(fileout,"Size of long double: %lld\n",(long long int)sizeof(long double));
 
+  if((long long int)sizeof(int)<=4){
+    fprintf(fileout,"WARNING: Since size of integer is only 4 bytes, some routines that input and output integer arguments will be limited to 2GB.  For example, ROMIO will fail to work if try to write >2GB file, since buffer sizes must then be <2GB\n");
+  }
+
+
   ///////////////////
   //
   // Some checks
