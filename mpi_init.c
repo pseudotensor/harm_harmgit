@@ -1326,7 +1326,7 @@ void init_placeongrid(void)
     fprintf(log_file,"mycpupos[%d]: %d\n", m, mycpupos[m]);
     fprintf(log_file, "startpos[%d]: %d\n", m, startpos[m]);
     fprintf(log_file, "endpos[%d]: %d\n", m, endpos[m]);
-    fprintf(log_file, "totalsize[%d]: %d\n", m, totalsize[m]);
+    fprintf(log_file, "totalsize[%d]: %lld\n", m, totalsize[m]);
   }
 
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {

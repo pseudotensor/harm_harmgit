@@ -126,7 +126,7 @@
 // SUM=30
 // 23+10=33
 // total=63
-#define WRITERESTARTHEADEROLD "%d %d %d " \
+#define WRITERESTARTHEADEROLD "%lld %lld %lld " \
 		 "%21.15g %21.15g %ld %21.15g %21.15g %21.15g " \
 		 "%21.15g %21.15g %21.15g %21.15g %ld %21.15g %ld %ld %ld %ld %ld" \
 		 "%21.15g %d %d %d %d %d %d %d %d " \

@@ -13,7 +13,6 @@
 
 
 
-int romiocoliter;
 int periodicx1, periodicx2, periodicx3;
 int mpiperiodicx1, mpiperiodicx2, mpiperiodicx3;
 int skipix1, reflectix1, reflectox1;
@@ -27,13 +26,13 @@ int myid_world, numprocs;
 int myid; // GRMHD CODE rank for non-MPI commands
 int MPIid[MAXCPUS]; // GRMHD MPI internal rank for MPI commands
 char myidtxt[MAXFILENAME];
-int totalzones, realtotalzones,realtotalcompzones;
-int rtotalzones;
-int itotalzones;
+long long int totalzones, realtotalzones,realtotalcompzones;
+long long int rtotalzones;
+long long int itotalzones;
 //int sizes[COMPDIM + 1][MAXCPUS];
 //int isizes[COMPDIM + 1][MAXCPUS];
-int totalsize[COMPDIM + 1];
-int itotalsize[COMPDIM + 1];
+long long int totalsize[COMPDIM + 1];
+long long int itotalsize[COMPDIM + 1];
 int mycpupos[COMPDIM + 1];		// my position amongst the cpus
 int primgridpos[NUMBOUNDTYPES][COMPDIM*2][MAXNPR];
 // NUMPACKUNPACK+1 because start at 1
@@ -68,6 +67,7 @@ long long int nextbuf;
 int numcolumns;
 long long int bufferoffset;
 long long int joniosize,writebufsize;
+int romiocoliter;
 
 
 /////////////////////////////

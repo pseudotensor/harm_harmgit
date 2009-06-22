@@ -490,10 +490,10 @@ int findandsetactivesection(int initialcall, int timeorder, int numtimeorders, l
 }
 
 
-int compute_numcompzones(int (*sectiondef)[NDIM], int *localnumcompzones)
+int compute_numcompzones(int (*sectiondef)[NDIM], long long int *localnumcompzones)
 {
 
-  *localnumcompzones=(sectiondef[POINTUP][1]-sectiondef[POINTDOWN][1]+1)*(sectiondef[POINTUP][2]-sectiondef[POINTDOWN][2]+1)*(sectiondef[POINTUP][3]-sectiondef[POINTDOWN][3]+1);
+  *localnumcompzones=(long long int)(sectiondef[POINTUP][1]-sectiondef[POINTDOWN][1]+1)*(long long int)(sectiondef[POINTUP][2]-sectiondef[POINTDOWN][2]+1)*(long long int)(sectiondef[POINTUP][3]-sectiondef[POINTDOWN][3]+1);
 
   return(0);
 }

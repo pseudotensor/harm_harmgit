@@ -263,5 +263,5 @@ extern void adjust_fluxcttoth_emfs(FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*e
 
 extern void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
 
-extern int compute_numcompzones(int (*sectiondef)[NDIM], int *localnumcompzones);
+extern int compute_numcompzones(int (*sectiondef)[NDIM], long long int *localnumcompzones);
 

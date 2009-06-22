@@ -78,7 +78,7 @@ extern void mpifmin(FTYPE*minptr);
 extern int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long int *sizeofmemory);
 extern int set_maxnumsize(int numcolumns, long long int *maxnumsize);
 extern int set_numbuffers(int numcolumns, int *numbuffers);
-extern int gcountmod(int numcolumns);
+extern long long int gcountmod(int numcolumns);
 
 extern int getsizeofdatatype(MPI_Datatype datatype);
 

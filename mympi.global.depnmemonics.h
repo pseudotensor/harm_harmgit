@@ -52,7 +52,7 @@ typedef int MPI_Datatype;
 // This forces file dumping and reading to be always in same format w.r.t. user-basis (N1,N2,N3) rather than how memory stored that could be arbitrary with ORDERSTORAGE
 // This forces storage to be i fastest, j slower, and k slowest
 //
-#define BUFFERMAP (bufferoffset+(k*N1*N2+j*N1+i)*numcolumns+nextbuf++)
-#define BUFFERMAP2 (k*N1*N2+j*N1+i)
+#define BUFFERMAP ((long long int)bufferoffset+(long long int)(k*N1*N2+j*N1+i)*(long long int)numcolumns+(long long int)nextbuf++)
+#define BUFFERMAP2 ((long long int)k*N1*N2+(long long int)j*N1+(long long int)i)
 #define BUFFERINIT0 bufferoffset=0
 // mpi uses BUFFERINIT in global.h as well

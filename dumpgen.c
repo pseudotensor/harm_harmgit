@@ -21,7 +21,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   int headerbintxt;
   int dumpbintxt;
   fpos_t headerendpos;
-  long uptodatabytesize;
+  long int uptodatabytesize;
   int binextension;
   int checkstatus;
   int gopastlinebreak(FILE *stream);
@@ -304,7 +304,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	
 	// check
 	if(nextbuf!=numcolumns){
-	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%d)\n",numcolumns,nextbuf);
+	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
 	  myexit(1);
 	}
 	

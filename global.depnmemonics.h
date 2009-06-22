@@ -615,7 +615,7 @@ god=deathadflkjasdflkjasdlfkja242424
 // SUM=30
 // 23+10=33
 // total=63
-#define WRITERESTARTHEADER "%d %d %d " \
+#define WRITERESTARTHEADER "%lld %lld %lld " \
 		 "%26.20g %26.20g %ld %26.20g %26.20g %26.20g %26.20g %26.20g " \
 		 "%26.20g %d %d %d %d %d %d %d %d " \
 		 "%26.20g %26.20g %26.20g %26.20g %d " \

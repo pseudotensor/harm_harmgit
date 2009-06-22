@@ -917,8 +917,8 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
   else if((type==TIMESERIESAREAMAP)&&(domap)){
     if(firsttime){
       // GODMARK: 2D only, not outputting z-related stuff so function remains consistent with SM macro
-      fprintf(fileptr,"%21.15g %d %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
-	      t,totalsize[1],totalsize[2],startx[1],startx[2],dx[1],dx[2],lowersizex1,uppersizex1,lowersizex2,uppersizex2,startpos[1]+i,startpos[2]+j,gam,a,R0,Rin,Rout,hslope);
+      fprintf(fileptr,"%21.15g %lld %lld %lld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+	      t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3],lowersizex1,uppersizex1,lowersizex2,uppersizex2,startpos[1]+i,startpos[2]+j,gam,a,R0,Rin,Rout,hslope);
       fflush(fileptr);
     }
     for(m=j-size/2;m<=j+size/2;m++){
@@ -1595,7 +1595,7 @@ void frdotout(void)
       myexit(1);
     }
     if(firsttime){
-      fprintf(frout,"%21.15g %ld %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+      fprintf(frout,"%21.15g %ld %lld %lld %lld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
 	      t,realnstep,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3]);
       fflush(frout);
     }
