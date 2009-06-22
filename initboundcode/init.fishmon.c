@@ -940,13 +940,14 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   //  torus_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
   //jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
 
+#if(1)
   enerregiondef[POINTDOWN][1]=0;
   enerregiondef[POINTUP][1]=totalsize[1]-1;
   enerregiondef[POINTDOWN][2]=0;
   enerregiondef[POINTUP][2]=totalsize[2]-1;
   enerregiondef[POINTDOWN][3]=0;
   enerregiondef[POINTUP][3]=totalsize[3]-1;
-
+#endif
 
   return(0);
 }

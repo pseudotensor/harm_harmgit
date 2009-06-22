@@ -10,13 +10,13 @@
 
 
 struct blink {
-  int num;
+  long long int num;
   struct blink * np;
   // only used by cpu=0
-  int cpu; // which cpu
-  int i,j,k,col; // starting values for cpu=0
-  int ri,rj,rk,rcol; // reference values for first cpu in sequence of nodes for a single buffer
-  int end;
+  long long int cpu; // which cpu
+  long long int i,j,k,col; // starting values for cpu=0
+  long long int ri,rj,rk,rcol; // reference values for first cpu in sequence of nodes for a single buffer
+  long long int end;
 };
 
 

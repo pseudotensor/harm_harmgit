@@ -303,7 +303,7 @@ static int advance_standard(
       MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
     else{
-      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+      //  MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
   }
 
@@ -637,7 +637,7 @@ static int advance_standard(
       interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
     }
     else{
-      interpolate_ustag2fieldcent_donor(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+      //      interpolate_ustag2fieldcent_donor(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
     }
 
     ////////////////////    

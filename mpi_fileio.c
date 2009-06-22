@@ -187,7 +187,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   if(sorted==UNSORTED){
     dualfprintf(fail_file,"Not setup to do unsorted with this method\n");
-    myexit(10000);
+    myexit(10001);
   }
 
 
@@ -307,7 +307,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	 )
 	{
 	dualfprintf(fail_file,"local total doesn't equal expected value\n got=%d demand=%d\n",-bufferoffset,N1*N2*N3*numcolumns);
-	myexit(10000);
+	myexit(10002);
       }
     }
 #if(DEBUGMINMEM)
@@ -481,7 +481,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  ////////////////
 	  if(uii!=cpulinkptr->num){
 	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
-	    myexit(10000);
+	    myexit(10003);
 	  }
 	  if(cpulinkptr->end) doset=0;
 	  cpulinkptr=cpulinkptr->np;
@@ -495,7 +495,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datasofar0+=datatoget0; // diagnostic
 	if(datasofar0!=datasofarc0){
 	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
-	  myexit(10000);
+	  myexit(10004);
 	}
 
 
@@ -556,7 +556,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  masterdone=1;
 	  if(datasofar0!=totalsize[1]*totalsize[2]*totalsize[3]*numcolumns){
 	    dualfprintf(fail_file,"write: total data written not equal to expected amount: wrote=%d expected=%d\n",datasofar0,totalsize[1]*totalsize[2]*totalsize[3]*numcolumns);
-	    myexit(10000);
+	    myexit(10005);
 	  }
 	}
 	// otherwise continue
@@ -711,7 +711,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  // check!
 	  if(uii!=cpulinkptr->num){
 	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
-	    myexit(10000);
+	    myexit(10006);
 	  }
 #if(DEBUGMINMEM)
 	  fprintf(fail_file,"got here4\n"); fflush(fail_file);	  
@@ -749,11 +749,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datasofar0+=datatoget0; // diagnostic
 	if(datasofar0!=datasofarc0){
 	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
-	  myexit(10000);
+	  myexit(10007);
 	}
 	if(datasent0!=datatoget0){
 	  dualfprintf(fail_file,"data sent doesn't match data read\n");
-	  myexit(10000);
+	  myexit(10008);
 	}
 	if((done0==0)&&(doing0==1)) dofull=0; // cpu==0 still needs to deal with more reads for it's own data
 	if(cpulinkptr==NULL){
@@ -761,7 +761,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  dofull=0; // end of list
 	  if(datasofar0!=totalsize[1]*totalsize[2]*totalsize[3]*numcolumns){
 	    dualfprintf(fail_file,"read: total data written not equal to expected amount: wrote=%d expected=%d\n",datasofar0,totalsize[1]*totalsize[2]*totalsize[3]*numcolumns);
-	    myexit(10000);
+	    myexit(10009);
 	  }
 	}// end if NULL
 
@@ -1118,7 +1118,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
        ((datatype==MPI_LONG_LONG_INT)&&(*writebuf8i == NULL)) 
        ){
       dualfprintf(fail_file,"Can't initialize writebuf memory for mpiioromio\n");
-      myexit(10000);
+      myexit(10010);
     }
 
     logsfprintf("mpiioromio_init end\n");
@@ -1227,7 +1227,7 @@ int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, int *sizeo
   return(0);
 }
 
-int set_maxnumsize(int numcolumns, int *maxnumsize)
+int set_maxnumsize(int numcolumns, long long int *maxnumsize)
 {
 
   *maxnumsize=(int)(ROUND2INT(ceil(ROUND2INT(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns))*(FTYPE)(numcolumns))));
@@ -2645,55 +2645,60 @@ int init_linklists(void)
 // setuplinklist() not a user function
 
 // use for mpiminio() functions (see init_mpi.c)
+// Had to convert to long long int for these variables and the blink structure in global.structs.h
+// This was required to deal with a large number of cpus, N1,N2,N3, and number of columns when totalsize[1]*totalsize[2]*totalsize[3]*numcolumns>2GB that is limit for size of signed integer that is default size on many systems
 int setuplinklist(int numcolumns,int which)
 {
-  int gcount,lcount,numlinks;
-  int i,j,k,col,li,lj,lk,pi,pj,pk,pid,firstlink;
+  long long int gcount,lcount,numlinks;
+  long long int i,j,k,col,li,lj,lk,pi,pj,pk,pid,firstlink;
   struct blink * clinkptr0, *clinkptr;
   struct blink * linkptr0for0, *linkptrfor0;
-  int *lcountfor0;
-  int firstlinkfor0;
-  int *firstlijk,*li0,*lj0,*lk0,*lcol0;
-  int ri,rj,rk,rcol;
-  int *cpulist0;
-  int numcpusinlist0,lcpu,itercpu,buffersize;
-  int maxnumsize;
+  long long int *lcountfor0;
+  long long int firstlinkfor0;
+  long long int *firstlijk,*li0,*lj0,*lk0,*lcol0;
+  long long int ri,rj,rk,rcol;
+  long long int *cpulist0;
+  long long int numcpusinlist0,lcpu,itercpu,buffersize;
+  long long int maxnumsize;
 
 
   set_maxnumsize(numcolumns,&maxnumsize);
+
+
+
 
   if(myid==0){
     // cpulist0's size is maximum possible number of cpus in a list due to buffer size
     //    buffersize=(int)(ceil(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns)*(FTYPE)(numcolumns)/(FTYPE)N1));
     buffersize=numprocs;
-    fprintf(stderr,"max cpus in a list=%d\n",buffersize); fflush(stderr);
-    if((cpulist0=(int*)malloc(sizeof(int)*buffersize))==NULL){
+    fprintf(stderr,"max cpus in a list=%lld\n",buffersize); fflush(stderr);
+    if((cpulist0=(long long int*)malloc(sizeof(long long int)*buffersize))==NULL){
       dualfprintf(fail_file,"can't allocate cpulist0\n");
-      myexit(10000);
+      myexit(10012);
     }
-    if((lcountfor0=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((lcountfor0=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate lcountfor0\n");
-      myexit(10000);
+      myexit(10013);
     }
-    if((firstlijk=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((firstlijk=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate firstlijk\n");
-      myexit(10000);
+      myexit(10014);
     }
-    if((li0=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((li0=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate li0\n");
-      myexit(10000);
+      myexit(10015);
     }
-    if((lj0=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((lj0=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate lj0\n");
-      myexit(10000);
+      myexit(10016);
     }
-    if((lk0=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((lk0=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate lk0\n");
-      myexit(10000);
+      myexit(10017);
     }
-    if((lcol0=(int*)malloc(sizeof(int)*numprocs))==NULL){
+    if((lcol0=(long long int*)malloc(sizeof(long long int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate lcol0\n");
-      myexit(10000);
+      myexit(10018);
     }
     for(i=0;i<buffersize;i++){
       cpulist0[i]=0;
@@ -2718,6 +2723,9 @@ int setuplinklist(int numcolumns,int which)
     firstlinkfor0=1;
   }
 
+
+
+
   /////////////////////////
   // general loop
   for(k=0;k<ncpux3*N3;k++)  for(j=0;j<ncpux2*N2;j++)  for(i=0;i<ncpux1*N1;i++) for(col=0;col<numcolumns;col++){
@@ -2726,9 +2734,9 @@ int setuplinklist(int numcolumns,int which)
     lj=j%N2;
     lk=k%N3;
     // cpu position number
-    pi=(int)(i/N1);
-    pj=(int)(j/N2);
-    pk=(int)(k/N3);
+    pi=(long long int)(i/N1);
+    pj=(long long int)(j/N2);
+    pk=(long long int)(k/N3);
     // cpu id for this data
     pid=pk*ncpux2*ncpux1+pj*ncpux1+pi;
     if(myid==pid) lcount++;
@@ -2742,17 +2750,17 @@ int setuplinklist(int numcolumns,int which)
 	lk0[pid]=k;
 	lcol0[pid]=col;
 	if(col!=0){
-	  dualfprintf(fail_file,"col!=0 col=%d, so chunking bad: numcolumns=%d which=%d\n",col,numcolumns,which);
-	  myexit(10000);
+	  dualfprintf(fail_file,"col!=0 col=%lld, so chunking bad: numcolumns=%d which=%d\n",col,numcolumns,which);
+	  myexit(10019);
 	}
 	firstlijk[pid]=0;
       }
     }
     gcount++;
     //    if(myid==0){
-    //  fprintf(fail_file,"%d %d %d %d\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
+    //  fprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
     // }
-    //    fprintf(log_file,"%d %d %d %d %d %d %d %d\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount); fflush(log_file);
+    //    fprintf(log_file,"%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount); fflush(log_file);
     // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
     // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
     // chunk in minimum size of numcolumns
@@ -2793,7 +2801,7 @@ int setuplinklist(int numcolumns,int which)
 	  }
 	  else{
 	    fprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
-	    myexit(10000);
+	    myexit(10020);
 	  }
 	}
 	// the last link is here identified as the last in the series of cpus to communicate with.  There's at least one new link here!
@@ -2801,7 +2809,7 @@ int setuplinklist(int numcolumns,int which)
 	numcpusinlist0=0; // reset list of cpus for this list
       }
       if(lcount>0){
-	fprintf(log_file,"numcolumns=%d lcount=%d\n",numcolumns,lcount); fflush(log_file);
+	fprintf(log_file,"numcolumns=%d lcount=%lld\n",numcolumns,lcount); fflush(log_file);
         // initialize another structure
         // set previous structure value to this structure, set this next one to NULL
         if(firstlink){

@@ -110,7 +110,7 @@ void myfopen(char*fname, char*fmt,char*message,FILE**fileptrptr)
     *fileptrptr = fopen(fname, fmt);
     if (*fileptrptr == NULL) {
       dualfprintf(fail_file, message);
-      myexit(10000);
+      myexit(10100);
     }
   }
 }
@@ -125,12 +125,12 @@ void myfclose(FILE ** fileptrptr,char*message)
       reterror = fclose(*fileptrptr);
       if (reterror == EOF) {
 	dualfprintf(fail_file, message);
-	myexit(10000);
+	myexit(10101);
       }
     }
     else{
       dualfprintf(fail_file,"file already closed: %s\n",message);
-      myexit(10000);
+      myexit(10102);
     }
   }
 }
