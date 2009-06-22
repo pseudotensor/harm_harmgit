@@ -144,8 +144,8 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   static int datasofar0,datasofarc0;
   static int done0=0;
   static int datagot;
-  int bfi;
-  int sii,uii;// sorted and unsorted index sometimes
+  long long int bfi;
+  long long int sii,uii;// sorted and unsorted index sometimes
 #if(USEMPI)
   MPI_Request request;
   MPI_Request request0;
@@ -160,20 +160,20 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   int *jonio4i;
   long long int *jonio8i;
 
-  int mapjoniosorted,mapjoniounsorted;
-  int datatoget0,datatogetc0,datasent0;
+  long long int mapjoniosorted,mapjoniounsorted;
+  long long int datatoget0,datatogetc0,datasent0;
   int doset;
   int dofull;
   int dolocal;
   int doing0;
-  int gi,gj,gk;//global i,j,k starting from first cpu reference and adding the sorted index
-  int lastnum;
+  long long int gi,gj,gk;//global i,j,k starting from first cpu reference and adding the sorted index
+  long long int lastnum;
   static int masterdone;
   static int thisslavedone;
 
   int numfiles;
   int sizeofdatatype;
-  int mypos;
+  long long int mypos;
   unsigned short short4char;
 
 
@@ -863,7 +863,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 {
   int i;
 
-  static int sizeofmemory;
+  static long long int sizeofmemory;
   static int sizeofdatatype;
 
   static long double **writebuf16;
@@ -1219,7 +1219,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 
 
 // size of buffer for MPI writing/reading
-int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, int *sizeofmemory)
+int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long int *sizeofmemory)
 {
   // can't trust that (int)ceil() along will be upper integer
   *sizeofmemory = sizeofdatatype * (int)ROUND2INT(ceil((FTYPE)N1 * (FTYPE)N2 * (FTYPE)N3 * (FTYPE)NUMBUFFERS/(FTYPE)numcolumns))*numcolumns * numbuff ; // default
@@ -1276,7 +1276,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
 
   int i;
   
-  int sizeofmemory;
+  long long int sizeofmemory;
   int sizeofdatatype;
 
   long double **jonio16;
@@ -1538,7 +1538,7 @@ void mpiiomin_final(int numcolumns,FILE **fp, void *jonio, void *writebuf)
 void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 		   FILE ** fp, void *jonio, void *writebuf)
 {
-  int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
+  long long int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
 #if(USEMPI)
   MPI_Request rrequest;
   MPI_Request srequest;
@@ -1586,6 +1586,7 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
   if(myid!=0) MPI_Isend(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[0], myid, MPI_COMM_GRMHD, &srequest);
   if (myid == 0) {
     for (l = 0; l < numprocs; l++) {
+      logsfprintf("on myid==0: mpiios combine: %d of numprocs=%d data=%lld\n",l,numprocs,(long long int) (N1 * N2 * N3 * numcolumns) );
       if(l!=0){
 	MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &rrequest);
 	MPI_Wait(&rrequest, &mpichstatus);
@@ -1627,6 +1628,7 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
   free(writebuf);		// writebuf used by each CPU
 
   if (myid == 0) {
+    logsfprintf("on myid==0: mpiios combine: writing: %lld\n",(long long int)(totalsize[1] * totalsize[2] * totalsize[3] * numcolumns));
     // now write out collected data using CPU=0
     if(docolsplit){
       numfiles=numcolumns;
@@ -1661,12 +1663,13 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 	else  fprintf(fp[i%numfiles],"\n");
       }
     }
+    logsfprintf("on myid==0: mpiios combine: freeing\n");
     free(jonio);		// used by CPU=0
     for(i=0;i<numfiles;i++){
       fclose(fp[i]);
       fp[i] = NULL;
     }
-  }
+  }// end if myid==0
 #endif
 
   logsfprintf("mpiios end combine\n");
@@ -1679,7 +1682,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
 		    FILE ** fp, void *jonio,
 		    void *writebuf)
 {
-  int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
+  long long int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
 #if(USEMPI)
   MPI_Request rrequest;
   MPI_Request srequest;
@@ -1839,7 +1842,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
 
 void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *writebuf)
 {
-  int i, j, k, l, col;
+  long long int i, j, k, l, col;
 #if(USEMPI)
   MPI_Request rrequest;
   MPI_Request srequest;
@@ -1855,7 +1858,7 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
   int *writebuf4i;
   long long int *writebuf8i;
   
-  int bufferwritemap;
+  long long int bufferwritemap;
   int numfiles;
 
   sizeofdatatype=getsizeofdatatype(datatype);
@@ -1929,7 +1932,7 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
 void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
 		      FILE ** fp,void *writebuf)
 {
-  int i, j, k, l, col;
+  long long int i, j, k, l, col;
 #if(USEMPI)
   MPI_Request rrequest;
   MPI_Request srequest;
@@ -1966,7 +1969,7 @@ void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
 
   unsigned short short4char;
 
-  int bufferwritemap;
+  long long int bufferwritemap;
 
 
 
@@ -2555,7 +2558,8 @@ int init_linklists(void)
 {
   struct blink * blinkptr;
   struct blink * cpulinkptr;
-  int i,numlists,numcells;
+  int i,numlists;
+  long long int numcells;
   int maxnumcolumns;
 
 
@@ -2604,7 +2608,7 @@ int init_linklists(void)
 	numlists++;
 	blinkptr=blinkptr->np; // next one
       }
-      fprintf(log_file,"i=%d numlists=%d numcells=%d\n",i,numlists,numcells);
+      fprintf(log_file,"i=%d numlists=%d numcells=%lld\n",i,numlists,numcells);
       numlists=0;
     }
   }
@@ -2620,11 +2624,11 @@ int init_linklists(void)
 	numcells=0;
 	while(cpulinkptr!=NULL){
 	  numcells+=cpulinkptr->num;
-	  //	fprintf(log_file,"i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%d\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells); fflush(log_file);
+	  //	fprintf(log_file,"i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells); fflush(log_file);
 	  numlists++;
 	  cpulinkptr=cpulinkptr->np; // next one
 	}
-	fprintf(log_file,"i=%d numlists=%d numcells=%d\n",i,numlists,numcells);
+	fprintf(log_file,"i=%d numlists=%d numcells=%lld\n",i,numlists,numcells);
 	numlists=0;
       }
     }

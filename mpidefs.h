@@ -63,9 +63,11 @@ MPI_Status mpichstatus;
 FTYPE ndtsend, bsq_maxsend;
 
 // for data output
-int nextbuf,numcolumns;
-int bufferoffset;
-int joniosize,writebufsize;
+// required to be long long int in case integer is only 4 bytes and want >2GB files.
+long long int nextbuf;
+int numcolumns;
+long long int bufferoffset;
+long long int joniosize,writebufsize;
 
 
 /////////////////////////////
