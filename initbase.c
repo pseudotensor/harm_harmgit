@@ -273,7 +273,7 @@ int init(int *argc, char **argv[])
 	FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
 
 
-      if(DODIAGS){
+      if(DODIAGS && PRODUCTION==0){
 	///////////////////////////////
 	// BEGIN DEBUG
 	// dump solution so far
@@ -311,7 +311,7 @@ int init(int *argc, char **argv[])
       init_all_conservatives(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(ulastglobal),GLOBALPOINT(unewglobal));
 
 
-      if(DODIAGS){
+      if(DODIAGS && PRODUCTION==0){
 	///////////////////////////////
 	// BEGIN DEBUG
 	// dump solution so far
