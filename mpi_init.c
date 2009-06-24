@@ -66,7 +66,7 @@ int init_MPI_general(int *argc, char **argv[])
 int init_OPENMP_general(FILE *out)
 {
 
-  get_report_openmp_thread_info(out);
+  // nothing to do for OpenMP so far
 
   return(0);
 }
@@ -1779,7 +1779,7 @@ void get_report_openmp_thread_info(FILE * out)
       fprintf(out,"OpenMP 3.0 activated: Maximum number of threads available=%d\n",omp_get_thread_limit());
 #endif
 
-      fprintf(out,"Master MPI proc=%d reports: Number of threads originaly=%d out of maximum=%d out of procs=%d\n", myid_world, numopenmpthreadsorig,omp_get_max_threads(),omp_get_num_procs());
+      fprintf(out,"Master MPI proc=%d reports: Number of threads originaly=%d out of maximum=%d out of procs=%d\n", myid, numopenmpthreadsorig,omp_get_max_threads(),omp_get_num_procs());
       if(omp_get_dynamic()){
 	fprintf(out,"Dynamic thread adjustment is enabled\n");
       }

@@ -9,14 +9,15 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// none of below blink integers should be nearly as large as 32-bit signed integer can handle
 struct blink {
-  long long int num;
+  int num;
   struct blink * np;
   // only used by cpu=0
-  long long int cpu; // which cpu
-  long long int i,j,k,col; // starting values for cpu=0
-  long long int ri,rj,rk,rcol; // reference values for first cpu in sequence of nodes for a single buffer
-  long long int end;
+  int cpu; // which cpu
+  int i,j,k,col; // starting values for cpu=0
+  int ri,rj,rk,rcol; // reference values for first cpu in sequence of nodes for a single buffer
+  int end;
 };
 
 

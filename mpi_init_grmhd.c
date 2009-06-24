@@ -25,7 +25,9 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
   // always do below since just sets defaults if not doing liaisonmode
+  fprintf(stderr, "Begin grmhd_init_mpi_liaisonmode_globalset()\n");
   grmhd_init_mpi_liaisonmode_globalset();
+  fprintf(stderr, "End grmhd_init_mpi_liaisonmode_globalset()\n");
 
 
 #if(USEMPI)
@@ -35,11 +37,15 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
   // currently INIT provides args to rest of processes
+  fprintf(stderr, "Begin myargs(*argc,*argv)\n");
   myargs(*argc,*argv);
+  fprintf(stderr, "End myargs(*argc,*argv)\n");
 
 
   // set default MPIid (must come after myargs())
+  fprintf(stderr, "Begin init_default_MPI_GRMHD_myid()\n");
   init_default_MPI_GRMHD_myid();
+  fprintf(stderr, "End init_default_MPI_GRMHD_myid()\n");
   // report MPIid[myid] ordering
   report_myid(stderr);
 
@@ -65,14 +71,17 @@ int init_MPI_GRMHD(int *argc, char **argv[])
   init_MPI_setupfilesandgrid(*argc, *argv);
 
   // report MPIid[myid] ordering
+  //  MPI_Barrier(MPI_COMM_GRMHD);
+  fprintf(stderr, "Begin report_myid()\n");
   if(myid==0) report_myid(logfull_file);
   report_myid(log_file);
+  fprintf(stderr, "End report_myid()\n");
 
 
 #if(USEOPENMP)
   // output to logfull_file
-  if(myid==0) init_OPENMP_general(logfull_file);
-  init_OPENMP_general(log_file);
+  if(myid==0) get_report_openmp_thread_info(logfull_file);
+  get_report_openmp_thread_info(log_file);
 #endif
 
 
@@ -248,7 +257,7 @@ int report_myid(FILE *out)
 
   fprintf(out,"\n");
   for(rankk=0;rankk<ncpux3;rankk++){
-    if(rankk==0) fprintf(out,"rankk=%d::\n",rankk);
+    fprintf(out,"rankk=%d::\n",rankk); // report each k-section
     for(rankj=0;rankj<ncpux2;rankj++){
       for(ranki=0;ranki<ncpux1;ranki++){
 	origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;

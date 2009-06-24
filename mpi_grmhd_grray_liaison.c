@@ -50,8 +50,12 @@ void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypel
 {
   int i;
 
+
   // may already have this, but get again to keep code modular
   MPI_Comm_size(localcomm, sizeproclistlocal);
+  fprintf(stderr,"processtype=%d sizeproclistlocal=%d\n",processtype,*sizeproclistlocal); fflush(stderr);
+
+  //  return;
 
   // allocate processor list 
   *processtypelistlocal=(int*) malloc((*sizeproclistlocal)*sizeof(int));
@@ -59,9 +63,12 @@ void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypel
     fprintf(stderr,"Could not allocate processtypelistlocal\n");
     exit(1);
   }
+  fprintf(stderr,"After malloc of processtypelistlocal: %d %d\n",processtype,myid_world); fflush(stderr);
 
   // Gather process type list
   MPI_Allgather(&processtype,1,MPI_INT,*processtypelistlocal,1,MPI_INT,localcomm);
+  fprintf(stderr,"After MPI_Allgather: %d\n",myid_world); fflush(stderr);
+  //  MPI_Barrier(localcomm);
 
   
   //  fprintf(stderr,"processtype=%d sizeproclistlocal0=%d\n",processtype,*sizeproclistlocal);
@@ -322,7 +329,11 @@ void grmhd_init_mpi_liaisonmode(
 					  MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
 					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
 
+
+  fprintf(stderr,"USEMPILIAISON=%d\n",USEMPILIAISON);
+
 #if(USEMPILIAISON)
+
 
 
   // get processtypes
@@ -835,12 +846,18 @@ void grmhd_init_mpi_liaisonmode_globalset(void)
 
   ////////////////////////////////
   // get group for MPI_COMM_WORLD
+  fprintf(stderr,"MPICOMM1\n");
   MPI_Comm_group(MPI_COMM_WORLD, &MPI_GROUP_WORLD);
+  fprintf(stderr,"MPICOMM2\n");
   MPI_COMM_GRMHD=MPI_COMM_WORLD;
+  fprintf(stderr,"MPICOMM3\n");
   MPI_GROUP_GRMHD=MPI_GROUP_WORLD;
 
+  fprintf(stderr,"MPICOMM4\n");
   grmhd_init_mpi_processtypes(MPI_COMM_WORLD, &processtypelist_world, &sizeproclist_world);
+  fprintf(stderr,"MPICOMM5\n");
   grmhd_init_mpi_processtypes(MPI_COMM_GRMHD, &processtypelist_grmhd, &sizeproclist_grmhd);
+  fprintf(stderr,"MPICOMM6\n");
 
 #else
   sizeproclist_world=sizeproclist_grmhd=1;

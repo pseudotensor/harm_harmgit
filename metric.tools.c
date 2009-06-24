@@ -13,6 +13,7 @@
 #define SAFE 2.0
 #define TRYTOL (trytollocal) // attempted tolerance
 #define OKTOL 1e-5 // error must be below this to avoid report
+#define FAILTOL 1e-1
 //#define HSTARTCHANGE 10.0
 #endif
 
@@ -26,6 +27,7 @@
 #define SAFE 2.0
 #define TRYTOL 1E-10 // attempted tolerance
 #define OKTOL 1e-5 // error must be below this to avoid report
+#define FAILTOL 1e-1
 #endif
 
 // whether to turn on extensive recent debugging
@@ -334,7 +336,7 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 	  for(iterdebug=0;iterdebug<iter;iterdebug++){
 	    dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
 	  }
-	  myexit(67);
+	  if(err>=FAILTOL) myexit(67);
 	}
       }      
     }
