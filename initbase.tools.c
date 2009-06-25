@@ -19,6 +19,7 @@ void report_systeminfo(FILE * fileout)
   fprintf(fileout,"Size of char: %lld\n",(long long int)sizeof(char));
   fprintf(fileout,"Size of short: %lld\n",(long long int)sizeof(short));
   fprintf(fileout,"Size of int: %lld\n",(long long int)sizeof(int));
+  fprintf(fileout,"Size of size_t: %lld\n",(long long int)sizeof(size_t));
   fprintf(fileout,"Size of long int: %lld\n",(long long int)sizeof(long int));
   fprintf(fileout,"Size of long long int: %lld\n",(long long int)sizeof(long long int));
   fprintf(fileout,"Size of float: %lld\n",(long long int)sizeof(float));
