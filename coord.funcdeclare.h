@@ -14,6 +14,7 @@ extern void coordf(FTYPE i, FTYPE j, FTYPE k, int loc, FTYPE *X);
 extern void bl_coord(FTYPE *X, FTYPE *V);
 extern void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V);
 extern void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V);
+extern void bl_coord_coord(int i, int j, int k, int loc, FTYPE *X, FTYPE *V);
 
 extern void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM]);
 extern void dxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*dxdxp)[NDIM]);

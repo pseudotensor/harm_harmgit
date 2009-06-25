@@ -348,7 +348,8 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
 	    ti=enerregiondef[updowniteri][1] + (updowniteri==POINTUP);
 	    tj=enerregiondef[updowniterj][2] + (updowniterj==POINTUP);
 	    tk=enerregiondef[updowniterk][3] + (updowniterk==POINTUP);
-	    bl_coord_ijk_2( ti, tj, tk, CORNT, X, V );
+	    // Can't use bl_coord_ijk() or bl_coord_ijk2() below since generally know that i,j,k requested can be beyond stored grid
+	    bl_coord_coord( ti, tj, tk, CORNT, X, V );
 	    trifprintf( "t = %21.15g, ud_{i,j,k} = %d %d %d :: CORNT_enerregiondef_{i,j,k} = %d %d %d :: V_{1,2,3} = %21.15g %21.15g %21.15g \n", t, updowniteri, updowniterj, updowniterk, ti, tj, tk, V[1], V[2], V[3] );
 	    
 	  }
@@ -532,10 +533,10 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   // find j for which theta is at our prespecified point
 
   i=0;j=0;k=0;
-  bl_coord_ijk_2(i, j, k, FACE2, X, V);
+  bl_coord_coord(i, j, k, FACE2, X, V);
   startth=V[2];
   i=0;j=N2;k=0;
-  bl_coord_ijk_2(i, j, k, FACE2, X, V);
+  bl_coord_coord(i, j, k, FACE2, X, V);
   endth=V[2];
 
   // assumes 0<thetajet<Pi/2
@@ -578,7 +579,7 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
     enerpos[X2DN]=0;
     i=0;
     for(j=0;j<=OUTM2;j++){
-      bl_coord_ijk_2(i, j, k, FACE2, X, V);
+      bl_coord_coord(i, j, k, FACE2, X, V);
       r=V[1];
       th=V[2];
       // look for switch from below to above thetajet at inner theta jet edge
@@ -681,7 +682,7 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
     // if outer jet edge is on this CPU but not on boundary
     i=0;k=0;
     for(j=0;j<=OUTM2;j++){
-      bl_coord_ijk_2(i, j, k, FACE2, X, V);
+      bl_coord_coord(i, j, k, FACE2, X, V);
       th=V[2];
       // look for switch from below to above thetajet at inner theta jet edge
       if(th>M_PI-thetajet){

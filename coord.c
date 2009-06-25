@@ -2606,7 +2606,7 @@ int is_on_surface(int dir, int ii, int jj, int kk, int pp)
 
 ////////// BELOW ARE ACCESSING STORE POSITION INFORMATION
 // GODMARK: Should improve this.  Right now if I call coord_ijk and then immediately bl_coord_ijk and first time called, then expensive since coord() called twice
-
+// NEVER CALL *_ijk_*() type functions if input i,j,k is meant to be related to total grid that would access beyond stored arrays
 
 
 // normally-used dxdxp[i,j,k]
@@ -2813,6 +2813,16 @@ void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
     // if really NOWHERE, then not associated with i,j,k at all, so can't use coord() to get X, so shouldn't be using bl_coord_ijk_2() in first place.  But assume X is already set
   }
 
+
+}
+
+// normally-used bl_coord[i,j,k]
+// returns both X and V given i,j,k,loc and does NOT try to use stored memory -- presumes could input arbitrary i,j,k not on a single CPU
+void bl_coord_coord(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
+{
+  
+  coord(i,j,k,loc,X);
+  bl_coord(X,V);
 
 }
 
