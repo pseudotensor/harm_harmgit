@@ -199,7 +199,7 @@ void myargs(int argc, char *argv[])
   if(USEMPI && USEOPENMP){
     numargs=1+3+1;
 
-    if(argc<numargs || argc>numargs+numextraargs){
+    if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
@@ -217,7 +217,7 @@ void myargs(int argc, char *argv[])
   else if(USEMPI){
     numargs=1+3;
 
-    if(argc<numargs || argc>numargs+numextraargs){
+    if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
@@ -234,7 +234,7 @@ void myargs(int argc, char *argv[])
   else if(USEOPENMP){
     numargs=1+1;
 
-    if(argc<numargs || argc>numargs+numextraargs){
+    if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
 	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
 	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
@@ -249,7 +249,7 @@ void myargs(int argc, char *argv[])
   else{
     numargs=1;
 
-    if(argc<numargs || argc>numargs+numextraargs){
+    if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
 	fprintf(stderr,"<progname>\n");
 	fprintf(stderr,"OR\n");
