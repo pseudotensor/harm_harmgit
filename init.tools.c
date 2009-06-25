@@ -254,7 +254,7 @@ int user1_init_global(void)
   DTdumpgen[DTDEBUG] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 100;
+  DTr = 1000;
 
 
   tf=2E3; // very problem dependent, should override

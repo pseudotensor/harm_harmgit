@@ -282,7 +282,7 @@ int init_global(void)
   DTdumpgen[DTDEBUG] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 100;
+  DTr = 1000;
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
@@ -294,7 +294,7 @@ int init_global(void)
   DTi = 10.0;                 /* image file frequ., in units of M */
   DTdebug = 250.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
-  DTr = 100;                  /* restart file period in steps */
+  DTr = 1000;                  /* restart file period in steps */
 #endif
 
 
