@@ -351,6 +351,7 @@
 // From 11K -> 17K -- not that big a difference after a day of pain.
 // 
 //
+// On Ranger: 4x4x4 per CPU with PARALINE+STAG+DISS+LUM (but R0=0 and Rout=10) on 2048 processors and 16x16x8 for ncpux?: late-time with 54K ZCPS with average of 10% fractional diagnostics
 //
 ///////////////////////////////////////////////////////
 //

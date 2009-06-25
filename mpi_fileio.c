@@ -209,10 +209,10 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   if(readwrite==WRITEFILE){
     // i+1 since called inside loop before i++, but really has done i++ things
-    bfi=(k*N1*N2+j*N1+(i+1))*numcolumns; // recall that we are always at col=0 since we always complete a column
+    bfi=((long long int)k*(long long int)N1*(long long int)N2+(long long int)j*(long long int)N1+(long long int)(i+1))*(long long int)numcolumns; // recall that we are always at col=0 since we always complete a column
   }
   else if(readwrite==READFILE){
-    bfi=(k*N1*N2+j*N1+i)*numcolumns;
+    bfi=((long long int)k*(long long int)N1*(long long int)N2+(long long int)j*(long long int)N1+(long long int)i)*(long long int)numcolumns;
   }
 
 
@@ -220,11 +220,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   else{
     // see if completed a single node in the list yet
     if(readwrite==WRITEFILE){
-      if(bfi==(datagot+blinkptr->num)) dolocal=1; // at a completion point, need to send to cpu=0
+      if(bfi==((long long int)datagot+(long long int)blinkptr->num)) dolocal=1; // at a completion point, need to send to cpu=0
       else   dolocal=0; // not yet completed
     }
     else if(readwrite==READFILE){
-      if(bfi==datagot) dolocal=1; // at a completion point, need to recv from cpu=0
+      if(bfi==(long long int)datagot) dolocal=1; // at a completion point, need to recv from cpu=0
       else   dolocal=0; // not yet completed
     }
   }
@@ -267,7 +267,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       fprintf(fail_file,"got here 0.66 : %lld\n",writebuf); fflush(fail_file);
 #endif
       // adjust offset to keep standard writebuf BUFFERMAP format with just an offset (offset keeps true memory area always as written part)
-      bufferoffset-=blinkptr->num;// or =-datagot+blinkptr->num
+      bufferoffset -= (long long int)blinkptr->num;// or =-(long long int)datagot+(long long int)blinkptr->num
 
 
     }
@@ -289,13 +289,13 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 #if(DEBUGMINMEM)
       fprintf(fail_file,"got here 0.66 : %lld %lld\n",writebuf,blinkptr); fflush(fail_file);
 #endif
-      bufferoffset=-datagot;
+      bufferoffset=(long long int)(-datagot);
     }// end if READFILE
 
 
 
-    datagot+=(blinkptr->num);
-    lastnum=blinkptr->num;
+    datagot += (long long int)(blinkptr->num);
+    lastnum = (long long int)(blinkptr->num);
     // now iterate to next node in list
     blinkptr=(blinkptr->np);
 #if(DEBUGMINMEM)
@@ -305,11 +305,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       thisslavedone=1;
       // then done with list, check to see if everything adds up
       if(
-	 ((readwrite==WRITEFILE)&&(-bufferoffset!=N1*N2*N3*numcolumns))
-	||((readwrite==READFILE)&&(-bufferoffset!=N1*N2*N3*numcolumns-lastnum))
+	 ((readwrite==WRITEFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns))
+	||((readwrite==READFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns-(long long int)lastnum))
 	 )
 	{
-	dualfprintf(fail_file,"local total doesn't equal expected value\n got=%d demand=%d\n",-bufferoffset,N1*N2*N3*numcolumns);
+	dualfprintf(fail_file,"local total doesn't equal expected value\n got=%d demand=%d\n",-bufferoffset,(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns);
 	myexit(10002);
       }
     }
@@ -346,7 +346,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   // check to see if done with cpu=0 data (we use cpu=0 to continue grabbing data as needed)
   if(readwrite==WRITEFILE){
     // wait until all data is grabbed from cpu=0 to send to disk before holding up here.
-    if((myid==0)&&(bfi==N1*N2*N3*numcolumns)){
+    if((myid==0)&&(bfi==(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns)){
       done0=1;
     }
     else done0=0;
@@ -386,7 +386,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
     // we need to loop over list until hit a marked end-cpu.  This will give us a chunk of data to sort for direct output
     // this is the offset to the sorted part of jonio
-    joniooffset=joniosize/2;
+    joniooffset=(long long int)joniosize/((long long int)2);
 
 #if(DEBUGMINMEM)
     fprintf(fail_file,"got here 2: joniooffset=%lld\n",joniooffset); fflush(fail_file);
@@ -412,10 +412,10 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	// determine amount of data to get from cpu group
 	
 	// limit the amount of data once doing last grab
-	if((long long int)datasofar0+(long long int)joniosize/2>(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0=-(long long int)datasofar0+(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
-	else datatogetc0=joniosize/2;
+	if((long long int)datasofar0+(long long int)joniosize/((long long int)2)>(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0=-(long long int)datasofar0+(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
+	else datatogetc0=joniosize/((long long int)2);
 	// new amount of data (that will be read total)
-	datasofarc0+=datatogetc0;      
+	datasofarc0 += (long long int)datatogetc0;
 
 
 	doset=1;
@@ -424,12 +424,12 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datatoget0=0;
 	while(doset){
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.4 : cpu=%lld: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
+	  fprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
 #endif
-	  datatoget0+=cpulinkptr->num;
+	  datatoget0 += (long long int)(cpulinkptr->num);
 	  if(cpulinkptr->cpu==0) doing0=1;
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.5: %lld %lld %lld\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
+	  fprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
 	  fprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
 #endif
 	  MPI_Irecv(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
@@ -446,7 +446,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 #endif
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here 3.54: %lld %lld %lld\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
+	    fprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
 #endif
 
 
@@ -470,11 +470,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    // gj : "" for j-location
 	    // gk : "" for k-location
 
-	    mypos=(long long int)(sii/numcolumns) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*totalsize[1] + (long long int)(cpulinkptr->rk)*totalsize[1]*totalsize[2];
+	    mypos=(long long int)(sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + (long long int)(cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
 
 	    gi=(long long int)mypos%((long long int)totalsize[1]);
-	    gj=(long long int)((mypos%((long long int)totalsize[1]*totalsize[2]))/((long long int)totalsize[1]));
-	    gk=(long long int)(mypos/((long long int)totalsize[1]*totalsize[2]));
+	    gj=(long long int)((mypos%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
+	    gk=(long long int)(mypos/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
 	    fprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
@@ -513,7 +513,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  // see if local data total is as expected
 	  //
 	  ////////////////
-	  if(uii!=cpulinkptr->num){
+	  if(uii!=(long long int)(cpulinkptr->num)){
 	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
 	    myexit(10003);
 	  }
@@ -526,8 +526,8 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 	// see if total data is as expected
-	datasofar0+=datatoget0; // diagnostic
-	if(datasofar0!=datasofarc0){
+	datasofar0 += (long long int)datatoget0; // diagnostic
+	if((long long int)datasofar0 != (long long int)datasofarc0){
 	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
 	  myexit(10004);
 	}
@@ -588,8 +588,8 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	if(cpulinkptr==NULL){
 	  dofull=0; // end of list
 	  masterdone=1;
-	  if(datasofar0!=totalsize[1]*totalsize[2]*totalsize[3]*numcolumns){
-	    dualfprintf(fail_file,"write: total data written not equal to expected amount: wrote=%d expected=%d\n",datasofar0,totalsize[1]*totalsize[2]*totalsize[3]*numcolumns);
+	  if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
+	    dualfprintf(fail_file,"write: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
 	    myexit(10005);
 	  }
 	}
@@ -621,7 +621,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 	// limit the amount of data once doing last grab
-	if(datasofar0+joniosize/2>totalsize[1]*totalsize[2]*totalsize[3]*numcolumns) datatogetc0=-datasofar0+totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;
+	if(datasofar0+(long long int)joniosize/((long long int)2) > (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0 = -(long long int)datasofar0 + (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
 	else datatogetc0=joniosize/2;
 	// new amount of data (that will be read total)
 	datasofarc0+=datatogetc0;      
@@ -697,7 +697,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 #endif
 
 	  if(cpulinkptr->cpu==0) doing0=1;
-	  datatoget0+=cpulinkptr->num;
+	  datatoget0 += (long long int)(cpulinkptr->num);
 
 	  // copy from 2nd half of jonio to first half the node cpu's data
 	  uii=0;
@@ -706,11 +706,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    fprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
 #endif
 
-	    mypos=(sii/numcolumns) + (cpulinkptr->ri) + (cpulinkptr->rj)*totalsize[1] + (cpulinkptr->rk)*totalsize[1]*totalsize[2];
+	    mypos=(long long int)((long long int)sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + ((long long int)cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
 
-	    gi=mypos%totalsize[1];
-	    gj=(int)((mypos%(totalsize[1]*totalsize[2]))/totalsize[1]);
-	    gk=(int)(mypos/(totalsize[1]*totalsize[2]));
+	    gi=((long long int)mypos)%((long long int)totalsize[1]);
+	    gj=(long long int)((((long long int)mypos)%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
+	    gk=(long long int)(((long long int)mypos)/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
 	    fprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
@@ -743,7 +743,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  /////////////////////
 	  //
 	  // check!
-	  if(uii!=cpulinkptr->num){
+	  if(uii != (long long int)(cpulinkptr->num)){
 	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
 	    myexit(10006);
 	  }
@@ -756,7 +756,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  // alternative is to have many sends, but then need to desort all at once which isn't easy since cycling through link list one at a time only once (could store starter pointer, etc.)
 	  MPI_Wait(&request0,&mpichstatus);
 	  
-	  datasent0+=cpulinkptr->num; // diagnostic
+	  datasent0 += (long long int)(cpulinkptr->num); // diagnostic
 
 	  if(cpulinkptr->end) doset=0;
 	  cpulinkptr=cpulinkptr->np;
@@ -780,12 +780,12 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	fprintf(fail_file,"got here6\n"); fflush(fail_file);	  
 #endif
 
-	datasofar0+=datatoget0; // diagnostic
-	if(datasofar0!=datasofarc0){
+	datasofar0 += (long long int)datatoget0; // diagnostic
+	if((long long int)datasofar0 != (long long int)datasofarc0){
 	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
 	  myexit(10007);
 	}
-	if(datasent0!=datatoget0){
+	if((long long int)datasent0 != (long long int)datatoget0){
 	  dualfprintf(fail_file,"data sent doesn't match data read\n");
 	  myexit(10008);
 	}
@@ -793,8 +793,8 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	if(cpulinkptr==NULL){
 	  masterdone=1; // i.e. don't come back
 	  dofull=0; // end of list
-	  if(datasofar0!=totalsize[1]*totalsize[2]*totalsize[3]*numcolumns){
-	    dualfprintf(fail_file,"read: total data written not equal to expected amount: wrote=%d expected=%d\n",datasofar0,totalsize[1]*totalsize[2]*totalsize[3]*numcolumns);
+	  if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
+	    dualfprintf(fail_file,"read: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
 	    myexit(10009);
 	  }
 	}// end if NULL
@@ -1314,7 +1314,7 @@ long long int gcountmod(int numcolumns)
 {
   long long int myval;
   
-  myval=(long long int)ROUND2LONGLONGINT(ceil((double)((FTYPE)N1*(FTYPE)N2*(FTYPE)N3*(FTYPE)NUMBUFFERS/(FTYPE)numcolumns)))*numcolumns;
+  myval=(long long int)ROUND2LONGLONGINT(ceil((FTYPE)((FTYPE)N1*(FTYPE)N2*(FTYPE)N3*(FTYPE)NUMBUFFERS/(FTYPE)numcolumns)))*(long long int)numcolumns;
 
   return(myval);
 }
@@ -1448,6 +1448,9 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
     }// end over numfiles
   }// end if myid==0
   
+
+
+
   if ( (sorted==SORTED)&&(myid == 0) ){		// total on CPU=0 is stored in memory somehow for sorting before output
 
     /////////////
@@ -1477,7 +1480,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
       }
 
     }
-    joniosize=sizeofmemory/(long long int)sizeofdatatype;
+    joniosize=sizeofmemory/((long long int)sizeofdatatype);
 
 #if(DEBUGMINMEM)
     dualfprintf(fail_file,"jonio sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
@@ -1511,6 +1514,9 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
     dualfprintf(fail_file,"got here1\n");
     */
 #endif
+
+    logsfprintf("mpiios_init jonio: sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
+
   }
 
 
@@ -1543,7 +1549,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
     }
   }
 
-  writebufsize=sizeofmemory/(long long int)sizeofdatatype; // never used currently
+  writebufsize=sizeofmemory/((long long int)sizeofdatatype); // never used currently
 
 #if(DEBUGMINMEM)
   dualfprintf(fail_file,"writebuf sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
@@ -1578,7 +1584,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
   */
 #endif
 #endif
-  logsfprintf("mpiios_init end\n");
+  logsfprintf("mpiios_init end: sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
 
 }
 
@@ -1699,7 +1705,7 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
   free(writebuf);		// writebuf used by each CPU
 
   if (myid == 0) {
-    logsfprintf("on myid==0: mpiios combine: writing: %lld\n",(long long int)(totalsize[1] * totalsize[2] * totalsize[3] * numcolumns));
+    logsfprintf("on myid==0: mpiios combine: writing: %lld\n",(long long int)totalsize[1] * (long long int)totalsize[2] * (long long int)totalsize[3] * (long long int)numcolumns);
     // now write out collected data using CPU=0
     if(docolsplit){
       numfiles=numcolumns;
@@ -1707,6 +1713,7 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
     else numfiles=1;
 
     if(bintxt==BINARYOUTPUT){
+      // GODMARK: Below may be too large of a size for fwrite() to output
       if(numfiles==1) fwrite(jonio, sizeofdatatype,totalsize[1] * totalsize[2] * totalsize[3] * numcolumns, *fp);
       else{
 	for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
@@ -1811,6 +1818,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
       
       if(bintxt==BINARYOUTPUT){
 	// first let cpu=0 read data
+	// GODMARK: Below may be too big for fread() to read
 	if(numfiles==1) fread(jonio, sizeofdatatype,totalsize[1] * totalsize[2] * totalsize[3] * numcolumns, *fp);
 	else{
 	  for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
@@ -1868,7 +1876,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
 		dualfprintf(fail_file,"mapvaluetempbuf out of range: %d\n",mapvaluetempbuf);
 		myexit(96726);
 	      }
-	      if((mapvaluejonio<0)||(mapvaluejonio>=(long long int)totalsize[1]*totalsize[2]*totalsize[3]*numcolumns)){
+	      if((mapvaluejonio<0)||(mapvaluejonio>=(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns)){
 		dualfprintf(fail_file,"mapvaluejonio out of range: %d\n",mapvaluejonio);
 		myexit(6726);
 	      }
@@ -1960,7 +1968,7 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
       DUMPGENLOOP{
 	for(col=0;col<numcolumns;col++){
 
-	  bufferwritemap=col+numcolumns*(i+N1*j+N1*N2*k);
+	  bufferwritemap=(long long int)col + (long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
 
 	  if(datatype== MPI_UNSIGNED_CHAR){
 	    fprintf(fp[(bufferwritemap)%numfiles],"%c ",writebuf1[bufferwritemap]);
@@ -2097,7 +2105,7 @@ void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
 
 	DUMPGENLOOP for (col = 0; col < numcolumns; col++) {
 
-	  bufferwritemap=col+numcolumns*(i+N1*j+N1*N2*k);
+	  bufferwritemap=(long long int)col+(long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
 
 	  if(datatype==MPI_UNSIGNED_CHAR){
 	    fscanf(fp[(bufferwritemap)%numfiles],"%hu",&short4char);
@@ -2151,6 +2159,7 @@ int getsizeofdatatype(MPI_Datatype datatype)
   else if (datatype == MPI_DOUBLE) sizeofdatatype=sizeof(double);
   else if (datatype == MPI_LONG_DOUBLE) sizeofdatatype=sizeof(long double);
   else if (datatype == MPI_INT) sizeofdatatype=sizeof(int);
+  else if (datatype == MPI_LONG) sizeofdatatype=sizeof(long int); // sometimes different than (int)
   else if (datatype == MPI_LONG_LONG_INT) sizeofdatatype=sizeof(long long int);
   else{
     dualfprintf(fail_file,"No such datatype=%d\n",datatype);
@@ -2840,7 +2849,7 @@ int setuplinklist(int numcolumns,int which)
     // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
     // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
     // chunk in minimum size of numcolumns
-    if((gcount%(gcountmod(numcolumns))==0)||(gcount==totalzones*numcolumns)){
+    if((gcount%(gcountmod(numcolumns))==0)||(gcount==(long long int)totalzones*(long long int)numcolumns)){
       // ok, so numcolumns can't exceed the buffer size, highly unlikely to happen, and checked for!
       if(myid==0){
 	// must do in order determined to have data, not numerical order

@@ -11,7 +11,7 @@
 
 // none of below blink integers should be nearly as large as 32-bit signed integer can handle
 struct blink {
-  int num;
+  int num; // must stay int since used as argument to MPI functions that assume int -- so this limits number of elements one can pass.
   struct blink * np;
   // only used by cpu=0
   int cpu; // which cpu
