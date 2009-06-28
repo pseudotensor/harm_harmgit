@@ -131,7 +131,7 @@ AVOIDFORK=1
 GPROFFLAG=-g -pg
 
 ifeq ($(USETACCRANGER),1)
-GPROFFLAG=-g -qp
+GPROFFLAG=-g -p
 endif
 
 
