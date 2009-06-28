@@ -129,7 +129,14 @@ AVOIDFORK=1
 # gprof -A -I<sourcedir>
 # gprof -l -A -x s
 GPROFFLAG=-g -pg
+
+ifeq ($(USETACCRANGER),1)
+GPROFFLAG=-g -qp
 endif
+
+
+endif
+
 ifeq ($(USEGPROF),0)
 GPROFFLAG=
 endif
