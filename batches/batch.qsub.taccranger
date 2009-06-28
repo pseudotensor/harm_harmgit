@@ -10,9 +10,11 @@
 # ssh tg802609@ranger.tacc.utexas.edu
 
 # To get environment (should do before compile as well):
-module unload mvapich2 pgi
+# MPI-2 (mvapich2) has bugs and MPI stalls under some cases like large files being written -- clearly bug.
+# Use MPI-1 or OpenMPI
+#module unload mvapich2 pgi
 module load intel
-module load mvapich2
+#module load mvapich2
 module load mkl
 
 # do "module avail" to see other things that are available

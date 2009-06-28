@@ -326,7 +326,7 @@
 // 64x16:      2       1            64        8x8x1     1730K   77%
 // 64x16:      2       4            16        4x4x1     1488K   66%
 //
-// So each Ranger core is almost 2X slower than ki-rh42.  That's AMD for you!
+// So each Ranger core is almost 2X slower than ki-rh42.  That's AMD vs. Intel for you!
 // So clearly bad to cross on PCI bus with memory as OpenMP has to when more than 4 threads with 1 thread per core.
 // MPI seems to be doing fine at 64^2 on one node.
 // Unclear why OpenMP is actually slower even for 64x16, which worked better on ki-rh42 by 2X!
@@ -334,13 +334,20 @@
 //
 //
 // Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTSTAG and DODISS=DODISSVSR=DOLUMVSR=1:
+// Default: module unload mvapich2 pgi ; module load mvapich2 intel mkl
 //
 // N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
 //
 // 64x32x8:    1       1             1        1x1x1        6K
+// 64x32x32:   1       1             1        1x1x1        8.7K        [to be used as reference for efficiency for 64x32x32 per MPI task runs]
 // 64x32x8:    4       4             4        2x2x1       41K   43%
 // 64x32x8:   16       1            16        4x4x1       84K   88%
 // 64x32x8:   64       4            64        8x8x1      617K   40%
+// 64x32x8:   64       4            64        8x8x1      624K   41%  [used purely static schedule, no user chunking]
+// 128x64x8:  64       4            64        8x8x1      713K   46%  [used purely static schedule, no user chunking]
+// 64x32x32:  64       4            64        8x8x1      884K   40%-57%  [used purely static schedule, no user chunking] [smaller % is when using correct reference point]
+// 64x32x32:  64       4            64        8x8x1      896K   40%-58%  [Changed to mvapich/1.0.1 during compile and in batch script]
+// 64x32x32:  64       4            64        8x8x1      888K   39%-58%  [Changed to openmpi/1.3 during compile and in batch script]
 // 64x32x8:  256       1           256        8x8x4     1278K   83%
 //
 //
