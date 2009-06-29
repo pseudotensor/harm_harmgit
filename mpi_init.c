@@ -308,7 +308,7 @@ void myargs(int argc, char *argv[])
 
   // test
   if(sizeproclist_grmhd!=numprocs){
-    fprintf(stderr, "Got (sizeproclist_grmhd=%d) != (numprocs=ncpux1*ncpux2*ncpux3=%d).  Did you run without mpirun?\n",sizeproclist_grmhd,numprocs);
+    fprintf(stderr, "Got (sizeproclist_grmhd=%d) != (numprocs=ncpux1*ncpux2*ncpux3=%d). ncpux1=%d ncpux2=%d ncpux3=%d.  Did you run without mpirun?\n",sizeproclist_grmhd,numprocs,ncpux1,ncpux2,ncpux3);
     exit(1);
   }
 

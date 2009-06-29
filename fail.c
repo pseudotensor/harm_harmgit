@@ -7,7 +7,7 @@ int fail(int i, int j, int k, int loc, int fail_type)
   // failed use for diag below to avoid bad calculations
   if(whocalleducon==1) return(1);
 
-  dualfprintf(fail_file, "\n\nfail: i=%d j=%d k=%d ft=%d\n",startpos[1]+ i, startpos[2]+j, startpos[3]+k, fail_type);
+  dualfprintf(fail_file, "\n\nfail: ti=%d tj=%d tk=%d ft=%d\n",startpos[1]+ i, startpos[2]+j, startpos[3]+k, fail_type);
 
   
   failed = 1 ;
