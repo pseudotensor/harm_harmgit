@@ -613,6 +613,18 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       geomcornodir2=1.0;
 #endif
 
+
+
+#if(0) // DEBUG:
+    if(i==390 && j==1 && k==0){
+      dualfprintf(fail_file,"ORIG: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgeom->gdet);
+      dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
+    }
+#endif
+
+
+
+
       // see fluxct.c for definitions of signature
       // e.g. edgedir=3 gives F[1][B2]=E3 and F[2][B1]=-E3  F[3][B3]=0, which is correct.
       // Checked that correct for all edgedir's

@@ -73,7 +73,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   rho = pr[RHO];
   u = pr[UU];
   if(u<0) u=0; // cold fix
-  if(rho<0) rho=0; // neg. density fix
+  if(rho<0) rho=SMALL; // neg. density fix (so that u/rho=0 but rho==SMALL).  Required to avoid NaN when computing cs2 in case both u<=0 and rho<=0.
 
   // OPTMARK: Now store pressure
   //  P = pressure_rho0_u(rho,u);

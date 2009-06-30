@@ -419,6 +419,13 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 	  B1ke=B2ke=B3ke=ke;
 	}
 
+
+	//	dualfprintf(fail_file,"dir=%d Clean1: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
+	//	dualfprintf(fail_file,"CleanB1: B1is=%d B1ie=%d B1js=%d B1je=%d B1ks=%d B1ke=%d\n",B1is,B1ie,B1js,B1je,B1ks,B1ke);
+	//	dualfprintf(fail_file,"CleanB2: B2is=%d B2ie=%d B2js=%d B2je=%d B2ks=%d B2ke=%d\n",B2is,B2ie,B2js,B2je,B2ks,B2ke);
+	//	dualfprintf(fail_file,"CleanB3: B3is=%d B3ie=%d B3js=%d B3je=%d B3ks=%d B3ke=%d\n",B3is,B3ie,B3js,B3je,B3ks,B3ke);
+
+
 	////      COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
 	OPENMP3DLOOPBLOCK{
@@ -2234,6 +2241,11 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
 
 // compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
 // To use this, remove "_donor" on function name and rename normal function to be with (e.g.) "_normal" on end of function name.
+
+// local corresponding value to global STOREWAVESPEEDS
+#define STOREWAVESPEEDMETHOD 1
+
+// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
 //int fluxcalc
 int fluxcalc_donor
 (int stage,
@@ -2269,6 +2281,7 @@ int fluxcalc_donor
   struct of_geom *ptrgeomcorn3=&geomcorn3dontuse;
   //    FTYPE Flux[3][3][NDIM][NPR];
   //    FTYPE ctop[3][3][NDIM];
+  FTYPE primcent[3][3][NPR];
   FTYPE prim[3][3][NPR];
   FTYPE uconf1[3][3][NDIM];
   FTYPE uconf2[3][3][NDIM];
@@ -2302,6 +2315,13 @@ int fluxcalc_donor
   extern int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   int is,ie,js,je,ks,ke;
 
+
+
+
+
+
+
+
   // default
   ptrstate_c = &state_c;
   ptrstate_l = &state_l;
@@ -2327,11 +2347,13 @@ int fluxcalc_donor
   
   MYCOMPLOOPF{
     // set primitives (effective interpolation)
+    kk=0;
     for(ii=im1mac(i);ii<=ip1mac(i);ii++){
       for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
 	shifti=1+ii-i;
 	shiftj=1+jj-j;
 
+	PLOOP(pliter,pl) primcent[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
 	PLOOP(pliter,pl) prim[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
 	PLOOPBONLY(pl) prim[shifti][shiftj][pl] = MACP0A1(pstag,ii,jj,kk,pl); // replace with face values (should be same really)
 
@@ -2396,22 +2418,42 @@ int fluxcalc_donor
 
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf1, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
-      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);
+      if(STOREWAVESPEEDMETHOD==0){
+	// == 0 method
+	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);
+      }
+      else{
+	// ==1 method
+	get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+	get_state(primcent[0][1],ptrgeomc,&state);
+	MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	get_geometry(ii,jj,kk, CENT, ptrgeomc);
+	get_state(primcent[1][1],ptrgeomc,&state);
+	MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);	
+      }
 
-      c2d[CMIN][0] = MAX(0.,-ocminmax[CMIN]);
-      c2d[CMAX][0] = MAX(0.,+ocminmax[CMAX]);
+
+
+      //      c2d[CMIN][0] = MAX(0.,-ocminmax[CMIN]);
+      //      c2d[CMAX][0] = MAX(0.,+ocminmax[CMAX]);
+      // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
+      c2d[CMIN][0] = ocminmax[CMIN];
+      c2d[CMAX][0] = ocminmax[CMAX];
  
       // now get flux
       MYFUN(flux_compute(i, j, k, dir, ptrgeomf1, ocminmax_l,ocminmax_r, ocminmax, ctopptr[1], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
       PLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl)=F[pl];
 
 #if(0)
+      // DEBUG:
       if(i==390 && j==1 && k==0){
 	dualfprintf(fail_file,"\n");
 	PLOOP(pliter,pl) dualfprintf(fail_file,"F1: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+	dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[1]);
       }
 #endif
 
@@ -2436,14 +2478,29 @@ int fluxcalc_donor
 
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf1, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
-      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
-      // have cmin,cmax,ctop here
 
-      c2d[CMIN][0] = fabs(MAX(c2d[CMIN][0],-ocminmax[CMIN]));
-      c2d[CMAX][0] = fabs(MAX(c2d[CMIN][0],+ocminmax[CMAX]));
+      if(STOREWAVESPEEDMETHOD==0){
+	// ==0 method
+	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
+	// have cmin,cmax,ctop here
+      }
+      else{
+	// ==1 method
+	get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+	get_state(primcent[0][0],ptrgeomc,&state);
+	MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	get_geometry(ii,jj,kk, CENT, ptrgeomc);
+	get_state(primcent[1][0],ptrgeomc,&state);
+	MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
+      }
+
+      // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
+      c2d[CMIN][0] = fabs(MAX(c2d[CMIN][0],ocminmax[CMIN]));
+      c2d[CMAX][0] = fabs(MAX(c2d[CMAX][0],ocminmax[CMAX]));
       ctoporig[0]  = MAX(c2d[CMIN][0],c2d[CMAX][0]);
 
     }
@@ -2482,14 +2539,29 @@ int fluxcalc_donor
 
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf2, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
-      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
-      // have cmin,cmax,ctop here
+      
+      if(STOREWAVESPEEDMETHOD==0){
+	// == 0 method
+	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
+	// have cmin,cmax,ctop here
+      }
+      else{
+	// == 1 method
+	get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
+	get_state(primcent[1][0],ptrgeomc,&state);
+	MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	get_geometry(ii,jj,kk, CENT, ptrgeomc);
+	get_state(primcent[1][1],ptrgeomc,&state);
+	MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
+      }
 
-      c2d[CMIN][1] = MAX(0.,-ocminmax[CMIN]);
-      c2d[CMAX][1] = MAX(0.,+ocminmax[CMAX]);
+      // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
+      c2d[CMIN][1] = ocminmax[CMIN];
+      c2d[CMAX][1] = ocminmax[CMAX];
 
 
       // now get flux
@@ -2497,10 +2569,12 @@ int fluxcalc_donor
       PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)=F[pl];
 
 #if(0)
+      // DEBUG:
       if(i==390 && j==1 && k==0){
 	dualfprintf(fail_file,"\n");
 	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim: pl=%d prim[1][0]=%21.15g prim[1][1]=%21.15g\n",prim[1][0][pl],prim[1][1][pl]);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"F2: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+	dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[2]);
       }
 #endif
 
@@ -2525,14 +2599,28 @@ int fluxcalc_donor
 
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf2, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
-      // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-      MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-      MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-      cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
-      // have cmin,cmax,ctop here
+      if(STOREWAVESPEEDMETHOD==0){
+	// ==0 method
+	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
+	// have cmin,cmax,ctop here
+      }
+      else{
+	// ==1 method
+	get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
+	get_state(primcent[0][0],ptrgeomc,&state);
+	MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+	get_geometry(ii,jj,kk,CENT, ptrgeomc);
+	get_state(primcent[0][1],ptrgeomc,&state);
+	MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
+      }
 
-      c2d[CMIN][1] = fabs(MAX(c2d[CMIN][1],-ocminmax[CMIN]));
-      c2d[CMAX][1] = fabs(MAX(c2d[CMIN][1],+ocminmax[CMAX]));
+      // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
+      c2d[CMIN][1] = fabs(MAX(c2d[CMIN][1],ocminmax[CMIN]));
+      c2d[CMAX][1] = fabs(MAX(c2d[CMAX][1],ocminmax[CMAX]));
       ctoporig[1]  = MAX(c2d[CMIN][1],c2d[CMAX][1]);
 
     }
@@ -2551,7 +2639,14 @@ int fluxcalc_donor
     // now compute correct staggered EMF at CORN3
     get_geometry(i,j,k, CORN3, ptrgeomcorn3);
 
+
+#define WHICHEMF 1
+
+#if(WHICHEMF==0)
+    // not really spatially correct for emf2d and vchar not like normal code
+
     // EMF3
+    kk=0;
     for(ii=im1mac(i);ii<=ip1mac(i);ii++){
       for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
 	shifti=1+ii-i;
@@ -2568,17 +2663,117 @@ int fluxcalc_donor
 
 	// GODMARK: vchar directly at CORN3, which is different than averaging procedure done in normal code
 	get_state(prim[shifti][shiftj], ptrgeomcorn3, &state);
-	dir=1; vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant);
-	dir=2; vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant);
+	dir=1; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 10);
+	dir=2; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 11);
 
 
 	//	dualfprintf(fail_file,"i=%d j=%d k=%d ii=%d jj=%d kk=%d ",i,j,k,ii,jj,kk);
 	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g ",pl,prim[shifti][shiftj][pl]);
 	//	dualfprintf(fail_file,"\n");
-	
-
       }
     }
+
+    // use vchar generated at CORN3
+    //c[CMIN,CMAX][0=odir1,1=odir2]
+    // dir=1:
+    ctop[0]    = MAX((-cminmax[0][0][CMIN][1]),(-cminmax[1][0][CMIN][1]));
+    ctop[0]    = MAX(ctop[0],(-cminmax[0][1][CMIN][1]));
+    ctop[0]    = MAX(ctop[0],(-cminmax[1][0][CMIN][1]));
+    ctop[0]    = MAX(ctop[0],(-cminmax[1][1][CMIN][1]));
+    ctop[0]    = MAX(ctop[0],0.0);
+    
+    ctop[0]    = MAX(ctop[0],(cminmax[0][0][CMAX][1]));
+    ctop[0]    = MAX(ctop[0],(cminmax[1][0][CMAX][1]));
+    ctop[0]    = MAX(ctop[0],(cminmax[0][1][CMAX][1]));
+    ctop[0]    = MAX(ctop[0],(cminmax[1][1][CMAX][1]));
+
+    // dir=2:
+    ctop[1]    = MAX((-cminmax[0][0][CMIN][2]),(-cminmax[1][0][CMIN][2]));
+    ctop[1]    = MAX(ctop[1],(-cminmax[0][1][CMIN][2]));
+    ctop[1]    = MAX(ctop[1],(-cminmax[1][0][CMIN][2]));
+    ctop[1]    = MAX(ctop[1],(-cminmax[1][1][CMIN][2]));
+    ctop[1]    = MAX(ctop[1],0.0);
+
+    ctop[1]    = MAX(ctop[1],(cminmax[0][0][CMAX][2]));
+    ctop[1]    = MAX(ctop[1],(cminmax[1][0][CMAX][2]));
+    ctop[1]    = MAX(ctop[1],(cminmax[0][1][CMAX][2]));
+    ctop[1]    = MAX(ctop[1],(cminmax[1][1][CMAX][2]));
+
+    // use vchar generated and "max-averaged" as in normal code
+    //    ctop[0] = ctoporig[0];
+    //    ctop[1] = ctoporig[1];
+
+#else
+
+    // 1 1
+    ii=i;
+    jj=j;
+    kk=k;
+    get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+    ucon_calc(primcent[1][1], ptrgeomf1, uconf1[1][1],others);
+
+    get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+    ucon_calc(primcent[1][1], ptrgeomf2, uconf2[1][1],others);
+
+    emf2d[1][1] = (
+			     + prim[1][1][B2]*uconf2[1][1][1]/uconf2[1][1][TT]
+			     - prim[1][1][B1]*uconf1[1][1][2]/uconf1[1][1][TT]
+			     );
+
+    // 0 1
+    ii=im1mac(i);
+    jj=j;
+    kk=k;
+    get_geometry(ii+1,jj,kk, FACE1, ptrgeomf1);
+    ucon_calc(primcent[0][1], ptrgeomf1, uconf1[0][1],others);
+
+    get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+    ucon_calc(primcent[0][1], ptrgeomf2, uconf2[0][1],others);
+
+    emf2d[0][1] = (
+			     + prim[0][1][B2]*uconf2[0][1][1]/uconf2[0][1][TT]
+			     - prim[1][1][B1]*uconf1[0][1][2]/uconf1[0][1][TT]
+			     );
+
+    // 1 0
+    ii=i;
+    jj=jm1mac(j);
+    kk=k;
+    get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+    ucon_calc(primcent[1][0], ptrgeomf1, uconf1[1][0],others);
+
+    get_geometry(ii,jj+1,kk, FACE2, ptrgeomf2);
+    ucon_calc(primcent[1][0], ptrgeomf2, uconf2[1][0],others);
+
+    emf2d[1][0] = (
+			     + prim[1][1][B2]*uconf2[1][0][1]/uconf2[1][0][TT]
+			     - prim[1][0][B1]*uconf1[1][0][2]/uconf1[1][0][TT]
+			     );
+
+    // 0 0
+    ii=im1mac(i);
+    jj=jm1mac(j);
+    kk=k;
+    get_geometry(ii+1,jj,kk, FACE1, ptrgeomf1);
+    ucon_calc(primcent[0][0], ptrgeomf1, uconf1[0][0],others);
+
+    get_geometry(ii,jj+1,kk, FACE2, ptrgeomf2);
+    ucon_calc(primcent[0][0], ptrgeomf2, uconf2[0][0],others);
+
+    emf2d[0][0] = (
+			     + prim[0][1][B2]*uconf2[0][0][1]/uconf2[0][0][TT]
+			     - prim[1][0][B1]*uconf1[0][0][2]/uconf1[0][0][TT]
+			     );
+
+    // don't compute cminmax[][][CMIN/CMAX][dir] since not needed
+
+    // use vchar generated and "max-averaged" as in normal code
+    ctop[0] = ctoporig[0];
+    ctop[1] = ctoporig[1];
+#endif
+
+
+
     //edgedir=3 odir1=1 odir2=2
     // dB in perp to B-dir at CORN3
     // dir=1:
@@ -2587,43 +2782,20 @@ int fluxcalc_donor
     dB[1] = prim[1][1][B2]-prim[0][1][B2];
 
 
-    if(0){
-      // use vchar generated at CORN3
-      //c[CMIN,CMAX][0=odir1,1=odir2]
-      // dir=1:
-      ctop[0]    = MAX((-cminmax[0][0][CMIN][1]),(-cminmax[1][0][CMIN][1]));
-      ctop[0]    = MAX(ctop[0],(-cminmax[0][1][CMIN][1]));
-      ctop[0]    = MAX(ctop[0],(-cminmax[1][0][CMIN][1]));
-      ctop[0]    = MAX(ctop[0],(-cminmax[1][1][CMIN][1]));
-      ctop[0]    = MAX(ctop[0],0.0);
+    emffinal=(
+	      + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
+	      - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0])
+	      );
+
+#if(0)
+      // DEBUG:
+    if(i==390 && j==1 && k==0){
+      dualfprintf(fail_file,"NEW: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgeomcorn3->gdet);
+      dualfprintf(fail_file,"NEW: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
+    }
+#endif
     
-      ctop[0]    = MAX(ctop[0],(cminmax[0][0][CMAX][1]));
-      ctop[0]    = MAX(ctop[0],(cminmax[1][0][CMAX][1]));
-      ctop[0]    = MAX(ctop[0],(cminmax[0][1][CMAX][1]));
-      ctop[0]    = MAX(ctop[0],(cminmax[1][1][CMAX][1]));
-
-      // dir=2:
-      ctop[1]    = MAX((-cminmax[0][0][CMIN][2]),(-cminmax[1][0][CMIN][2]));
-      ctop[1]    = MAX(ctop[1],(-cminmax[0][1][CMIN][2]));
-      ctop[1]    = MAX(ctop[1],(-cminmax[1][0][CMIN][2]));
-      ctop[1]    = MAX(ctop[1],(-cminmax[1][1][CMIN][2]));
-      ctop[1]    = MAX(ctop[1],0.0);
-
-      ctop[1]    = MAX(ctop[1],(cminmax[0][0][CMAX][2]));
-      ctop[1]    = MAX(ctop[1],(cminmax[1][0][CMAX][2]));
-      ctop[1]    = MAX(ctop[1],(cminmax[0][1][CMAX][2]));
-      ctop[1]    = MAX(ctop[1],(cminmax[1][1][CMAX][2]));
-    }
-    else{
-      // use vchar generated and "max-averaged" as in normal code
-      ctop[0] = ctoporig[0];
-      ctop[1] = ctoporig[1];
-    }
-
-    emffinal=(ptrgeomcorn3->gdet)*(
-				   + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
-				   - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0])
-				   );
+    emffinal *= (ptrgeomcorn3->gdet);
     
     // zero-out as test comparison with normal code
     if(1){
@@ -2679,6 +2851,24 @@ int fluxcalc_donor
     }
   }
 
+  FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  int Nvec[NDIM];
+  int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+
+  fluxvec[1]=F1;
+  fluxvec[2]=F2;
+  fluxvec[3]=F3;
+
+  ptrfluxvec=fluxvec;
+
+  Nvec[1]=N1;
+  Nvec[2]=N2;
+  Nvec[3]=N3;
+
+  dualfprintf(fail_file,"BEFORE CLEAN\n");
+  cleanup_fluxes(Nvec,ptrfluxvec);
+  dualfprintf(fail_file,"AFTER CLEAN\n");
 
 
 

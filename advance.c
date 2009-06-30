@@ -296,16 +296,78 @@ static int advance_standard(
 #endif
 
 
-  if(dt!=0.0){
+
+
+  if(1){
+    // NORMAL:
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-    if(1){ // normal -- must manually override even if using lim[1,2,3]=DONOR to use fluxcalcdonor()
-      MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+  }
+  
+#if(0)// DEBUG:
+  if(1){
+    ndt1donor=ndt2donor=ndt3donor=BIG;
+    MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf[2],fluxdt,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
+  }
+  // DEBUG:
+  if(1){
+    int i,j,k,pl,pliter;
+    FULLLOOP{
+      PLOOP(pliter,pl){
+	if(N1>1) MACP0A1(F1,i,j,k,pl)=GLOBALMACP0A1(F1EM,i,j,k,pl);
+	if(N2>1) MACP0A1(F2,i,j,k,pl)=GLOBALMACP0A1(F2EM,i,j,k,pl);
+	if(N3>1) MACP0A1(F3,i,j,k,pl)=GLOBALMACP0A1(F3EM,i,j,k,pl);
+      }
     }
-    else{
-      //  MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    ndt1=ndt1donor;
+    ndt2=ndt2donor;
+    ndt3=ndt3donor;
+  }
+#endif
+
+
+#if(0)// DEBUG:
+  if(1){
+    int i,j,k,pliter,pl;
+    dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
+    dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
+    COMPFULLLOOP{
+      if(i==390 && j==1 && k==0){
+	dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
+	PLOOP(pliter,pl) dualfprintf(fail_file,"          pl=%d F1orig=%21.15g F1new=%21.15g  :: F2orig=%21.15g F2new=%21.15g \n",pl,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+      }
     }
   }
+#endif
+  
+#if(0)// DEBUG:
+  if(1){
+    int i,j,k,pliter,pl;
+    FTYPE diff1,diff2;
+    FTYPE sum1,sum2;
+    dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
+    dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
+    COMPFULLLOOP{
+      PLOOP(pliter,pl){
+	diff1=fabs(MACP0A1(F1,i,j,k,pl)-GLOBALMACP0A1(F1EM,i,j,k,pl));
+	sum1=fabs(MACP0A1(F1,i,j,k,pl))+fabs(GLOBALMACP0A1(F1EM,i,j,k,pl))+SMALL;
+	diff2=fabs(MACP0A1(F2,i,j,k,pl)-GLOBALMACP0A1(F2EM,i,j,k,pl));
+	sum2=fabs(MACP0A1(F2,i,j,k,pl))+fabs(GLOBALMACP0A1(F2EM,i,j,k,pl))+SMALL;
+	if(diff1/sum1>100.0*NUMEPSILON || diff2/sum2>100.0*NUMEPSILON){
+	  dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
+	  dualfprintf(fail_file,"          pl=%d diff1/sum1=%21.15g F1orig=%21.15g F1new=%21.15g  :: diff2/sum2=%21.15g F2orig=%21.15g F2new=%21.15g \n",pl,diff1/sum1,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),diff2/sum2,MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+	}
+      }
+    }
+  }
+#endif
+
+
+
+
+
+
 
 
 
