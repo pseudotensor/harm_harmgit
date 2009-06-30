@@ -2037,6 +2037,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     // now obtain correction
     // for Xh-Xl->0 this vanishes as required
     // Plugging this new conn into EOM for T^\mu_\nu = p \delta^\mu_\nu gives exactly cancellation between source and flux differencing of pressure
+#if(0)
     // Note that correction applies to \Gamma^\kappa_{\nu\kappa}, which is a contracted quantity.  So we spread correction across each \kappa=0,1,2,3.  Hence the 0.25
     // Once later contractions operate and pressure and flux source terms appear, the contracted term involving the pressure will cancel correctly for constant pressure
     //////////////////
@@ -2060,6 +2061,26 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 	}
       }
     }
+#else
+    // Sasha's weighted method for correction
+    FTYPE sumabsconn[NDIM];
+    DLOOPA(kk){
+      sumabsconn[kk]=SMALL; // to avoid 0/0 in weight
+      DLOOPA(jj) sumabsconn[kk] += fabs(conn[jj][kk][jj]);
+    }
+
+    FTYPE dS,weight;
+    for (i = 0; i < NDIM; i++){ // over traced terms
+      for (j = 0; j < NDIM; j++){ // over each j
+	// correction to sum of trace:
+	dS=conndiag2[j]-conndiag[j];
+	// weight for this connection term
+	weight=fabs(conn[i][j][i])/sumabsconn[j];
+	// weighted correction
+	conn[i][j][i] += dS*weight;
+      }
+    }
+#endif
 
 
   } // end if correcting body forces
