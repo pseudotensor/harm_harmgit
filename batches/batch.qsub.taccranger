@@ -12,17 +12,15 @@
 # To get environment (should do before compile as well):
 # MPI-2 (mvapich2) has bugs and MPI stalls under some cases like large files being written -- clearly bug.
 # Use MPI-1 or OpenMPI.  OpenMPI supports MPI-2, so that's preferred
+# NO, apparently OpenMPI on Ranger is unstable in their environment according to their own comments!  So only MPI-1 is supported.
 #module unload mvapich2 pgi
 #module load intel
 #module load mvapich2
 #module load mkl
+#module load openmpi/1.3
 module unload mvapich2 mvaphich1 mvapich/1.0.1 openmpi/1.3 pgi mkl
 module load intel
 module load mvapich/1.0.1
-#module load openmpi/1.3
-module load mkl
-
-
 module load mkl
 
 # do "module avail" to see other things that are available

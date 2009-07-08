@@ -744,6 +744,17 @@ void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS
   int ks=-N3BND;
   int ke=N3-1+N3BND;
   
+  // override
+  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+  
+  // +-1 extra so can do check
+  is += -SHIFT1;
+  ie += +SHIFT1;
+  js += -SHIFT2;
+  je += +SHIFT2;
+  ks += -SHIFT3;
+  ke += +SHIFT3;
+
 
   copy_3dpftype_special(is, ie, js, je, ks, ke,source, destspecial);
 

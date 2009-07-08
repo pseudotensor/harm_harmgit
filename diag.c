@@ -193,18 +193,23 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   //////////////////////
   //
-  // ener dump (integrated quantities: integrate and possibly  dump them too (if doener==1))
+  // ener dump (integrated quantities: integrate and possibly  dump them too (if dodumpgen[DTENER]==1))
   //
   /////////////////////
 
-  if(dodumpgen[DTENER]||dordump||(call_code==FINAL_OUT)||(call_code==INIT_OUT)){ // need integratd quantities for restart dump, but don't write them to ener file.
-
+  // need integratd quantities for restart dump, but don't write them to ener file.
+  if(dodumpgen[DTENER]||dordump){
+    // get integrated quantities and possiblly dump them to files
     dump_ener(dodumpgen[DTENER],dordump,call_code);
+  }
+
+  // output other things not put into restart file AND update time to output to ener files
+  if(dodumpgen[DTENER]){
     if(COMPUTEFRDOT){
-      if(dodumpgen[DTENER]||(call_code==FINAL_OUT)||(call_code==INIT_OUT)){
-	frdotout(); // need to include all terms and theta fluxes on horizon/outer edge at some point GODMARK
-      }
+      frdotout(); // need to include all terms and theta fluxes on horizon/outer edge at some point GODMARK
     }
+
+    // only update DT if wrote upon ener-type file period
     whichDT=DTENER;
     // below is really floor to nearest integer plus 1
     dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));

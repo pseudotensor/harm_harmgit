@@ -952,6 +952,21 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
 // So disable for now
 #define DO_CONSERVE_D_INFAILFIXUPS 0 
 
+#define HANDLEUNEG 0
+// seems to keep failing with this, so probably treating u<0 like failure is better idea
+// 0: treat as full failure
+// 1: treat as floor issue
+
+#define HANDLERHONEG 0
+// seems to keep failing with this, so probably treating rho<0 like failure is better idea
+// 0: treat as full failure
+// 1: treat as floor issue
+
+#define HANDLERHOUNEG 0
+// seems to keep failing with this, so probably treating rho<0 like failure is better idea
+// 0: treat as full failure
+// 1: treat as floor issue
+
 
 // fix the bad solution as determined by utoprim() and fixup_checksolution()
 // needs fail flag over -1..N, but uses p at 0..N-1
@@ -983,13 +998,15 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     // ptoavg is only used for surrounding zones used to fixup local zone
     //LOOPXalldir
 
+    get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+    
     // +-1 extra so can do check
-    is=Uconsevolveloop[FIS]-SHIFT1;
-    ie=Uconsevolveloop[FIE]+SHIFT1;
-    js=Uconsevolveloop[FJS]-SHIFT2;
-    je=Uconsevolveloop[FJE]+SHIFT2;
-    ks=Uconsevolveloop[FKS]-SHIFT3;
-    ke=Uconsevolveloop[FKE]+SHIFT3;
+    is += -SHIFT1;
+    ie += +SHIFT1;
+    js += -SHIFT2;
+    je += +SHIFT2;
+    ks += -SHIFT3;
+    ke += +SHIFT3;
 
     //////    COMPZSLOOP(is,ie,js,je,ks,ke) PALLLOOP(pl) MACP0A1(ptoavg,i,j,k,pl)=MACP0A1(pv,i,j,k,pl);
     copy_3dnpr(is,ie,js,je,ks,ke,pv,ptoavg); // GODMARK: Won't PLOOP be PALLLOOP here, so ok?
@@ -1110,14 +1127,25 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	  //
 	  //////////////////
 	  // field is evolved fine, so only average non-field
-	  if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILUPERC ){
+ 	  if(mypflag==UTOPRIMFAILRHOUNEG && HANDLERHOUNEG==1){
+	    startpl=RHO;
+	    endpl=UU;
+	  }
+ 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
 	    startpl=UU;
 	    endpl=UU;
 	  }
+ 	  else if(mypflag==UTOPRIMFAILRHONEG && HANDLERHONEG==1){
+	    startpl=RHO;
+	    endpl=RHO;
+	  }
 	  else{
+	    // then presume inversion failure with no solution or assuming rho<=0 or u<=0 is bad inversion if HANDLE?NEG==0
 	    startpl=RHO;
 	    endpl=U3;
 	  }
+
+
 
 
 
@@ -1131,7 +1159,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 	  //////////////////////////////
 	  //
-	  // other kinds of failures not caught by above (usually convergence type failures)
+	  // other kinds of failures not caught by above (inversion convergence type failures)
 	  //
 	  //////////////////////////////
 	  if(fixed==0){
@@ -1159,6 +1187,39 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	    }
 
 
+	    /////////////////////
+	    //
+	    // Things to do only if modifying density
+	    //
+	    //////////////////////
+	    if(startpl<=RHO && endpl>=RHO){
+
+
+#if(DO_CONSERVE_D_INFAILFIXUPS)
+
+	      if(mypflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+		// Use D0 to constrain how changing u^t changes rho
+		// GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
+		// GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
+		// Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
+		// This is probably not necessary or useful
+		D0 = MACP0A1(ptoavg,i,j,k,RHO)*ucon[TT];
+
+		///////////////////////////////////////////
+		//
+		// constrain change in density so conserve particle number
+		// always do it?
+		//
+		//////////////////////////////////////////
+		if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+		MACP0A1(pv,i,j,k,RHO) = D0/ucon[TT];
+	      }
+#endif
+
+	    }
+
+
+
 
 
 	    /////////////////////
@@ -1168,38 +1229,13 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	    //////////////////////
 	    if(startpl<=U1 && endpl>=U3){
 
-
-#if(DO_CONSERVE_D_INFAILFIXUPS)
-	      // Use D0 to constrain how changing u^t changes rho
-	      // GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
-	      // See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
-	      // Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
-	      // This is probably not necessary or useful
-	      D0 = MACP0A1(ptoavg,i,j,k,RHO)*ucon[TT];
-#endif
-
-#if(DO_CONSERVE_D_INFAILFIXUPS)
-	    ///////////////////////////////////////////
-	    //
-	    // constrain change in density so conserve particle number
-	    // always do it?
-	    //
-	    //////////////////////////////////////////
-	    if(mypflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
-	      if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
-	      MACP0A1(pv,i,j,k,RHO) = D0/ucon[TT];
-	    }
-#endif
-
 #if(WHICHVEL==VELREL4)
 	      //////////////
 	      //
 	      // check gamma to so calibrate new gamma to no larger than previous gamma
-	      // // also compute D0=rho u^t
 	      /////////////
 	      MYFUN(gamma_calc(MAC(ptoavg,i,j,k),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",1);
-	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon, others) >= 1)
-		FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon, others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
 	      //	  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);
 	      alpha = ptrgeom->alphalapse;
 	      vsq = 1. - 1. / (alpha * alpha * ucon[0] * ucon[0]);
@@ -1213,8 +1249,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	      }
 #else
 	      limitedgamma=0;
-	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon,others) >= 1)
-		FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
 #endif
 	  
 
@@ -1343,20 +1378,6 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 
-#define HANDLEUNEG 0
-// seems to keep failing with this, so probably treating u<0 like failure is better idea
-// 0: treat as full failure
-// 1: treat as floor issue
-
-#define HANDLERHONEG 0
-// seems to keep failing with this, so probably treating rho<0 like failure is better idea
-// 0: treat as full failure
-// 1: treat as floor issue
-
-#define HANDLERHOUNEG 0
-// seems to keep failing with this, so probably treating rho<0 like failure is better idea
-// 0: treat as full failure
-// 1: treat as floor issue
 
 
 
@@ -1373,8 +1394,8 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILUNEG){
 	  
-      if(STEPOVERNEGU==-1){ *fixed=1; }
-      else if((STEPOVERNEGU==0)||(STEPOVERNEGU&&finalstep)){
+      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLEUNEG==1){
 	  // set back to floor level
@@ -1392,7 +1413,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	  }
 	}// end if handling u<0 in special way
       }// end if not allowing negative u or if allowing but not yet final step
-      else if((STEPOVERNEGU)&&(!finalstep)){
+      else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
 	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if u<0
@@ -1407,8 +1428,8 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHONEG){
 	  
-      if(STEPOVERNEGRHO==-1){ *fixed=1; }
-      else if((STEPOVERNEGRHO==0)||(STEPOVERNEGRHO&&finalstep)){
+      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLERHONEG==1){
 	  // set back to floor level
@@ -1426,7 +1447,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	  }
 	}// end if handling rho<0 in special way
       }// end if not allowing negative rho or if allowing but not yet final step
-      else if((STEPOVERNEGRHO)&&(!finalstep)){
+      else if((STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
 	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if rho<0
@@ -1442,10 +1463,11 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHOUNEG){
 
-      if(STEPOVERNEGRHOU==-1){ *fixed=1; }
-      else if( (STEPOVERNEGRHOU==0)  ||(STEPOVERNEGU&&STEPOVERNEGRHO&&finalstep)){
+      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
+      else if( (STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)  ||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
-	if(HANDLERHOUNEG){
+	if(HANDLERHOUNEG==1){
 	  // set back to floor level
 	  set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
 	  // GODMARK -- maybe too agressive, maybe allow more negative?
@@ -1463,7 +1485,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	  }
 	}// end if handling rho<0 and u<0 in special way
       }// end if not allowing negative rho or if allowing but not yet final step
-      else if(STEPOVERNEGRHOU&&(!finalstep)){
+      else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
 	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if rho<0 and u<0
