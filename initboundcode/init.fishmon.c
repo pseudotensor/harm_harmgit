@@ -17,6 +17,7 @@
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
+static FTYPE rhodisk;
 
 
 static FTYPE nz_func(FTYPE R) ;
@@ -41,6 +42,8 @@ int pre_init_specific_init(void)
   h_over_r=0.3;
   // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
   h_over_r_jet=2.0*h_over_r;
+
+  rhodisk=1.0;
 
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
 
@@ -787,6 +790,7 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   eqline=1;
   parms[0]=rin;
+  parms[1]=rhodisk;
 
   funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
   if(funreturn!=0) return(funreturn);

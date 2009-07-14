@@ -197,7 +197,30 @@ void writesyminfo( void )
 
 }
 
+
 int dump_header(int bintxt, FILE *headerptr)
+{
+  int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int retval;
+
+  retval=dump_header_general(realnstep,dt, bintxt, headerptr);
+
+  return(retval);
+
+}
+
+int fluxdump_header(int bintxt, FILE *headerptr)
+{
+  int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int retval;
+
+  retval=dump_header_general(fluxdumprealnstep,fluxdumpdt, bintxt, headerptr);
+
+  return(retval);
+
+}
+
+int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
 {
   int realtotalsize[NDIM];
   FTYPE realstartx[NDIM];
@@ -249,22 +272,22 @@ int dump_header(int bintxt, FILE *headerptr)
     fwrite(&dx[1],sizeof(FTYPE),1,headerptr);
     fwrite(&dx[2],sizeof(FTYPE),1,headerptr);
     fwrite(&dx[3],sizeof(FTYPE),1,headerptr);
-    fwrite(&realnstep,sizeof(long),1,headerptr);
+    fwrite(&localrealnstep,sizeof(long),1,headerptr);
     fwrite(&gam,sizeof(FTYPE),1,headerptr);
     fwrite(&a,sizeof(FTYPE),1,headerptr);
     fwrite(&R0,sizeof(FTYPE),1,headerptr);
     fwrite(&Rin,sizeof(FTYPE),1,headerptr);
     fwrite(&Rout,sizeof(FTYPE),1,headerptr);
     fwrite(&hslope,sizeof(FTYPE),1,headerptr);
-    fwrite(&dt,sizeof(FTYPE),1,headerptr);
+    fwrite(&localdt,sizeof(FTYPE),1,headerptr);
     fwrite(&MBH,sizeof(int),1,headerptr);
     fwrite(&QBH,sizeof(int),1,headerptr);
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
 #endif
   }
   fflush(headerptr);
@@ -1258,7 +1281,7 @@ int fluxdumpdump(long dump_cnt)
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
   strcpy(filesuffix,"");
   
-  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,fluxdump_content)>=1) return(1);
+  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,fluxdump_header,fluxdump_content)>=1) return(1);
 
   trifprintf("end dumping fluxdump# %ld ... ",dump_cnt);
 

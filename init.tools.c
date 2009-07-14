@@ -527,12 +527,13 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
 {
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
-  FTYPE rin;
-
+  FTYPE rin,rhodisk;
+  
 
   *rhomax=0;
   *umax=0;
   rin=parms[0];
+  rhodisk=parms[1];
 
 
   COMPZLOOP {
@@ -567,8 +568,8 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   ////////////
 
   COMPZLOOP{
-    MACP0A1(prim,i,j,k,RHO) /= (*rhomax);
-    MACP0A1(prim,i,j,k,UU) /= (*rhomax);
+    MACP0A1(prim,i,j,k,RHO) *= rhodisk/(*rhomax);
+    MACP0A1(prim,i,j,k,UU)  *= rhodisk/(*rhomax);
   }
 
 
@@ -578,8 +579,8 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   //
   ////////////
 
-  *umax /= (*rhomax);
-  *rhomax = 1.;
+  *umax *= rhodisk/(*rhomax);
+  *rhomax = rhodisk;
 
   return(0);
 }

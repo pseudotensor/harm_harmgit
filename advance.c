@@ -535,6 +535,8 @@ static int advance_standard(
 
 
 #if(FLUXDUMP)
+	fluxdumpdt=dt; // store current dt so when dump fluxdump use that dt instead of updated dt
+	fluxdumprealnstep=realnstep;
 	// DEBUG - DIAG:
 	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
 

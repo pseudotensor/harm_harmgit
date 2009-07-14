@@ -47,6 +47,8 @@ FTYPE Risco,Rhor;
 FTYPE cour;
 FTYPE dV, dVF, dx[NDIM], startx[NDIM], endx[NDIM], Diffx[NDIM];
 SFTYPE dt,t,tf,tstepparti,tsteppartf;
+SFTYPE fluxdumpdt;
+long fluxdumprealnstep;
 FTYPE TDYNORYEglobal,Hglobal;
 FTYPE rcurr, hcurr;
 FTYPE drsing;

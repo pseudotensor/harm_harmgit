@@ -23,14 +23,14 @@ void kazfulleos_set_arrays_perpoint_perline(void)
   //
   //////////////////////////////////////////////
 #if(WHICHEOS==KAZFULL)
-  EOSPOINT(eostable) = (double PTREOSMAC(a_eostable,FILL,EOSN5,EOSN4,EOSN3,EOSN2,EOSN1)) (&(BASEEOSMAC(a_eostable,0,0,0,0,0,0)));
-  EOSPOINT(eosdegentable) = (double PTREOSMAC(a_eosdegentable,FILL,EOSN5,EOSN4,EOSN3,1,EOSN1)) (&(BASEEOSMAC(a_eosdegentable,0,0,0,0,0,0)));
+  EOSPOINT(eostable) = (double PTREOSMAC(eostable,FILL,EOSN5,EOSN4,EOSN3,EOSN2,EOSN1)) (&(BASEEOSMAC(eostable,0,0,0,0,0,0)));
+  EOSPOINT(eosdegentable) = (double PTREOSMAC(eosdegentable,FILL,EOSN5,EOSN4,EOSN3,1,EOSN1)) (&(BASEEOSMAC(eosdegentable,0,0,0,0,0,0)));
   
-  EOSPOINT(eossimpletable) = (double PTREOSMAC(a_eossimpletable,FILL,EOSSIMPLEN5,EOSSIMPLEN4,EOSSIMPLEN3,EOSSIMPLEN2,EOSSIMPLEN1)) (&(BASEEOSMAC(a_eossimpletable,0,0,0,0,0,0)));
-  EOSPOINT(eosdegensimpletable) = (double PTREOSMAC(a_eosdegensimpletable,FILL,EOSSIMPLEN5,EOSSIMPLEN4,EOSSIMPLEN3,1,EOSSIMPLEN1)) (&(BASEEOSMAC(a_eosdegensimpletable,0,0,0,0,0,0)));
+  EOSPOINT(eossimpletable) = (double PTREOSMAC(eossimpletable,FILL,EOSSIMPLEN5,EOSSIMPLEN4,EOSSIMPLEN3,EOSSIMPLEN2,EOSSIMPLEN1)) (&(BASEEOSMAC(eossimpletable,0,0,0,0,0,0)));
+  EOSPOINT(eosdegensimpletable) = (double PTREOSMAC(eosdegensimpletable,FILL,EOSSIMPLEN5,EOSSIMPLEN4,EOSSIMPLEN3,1,EOSSIMPLEN1)) (&(BASEEOSMAC(eosdegensimpletable,0,0,0,0,0,0)));
 
-  EOSPOINT(eossimplezoomtable) = (double PTREOSMAC(a_eossimplezoomtable,FILL,EOSSIMPLEZOOMN5,EOSSIMPLEZOOMN4,EOSSIMPLEZOOMN3,EOSSIMPLEZOOMN2,EOSSIMPLEZOOMN1)) (&(BASEEOSMAC(a_eossimplezoomtable,0,0,0,0,0,0)));
-  EOSPOINT(eosdegensimplezoomtable) = (double PTREOSMAC(a_eosdegensimplezoomtable,FILL,EOSSIMPLEZOOMN5,EOSSIMPLEZOOMN4,EOSSIMPLEZOOMN3,1,EOSSIMPLEZOOMN1)) (&(BASEEOSMAC(a_eosdegensimplezoomtable,0,0,0,0,0,0)));
+  EOSPOINT(eossimplezoomtable) = (double PTREOSMAC(eossimplezoomtable,FILL,EOSSIMPLEZOOMN5,EOSSIMPLEZOOMN4,EOSSIMPLEZOOMN3,EOSSIMPLEZOOMN2,EOSSIMPLEZOOMN1)) (&(BASEEOSMAC(eossimplezoomtable,0,0,0,0,0,0)));
+  EOSPOINT(eosdegensimplezoomtable) = (double PTREOSMAC(eosdegensimplezoomtable,FILL,EOSSIMPLEZOOMN5,EOSSIMPLEZOOMN4,EOSSIMPLEZOOMN3,1,EOSSIMPLEZOOMN1)) (&(BASEEOSMAC(eosdegensimplezoomtable,0,0,0,0,0,0)));
 #endif
 
 

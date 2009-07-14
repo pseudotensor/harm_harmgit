@@ -172,7 +172,7 @@
 #define SPLITNPR 0 // DEBUG
 #define FIELDSTAGMEM 1 // DEBUG
 #define HIGHERORDERMEM 1
-#define MAXBND 3
+#define MAXBND 4
 //#define MAXBND 11
 #define PRODUCTION 0
 #define FULLOUTPUT MAXBND
@@ -206,12 +206,12 @@
 
 //set this and the following one to unity to use the DONOR interpolated states for computing wavespeeds
 #if(1 || SPLITNPR==1 || FIELDSTAGMEM==1) // should also be on if FLUXB==FIELDSTAG
-#define STOREWAVESPEEDS 1 // no choice
+#define STOREWAVESPEEDS 2 // no choice
 #else
 #define STOREWAVESPEEDS 0 // choice
 #endif
 
-#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS) // choice really
+#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS>0) // choice really
 
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1
@@ -258,11 +258,11 @@
 #define UTOPRIMADJUST UTOPRIMAVG
 #define UTOPRIMFAILRETURNTYPE UTOPRIMRETURNADJUSTED
 #define SMOOTHSING 1 // near BH
-#define COORDSINGFIX 0
+#define COORDSINGFIX 1
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
-#define SINGSMALL (1E-14) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (1E-13) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG

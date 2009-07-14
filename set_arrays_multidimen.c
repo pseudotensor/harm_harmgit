@@ -150,7 +150,7 @@ void set_arrays_multidimen()
 #if(FIELDTOTHMEM)
   // below only used in fluxct.c
   GLOBALPOINT(vconemf) = (FTYPE PTRMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1)) (&(BASEMACP0A1(vconemf,N1BND,N2BND,N3BND,-U1)));
-  FULLLOOP for(l=1;l<=COMPDIM;l++) GLOBALMACP0A1(vconemf,i,j,k,l) = valueinit;
+  FULLLOOP for(l=U1;l<U1+COMPDIM;l++) GLOBALMACP0A1(vconemf,i,j,k,l) = valueinit;
 #endif
 
 #if(TRACKVPOT)

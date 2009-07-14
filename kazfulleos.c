@@ -3734,7 +3734,7 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
     // This is scale-height used by Kaz's EOS
     // add outgoing radial part to hack photon trajectory for +-z for disk near BH or NS
     MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + MACP0A1(EOSextra,i,1,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,1,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
-    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest2 + MACP0A1(EOSextra,i,N2-2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest2 + MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
   }
 
 

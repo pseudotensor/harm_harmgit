@@ -908,10 +908,12 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
 
   FTYPE YLl,YLc,YLr;
 
+#if(MERGEDC2EA2CMETHOD)
   // Y_l:
   YLl=stateleft->prim[YL];
   YLc=statecent->prim[YL];
   YLr=stateright->prim[YL];
+#endif
 
 #if(MCOORD==CARTMINKMETRIC)
   threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  YLl, YLc, YLr   ,&Fleft[YL], &Fright[YL]);
@@ -939,9 +941,11 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
   FTYPE YNUl,YNUc,YNUr;
 
   // Y_\nu:
+#if(MERGEDC2EA2CMETHOD)
   YNUl=stateleft->prim[YNU];
   YNUc=statecent->prim[YNU];
   YNUr=stateright->prim[YNU];
+#endif
 
 #if(MCOORD==CARTMINKMETRIC)
   threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  YNUl, YNUc, YNUr   ,&Fleft[YNU], &Fright[YNU]);

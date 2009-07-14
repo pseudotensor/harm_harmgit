@@ -82,7 +82,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   parlist[1]=pr[YNU]; // Y_\nu
   parlist[2]=parlist[3]=parlist[4]=parlist[5]=hcmsingle; // H
   parlist[6]=parlist[7]=parlist[8]=0.0; // unu=pnu=snu=0 as first guess
-  store_EOS_parms(i,j,k,9,parlist);
+  store_EOS_parms(NUMEOSGLOBALS,GLOBALMAC(EOSextraglobal,i,j,k),parlist);
 
 
 
@@ -91,8 +91,8 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   // Set other aspects of stellar model, such as rotational velocity
   //
   ///////////////////////////////////
-  get_geometry(i,j,k,CENT,&geom);
   ptrgeom=&geom;
+  get_geometry(i,j,k,CENT,ptrgeom);
   coord_ijk(i, j, k, CENT, X);
   bl_coord_ijk(i, j, k, CENT,V);
   dxdxprim_ijk(i, j, k, CENT,dxdxp);

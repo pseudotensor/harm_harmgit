@@ -72,9 +72,9 @@
 #define SIMPLEZOOMTABLE 2
 
 
-// 5 true dimensions (rhob,u/p/chi/tk,hcm,tdynorye,tdynorynu)
+// 5 true dimensions (rhob,u/p/chi/tk,tdynorye,tdynorynu,hcm)
 #define NUMINDEPDIMENS 5
-// what is contained within file (rhob,utotdiff,ptotdiff,chidiff,hcm,tdynorye,tdynorynu)
+// what is contained within file (rhob,utotdiff,ptotdiff,chidiff,tdynorye,tdynorynu,hcm)
 #define NUMEOSINDEPS 7
 
 
@@ -85,7 +85,7 @@
 #define UEOS   1    // internal energy density: used for u
 #define PEOS   2    // pressure energy density: used for p
 #define CHIEOS 3    // enthalpy energy density: used for \chi
-#define TEOS   4    // tdynorye: dynamical time or Y_e
+#define TEOS   4    // tdynorye: dynamical time or Y_e // JONNEWMARK: Change TEOS -> YEEOS ?
 #define YNUEOS 5    // tdynorynu: dynamical time or Y_\nu
 #define HEOS   6    // height (not used normally anymore)
 
@@ -369,7 +369,7 @@
 
 // NOTE: must be in same order and number as EOS independent vars
 // GODMARK: must also change MAXPARLIST in nondepnmemonics.h
-#define NUMNONSTANDARD 6
+#define NUMNONSTANDARD (6+3)
 #define NUMEOSGLOBALS (NUMEXTRAINDEP+NUMNONSTANDARD)   // number of per CPU position-based data for EOS
 
 // these should be ordered and numbered such that correspond to EOS table independent variables

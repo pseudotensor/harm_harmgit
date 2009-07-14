@@ -29,6 +29,7 @@
 
 
 #define NRADIALMAX 10000
+#define MAXPASSPARMS 10
 
 static FTYPE rho[NRADIALMAX],ie[NRADIALMAX],vr[NRADIALMAX],radius[NRADIALMAX],omega3[NRADIALMAX],yl[NRADIALMAX],ynu[NRADIALMAX],hcm[NRADIALMAX];
 static int NRADIAL;
@@ -41,7 +42,7 @@ static FTYPE tauff;
 #define SLOWFAC 0.5		/* reduce u_phi by this amount */
 
 SFTYPE rhomax=0,umax=0,bsq_max=0,beta,Rbeta=0.0,rin;
-SFTYPE rhodisk;
+FTYPE rhodisk;
 
 FTYPE Rb,Bpole;
 
@@ -121,15 +122,10 @@ int fieldfrompotential[NDIM];
 
 int prepre_init_specific_init(void)
 {
-
- // choice// GODMARK: not convenient location, but needed for init_mpi()
-  periodicx1=0;
-  periodicx2=0;
-#if(USEMPI&&N3!=1)
-  periodicx3=1;// GODMARK: periodic in \phi for 3D spherical polar
-#else
-  periodicx3=0;
-#endif
+  int funreturn;
+  
+  funreturn=user1_prepre_init_specific_init();
+  if(funreturn!=0) return(funreturn);
 
   return(0);
 }
@@ -146,6 +142,18 @@ int pre_init_specific_init(void)
   Bpole=1.0;
   Rb=1.0;
 
+  UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
+
+
+  return(0);
+}
+
+int set_fieldfrompotential(int *fieldfrompotential)
+{
+  int pl,pliter;
+
+  // default (assume all fields are from potential)
+  PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
 
 
   return(0);
@@ -154,14 +162,14 @@ int pre_init_specific_init(void)
 
 int init_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*Utemp)[NSTORE2][NSTORE3][NPR], FTYPE (*U)[NSTORE2][NSTORE3][NPR])
 {
-  int pl,pliter;
-  
-  PLOOPBONLY(pl) trifprintf("fieldfrompotential[%d]=%d\n",pl-B1+1,fieldfrompotential[pl-B1+1]);
+  int funreturn;
+  int fieldfrompotential[NDIM];
 
+  set_fieldfrompotential(fieldfrompotential);
 
-  trifprintf("begin init_conservatives\n");
-  pi2Uavg(fieldfrompotential, prim, pstag, Utemp, U);
-  trifprintf("end init_conservatives\n");
+  funreturn=user1_init_conservatives(fieldfrompotential, prim,pstag, Utemp, U);
+  if(funreturn!=0) return(funreturn);
+
 
   return(0);
 
@@ -170,14 +178,10 @@ int init_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTOR
 
 int post_init_specific_init(void)
 {
-  // globally used parameters set by specific initial condition routines, reran for restart as well *after* all other calculations
+  int funreturn;
 
-  UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
-
-  //  UTOPRIMVERSION =   UTOPRIM5D1;
-  //    UTOPRIMVERSION =   UTOPRIM2DFINAL;
-
-  //  DODIAGEVERYSUBSTEP=1; // GODMARK: DEBUGGING
+  funreturn=user1_post_init_specific_init();
+  if(funreturn!=0) return(funreturn);
 
   return(0);
 }
@@ -556,6 +560,86 @@ int init_consts(void)
 
 
 
+int init_defcoord(void)
+{
+
+#if(WHICHPROBLEM==VARYMASS) // new method
+  //////////////////////////////////
+  //  new M anything G=c=1 method (could be normal torus model)
+  // originally envisioned without self-gravity but evolution of metric
+  // Uses relatively large Rin so that material just adds up to BH inside
+  // Original idea was that Rin must be large to avoid horizon (and rminus inside horizon) reaching grid
+  // Now if horizon passes Rin we will automagically move the evolved part of the grid outward (benefit of self-gravity tests where black hole grows substantially)
+  // So this method is somewhat outdated, but still useable to avoid evolving inside Rin
+  //
+
+  // define coordinate type
+  defcoord = JET4COORDS;
+  
+
+
+
+
+#elif(WHICHPROBLEM==GRBPROBLEM)
+  //////////////////////////////////
+  //  new M anything G=c=1 method with full GRB model with self-gravity in mind
+  // starts with Rin=0 and MBH=0
+
+
+#if(0)
+
+  // define coordinate type
+  //  defcoord = JET4COORDS;
+  defcoord=LOGRSINTH; // best if following spherical collapse
+#elif(1)
+
+  // define coordinate type
+  //  defcoord = JET4COORDS;
+  //  defcoord=LOGRSINTH; // best if following spherical collapse
+
+  defcoord=UNI2LOG; // Afactor, Nstar, and Rstar set in coord.c
+  //defcoord = UNIRSINTH;
+  //defcoord = UNIRSINTH2; // try with dxdxp11!=1.0
+#else
+  defcoord = UNIRSINTH;
+
+#endif  
+
+
+
+
+
+
+
+#elif(WHICHPROBLEM==MASSONE)
+  /////////////////////////////
+  /////////// old GM=c=1 method
+  
+
+  // define coordinate type
+  defcoord = JET4COORDS;
+
+
+
+
+
+
+
+
+#elif(WHICHPROBLEM==UNIFORMDENSITY)
+  /////////////////////////////
+  /////////// Studying self-gravitational collapse with formation of black hole
+  //  defcoord = 0;
+  defcoord = UNIRSINTH;
+
+
+#endif
+
+  return(0);
+}
+
+
+
 
 
 int init_grid(void)
@@ -587,8 +671,6 @@ int init_grid(void)
   Rhor=rhor_calc(0);
   hslope = 0.3;
 
-  // define coordinate type
-  defcoord = JET4COORDS;
   
 
 
@@ -607,9 +689,6 @@ int init_grid(void)
   Rhor=rhor_calc(0);
   hslope = 0.3;
 
-  // define coordinate type
-  //  defcoord = JET4COORDS;
-  defcoord=LOGRSINTH; // best if following spherical collapse
 #elif(1)
   Rin=0.0; // at least initially
   Rout=(1E4*Lunit)/Lunit; // fixed in time
@@ -617,19 +696,11 @@ int init_grid(void)
   Rhor=rhor_calc(0);
   hslope = 0.3;
 
-  // define coordinate type
-  //  defcoord = JET4COORDS;
-  //  defcoord=LOGRSINTH; // best if following spherical collapse
-
-  defcoord=UNI2LOG; // Afactor, Nstar, and Rstar set in coord.c
-  //defcoord = UNIRSINTH;
-  //defcoord = UNIRSINTH2; // try with dxdxp11!=1.0
 #else
   R0 = 0.0;
   Rout = 2E3;
   Rin = 0.0;
   hslope = 1.0;
-  defcoord = UNIRSINTH;
 
 #endif  
 
@@ -657,12 +728,10 @@ int init_grid(void)
   Rout = 3E3;
 #endif
 
-  //Rin=setRin(setihor());
+  //  setRin_withchecks(&Rin);
   Rin = 0.95 * Rhor;
 
 
-  // define coordinate type
-  defcoord = JET4COORDS;
   hslope = 0.3;
 
 
@@ -685,8 +754,6 @@ int init_grid(void)
 
   hslope = 1.0;
 
-  //  defcoord = 0;
-  defcoord = UNIRSINTH;
 
 
 #endif
@@ -708,124 +775,15 @@ int init_grid(void)
 int init_global(void)
 {
   int pl,pliter;
-
-  DODIAGEVERYSUBSTEP = 0;
-  UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
-
-  //  UTOPRIMVERSION =   UTOPRIM5D1;
-  //    UTOPRIMVERSION =   UTOPRIM2DFINAL;
+  int funreturn;
 
 
+  funreturn=user1_init_global();
+  if(funreturn!=0) return(funreturn);
 
+  //////////////////
+  // overrides for more detailed problem dependence
 
-  SAFE=1.3;
-  //  cour = 0.9;
-  cour=0.8;
-  //  cour=0.8/4.0; // simulate TO=4 for metric // GODMARK // worked
-  //   cour = 0.1;
-
-
-  ///////////////////////
-  //
-  // ENO-RELATED STUFF
-  //
-  ///////////////////////
-  
-  INVERTFROMAVERAGEIFFAILED = 1;
-  LIMIT_AC_PRIM_FRAC_CHANGE = 1;
-  MAX_AC_PRIM_FRAC_CHANGE = 0.1;
-
-  LIMIT_AC_FRAC_CHANGE=0; // CHANGINGMARK: avoiding complication for now
-  // have to make consistent with weno-minimization for fluxes
-  MAX_AC_FRAC_CHANGE=0.2;
-
-  // need MAXBND==17 if not evolving point field and doing full WENO5BND
-  // test1103 N1=8 is smallest tried and new simple_ limiting works at 10% very well
-  //dofluxreconevolvepointfield=0;
-  // only need MAXBND==11 like normal higher-order method (like FV method)
-  dofluxreconevolvepointfield=1;
-
-
-
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
-
-
-  //avgscheme[1]=avgscheme[2]=avgscheme[3]=WENO5BND;
-  //  lim[1] = lim[2] = lim[3] = WENO5BND;
-  lim[1] = lim[2] = lim[3] = PARALINE;
-
-  avgscheme[1]=avgscheme[2]=avgscheme[3]=DONOR; // CHANGINGMARK
-  //lim[1] = lim[2] = lim[3] = MC; // CHANGINGMARK
-
-
-  DOENOFLUX = NOENOFLUX;
-  //DOENOFLUX = ENOFLUXRECON; // CHANGINGMARK
-  //DOENOFLUX = ENOFINITEVOLUME;
-
-  if(DOENOFLUX == ENOFLUXRECON){
-    // below applies to all fluxes
-    PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
-    PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
-    // below used for re-averaging of field in advance.c for dBhat/dt method
-    PALLLOOP(pl) do_conserved_integration[pl] = 1;
-    PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
-  }
-
-  if(DOENOFLUX == ENOFINITEVOLUME){
-    PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
-    PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
-    PALLLOOP(pl) do_source_integration[pl] = 0;
-    PLOOPBONLY(pl) do_source_integration[pl] = 0;
-    PALLLOOP(pl) do_conserved_integration[pl] = 1;
-    PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
-    //    do_conserved_integration[B1-1+DIRZ] = 1;
-  }
-
-
-
-  FLUXB = FLUXCTSTAG;  // CHANGINGMARK
-  //  FLUXB = FLUXCTHLL;
-  //FLUXB = FLUXCTTOTH;
-  //  TIMEORDER=2;
-  TIMEORDER=4;
-  //  TIMEORDER=3;
-  //  fluxmethod= HLLFLUX;
-  fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
-  
-
-  //  UTOPRIMVERSION=UTOPRIM5D1;
-  UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
-  //  UTOPRIMVERSION = UTOPRIM1DFINAL;
-
-
-#elif(EOMTYPE==EOMFFDE)
-  // PARA and TO=4 and HLL not trustable in FFDE so far
-  lim[1] =lim[2]=lim[3]= MC;
-  TIMEORDER=2;
-
-
-  // below applies to all fluxes
-  PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
-  PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
-  // below used for re-averaging of field in advance.c for dBhat/dt method
-  PALLLOOP(pl) do_conserved_integration[pl] = 1;
-  PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
-
-
-
-  fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
-  FLUXB = FLUXCTTOTH;
-  UTOPRIMVERSION=UTOPRIM2DFINAL;
-  // whether/which ENO used to interpolate fluxes
-  DOENOFLUX = ENOFINITEVOLUME;
-  //  DOENOFLUX= NOENOFLUX;
-  //DOENOFLUX=ENOFLUXRECON;
-#endif
-
-
-
-
-  ranc(1,7); // no MPI method yet, so just pure randomization
 
   /* some physics parameters */
 #if(WHICHEOS==IDEALGAS)
@@ -887,18 +845,6 @@ int init_global(void)
   UUMIN = 1E-4*rhodisk;
 
   trifprintf("RHOMIN=%g UUMIN=%g\n",RHOMIN,UUMIN);
-
-  // below floor model is only used if rescaletype!=4
-  if(BCtype[X1UP]==FIXEDOUTFLOW){ // then doing bondi inflow
-    // avoids constant floor activation -- trying to be more physical
-    prfloorcoef[RHO]=RHOMIN/100.0;
-    prfloorcoef[UU]=UUMIN/100.0;
-  }
-  else{
-    prfloorcoef[RHO]=RHOMIN;
-    prfloorcoef[UU]=UUMIN;
-  }
-
 
 
   /////////////////////////////////////
@@ -995,12 +941,18 @@ int init_global(void)
 int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr)
 {
   int pl,pliter;
-  struct of_geom realgeom,geom;
+  struct of_geom realgeomdontuse;
+  struct of_geom *ptrrealgeom=&realgeomdontuse;
   FTYPE pratm[NPR];
 
 
-  get_geometry(i, j, k, CENT, &realgeom); // true coordinate system
-  set_atmosphere(-1,WHICHVEL,&realgeom,pratm); // set velocity in chosen WHICHVEL frame in any coordinate system
+#if(READINITIALDATA==GRBDATA1)
+  return(0);
+#endif
+
+
+  get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+  set_atmosphere(-1,WHICHVEL,ptrrealgeom,pratm); // set velocity in chosen WHICHVEL frame in any coordinate system
 
   //  if(pr[RHO]<pratm[RHO]){
   if(pr[RHO]<SMALL){
@@ -1012,14 +964,13 @@ int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr
   *whichcoord=PRIMECOORDS;
   return(0);
 
-
 }
 
 
 
 // do after grid is set
 // checks location of horizon
-int init_grid_post_set_grid(void)
+int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
@@ -1030,42 +981,46 @@ int init_grid_post_set_grid(void)
   Risco=rmso_calc(PROGRADERISCO);
 
 
+
   //SASMARK restart: need to populate panalytic with IC's
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
-    MYFUN(init_primitives(panalytic,pstaganalytic,ulastglobal,vpotanalytic,Bhatanalytic),"initbase.c:init()", "init_primitives()", 0);
+    MYFUN(init_primitives(prim,pstag,ucons,vpot,Bhat,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
     //to have initial vector potential to be saved in panalytic array
   }
 
 
-  if(specialstep<2){
-    // diagnostic
-    // determine nature of inner radial edge (assumes myid==0 is always there)
-    if(myid==0){
-      i=INFULL1;
-      j=k=0;
-      coord(i,j,k, FACE1, X);
-      bl_coord(X, V);
-      r=V[1];
-      th=V[2];
-      trifprintf("Rin=%21.15g Rhor=%21.15g rmin: %21.15g\n", Rin, Rhor, r);
-      trifprintf("rmin/rh: %21.15g\n", r / Rhor );
-      //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
-      if(r/Rhor<=1.0){
-	trifprintf("GOOD: inner grid is inside horizon\n");
-      }
-      else{
-	trifprintf("BAD: inner grid is outside horizon\n");
-      }
+
+
+  
+  // diagnostic
+  // determine nature of inner radial edge (assumes myid==0 is always there)
+  if(myid==0){
+    i=INFULL1;
+    j=k=0;
+    coord(i,j,k, FACE1, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+    trifprintf("rmin(i=%d,X=%21.15g): %21.15g\n", i,X[1],r);
+    trifprintf("rmin/rh: %21.15g\n", r / Rhor );
+    //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
+    if(r/Rhor<=1.0){
+      trifprintf("inner grid is inside horizon\n");
+    }
+    else{
+      trifprintf("inner grid is outside horizon\n");
     }
   }
 
-  
 
   // check that singularities are properly represented by code
   check_spc_singularities_user();
 
+  
   return(0);
+
+
 
 }
 
@@ -1080,80 +1035,21 @@ int init_grid_post_set_grid(void)
 // set primitives at t=0
 //
 ///////////////////////////
-int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  int whichvel, whichcoord;
-  int initreturn;
-  int i = 0, j = 0, k = 0, l;
-  struct of_geom geom;
-  FTYPE r,th,X[NDIM],V[NDIM];
-  int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int init_dsandvels(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
-  int init_atmosphere(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *pr);
-  int pl,pliter;
+  int funreturn;
   int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax);
 
-
-  ///////////////////////////////////
-  //
-  // Assign primitive variables
-  //
-  ///////////////////////////////////
-  trifprintf("Assign primitives\n");
-
-
-
-  // assume we start in bl coords and convert to KSprim
-  COMPFULLLOOP{
-    PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=0.0; // so field defined when get to floor model (fixup)
-  }
-
-  // assume we start in bl coords and convert to KSprim
-  COMPFULLLOOP{
-    initreturn=init_dsandvels(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers
-    if(initreturn>0) return(1);
-    else MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, pstag),"init.c:init_primitives","transform_primitive_vB()",0);
-  }
-
+  funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
+  if(funreturn!=0) return(funreturn);
 
 #if(READINITIALDATA==NODATA)
 
-
-  /////////////////////////////
-  //
-  // normalize density if wanted
-  //
-  /////////////////////////////// 
-  // at this point densities are still standard, so just send "prim"
-  trifprintf("Normalize densities\n");
-  normalize_densities(prim);
-
-
-  /////////////////////////////
-  //
-  // Define an atmosphere if wanted
-  //
-  /////////////////////////////// 
-
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
-  // normalized atmosphere
-  trifprintf("Add atmosphere\n");
-  COMPZLOOP{
-    initreturn=init_atmosphere(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k));
-    if(initreturn>0) return(1);
-    else{
-      // transform from whichcoord to MCOORD
-      if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
-    }
-  }
-#endif
-
-
+  // standard user1_init_primitives() result
 
 #elif(READINITIALDATA==GRBDATA1)
 
+  // Make sure normalize_densities() and init_atmopshere() do nothing in this case
 
   // then assume density already normalized properly and that atmosphere is how wanted
   // still get rhomax and umax
@@ -1162,100 +1058,10 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 #endif
 
 
-
-
-  // copy over initial solution as analytic solution
-  // NEEDED FOR BOUND in case uses panalytic
-  copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
-
-
-  /////////////////////////////
-  //
-  // Fixup and Bound variables since some primitive quantities may have changed
-  // These may be used to define vector potential below
-  // Also setup pre_fixup() type quantities
-  //
-  /////////////////////////////// 
-  trifprintf("Fixup and Bound #1\n");
-
-#if(EOMTYPE!=EOMFFDE)
-  // assume EOMFFDE doesn't use "density/ie" to set field, so no need to bound, and no field definition is bad for EOMFFDE
-#if(FIXUPAFTERINIT)
-  if(fixup(STAGEM1,prim,ucons,0)>=1)
-    FAILSTATEMENT("init.c:init()", "fixup()", 1);
-#endif
-
-  if (bound_prim(STAGEM1,0.0,prim) >= 1)
-    FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
-
-  if(pre_fixup(STAGEM1,prim)>=1)
-    FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-#endif
-
-
-  
-  /////////////////////////////
-  //
-  // Initialize field from vector potential
-  //
-  /////////////////////////////// 
-#if(1)
-  init_vpot(prim,pstag,ucons,vpot,Bhat);
-  normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstagscratch and unew and vpotarray if tracked
-#else
-  // no field
-  init_zero_field(prim,pstag,ucons,vpot,Bhat);
-#endif
-
-
-
-
-  // copy over initial solution as analytic solution
-  // NEEDED FOR BOUND in case uses panalytic
-  copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
-
-
-  /////////////////////////////
-  //
-  // Fixup and Bound variables since some primitive quantities may have changed
-  // These may be used to define vector potential below
-  // Also setup pre_fixup() type quantities
-  //
-  //
-  // BOUND AGAIN IN CASE USING PANALYTIC TO BOUND!
-  //
-  /////////////////////////////// 
-  trifprintf("Fixup and Bound #2\n");
-
-#if(EOMTYPE!=EOMFFDE)
-  // assume EOMFFDE doesn't use "density/ie" to set field, so no need to bound, and no field definition is bad for EOMFFDE
-#if(FIXUPAFTERINIT)
-  if(fixup(STAGEM1,prim,ucons,0)>=1)
-    FAILSTATEMENT("init.c:init()", "fixup()", 1);
-#endif
-
-  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons) >= 1)
-    FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
-
-  if(pre_fixup(STAGEM1,prim)>=1)
-    FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-#endif
-
-
-
-
   return(0);
 
 
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -1607,40 +1413,18 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*prim)[NS
 }
 
 
+
 int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
-  extern int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int i,j,k,pl,pliter;
-  int toreturn;
+  int funreturn;
+  int fieldfrompotential[NDIM];
+
+  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  if(funreturn!=0) return(funreturn);
  
 
-  // uses ptemparray as temporary variable
-  COMPFULLLOOP{
-    // use PLOOP (not PLOOPBONLY) since rho,u,etc. used for interpolation in some cases
-    PLOOP(pliter,pl) MACP0A1(ptemparray,i,j,k,pl)=MACP0A1(prim,i,j,k,pl);
-  }
+  return(0);
 
-
-  // obtain primitive magnetic field from vector potential
-  toreturn=vpot2field(A,ptemparray,pstag,ucons,Bhat); // uses ptemparray as temporary variable
-
-  // default (assume all fields are from potential)
-  PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
-
-
-  // Can override vector potential choice for some field components, like B3 in axisymmetry
-  // see init.sasha.c
-
-  ////////////////////
-  //
-  // don't override
-  //
-  ////////////////////
-  COMPFULLLOOP{
-    PLOOPBONLY(pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(ptemparray,i,j,k,pl);
-  }
-
-  return(toreturn);
 
 }
 
@@ -1651,34 +1435,21 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 // also normalize density scale so density is unity
 int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int i,j,k;
-  FTYPE X[NDIM],V[NDIM],r,th;
+  int funreturn;
+  FTYPE parms[MAXPASSPARMS];
+  int eqline;
 
+#if(READINITIALDATA==GRBDATA1)
+  return(0);
+#endif
 
+  eqline=1;
+  parms[0]=rin*MBH;
+  parms[1]=rhodisk;
 
-  rhomax=0;
-  umax=0;
-  ZLOOP{
-    coord(i, j, k, CENT, X);
-    bl_coord(X, V);
-    r=V[1]/MBH; // since rin is normalized
-    th=V[2];
-
-    if (MACP0A1(prim,i,j,k,RHO) > rhomax)   rhomax = MACP0A1(prim,i,j,k,RHO);
-    if (MACP0A1(prim,i,j,k,UU) > umax && r > rin)    umax = MACP0A1(prim,i,j,k,UU);
-  }
-
-  mpimax(&rhomax);
-  mpimax(&umax);
-  trifprintf("rhomax: %21.15g umax: %21.15g\n", rhomax, umax);
-
-
-  ZLOOP{
-    MACP0A1(prim,i,j,k,RHO) *= rhodisk/rhomax;
-    MACP0A1(prim,i,j,k,UU)  *= rhodisk/rhomax;
-  }
-  umax *= rhodisk/rhomax;
-  rhomax = rhodisk;
+  funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
+  if(funreturn!=0) return(funreturn);
+ 
 
   return(0);
 }
@@ -1688,28 +1459,11 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 // assumes we are fed the true densities
 int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax)
 {
-  int i,j,k;
-  FTYPE X[NDIM],V[NDIM],r,th;
+  int funreturn;
 
-
-  *rhomax=0;
-  *umax=0;
-  ZLOOP{
-    coord(i, j, k, CENT, X);
-    bl_coord(X, V);
-    r=V[1];
-    th=V[2];
-
-    //    dualfprintf(fail_file,"rho=%g u=%g\n",MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-
-    if (MACP0A1(prim,i,j,k,RHO) > *rhomax)   *rhomax = MACP0A1(prim,i,j,k,RHO);
-    if (MACP0A1(prim,i,j,k,UU) > *umax )    *umax = MACP0A1(prim,i,j,k,UU);
-  }
-
-  mpimax(rhomax);
-  mpimax(umax);
-  trifprintf("rhomax: %21.15g umax: %21.15g\n", *rhomax, *umax);
-
+  funreturn=user1_getmax_densities(prim,rhomax, umax);
+  if(funreturn!=0) return(funreturn);
+ 
   return(0);
 }
 
@@ -1719,71 +1473,16 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 // get maximum b^2 and p_g
 int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max)
 {
-  int i,j,k;
-  FTYPE bsq_ij,pg_ij;
-  struct of_geom geom;
-  FTYPE X[NDIM],V[NDIM];
-  FTYPE dxdxp[NDIM][NDIM];
-  FTYPE r,th;
-  int gotnormal;
+  int funreturn;
+  int eqslice;
+  FTYPE parms[MAXPASSPARMS];
+  
+  eqslice=1;
+  parms[0]=rin;
 
-
-
-  pg_max[0]= 0.;
-  bsq_max[0] = SMALL;
-  gotnormal=0; // to check if ever was in location where wanted to normalize
-  ZLOOP {
-    get_geometry(i, j, k, CENT, &geom);    
-
-    if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
-      coord(i, j, k, CENT, X);
-      bl_coord(X, V);
-      r=V[1];
-      th=V[2];
-      
-      if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
-	gotnormal=1;
-	if (bsq_calc(MAC(prim,i,j,k), &geom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-	if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
-
-	pg_ij=pressure_rho0_u(MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-	if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
-      }
-    }
-    else{
-      gotnormal=1;
-      if (bsq_calc(MAC(prim,i,j,k), &geom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-      if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
-
-      pg_ij=pressure_rho0_u(MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-      if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
-
-    }
-  }
-
-
-  mpiisum(&gotnormal);
-
-  if(gotnormal==0){
-    dualfprintf(fail_file,"Never found place to normalize field\n");
-    if(N2==1 && N3==1){
-      ZLOOP {
-	coord(i, j, k, CENT, X);
-	bl_coord(X, V);
-	dxdxprim(X,V,dxdxp);
-	r=V[1];
-	th=V[2];
-
-	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
-      }
-    }
-    myexit(111);
-  }
-
-  mpimax(bsq_max);
-  mpimax(pg_max);
-
-
+  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max);
+  if(funreturn!=0) return(funreturn);
+ 
   return(0);
 
 }
@@ -1793,32 +1492,12 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 // assumes normal field definition
 int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
-  FTYPE bsq_max, norm, beta_act;
-  FTYPE mypgmax;
-  int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *mypgmax);
+  int funreturn;
 
-
-  // get initial maximum
-  get_maxes(prim, &bsq_max, &mypgmax);
-  trifprintf("initial bsq_max: %21.15g pgmax: %21.15g Rbeta=%21.15g\n", bsq_max,mypgmax,Rbeta);
-
-  // get normalization parameter
-  beta_act = mypgmax / (0.5 * bsq_max);
-  norm = sqrt(beta_act / beta);
-  trifprintf("initial beta: %21.15g (should be %21.15g) norm=%21.15g\n", beta_act,beta,norm);
-
-  // not quite right since only correct static field energy, not moving field energy
-  normalize_field_withnorm(norm, prim, pstag, ucons, vpot, Bhat);
-
-  // get new maxes to check if beta is correct
-  get_maxes(prim, &bsq_max, &mypgmax);
-  trifprintf("new initial bsq_max: %21.15g\n", bsq_max);
-
-  beta_act = mypgmax / (0.5 * bsq_max);
-  trifprintf("new bsq_max: %21.15g\n", bsq_max);
-  trifprintf("final beta: %21.15g (should be %21.15g)\n", beta_act,beta);
-
-
+ 
+  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  if(funreturn!=0) return(funreturn);
+ 
   return(0);
 }
 
@@ -1893,7 +1572,7 @@ int set_atmosphere_grb2(int whichcond, int whichvel, struct of_geom *ptrgeom, FT
   kk=ptrgeom->k;
 
   PLOOP(pliter,pl){
-    pr[pl]=MACP0A1(panalytic,ii,jj,kk,pl);
+    pr[pl]=GLOBALMACP0A1(panalytic,ii,jj,kk,pl);
   }
 
   return(0);
@@ -2065,7 +1744,12 @@ int set_atmosphere_grb1(int whichcond, int whichvel, struct of_geom *ptrgeom, FT
 
 int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
-  return(set_density_floors_default(ptrgeom, pr, prfloor));
+  int funreturn;
+  
+  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+  if(funreturn!=0) return(funreturn);
+
+  return(0);
 }
 
 
@@ -2084,18 +1768,19 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   // 2) get_new_metric_parms() accretion to BH only, need to accrete to normal non-BH mass if inner radius is far beyond horizon radius
 
 
-  // assume only moving black hole with horizon for now
-  settrueglobalregion_set_enerregiondef(initialcall, timeorder, numtimeorders, thenstep, thetime, trueglobalregion_enerdef );
 
   // GODMARK: Should also follow check like in Sasha's version of enerregiondef[][]
 
-  // copy over
-  DIMENLOOP(dimen){
-    for(updowniter=0;updowniter<NUMUPDOWN;updowniter++){
-      // GLOBALMARK
-      enerregiondef[updowniter][dimen] = trueglobalregion_enerdef[updowniter][dimen];
-    }
-  }
+#if(1)
+  enerregiondef[POINTDOWN][1]=0;
+  enerregiondef[POINTUP][1]=totalsize[1]-1;
+  enerregiondef[POINTDOWN][2]=0;
+  enerregiondef[POINTUP][2]=totalsize[2]-1;
+  enerregiondef[POINTDOWN][3]=0;
+  enerregiondef[POINTUP][3]=totalsize[3]-1;
+#endif
+
+
   
   // now GRIDSECTION can define ACTIVEREGION
 
@@ -2114,7 +1799,7 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
   // Setup update period
   //
   ///////////////////
-  *updateeverynumsteps=100; // SUPERGODMARK
+  *updateeverynumsteps=1; // SUPERGODMARK
   //number of steps after which position/size of active section is updated
   *everynumsteps = *updateeverynumsteps;
 
@@ -2125,6 +1810,23 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
 
 
 
+// specify MPI task rank ordering
+// example user-dependent code
+int theproblem_set_myid(void)
+{
+  int retval;
+ 
+  // default is to do nothing
+  //  retval=jet_set_myid();
+  retval=0;
+
+  // do other things?
+
+  return(retval);
+
+}
+
+
+
 // GRB read of initial data
 #include "init.readdata.c"
-

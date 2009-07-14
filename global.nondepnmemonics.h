@@ -112,7 +112,7 @@
 // maximum number of extra variables in kazfulleos.c
 // placed here so can know this when dumping and dump file is always same
 #define MAXNUMEXTRAS 24
-#define MAXPARLIST 9 // for get_EOS_parms() (same as NUMEOSGLOBALS)
+#define MAXPARLIST 9 // for get_EOS_parms() (same as NUMEOSGLOBALS-FIRSTEOSGLOBAL)
 #define MAXPROCESSEDEXTRAS 13 // for using get_extrasprocessed()
 
 #define ERRORCODEBELOWCLEANFINISH 1000

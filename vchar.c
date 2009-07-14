@@ -84,20 +84,23 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   if(WW>0.0){
     cs2 =  cs2_compute_simple(i,j,k,loc,rho,u);
   }
-  else WW=cs2=0.0;
+  else WW=cs2=SMALL;
 
   // make sure sound speed is well-defined (needed in case fundamental variables are temporarily unphysical)
 
-  if(cs2>=1.0) cs2=1.0-1e-9; // some upper limit resolvable by machine precision
-  else if(cs2<=0.0) cs2=0.0; // lower limit
+  if(cs2>=1.0) cs2=1.0-NUMEPSILON*10.0; // some upper limit resolvable by machine precision
+  else if(cs2<=0.0) cs2=SMALL; // lower limit
 
 
   //  dualfprintf(fail_file,"rho=%g u=%g p=%g WW=%g cs2=%g\n",rho,u,P,WW,cs2);
     
 
-  EF = bsq + WW;
-  if(EF>0.0) va2 = bsq / EF;
-  else EF=va2=0.0;
+  EF = SMALL + fabs(bsq + WW);
+  va2 = bsq / EF;
+  // GODMARK: Was 
+  //  EF = bsq + WW;
+  // if(EF>0.0) va2 = bsq / EF;
+  // else EF=va2=0.0;
 
   cms2 = cs2 + va2 - cs2 * va2;	/* and there it is... */
 
