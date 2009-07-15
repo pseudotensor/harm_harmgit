@@ -987,11 +987,11 @@ void compute_dp(int i, int j, int k, FTYPE *dp)
   FTYPE Xkm[NDIM],Vkm[NDIM],Xkp1[NDIM],Vkp1[NDIM];
   
 
-  coord_ijk(i, j, k, FACE3, Xkm);
-  bl_coord_ijk(i, j, k, FACE3, Vkm);
+  //  coord_ijk(i, j, k, FACE3, Xkm);
+  //  bl_coord_ijk(i, j, k, FACE3, Vkm);
+  bl_coord_coord(i, j, k, FACE3, Xkm, Vkm);
 
-  coord_ijk(i, j, k+1, FACE3, Xkp1); // ok to have k+1 since coord and bl_coord don't depend upon memory locations
-  bl_coord_ijk(i, j, k+1, FACE3, Vkp1);
+  bl_coord_coord(i, j, k+1, FACE3, Xkp1, Vkp1); // must use bl_coord_coord() not _ijk versions
   
 
 
@@ -1009,11 +1009,12 @@ void compute_dh(int i, int j, int k, FTYPE *dh)
 {
   FTYPE Xjm[NDIM],Vjm[NDIM],Xjp1[NDIM],Vjp1[NDIM];
 
-  coord_ijk(i, j, k, FACE2, Xjm);
-  bl_coord_ijk(i, j, k, FACE2, Vjm);
+  //  coord_ijk(i, j, k, FACE2, Xjm);
+  //  bl_coord_ijk(i, j, k, FACE2, Vjm);
+  bl_coord_coord(i, j, k, FACE2, Xjm, Vjm);
 
-  coord_ijk(i, j+1, k, FACE2, Xjp1); // ok to have j+1 since coord and bl_coord don't depend upon memory locations
-  bl_coord_ijk(i, j+1, k, FACE2, Vjp1);
+  bl_coord_coord(i, j+1, k, FACE2, Xjp1, Vjp1); // must use bl_coord_coord() not _ijk versions
+
 
 #if(N2>1)
   // dh doesn't reduce to Pi
@@ -1035,11 +1036,12 @@ void compute_dr(int i, int j, int k, FTYPE *dr)
 
 
   // FINITE VOLUME -- dh is too different in limit of totalsize[2]==1
-  coord_ijk(i, j, k, FACE1, Xim);
-  bl_coord_ijk(i, j, k, FACE1, Vim);
+  //  coord_ijk(i, j, k, FACE1, Xim);
+  //  bl_coord_ijk(i, j, k, FACE1, Vim);
+  bl_coord_coord(i, j, k, FACE1, Xim, Vim);
 
-  coord_ijk(i+1, j, k, FACE1, Xip1); // ok to have i+1 since coord and bl_coord don't depend upon memory locations
-  bl_coord_ijk(i+1, j, k, FACE1, Vip1);
+  bl_coord_coord(i+1, j, k, FACE1, Xip1, Vip1); // must use bl_coord_coord() not _ijk versions
+
   
 #if(N1>1)
   *dr = fabs(THIRD*(pow(Vip1[1],3)-pow(Vim[1],3))); // really \delta(r^3/3) = r^2 dr
@@ -2220,16 +2222,16 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       // assumes spherical polar coords and myid==0 is on the inner-radial boundary
       if(BCtype[X1DN]==R0SING){
 #define GAMMAGRAVTEST(MOr) (1.0/(1.0-2.0*(MOr))) // relativistic TOV factor
-	coord_ijk(1, 0, 0, FACE1, X);
-	bl_coord_ijk(1, 0, 0, FACE1, V);
+	coord_ijk(SHIFT1*1, 0, 0, FACE1, X);
+	bl_coord_ijk(SHIFT1*1, 0, 0, FACE1, V);
 	Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
 	if(Gamma<Gammagrav_max && Gamma>0.0){
 	  trifprintf("WARNING: Never possible to form black hole at this resolution\n");
 	}
 	trifprintf("Gamma(max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
 	//
-	coord_ijk(3, 0, 0, FACE1, X);
-	bl_coord_ijk(3, 0, 0, FACE1, V);
+	coord_ijk(SHIFT1*3, 0, 0, FACE1, X);
+	bl_coord_ijk(SHIFT1*3, 0, 0, FACE1, V);
 	Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
 	if(Gamma<Gammagrav_max && Gamma>0.0){
 	  trifprintf("WARNING: Difficult to form black hole at this resolution\n");
