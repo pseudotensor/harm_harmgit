@@ -201,6 +201,10 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,X[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);
 	//      }
 
+	//	DLOOPA(j){
+	//	  dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: gcovselfpert[%d]=%21.15g\n",t,steppart,nstep,X[1],j,gcovselfpert[j]);
+	//	}
+
 
 	// add self-gravity perturbation to metric
 	DLOOPA(j){

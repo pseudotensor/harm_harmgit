@@ -2624,7 +2624,7 @@ void dxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*dxdxp)[NDIM])
   if(didstorepositiondata && loc!=NOWHERE){
     DLOOP(jj,kk) dxdxp[jj][kk] = GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND || i>N1-1+SHIFT1+N1BND || j<-N2BND || j>N2-1+SHIFT2+N2BND || k<-N3BND || k>N3-1+SHIFT3+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365262);
     }
@@ -2664,7 +2664,7 @@ void dxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[
   if(didstorepositiondata && loc!=NOWHERE){
     DLOOP(jj,kk) dxdxp[jj][kk] = GLOBALMETMACP1A2(dxdxpstore,loc,i,j,k,jj,kk);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND || i>N1-1+SHIFT1+N1BND || j<-N2BND || j>N2-1+SHIFT2+N2BND || k<-N3BND || k>N3-1+SHIFT3+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365263);
     }
@@ -2707,7 +2707,7 @@ void idxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*idxdxp)[NDIM])
   if(didstorepositiondata && loc!=NOWHERE){
     DLOOP(jj,kk) idxdxp[jj][kk] = GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND || i>N1-1+SHIFT1+N1BND || j<-N2BND || j>N2-1+SHIFT2+N2BND || k<-N3BND || k>N3-1+SHIFT3+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365264);
     }
@@ -2752,7 +2752,7 @@ void idxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*idxdxp
     bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,X,V);
     DLOOP(jj,kk) idxdxp[jj][kk] = GLOBALMETMACP1A2(idxdxpstore,loc,i,j,k,jj,kk);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND || i>N1-1+SHIFT1+N1BND || j<-N2BND || j>N2-1+SHIFT2+N2BND || k<-N3BND || k>N3-1+SHIFT3+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365265);
     }
@@ -2791,7 +2791,7 @@ void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V)
   if(didstorepositiondata && loc!=NOWHERE){
     DLOOPA(jj) V[jj] = GLOBALMETMACP1A1(Vstore,loc,i,j,k,jj);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND-SHIFT1 || i>N1-1+SHIFT1*2+N1BND || j<-N2BND-SHIFT2 || j>N2-1+SHIFT2*2+N2BND || k<-N3BND-SHIFT3 || k>N3-1+SHIFT3*2+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365266);
     }
@@ -2831,7 +2831,7 @@ void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 
     DLOOPA(jj) V[jj] = GLOBALMETMACP1A1(Vstore,loc,i,j,k,jj);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND-SHIFT1 || i>N1-1+SHIFT1*2+N1BND || j<-N2BND-SHIFT2 || j>N2-1+SHIFT2*2+N2BND || k<-N3BND-SHIFT3 || k>N3-1+SHIFT3*2+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365267);
     }
@@ -2878,7 +2878,7 @@ void coord_ijk(int i, int j, int k, int loc, FTYPE *X)
   if(didstorepositiondata && loc!=NOWHERE){
     DLOOPA(jj) X[jj] = GLOBALMACP1A1(Xstore,loc,i,j,k,jj);
 #if(PRODUCTION==0)
-    if(i<-N1BND || i>N1-1+N1BND || j<-N2BND || j>N2-1+N2BND || k<-N3BND || k>N3-1+N3BND){
+    if(i<-N1BND-SHIFT1 || i>N1-1+SHIFT1*2+N1BND || j<-N2BND-SHIFT2 || j>N2-1+SHIFT2*2+N2BND || k<-N3BND-SHIFT3 || k>N3-1+SHIFT3*2+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
       myexit(10365268);
     }

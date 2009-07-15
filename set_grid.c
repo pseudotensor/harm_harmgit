@@ -274,6 +274,9 @@ static void set_position_stores(void)
   extern void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM]);
 
 
+
+
+  // separately store X since over different domain in i,j,k and no MCOORD dependency
 #pragma omp parallel 
   {
     int i, j, k;
@@ -284,8 +287,7 @@ static void set_position_stores(void)
     for (loc = NPG - 1; loc >= 0; loc--) {
 
 
-      //////////    COMPFULLLOOPP1
-      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
       OPENMP3DLOOPBLOCK{
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -302,6 +304,40 @@ static void set_position_stores(void)
 
 
 
+  // separately store V since over different domain in i,j,k
+#pragma omp parallel  // no ucon or EOS stuff needed
+  {
+    int i, j, k;
+    int loc;
+
+
+    // over grid locations needing these quantities
+    for (loc = NPG - 1; loc >= 0; loc--) {
+
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	// doesn't depend on position, only store/use 1 value
+	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+      
+      
+
+	// store V since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
+	bl_coord(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMETMACP1A0(Vstore,loc,i,j,k));
+	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMETMACP1A0(Vstore,loc,i,j,k)[jj]);
+      }// end internal loop block
+    }// end over locations
+  }// end parallel region (and implied barrier)
+
+
+
+
+
   // separately do other non-X stores since X has no MCOORD==CARTMINKMETRIC conditional
 #pragma omp parallel  // no ucon or EOS stuff needed
   {
@@ -312,7 +348,6 @@ static void set_position_stores(void)
     // over grid locations needing these quantities
     for (loc = NPG - 1; loc >= 0; loc--) {
 
-      //////////    COMPFULLLOOPP1
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
       OPENMP3DLOOPBLOCK{
@@ -326,8 +361,7 @@ static void set_position_stores(void)
       
       
 
-	// store V, dxdxp since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
-	bl_coord(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMETMACP1A0(Vstore,loc,i,j,k));
+	// store dxdxp since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
 	dxdxprim(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMETMACP1A0(Vstore,loc,i,j,k),GLOBALMETMACP1A0(dxdxpstore,loc,i,j,k));
 
 	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMETMACP1A0(Vstore,loc,i,j,k)[jj]);
@@ -350,8 +384,76 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 {
 
   // symmetrize gcov
-  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS && N2>1){
 
+
+
+    // deal with X,V
+#pragma omp parallel 
+    {
+      int i, j, k;
+      int jj,kk;
+      int loc;
+
+
+
+      // over grid locations needing these quantities
+      for (loc = NPG - 1; loc >= 0; loc--) {
+
+	
+	if(loc==FACE2 || loc==CORN1 || loc==CORN3 || loc==CORNT){
+
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+
+	    if(j>=N2/2){
+
+	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-j,k,TH);
+	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH);
+
+	    }// end over upper hemisphere
+	  
+	  }// end 3D LOOP
+	}// end if symmetrizing FACE2-like positions
+	else{
+
+	  OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMP3DLOOPBLOCK{
+	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+	    // doesn't depend on position, only store/use 1 value
+	    if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+    
+	    if(j>=N2/2){
+
+	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
+	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH);
+
+
+	    }// end over upper hemisphere
+	  }// end 3D LOOP
+	}// end if over CENT-like w.r.t. FACE2
+
+      }// end over locations
+    }// end parallel region
+
+
+
+
+    // deal with dxdxp and idxdxp
 #pragma omp parallel 
     {
       int i, j, k;
@@ -392,9 +494,6 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 		}
 	      }
 
-	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-j,k,TH);
-	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH);
-
 	    }// end over upper hemisphere
 	  
 	  }// end 3D LOOP
@@ -425,9 +524,6 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 		}
 	      }
 
-	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
-	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH);
-
 
 	    }// end over upper hemisphere
 	  }// end 3D LOOP
@@ -435,6 +531,8 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 
       }// end over locations
     }// end parallel region
+
+
   }// end if can symmetrize
 
 
@@ -836,7 +934,7 @@ static void symmetrize_gcov(void)
 #if(NEWMETRICSTORAGE==1)
 
   // symmetrize gcov
-  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS && N2>1){
 
 #pragma omp parallel 
     {
@@ -1030,7 +1128,7 @@ static void symmetrize_connection(void)
 
 
 
-  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS){
+  if(numprocs==1 && ISSPCMCOORD(MCOORD) && BCtype[X2DN]==POLARAXIS && BCtype[X2UP]==POLARAXIS && N2>1){
     // symmetrize
 #pragma omp parallel 
     {
