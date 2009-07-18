@@ -2290,7 +2290,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   FTYPE ag[NDIM],dtsource[NDIM];
   FTYPE rho,u,P,bsq,w,eta;
   FTYPE mydU[NDIM];
-  FTYPE mydUgravity, rhoprimegravity, aggravity;
+  FTYPE mydUdtgravity, rhoprimegravity, aggravity;
   FTYPE frac;
   int i,j,k,loc;
   extern void compute_dr(int i, int j, int k, FTYPE *dr);
@@ -2325,7 +2325,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
 
   // comparing time update with time value, so keep lower as conserved quantity
   mydU[TT]=dUd[TT];
-  mydUgravity = dUgeomevolve[UU]*(ptrgeom->IEOMFUNCNOSINGMAC(UU)); // pure gravity piece
+  mydUdtgravity = dUgeomevolvedt[UU]*(ptrgeom->IEOMFUNCNOSINGMAC(UU)); // pure gravity piece
 
   mydx[TT]=dt; // so in the end dt_time <=C*dt/(dU/rhoprime)
   SLOOPA(jj){
@@ -2351,7 +2351,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   // New method for dealing with source terms
   //
   /////////////////////////
-#if(1)
+
   DLOOPA(jj){
     // U[UU] is like eta but with \gamma^2 factors that are present in the momentum terms
     // account for geometry prefactor of conserved quantities and put in geometry consistent with source term
@@ -2461,7 +2461,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   // remove rest-mass
   rhoprimegravity=fabs(U[UU]+U[RHO]); // gravity affects only \rho \phi -like terms order \rho v^2, not \rho
 #endif
-  aggravity=SMALL+fabs(mydUgravity/rhoprimegravity);
+  aggravity=SMALL+fabs(mydUdtgravity/rhoprimegravity);
   veleff = aggravity*mydx[1];
 
   // get speed of light in 1-direction (dx^1/dt)
@@ -2492,48 +2492,6 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
 
 
 
-#else // else other older method for gravitydt
-
-
-  /////////////////////////
-  //
-  // Old method for dealing with source terms
-  //
-  /////////////////////////
-
-  // as expected, this method essentialy divides by 0 do dt->0
-
-  SLOOPA(jj){
-    // U[UU] is like eta but with \gamma^2 factors that are present in the momentum terms
-    // account for geometry prefactor of conserved quantities and put in geometry consistent with source term
-    // U[UU] \sim eta \gamma^2 when neglecting stress terms
-    // GODMARK: Might want to be more careful like in utoprim_jon.c in how normalize errors
-    // GODMARK: Consider REMOVERESTMASSFROMUU==2 effects
-    rhoprime[jj]=MAX(fabs(eta),fabs(U[UU]));
-
-    // update to 3-velocity v^i is approximately due to this acceleration
-    ag[jj]=SMALL+fabs(mydU[jj]/rhoprime[jj]); // acceleration.  SMALL is so doesn't identically vanish and we get nan below
-
-    dtsource[jj]=cour*sqrt(mydx[jj]/ag[jj]); // characteristic time-step for increasing velocity so mass would cross a grid
-      
-  }
-
-  // do pure gravity piece (very similar to how full TT source term dealt with)
-  //  rhoprimegravity=MAX(fabs(eta),fabs(U[UU]));
-  // The below term is \propto \rho Mvsr(r)/r when v=0, so is well-defined
-  // GODMARK: Can this quantity go to zero near rotating BH or something?
-#if(REMOVERESTMASSFROMUU==2)
-  rhoprimegravity=fabs(U[UU]); // gravity affects only \rho \phi -like terms order \rho v^2, not \rho
-#else
-  // remove rest-mass
-  rhoprimegravity=fabs(U[UU]+U[RHO]); // gravity affects only \rho \phi -like terms order \rho v^2, not \rho
-#endif
-  aggravity=SMALL+fabs(mydUgravity/rhoprimegravity);
-  dtsource[TT] = *gravitydt=cour*(mydx[TT]/aggravity);
-
-
-
-#endif  
 
 
 
@@ -2549,7 +2507,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   //  DLOOPA(jj) dualfprintf(fail_file,"dtsource[%d]=%21.15g : %21.15g : %21.15g %21.15g : %21.15g\n",jj,dtsource[jj],cour,mydx[jj],ag[jj],dUevolve[UU+jj]);
   //} 
 
-  //  dualfprintf(fail_file,"i=%d mydUgravity=%21.15g rhoprimegravity=%21.15g rhoprime[TT]=%21.15g mydU[TT]=%21.15g\n",ptrgeom->i,mydUgravity,rhoprimegravity,rhoprime[TT],mydU[TT]);
+  //  dualfprintf(fail_file,"i=%d mydUdtgravity=%21.15g rhoprimegravity=%21.15g rhoprime[TT]=%21.15g mydU[TT]=%21.15g\n",ptrgeom->i,mydUdtgravity,rhoprimegravity,rhoprime[TT],mydU[TT]);
 
   // always do time-component
   // accounts for thermal changes if cooling function or geometry changes if metric changing
