@@ -34,7 +34,8 @@ static int extralimits[MAXNUMDATATYPES][2];
 
 
 static FTYPE FAKE2IDEALNUCLEAROFFSET;
-static FTYPE TRUENUCLEAROFFSET;
+static FTYPE TRUENUCLEAROFFSET, DEGENNUCLEAROFFSET;
+static FTYPE lsoffset, fakelsoffset;
 static int didsetupkazeos;
 
 

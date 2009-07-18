@@ -21,6 +21,8 @@
 ///////////////
 static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answer);
 static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
+static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
+static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 
 
 #include "kazfulleos_set_arrays.c"
@@ -173,19 +175,7 @@ void read_setup_eostable(void)
   kazfulleos_set_arrays();
 
 
-  // GODMARK: should really read-in from table, although expected tabular value is 9.14Mev and this gives 7.108 for smooth connection for initial conditions
-  // GODMARK: The below is for Shen EOS only
-  FAKE2IDEALNUCLEAROFFSET = (+7.57E-3);
-
-  // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
-  // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correc tunits.
-  // SUPERGODMARK: NOT DONE!
-  // ergPmev=1.60218E-6
-  //  TRUENUCLEAROFFSET=(-9.14*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
-  TRUENUCLEAROFFSET=0.0; // assume degen offset accounts for offset, that cannot be put into EOS itself!
-  // above gives 9.7346E-3
-  //  TRUENUCLEAROFFSET /= (1.0); // need to get code version of energy/baryon however used to add to internal energy
-
+  
 
 
 
@@ -297,9 +287,9 @@ void read_setup_eostable(void)
       for(ii=0;ii<NUMEOSINDEPS;ii++){
 	fscanf(inhead,"%d",&tablesize[tableiter][ii]);
 	// second [4] : 0 = lower log_base limit, 1 = upper log_base limit, 2=step, 3 = divisor of grid position 4=base of log, 5 = linear value of offset for log_base stepping so can control how resolved
- 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][0]);
-	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][1]);
-	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][2]);
+ 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][0]); // start in log
+	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][1]); // end in log
+	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][2]); // step in log
 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][4]); // base of log offset
 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][5]); // linear offset
 
@@ -350,7 +340,42 @@ void read_setup_eostable(void)
 	lineartablelimits[tableiter][ii][3]=inputtablelimits[tableiter][ii][5]; // linear offset
       }
 
+
+      ////////////////////////
+      //
+      // Also read in lsoffset and fakelsoffset
+      fscanf(inhead,HEADERONEIN,&lsoffset);
+      fscanf(inhead,HEADERONEIN,&fakelsoffset);
+
+      // GODMARK: should really read-in from table, although expected tabular value is 9.14Mev and this gives 7.108 for smooth connection for initial conditions
+      // GODMARK: The below is for Shen EOS only
+      FAKE2IDEALNUCLEAROFFSET = (-7.57E-3);
+
+      // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
+      // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correc tunits.
+      // SUPERGODMARK: NOT DONE!
+      // ergPmev=1.60218E-6
+      //  TRUENUCLEAROFFSET=(9.14*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
+      // above gives 9.7346E-3
+      //  TRUENUCLEAROFFSET /= (1.0); // need to get code version of energy/baryon however used to add to internal energy
+      // assume degen offset accounts for offset, that cannot be put into EOS itself!
+      // Now read-in unphysical fakelsoffset used to avoid negative energies is required to reoffset internal energy back so only physical "lsoffset" is included
+      TRUENUCLEAROFFSET=fakelsoffset*ergPmev/(mb*C*C);
+
+      // degeneracy global offset:
+      // ergPmev=1.60218E-6
+      //  DEGENNUCLEAROFFSET=(50.0*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
+      DEGENNUCLEAROFFSET=0.0; // avoid this approach for now -- try putting in offset into original HELM table first
+
+      //
+      ////////////////////////
+
+
+
+      
       // Temperature table limits not read in, just for user use
+
+
 
 
       // check size of tables
@@ -376,7 +401,7 @@ void read_setup_eostable(void)
       
 
 
-
+    
 
 
 
@@ -876,7 +901,13 @@ void read_setup_eostable(void)
   MPI_Bcast(&vardegentypearray[0],NUMEOSDEGENINDEPS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&varnormalcompare2degentypearray[0],NUMEOSDEGENINDEPS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
-  
+  MPI_Bcast(&lsoffset,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&fakelsoffset,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&FAKE2IDEALNUCLEAROFFSET,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&TRUENUCLEAROFFSET,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&DEGENNUCLEAROFFSET,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
+
+ 
   // eostable is double, so MPI_DOUBLE
   MPI_Bcast(&(EOSMAC(eostable,0,0,0,0,0,0)),numeosquantities[FULLTABLE]*EOSN5*EOSN4*EOSN3*EOSN2*EOSN1,MPI_DOUBLE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(EOSMAC(eosdegentable,0,0,0,0,0,0)),numeosdegenquantities[FULLTABLE]*EOSN5*EOSN4*EOSN3*1*EOSN1,MPI_DOUBLE,MPIid[0], MPI_COMM_GRMHD);
@@ -1042,37 +1073,37 @@ void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, in
 
 
 // quad-linear interpolation
-FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
-  FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
-  FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
-  FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
-  FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
-  FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
 
 
 
 #if(0)
   // neartest dumb for normal table
   if(degentable==0){
-    return(get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+    return(get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
   }
   else{
     // linear
-    return(get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+    return(get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
   }
 #elif(0)
   // nearest dumb for all
-  return(get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+  return(get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
 #elif(1)
   // linear
-  return(get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+  return(get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
 #elif(0)
   // parabolic for density and tri-linear otherwise
-  return(get_eos_fromlookup_parabolic(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+  return(get_eos_fromlookup_parabolic(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
 #elif(0)
   // parabolic for all quantities
-  return(get_eos_fromlookup_parabolicfull(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, vartypearray, indexarray));
+  return(get_eos_fromlookup_parabolicfull(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray));
 #endif
 
 }
@@ -1085,7 +1116,7 @@ FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int wh
 
 // tri-linear + parabolic (density) interpolation
 // Uses globals so can make them thread safe instead of using static's that are not
-FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE tempcheck;
   FTYPE totalf[3][3][3][3]; // 3 values for parabolic interpolation
@@ -1260,6 +1291,9 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 #if(DOLOGINTERP)
       if(loginterp){
+	if(degentable==1){
+	  offsetquant2_general(whichdegenfun, quant1, tfptr[iii][jjj][kkk][lll], &tfptr[iii][jjj][kkk][lll]);
+	}
 	//	if(tfptr[iii][jjj][kkk][lll]<=0.0){
 	//	  dualfprintf(fail_file,"Negative of log10\n");
 	//	}
@@ -1343,6 +1377,9 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 #if(DOLOGINTERP)
   if(loginterp){
     totalffinal=pow(10.0,totalffinal);
+    if(degentable==1){
+      offsetquant2_general_inverse(whichdegenfun, quant1, totalffinal, &totalffinal);
+    }
   }
 #endif
 
@@ -1363,7 +1400,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 
 // tri-linear + parabolic (density) interpolation
-FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE totaldist[3];
   FTYPE *tdist;
@@ -1508,6 +1545,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
 #if(DOLOGINTERP)
       if(loginterp){
+	if(degentable==1){
+	  offsetquant2_general(whichdegenfun, quant1, f[jjj][kkk][lll], &f[jjj][kkk][lll]);
+	}
 	f[jjj][kkk][lll] = log10(f[jjj][kkk][lll]);
       }
 #endif
@@ -1563,6 +1603,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 #if(DOLOGINTERP)
       if(loginterp){
 	tfptr[iii] = log10(tfptr[iii]);
+	if(degentable==1){
+	  offsetquant2_general_inverse(whichdegenfun, quant1, tfptr[iii], &tfptr[iii]);
+	}
       }
 #endif
 
@@ -1601,6 +1644,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 #if(DOLOGINTERP)
   if(loginterp){
     totalffinal=pow(10.0,totalffinal);
+    if(degentable==1){
+      offsetquant2_general_inverse(whichdegenfun, quant1, totalffinal, &totalffinal);
+    }
   }
 #endif
 
@@ -1622,7 +1668,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
 
 // full 5D linear interpolation
-FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE totaldist;
   FTYPE dist[2][2][2][2][2],f[2][2][2][2][2];
@@ -1671,12 +1717,17 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
   // functions (F) F(rho0,p)
   whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
-  if(whichinterp1||degentable==1) loginterp=1;
-  else if(whichinterp2) loginterp=0;
+  if(1||degentable==0){ // always allow loginterp==1
+    if(whichinterp1||degentable==1) loginterp=1;
+    else if(whichinterp2) loginterp=0;
+    else{
+      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
+      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
+      myexit(62662);
+    }
+  }
   else{
-    dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
-    for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
-    myexit(62662);
+    loginterp=0;
   }
 #endif
 
@@ -1764,6 +1815,11 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
 #if(DOLOGINTERP)
       if(loginterp){
+	if(degentable==1){
+	  dualfprintf(fail_file,"fbefore: %21.15g\n",f[iii][jjj][kkk][lll][mmm]);
+	  offsetquant2_general(whichdegenfun, quant1, f[iii][jjj][kkk][lll][mmm], &f[iii][jjj][kkk][lll][mmm]);
+	  dualfprintf(fail_file,"fafter: %21.15g\n",f[iii][jjj][kkk][lll][mmm]);
+	}
 	f[iii][jjj][kkk][lll][mmm] = log10(f[iii][jjj][kkk][lll][mmm]);
       }
 #endif
@@ -1826,6 +1882,9 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 #if(DOLOGINTERP)
     if(loginterp){
       totalf=pow(10.0,totalf);
+      if(degentable==1){
+	offsetquant2_general_inverse(whichdegenfun, quant1, totalf, &totalf);
+      }
     }
 #endif
 
@@ -1854,7 +1913,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
 
 // nearest neighbor interpolation but caution to temperature defined or not
-FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE totaldist;
   FTYPE tempcheck;
@@ -1981,7 +2040,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
 //#define index2array(name,fun) name[fun][indexarray[5]][indexarray[4]][indexarray[3]][indexarray[2]][indexarray[1]]
 
 // nearest neighbor interpolation with no temperature check
-FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray)
+FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE totalf;
   int whichdegenfun;
@@ -2067,7 +2126,7 @@ FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degen
 // notice that q1-q2 are pass by value, so internally changed but externally remains unchanged
 static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answer)
 {
-  FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, int *vartypearray, FTYPE *indexarray);
+  FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray);
   int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable);
 
   void eos_lookup(int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
@@ -2091,7 +2150,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
   ///////////////////////////////
   //
-  // general nuclear offset
+  // nuclear offset (as consistent with HELM code to obtain correct energy per baryon)
   //
   ///////////////////////////////
   offsetquant2(whichd, EOSextra, quant1, quant2, &quant2);
@@ -2177,7 +2236,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
       if(gottable[whichdegen]==0 || gottable[1]!=gottable[0] || whichtable[1]!=whichtable[0]) return(1);// indicates "failure" and no answer within table
       else{
 	dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
-	*answer=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[0], whichfun, whichindep, vartypearray, indexarray);
+	*answer=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[0], whichfun, whichindep, quant1, vartypearray, indexarray);
 	// now save result if got result
 	resultold[whichfun]=*answer;
 	repeatedfun[whichfun]=1;
@@ -2269,7 +2328,6 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 
 
-
 	// DEBUG:
 	//dualfprintf(fail_file,"LOOKUPANDGET: whichdegen=%d\n",whichdegen); // DEBUG
 
@@ -2281,7 +2339,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 	}
 
 	// now compute result
-	myanswer[whichdegen]=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichdegen], whichfun, whichindep, vartypearray, indexarray);
+	myanswer[whichdegen]=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichdegen], whichfun, whichindep, quant1, vartypearray, indexarray);
 
 	// BEGIN DEBUG
 	//dualfprintf(fail_file,"q1=%21.15g q2=%21.15g q3=%21.15g q4=%21.15g\n",q1,q2,q3,q4);
@@ -2311,11 +2369,18 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 			 
 
 	  qarray[2] -= myanswer[whichdegen];
+
+
+	  dualfprintf(fail_file,"answer=%21.15g : %21.15g %21.15g\n",myanswer[whichdegen],qarray[1],qarray[2]);
+	  int loopit;
+	  for(loopit=0;loopit<NUMEOSGLOBALS;loopit++) dualfprintf(fail_file,"EOSextra[%d]=%21.15g\n",loopit,EOSextra[loopit]);
+	  
+
 	  if(qarray[2]<0.0){
 	    // DEBUG:
 	    dualfprintf(fail_file,"Got negative q2=%21.15g, forcing to be %21.15g: :: myanswer[%d]=%21.15g :: whichdegen=%d whichtable=%d whichfun=%d whichindep=%d\n",qarray[2],SMALL,whichdegen,myanswer[whichdegen],whichdegen,whichtable[whichdegen],whichfun,whichindep);
 	    for(qi=1;qi<=NUMINDEPDIMENS;qi++){
-	      dualfprintf(fail_file,"indexarray[%d]=%d\n",qi,indexarray[qi]);
+	      dualfprintf(fail_file,"indexarray[%d]=%g\n",qi,indexarray[qi]);
 	    }
 
 #if(ALLOWDEGENOFFSET)
@@ -2405,8 +2470,8 @@ int get_whichindep(int whichfun)
 
 // general offset for energy per baryon to be applied always before accessing table with nuclear EOS
 // quant2out is the \delta u that is tabulated in the EOS table itself.
-// inputted quant2in is some true internal energy (maybe no neutrinos) that contains nuclear offset and could be itself negative!
-// So we add back in the offset before looking up the results from the table
+// inputted quant2in is some true internal energy (maybe no neutrinos)
+// So we add the offset before looking up the results from the table that has the offset
 static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
@@ -2414,10 +2479,27 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
   if(whichd==UTOTDIFF || whichd==CHIDIFF){
     // nuclear offset
     // assumes lsoffset in helm/jon_lsbox.f is offsetting only energy/baryon = u/\rho_0
-    // -TRUENUCLEAROFFSET > 0 normally
-    *quant2out = (quant2in/quant1 - TRUENUCLEAROFFSET)*quant1;
+    *quant2out = (quant2in/quant1 + TRUENUCLEAROFFSET)*quant1;
   }
 
+
+  return(0);
+
+}
+
+static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
+{
+
+  *quant2out = (quant2in/quant1 + DEGENNUCLEAROFFSET)*quant1;
+
+  return(0);
+
+}
+
+static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
+{
+
+  *quant2out = (quant2in/quant1 - DEGENNUCLEAROFFSET)*quant1;
 
   return(0);
 
@@ -2449,7 +2531,7 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
 
 
   if(get_eos_fromtable(whichfun,whichd,EOSextra,quant1,dquant2,&dfinal)){ // input quant1,dquant2 and get dfinal
-    quant2mod = (quant2/quant1 - FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+    quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
     // otherwise use TM EOS
 #if(REDUCE2WHICHEOS==MIGNONE)
     if(whichfun==PofRHOU)        final = pressure_rho0_u_mignone(EOSextra,quant1, quant2mod); // use total quant2mod
@@ -2546,10 +2628,10 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   // set nuclear per baryon offset so can smoothly connect to ideal gas form of EOS
   //
   ///////////////
-  dquant2mod = (quant2/quant1 - FAKE2IDEALNUCLEAROFFSET)*quant1 - quant2nu;
+  dquant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1 - quant2nu;
 
   // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
-  quant2mod = (quant2/quant1 - FAKE2IDEALNUCLEAROFFSET)*quant1;
+  quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1;
 
 
 

@@ -2280,8 +2280,10 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 // but cour=0.8 and GRAVITYCOUR = 0.1 doesn't even work for longsteps!
 #define GRAVITYCOUR (0.1)
 
-static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state, FTYPE *pr, FTYPE *U, FTYPE *dUevolve, FTYPE *dUgeomevolve, FTYPE *dtij, FTYPE *gravitydt)
+// note that dUevolve and dUgeomevolve are really dU/dt (i.e. per unit dt)
+static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state, FTYPE *pr, FTYPE *U, FTYPE *dUevolvedt, FTYPE *dUgeomevolvedt, FTYPE *dtij, FTYPE *gravitydt)
 {
+  FTYPE dUevolve[NDIM],dUgeomevolve[NDIM];
   FTYPE dUd[NDIM],dUu[NDIM];
   int jj,kk;
   FTYPE rhoprime[NDIM];
@@ -2308,6 +2310,12 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   // default is no limit due to time-dependence of gravity
   *gravitydt=BIG;
 
+
+  // convert from dU/dt to dU
+  DLOOPA(jj){
+    dUevolve[UU+jj] = dUevolvedt[UU+jj]*dt;
+    dUgeomevolve[UU+jj] = dUgeomevolvedt[UU+jj]*dt;
+  }
 
 
   DLOOPA(jj){
@@ -2536,7 +2544,10 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
   // Finally store source term's version of limited dt to be used later
   //
   /////////////////////////
-  
+
+  //  if(ptrgeom->i==30 && ptrgeom->j==31){
+  //  DLOOPA(jj) dualfprintf(fail_file,"dtsource[%d]=%21.15g : %21.15g : %21.15g %21.15g : %21.15g\n",jj,dtsource[jj],cour,mydx[jj],ag[jj],dUevolve[UU+jj]);
+  //} 
 
   //  dualfprintf(fail_file,"i=%d mydUgravity=%21.15g rhoprimegravity=%21.15g rhoprime[TT]=%21.15g mydU[TT]=%21.15g\n",ptrgeom->i,mydUgravity,rhoprimegravity,rhoprime[TT],mydU[TT]);
 
