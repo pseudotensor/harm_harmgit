@@ -1808,10 +1808,10 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"WARNING: LIMITDTWITHSOURCETERM set to 1, code may be slower\n");
   }
 
-  if(LIMITDTWITHSOURCETERM){
-    dualfprintf(fail_file,"LIMITDTWITHSOURCETERM==1 doesn't work right now\n");
-    myexit(ERRORCODEBELOWCLEANFINISH+54986456);
-  }
+  //  if(LIMITDTWITHSOURCETERM){
+  //    dualfprintf(fail_file,"LIMITDTWITHSOURCETERM==1 doesn't work right now\n");
+  //    myexit(ERRORCODEBELOWCLEANFINISH+54986456);
+  //  }
 
   if(DODISS || DOLUMVSR || DODISSVSR || DOENTROPY!=DONOENTROPY){
     dualfprintf(fail_file,"WARNING: DODISS/DOLUMVSR/DODISSVSR/DOENTROPY!=DONOENTROPY set to 1, code may be slower\n");
