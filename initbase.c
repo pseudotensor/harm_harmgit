@@ -1676,6 +1676,10 @@ void check_bnd_num(void)
     }
   }
 
+  if(CONNMACHINEBODY&&(DOENOFLUX!=NOENOFLUX || MERGEDC2EA2CMETHOD)){
+    dualfprintf(fail_file,"WARNING: MACHINEBODY with higher order scheme makes no sense\n");
+  }
+
 
 
   if(CONTACTINDICATOR!=0){

@@ -520,7 +520,8 @@
 
 // whether to correct connection so body forces are 0 when p=constant
 // only makes sense for non-higher order scheme
-#define CONNMACHINEBODY 0
+// does help near the pole to avoid failures
+#define CONNMACHINEBODY 1
 
 // if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
 #define WHICHEOM WITHGDET
