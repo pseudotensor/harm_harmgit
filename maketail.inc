@@ -437,16 +437,16 @@ $(FINISH):
 #	$(MYCOMMANDS1)
 
 
-$(CMD):	$(PREP) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile freespace.o tau_neededbyharm.o
-	$(CC)  $(CFLAGSNONPRECISE) -o $(CMD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) freespace.o tau_neededbyharm.o $(LDFLAGS)
+$(CMD):	$(PREP) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile
+	$(CC)  $(CFLAGSNONPRECISE) -o $(CMD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(LDFLAGS)
 
 
-$(CMD2):       $(PREP) $(PREPLD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile libml.a $(OBJSOTHER) freespace.o tau_neededbyharm.o
+$(CMD2):       $(PREP) $(PREPLD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile libml.a $(OBJSOTHER)
 	       $(CC2) $(GCCCFLAGS) -c polevll.c $(LDFLAGS) $(LDFLAGSOTHER)
-	       $(CC)  $(CFLAGS) -o $(CMD2) $(OBJSMANYPOINTS) $(OBJSONEPOINT) freespace.o tau_neededbyharm.o polevll.o libml.a $(LDFLAGS) $(LDFLAGSOTHER)
+	       $(CC)  $(CFLAGS) -o $(CMD2) $(OBJSMANYPOINTS) $(OBJSONEPOINT) polevll.o libml.a $(LDFLAGS) $(LDFLAGSOTHER)
 
-$(LIAISONCMD): $(PREPLIAISON) $(OBJSLIAISON) makefile freespace.o 
-	       $(CC)  $(CFLAGS) -DUSINGLIAISON=1 -o $(LIAISONCMD) $(OBJSLIAISON) freespace.o $(LDFLAGS) $(LDFLAGSOTHER)
+$(LIAISONCMD): $(PREPLIAISON) $(OBJSLIAISON) makefile 
+	       $(CC)  $(CFLAGS) -DUSINGLIAISON=1 -o $(LIAISONCMD) $(OBJSLIAISON) $(LDFLAGS) $(LDFLAGSOTHER)
 
 $(JONINTERPCMD): $(PREPJONINTERP) $(OBJSJONINTERP) makefile
 	       $(CC)  $(CFLAGS) -DUSINGJONINTERP=1 -o $(JONINTERPCMD) $(OBJSJONINTERP) $(LDFLAGS) $(LDFLAGSOTHER)
