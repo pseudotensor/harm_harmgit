@@ -49,7 +49,7 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   
   alpha=dmatrix(1, 5, 1, 5);
 
-  if (dudp_calc(whichcons,EOSextra, pr0, &q, ptrgeom, alpha) >= 1)
+  if (dudp_calc(WHICHEOS,whichcons,EOSextra, pr0, &q, ptrgeom, alpha) >= 1)
     FAILSTATEMENT("utoprim.c:usrfun()", "dudp_calc()", 1);
   // more general normalization
   // copied from usrfun
@@ -253,7 +253,7 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   
   alpha=dmatrix(1, 5, 1, 5);
 
-  if (dudp_calc(whichcons,EOSextra, pr0, &q, ptrgeom, alpha) >= 1)
+  if (dudp_calc(WHICHEOS,whichcons,EOSextra, pr0, &q, ptrgeom, alpha) >= 1)
     FAILSTATEMENT("utoprim.c:usrfun()", "dudp_calc()", 1);
   // more general normalization
   // copied from usrfun

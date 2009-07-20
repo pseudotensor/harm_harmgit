@@ -46,7 +46,7 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE h;
   FTYPE cs2;
 
-  pressure = pressure_rho0_u(EOSextra,rho0,u);
+  pressure = pressure_rho0_u_idealgas(EOSextra,rho0,u);
   h=rho0+u+pressure;
 
   cs2=GAMMA*pressure/h;
@@ -60,11 +60,11 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // entropy = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure_rho0_u(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
   FTYPE pressure,indexn,entropy;
 
 
-  pressure=pressure_rho0_u(EOSextra,rho0,u);
+  pressure=pressure_rho0_u_idealgas(EOSextra,rho0,u);
   indexn=1.0/GAMMAM1;
 
   if(rho0<SMALL) rho0=SMALL;
@@ -105,9 +105,9 @@ FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE indexn;
   FTYPE entropy;
   FTYPE dSdrho;
-  FTYPE compute_entropy(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
-  entropy=compute_entropy(EOSextra,rho0,u);
+  entropy=compute_entropy_idealgas(EOSextra,rho0,u);
 
   // ideal gas
   indexn=1.0/GAMMAM1;
@@ -193,7 +193,7 @@ int get_extrasprocessed_idealgas(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *e
   FTYPE rho0,u;
   rho0=pr[RHO];
   u=pr[UU];
-  compute_allextras(0, EOSextra, rho0, u, &numextrasreturn, extras);
+  compute_allextras_idealgas(0, EOSextra, rho0, u, &numextrasreturn, extras);
   for(pi=0;pi<MAXPROCESSEDEXTRAS;pi++){
     processed[pi] = 0.0;
   }

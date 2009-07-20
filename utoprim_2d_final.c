@@ -14,7 +14,7 @@ static FTYPE Bsq,QdotBsq,Qtsq,Qdotn,D ;
 static FTYPE wglobal;
 static PFTYPE *glpflag; // global pflag for local file
 static FTYPE *EOSextra; // global with file scope
-
+static int whicheos; // global with file scope
 
 
 // Declarations: 
@@ -73,6 +73,8 @@ int Utoprim_2d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FT
   // assign global int pointer to lpflag pointer
   glpflag=lpflag;
   EOSextra=GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  whicheos=WHICHEOS;
+
 
 
 #if( WHICHVEL != VELREL4 ) 
@@ -184,8 +186,8 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   FTYPE rho0,u,p,w,gammasq,gamma,gtmp,W_last,W,utsq,vsq,tmpdiff ;
   int i,j, retval, retval2, i_increase ;
    
-  FTYPE pressure_rho0_u(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-  FTYPE pressure_rho0_w(FTYPE *EOSextra, FTYPE rho0, FTYPE w);
+  FTYPE pressure_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  FTYPE pressure_rho0_w(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE w);
   const int ltrace = 0;
   const int ltrace2 = 0;
 
@@ -269,7 +271,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   //   i.e. you don't get positive values for dP/d(vsq) . 
   rho0 = D / gamma ;
   u = prim[UU] ;
-  p = pressure_rho0_u(EOSextra,rho0,u) ;
+  p = pressure_rho0_u(WHICHEOS, EOSextra,rho0,u) ;
   w = rho0 + u + p ;
 
   W_last = w*gammasq ;
@@ -431,7 +433,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   rho0 = D * gtmp;
 
   w = W * (1. - vsq) ;
-  p = pressure_rho0_w(EOSextra,rho0,w) ;
+  p = pressure_rho0_w(whicheos,EOSextra,rho0,w) ;
   u = w - (rho0 + p) ;
 
   if( (rho0 <= 0.) || (u < 0.) ) { 
@@ -520,7 +522,7 @@ pressure as a function of W, vsq, and D:
 
 */
 /*
-static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
 {
   FTYPE gtmp;
   
@@ -1127,9 +1129,9 @@ static void func_vsq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM
   
   Wsq = W*W;
   
-  p_tmp  = pressure_W_vsq(EOSextra, W, D, vsq );
-  dPdW   = dpdW_calc_vsq(EOSextra, W, D, vsq );
-  dPdvsq = dpdvsq_calc(EOSextra, W, D, vsq );
+  p_tmp  = pressure_W_vsq(whicheos,EOSextra, W, D, vsq );
+  dPdW   = dpdW_calc_vsq(whicheos,EOSextra, W, D, vsq );
+  dPdvsq = dpdvsq_calc(whicheos,EOSextra, W, D, vsq );
 
 
   /* These expressions were calculated using Mathematica */
@@ -1204,9 +1206,9 @@ static void func_vsq2(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DI
   
   Wsq = W*W;
   
-  p_tmp  = pressure_W_vsq(EOSextra, W, D, vsq );
-  dPdW   = dpdW_calc_vsq(EOSextra,  W, D, vsq );
-  dPdvsq = dpdvsq_calc(EOSextra,  W, D, vsq );
+  p_tmp  = pressure_W_vsq(whicheos,EOSextra, W, D, vsq );
+  dPdW   = dpdW_calc_vsq(whicheos,EOSextra,  W, D, vsq );
+  dPdvsq = dpdvsq_calc(whicheos,EOSextra,  W, D, vsq );
 
 
   /* These expressions were calculated using Mathematica, but made into efficient code using Maple */
@@ -1269,9 +1271,9 @@ static FTYPE res_sq_vsq(FTYPE x[])
   
   Wsq = W*W;
   
-  p_tmp  = pressure_W_vsq(EOSextra,  W, D, vsq );
-  dPdW   = dpdW_calc_vsq(EOSextra,  W, D, vsq );
-  dPdvsq = dpdvsq_calc(EOSextra,  W, D, vsq );
+  p_tmp  = pressure_W_vsq(whicheos,EOSextra,  W, D, vsq );
+  dPdW   = dpdW_calc_vsq(whicheos,EOSextra,  W, D, vsq );
+  dPdvsq = dpdvsq_calc(whicheos,EOSextra,  W, D, vsq );
 
   /* These expressions were calculated using Mathematica */
   /* Since we know the analytic form of the equations, we can explicitly
@@ -1317,7 +1319,7 @@ static FTYPE res_sq_vsq2(FTYPE x[])
   
   Wsq = W*W;
   
-  p_tmp  = pressure_W_vsq(EOSextra,  W, D, vsq );
+  p_tmp  = pressure_W_vsq(whicheos,EOSextra,  W, D, vsq );
 
   /* These expressions were calculated using Mathematica and made into efficient code using Maple*/
   /* Since we know the analytic form of the equations, we can explicitly

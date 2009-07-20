@@ -42,15 +42,15 @@ static void dbsqdui_calc(struct of_geom *ptrgeom, FTYPE (*dbiduj)[NDIM],FTYPE *b
 static void duudud_calc(struct of_geom *ptrgeom, FTYPE *ucon, FTYPE (*duudud)[NDIM]) ;
 static void dudduu_calc(struct of_geom *ptrgeom, FTYPE*dutdui, FTYPE (*dudduu)[NDIM]);
 static void dbdiduj_calc(struct of_geom *ptrgeom, FTYPE (*dbiduj)[NDIM],FTYPE (*dbdiduj)[NDIM]);
-static void dSdu_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdu);
-static void dSdrho_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdrho);
+static void dSdu_calc(int whicheos, FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdu);
+static void dSdrho_calc(int whicheos, FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdrho);
 static void dPtodP(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q, FTYPE **alpha);
 static void ducon_dv3_calc(struct of_geom *ptrgeom, struct of_state *q,FTYPE (*ducon_dv3)[NDIM]);
 static void dgdvi_calc(struct of_geom *ptrgeom, FTYPE *pr,FTYPE *dgdvi);
 static void duidvj_calc(struct of_geom *ptrgeom, FTYPE *dgdvi,FTYPE (*duidvj)[NDIM]);
 
 
-int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha)
+int dudp_calc_gen(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha)
 {
   VARDUDPSTATIC FTYPE dutdui[NDIM] ;
   VARDUDPSTATIC FTYPE dbtdui[NDIM] ;
@@ -99,7 +99,7 @@ int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q,
   rho=pr[RHO];
   ie=pr[UU];
   //  P=(gam-1.0)*ie;
-  P = pressure_rho0_u(EOSextra,rho,ie);
+  P = pressure_rho0_u(whicheos,EOSextra,rho,ie);
 
   eta = P + rho + ie + bsq ;
 
@@ -114,7 +114,7 @@ int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q,
   alpha[RHO+1][RHO+1] = q->ucon[TT] ;
 
 
-  dpdrho0=dpdrho0_rho0_u(EOSextra,pr[RHO],pr[UU]);
+  dpdrho0=dpdrho0_rho0_u(whicheos,EOSextra,pr[RHO],pr[UU]);
 
   // u+momentums on rho
   // d(T^t_\nu)/d\rho_0
@@ -134,7 +134,7 @@ int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q,
   // u+momentums on u // (notice that no d/d(ie) terms on T^t_t for REMOVERESTMASSFROMUU==2)
   // d(T^t_\nu)/du
   // needs d(u+p)/du   and dp/du
-  dpdu = dpdu_rho0_u(EOSextra,pr[RHO],pr[UU]);
+  dpdu = dpdu_rho0_u(whicheos,EOSextra,pr[RHO],pr[UU]);
   DLOOPA(j) alpha[UU+1+j][UU+1] = (1.0+dpdu)*q->ucon[TT]*q->ucov[j] + delta(TT,j)*dpdu;
 
   // rho on momentums
@@ -184,8 +184,8 @@ int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q,
   if(whichcons==EVOLVEFULLENTROPY){
 
 
-    dSdrho_calc(EOSextra,pr,&dSdrho);
-    dSdu_calc(EOSextra,pr,&dSdu);
+    dSdrho_calc(whicheos, EOSextra,pr,&dSdrho);
+    dSdu_calc(whicheos, EOSextra,pr,&dSdu);
 
     // ENTROPY on rho
     alpha[UU+1][RHO+1] = dSdrho*(q->ucon[TT]) ;
@@ -440,7 +440,7 @@ static void ducon_dv3_calc(struct of_geom *ptrgeom, struct of_state *q,FTYPE (*d
 }
 
 
-static void dSdrho_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdrho)
+static void dSdrho_calc(int whicheos, FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdrho)
 {
   int j,k;
   FTYPE rho0,u;
@@ -448,11 +448,11 @@ static void dSdrho_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdrho)
   rho0=pr[RHO];
   u=pr[UU];
 
-  *dSdrho=compute_dSdrho(EOSextra,rho0,u);
+  *dSdrho=compute_dSdrho(whicheos,EOSextra,rho0,u);
 
 }
 
-static void dSdu_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdu)
+static void dSdu_calc(int whicheos, FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdu)
 {
   int j,k;
   FTYPE rho0,u;
@@ -460,6 +460,6 @@ static void dSdu_calc(FTYPE *EOSextra, FTYPE *pr,FTYPE *dSdu)
   rho0=pr[RHO];
   u=pr[UU];
 
-  *dSdu=compute_dSdu(EOSextra,rho0,u);
+  *dSdu=compute_dSdu(whicheos,EOSextra,rho0,u);
 
 }

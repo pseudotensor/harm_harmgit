@@ -63,9 +63,9 @@ extern void bsq_calc_rel4vel_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of
 extern int gamma_calc(FTYPE *pr, struct of_geom *geom,FTYPE *gamma, FTYPE *qsq);
 
 
-extern int dudp_calc_gen(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha);
+extern int dudp_calc_gen(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha);
 
-extern int dudp_calc_3vel(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *geom, FTYPE **alpha);
+extern int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *geom, FTYPE **alpha);
 
 
 extern int sol(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin);

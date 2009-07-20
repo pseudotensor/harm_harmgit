@@ -3069,11 +3069,11 @@ int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
   return(0);
 }
 
-// wrapper
+// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(pressure_rho0_u(GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  return(pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
 
 }
 
@@ -3081,7 +3081,7 @@ FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(cs2_compute(GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  return(cs2_compute(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
 
 }
 
@@ -3089,7 +3089,7 @@ FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(compute_entropy(GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
 
 }
 
@@ -3097,7 +3097,7 @@ FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *parlist)
 {
 
-  get_EOS_parms(numparms, GLOBALMAC(EOSextraglobal,i,j,k),parlist);
+  get_EOS_parms(WHICHEOS,numparms, GLOBALMAC(EOSextraglobal,i,j,k),parlist);
 
 
 }
@@ -3105,7 +3105,7 @@ void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *par
 FTYPE compute_temp_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(compute_temp(GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  return(compute_temp(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
 
 }
 
@@ -3113,7 +3113,7 @@ FTYPE compute_temp_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 int get_extrasprocessed_simple(int doall, int i, int j, int k, int loc, FTYPE *pr, FTYPE *extras, FTYPE *processed)
 {
 
-  return(get_extrasprocessed(1, GLOBALMAC(EOSextraglobal,i,j,k), GLOBALMAC(pdump,i,j,k), extras, processed));
+  return(get_extrasprocessed(WHICHEOS,1, GLOBALMAC(EOSextraglobal,i,j,k), GLOBALMAC(pdump,i,j,k), extras, processed));
 
 }
 
@@ -3121,27 +3121,27 @@ int get_extrasprocessed_simple(int doall, int i, int j, int k, int loc, FTYPE *p
 FTYPE compute_u_from_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE entropy)
 {
 
-  return(compute_u_from_entropy(GLOBALMAC(EOSextraglobal,i,j,k), rho, entropy));
+  return(compute_u_from_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k), rho, entropy));
 
 }
 
 FTYPE compute_qdot_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(compute_qdot(GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
+  return(compute_qdot(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
 
 }
 
 FTYPE dpdrho0_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(dpdrho0_rho0_u(GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
+  return(dpdrho0_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
 
 }
 
 FTYPE dpdu_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
-  return(dpdu_rho0_u(GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
+  return(dpdu_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k), rho, u));
 
 }

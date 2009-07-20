@@ -627,6 +627,14 @@ int prepre_init(void)
   }
 
 
+  /////////////////////
+  //
+  // Initialize global EOS pointers
+  //
+  /////////////////////
+  initeos_eomtype();
+
+
   return(0);
 }
 
@@ -1326,7 +1334,7 @@ int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NS
   // need to compute various things for EOS
   // also done per timestep in step_ch.c
   // GODMARK: Check that no EOS call is before this point 
-  compute_EOS_parms(GLOBALPOINT(EOSextraglobal),prim);
+  compute_EOS_parms(WHICHEOS, GLOBALPOINT(EOSextraglobal),prim);
 
 
   // in synch always here
@@ -1437,14 +1445,6 @@ int post_par_set(void)
   void check_bnd_num(void);
 
 
-
-  /////////////////////
-  //
-  // Initialize EOS and get EOS pointers for a given WHICHEOS,EOMTYPE
-  //
-  /////////////////////
-  //pickeos_eomtype(WHICHEOS,eomtype); // any eomtype could be used.
-  pickeos_eomtype(WHICHEOS,EOMTYPE);
 
 
 

@@ -183,10 +183,13 @@
 //
 ////////////////////////////
 
-#define IDEALGAS 0
-#define MIGNONE 1
-#define GRBPWF99 2
-#define KAZFULL 3
+#define NUMEOSS 5 // number of EOS types
+
+#define COLDEOS 0
+#define IDEALGAS 1
+#define MIGNONE 2
+#define GRBPWF99 3
+#define KAZFULL 4
 
 
 

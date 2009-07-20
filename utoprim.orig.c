@@ -768,7 +768,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
 #endif
 
 
-    failreturn=dudp_calc(whichcons,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, &q, ptrgeom, alpha5);
+    failreturn=dudp_calc(WHICHEOS, whichcons,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, &q, ptrgeom, alpha5);
     if(failreturn>=1)
       FAILSTATEMENT("utoprim.c:usrfun()", "dudp_calc()", 1);
 

@@ -19,7 +19,7 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
   else if(cooling==2){
     //    return(coolfunc_neutrino(pr, ptrgeom, q,dUcomp));
     // more general use of EOS version of sources
-    return(compute_sources_EOS(GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, ptrgeom, q, Ugeomfree, dUother, dUcomp));
+    return(compute_sources_EOS(WHICHEOS,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, ptrgeom, q, Ugeomfree, dUother, dUcomp));
   }
   else if(cooling==3){
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));

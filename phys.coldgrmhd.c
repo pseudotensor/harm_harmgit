@@ -438,7 +438,7 @@ int get_cold_pressure(FTYPE *EOSextra, FTYPE W, FTYPE Dsq, FTYPE gammasq, FTYPE 
 
   vsq=1.0-1.0/gammasq;
 
-  *pressure = pressure_W_vsq(EOSextra, W,sqrt(fabs(Dsq)),vsq);
+  *pressure = pressure_W_vsq(COLDEOS, EOSextra, W,sqrt(fabs(Dsq)),vsq);
 
   return(0);
 }

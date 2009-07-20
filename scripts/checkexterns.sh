@@ -16,7 +16,8 @@ cat $totallist > temptempallc.txt
 sed 's/\/\/.*//g' temptempallc.txt > temptempallc2.txt # remove C 1-line comments
 sed ':a;N;$!ba;s/\n/ /g' temptempallc2.txt > temptempallc3.txt # replace new lines with space
 # to force simple interpretation of ;'s as indicating lines (so functions not broken on multiple lines)
-sed 's/;/;\n/g' temptempallc3.txt > temptempallc4.txt  # replace ';' with ';<CTRL-ALT-J>'
+sed 's/;/;\n/g' temptempallc3.txt > temptempallc35.txt  # replace ';' with ';<CTRL-ALT-J>'
+sed 's/#define/\n#define/g' temptempallc35.txt > temptempallc4.txt  # replace '#define' with '<CTRL-ALT-J>#define'
 # Replace all 'extern' with '<CTRL-ALT-J>extern ' to isolate lines that start with extern
 sed 's/extern/\n extern /g' temptempallc4.txt > temptempallc5.txt
 # get extern declarations

@@ -48,18 +48,18 @@
 
 
 // static declarations
-static FTYPE pressure_Wp_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
-static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
+static FTYPE pressure_Wp_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE pressure_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
-static FTYPE pressure_W_vsq_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
-static FTYPE pressure_W_vsq_old(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
+static FTYPE pressure_W_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
+static FTYPE pressure_W_vsq_old(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
-static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
-static FTYPE dpdW_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
-static FTYPE dpdvsq_calc_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
-static FTYPE dpdvsq_calc_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
+static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dpdvsq_calc_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
@@ -79,7 +79,7 @@ pressure as a function of W, vsq, and D:
 //#define CRAZYDEBUG 1
 
 #if(OLDCALCJON)
-static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
 {
   FTYPE gtmp;
   FTYPE answer;
@@ -92,10 +92,10 @@ static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 
 }
 #else
-static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
 {
 
-  return(pressure_Wp_vsq(EOSextra, W-D,D,vsq));
+  return(pressure_Wp_vsq(whicheos,EOSextra, W-D,D,vsq));
 
 }
 #endif
@@ -103,23 +103,23 @@ static FTYPE pressure_W_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 
 
 #if(OLDCALCJON)
-static FTYPE pressure_Wp_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_Wp_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq) 
 {
   
   
-  return(pressure_W_vsq(EOSextra, Wp+D, D, vsq));
+  return(pressure_W_vsq(whicheos,EOSextra, Wp+D, D, vsq));
 
 }
 
 #else
 
 
-static FTYPE pressure_Wp_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_Wp_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq) 
 {
   FTYPE gtmp;
   FTYPE gamma,gammasq;
   FTYPE rho0,wmrho0;
-  FTYPE pressure_wmrho0(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE pressure_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
 
 
@@ -130,7 +130,7 @@ static FTYPE pressure_Wp_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
   // wmrho0=u+p and for ideal gas p=(GAMMA-1) u, so p (GAMMA/(GAMMA-1)) = wmrho0
   //  return( wmrho0*IGAMMAR );
-  return(pressure_wmrho0(EOSextra,rho0,wmrho0));
+  return(pressure_wmrho0(whicheos,EOSextra,rho0,wmrho0));
 
   
   //  return(pressure_W_vsq_scn(Wp+D,D,vsq));
@@ -138,12 +138,12 @@ static FTYPE pressure_Wp_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
   //  return(pressure_W_vsq_old(Wp+D,D,vsq));
 }
 
-static FTYPE pressure_Wp_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq) 
+static FTYPE pressure_Wp_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq) 
 {
   FTYPE gtmp;
   FTYPE gamma,gammasq;
   FTYPE rho0,wmrho0;
-  FTYPE pressure_wmrho0(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE pressure_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
 
   gammasq=1.0+utsq;
@@ -152,7 +152,7 @@ static FTYPE pressure_Wp_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
   rho0=D/gamma;
 
   // wmrho0=u+p and for ideal gas p=(GAMMA-1) u, so p (GAMMA/(GAMMA-1)) = wmrho0
-  return(pressure_wmrho0(EOSextra,rho0,wmrho0));
+  return(pressure_wmrho0(whicheos,EOSextra,rho0,wmrho0));
 
   
 }
@@ -162,7 +162,7 @@ static FTYPE pressure_Wp_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 #endif
 
 
-static FTYPE pressure_W_vsq_old(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_W_vsq_old(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
 {
   FTYPE gtmp;
   
@@ -174,13 +174,13 @@ static FTYPE pressure_W_vsq_old(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 }
 
 
-static FTYPE pressure_W_vsq_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
+static FTYPE pressure_W_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) 
 {
   FTYPE gtmp;
   FTYPE gamma;
   FTYPE wmrho0;
   FTYPE rho0;
-  FTYPE pressure_wmrho0(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE pressure_wmrho0(int whicheos,FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   
 
   gamma=1.0/sqrt(1.0-vsq);
@@ -189,7 +189,7 @@ static FTYPE pressure_W_vsq_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
   gtmp = 1. - vsq;
   wmrho0=W * gtmp  -  D * sqrt(gtmp);
 
-  return(pressure_wmrho0(EOSextra, rho0, wmrho0));
+  return(pressure_wmrho0(whicheos, EOSextra, rho0, wmrho0));
 
 
 }
@@ -204,14 +204,14 @@ partial derivative of pressure with respect to W holding vsq fixed
 
 */
 #if(OLDCALCJON)
-static FTYPE dpdW_calc_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
 
   return( (GAMMA - 1.) * (1. - vsq) /  GAMMA ) ;
 
 }
 
-static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE W=Wp+D;
 
@@ -221,21 +221,21 @@ static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
 #else
 
-static FTYPE dpdW_calc_vsq(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
 
 
-  return(dpdWp_calc_vsq(EOSextra, W-D, D, vsq));
+  return(dpdWp_calc_vsq(whicheos,EOSextra, W-D, D, vsq));
 
 }
 
 
 // holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
 // obtains: dp/dW' holding v^2 fixed
-static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
-  FTYPE compute_idwmrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE compute_idrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE rho0,wmrho0;
   FTYPE idwmrho0dp;
   FTYPE gamma,gammasq;
@@ -249,11 +249,11 @@ static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
   rho0=D/gamma;
   // holding v^2 fixed
-  idwmrho0dp=compute_idwmrho0dp(EOSextra, rho0, wmrho0);
+  idwmrho0dp=compute_idwmrho0dp(whicheos, EOSextra, rho0, wmrho0);
   dwmrho0dW = 1.0-vsq;
 
   drho0dW = 0.0; // because \rho=D/\gamma
-  idrho0dp = compute_idrho0dp(EOSextra, rho0, wmrho0); // so not really needed
+  idrho0dp = compute_idrho0dp(whicheos, EOSextra, rho0, wmrho0); // so not really needed
 
   dpdW = drho0dW *idrho0dp + dwmrho0dW *idwmrho0dp;
 
@@ -263,10 +263,10 @@ static FTYPE dpdWp_calc_vsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
 // holding utsq fixed
 // obtains dp/dW' holding utsq fixed
-static FTYPE dpdWp_calc_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
+static FTYPE dpdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
-  FTYPE compute_idwmrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE compute_idrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE rho0,wmrho0;
   FTYPE idwmrho0dp;
   FTYPE gamma,gammasq;
@@ -280,11 +280,11 @@ static FTYPE dpdWp_calc_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 
   rho0=D/gamma;
   // holding utsq fixed
-  idwmrho0dp=compute_idwmrho0dp(EOSextra, rho0, wmrho0);
+  idwmrho0dp=compute_idwmrho0dp(whicheos,EOSextra, rho0, wmrho0);
   dwmrho0dW = 1.0/gammasq;
 
   drho0dW = 0.0; // because \rho=D/\gamma
-  idrho0dp = compute_idrho0dp(EOSextra, rho0, wmrho0); // so not really needed
+  idrho0dp = compute_idrho0dp(whicheos,EOSextra, rho0, wmrho0); // so not really needed
 
   dpdW = drho0dW *idrho0dp + dwmrho0dW *idwmrho0dp;
 
@@ -295,10 +295,10 @@ static FTYPE dpdWp_calc_utsq(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 
 #endif
 
-static FTYPE dpdW_calc_vsq_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdW_calc_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
 
-  return(dpdW_calc_vsq(EOSextra,W,D,vsq));
+  return(dpdW_calc_vsq(whicheos,EOSextra,W,D,vsq));
 
 }
 
@@ -309,7 +309,7 @@ partial derivative of pressure with respect to vsq holding W fixed
 
 */
 #if(OLDCALCJON)
-static FTYPE dpdvsq_calc(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdvsq_calc(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
   FTYPE outval;
   outval =  (GAMMA - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / GAMMA   ;
@@ -319,13 +319,13 @@ static FTYPE dpdvsq_calc(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 }
 
 #else
-static FTYPE dpdvsq_calc(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdvsq_calc(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
 
   // old version
   //  return( (GAMMA - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / GAMMA   );
 
-  return(dpdvsq_calc_Wp(EOSextra, W-D, D, vsq));
+  return(dpdvsq_calc_Wp(whicheos,EOSextra, W-D, D, vsq));
 }
 #endif
 
@@ -333,22 +333,22 @@ static FTYPE dpdvsq_calc(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 
 
 #if(OLDCALCJON)
-static FTYPE dpdvsq_calc_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
 
-  return(dpdvsq_calc_scn(EOSextra, Wp+D, D, vsq));
+  return(dpdvsq_calc_scn(whicheos,EOSextra, Wp+D, D, vsq));
 }
 
 #else
 
 
 //dp/dv^2 holding W' fixed
-static FTYPE dpdvsq_calc_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE outval;
   FTYPE gamma,W;
-  FTYPE compute_idwmrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE compute_idrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE rho0,wmrho0;
   FTYPE dwmrho0dvsq,idwmrho0dp;
   FTYPE drho0dvsq,idrho0dp;
@@ -369,11 +369,11 @@ static FTYPE dpdvsq_calc_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
   //  outval =  (D*gamma*0.5-W)*idwmrho0dp; // old code
 
-  idwmrho0dp=compute_idwmrho0dp(EOSextra, rho0, wmrho0);
+  idwmrho0dp=compute_idwmrho0dp(whicheos,EOSextra, rho0, wmrho0);
   dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
 
   drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
-  idrho0dp = compute_idrho0dp(EOSextra, rho0, wmrho0);
+  idrho0dp = compute_idrho0dp(whicheos,EOSextra, rho0, wmrho0);
 
   dpdvsq =   drho0dvsq *idrho0dp  +   dwmrho0dvsq *idwmrho0dp;
 
@@ -387,12 +387,12 @@ static FTYPE dpdvsq_calc_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 
 
 // dp/dv^2 holding W' fixed with utsq as input instead of vsq
-static FTYPE dpdvsq_calc2_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
+static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
   FTYPE outval;
   FTYPE gamma,W;
-  FTYPE compute_idwmrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE compute_idrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE rho0,wmrho0;
   FTYPE dwmrho0dvsq,idwmrho0dp;
   FTYPE drho0dvsq,idrho0dp;
@@ -407,11 +407,11 @@ static FTYPE dpdvsq_calc2_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 
   W = Wp+D;
 
-  idwmrho0dp=compute_idwmrho0dp(EOSextra, rho0, wmrho0);
+  idwmrho0dp=compute_idwmrho0dp(whicheos,EOSextra, rho0, wmrho0);
   dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
 
   drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
-  idrho0dp = compute_idrho0dp(EOSextra, rho0, wmrho0);
+  idrho0dp = compute_idrho0dp(whicheos,EOSextra, rho0, wmrho0);
 
   dpdvsq =   drho0dvsq *idrho0dp  +   dwmrho0dvsq *idwmrho0dp;
 
@@ -429,10 +429,10 @@ static FTYPE dpdvsq_calc2_Wp(FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 
 
 
-static FTYPE dpdvsq_calc_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
+static FTYPE dpdvsq_calc_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
   FTYPE outval;
-  FTYPE compute_idwmrho0dp(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE idwmrho0dp;
   FTYPE rho0,wmrho0;
   FTYPE gamma,gammasq;
@@ -444,7 +444,7 @@ static FTYPE dpdvsq_calc_scn(FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
   wmrho0=wmrho0_compute_vsq(Wp, D, vsq, gamma, gammasq);
 
   rho0=D/gamma;
-  idwmrho0dp=compute_idwmrho0dp(EOSextra, rho0, wmrho0);
+  idwmrho0dp=compute_idwmrho0dp(whicheos,EOSextra, rho0, wmrho0);
 
   //  return( (gam - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / gam  ) ;
   outval =  ( 0.5 * D / sqrt(1.-vsq)  - W  )*idwmrho0dp  ;

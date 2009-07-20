@@ -716,6 +716,11 @@ static int advance_standard(
 
 
 
+
+
+
+
+
   ////////////////////////////
   //
   // INVERT [loop only over "centered" cells]
@@ -787,6 +792,9 @@ static int advance_standard(
 
     }// end COMPZLOOP
   }// end parallel section
+
+
+
 
 
 

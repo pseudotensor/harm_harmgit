@@ -843,87 +843,6 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 
 
 
-// use cold grmhd if hot grmhd gives u<0 since then cold is valid
-#define USECOLDIFHOTUNEG 1
-// use cold grmhd if hot grmhd leads to convergence or other "no solution" type failure
-#define USECOLDIFHOTFAILCONV 1
-
-// try cold inversion of hot one fails
-int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
-{
-  int k;
-  FTYPE prhot[NPR],prcold[NPR];
-  PFTYPE coldpflag;
-
-
-  //  dualfprintf(fail_file,"Got here in trycoldinversion\n");
-
-  if(IFUTOPRIMFAILSOFTRHORELATED(hotpflag) || (USECOLDIFHOTUNEG==0 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) ){
-    // then maybe not so bad failure
-    
-  }
-  else if( (USECOLDIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USECOLDIFHOTFAILCONV==1 && hotpflag!=0) ){
-    
-    
-    
-    // then bad failure, so try to use cold grmhd
-    // restore backup in case previous inversion changed things
-    PALLLOOP(k){
-      prhot[k]=pr[k];
-      Ugeomfree[k]=Ugeomfree0[k];
-      pr[k]=pr0[k];
-    }
-    
-    
-    // get cold inversion
-    MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMCOLDGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &coldpflag, prcold,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
-    
-    
-    ///////////////////////////////////
-    //
-    // check if cold solution is good
-    if(coldpflag==UTOPRIMNOFAIL){
-      // then keep cold solution
-      PALLLOOP(k) pr[k]=prcold[k];
-
-
-      // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
-      // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
-      
-      if(debugfail>=2) dualfprintf(fail_file,"Tried cold and good! hotpflag=%d coldpflag=%d\n",hotpflag,coldpflag);
-
-      ///////////////////////////////
-      //
-      // decide how to use cold inversion solution    
-      if(IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)){
-	// since cold approximation is very good, then use cold solution and just set internal energy to 0
-	// if internal energy is actually small, then just set it to 0
-	// works for Hubble flow!
-	pr[UU]=0.0;
-      }
-      else{
-	//////////////
-	//  if internal energy is not negligible or unknown, then should average or evolve!
-	pr[UU]=pr0[UU];
-	// then very bad failure, so try cold inversion and average internal energy for now
-	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1; // assume only internal energy needs correcting by averaging
-	
-      }// end if (else) trying cold inversion
-
-    }
-    else{
-      // then both hot and cold are bad, so keep hot
-      // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in cold case!'
-      // only can go to force-free if b^2/rho>>1 as well
-      // keep hotpflag and keep hot solution
-      PALLLOOP(k) pr[k]=prhot[k];
-      if(debugfail>=2) dualfprintf(fail_file,"Tried cold and bad! hotpflag=%d coldpflag=%d\n",hotpflag,coldpflag);
-    }
-        
-  }// if bad failure of some kind
-
-  return(0);
-}
 
 
 
@@ -975,7 +894,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
   extern void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke);
   int is,ie,js,je,ks,ke;
-  int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
 
 
 
@@ -1024,42 +942,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
   copy_3dpftype_special_fullloop(GLOBALPOINT(pflag),GLOBALPOINT(pflagfailorig));
 
 
-
-
-  ///////////////////////////////////
-  //
-  // Try using cold inversion if failure
-  //
-  //////////////////////////////////
-#if(HOT2COLD) // SUPERGODMARK: Not really setup yet
-  pickeos_eomtype(WHICHEOS,EOMCOLDGRMHD); // must be called outside parallel region
- 
-#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // accounting requires state stuff
-  {
-    PFTYPE lpflag,hotpflag,coldpflag;
-    FTYPE prhot[NPR],prcold[NPR];
-
-
-    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-    OPENMP3DLOOPBLOCK{
-      OPENMP3DLOOPBLOCK2IJK(i,j,k);
-
-      ////////////////////
-      //  If hot GRMHD failed or gets suspicious solution, revert to cold GRMHD if solution is cold
-      ///////////////////
-      // get failure flag
-      hotpflag=GLOBALMACP0A0(pflagfailorig,i,j,k);
-
-      if(hotpflag){
-	trycoldinversion(hotpflag, pr0, pr, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
-      }// end if hotpflag
-    }// end 3D block
-  }// end parallel region
-  
-  // return EOS to normal
-  pickeos_eomtype(WHICHEOS,EOMTYPE); // must be called outside parallel region
-#endif
 
 
 

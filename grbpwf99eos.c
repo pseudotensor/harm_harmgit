@@ -46,7 +46,7 @@ FTYPE cs2_compute_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE h;
   FTYPE cs2;
 
-  pressure = pressure_rho0_u(EOSextra,rho0,u);
+  pressure = pressure_rho0_u_grbpwf99(EOSextra,rho0,u);
   h=rho0+u+pressure; // not specific h
 
   cs2=pressure*(5.0*h - 8.0*pressure) / (3.0*h*(h-pressure));
@@ -62,7 +62,7 @@ FTYPE cs2_compute_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // S(rho0,u)
 FTYPE compute_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure_rho0_u(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  FTYPE pressure_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
   FTYPE entropy;
 
   entropy=0.0; // GODMARK: not set yet
@@ -83,9 +83,9 @@ FTYPE compute_dSdrho_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE indexn;
   FTYPE entropy;
   FTYPE dSdrho;
-  FTYPE compute_entropy(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  FTYPE compute_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
-  entropy=compute_entropy(EOSextra,rho0,u);
+  entropy=compute_entropy_grbpwf99(EOSextra,rho0,u);
 
   // ideal gas
   indexn=1.0/GAMMAM1;
@@ -168,11 +168,11 @@ FTYPE compute_idwmrho0dp_grbpwf99_old(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 // 1 / (d(u+p)/dp) holding rho0 fixed
 FTYPE compute_idwmrho0dp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE pressure_wmrho0(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE pressure_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE idwmrho0dp;
   FTYPE p;
 
-  p = pressure_wmrho0(EOSextra, rho0, wmrho0);
+  p = pressure_wmrho0_grbpwf99(EOSextra, rho0, wmrho0);
 
   idwmrho0dp = (2.0*wmrho0 + 2.0*rho0 - 5.0*p)/(5.0*rho0+5.0*wmrho0-8.0*p);
 
@@ -183,11 +183,11 @@ FTYPE compute_idwmrho0dp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 // 1 / (drho0/dp) holding wmrho0 fixed
 FTYPE compute_idrho0dp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE pressure_wmrho0(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE pressure_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
   FTYPE idrho0dp;
   FTYPE p;
 
-  p = pressure_wmrho0(EOSextra, rho0, wmrho0);
+  p = pressure_wmrho0_grbpwf99(EOSextra, rho0, wmrho0);
 
   idrho0dp = (2.0*wmrho0 - 5.0*p)/(5.0*rho0+5.0*wmrho0-8.0*p);
 
@@ -232,7 +232,7 @@ int get_extrasprocessed_grbpwf99(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *e
   FTYPE rho0,u;
   rho0=pr[RHO];
   u=pr[UU];
-  compute_allextras(0, EOSextra, rho0, u, &numextrasreturn, extras);
+  compute_allextras_grbpwf99(0, EOSextra, rho0, u, &numextrasreturn, extras);
   for(pi=0;pi<MAXPROCESSEDEXTRAS;pi++){
     processed[pi] = 0.0;
   }

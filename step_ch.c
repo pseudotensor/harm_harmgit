@@ -289,7 +289,7 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
   // use primitive located where EOS will be used (pb)
   //
   //////////////////////
-  compute_EOS_parms(GLOBALPOINT(EOSextraglobal),pb);
+  compute_EOS_parms(WHICHEOS,GLOBALPOINT(EOSextraglobal),pb);
 
   return(0);
 

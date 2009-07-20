@@ -18,6 +18,8 @@ static int numnormterms;
 
 static PFTYPE *glpflag; // global pflag for local file
 static FTYPE *EOSextra; // global with file scope
+static int whicheos; // global with file scope
+
 
 static FTYPE A_orig[NEWT_DIM][NEWT_DIM];
 
@@ -78,6 +80,7 @@ int Utoprim_5d2_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  F
   // assign global int pointer to lpflag pointer
   glpflag=lpflag;
   EOSextra=GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  whicheos=WHICHEOS;
 
 
 
@@ -462,7 +465,7 @@ static int dudp_calc_g(FTYPE *pr, struct of_state *q, struct of_geom *geom, FTYP
   }
 
   // get matrix
-  dudp_calc(EVOLVENOENTROPY,EOSextra,pr,q,geom,alpha);
+  dudp_calc(WHICHEOS,EVOLVENOENTROPY,EOSextra,pr,q,geom,alpha);
 
   // copy offset matrix
   for(j=1;j<=5;j++) for(k=1;k<=5;k++) Am[j-1][k-1]=alpha[j][k];

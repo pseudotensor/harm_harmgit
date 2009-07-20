@@ -315,26 +315,26 @@ FTYPE nu,ss,ucrit,Ttpow,jetalpha;
 
 
 // EOS related functions
-FTYPE (*ptr_pressure_rho0_u)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_compute_u_from_entropy)(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
-FTYPE (*ptr_u_rho0_p)(FTYPE *EOSextra, FTYPE rho0, FTYPE p);
-FTYPE (*ptr_dpdu_rho0_u)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_dpdrho0_rho0_u)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_cs2_compute)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_compute_entropy)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_compute_dSdrho)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_compute_dSdu)(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-FTYPE (*ptr_pressure_wmrho0) (FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-FTYPE (*ptr_compute_idwmrho0dp) (FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-FTYPE (*ptr_compute_idrho0dp) (FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-FTYPE (*ptr_compute_qdot) (FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-int (*ptr_compute_sources_EOS) (FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *dUother, FTYPE(*dUcomp)[NPR]);
-void (*ptr_compute_allextras) (int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras);
-int (*ptr_get_extrasprocessed) (int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
-FTYPE (*ptr_compute_temp) (FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-void (*ptr_compute_EOS_parms) (FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS],  FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-void (*ptr_store_EOS_parms) (int numparms, FTYPE *EOSextra, FTYPE *parlist);
-void (*ptr_get_EOS_parms) (int*numparms, FTYPE *EOSextra, FTYPE *parlist);
+FTYPE (*ptr_pressure_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_compute_u_from_entropy[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
+FTYPE (*ptr_u_rho0_p[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE p);
+FTYPE (*ptr_dpdu_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_dpdrho0_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_cs2_compute[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_compute_entropy[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_compute_dSdrho[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_compute_dSdu[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+FTYPE (*ptr_pressure_wmrho0[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+FTYPE (*ptr_compute_idwmrho0dp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+FTYPE (*ptr_compute_idrho0dp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+FTYPE (*ptr_compute_qdot[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+int (*ptr_compute_sources_EOS[NUMEOSS])(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *dUother, FTYPE(*dUcomp)[NPR]);
+void (*ptr_compute_allextras[NUMEOSS])(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras);
+int (*ptr_get_extrasprocessed[NUMEOSS])(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
+FTYPE (*ptr_compute_temp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+void (*ptr_compute_EOS_parms[NUMEOSS])(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS],  FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+void (*ptr_store_EOS_parms[NUMEOSS])(int numparms, FTYPE *EOSextra, FTYPE *parlist);
+void (*ptr_get_EOS_parms[NUMEOSS])(int*numparms, FTYPE *EOSextra, FTYPE *parlist);
 
 FTYPE SQRTMINNUMREPRESENT;
 
