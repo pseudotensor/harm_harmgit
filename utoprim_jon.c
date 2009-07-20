@@ -334,8 +334,8 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   FTYPE Qconp[NDIM],Qcovp[NDIM];
   FTYPE Qtcon[4],Bcon[4],Bcov[4];
   FTYPE primother[NPR];
-  FTYPE W_last,W,Wp_last,Wp0,Wp,Wp2,Wp3,Wpother;
-  int i,j, retval0, retval, retval2, retval3 ;
+  FTYPE W_last,W,Wp_last,Wp0,Wp,Wp1,Wp2,Wp3,Wpother;
+  int i,j, retval0, retval, retval1,retval2, retval3 ;
   int retvalother,retvalother2;
   // below used to be static global in this file
   FTYPE Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D ;
@@ -402,7 +402,8 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
   // SETUP ITERATIVE METHODS (good for GRMHD or cold GRMHD)
-  set_guess_Wp(lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra);
+  retval=set_guess_Wp(lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra);
+  if(retval) return(retval);
 
 
 
@@ -489,10 +490,11 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 #if(WHICHCOLDINVERTER==0)
     retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
+    check_on_inversion(prim, U, ptrgeom, Wp0, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
     //  Check if solution was found
-    check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp, retval0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+    retval0+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp0, retval0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+
 
 
     //  if(*lpflag!=0){
@@ -512,12 +514,13 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 #if(WHICHCOLDINVERTER==1)
 
     // Do inversion using E'[W'] equation
-    retval = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
+    retval1 = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
+    check_on_inversion(prim, U, ptrgeom, Wp1, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
     //  Check if solution was found
-    check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+    retval1+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp1, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+
 
 
 
@@ -538,7 +541,8 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     //  }
 
   
-
+    retval=retval1;
+    Wp=Wp1;
 #endif
 
 
@@ -553,10 +557,10 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
     retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
+    check_on_inversion(prim, U, ptrgeom, Wp2, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
     //  Check if solution was found
-    check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp2, retval2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+    retval2+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp2, retval2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
 
 
 
@@ -580,10 +584,10 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
     retval3 = find_root_3D_gen_Palpha(lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
+    check_on_inversion(prim, U, ptrgeom, Wp3, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra,newtonstats);
 
     //  Check if solution was found
-    check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp3, retval3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
+    retval3+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp3, retval3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,whicheos,EOSextra); // should add in case retval!=0 before this call
 
 
 
@@ -922,6 +926,8 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
 #endif
 
 
+#define MAXNUMGUESSCHANGES (1000)
+
 
   // sometimes above gives invalid guess (Wp=0 or utsq<0) so fix
   numattemptstofixguess=0;
@@ -933,12 +939,11 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
       break;
     }
     else{
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g D=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,D);
+      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g D=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,D);
       *Wp_last = MAX(*Wp_last*10.0,fabs(D));
       *W_last = *Wp_last + (D);
     }
 
-#define MAXNUMGUESSCHANGES (1000)
 
     if(numattemptstofixguess>MAXNUMGUESSCHANGES){
       *lpflag= UTOPRIMFAILCONVGUESSUTSQ; // guess failure actually

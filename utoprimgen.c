@@ -370,6 +370,9 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
     //
     // check if cold solution is good
     if(coldpflag==UTOPRIMNOFAIL){
+
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL; // default then is that no failure
+
       // then keep cold solution
       PALLLOOP(k) pr[k]=prcold[k];
 
@@ -397,7 +400,7 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
 	
       }// end if (else) trying cold inversion
 
-    }
+    }// else if coldpflag is bad
     else{
       // then both hot and cold are bad, so keep hot
       // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in cold case!'

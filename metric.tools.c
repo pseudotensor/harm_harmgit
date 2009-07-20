@@ -2321,14 +2321,14 @@ int metric_checks(struct of_geom *ptrgeom)
     if(PRODUCTION==0){
       if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*100.0){
 	if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
-	  dualfprintf(fail_file,"Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk]);
+	  dualfprintf(fail_file,"Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
 	}
       }
     }
 
     if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*1000.0){
       if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
-	dualfprintf(fail_file,"MAJOR Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk]);
+	dualfprintf(fail_file,"MAJOR Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
       }
     }
   }
