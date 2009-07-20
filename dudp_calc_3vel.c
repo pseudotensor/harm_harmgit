@@ -17,7 +17,7 @@
 
 #include "decs.h"
 
-int dudp_calc_3vel(int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha)
+int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE **alpha)
 {
   FTYPE w, bsq;
   FTYPE ducov_dv[NDIM][NDIM], ducon_dv[NDIM][NDIM];

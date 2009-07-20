@@ -829,7 +829,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   }
   else{
     if( debugfail>=2 ){
-      dualfprintf(fail_file,"Utoprim_new(): utsq < 0 in utoprim_1d attempt, utsq = %21.15g \n", utsq) ;
+      dualfprintf(fail_file,"Utoprim_new(): utsq < 0 in utoprim_jon attempt, utsq = %21.15g \n", utsq) ;
       dualfprintf(fail_file,"utsq=%21.15g\n",utsq);
     }
     
