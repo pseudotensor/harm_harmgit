@@ -40,11 +40,11 @@
 //#endif
 
 // always include all of the ever-wanted EOSs so included in dependencies when compiling
-#include "grbpwf99eos.c"
+#include "coldeos.c"
 #include "idealgaseos.c"
 #include "mignoneeos.c"
+#include "grbpwf99eos.c"
 #include "kazfulleos.c"
-#include "coldeos.c"
 
 
 
@@ -88,6 +88,18 @@ FTYPE cs2_compute(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   return( (*(ptr_cs2_compute[whicheos]))(EOSextra,rho0,u) );
 }
 
+// entropy as function of rho0 and internal energy (u)
+// S(rho0,u)
+FTYPE compute_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+{
+  return( (*(ptr_compute_entropy[whicheos]))(EOSextra,rho0,u) );
+}
+
+// u(rho0,S)
+FTYPE compute_u_from_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+{
+  return( (*(ptr_compute_u_from_entropy[whicheos]))(EOSextra,rho0,entropy) );
+}
 
 // used for dudp_calc
 FTYPE compute_dSdrho(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
@@ -103,18 +115,28 @@ FTYPE compute_dSdu(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 
-// entropy as function of rho0 and internal energy (u)
-// S(rho0,u)
-FTYPE compute_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+
+
+// entropy as function of rho0 and internal energy (wmrho0)
+// S(rho0,wmrho0)
+FTYPE compute_entropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  return( (*(ptr_compute_entropy[whicheos]))(EOSextra,rho0,u) );
+  return( (*(ptr_compute_entropy_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
-// u(rho0,S)
-FTYPE compute_u_from_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+// used for utoprim_jon entropy inversion
+FTYPE compute_dSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  return( (*(ptr_compute_u_from_entropy[whicheos]))(EOSextra,rho0,entropy) );
+  return( (*(ptr_compute_dSdrho_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
+
+// used for utoprim_jon entropy inversion
+FTYPE compute_dSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  return( (*(ptr_compute_dSdwmrho0_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
+}
+
+
 
 
 // p(rho0, w-rho0 = u+p)

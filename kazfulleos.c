@@ -2642,41 +2642,49 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   ////////////////////////////////////////
 #if(REDUCE2WHICHEOS==MIGNONE)
   // GODMARK: Assume at least that if neutrino pressure is dominant then treat like mixture of gas+neutrinos
-  if(whichfun==CS2ofRHOU)         neutrino = cs2_compute_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DPDUofRHOU)   neutrino = dpdu_rho0_u_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DPDRHOofRHOU) neutrino = dpdrho0_rho0_u_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==IDRHO0DP)     neutrino = compute_idrho0dp_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==IDCHIDP)      neutrino = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDRHOofRHOU) neutrino = compute_dSdrho_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDUofRHOU)   neutrino = compute_dSdu_mignone(EOSextra,quant1, quant2nu);
+  if(whichfun==CS2ofRHOU)           neutrino = cs2_compute_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DPDUofRHOU)     neutrino = dpdu_rho0_u_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DPDRHOofRHOU)   neutrino = dpdrho0_rho0_u_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==IDRHO0DP)       neutrino = compute_idrho0dp_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==IDCHIDP)        neutrino = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDRHOofRHOU)   neutrino = compute_dSdrho_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDUofRHOU)     neutrino = compute_dSdu_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDRHOofRHOCHI) neutrino = compute_dSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDCHIofRHOCHI) neutrino = compute_dSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
-  if(whichfun==CS2ofRHOU)         neutrino = cs2_compute_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DPDUofRHOU)   neutrino = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DPDRHOofRHOU) neutrino = dpdrho0_rho0_u_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==IDRHO0DP)     neutrino = compute_idrho0dp_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==IDCHIDP)      neutrino = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDRHOofRHOU) neutrino = compute_dSdrho_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDUofRHOU)   neutrino = compute_dSdu_idealgas(EOSextra,quant1, quant2nu);
+  if(whichfun==CS2ofRHOU)           neutrino = cs2_compute_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DPDUofRHOU)     neutrino = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DPDRHOofRHOU)   neutrino = dpdrho0_rho0_u_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==IDRHO0DP)       neutrino = compute_idrho0dp_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==IDCHIDP)        neutrino = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDRHOofRHOU)   neutrino = compute_dSdrho_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDUofRHOU)     neutrino = compute_dSdu_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDRHOofRHOCHI) neutrino = compute_dSdrho_wmrho0_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDCHIofRHOCHI) neutrino = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2nu);
 #endif
 
   // reduce to using totals if not within table
 #if(REDUCE2WHICHEOS==MIGNONE)
   // GODMARK: Assume at least that if neutrino pressure is dominant then treat like mixture of gas+neutrinos
-  if(whichfun==CS2ofRHOU)         total = cs2_compute_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==DPDUofRHOU)   total = dpdu_rho0_u_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==DPDRHOofRHOU) total = dpdrho0_rho0_u_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==IDRHO0DP)     total = compute_idrho0dp_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==IDCHIDP)      total = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDRHOofRHOU) total = compute_dSdrho_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDUofRHOU)   total = compute_dSdu_mignone(EOSextra,quant1, quant2mod);
+  if(whichfun==CS2ofRHOU)           total = cs2_compute_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==DPDUofRHOU)     total = dpdu_rho0_u_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==DPDRHOofRHOU)   total = dpdrho0_rho0_u_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==IDRHO0DP)       total = compute_idrho0dp_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==IDCHIDP)        total = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDRHOofRHOU)   total = compute_dSdrho_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDUofRHOU)     total = compute_dSdu_mignone(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDRHOofRHOCHI) total = compute_dSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSDCHIofRHOCHI) total = compute_dSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
-  if(whichfun==CS2ofRHOU)         total = cs2_compute_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DPDUofRHOU)   total = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DPDRHOofRHOU) total = dpdrho0_rho0_u_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==IDRHO0DP)     total = compute_idrho0dp_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==IDCHIDP)      total = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDRHOofRHOU) total = compute_dSdrho_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDUofRHOU)   total = compute_dSdu_idealgas(EOSextra,quant1, quant2mod);
+  if(whichfun==CS2ofRHOU)           total = cs2_compute_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DPDUofRHOU)     total = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DPDRHOofRHOU)   total = dpdrho0_rho0_u_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==IDRHO0DP)       total = compute_idrho0dp_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==IDCHIDP)        total = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDRHOofRHOU)   total = compute_dSdrho_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDUofRHOU)     total = compute_dSdu_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDRHOofRHOCHI) total = compute_dSdrho_wmrho0_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSDCHIofRHOCHI) total = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2mod);
 #endif
 
 
@@ -2732,16 +2740,6 @@ FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp
   return(dfun2fun_kazfull(PofRHOU, UTOTDIFF, EOSextra, rho0, u, dp));
 }
 
-// exactly correct answer (not frac-fudged)
-// entropy as function of rho0 and internal energy (u)
-// S(rho0,u)
-// tabulated ds(du), so first compute du and then ds and then s
-FTYPE compute_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
-{
-  FTYPE ds;
-  FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
-  return(dfun2fun_kazfull(SofRHOU, UTOTDIFF, EOSextra, rho0, u, &ds));
-}
 
 
 // u(rho0, p) (used for initial conditions)
@@ -2802,23 +2800,16 @@ FTYPE cs2_compute_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 
-// used for dudp_calc
-// frac-fudged
-FTYPE compute_dSdrho_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+// exactly correct answer (not frac-fudged)
+// entropy as function of rho0 and internal energy (u)
+// S(rho0,u)
+// tabulated ds(du), so first compute du and then ds and then s
+FTYPE compute_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-  return(fudgefrac_kazfull(DSDRHOofRHOU,UTOTDIFF,EOSextra,rho0, u));
+  FTYPE ds;
+  FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
+  return(dfun2fun_kazfull(SofRHOU, UTOTDIFF, EOSextra, rho0, u, &ds));
 }
-
-
-// used for dudp_calc
-// frac-fudged
-FTYPE compute_dSdu_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
-{
-  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-  return(fudgefrac_kazfull(DSDUofRHOU,UTOTDIFF, EOSextra, rho0, u));
-}
-
 
 // u(rho0,S)
 // here entropy is entropy density?
@@ -2839,6 +2830,54 @@ FTYPE compute_u_from_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
   return(u);
 
 }
+
+
+// used for dudp_calc
+// frac-fudged
+FTYPE compute_dSdrho_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+{
+  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  return(fudgefrac_kazfull(DSDRHOofRHOU,UTOTDIFF,EOSextra,rho0, u));
+}
+
+
+// used for dudp_calc
+// frac-fudged
+FTYPE compute_dSdu_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+{
+  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+  return(fudgefrac_kazfull(DSDUofRHOU,UTOTDIFF, EOSextra, rho0, u));
+}
+
+// exactly correct answer (not frac-fudged)
+// entropy as function of rho0 and internal energy (u)
+// S(rho0,\chi)
+// tabulated ds(d\chi), so first compute d\chi and then ds and then s
+FTYPE compute_entropy_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE ds;
+  FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
+  return(dfun2fun_kazfull(SofRHOCHI, CHIDIFF, EOSextra, rho0, wmrho0, &ds));
+}
+
+// used for utoprim_jon entropy inversion
+// frac-fudged
+FTYPE compute_dSdrho_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  return(fudgefrac_kazfull(DSDRHOofRHOCHI,CHIDIFF,EOSextra,rho0, wmrho0));
+}
+
+
+// used for utoprim_jon entropy inversion
+// frac-fudged
+FTYPE compute_dSdwmrho0_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  return(fudgefrac_kazfull(DSDCHIofRHOCHI,CHIDIFF, EOSextra, rho0, wmrho0));
+}
+
+
 
 
 // 1 / (drho0/dp) holding wmrho0 fixed

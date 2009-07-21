@@ -58,77 +58,94 @@ FTYPE cs2_compute_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
+
 // entropy as function of rho0 and internal energy (u)
 // S(rho0,u)
 FTYPE compute_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
   FTYPE entropy;
 
-  entropy=0.0; // GODMARK: not set yet
+  // not setup yet for TM EOS
+  entropy=compute_entropy_idealgas(EOSextra,rho0,u);
 
   return(entropy);
 
 }
 
 
-#define GAMMA (gamideal)
-#define GAMMAM1 (GAMMA-1.0)
+// u(rho0,S)
+FTYPE compute_u_from_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+{
+  FTYPE u;
+
+  // not setup yet for TM EOS
+  u = compute_u_from_entropy_idealgas(EOSextra,rho0,entropy);
+
+  return(u);
+
+}
 
 
-// not setup yet for TM EOS
+
 // used for dudp_calc
 FTYPE compute_dSdrho_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE indexn;
-  FTYPE entropy;
   FTYPE dSdrho;
-  FTYPE compute_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
-  entropy=compute_entropy_grbpwf99(EOSextra,rho0,u);
-
-  // ideal gas
-  indexn=1.0/GAMMAM1;
-
-  dSdrho=entropy/rho0-(indexn+1.0);
+  // not setup yet for TM EOS
+  dSdrho=compute_dSdrho_idealgas(EOSextra,rho0,u);
 
   return(dSdrho);
 
 }
 
 
-// not setup yet for TM EOS
 // used for dudp_calc
 FTYPE compute_dSdu_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE indexn;
   FTYPE dSdu;
 
-
-  // ideal gas
-  indexn=1.0/GAMMAM1;
-
-  dSdu=indexn*rho0/u;
+  // not setup yet for TM EOS
+  dSdu = compute_dSdu_idealgas(EOSextra,rho0,u);
 
   return(dSdu);
 
 }
 
-#undef GAMMA
-#undef GAMMAM1
-
-
-// not setup yet for TM EOS
-// u(rho0,S)
-FTYPE compute_u_from_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+FTYPE compute_entropy_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE u;
+  FTYPE entropy;
 
-  u=0.0; // GODMARK: not set yet
+  // not setup yet for TM EOS
+  entropy=compute_entropy_wmrho0_idealgas(EOSextra,rho0,wmrho0);
 
-  return(u);
+  return(entropy);
 
 }
+
+
+
+FTYPE compute_dSdrho_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+
+  // not setup yet for TM EOS
+  dSdchi=compute_dSdrho_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
+
+  return(dSdchi);
+}
+
+FTYPE compute_dSdwmrho0_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+
+  // not setup yet for TM EOS
+  dSdchi = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
+
+  return(dSdchi);
+
+}
+
 
 
 // p(rho0, w-rho0 = u+p)

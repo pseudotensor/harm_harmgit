@@ -100,7 +100,7 @@
 // for degen table, eox_extract.m has 9 total
 
 // number of base quantities to *store* from table made by eos_extract.m
-#define NUMEOSQUANTITIESBASE (2 + 2 + 1 + 3 + 3 + 3)  // 14 : eosquantities
+#define NUMEOSQUANTITIESBASE (2 + 2 + 1 + 3 + 3 + 3 + 3)  // 17 : eosquantities
 
 // for memory optimization, specifiy which datatype
 #define WHICHDATATYPEGENERAL 4
@@ -135,41 +135,47 @@
 #define DSDRHOofRHOU 6 // dS/drho0 |u (rho0,u)
 #define DSDUofRHOU 7   // dS/du |\rho0 (rho0,u)
 
-#define PofRHOCHI 8    // P(rho0,\chi)  \chi = u+p
-#define IDRHO0DP 9     // 1/(d\rho0/dp) |\chi
-#define IDCHIDP 10      // 1/(d\chi/dp) |\rho0
+#define SofRHOCHI 8      // S(rho0,\chi)
+#define DSDRHOofRHOCHI 9 // dS/drho0 |\chi (rho0,\chi)
+#define DSDCHIofRHOCHI 10   // dS/d\chi |\rho0 (rho0,\chi)
 
-#define TEMPU 11 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPP 12 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPCHI 13 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define PofRHOCHI 11    // P(rho0,\chi)  \chi = u+p
+#define IDRHO0DP 12     // 1/(d\rho0/dp) |\chi
+#define IDCHIDP 13      // 1/(d\chi/dp) |\rho0
+
+#define TEMPU 14 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPP 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPCHI 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+
+#define LASTEOSQUANTITIESBASE TEMPCHI
 
 // so-called "extras" in eos_extract.m: Those things that didn't require extra processing as independent variables or derivatives -- just interpolated from T -> U only
 // extras:
 
-#define EXTRA1  14
-#define EXTRA2  15
-#define EXTRA3  16
-#define EXTRA4  17
-#define EXTRA5  18
-#define EXTRA6  19
-#define EXTRA7  20
-#define EXTRA8  21
-#define EXTRA9  22
-#define EXTRA10 23
-#define EXTRA11 24
-#define EXTRA12 25
-#define EXTRA13 26
-#define EXTRA14 27
-#define EXTRA15 28
-#define EXTRA16 29
-#define EXTRA17 30
-#define EXTRA18 31
-#define EXTRA19 32
-#define EXTRA20 33
-#define EXTRA21 34
-#define EXTRA22 35
-#define EXTRA23 36
-#define EXTRA24 37
+#define EXTRA1  LASTEOSQUANTITIESBASE+1
+#define EXTRA2  EXTRA1+1
+#define EXTRA3  EXTRA1+2
+#define EXTRA4  EXTRA1+3
+#define EXTRA5  EXTRA1+4
+#define EXTRA6  EXTRA1+5
+#define EXTRA7  EXTRA1+6
+#define EXTRA8  EXTRA1+7
+#define EXTRA9  EXTRA1+8
+#define EXTRA10 EXTRA1+9
+#define EXTRA11 EXTRA1+10
+#define EXTRA12 EXTRA1+11
+#define EXTRA13 EXTRA1+12
+#define EXTRA14 EXTRA1+13
+#define EXTRA15 EXTRA1+14
+#define EXTRA16 EXTRA1+15
+#define EXTRA17 EXTRA1+16
+#define EXTRA18 EXTRA1+17
+#define EXTRA19 EXTRA1+18
+#define EXTRA20 EXTRA1+19
+#define EXTRA21 EXTRA1+20
+#define EXTRA22 EXTRA1+21
+#define EXTRA23 EXTRA1+22
+#define EXTRA24 EXTRA1+23
 
 // used to map request to correct EXTRA for given table that uses certain whichdatatype
 #define LAMBDATOT -100

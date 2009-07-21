@@ -1,5 +1,9 @@
 // TM EOS
 
+// See entropy_new_inversion_mignone.nb
+
+static FTYPE compute_inside_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+static FTYPE u_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
 // p(rho0, u) (needed to get initial guess for W)
 FTYPE pressure_rho0_u_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
@@ -57,77 +61,136 @@ FTYPE cs2_compute_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// entropy as function of rho0 and internal energy (u)
+// entropy density (per unit volume) as function of rho0 and internal energy (u)
 // S(rho0,u)
 FTYPE compute_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure_rho0_u_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
-  FTYPE entropy;
+  FTYPE entropy,insideentropy;
 
-  entropy=0.0; // GODMARK: not set yet
+  insideentropy = compute_inside_entropy_mignone(EOSextra,rho0,u);
+
+  entropy = rho0*log(insideentropy);
 
   return(entropy);
 
 }
 
+//local aux function
+static FTYPE compute_inside_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
+{
+  FTYPE pressure,insideentropy;
+  FTYPE pressure_rho0_u_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  
 
-#define GAMMA (gamideal)
-#define GAMMAM1 (GAMMA-1.0)
+  pressure=pressure_rho0_u_mignone(EOSextra,rho0,u);
+
+  if(rho0<SMALL) rho0=SMALL;
+  if(u<SMALL) u=SMALL;
+  if(pressure<SMALL) pressure=SMALL;
+  
+  insideentropy=pressure*(rho0+u)/pow(rho0,8.0/3.0);
+
+  return(insideentropy);
+
+}
 
 
-// not setup yet for TM EOS
+// u(rho0,S)
+FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+{
+  FTYPE u;
+  FTYPE expfactor;
+
+  if(rho0<SMALL) rho0=SMALL;
+
+  expfactor = exp(entropy/rho0)*pow(rho0,8.0/3.0);
+  u = 3.0*expfactor/(rho0+sqrt(rho0*rho0+3.0*expfactor));
+
+  return(u);
+
+}
+
+
+
 // used for dudp_calc
 FTYPE compute_dSdrho_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE indexn;
-  FTYPE entropy;
   FTYPE dSdrho;
-  FTYPE compute_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
-  entropy=compute_entropy_mignone(EOSextra,rho0,u);
+  if(rho0<SMALL) rho0=SMALL;
+  if(u<SMALL) u=SMALL;
 
-  // ideal gas
-  indexn=1.0/GAMMAM1;
-
-  dSdrho=entropy/rho0-(indexn+1.0);
+  dSdrho = (-8.0/3.0) + 2.0*rho0/(2.0*rho0+u) + log(u*(2.0*rho0+u)/(3.0*pow(rho0,8.0/3.0)));
 
   return(dSdrho);
 
 }
 
 
-// not setup yet for TM EOS
 // used for dudp_calc
 FTYPE compute_dSdu_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE indexn;
   FTYPE dSdu;
 
+  if(rho0<SMALL) rho0=SMALL;
+  if(u<SMALL) u=SMALL;
 
-  // ideal gas
-  indexn=1.0/GAMMAM1;
-
-  dSdu=indexn*rho0/u;
+  dSdu = rho0*(1.0/u + 1.0/(2.0*rho0+u));
 
   return(dSdu);
 
 }
 
-#undef GAMMA
-#undef GAMMAM1
-
-
-// not setup yet for TM EOS
-// u(rho0,S)
-FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
+FTYPE compute_entropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE u;
+  FTYPE u,P,entropy;
+  FTYPE pressure_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
-  u=0.0; // GODMARK: not set yet
+  u=u_wmrho0_mignone(EOSextra, rho0, wmrho0);
+  P=pressure_wmrho0_mignone(EOSextra, rho0, wmrho0);
 
-  return(u);
+  if(rho0<SMALL) rho0=SMALL;
+  if(u<SMALL) u=SMALL;
+  if(P<SMALL) P=SMALL;
+
+  entropy = rho0*log(P*(rho0+u)/pow(rho0,8.0/3.0));
+
+
+  return(entropy);
 
 }
+
+
+
+
+FTYPE compute_dSdrho_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE compute_entropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE dSdchi;
+  FTYPE entropy;
+
+  entropy=compute_entropy_wmrho0_mignone(EOSextra, rho0, wmrho0);
+
+  dSdchi = (-5.0/3.0) + entropy/rho0 + rho0/(2.0*rho0+wmrho0) + (-3.0*wmrho0*wmrho0-6.0*wmrho0*rho0-5.0*rho0*rho0)/((2.0*rho0+wmrho0)*sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0));
+
+  return(dSdchi);
+}
+
+FTYPE compute_dSdwmrho0_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+  FTYPE sqrtthing;
+
+  sqrtthing = sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0);
+  dSdchi = (rho0*(3.0*wmrho0*wmrho0+rho0*(5.0*rho0+sqrtthing)+wmrho0*(6.0*rho0+sqrtthing)))/(wmrho0*(2.0*rho0+wmrho0)*sqrtthing);
+
+  return(dSdchi);
+
+}
+
+
+
+
 
 
 // p(rho0, w-rho0 = u+p)
@@ -143,6 +206,19 @@ FTYPE pressure_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
   pressure=(5.0/8.0)*(wmrho0 - delta/(1.0+sqrt(1.0+delta2)));
 
   return(pressure);
+}
+
+// u(rho0, w-rho0 = u+p)
+static FTYPE u_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE u;
+  FTYPE sqrtthing;
+
+  sqrtthing=sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0);
+
+  u = 3.0*wmrho0*(3.0*wmrho0+3.0*rho0+sqrtthing)/(4.0*(3.0*wmrho0+5.0*rho0+sqrtthing));
+
+  return(u);
 }
 
 

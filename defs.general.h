@@ -321,9 +321,15 @@ FTYPE (*ptr_u_rho0_p[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE p);
 FTYPE (*ptr_dpdu_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_dpdrho0_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_cs2_compute[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+
 FTYPE (*ptr_compute_entropy[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_compute_dSdrho[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_compute_dSdu[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+
+FTYPE (*ptr_compute_entropy_wmrho0[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+FTYPE (*ptr_compute_dSdrho_wmrho0[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+FTYPE (*ptr_compute_dSdwmrho0_wmrho0[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+
 FTYPE (*ptr_pressure_wmrho0[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 FTYPE (*ptr_compute_idwmrho0dp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 FTYPE (*ptr_compute_idrho0dp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);

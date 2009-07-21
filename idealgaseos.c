@@ -1,5 +1,7 @@
 // IDEAL GAS EOS
 
+// see entropy_new_inversion.nb
+
 // P = (\GAMMA -1) u
 // h = 1+\Gamma_r \Theta  ; \Theta=p/\rho_0  \Gamma_r = (\GAMMA/(\GAMMA-1))
 
@@ -8,6 +10,9 @@
 // 1/\Gamma_r
 #define GAMMAM1 (GAMMA-1.0)
 #define IGAMMAR (GAMMAM1/GAMMA)
+
+
+static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
 
 // p(rho0, u) (needed to get initial guess for W)
@@ -99,6 +104,28 @@ FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy
 
 }
 
+
+
+// local aux function
+static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE pressure,indexn,insideentropy;
+  FTYPE pressure_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  
+
+  pressure=pressure_wmrho0_idealgas(EOSextra,rho0,wmrho0);
+  indexn=1.0/GAMMAM1;
+
+  if(rho0<SMALL) rho0=SMALL;
+  if(pressure<SMALL) pressure=SMALL;
+  
+  insideentropy=pow(pressure,indexn)/pow(rho0,indexn+1.0);
+
+  return(insideentropy);
+}
+
+
+
 // used for dudp_calc
 FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
@@ -131,6 +158,54 @@ FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   dSdu=indexn*rho0/u;
 
   return(dSdu);
+
+}
+
+
+// entropy as function of rho0 and internal energy (u)
+// S(rho0,\chi=u+p)
+// entropy = \rho\ln( p^n/\rho^{n+1} )
+FTYPE compute_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE insideentropy,entropy;
+
+  insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
+  
+  entropy=rho0*log(insideentropy);
+
+  return(entropy);
+
+}
+
+// used for utoprim_jon when doing entropy evolution
+// Because P=(\gamma-1)u, then holding \chi=w-\rho_0 constant is the same as holding u constant
+FTYPE compute_dSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdrho;
+  FTYPE insideentropy;
+
+
+  insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
+  
+  dSdrho=GAMMA/(1.0-GAMMA) + log(insideentropy);
+
+  // Note that it makes no sense to speak of entropy changes with isothermal (GAMMA=1.0) gas since in the limit GAMMA->1, dSdrho->-\infty
+
+  return(dSdrho);
+
+}
+
+
+// used for utoprim_jon when doing entropy evolution
+FTYPE compute_dSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+
+  dSdchi = rho0/(GAMMAM1*wmrho0);
+
+  // Again, GAMMA->1 means dSdchi->\infty unless \chi->0 or rho0->0
+
+  return(dSdchi);
 
 }
 
