@@ -60,7 +60,12 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// entropy as function of rho0 and internal energy (u)
+// The resulting entropy is an entropy per unit volume.
+// The dimensionless specific entropy per baryon (or per gram really) would be this entropy divided by \rho_0
+// In general, entropy density often comes in units of erg/K/cc.  If one divides by k_b one gets 1/cc.  If one divides by n_b, one gets a dimensionless entropy per baryon.  If one divides by instead \rho_0=m_b n_b, one gets a entropy per baryon in per baryon rest-mass.
+// The prefactor constant doesn't matter for entropy evolution/inversion or sound speed evaluations as long as everything is self-consistent.
+//
+// entropy (in energy/volume) as function of rho0 and internal energy (u)
 // S(rho0,u)
 // entropy = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
@@ -161,11 +166,10 @@ FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-
 // entropy as function of rho0 and internal energy (u)
 // S(rho0,\chi=u+p)
 // entropy = \rho\ln( p^n/\rho^{n+1} )
-FTYPE compute_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE insideentropy,entropy;
 
@@ -177,9 +181,24 @@ FTYPE compute_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 
 }
 
+// specific entropy as function of rho0 and internal energy (u)
+// S(rho0,\chi=u+p)
+// entropy = \rho\ln( p^n/\rho^{n+1} )
+FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE insideentropy,specificentropy;
+
+  insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
+  
+  specificentropy=log(insideentropy);
+
+  return(specificentropy);
+
+}
+
 // used for utoprim_jon when doing entropy evolution
 // Because P=(\gamma-1)u, then holding \chi=w-\rho_0 constant is the same as holding u constant
-FTYPE compute_dSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdrho;
   FTYPE insideentropy;
@@ -195,13 +214,40 @@ FTYPE compute_dSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 
 }
 
+FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdrho;
+
+  if(rho0<SMALL) rho0=SMALL;
+  
+  dSdrho=GAMMA/((1.0-GAMMA)*rho0);
+
+  // Note that it makes no sense to speak of entropy changes with isothermal (GAMMA=1.0) gas since in the limit GAMMA->1, dSdrho->-\infty
+
+  return(dSdrho);
+
+}
+
 
 // used for utoprim_jon when doing entropy evolution
-FTYPE compute_dSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
 
   dSdchi = rho0/(GAMMAM1*wmrho0);
+
+  // Again, GAMMA->1 means dSdchi->\infty unless \chi->0 or rho0->0
+
+  return(dSdchi);
+
+}
+
+// used for utoprim_jon when doing entropy evolution
+FTYPE compute_dspecificSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+
+  dSdchi = 1.0/(GAMMAM1*wmrho0);
 
   // Again, GAMMA->1 means dSdchi->\infty unless \chi->0 or rho0->0
 

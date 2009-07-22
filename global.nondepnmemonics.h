@@ -160,15 +160,19 @@
 // whether relativistic or nonrelativistic EOMs (speed of light limitation)
 
 // for EOMTYPE
-// 2 = GRMHD
 // 0 = FF(D)E force-free electrodynamics
+// 1 = cold GRMHD
+// 2 = entropy conservation version of GRMHD
+// 3 = GRMHD
 // for force-free, must turn off:
 // ok now, but effectively setup already the below 2 lines implicitly
 // global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
 // global.h FIXUPZONES->FIXUPNOZONES
 #define EOMFFDE 0
 #define EOMCOLDGRMHD 1
-#define EOMGRMHD 2
+#define EOMENTROPYGRMHD 2
+#define EOMGRMHD 3
+
 
 
 // macros for defining which fluxcalc method to use in flux.c

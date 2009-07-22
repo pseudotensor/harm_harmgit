@@ -729,6 +729,12 @@ void read_setup_eostable(void)
 	// below is (1/cc) / (erg/cc) \propto 1/erg since we have rho as rho c^2
 	tabletemp[DSDRHOofRHOU]/=(1.0/energyunit);
 	tabletemp[DSDUofRHOU]/=(1.0/energyunit);
+
+	// SSofRHOCHI is nearly dimensionless (really has units of 1/mb since obtained by division of Sden by \rho_0 instead of n_b)
+
+	// DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of 1/Pressureunit
+	tabletemp[DSSDRHOofRHOCHI]/=Pressureunit;
+	tabletemp[DSSDCHIofRHOCHI]/=Pressureunit;
 	
 	tabletemp[PofRHOCHI]/=Pressureunit;
 	// IDRHO0DP is dimensionless
@@ -1164,9 +1170,9 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
   // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==IDRHO0DP||whichfun==IDCHIDP);
+  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
   if(whichinterp1||degentable==1) loginterp=1;
   else if(whichinterp2) loginterp=0;
@@ -1450,9 +1456,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
   // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==IDRHO0DP||whichfun==IDCHIDP);
+  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
   if(whichinterp1||degentable==1) loginterp=1;
   else if(whichinterp2) loginterp=0;
@@ -1713,9 +1719,9 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
   // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==IDRHO0DP||whichfun==IDCHIDP);
+  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
   if(1||degentable==0){ // always allow loginterp==1
     if(whichinterp1||degentable==1) loginterp=1;
@@ -2437,7 +2443,7 @@ int get_whichindep(int whichfun)
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
   // GODMARK: >=EXTRA1 assumes all extras are F(rho0,u), although for whichdatatype==4 some must be functions of \chi -- need to change if going to use that method
-  whichcheck1=(whichfun==PofRHOU||whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||(whichfun>=EXTRA1)||whichfun==TEMPU);
+  whichcheck1=(whichfun==PofRHOU||whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||(whichfun>=EXTRA1)||whichfun==TEMPU);
 
   // functions (F) F(rho0,p)
   whichcheck2=(whichfun==UofRHOP||whichfun==TEMPP);
@@ -2536,12 +2542,14 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
 #if(REDUCE2WHICHEOS==MIGNONE)
     if(whichfun==PofRHOU)        final = pressure_rho0_u_mignone(EOSextra,quant1, quant2mod); // use total quant2mod
     else if(whichfun==SofRHOU)   final = compute_entropy_mignone(EOSextra,quant1, quant2mod);
+    else if(whichfun==SSofRHOCHI)   final = compute_specificentropy_wmrho0_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==UofRHOP)   final = u_rho0_p_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==PofRHOCHI) final = pressure_wmrho0_mignone(EOSextra,quant1, quant2mod);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
     // use ideal EOS
     if(whichfun==PofRHOU)        final = pressure_rho0_u_idealgas(EOSextra,quant1, quant2mod); // use total quant2mod
     else if(whichfun==SofRHOU)   final = compute_entropy_idealgas(EOSextra,quant1, quant2mod);
+    else if(whichfun==SSofRHOCHI)   final = compute_specificentropy_wmrho0_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==UofRHOP)   final = u_rho0_p_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==PofRHOCHI) final = pressure_wmrho0_idealgas(EOSextra,quant1, quant2mod);    
 #endif
@@ -2555,6 +2563,7 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
       //      dualfprintf(fail_file,"PofRHOU final=%21.15g dfinal=%21.15g pnu=%21.15g\n",final,dfinal,pnu);
     }
     else if(whichfun==SofRHOU)   final = dfinal + snu;
+    else if(whichfun==SSofRHOCHI)   final = dfinal + snu/quant1; // specific entropy is snu/rho0
     else if(whichfun==UofRHOP)   final = dfinal + unu;
     else if(whichfun==PofRHOCHI) final = dfinal + pnu;
   }
@@ -2649,8 +2658,8 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   else if(whichfun==IDCHIDP)        neutrino = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2nu);
   else if(whichfun==DSDRHOofRHOU)   neutrino = compute_dSdrho_mignone(EOSextra,quant1, quant2nu);
   else if(whichfun==DSDUofRHOU)     neutrino = compute_dSdu_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDRHOofRHOCHI) neutrino = compute_dSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDCHIofRHOCHI) neutrino = compute_dSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDRHOofRHOCHI) neutrino = compute_dspecificSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDCHIofRHOCHI) neutrino = compute_dspecificSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
   if(whichfun==CS2ofRHOU)           neutrino = cs2_compute_idealgas(EOSextra,quant1, quant2nu);
   else if(whichfun==DPDUofRHOU)     neutrino = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2nu);
@@ -2659,8 +2668,8 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   else if(whichfun==IDCHIDP)        neutrino = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2nu);
   else if(whichfun==DSDRHOofRHOU)   neutrino = compute_dSdrho_idealgas(EOSextra,quant1, quant2nu);
   else if(whichfun==DSDUofRHOU)     neutrino = compute_dSdu_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDRHOofRHOCHI) neutrino = compute_dSdrho_wmrho0_idealgas(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDCHIofRHOCHI) neutrino = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDRHOofRHOCHI) neutrino = compute_dspecificSdrho_wmrho0_idealgas(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDCHIofRHOCHI) neutrino = compute_dspecificSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2nu);
 #endif
 
   // reduce to using totals if not within table
@@ -2673,8 +2682,8 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   else if(whichfun==IDCHIDP)        total = compute_idwmrho0dp_mignone(EOSextra,quant1, quant2mod);
   else if(whichfun==DSDRHOofRHOU)   total = compute_dSdrho_mignone(EOSextra,quant1, quant2mod);
   else if(whichfun==DSDUofRHOU)     total = compute_dSdu_mignone(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDRHOofRHOCHI) total = compute_dSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
-  else if(whichfun==DSDCHIofRHOCHI) total = compute_dSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDRHOofRHOCHI) total = compute_dspecificSdrho_wmrho0_mignone(EOSextra,quant1, quant2nu);
+  else if(whichfun==DSSDCHIofRHOCHI) total = compute_dspecificSdwmrho0_wmrho0_mignone(EOSextra,quant1, quant2nu);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
   if(whichfun==CS2ofRHOU)           total = cs2_compute_idealgas(EOSextra,quant1, quant2mod);
   else if(whichfun==DPDUofRHOU)     total = dpdu_rho0_u_idealgas(EOSextra,quant1, quant2mod);
@@ -2683,8 +2692,8 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   else if(whichfun==IDCHIDP)        total = compute_idwmrho0dp_idealgas(EOSextra,quant1, quant2mod);
   else if(whichfun==DSDRHOofRHOU)   total = compute_dSdrho_idealgas(EOSextra,quant1, quant2mod);
   else if(whichfun==DSDUofRHOU)     total = compute_dSdu_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDRHOofRHOCHI) total = compute_dSdrho_wmrho0_idealgas(EOSextra,quant1, quant2mod);
-  else if(whichfun==DSDCHIofRHOCHI) total = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSSDRHOofRHOCHI) total = compute_dspecificSdrho_wmrho0_idealgas(EOSextra,quant1, quant2mod);
+  else if(whichfun==DSSDCHIofRHOCHI) total = compute_dspecificSdwmrho0_wmrho0_idealgas(EOSextra,quant1, quant2mod);
 #endif
 
 
@@ -2853,28 +2862,28 @@ FTYPE compute_dSdu_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // entropy as function of rho0 and internal energy (u)
 // S(rho0,\chi)
 // tabulated ds(d\chi), so first compute d\chi and then ds and then s
-FTYPE compute_entropy_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_specificentropy_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE ds;
   FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
-  return(dfun2fun_kazfull(SofRHOCHI, CHIDIFF, EOSextra, rho0, wmrho0, &ds));
+  return(dfun2fun_kazfull(SSofRHOCHI, CHIDIFF, EOSextra, rho0, wmrho0, &ds));
 }
 
 // used for utoprim_jon entropy inversion
 // frac-fudged
-FTYPE compute_dSdrho_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdrho_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  return(fudgefrac_kazfull(DSDRHOofRHOCHI,CHIDIFF,EOSextra,rho0, wmrho0));
+  return(fudgefrac_kazfull(DSSDRHOofRHOCHI,CHIDIFF,EOSextra,rho0, wmrho0));
 }
 
 
 // used for utoprim_jon entropy inversion
 // frac-fudged
-FTYPE compute_dSdwmrho0_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdwmrho0_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  return(fudgefrac_kazfull(DSDCHIofRHOCHI,CHIDIFF, EOSextra, rho0, wmrho0));
+  return(fudgefrac_kazfull(DSSDCHIofRHOCHI,CHIDIFF, EOSextra, rho0, wmrho0));
 }
 
 

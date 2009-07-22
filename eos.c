@@ -117,23 +117,23 @@ FTYPE compute_dSdu(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 
 
-// entropy as function of rho0 and internal energy (wmrho0)
-// S(rho0,wmrho0)
-FTYPE compute_entropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+// specific entropy as function of rho0 and internal energy (wmrho0)
+// specificS(rho0,wmrho0)
+FTYPE compute_specificentropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  return( (*(ptr_compute_entropy_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
+  return( (*(ptr_compute_specificentropy_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 // used for utoprim_jon entropy inversion
-FTYPE compute_dSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  return( (*(ptr_compute_dSdrho_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
+  return( (*(ptr_compute_dspecificSdrho_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 // used for utoprim_jon entropy inversion
-FTYPE compute_dSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  return( (*(ptr_compute_dSdwmrho0_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
+  return( (*(ptr_compute_dspecificSdwmrho0_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 
@@ -285,9 +285,14 @@ int initeos_eomtype(void)
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_idealgas;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_idealgas;
   ptr_cs2_compute[whicheos] = &cs2_compute_idealgas;
+
   ptr_compute_dSdrho[whicheos] = &compute_dSdrho_idealgas;
   ptr_compute_dSdu[whicheos] = &compute_dSdu_idealgas;
   ptr_compute_entropy[whicheos] = &compute_entropy_idealgas;
+
+  ptr_compute_dspecificSdrho_wmrho0[whicheos] = &compute_dspecificSdrho_wmrho0_idealgas;
+  ptr_compute_dspecificSdwmrho0_wmrho0[whicheos] = &compute_dspecificSdwmrho0_wmrho0_idealgas;
+  ptr_compute_specificentropy_wmrho0[whicheos] = &compute_specificentropy_wmrho0_idealgas;
       
   ptr_pressure_wmrho0[whicheos] = &pressure_wmrho0_idealgas;
   ptr_compute_idwmrho0dp[whicheos] = &compute_idwmrho0dp_idealgas;
@@ -312,9 +317,14 @@ int initeos_eomtype(void)
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_mignone;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_mignone;
   ptr_cs2_compute[whicheos] = &cs2_compute_mignone;
+
   ptr_compute_dSdrho[whicheos] = &compute_dSdrho_mignone;
   ptr_compute_dSdu[whicheos] = &compute_dSdu_mignone;
   ptr_compute_entropy[whicheos] = &compute_entropy_mignone;
+
+  ptr_compute_dspecificSdrho_wmrho0[whicheos] = &compute_dspecificSdrho_wmrho0_mignone;
+  ptr_compute_dspecificSdwmrho0_wmrho0[whicheos] = &compute_dspecificSdwmrho0_wmrho0_mignone;
+  ptr_compute_specificentropy_wmrho0[whicheos] = &compute_specificentropy_wmrho0_mignone;
       
   ptr_pressure_wmrho0[whicheos] = &pressure_wmrho0_mignone;
   ptr_compute_idwmrho0dp[whicheos] = &compute_idwmrho0dp_mignone;
@@ -340,9 +350,14 @@ int initeos_eomtype(void)
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_grbpwf99;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_grbpwf99;
   ptr_cs2_compute[whicheos] = &cs2_compute_grbpwf99;
+
   ptr_compute_dSdrho[whicheos] = &compute_dSdrho_grbpwf99;
   ptr_compute_dSdu[whicheos] = &compute_dSdu_grbpwf99;
   ptr_compute_entropy[whicheos] = &compute_entropy_grbpwf99;
+
+  ptr_compute_dspecificSdrho_wmrho0[whicheos] = &compute_dspecificSdrho_wmrho0_grbpwf99;
+  ptr_compute_dspecificSdwmrho0_wmrho0[whicheos] = &compute_dspecificSdwmrho0_wmrho0_grbpwf99;
+  ptr_compute_specificentropy_wmrho0[whicheos] = &compute_specificentropy_wmrho0_grbpwf99;
       
   ptr_pressure_wmrho0[whicheos] = &pressure_wmrho0_grbpwf99;
   ptr_compute_idwmrho0dp[whicheos] = &compute_idwmrho0dp_grbpwf99;
@@ -368,10 +383,15 @@ int initeos_eomtype(void)
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_kazfull;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_kazfull;
   ptr_cs2_compute[whicheos] = &cs2_compute_kazfull;
+
   ptr_compute_dSdrho[whicheos] = &compute_dSdrho_kazfull;
   ptr_compute_dSdu[whicheos] = &compute_dSdu_kazfull;
   ptr_compute_entropy[whicheos] = &compute_entropy_kazfull;
-      
+
+  ptr_compute_dspecificSdrho_wmrho0[whicheos] = &compute_dspecificSdrho_wmrho0_kazfull;
+  ptr_compute_dspecificSdwmrho0_wmrho0[whicheos] = &compute_dspecificSdwmrho0_wmrho0_kazfull;
+  ptr_compute_specificentropy_wmrho0[whicheos] = &compute_specificentropy_wmrho0_kazfull;
+            
   ptr_pressure_wmrho0[whicheos] = &pressure_wmrho0_kazfull;
   ptr_compute_idwmrho0dp[whicheos] = &compute_idwmrho0dp_kazfull;
   ptr_compute_idrho0dp[whicheos] = &compute_idrho0dp_kazfull;
@@ -396,10 +416,15 @@ int initeos_eomtype(void)
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_coldgrmhd;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_coldgrmhd;
   ptr_cs2_compute[whicheos] = &cs2_compute_coldgrmhd;
+
   ptr_compute_dSdrho[whicheos] = &compute_dSdrho_coldgrmhd;
   ptr_compute_dSdu[whicheos] = &compute_dSdu_coldgrmhd;
   ptr_compute_entropy[whicheos] = &compute_entropy_coldgrmhd;
 
+  ptr_compute_dspecificSdrho_wmrho0[whicheos] = &compute_dspecificSdrho_wmrho0_coldgrmhd;
+  ptr_compute_dspecificSdwmrho0_wmrho0[whicheos] = &compute_dspecificSdwmrho0_wmrho0_coldgrmhd;
+  ptr_compute_specificentropy_wmrho0[whicheos] = &compute_specificentropy_wmrho0_coldgrmhd;
+            
   ptr_pressure_wmrho0[whicheos] = &pressure_wmrho0_coldgrmhd;
   ptr_compute_idwmrho0dp[whicheos] = &compute_idwmrho0dp_coldgrmhd;
   ptr_compute_idrho0dp[whicheos] = &compute_idrho0dp_coldgrmhd;

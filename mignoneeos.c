@@ -95,7 +95,7 @@ static FTYPE compute_inside_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u
 }
 
 
-// u(rho0,S)
+// u(rho0,Sden)
 FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
   FTYPE u;
@@ -141,7 +141,7 @@ FTYPE compute_dSdu_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-FTYPE compute_entropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_entropy_wmrho0_mignone_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE u,P,entropy;
   FTYPE pressure_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
@@ -155,34 +155,79 @@ FTYPE compute_entropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 
   entropy = rho0*log(P*(rho0+u)/pow(rho0,8.0/3.0));
 
-
   return(entropy);
 
 }
 
-
-
-
-FTYPE compute_dSdrho_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+// used for utoprim_jon.c entropy inversion
+FTYPE compute_specificentropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE compute_entropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE dSdchi;
-  FTYPE entropy;
+  FTYPE u,P,specificentropy;
+  FTYPE pressure_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
-  entropy=compute_entropy_wmrho0_mignone(EOSextra, rho0, wmrho0);
+  u=u_wmrho0_mignone(EOSextra, rho0, wmrho0);
+  P=pressure_wmrho0_mignone(EOSextra, rho0, wmrho0);
 
-  dSdchi = (-5.0/3.0) + entropy/rho0 + rho0/(2.0*rho0+wmrho0) + (-3.0*wmrho0*wmrho0-6.0*wmrho0*rho0-5.0*rho0*rho0)/((2.0*rho0+wmrho0)*sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0));
+  if(rho0<SMALL) rho0=SMALL;
+  if(u<SMALL) u=SMALL;
+  if(P<SMALL) P=SMALL;
 
-  return(dSdchi);
+  specificentropy = log(P*(rho0+u)/pow(rho0,8.0/3.0));
+
+  return(specificentropy);
+
 }
 
-FTYPE compute_dSdwmrho0_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+
+
+
+FTYPE compute_dSdrho_wmrho0_mignone_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE compute_entropy_wmrho0_mignone_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE dSdrho;
+  FTYPE entropy;
+
+  entropy=compute_entropy_wmrho0_mignone_unused(EOSextra, rho0, wmrho0);
+
+  dSdrho = (-5.0/3.0) + entropy/rho0 + rho0/(2.0*rho0+wmrho0) + (-3.0*wmrho0*wmrho0-6.0*wmrho0*rho0-5.0*rho0*rho0)/((2.0*rho0+wmrho0)*sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0));
+
+  return(dSdrho);
+}
+
+// used for utoprim_jon.c entropy inversion
+FTYPE compute_dspecificSdrho_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE sqrtthing,sqrtinside,dSdrho;
+
+  sqrtinside=9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0;
+  sqrtthing=sqrt(sqrtinside);
+  dSdrho = -(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+15.0*rho0*rho0+5.0*wmrho0*sqrtthing + 7.0*rho0*sqrtthing)/(3.0*rho0*(wmrho0+2.0*rho0)*sqrtthing);
+
+  return(dSdrho);
+}
+
+FTYPE compute_dSdwmrho0_wmrho0_mignone_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
   FTYPE sqrtthing;
 
   sqrtthing = sqrt(9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0);
   dSdchi = (rho0*(3.0*wmrho0*wmrho0+rho0*(5.0*rho0+sqrtthing)+wmrho0*(6.0*rho0+sqrtthing)))/(wmrho0*(2.0*rho0+wmrho0)*sqrtthing);
+
+  return(dSdchi);
+
+}
+
+// used for utoprim_jon.c entropy inversion
+FTYPE compute_dspecificSdwmrho0_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  FTYPE dSdchi;
+  FTYPE sqrtthing,sqrtinside;
+
+  sqrtinside=9.0*wmrho0*wmrho0+18.0*wmrho0*rho0+25.0*rho0*rho0;
+  sqrtthing=sqrt(sqrtinside);
+
+  dSdchi = (wmrho0+rho0-10.0*rho0*rho0/(3.0*sqrtthing)+sqrtthing/3.0)/(wmrho0*(wmrho0+2.0*rho0));
 
   return(dSdchi);
 

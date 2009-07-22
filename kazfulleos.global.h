@@ -131,13 +131,15 @@
 
 #define CS2ofRHOU 4    // cs^2(rho0,u)
 
+// below used for utoprim.orig.c (dudp_calc.c) entropy inversion
 #define SofRHOU 5      // S(rho0,u)
 #define DSDRHOofRHOU 6 // dS/drho0 |u (rho0,u)
 #define DSDUofRHOU 7   // dS/du |\rho0 (rho0,u)
 
-#define SofRHOCHI 8      // S(rho0,\chi)
-#define DSDRHOofRHOCHI 9 // dS/drho0 |\chi (rho0,\chi)
-#define DSDCHIofRHOCHI 10   // dS/d\chi |\rho0 (rho0,\chi)
+// below used for utoprim_jon.c entropy inversion
+#define SSofRHOCHI 8      // specificS(rho0,\chi)
+#define DSSDRHOofRHOCHI 9 // dspecificS/drho0 |\chi (rho0,\chi)
+#define DSSDCHIofRHOCHI 10   // dspecificS/d\chi |\rho0 (rho0,\chi)
 
 #define PofRHOCHI 11    // P(rho0,\chi)  \chi = u+p
 #define IDRHO0DP 12     // 1/(d\rho0/dp) |\chi

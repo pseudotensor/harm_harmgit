@@ -199,12 +199,20 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
 
 
 
-
-
+  /////////////////
+  //
+  // initialize iteration counter
+  //
+  /////////////////
   newtonstats->lntries=0;
 
 
 
+  /////////////////
+  //
+  // Setup dimensionality of method for a given eomtype and choice if inverter
+  //
+  /////////////////
   if(eomtype==EOMGRMHD){
     if(WHICHHOTINVERTER==1) real_dimen_newton=1;
     else   if(WHICHHOTINVERTER==2) real_dimen_newton=2;
@@ -215,6 +223,9 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
     else if(WHICHCOLDINVERTER==1) real_dimen_newton=1;
     else   if(WHICHCOLDINVERTER==2) real_dimen_newton=1;
     else   if(WHICHCOLDINVERTER==3) real_dimen_newton=1;
+  }
+  else if(eomtype==EOMENTROPYGRMHD){
+    if(WHICHENTROPYINVERTER==0) real_dimen_newton=1;
   }
   else real_dimen_newton=0; // not using Newton's method
 

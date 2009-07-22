@@ -23,6 +23,9 @@
 #define WHICHCOLDINVERTER 2
 
 
+// WORKING ON IT:
+#define WHICHENTROPYINVERTER 0
+
 #define METHODTYPE  3
 #define NEWT_DIM 2 // actually maximum # of dimensions
 #define USE_LINE_SEARCH -2

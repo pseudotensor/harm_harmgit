@@ -112,35 +112,35 @@ FTYPE compute_dSdu_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-FTYPE compute_entropy_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_specificentropy_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE entropy;
+  FTYPE specificentropy;
 
   // not setup yet for TM EOS
-  entropy=compute_entropy_wmrho0_idealgas(EOSextra,rho0,wmrho0);
+  specificentropy=compute_specificentropy_wmrho0_idealgas(EOSextra,rho0,wmrho0);
 
-  return(entropy);
+  return(specificentropy);
 
 }
 
 
 
-FTYPE compute_dSdrho_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdrho_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
 
   // not setup yet for TM EOS
-  dSdchi=compute_dSdrho_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
+  dSdchi=compute_dspecificSdrho_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
 
   return(dSdchi);
 }
 
-FTYPE compute_dSdwmrho0_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+FTYPE compute_dspecificSdwmrho0_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
 
   // not setup yet for TM EOS
-  dSdchi = compute_dSdwmrho0_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
+  dSdchi = compute_dspecificSdwmrho0_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
 
   return(dSdchi);
 

@@ -65,6 +65,31 @@ FTYPE compute_u_from_entropy_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE entrop
 }
 
 
+
+
+FTYPE compute_specificentropy_wmrho0_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  return(0.0);
+
+}
+
+FTYPE compute_dspecificSdrho_wmrho0_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+  return(0.0);
+
+}
+
+
+FTYPE compute_dspecificSdwmrho0_wmrho0_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
+{
+
+  return(0.0);
+
+}
+
+
+
+
 // p(rho0, w-rho0 = u+p)
 FTYPE pressure_wmrho0_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
