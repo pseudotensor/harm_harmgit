@@ -89,8 +89,12 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   //    dualfprintf(fail_file,"BADENTROPY: i=%d j=%d nstep=%ld steppart=%d : bad U[ENTROPY]=%21.15g\n",ptrgeom->i,ptrgeom->j,nstep,steppart,U[ENTROPY]);
   //  }
 
+  ///////////
+  //
   // Notice that reconstruct "standard" geometry-free conserved quantities by first modifying the geometry prefactor and THEN dealing with rest-mass or other subtractions and additions.
   // This is consistent with primtoflux() and how primtoflux() is used in source_conn().
+  //
+  ///////////
   UtoU(inputtype,UNOTHING,ptrgeom,U,Ugeomfree);
   // e.g. if REMOVERESTMASSFROMUU==1 and inputtype==UEVOLVE, then Ugeomfree has energy T^t_t that includes rest-mass
 #if(SPLITNPR)
@@ -137,6 +141,8 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   //
   // all pseudo-passive scalars are trivially inverted
   //
+  // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
+  //
   ////////////////////////
 
   invert_scalars(Uold,Ugeomfree0,Ugeomfree,pr0,pr);
@@ -151,6 +157,8 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   // DO INVERSION
   //
   ////////////////////////
+
+
 
   // assume solution is good unless flagged as bad
   GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
@@ -261,6 +269,8 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
   }
+
+
 
 
 
@@ -478,13 +488,18 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
       // default is to assume nothing wrong
       fdiff[pl]=0.0;
 
+      if(pl==YNU || pl==YL) continue; // always avoid checking passive scalars
+
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
-      if(EOMTYPE==EOMFFDE && (pl==RHO || pl==UU) ) continue;
-      if(EOMTYPE==EOMCOLDGRMHD  && (pl==UU) ) continue;
-      // leave geometry out of it
+      if(EOMTYPE==EOMFFDE && (pl==RHO || pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
+      if(EOMTYPE==EOMCOLDGRMHD  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
+      // inversion either uses energy or entropy and can't use both at once inside inversion routine
+      if(EOMTYPE==EOMENTROPYGRMHD  && (pl==UU )) continue;
+      if(EOMTYPE==EOMGRMHD  && (pl==ENTROPY && DOENTROPY!=DOEVOLVEDIRECTENTROPY )) continue; // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
+	 // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
-      if(pl==RHO || pl==UU) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+      if(pl==RHO || pl==UU || pl==ENTROPY) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
       else if(pl==U1 || pl==U2 || pl==U3){
 
 	errornorm  = THIRD*(fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
@@ -506,14 +521,14 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     PLOOP(pliter,pl){
       if((*lpflag)!=0 || fdiff[pl]>CHECKONINVFRAC){
 	if(
-	   ( (pl>=RHO)&&(pl<=B3)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
+	   ( (pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && EOMTYPE==EOMENTROPYGRMHD)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ) // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
 	    ){
 	  badinversion++;
 	  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
 	}
       }
       if(fdiff[pl]>CHECKONINVFRACFAIL){
-	if((pl>=RHO)&&(pl<=B3)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL))){
+	if((pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && EOMTYPE==EOMENTROPYGRMHD)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL))){
 	  badinversionfail++;
 	}
       }
