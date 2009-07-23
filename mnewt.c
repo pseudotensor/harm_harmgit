@@ -167,7 +167,7 @@ int mnewt(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primtoU
 
 
 
-#if(0 && DOENTROPY==DOEVOLVECOMPAREENTROPY)
+#if(0)
     // DEBUG: OPENMPMARK: Not thread safe
     // determine error in f, conserved quantities
     P0ITERLOOP(i){

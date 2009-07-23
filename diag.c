@@ -2104,7 +2104,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 
 
 
-  if(DOENTROPY==DOEVOLVECOMPAREENTROPY){
+  if(DODISS||DODISSVSR){
 
 
 
@@ -2434,7 +2434,8 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
   
       }// end loop over versions
     }// end if evolving
-  }// end if doing comparison
+  }// end if DODISS||DODISSVSR
+
 
 
   // now must redefine U[ENTROPY] so consistent with p(U[normalgrmhd])

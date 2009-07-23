@@ -173,33 +173,17 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     ///////////////////////////////////////////////////
 
 
-    if(DOENTROPY!=DOEVOLVEDIRECTENTROPY){
-      // then do energy equation version
+    if(UTOPRIMVERSION!=UTOPRIMCOMPARE) Utoprimgen_pick(UTOPRIMVERSION, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats);
+    else Utoprimgen_compare(EVOLVENOENTROPY,Ugeomfree,ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats);
     
-      if(UTOPRIMVERSION!=UTOPRIMCOMPARE) Utoprimgen_pick(UTOPRIMVERSION, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats);
-      else Utoprimgen_compare(EVOLVENOENTROPY,Ugeomfree,ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats);
-
-      // try other methods (assumes all methods can handle WHICHVEL, etc. used for primary model)
-      // right now, all can handle WHICHVEL==VELREL4 and energy equation evolution and REMOVERESTMASSFROMUU=0,1
+    // try other methods (assumes all methods can handle WHICHVEL, etc. used for primary model)
+    // right now, all can handle WHICHVEL==VELREL4 and energy equation evolution and REMOVERESTMASSFROMUU=0,1
 #if((WHICHVEL==VELREL4)&&(REMOVERESTMASSFROMUU<=1)&&(UTOPRIMTRYAGAIN))
-      Utoprimgen_tryagain(EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,newtonstats);
+    Utoprimgen_tryagain(EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,newtonstats);
 #elif((WHICHVEL==VELREL4)&&(REMOVERESTMASSFROMUU==2)&&(UTOPRIMTRYAGAIN))
-      // Can only try again using same type of U since tryagain code doesn't convert U 
-      Utoprimgen_tryagain2(EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,newtonstats);
+    // Can only try again using same type of U since tryagain code doesn't convert U 
+    Utoprimgen_tryagain2(EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,newtonstats);
 #endif
-    }
-    else{ // direct entropy evolution
-
-      // do inversion for entropy version of EOMs
-      // only one inversion is setup to handle this
-      PALLLOOP(k) prother[k]=pr0[k];
-      whichentropy=EVOLVEFULLENTROPY;
-
-      ////////////////////////
-      // get entropy evolution (don't use failure -- otherfail)
-      MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
-
-    } // end if doing direct entropy evolution
 
 
 
@@ -269,7 +253,31 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
   }
+  else if(EOMTYPE==EOMENTROPYGRMHD){
+    // direct entropy evolution (can use old Utoprim() or new code, but not all codes have entropy inversion)
 
+    if(0){
+      // original entropy inversion method (works fine)
+
+      // do inversion for entropy version of EOMs
+      // only one inversion is setup to handle this
+      PALLLOOP(k) prother[k]=pr0[k];
+      whichentropy=EVOLVEFULLENTROPY;
+      
+      ////////////////////////
+      // get entropy evolution (don't use failure -- otherfail)
+      MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
+    }
+    else{
+      // new faster code within utoprim_jon.c
+
+      // get entropy evolution inversion
+      MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMENTROPYGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
+
+
+    }
+
+  }
 
 
 
@@ -495,7 +503,7 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
       if(EOMTYPE==EOMCOLDGRMHD  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
       // inversion either uses energy or entropy and can't use both at once inside inversion routine
       if(EOMTYPE==EOMENTROPYGRMHD  && (pl==UU )) continue;
-      if(EOMTYPE==EOMGRMHD  && (pl==ENTROPY && DOENTROPY!=DOEVOLVEDIRECTENTROPY )) continue; // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
+      if(EOMTYPE==EOMGRMHD  && (pl==ENTROPY )) continue; // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
 	 // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
@@ -521,7 +529,7 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     PLOOP(pliter,pl){
       if((*lpflag)!=0 || fdiff[pl]>CHECKONINVFRAC){
 	if(
-	   ( (pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && EOMTYPE==EOMENTROPYGRMHD)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ) // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
+	   ( (pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && EOMTYPE==EOMENTROPYGRMHD)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
 	    ){
 	  badinversion++;
 	  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);

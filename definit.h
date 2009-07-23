@@ -356,6 +356,10 @@
 // see diag_source()
 #define DODISSVSR 0
 
+// below only applies to dissipation inversion
+#define WHICHENTROPYEVOLVE EVOLVESIMPLEENTROPY
+//#define WHICHENTROPYEVOLVE EVOLVEFULLENTROPY
+
 
 // see metric.c
 #define DOSELFGRAVVSR 0
@@ -422,14 +426,8 @@
 
 
 
-// whether to coevolve the entropy to check for shock+reconnection dissipation
+// whether to activate entropy variable
 #define DOENTROPY DONOENTROPY // normal total energy equation
-//#define DOENTROPY DOEVOLVECOMPAREENTROPY // coevolve and compare
-//#define DOENTROPY DOEVOLVEDIRECTENTROPY // directly evolve entropy equation instead of total energy equation
-
-
-// generically which type of entropy evolution to do, except not used when doing DOENTROPY==DOEVOLVEDIRECTENTROPY
-#define WHICHENTROPYEVOLVE EVOLVESIMPLEENTROPY
 
 // whether to call fixup() after initialization
 #define FIXUPAFTERINIT 1

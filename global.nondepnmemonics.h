@@ -146,6 +146,8 @@
 #define NOGDETB2 0
 #define NOGDETB3 0
 #define NOGDETENTROPY 0
+#define NOGDETYL 0
+#define NOGDETYNU 0
 
 
 
@@ -200,8 +202,7 @@
 // mnenomics
 // for DOENTROPY
 #define DONOENTROPY  0
-#define DOEVOLVECOMPAREENTROPY 1
-#define DOEVOLVEDIRECTENTROPY 2
+#define DOEVOLVEENTROPY 1 // generic activation of entropy variable in conservation laws, etc.
 
 #define DONOYL 0
 #define DOEVOLVEYL 1

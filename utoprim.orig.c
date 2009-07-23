@@ -172,7 +172,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   // No, now further assume if not getting inversion within short trials, not going to happen and reduces to other method for "inversion"
   // No, now assuming want accurate dissipation tracking and avoidance of problems in strong shocks
   // assume don't want special messages if just using entropy evolution for comparison and not primary evolution
-  if(whichcons==EVOLVEFULLENTROPY && DOENTROPY!=DOEVOLVEDIRECTENTROPY){
+  if(whichcons==EVOLVEFULLENTROPY){
     whethertoreport=0;
     // then simplify inversion a bit
     ntrial = 20;
