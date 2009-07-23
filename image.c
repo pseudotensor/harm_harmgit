@@ -46,61 +46,66 @@ int image_dump(long dump_cnt)
 
   // STARTI=0 is normal
   // ENDI=NPRDUMP is normal, but can be NPRDUMP+2 to get linear RHO/UU
-#if(PRODUCTION==0)
-  if(GAMMIEIMAGE){
-    startpl=GAMMIESTARTI;
-    endpl=GAMMIEENDI;
-    starts=0;
-    ends=1;
-    startl=0;
-    endl=0;
-    startv=0;
-    endv=0;
+  if(PRODUCTION==0){
+    if(GAMMIEIMAGE){
+      startpl=GAMMIESTARTI;
+      endpl=GAMMIEENDI;
+      starts=0;
+      ends=1;
+      startl=0;
+      endl=0;
+      startv=0;
+      endv=0;
+    }
+    else{
+      startpl=JONSTARTI;
+      endpl=JONENDI;
+      starts=0;
+      ends=NUMSCALE-1;
+      startl=0;
+      endl=NUMLIMITS-1;
+      startv=0;
+      //    endv=1;
+      endv=2; // including failures now
+    }
   }
   else{
-    startpl=JONSTARTI;
-    endpl=JONENDI;
-    starts=0;
-    ends=NUMSCALE-1;
-    startl=0;
-    endl=NUMLIMITS-1;
-    startv=0;
-    //    endv=1;
-    endv=2; // including failures now
+    // no special images for production mode, just basic log density
+    if(GAMMIEIMAGE){
+      if(DOEVOLVERHO){
+	startpl=0;
+	endpl=0;
+      }
+      else{
+	startpl=B1;
+	endpl=B1;
+      }
+      starts=0;
+      ends=0;
+      startl=0;
+      endl=0;
+      startv=0;
+      endv=0;
+    }
+    else{
+      if(DOEVOLVERHO){
+	startpl=0;
+	endpl=0;
+      }
+      else{
+	startpl=B1;
+	endpl=B1;
+      }
+      starts=0;
+      ends=0;
+      startl=0;
+      endl=0;
+      startv=0;
+      endv=0;
+    }
   }
-#else
-  // no special images for production mode, just basic log density
-  if(GAMMIEIMAGE){
-#if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD))
-    startpl=0;
-    endpl=0;
-#elif(EOMTYPE==EOMFFDE)
-    startpl=B1;
-    endpl=B1;
-#endif
-    starts=0;
-    ends=0;
-    startl=0;
-    endl=0;
-    startv=0;
-    endv=0;
-  }
-  else{
-#if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD))
-    startpl=0;
-    endpl=0;
-#elif(EOMTYPE==EOMFFDE)
-    startpl=B1;
-    endpl=B1;
-#endif
-    starts=0;
-    ends=0;
-    startl=0;
-    endl=0;
-    startv=0;
-    endv=0;
-  }
-#endif
+
+
 
   for(vartype=startv;vartype<=endv;vartype++){
     for(limits=startl;limits<=endl;limits++){

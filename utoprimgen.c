@@ -297,7 +297,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   //
   ////////////
 
-#if(EOMTYPE == EOMGRMHD)
+#if(DOEVOLVERHO)
   if(finalstep){
     negdensitycheck(pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
   }
@@ -496,7 +496,6 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
       // default is to assume nothing wrong
       fdiff[pl]=0.0;
 
-      if(pl==YNU || pl==YL) continue; // always avoid checking passive scalars
 
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
       if(EOMTYPE==EOMFFDE && (pl==RHO || pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
@@ -504,7 +503,9 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
       // inversion either uses energy or entropy and can't use both at once inside inversion routine
       if(EOMTYPE==EOMENTROPYGRMHD  && (pl==UU )) continue;
       if(EOMTYPE==EOMGRMHD  && (pl==ENTROPY )) continue; // SUPERGODMARK: Fix DOENTROPY vs. EOMTYPE
-	 // leave geometry out of it
+      if(pl==YNU || pl==YL) continue; // always avoid checking passive scalars
+
+      // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
       if(pl==RHO || pl==UU || pl==ENTROPY) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);

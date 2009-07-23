@@ -229,21 +229,21 @@ int init(int *argc, char **argv[])
       //
       /////////////////////////////// 
       
-#if(EOMTYPE==EOMFFDE)
-      trifprintf("System filtered to FFDE\n");
-      // filter to get force-free
-      COMPFULLLOOP{
-	filterffde(i,j,k,GLOBALMAC(pglobal,i,j,k));
+      if(EOMTYPE==EOMFFDE){
+	trifprintf("System filtered to FFDE\n");
+	// filter to get force-free
+	COMPFULLLOOP{
+	  filterffde(i,j,k,GLOBALMAC(pglobal,i,j,k));
+	}
       }
-#endif
       
-#if(EOMTYPE==EOMCOLDGRMHD)
-      trifprintf("System filtered to cold GRMHD\n");
-      // filter to get cold GRMHD
-      COMPFULLLOOP{
-	filter_coldgrmhd(i,j,k,GLOBALMAC(pglobal,i,j,k));
+      if(EOMTYPE==EOMCOLDGRMHD){
+	trifprintf("System filtered to cold GRMHD\n");
+	// filter to get cold GRMHD
+	COMPFULLLOOP{
+	  filter_coldgrmhd(i,j,k,GLOBALMAC(pglobal,i,j,k));
+	}
       }
-#endif
       
       
       /////////////////////////////
@@ -1055,44 +1055,47 @@ int init_defglobal(void)
   dofluxreconevolvepointfield=1;
 
 
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
-  //lim = WENO5FLAT;
-  //lim = WENO5BND;
-  //  lim = WENO3;
-  //lim = DONOR;
-  //lim = MINM;
-  //  lim = PARA;
-  //lim = MC;
-  lim[1]=lim[2]=lim[3]=MC;
-  //lim = PARA;
-  //  lim = PARAFLAT;
-  //lim = MC;
-  TIMEORDER=4;
-  // whether/which ENO used to interpolate fluxes
-  DOENOFLUX = ENOFINITEVOLUME;
-  //DOENOFLUX= NOENOFLUX;
-  //DOENOFLUX=ENOFLUXRECON;
-  //  fluxmethod=MUSTAFLUX;
-  //fluxmethod=FORCEFLUX;
-  fluxmethod=HLLFLUX;
-  //fluxmethod=HLLLAXF1FLUX;
-  //fluxmethod=LAXFFLUX;
-  FLUXB = FLUXCTTOTH;
-  UTOPRIMVERSION=UTOPRIM5D1;  //UTOPRIM2DFINAL;
-  //UTOPRIMVERSION=UTOPRIM5D2;
-  //  UTOPRIMVERSION=UTOPRIM2DFINAL;
-#elif(EOMTYPE==EOMFFDE)
-  // PARA and TO=4 and HLL not trustable in FFDE so far
-  lim[1] = lim[2] = lim[3] = MC;
-  TIMEORDER=2;
-  fluxmethod=LAXFFLUX;
-  FLUXB = FLUXCTTOTH;
-  UTOPRIMVERSION=UTOPRIM2DFINAL;
-  // whether/which ENO used to interpolate fluxes
-  //DOENOFLUX = ENOFINITEVOLUME;
-  DOENOFLUX= NOENOFLUX;
-  //DOENOFLUX=ENOFLUXRECON;
-#endif
+  if(DOEVOLVERHO){
+    //lim = WENO5FLAT;
+    //lim = WENO5BND;
+    //  lim = WENO3;
+    //lim = DONOR;
+    //lim = MINM;
+    //  lim = PARA;
+    //lim = MC;
+    lim[1]=lim[2]=lim[3]=MC;
+    //lim = PARA;
+    //  lim = PARAFLAT;
+    //lim = MC;
+    TIMEORDER=4;
+    // whether/which ENO used to interpolate fluxes
+    DOENOFLUX = ENOFINITEVOLUME;
+    //DOENOFLUX= NOENOFLUX;
+    //DOENOFLUX=ENOFLUXRECON;
+    //  fluxmethod=MUSTAFLUX;
+    //fluxmethod=FORCEFLUX;
+    fluxmethod=HLLFLUX;
+    //fluxmethod=HLLLAXF1FLUX;
+    //fluxmethod=LAXFFLUX;
+    FLUXB = FLUXCTTOTH;
+    UTOPRIMVERSION=UTOPRIM5D1;  //UTOPRIM2DFINAL;
+    //UTOPRIMVERSION=UTOPRIM5D2;
+    //  UTOPRIMVERSION=UTOPRIM2DFINAL;
+  }
+
+
+  if(EOMTYPE==EOMFFDE){
+    // PARA and TO=4 and HLL not trustable in FFDE so far
+    lim[1] = lim[2] = lim[3] = MC;
+    TIMEORDER=2;
+    fluxmethod=LAXFFLUX;
+    FLUXB = FLUXCTTOTH;
+    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    // whether/which ENO used to interpolate fluxes
+    //DOENOFLUX = ENOFINITEVOLUME;
+    DOENOFLUX= NOENOFLUX;
+    //DOENOFLUX=ENOFLUXRECON;
+  }
 
 
   t = 0.;
@@ -1163,12 +1166,13 @@ int init_defglobal(void)
   UORHOLIMIT=1E3;
   GAMMADAMP=5.0;
 
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
-  // GODMARK -- unstable beyond about 25, but can sometimes get away with 1000
-  GAMMAMAX=25.0; // when we think gamma is just too high and may cause unstable flow, but solution is probably accurate.
-#else
-  GAMMAMAX=2000.0;
-#endif
+  if(DOEVOLVERHO){
+    // GODMARK -- unstable beyond about 25, but can sometimes get away with 1000
+    GAMMAMAX=25.0; // when we think gamma is just too high and may cause unstable flow, but solution is probably accurate.
+  }
+  else{
+    GAMMAMAX=2000.0;
+  }
 
   GAMMAFAIL=100.0*GAMMAMAX; // when we think gamma is rediculous as to mean failure and solution is not accurate.
   prMAX[RHO]=20.0;

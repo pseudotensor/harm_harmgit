@@ -174,10 +174,10 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   COMPZLOOP {
     get_geometry(i,j,k, CENT,ptrgeom) ;
     // densities
-    if(EOMTYPE!=EOMFFDE) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
+    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
   
 
-    if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD) ){
+    if(DOEVOLVERHO ){
       /* floor on density (momentum *not* conserved) */
       if (MACP0A1(pv,i,j,k,RHO) < prfloor[RHO]) {
 #if(FLOORDIAGS)
@@ -188,7 +188,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
       }
     }
     
-    if(EOMTYPE==EOMGRMHD){
+    if(DOEVOLVEUU){
       /* floor on internal energy */
       if (MACP0A1(pv,i,j,k,UU) < prfloor[UU]) {
 #if(FLOORDIAGS)
@@ -432,10 +432,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   // Set which quantities to check
   //
   ////////////
-  if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD) ){
+  if(DOEVOLVERHO){
     checkfl[RHO]=1;
   }
-  if(EOMTYPE==EOMGRMHD){
+  if(DOEVOLVEUU){
     checkfl[UU]=1;
   }
 
@@ -446,7 +446,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   // Only apply floor if cold or hot GRMHD
   //
   ////////////
-  if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD) ){
+  if(DOEVOLVERHO||DOEVOLVEUU){
 
 
     //////////////
@@ -690,10 +690,6 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
   ke=Uconsevolveloop[FKE]+SHIFT3;
 
 
-  //  if(EOMTYPE==EOMFFDE) return(0); // nothing to do
-  //  if(EOMTYPE==EOMCOLDGRMHD) return(0); // nothing to do for now
-
-
 
 
   ///////////////////////////////////
@@ -809,7 +805,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 	  numvotes[ISGAMMACHECK]++;
 	}
 	if(checkcondition[ISUUCHECK] && percdiff[ISUUCHECK][l]>=0.0){
-	  if((EOMTYPE==EOMGRMHD)&& ((fabs(percdiff[ISUUCHECK][l])>UPERCDIFFMAX)||(fabs(percdiff[ISUUCHECK][l])<1.0/UPERCDIFFMAX)) ) vote[ISUUCHECK]++;
+	  if((DOEVOLVEUU)&& ((fabs(percdiff[ISUUCHECK][l])>UPERCDIFFMAX)||(fabs(percdiff[ISUUCHECK][l])<1.0/UPERCDIFFMAX)) ) vote[ISUUCHECK]++;
 	  numvotes[ISUUCHECK]++;
 	}
       }
@@ -901,7 +897,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
   // this average only works if using 4 velocity since only then guaranteed solution is good after interpolation
   if(WHICHVEL==VEL3) return(0); // just stick with static, best can do
   if(EOMTYPE==EOMFFDE) return(0); // nothing to do
-  //  if(EOMTYPE==EOMCOLDGRMHD) return(0); // nothing to do
 
 
 
@@ -1204,7 +1199,6 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
   // this average only works if using 4 velocity since only then guaranteed solution is good after interpolation
   if(WHICHVEL==VEL3) return(0); // just stick with static, best can do
   if(EOMTYPE==EOMFFDE) return(0); // nothing to do
-  //  if(EOMTYPE==EOMCOLDGRMHD) return(0); // nothing to do
 
 
   ///////////////////////////////////
@@ -2338,7 +2332,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
     get_geometry(i, j, k, loc, ptrgeom);
 
 
-#if( (EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD) )
+#if(DOEVOLVERHO)
     // b^2
     if (get_state(MAC(pv,i,j,k), ptrgeom, &q) >= 1)
       FAILSTATEMENT("fixup.c:get_bsqflags()", "get_state()", 1);
@@ -2356,7 +2350,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 #endif
 
-#if(EOMTYPE==EOMGRMHD)
+#if(DOEVOLVEUU)
     // b^2/u
 
     if(bsq/MACP0A1(pv,i,j,k,UU)>BSQOULIMIT) flags[3]=2;

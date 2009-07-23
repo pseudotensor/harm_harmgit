@@ -439,7 +439,7 @@ void UtoU_gen(int whichmaem, int inputtype, int returntype,struct of_geom *ptrge
   void UtoU_gen_allgdet(int removemass, int whichmaem, int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   VARSTATIC int removemass;
 
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
   removemass = (whichmaem==ISMAONLY || whichmaem==ISMAANDEM);
 #else
   // otherwise removemass = 0 effectively
@@ -462,7 +462,7 @@ void UtoU_gen_fromunothing(int whichmaem, int returntype,struct of_geom *ptrgeom
   VARSTATIC int removemass;
 
 
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
     removemass = (whichmaem==ISMAONLY || whichmaem==ISMAANDEM);
 #else
     // otherwise removemass = 0 effectively
@@ -521,7 +521,7 @@ void UtoU_gen_gengdet(int removemass, int whichmaem, int inputtype, int returnty
       PLOOP(pliter,pl) Ugeomfree[pl] *= ptrgeom->IEOMFUNCNOSINGMAC(pl);
       
       //    dualfprintf(fail_file,"diff: %21.15g %21.15g\n",ptrgeom->EOMFUNCMAC(UU),MACP0A1(gdetvol,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p)); 
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
       if(removemass){
 	// go back to standard stress-energy tensor form
 	Ugeomfree[UU]  +=  - Ugeomfree[RHO] ; // - means adding back rest-mass
@@ -566,7 +566,7 @@ void UtoU_gen_gengdet_fromunothing(int removemass, int whichmaem, int returntype
   //
   switch(returntype){
   case UEVOLVE:
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
     if(removemass){ // diagnostics want normal stress-energy tensor
       // "subtract" rest-mass
       // should be done on geometry-free version
@@ -608,7 +608,7 @@ void UtoU_gen_allgdet(int removemass, int whichmaem, int inputtype, int returnty
   
   
   
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
   removemass = (whichmaem==ISMAONLY || whichmaem==ISMAANDEM);
 #endif// otherwise removemass = 0 effectively
   
@@ -629,7 +629,7 @@ void UtoU_gen_allgdet(int removemass, int whichmaem, int inputtype, int returnty
     
     PLOOP(pliter,pl) Ugeomfree[pl] = Uin[pl]*ptrgeom->igdetnosing;
     
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
     if(removemass){
       // go back to standard stress-energy tensor form
       Ugeomfree[UU]  +=  - Ugeomfree[RHO] ; // - means adding back rest-mass
@@ -666,7 +666,7 @@ void UtoU_gen_allgdet_fromunothing(int removemass, int whichmaem, int returntype
   switch(returntype){
   case UEVOLVE:
   case UDIAG:
-#if((REMOVERESTMASSFROMUU==1)&&(EOMTYPE!=EOMFFDE))
+#if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
     if(removemass){ // diagnostics want normal stress-energy tensor
       // "subtract" rest-mass
       // should be done on geometry-free version
@@ -931,21 +931,23 @@ void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FT
 void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress)
 {
   VARSTATIC int j;
-  VARSTATIC FTYPE r, u, P, w, eta, ptot;
+  VARSTATIC FTYPE rho, u, P, w, eta, ptot;
 
   // below allows other scalars to be advected but not affect the stress-energy equations of motion
-#if(EOMTYPE==EOMGRMHD)
-  r = pr[RHO];
+#if(DOEVOLVERHO)
+  rho = pr[RHO];
+#else
+  rho = 0.0;
+#endif
+
+#if(DOEVOLVEUU)
   u = pr[UU];
   P = q->pressure;
-  w = P + r + u;
-#elif(EOMTYPE==EOMCOLDGRMHD)
-  w = r = pr[RHO];
-  u = 0.0;
-  P = 0.0;
-#elif(EOMTYPE==EOMFFDE)
-  r=u=P=w=0.0;
+#else
+  u = P = 0.0;
 #endif
+
+  w = P + rho + u;
   eta = w;
   ptot = P;
 
@@ -1029,18 +1031,20 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   ///////////////////////
 
   // below allows other scalars to be advected but not affect the stress-energy equations of motion
-#if(EOMTYPE==EOMGRMHD)
+#if(DOEVOLVERHO)
   rho = pr[RHO];
+#else
+  rho = 0.0;
+#endif
+
+#if(DOEVOLVEUU)
   u = pr[UU];
   P = q->pressure;
-  w = P + rho + u;
-#elif(EOMTYPE==EOMCOLDGRMHD)
-  w = rho = pr[RHO];
-  u = 0.0;
-  P = 0.0;
-#elif(EOMTYPE==EOMFFDE)
-  rho=u=P=w=0.0;
+#else
+  u = P = 0.0;
 #endif
+
+  w = P + rho + u;
   eta = w;
   ptot = P;
 

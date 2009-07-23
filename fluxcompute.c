@@ -522,7 +522,7 @@ int mustaflux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, 
 
 
 
-  if(EOMTYPE==EOMGRMHD){
+  if(DOEVOLVEUU){
     // check for strong shock that MUSTA can't handle
     shockstrength=fabs((p_r[UU]-p_l[UU])/max(min(fabs(p_l[UU]),fabs(p_r[UU])),SMALL));
     

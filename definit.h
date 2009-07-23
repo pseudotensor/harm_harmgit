@@ -23,6 +23,9 @@
 // if one doesn't do this, then \theta=\pi pole can lead to \detg=small number instead of 0.0
 #define ACCURATESINCOS 1
 
+// whether to try entropy inversion if hot fails
+#define HOT2ENTROPY 0
+
 // whether to try cold inversion if hot fails
 #define HOT2COLD 0
 

@@ -277,7 +277,7 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
   // prefixup
   //
   //////////////////
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD )
+#if(EOMTYPE!=EOMFFDE)
   // force-free and cold GRMHD don't use pre_fixup, currently, even if could
   MYFUN(pre_fixup(STAGEM1, pi),"step_ch.c:step_ch_simple()", "pre_fixup()", 1);
 #endif
@@ -311,7 +311,7 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   /////////////////////////////////////
 
   // force-free and cold GRMHD don't use post_fixup (now do use it)
-  //#if( (EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD) && (1 == CHECKSOLUTION || UTOPRIMADJUST == UTOPRIMAVG) )
+  //#if( (EOMTYPE!=EOMFFDE) && (1 == CHECKSOLUTION || UTOPRIMADJUST == UTOPRIMAVG) )
 #if( (1 == CHECKSOLUTION || UTOPRIMADJUST == UTOPRIMAVG) )
   // if CHECKSOLUTION==1, then need values to be bounded right now, since use them to check whether even good solutions are really good.
   // post_fixup() will use previous time step pff boundary values to fixup_utoprim() if this is not called.

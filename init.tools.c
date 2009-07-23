@@ -120,80 +120,81 @@ int user1_init_global(void)
 
 
 
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
+  if(DOEVOLVERHO){
 
 
-  //avgscheme[1]=avgscheme[2]=avgscheme[3]=WENO5BND;
-  //  lim[1] = lim[2] = lim[3] = WENO5BND;
-  lim[1] = lim[2] = lim[3] = PARALINE;
+    //avgscheme[1]=avgscheme[2]=avgscheme[3]=WENO5BND;
+    //  lim[1] = lim[2] = lim[3] = WENO5BND;
+    lim[1] = lim[2] = lim[3] = PARALINE;
 
-  avgscheme[1]=avgscheme[2]=avgscheme[3]=DONOR; // CHANGINGMARK
-  //lim[1] = lim[2] = lim[3] = MC; // CHANGINGMARK
+    avgscheme[1]=avgscheme[2]=avgscheme[3]=DONOR; // CHANGINGMARK
+    //lim[1] = lim[2] = lim[3] = MC; // CHANGINGMARK
 
 
-  DOENOFLUX = NOENOFLUX;
-  //DOENOFLUX = ENOFLUXRECON; // CHANGINGMARK
-  //DOENOFLUX = ENOFINITEVOLUME;
+    DOENOFLUX = NOENOFLUX;
+    //DOENOFLUX = ENOFLUXRECON; // CHANGINGMARK
+    //DOENOFLUX = ENOFINITEVOLUME;
 
-  if(DOENOFLUX == ENOFLUXRECON){
+    if(DOENOFLUX == ENOFLUXRECON){
+      // below applies to all fluxes
+      PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
+      PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
+      // below used for re-averaging of field in advance.c for dBhat/dt method
+      PALLLOOP(pl) do_conserved_integration[pl] = 1;
+      PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
+    }
+
+    if(DOENOFLUX == ENOFINITEVOLUME){
+      PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
+      PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
+      PALLLOOP(pl) do_source_integration[pl] = 0;
+      PLOOPBONLY(pl) do_source_integration[pl] = 0;
+      PALLLOOP(pl) do_conserved_integration[pl] = 1;
+      PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
+      //    do_conserved_integration[B1-1+DIRZ] = 1;
+    }
+
+
+
+    FLUXB = FLUXCTSTAG;  // CHANGINGMARK
+    //  FLUXB = FLUXCTHLL;
+    //FLUXB = FLUXCTTOTH;
+    //  TIMEORDER=2;
+    TIMEORDER=4;
+    //  TIMEORDER=3;
+    //  fluxmethod= HLLFLUX;
+    fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
+  
+
+    //  UTOPRIMVERSION=UTOPRIM5D1;
+    UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
+    //  UTOPRIMVERSION = UTOPRIM1DFINAL;
+  }
+
+
+  if(EOMTYPE==EOMFFDE){
+    // PARA and TO=4 and HLL not trustable in FFDE so far
+    lim[1] =lim[2]=lim[3]= MC;
+    TIMEORDER=2;
+
+
     // below applies to all fluxes
     PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
     PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
     // below used for re-averaging of field in advance.c for dBhat/dt method
     PALLLOOP(pl) do_conserved_integration[pl] = 1;
     PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
+
+
+
+    fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
+    FLUXB = FLUXCTTOTH;
+    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    // whether/which ENO used to interpolate fluxes
+    DOENOFLUX = ENOFINITEVOLUME;
+    //  DOENOFLUX= NOENOFLUX;
+    //DOENOFLUX=ENOFLUXRECON;
   }
-
-  if(DOENOFLUX == ENOFINITEVOLUME){
-    PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
-    PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
-    PALLLOOP(pl) do_source_integration[pl] = 0;
-    PLOOPBONLY(pl) do_source_integration[pl] = 0;
-    PALLLOOP(pl) do_conserved_integration[pl] = 1;
-    PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
-    //    do_conserved_integration[B1-1+DIRZ] = 1;
-  }
-
-
-
-  FLUXB = FLUXCTSTAG;  // CHANGINGMARK
-  //  FLUXB = FLUXCTHLL;
-  //FLUXB = FLUXCTTOTH;
-  //  TIMEORDER=2;
-  TIMEORDER=4;
-  //  TIMEORDER=3;
-  //  fluxmethod= HLLFLUX;
-  fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
-  
-
-  //  UTOPRIMVERSION=UTOPRIM5D1;
-  UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
-  //  UTOPRIMVERSION = UTOPRIM1DFINAL;
-
-
-#elif(EOMTYPE==EOMFFDE)
-  // PARA and TO=4 and HLL not trustable in FFDE so far
-  lim[1] =lim[2]=lim[3]= MC;
-  TIMEORDER=2;
-
-
-  // below applies to all fluxes
-  PALLLOOP(pl) do_transverse_flux_integration[pl] = 1;
-  PLOOPBONLY(pl) do_transverse_flux_integration[pl] = 1;
-  // below used for re-averaging of field in advance.c for dBhat/dt method
-  PALLLOOP(pl) do_conserved_integration[pl] = 1;
-  PLOOPBONLY(pl) do_conserved_integration[pl] = 1;
-
-
-
-  fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
-  FLUXB = FLUXCTTOTH;
-  UTOPRIMVERSION=UTOPRIM2DFINAL;
-  // whether/which ENO used to interpolate fluxes
-  DOENOFLUX = ENOFINITEVOLUME;
-  //  DOENOFLUX= NOENOFLUX;
-  //DOENOFLUX=ENOFLUXRECON;
-#endif
 
 
 
@@ -359,32 +360,33 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   /////////////////////////////// 
 
-#if(EOMTYPE==EOMGRMHD || EOMTYPE==EOMCOLDGRMHD)
-  // normalized atmosphere
-  trifprintf("Add atmosphere\n");
+  if(DOEVOLVERHO||DOEVOLVEUU){
+    // normalized atmosphere
+    trifprintf("Add atmosphere\n");
 
 #pragma omp parallel private(i,j,k,initreturn,whichvel,whichcoord) OPENMPGLOBALPRIVATEFULL
-  {
-    OPENMP3DLOOPVARSDEFINE;
-    ///////  COMPZLOOP {
-    OPENMP3DLOOPSETUPZLOOP;
+    {
+      OPENMP3DLOOPVARSDEFINE;
+      ///////  COMPZLOOP {
+      OPENMP3DLOOPSETUPZLOOP;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-    OPENMP3DLOOPBLOCK{
-      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      initreturn=init_atmosphere(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k));
-      if(initreturn>0){
-	FAILSTATEMENT("init.c:init_primitives()", "init_atmosphere()", 1);
-      }
-      else{
-	// transform from whichcoord to MCOORD
-	if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
-	  FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+	initreturn=init_atmosphere(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k));
+	if(initreturn>0){
+	  FAILSTATEMENT("init.c:init_primitives()", "init_atmosphere()", 1);
 	}
-      }
-    }// end 3D LOOP
-  }// end parallel region
-#endif// end if EOMTYPE is EOMGRMHD or EOMCOLDGRMHD
+	else{
+	  // transform from whichcoord to MCOORD
+	  if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
+	    FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+	  }
+	}
+      }// end 3D LOOP
+    }// end parallel region
+  }
+
 
 
 
@@ -768,7 +770,7 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
   // default
   PLOOP(pliter,pl) prlocal[pl]=pr[pl];
 
-  if((EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD)){
+  if(DOEVOLVERHO){
     // Bondi-like atmosphere
     if(rescaletype==4){
       if(atmospheretype==1){
@@ -790,7 +792,7 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
   }
 
 
-  if(EOMTYPE==EOMGRMHD){
+  if(DOEVOLVEUU){
     // Bondi-like atmosphere
     prlocal[UU]  = UUMIN*pow(r,-2.5);
   }

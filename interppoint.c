@@ -39,12 +39,12 @@
 
 // whether to interpolate and enforce steepening on u and rho in consistent way
 // see comments where used first as to why turned off
-#define CONNECTUANDRHO (0 && EOMTYPE==EOMGRMHD)
+#define CONNECTUANDRHO (0 && (DOEVOLVERHO&&DOEVOLVEUU))
 
 // whether to interpolate and enforce steepening on B and rho in consistent way
 // Should I turn this off?  Maybe for same reason of U version turned off -- may cause current sheet to spontaneously dissipate -- just use separate steepening
 // Seems to cause lots of problems with MCSTEEP and MHD torus problem -- too much steepening
-#define CONNECTBANDRHO (0 && (EOMTYPE==EOMCOLDGRMHD || EOMTYPE==EOMGRMHD) )
+#define CONNECTBANDRHO (0 && (DOEVOLVERHO) )
 
 
 #if(DQALLOWEXTREMUM==0)

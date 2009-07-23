@@ -25,9 +25,8 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
 
 
 
-  if(EOMTYPE!=EOMGRMHD && EOMTYPE!=EOMCOLDGRMHD){
-    dualfprintf(fail_file,"Should be GRMHD model\n");
-    myexit(7725);
+  if(DOEVOLVERHO==0||DOEVOLVEUU==0||DOEVOLVEYL==0||DOEVOLVEYNU==0){
+    dualfprintf(fail_file,"WARNING: Should be GRMHD model, normally with evolution of Y_l and Y_\\nu.\n");
   }
 
 
