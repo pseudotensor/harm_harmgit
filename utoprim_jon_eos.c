@@ -55,10 +55,13 @@ static FTYPE pressure_W_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D,
 static FTYPE pressure_W_vsq_old(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dSsdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
 static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dSsdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
+static FTYPE dSsdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq);
 static FTYPE dpdvsq_calc_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq);
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq);
@@ -153,6 +156,25 @@ static FTYPE pressure_Wp_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, 
 
   // wmrho0=u+p and for ideal gas p=(GAMMA-1) u, so p (GAMMA/(GAMMA-1)) = wmrho0
   return(pressure_wmrho0(whicheos,EOSextra,rho0,wmrho0));
+
+  
+}
+
+static FTYPE Ss_Wp_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq) 
+{
+  FTYPE gtmp;
+  FTYPE gamma,gammasq;
+  FTYPE rho0,wmrho0;
+  FTYPE compute_specificentropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+
+
+  gammasq=1.0+utsq;
+  gamma=sqrt(gammasq);
+  wmrho0=wmrho0_compute_utsq(Wp, D, utsq, gamma,gammasq);
+  rho0=D/gamma;
+
+  // wmrho0=u+p and for ideal gas p=(GAMMA-1) u, so p (GAMMA/(GAMMA-1)) = wmrho0
+  return(compute_specificentropy_wmrho0(whicheos,EOSextra,rho0,wmrho0));
 
   
 }
@@ -293,7 +315,83 @@ static FTYPE dpdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 }
 
 
+
+
+
+// holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
+// obtains: dSs/dW' holding v^2 fixed
+static FTYPE dSsdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+{
+  FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE rho0,wmrho0;
+  FTYPE idwmrho0dSs;
+  FTYPE gamma,gammasq;
+  FTYPE dwmrho0dW;
+  FTYPE dSsdW;
+  FTYPE drho0dW,idrho0dSs;
+
+  gamma=1.0/sqrt(1.0-vsq);
+  gammasq=gamma*gamma;
+  wmrho0=wmrho0_compute_vsq(Wp, D, vsq, gamma, gammasq);
+
+  rho0=D/gamma;
+  // holding v^2 fixed
+  idwmrho0dSs=compute_dspecificSdwmrho0_wmrho0(whicheos, EOSextra, rho0, wmrho0);
+  dwmrho0dW = 1.0-vsq;
+
+  drho0dW = 0.0; // because \rho=D/\gamma
+  idrho0dSs = compute_dspecificSdrho_wmrho0(whicheos, EOSextra, rho0, wmrho0); // so not really needed
+
+  dSsdW = drho0dW *idrho0dSs + dwmrho0dW *idwmrho0dSs;
+
+  return( dSsdW ) ;
+
+}
+
+// holding utsq fixed
+// obtains dSs/dW' holding utsq fixed
+static FTYPE dSsdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
+{
+  FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE rho0,wmrho0;
+  FTYPE idwmrho0dSs;
+  FTYPE gamma,gammasq;
+  FTYPE dwmrho0dW;
+  FTYPE dSsdW;
+  FTYPE drho0dW,idrho0dSs;
+
+  gammasq=1.0+utsq;
+  gamma=sqrt(gammasq);
+  wmrho0=wmrho0_compute_utsq(Wp, D, utsq, gamma, gammasq);
+
+  rho0=D/gamma;
+  // holding utsq fixed
+  idwmrho0dSs=compute_dspecificSdwmrho0_wmrho0(whicheos,EOSextra, rho0, wmrho0);
+  dwmrho0dW = 1.0/gammasq;
+
+  drho0dW = 0.0; // because \rho=D/\gamma
+  idrho0dSs = compute_dspecificSdrho_wmrho0(whicheos,EOSextra, rho0, wmrho0); // so not really needed
+
+  dSsdW = drho0dW *idrho0dSs + dwmrho0dW *idwmrho0dSs;
+
+  return( dSsdW ) ;
+
+}
+
+
+
+
+
+
+
 #endif
+
+
+
+
+
 
 static FTYPE dpdW_calc_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
@@ -422,6 +520,89 @@ static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 
   return(dpdvsq);
 }
+
+
+//dSs/dv^2 holding W' fixed
+static FTYPE dSsdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
+{
+  FTYPE outval;
+  FTYPE gamma,W;
+  FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE rho0,wmrho0;
+  FTYPE dwmrho0dvsq,idwmrho0dSs;
+  FTYPE drho0dvsq,idrho0dSs;
+  FTYPE gammasq;
+  FTYPE dSsdvsq;
+
+
+  gamma=1.0/sqrt(1.0-vsq);
+  gammasq=gamma*gamma;
+  wmrho0=wmrho0_compute_vsq(Wp, D, vsq, gamma, gammasq);
+
+  rho0=D/gamma;
+
+  //  return( (gam - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / gam  ) ;
+  //  outval =  (gam - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / gam   ;
+
+  W = Wp+D;
+
+  //  outval =  (D*gamma*0.5-W)*idwmrho0dp; // old code
+
+  idwmrho0dSs=compute_dspecificSdwmrho0_wmrho0(whicheos,EOSextra, rho0, wmrho0);
+  dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
+
+  drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
+  idrho0dSs = compute_dspecificSdrho_wmrho0(whicheos,EOSextra, rho0, wmrho0);
+
+  dSsdvsq =   drho0dvsq *idrho0dSs  +   dwmrho0dvsq *idwmrho0dSs;
+
+//  if( outval > 0. ) { 
+//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+//	    outval, D, vsq, W );
+//  }
+
+  return(dSsdvsq);
+}
+
+
+// dSs/dv^2 holding W' fixed with utsq as input instead of vsq
+static FTYPE dSsdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
+{
+  FTYPE outval;
+  FTYPE gamma,W;
+  FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+  FTYPE rho0,wmrho0;
+  FTYPE dwmrho0dvsq,idwmrho0dSs;
+  FTYPE drho0dvsq,idrho0dSs;
+  FTYPE gammasq;
+  FTYPE dSsdvsq;
+
+  gammasq=1.0+utsq;
+  gamma=sqrt(gammasq);
+  wmrho0=wmrho0_compute_utsq(Wp, D, utsq, gamma, gammasq);
+
+  rho0=D/gamma;
+
+  W = Wp+D;
+
+  idwmrho0dSs=compute_dspecificSdwmrho0_wmrho0(whicheos,EOSextra, rho0, wmrho0);
+  dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
+
+  drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
+  idrho0dSs = compute_dspecificSdrho_wmrho0(whicheos,EOSextra, rho0, wmrho0);
+
+  dSsdvsq =   drho0dvsq *idrho0dSs  +   dwmrho0dvsq *idwmrho0dSs;
+
+//  if( outval > 0. ) { 
+//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+//	    outval, D, vsq, W );
+//  }
+
+  return(dSsdvsq);
+}
+
 
 #endif
 

@@ -23,8 +23,10 @@
 #define WHICHCOLDINVERTER 2
 
 
-// WORKING ON IT:
+// 0: 1-D method using equation Sc = \rho_0 \gamma Ss = D Ss with Ss specific entropy to find W'
 #define WHICHENTROPYINVERTER 0
+
+
 
 #define METHODTYPE  3
 #define NEWT_DIM 2 // actually maximum # of dimensions
