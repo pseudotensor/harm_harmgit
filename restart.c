@@ -323,7 +323,7 @@ void set_rmetricdump_content_dnumcolumns(int *numcolumns)
 }
 
 
-// must be consistent with dnumcolumns[RMETRICDUMPCOL] in initbase.c
+// must be consistent with dnumcolumns[RMETRICDUMPCOL]
 int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int gridpos;
@@ -444,7 +444,10 @@ void set_rmetricdump_read_content_dnumcolumns(int *numcolumns)
 
   if(DOEVOLVEMETRIC){
 #if(NEWMETRICSTORAGE)
-    *numcolumns=NPG*(NDIM*NDIM + NDIM*NDIM + NDIM + 1 + NPR + NPR + 1 + 1 + 1 + NDIM); // See restart.c's rmetricdump_content()
+    *numcolumns=NPG*(NDIM*NDIM + NDIM*NDIM + NDIM + 1 + 1 + 1 + 1 + NDIM); // See restart.c's rmetricdump_content()
+#if(WHICHEOM!=WITHGDET)
+    *numcolumns+=NPG*(2*NPR);
+#endif
 #if(GDETVOLDIFF)
     *numcolumns+=NPG*(1);
 #endif

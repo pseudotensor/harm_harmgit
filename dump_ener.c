@@ -302,7 +302,9 @@ int dump_ener(int doener, int dordump, int call_code)
 	}
       }
       trifprintf("AI%d",enerregion);
-    }
+    }// end if dordump||doener
+
+
 
     /////////////////////////////
     //

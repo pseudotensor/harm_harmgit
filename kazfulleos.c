@@ -57,7 +57,7 @@ void read_setup_eostable(void)
   FTYPE errordegen,errordegen2;
   int i;
   int numeosquantitiestype[MAXNUMDATATYPES];
-
+  int testnumfscanfquantities,testnumfscanfquantitiesdegen;
 
 
 
@@ -432,9 +432,12 @@ void read_setup_eostable(void)
       // assume jjj=0 to start since degen checks below depend on that
       // notice that vartypearray has same size as dimension of arrays and loops.
       for(mmm=0;mmm<tablesize[tableiter][vartypearray[5]];mmm++)for(lll=0;lll<tablesize[tableiter][vartypearray[4]];lll++)for(kkk=0;kkk<tablesize[tableiter][vartypearray[3]];kkk++)for(jjj=0;jjj<tablesize[tableiter][vartypearray[2]];jjj++)for(iii=0;iii<tablesize[tableiter][vartypearray[1]];iii++){
+	testnumfscanfquantities=0;
+	testnumfscanfquantitiesdegen=0;
 
 	// first, get positions to make sure everything is consistent
 	fscanf(intable,"%d %d %d %d %d",&m,&n,&o,&p,&q);
+	testnumfscanfquantities += 1+1+1+1+1;
 
 	if(m!=iii || n!=jjj || o!=kkk || p!=lll || q!=mmm){
 	  dualfprintf(fail_file,"Read-in table (%d) indicies inconsistent with expected indicies: m=%d iii=%d n=%d jjj=%d o=%d kkk=%d p=%d lll=%d q=%d mmm=%d\n",tableiter,m,iii,n,jjj,o,kkk,p,lll,q,mmm);
@@ -443,12 +446,15 @@ void read_setup_eostable(void)
 	  for(jj=0;jj<NUMEOSINDEPS;jj++){
 	    dualfprintf(fail_file,"tablesize[%d][%d]=%d\n",tableiter,jj,tablesize[tableiter][jj]);
 	  }
+	  dualfprintf(fail_file,"Total number of EOS quantities=%d (Ensure file has correct number of columns!)\n",NUMINDEPDIMENS+NUMEOSINDEPS+numeosdegenquantities[tableiter]+numeosquantitiestype[whichdatatype[tableiter]-1]);
+	  
 	  myexit(16626);
 	}
 
 	if(jjj==0){ // degen table
 	  n=jjj;
 	  fscanf(indegentable,"%d %d %d %d",&m,&o,&p,&q);
+	  testnumfscanfquantitiesdegen += 1+1+1+1;
 	  if(m!=iii || n!=jjj || o!=kkk || p!=lll || q!=mmm){
 	    dualfprintf(fail_file,"Read-in degentable indicies inconsistent with expected indicies: m=%d iii=%d n=%d jjj=%d o=%d kkk=%d p=%d lll=%d q=%d mmm=%d\n",tableiter,m,iii,n,jjj,o,kkk,p,lll,q,mmm);
 	    myexit(166265);
@@ -462,10 +468,12 @@ void read_setup_eostable(void)
 	// second, read in the independent variable values and compare with expected value
 	for(ii=0;ii<NUMEOSINDEPS;ii++){
 	  fscanf(intable,"%lf",&indep[ii]); // rhob, Udiff, Pdiff, CHIdiff, tdynorye, tdynorynu, H   for given grid value
+	  testnumfscanfquantities += 1;
 	}
 	// read-in UofUdiff, PofPdiff, CHIofCHIdiff -- used to check degen offset calculation in HARM
 	for(ii=0;ii<numeosdegenquantities[tableiter];ii++){
 	  fscanf(intable,"%lf",&indepplusdegen[ii]);
+	  testnumfscanfquantities += 1;
 	}
 
 	// true independent dimensions associated with free index
@@ -479,6 +487,7 @@ void read_setup_eostable(void)
 	if(jjj==0){
 	  for(ii=0;ii<NUMEOSDEGENINDEPS;ii++){
 	    fscanf(indegentable,"%lf",&indepdegen[ii]); // rho, tdynorye, tdynorynu, H
+	    testnumfscanfquantitiesdegen += 1;
 	    // check consistency between normal and degen tablef or independent variables (assumes jjj!=0 in normal table is same for these quantities as jjj==0)
 	  
 	    if(fabs(indepdegen[vardegentypearray[ii]]-indep[varnormalcompare2degentypearray[ii]])>TABLETOL){
@@ -486,6 +495,21 @@ void read_setup_eostable(void)
 	    }
 	  }
 	}
+
+
+	// check that read-in quantities agrees with expected number so far:
+ 	if(testnumfscanfquantities!=NUMINDEPDIMENS+NUMEOSINDEPS+numeosdegenquantities[tableiter]){
+	  dualfprintf(fail_file,"Base number of scanned EOS quantities=%d doesn't agree with expected amount=%d\n",testnumfscanfquantities,NUMINDEPDIMENS+NUMEOSINDEPS+numeosdegenquantities[tableiter]);
+	  myexit(1873626);
+	}
+
+	if(jjj==0){
+	  if(testnumfscanfquantitiesdegen!=NUMEOSDEGENQUANTITIESBASE){
+	    dualfprintf(fail_file,"Base number of scanned EOS quantities=%d doesn't agree with expected amount=%d\n",testnumfscanfquantities,NUMEOSQUANTITIESBASE);
+	    myexit(1873627);
+	  }
+	}
+
 
 
 
@@ -536,6 +560,8 @@ void read_setup_eostable(void)
 	// fourth, since everything is consistent, now read in columns of actual dependent variable values
 	for(ppp=0;ppp<numeosquantities[tableiter];ppp++){
 	  fscanf(intable,DOUBLEINPUT,&valuetemp[ppp]); // double values
+	  testnumfscanfquantities += 1;
+
 	  if(tableiter==FULLTABLE){
 	    EOSMAC(eostable,ppp,mmm,lll,kkk,jjj,iii)=valuetemp[ppp];
 	  }
@@ -552,6 +578,16 @@ void read_setup_eostable(void)
 	if(jjj==0){ // degen table
 	  for(ppp=0;ppp<numeosdegenquantities[tableiter];ppp++){
 	    fscanf(indegentable,DOUBLEINPUT,&degenvaluetemp[ppp]); // double values
+
+	    if(degenvaluetemp[ppp]<=0.0 && DOLOGINTERP){
+	      dualfprintf(fail_file,"Degenerate table contains non-positive offsets: degenvaluetemp[%d]=%21.15g (tableiter=%d mmm=%d lll=%d kkk=%d iii=%d)\n",ppp,degenvaluetemp[ppp],tableiter,mmm,lll,kkk,iii);
+	      dualfprintf(fail_file,"Should use linear interpolation for degenerate table offsets and remove this check.  But note that degenerate offsets are well-described by linear in log-log\n");
+	      dualfprintf(fail_file,"If table is too small, then eos_extract.m used to create the degenerate offsets could result in negative degenerate offsets.  Again, either use linear interpolation or use a larger table.\n");
+	      myexit(248973463);
+	    }
+
+	    testnumfscanfquantitiesdegen += 1;
+
 	    if(tableiter==FULLTABLE){
 	      EOSMAC(eosdegentable,ppp,mmm,lll,kkk,0,iii)=degenvaluetemp[ppp];
 	    }
@@ -575,6 +611,20 @@ void read_setup_eostable(void)
 	    else if(tableiter==SIMPLEZOOMTABLE){
 	      degenvaluetemp[ppp]=EOSMAC(eosdegensimplezoomtable,ppp,mmm,lll,kkk,0,iii);
 	    }
+	  }
+	}
+
+
+	// check that read-in quantities agrees with expected number so far:
+ 	if(testnumfscanfquantities!=NUMINDEPDIMENS+NUMEOSINDEPS+numeosdegenquantities[tableiter]+numeosquantitiestype[whichdatatype[tableiter]-1]){
+	  dualfprintf(fail_file,"Total number of scanned EOS quantities=%d doesn't agree with expected amount=%d (whichdatatype=%d tableiter=%d)\n",testnumfscanfquantities,NUMINDEPDIMENS+NUMEOSINDEPS+numeosdegenquantities[tableiter]+numeosquantitiestype[whichdatatype[tableiter]-1],whichdatatype[tableiter],tableiter);
+	  myexit(2873626);
+	}
+
+	if(jjj==0){
+	  if(testnumfscanfquantitiesdegen!=NUMEOSDEGENQUANTITIES){
+	    dualfprintf(fail_file,"Total number of scanned EOS quantities=%d doesn't agree with expected amount=%d\n",testnumfscanfquantitiesdegen,NUMEOSDEGENQUANTITIES);
+	    myexit(2873627);
 	  }
 	}
 
@@ -744,6 +794,19 @@ void read_setup_eostable(void)
 	tabletemp[TEMPU]/=Tempunit;
 	tabletemp[TEMPP]/=Tempunit;
 	tabletemp[TEMPCHI]/=Tempunit;
+
+	////////////////
+	//
+	// put a floor in input sound speed since want to use log interpolation
+	//
+	////////////////
+	if(tabletemp[CS2ofRHOU]<=0.0){
+	  tabletemp[CS2ofRHOU]=SMALL; // just to avoid inf or NaN
+	  // and tell interpolation that this is an invalid data point to use
+	  tabletemp[TEMPU]=invalidtempcode/10.0;
+	  tabletemp[TEMPP]=invalidtempcode/10.0;
+	  tabletemp[TEMPCHI]=invalidtempcode/10.0;
+	}
 
 
 	////////////////////////////////
@@ -972,7 +1035,7 @@ int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE
 
   /////////////////////////////
   //
-  // Note that q3,q4 ((TDYN or YE),(TDYN or YNU), Hcm) are computed such that is forced to be within FULLTABLE limits so consistently used
+  // Note that q3,q4,q5 ((TDYN or YE),(TDYN or YNU), Hcm) are computed such that is forced to be within FULLTABLE limits so consistently used
   //
   /////////////////////////////
 
@@ -996,7 +1059,7 @@ int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE
   }
   else{
 
-    if(debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+    if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
       dualfprintf(fail_file,"NOT IN LOOKUP: ifdegencheck=%d whichindep=%d qarray[1]=%21.15g qarray[2]=%21.15g\n",ifdegencheck,whichindep,qarray[1],qarray[2]);
       dualfprintf(fail_file,"lin0=%g lin1=%g\n",lineartablelimits[SIMPLETABLE][RHOEOS][0],lineartablelimits[SIMPLETABLE][RHOEOS][1]);
     }
@@ -1047,7 +1110,7 @@ void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichind
     indexarray[qi] = (logq[qi]   -tablelimits[whichtable][vartypearray[qi]]  [0])*tablelimits[whichtable][vartypearray[qi]]  [3];
 
     // DEBUG:
-    dualfprintf(fail_file,"qi=%d qarray=%21.15g prelogq=%21.15g logq=%21.15g indexarray=%21.15g\n",qi,qarray[qi],prelogq[qi],logq[qi],indexarray[qi]);
+    //    dualfprintf(fail_file,"qi=%d qarray=%21.15g prelogq=%21.15g logq=%21.15g indexarray=%21.15g\n",qi,qarray[qi],prelogq[qi],logq[qi],indexarray[qi]);
 
   }
 
@@ -1286,7 +1349,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 	else tfptr[iii][jjj][kkk][lll] = EOSMAC(eosdegentable,whichdegenfun,0,kazllo+lll,kazkko+kkk,0,kaziio+iii);
       }
 
-      if(debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
@@ -1567,7 +1630,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
     }// end if good temperature or doing degentable
     else{
 
-      if(debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
@@ -1625,9 +1688,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
     }
 
     // GODMARK DEBUG:
-    if(whichfun==TEMPU){
-      dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,degentable,tfptr[iii]);
-    }
+    //    if(whichfun==TEMPU){
+    //      dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,degentable,tfptr[iii]);
+    //    }
 
   } // end over iii
 
@@ -1723,6 +1786,8 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
   // functions (F) F(rho0,p)
   whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
+  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
+
   if(1||degentable==0){ // always allow loginterp==1
     if(whichinterp1||degentable==1) loginterp=1;
     else if(whichinterp2) loginterp=0;
@@ -1778,6 +1843,12 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
     if(tablesize[whichtable][vartypearray[5]]!=1) kazendmmm=1;
     else kazendmmm=0;
 
+    // avoid using data beyond table (i.e. reduce to nearest neighbor at edges of table as long as within table)
+    if(kazii+kazendiii>=tablesize[whichtable][vartypearray[1]]) kazendiii=kazii;
+    if(kazjj+kazendjjj>=tablesize[whichtable][vartypearray[2]]) kazendjjj=kazjj;
+    if(kazkk+kazendkkk>=tablesize[whichtable][vartypearray[3]]) kazendkkk=kazkk;
+    if(kazll+kazendlll>=tablesize[whichtable][vartypearray[4]]) kazendlll=kazll;
+    if(kazmm+kazendmmm>=tablesize[whichtable][vartypearray[5]]) kazendmmm=kazmm;
 
   }
 
@@ -1822,15 +1893,14 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 #if(DOLOGINTERP)
       if(loginterp){
 	if(degentable==1){
-	  dualfprintf(fail_file,"fbefore: %21.15g\n",f[iii][jjj][kkk][lll][mmm]);
 	  offsetquant2_general(whichdegenfun, quant1, f[iii][jjj][kkk][lll][mmm], &f[iii][jjj][kkk][lll][mmm]);
-	  dualfprintf(fail_file,"fafter: %21.15g\n",f[iii][jjj][kkk][lll][mmm]);
 	}
 	f[iii][jjj][kkk][lll][mmm] = log10(f[iii][jjj][kkk][lll][mmm]);
       }
 #endif
 
-      //dualfprintf(fail_file,"f[%d][%d][%d][%d]=%21.15g\n",iii,jjj,kkk,lll,f[iii][jjj][kkk][lll]);
+      //dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
+
       totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
 
       // DEBUG
@@ -1840,7 +1910,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
     else{
 
 
-      if(1|| debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d mm=%d mmm=%d :: temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,kazmm,mmm,tempcheck,invalidtempcode);
       }
@@ -1864,6 +1934,11 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
     kazll=ROUND2INT(leos);
     kazmm=ROUND2INT(meos);
 
+    if(kazii>=tablesize[whichtable][vartypearray[1]]) kazii=tablesize[whichtable][vartypearray[1]]-1;
+    if(kazjj>=tablesize[whichtable][vartypearray[2]]) kazjj=tablesize[whichtable][vartypearray[2]]-1;
+    if(kazkk>=tablesize[whichtable][vartypearray[3]]) kazkk=tablesize[whichtable][vartypearray[3]]-1;
+    if(kazll>=tablesize[whichtable][vartypearray[4]]) kazll=tablesize[whichtable][vartypearray[4]]-1;
+    if(kazmm>=tablesize[whichtable][vartypearray[5]]) kazmm=tablesize[whichtable][vartypearray[5]]-1;
 
     // just use nearest neighbor if no valid inversion
     if(whichtable==SIMPLEZOOMTABLE){
@@ -1879,11 +1954,13 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
       else totalf = EOSMAC(eosdegentable,whichdegenfun,kazmm,kazll,kazkk,0,kazii);
     }
 
-    dualfprintf(fail_file,"Never found temperature: degentable=%d whichtable=%d whichfun=%d whichindep=%d whichdegenfun=%d ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g totalf=%21.15g\n",degentable,whichtable,whichfun,whichindep,whichdegenfun,ieos,jeos,keos,leos,totalf);
+    if(0&&debugfail>=2) dualfprintf(fail_file,"Never found temperature: degentable=%d whichtable=%d whichfun=%d whichindep=%d whichdegenfun=%d ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g totalf=%21.15g\n",degentable,whichtable,whichfun,whichindep,whichdegenfun,ieos,jeos,keos,leos,totalf);
 
   }
   else{
     totalf /=totaldist;
+
+    //dualfprintf(fail_file,"A totaldist=%21.15g totalf=%21.15g\n",totaldist,totalf);
 
 #if(DOLOGINTERP)
     if(loginterp){
@@ -1896,13 +1973,12 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
   }
 
-  //  dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d\n",ii,jj,kk,ll);
   //  dualfprintf(fail_file,"totaldist=%21.15g totalf=%21.15g\n",totaldist,totalf);
 
   // GODMARK DEBUG:
-  if(whichfun==TEMPU){
-    dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d mm=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,kazmm,degentable,totalf);
-  }
+  //  if(whichfun==TEMPU){
+  //    dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d mm=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,kazmm,degentable,totalf);
+  //  }
 
 
   return(totalf);
@@ -2018,7 +2094,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
     else{
 
 
-      if(debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
@@ -2031,7 +2107,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
   ////////////////////////////
   //
   // finally normalize
-  if(totaldist==0.0){
+  if(0&&debugfail>=2 && totaldist==0.0){
     dualfprintf(fail_file,"Never found temperature: degentable=%d whichtable=%d whichfun=%d whichindep=%d whichdegenfun=%d ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g totalf=%21.15g\n",degentable,whichtable,whichfun,whichindep,whichdegenfun,ieos,jeos,keos,leos,totalf);
 
   }
@@ -2092,7 +2168,7 @@ FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degen
     else totalf = EOSMAC(eosdegentable,whichdegenfun,0,kazll,kazkk,0,kazii);
   }
 
-  if(whichfun==TEMPU){
+  if(0&&debugfail>=2 && whichfun==TEMPU){
     dualfprintf(fail_file,"TEMPUCHECK1 :: :: ieos=%g jeos=%g keos=%g leos=%g :: ii=%d jj=%d kk=%d ll=%d :: degen=%d :: %g\n",ieos,jeos,keos,leos,kazii,kazjj,kazkk,kazll,degentable,totalf);
   }
 
@@ -2232,7 +2308,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
     if(repeatedfun[whichfun]){
       // choice of table irrelevant if already found solution
       *answer = resultold[whichfun];
-      dualfprintf(fail_file,"REPEATALL\n"); // DEBUG
+      if(0&&debugfail>=2) dualfprintf(fail_file,"REPEATALL\n"); // DEBUG
       // done!
     }
     else{
@@ -2241,7 +2317,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
       
       if(gottable[whichdegen]==0 || gottable[1]!=gottable[0] || whichtable[1]!=whichtable[0]) return(1);// indicates "failure" and no answer within table
       else{
-	dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
+	if(0&&debugfail>=2) dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
 	*answer=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[0], whichfun, whichindep, quant1, vartypearray, indexarray);
 	// now save result if got result
 	resultold[whichfun]=*answer;
@@ -2340,17 +2416,19 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 	for(qi=1;qi<=WHICHEOSDIMEN;qi++){
 	  if(indexarray[qi]<0.0){
-	    dualfprintf(fail_file,"out of bounds (whichdegen=%d) for indexarray[%d]=%21.15g qarray=%21.15g\n",whichdegen,qi,indexarray[qi],qarray[qi]);
+	    if(0&&debugfail>=2) dualfprintf(fail_file,"out of bounds (whichdegen=%d) for indexarray[%d]=%21.15g qarray=%21.15g\n",whichdegen,qi,indexarray[qi],qarray[qi]);
 	  }
 	}
 
 	// now compute result
 	myanswer[whichdegen]=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichdegen], whichfun, whichindep, quant1, vartypearray, indexarray);
 
-	// BEGIN DEBUG
-	//dualfprintf(fail_file,"q1=%21.15g q2=%21.15g q3=%21.15g q4=%21.15g\n",q1,q2,q3,q4);
-	//dualfprintf(fail_file,"ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g :: whichdegen=%d whichtable=%d whichfun=%d whichindep=%d :: myanswer=%21.15g\n",ieos,jeos,keos,leos,whichdegen,whichtable[whichdegen],whichfun,whichindep,myanswer[whichdegen]);
-	// END DEBUG
+
+	//	dualfprintf(fail_file,"%d %d %d %d %d %d : %21.15g : %21.15g\n",repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichdegen], whichfun, whichindep, quant1,myanswer[whichdegen]);
+	//	for(qi=1;qi<=WHICHEOSDIMEN;qi++){
+	//	  dualfprintf(fail_file,"indexarray[%d]=%21.15g\n",qi,indexarray[qi]);
+	//	}
+
       
 	/////////////////////////
 	//      
@@ -2362,31 +2440,33 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 
 	// GODMARK: DEBUG
-	if(whichfun==TEMPU){
-	  dualfprintf(fail_file,":: whichtable=%d :: ieos=%21.15g jeos=%21.15g :: answer=%21.15g\n",whichtable[whichdegen],indexarray[1],indexarray[2],myanswer[whichdegen]);
-	}
+	//	if(whichfun==TEMPU){
+	//	  dualfprintf(fail_file,":: whichtable=%d :: ieos=%21.15g jeos=%21.15g :: answer=%21.15g\n",whichtable[whichdegen],indexarray[1],indexarray[2],myanswer[whichdegen]);
+	//	}
 
 	if(whichdegen==1){
 
 	  // GODMARK: DEBUG
-	  if(whichfun==TEMPU){
-	    dualfprintf(fail_file,":: ieos=%21.15g jeos=%21.15g :: q2orig=%21.15g q2new=%21.15g degen=%21.15g\n",indexarray[1],indexarray[2],qarray[2],qarray[2]-myanswer[whichdegen],myanswer[whichdegen]);
-	  }
+	  //	  if(whichfun==TEMPU){
+	  //	    dualfprintf(fail_file,":: ieos=%21.15g jeos=%21.15g :: q2orig=%21.15g q2new=%21.15g degen=%21.15g\n",indexarray[1],indexarray[2],qarray[2],qarray[2]-myanswer[whichdegen],myanswer[whichdegen]);
+	  //	  }
 			 
 
 	  qarray[2] -= myanswer[whichdegen];
 
 
-	  dualfprintf(fail_file,"answer=%21.15g : %21.15g %21.15g\n",myanswer[whichdegen],qarray[1],qarray[2]);
-	  int loopit;
-	  for(loopit=0;loopit<NUMEOSGLOBALS;loopit++) dualfprintf(fail_file,"EOSextra[%d]=%21.15g\n",loopit,EOSextra[loopit]);
+	  //	  dualfprintf(fail_file,"answer=%21.15g : %21.15g %21.15g\n",myanswer[whichdegen],qarray[1],qarray[2]);
+	  //	  int loopit;
+	  //	  for(loopit=0;loopit<NUMEOSGLOBALS;loopit++) dualfprintf(fail_file,"EOSextra[%d]=%21.15g\n",loopit,EOSextra[loopit]);
 	  
 
 	  if(qarray[2]<0.0){
 	    // DEBUG:
-	    dualfprintf(fail_file,"Got negative q2=%21.15g, forcing to be %21.15g: :: myanswer[%d]=%21.15g :: whichdegen=%d whichtable=%d whichfun=%d whichindep=%d\n",qarray[2],SMALL,whichdegen,myanswer[whichdegen],whichdegen,whichtable[whichdegen],whichfun,whichindep);
-	    for(qi=1;qi<=NUMINDEPDIMENS;qi++){
-	      dualfprintf(fail_file,"indexarray[%d]=%g\n",qi,indexarray[qi]);
+	    if(0&&debugfail>=2){
+	      dualfprintf(fail_file,"Got negative q2=%21.15g, forcing to be %21.15g: :: myanswer[%d]=%21.15g :: whichdegen=%d whichtable=%d whichfun=%d whichindep=%d\n",qarray[2],SMALL,whichdegen,myanswer[whichdegen],whichdegen,whichtable[whichdegen],whichfun,whichindep);
+	      for(qi=1;qi<=NUMINDEPDIMENS;qi++){
+		dualfprintf(fail_file,"indexarray[%d]=%g\n",qi,indexarray[qi]);
+	      }
 	    }
 
 #if(ALLOWDEGENOFFSET)
@@ -2411,7 +2491,10 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 
       } // end if within some table
-      else return(1);// indicates "failure" and no answer within table
+      else{
+	//	dualfprintf(fail_file,"No answer within table\n");
+	return(1);// indicates "failure" and no answer within table
+      }
     }// end loop over degenerate and then normal table (or if ALLOWDEGENOFFSET==0, then only for normal table)
     
     // finally, normal table lookup gives answer
@@ -2588,18 +2671,24 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   FTYPE ptot;
   FTYPE frac;
   FTYPE quant2mod,dquant2mod;
-  FTYPE pgas, chigas, chitot;
+  FTYPE ugas, pgas, chigas, chitot;
 
+  // neutrino pressure, internal energy density, and \chi=u+p
+  // SUPERMARK: JCM: Check that EOSextra is used for whichdatatype!=4
+  pnu = EOSextra[PNUGLOBAL];
+  rhonu = EOSextra[UNUGLOBAL];
+  chinu = rhonu + pnu;
 
 
   // first get total pressure in order to frac-fudge the answer
   if(whichd==UTOTDIFF){
     ptot = pressure_dp_rho0_u_kazfull(EOSextra, quant1, quant2, &pgas); // need pgas to form chi since otherwise don't have it
+    ugas = quant2 - rhonu; // ugas = utot - unu
     chigas = quant2 + pgas;
   }
   else if(whichd==CHIDIFF){
     ptot =pressure_dp_wmrho0_kazfull(EOSextra, quant1, quant2, &pgas); // don't need separate pgas
-    chigas = quant2;
+    chigas = quant2-chinu;
   }
   else{
     dualfprintf(fail_file,"fudgefrac_kazfull() not setup for whichd=%d\n",whichd);
@@ -2613,10 +2702,6 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   //
   /////////////////////////////////////
   if(whichdatatype[primarytable]==4){
-
-    pnu = EOSextra[PNUGLOBAL];
-    rhonu = EOSextra[UNUGLOBAL];
-    chinu = rhonu + pnu;
 
     if(whichd==UTOTDIFF)      quant2nu = rhonu;
     else if(whichd==PTOTDIFF) quant2nu = pnu;
@@ -2637,10 +2722,17 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   // set nuclear per baryon offset so can smoothly connect to ideal gas form of EOS
   //
   ///////////////
-  dquant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1 - quant2nu;
 
   // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
   quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1;
+
+  if(whichdatatype[primarytable]==4){
+    dquant2mod = quant2mod - quant2nu;
+  }
+  else{
+    dquant2mod = quant2mod;
+  }
+
 
 
 
@@ -2715,12 +2807,24 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
       // hneutrino = (rho_0 + rhonu + pnu)/rho_0
       chitot = chigas + chinu;
       final = (nonneutrino*(quant1+chigas) + neutrino*(quant1+chinu))/(quant1+chitot);
+
+      //      if(!isfinite(final)){
+      //	dualfprintf(fail_file,"IF: final=%21.15g chitot=%21.15g\n",final,chitot);
+      //	dualfprintf(fail_file,"%21.15g%21.15g%21.15g%21.15g%21.15g%21.15g%21.15g%21.15g\n",nonneutrino,quant1,chigas,neutrino,quant1,chinu,quant1,chitot);
+      //      }
+      
+      
     }
     else{
       //    frac = (pnu/(ptot-pnu));
       frac = pnu/ptot; // -> 1 if ptot=pnu.  Suppose photons+electrons+neutrinos equally dominate.  Then cs2 still correct.
       // choose cs2total if neutrino-dominated, otherwise choose non-neutrino cs2
       final = total*frac + nonneutrino*(1.0-frac);
+
+      //      if(!isfinite(final)){
+      //	dualfprintf(fail_file,"ELSE: final=%21.15g frac=%21.15g\n",final,frac);
+      //      }
+
     }
 
   }
@@ -3252,9 +3356,9 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       }
       else{
 	// DEBUG:
-	dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",qtautnueohcm,qtauanueohcm,qtautnuebarohcm,qtauanuebarohcm,qtautmuohcm,qtauamuohcm,unue0,unuebar0,unumu0);
-	dualfprintf(fail_file,"CCODE: :: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",Ccode,mbwithrhounit,rho0,kbtk,H,unue0,unuebar0,unumu0,qtautnueohcm,qtautnuebarohcm,qtautmuohcm,qtauanueohcm,qtauanuebarohcm,qtauamuohcm);
-	dualfprintf(fail_file,"mb[cgs]=%21.15g T[K] = %21.15g\n",mbwithrhounit*Munit/Vunit/Vunit,kbtk*energyunit/kb);
+	//	dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",qtautnueohcm,qtauanueohcm,qtautnuebarohcm,qtauanuebarohcm,qtautmuohcm,qtauamuohcm,unue0,unuebar0,unumu0);
+	//	dualfprintf(fail_file,"CCODE: :: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",Ccode,mbwithrhounit,rho0,kbtk,H,unue0,unuebar0,unumu0,qtautnueohcm,qtautnuebarohcm,qtautmuohcm,qtauanueohcm,qtauanuebarohcm,qtauamuohcm);
+	//	dualfprintf(fail_file,"mb[cgs]=%21.15g T[K] = %21.15g\n",mbwithrhounit*Munit/Vunit/Vunit,kbtk*energyunit/kb);
 
 	if(!notintable){
 	  // get rho_nu, p_nu, s_nu from extras
@@ -3804,6 +3908,7 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
     }
     else{
       dualfprintf(fail_file,"Shouldn't request whichfun0=%d if primarytable=%d\n",LAMBDATOT,primarytable);
+      myexit(46763463);
     }
 
 
@@ -3863,8 +3968,8 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
     }
     // This is scale-height used by Kaz's EOS
     // add outgoing radial part to hack photon trajectory for +-z for disk near BH or NS
-    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + MACP0A1(EOSextra,i,1,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,1,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
-    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest2 + MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + SHIFT2*MACP0A1(EOSextra,i,SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest2 + SHIFT2*MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
   }
 
 

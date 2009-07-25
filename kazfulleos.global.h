@@ -99,7 +99,7 @@
 // eos_extract always makes 24 + extras = 10 iterators + 14 eosquantities + extras
 // for degen table, eox_extract.m has 9 total
 
-// number of base quantities to *store* from table made by eos_extract.m
+// number of base quantities to *store* from table made by eos_extract.m starting from PofRHOU
 #define NUMEOSQUANTITIESBASE (2 + 2 + 1 + 3 + 3 + 3 + 3)  // 17 : eosquantities
 
 // for memory optimization, specifiy which datatype
@@ -275,6 +275,9 @@
 #define NUMEOSDEGENQUANTITIESMEM (3) // utotdiff, ptotdiff, chidiff
 
 #define NUMEOSDEGENINDEPS (NUMINDEPDIMENS-1) // rho, tdynorye, tdynorynu, H
+
+#define NUMEOSDEGENQUANTITIESBASE (NUMEOSDEGENINDEPS*2)
+#define NUMEOSDEGENQUANTITIES (NUMEOSDEGENQUANTITIESBASE+NUMEOSDEGENQUANTITIESMEM)
 
 // independents for degen table
 #define RHOEOSDEGEN 0

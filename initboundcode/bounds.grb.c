@@ -5,6 +5,9 @@
 /* bound array containing entire set of primitive variables */
 
 
+#define BOUNDPRIMLOC 0
+#define BOUNDPSTAGLOC 1
+
 static int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
@@ -18,7 +21,7 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
   // specify location of primitives
   PALLLOOP(pl) dirprim[pl]=CENT;
   //  dualfprintf(fail_file,"start bound_prim\n"); // CHANGINGMARK
-  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, 0, dirprim, prim);
+  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, BOUNDPRIMLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_prim\n"); // CHANGINGMARK
 
   return(0);
@@ -56,7 +59,7 @@ int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int bou
 
   // assume before calling this that bound_pstag() setup PLOOPINTERP so only doing B1,B2,B3 (even though user may not respect this in bound_prim_user_general() -- which is ok since non-field quantities in pstag aren't needed -- may be problem if user_general() assumes primitive is reasonable)
   //  dualfprintf(fail_file,"start bound_pstag\n"); // CHANGINGMARK
-  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, 1, dirprim, prim);
+  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, BOUNDPSTAGLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_pstag\n"); // CHANGINGMARK
 
 

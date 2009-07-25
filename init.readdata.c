@@ -81,7 +81,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   parlist[1]=pr[YNU]; // Y_\nu
   parlist[2]=parlist[3]=parlist[4]=parlist[5]=hcmsingle; // H
   parlist[6]=parlist[7]=parlist[8]=0.0; // unu=pnu=snu=0 as first guess
-  store_EOS_parms(NUMEOSGLOBALS,GLOBALMAC(EOSextraglobal,i,j,k),parlist);
+  store_EOS_parms(WHICHEOS,NUMEOSGLOBALS,GLOBALMAC(EOSextraglobal,i,j,k),parlist);
 
 
 
