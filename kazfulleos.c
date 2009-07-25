@@ -293,6 +293,10 @@ void read_setup_eostable(void)
 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][4]); // base of log offset
 	fscanf(inhead,HEADERONEIN,&inputtablelimits[tableiter][ii][5]); // linear offset
 
+	if(inputtablelimits[tableiter][ii][5]>=0.0 && ii==YNUEOS){
+	  dualfprintf(fail_file,"SUPERWARNING: Note that table setup so Ynu<=0 not allowed since log-indexing Ynu as independent variable.\n");
+	}
+
 
 	// convert base 10 to actual base with actual offset so can be easily used for mapping
 	// x_in:=
