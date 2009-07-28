@@ -427,7 +427,7 @@
 
 // number of inversion quantities to report when inversion fails if CHECKONINVERSION = 1
 // See utoprim_jon.c:check_on_inversion()
-#define NUMINVPROPERTY 14
+#define NUMINVPROPERTY 13
 
 // for WHICHCURRENTCALC
 // 0: original time is on edge and spatial on edge, but spatials are different locations.  old time.

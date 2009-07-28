@@ -219,15 +219,27 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
     if(WHICHHOTINVERTER==1) real_dimen_newton=1;
     else   if(WHICHHOTINVERTER==2) real_dimen_newton=2;
     else   if(WHICHHOTINVERTER==3) real_dimen_newton=1;
+    else{
+      dualfprintf(fail_file,"No such hot inverter %d\n",WHICHHOTINVERTER);
+      myexit(89285323);
+    }
   }
   else if(eomtype==EOMCOLDGRMHD){
     if(WHICHCOLDINVERTER==0) real_dimen_newton=1;
     else if(WHICHCOLDINVERTER==1) real_dimen_newton=1;
     else   if(WHICHCOLDINVERTER==2) real_dimen_newton=1;
     else   if(WHICHCOLDINVERTER==3) real_dimen_newton=1;
+    else{
+      dualfprintf(fail_file,"No such cold inverter %d\n",WHICHCOLDINVERTER);
+      myexit(89285324);
+    }
   }
   else if(eomtype==EOMENTROPYGRMHD){
     if(WHICHENTROPYINVERTER==0) real_dimen_newton=1;
+    else{
+      dualfprintf(fail_file,"No such entropy inverter %d\n",WHICHENTROPYINVERTER);
+      myexit(89285325);
+    }
   }
   else real_dimen_newton=0; // not using Newton's method
 
@@ -282,7 +294,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   // Calculate the transform the PRIMITIVE variables into the new system
   //
   /////////////
-  for( i = 0; i < BCON1; i++ ) {
+  for( i = 0; i <=U3; i++ ) {
     prim_tmp[i] = prim[i];
   }
   for( i = BCON1; i <= BCON3; i++ ) {
@@ -335,7 +347,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   //
   ///////////
   if( ret == 0 ) {
-    for( i = 0; i < BCON1; i++ ) {
+    for( i = 0; i <=U3; i++ ) {
       prim[i] = prim_tmp[i];
     }
   }
@@ -514,6 +526,9 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     retval = find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #elif(WHICHHOTINVERTER==1)
     retval = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+#else
+    dualfprintf(fail_file,"No such WHICHHOTINVERTER=%d\n",WHICHHOTINVERTER);
+    myexit(89285221);
 #endif
 
 
@@ -532,27 +547,8 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
 
-    // check on result of inversion
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-
-
-
-    //  Check if solution was found
-    retval+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
-    if(retval) return(retval);
-
-
-    // find solution
-    retval+=Wp2prim(lpflag, eomtype,prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-    if(retval) return(retval);
-
-
   } // end if hot GRMHD
-
-
-
-
+  
 
   /////////////////////////////////////////////////////////////////////////
   //
@@ -560,18 +556,12 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   // COLD GRMHD INVERTERS
   //
   /////////////////////////////////////////////////////////////////////////
-  if(eomtype==EOMCOLDGRMHD){
+  else if(eomtype==EOMCOLDGRMHD){
 
 
 
 #if(WHICHCOLDINVERTER==0)
     retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    check_on_inversion(prim, U, ptrgeom, Wp0, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    //  Check if solution was found
-    retval0+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp0, retval0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
-
 
 
     //  if(*lpflag!=0){
@@ -584,19 +574,17 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
     retval=retval0;
     Wp=Wp0;
-#endif
 
 
 
-#if(WHICHCOLDINVERTER==1)
+
+#elif(WHICHCOLDINVERTER==1)
+
+
 
     // Do inversion using E'[W'] equation
     retval1 = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
-    check_on_inversion(prim, U, ptrgeom, Wp1, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    //  Check if solution was found
-    retval1+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp1, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
 
 
 
@@ -620,11 +608,12 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   
     retval=retval1;
     Wp=Wp1;
-#endif
 
 
-#if(WHICHCOLDINVERTER==2)
+
+#elif(WHICHCOLDINVERTER==2)
     // Do inversion using P^2[W'] equation
+
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
     if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
@@ -633,14 +622,6 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 #endif
 
     retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    check_on_inversion(prim, U, ptrgeom, Wp2, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    //  Check if solution was found
-    retval2+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp2, retval2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
-
-
-
     //  if(*lpflag!=0){
     //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
     //    myexit(0);
@@ -654,17 +635,13 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     retval=retval2;
     Wp=Wp2;
 
-#endif
 
-#if(WHICHCOLDINVERTER==3)
+
+#elif(WHICHCOLDINVERTER==3)
     // Do inversion using P^\alpha[W'] equation
 
+
     retval3 = find_root_3D_gen_Palpha(lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    check_on_inversion(prim, U, ptrgeom, Wp3, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-
-    //  Check if solution was found
-    retval3+=check_Wp(lpflag, prim, U, ptrgeom, Wp_last, Wp3, retval3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
 
 
 
@@ -681,24 +658,54 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     retval=retval3;
     Wp=Wp3;
 
+#else
+    dualfprintf(fail_file,"No such WHICHCOLDINVERTER=%d\n",WHICHCOLDINVERTER);
+    myexit(89285224);
 #endif
+
+
+
+
+  } // end if eomtype==EOMCOLDGRMHD
+  else if(eomtype==EOMENTROPYGRMHD){
+
+
+
+    // METHOD specific:
+#if(WHICHENTROPYINVERTER==0)
+    retval = find_root_1D_gen_Sc(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+#else
+    dualfprintf(fail_file,"No such WHICHENTROPYINVERTER=%d\n",WHICHENTROPYINVERTER);
+    myexit(89285225);
+#endif
+
+
+
+  } // end if-else structure over eomtype
+
+
+
+
+  /////////////////////
+  //
+  // Use root if no failure in finding root
+  //
+  /////////////////////
+
+  if(retval==0){
+    // check on result of inversion
+    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+    
+
+    //  Check if solution was found
+    retval+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
+    if(retval) return(retval);
 
 
     // find solution
     retval+=Wp2prim(lpflag, eomtype,prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
     if(retval) return(retval);
-  
-
-
-  } // end if eomtype==EOMCOLDGRMHD
-  else if(eomtype==EOMENTROPYGRMHD){
-    // METHOD specific:
-#if(WHICHHOTINVERTER==0)
-    retval = find_root_1D_gen_Sc(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-#endif
   }
-
-
 
 
 
@@ -1249,7 +1256,7 @@ static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, F
   checki=0;
   strcpy(newtonstats->invpropertytext[checki++],"Qdotnp");
   strcpy(newtonstats->invpropertytext[checki++],"Qtsq");
-  strcpy(newtonstats->invpropertytext[checki++],"Qtsqorig");
+  //  strcpy(newtonstats->invpropertytext[checki++],"Qtsqorig");
   strcpy(newtonstats->invpropertytext[checki++],"Bsq");
   strcpy(newtonstats->invpropertytext[checki++],"DD");
   strcpy(newtonstats->invpropertytext[checki++],"Sc");
@@ -1437,7 +1444,7 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of
   // GODMARK
   // fix checks for cold case
   if( (rho0 <= 0.) 
-      || ((u < 0.)&&(eomtype==EOMGRMHD))
+      || ((u < 0.)&&(eomtype!=EOMCOLDGRMHD))
       ) { 
     if( debugfail>=2 ) {
       tmpdiff = w - rho0;
@@ -1470,13 +1477,13 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of
 
 
 
-  if(eomtype==EOMGRMHD){
+  if(eomtype==EOMCOLDGRMHD){
+    prim[UU] = 0;
+  }
+  else{
     prim[UU] = u ;
   }
-  else if(eomtype==EOMCOLDGRMHD){
-    prim[UU] = 0;
-    //  dualfprintf(fail_file,"u=%21.15g\n",u);
-  }
+
 
 #if(DOENTROPY!=DONOENTROPY)
   // put result in both UU and ENTROPY for primitive
@@ -2335,6 +2342,7 @@ static void pick_validate_x(int eomtype,void (**ptr_validate_x)(FTYPE x[NEWT_DIM
      (WHICHHOTINVERTER==3 && eomtype==EOMGRMHD) ||
      ( (WHICHCOLDINVERTER==0 || WHICHCOLDINVERTER==1) && eomtype==EOMCOLDGRMHD) ||
      (WHICHCOLDINVERTER==2 && eomtype==EOMCOLDGRMHD)
+     || (eomtype==EOMENTROPYGRMHD)
      ){
     *ptr_validate_x = &validate_x_1d;
   }
