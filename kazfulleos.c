@@ -3833,8 +3833,9 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   int hi;
 
   // expected use of output should be know this ordering
-  parlist[0]=EOSextra[TDYNORYEGLOBAL];
-  parlist[1]=EOSextra[YNUGLOBAL];
+  // resulting array parlist[] should start at index 0 and have "*numparms" elements
+  parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=EOSextra[TDYNORYEGLOBAL];
+  parlist[YNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[YNUGLOBAL];
   for(hi=0;hi<NUMHDIRECTIONS;hi++){
     parlist[HGLOBAL-FIRSTEOSGLOBAL+hi]=EOSextra[HGLOBAL+hi];
   }
@@ -3842,7 +3843,7 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   parlist[PNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[PNUGLOBAL];
   parlist[SNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[SNUGLOBAL];
 
-  *numparms=NUMEOSGLOBALS;
+  *numparms=NUMEOSGLOBALS-FIRSTEOSGLOBAL+1; // Only Ye -> snu
 
 }
 
@@ -3862,10 +3863,11 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
   FTYPE X[NDIM],V[NDIM],dxdxp[NDIM][NDIM];
   FTYPE dr,rdth,rsinthdphi,lambdatot;
   FTYPE rho0,u;
-  FTYPE Htest1,Htest2;
+  FTYPE Htest1,Htest2,Htest3,Htest4;
   int lambdatotextra;
   int hi;
   int whichfun;
+  FTYPE unu,snu,pnu,du;
 
 
   //  return; //assume initial H is good -- use to compare input and output for EOS
@@ -3898,6 +3900,7 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
 
 
 
+
     /////////////////////
     //
     // determine what whichfun0 means for this table
@@ -3915,8 +3918,19 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
       myexit(46763463);
     }
 
+    if(whichdatatype[primarytable]==4){
+      unu = MACP0A1(EOSextra,i,j,k,UNUGLOBAL);
+      pnu = MACP0A1(EOSextra,i,j,k,PNUGLOBAL);
+      snu = MACP0A1(EOSextra,i,j,k,SNUGLOBAL);
+      du  = u - unu;
+    }
+    else{
+      du = u;
+    }
 
-    if(get_eos_fromtable(whichfun,UTOTDIFF,MAC(EOSextra,i,j,k),rho0,u,&lambdatot)){ // GODMARK: Want udiff?
+
+
+    if(get_eos_fromtable(whichfun,UTOTDIFF,MAC(EOSextra,i,j,k),rho0,du,&lambdatot)){ // uses utotdiff=du
       lambdatot=1.0E30; // then assume optically thin (worry if outside when rho>>the limit in the table?) GODMARK
     }
     GLOBALMACP0A1(ptemparray,i,j,k,0) = lambdatot;
@@ -3931,11 +3945,13 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
 
 
 
-  //////////////////////////////
-  //
-  // get +- r direction H
   // GODMARK : NOT YET FOR MPI
   COMPFULLLOOP{ 
+
+
+    //////////////////////////////
+    //
+    // get +- r direction H
     Htest1 = Htest2 = 0.0;
     jj=j;
     kk=k;
@@ -3953,28 +3969,34 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
     // This is scale-height used by Kaz's EOS
     MACP0A1(EOSextra,i,j,k,HGLOBAL)  = Htest1*GLOBALMACP0A1(ptemparray,i,j,k,0);
     MACP0A1(EOSextra,i,j,k,H2GLOBAL) = Htest1*GLOBALMACP0A1(ptemparray,i,j,k,0);
-  }
 
 
-  //////////////////////////////
-  //
-  // get +- \theta direction H (assume spherical polar)
-  // GODMARK : NOT YET FOR MPI
-  COMPFULLLOOP{ 
-    Htest1 = Htest2 = 0.0;
+
+    //////////////////////////////
+    //
+    // get +- \theta direction H (assume spherical polar)
+    // GODMARK : NOT YET FOR MPI
+    Htest3 = Htest4 = 0.0;
     ii=i;
     kk=k;
-    for(jj=j;jj<N2;jj++){
-      Htest1 +=GLOBALMACP0A1(ptemparray,ii,jj,kk,1);
+    for(jj=j;jj<=N2-1;jj++){
+      Htest3 +=GLOBALMACP0A1(ptemparray,ii,jj,kk,2);
     }
     for(jj=j;jj>=0;jj--){
-      Htest2 +=GLOBALMACP0A1(ptemparray,ii,jj,kk,1);
+      Htest4 +=GLOBALMACP0A1(ptemparray,ii,jj,kk,2);
     }
     // This is scale-height used by Kaz's EOS
-    // add outgoing radial part to hack photon trajectory for +-z for disk near BH or NS
-    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + SHIFT2*MACP0A1(EOSextra,i,SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
-    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest2 + SHIFT2*MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+    // add angular part to hack photon trajectory for +-z for disk near BH or NS
+    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + Htest3)*GLOBALMACP0A1(ptemparray,i,j,k,0);;
+
+    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest1 + Htest4)*GLOBALMACP0A1(ptemparray,i,j,k,0);;
+
+    //    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest3 + SHIFT2*MACP0A1(EOSextra,i,SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+    //    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest4 + SHIFT2*MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
+
   }
+
+
 
 
 #if(0)
@@ -4114,4 +4136,62 @@ void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYP
   }
 
 }
+
+
+
+
+// Change the primitives to be limited by constraints on Y_e
+// Do this so if out of bounds, Y_e can still recover eventually if fluid goes out of region where Y_\nu is large
+void fix_primitive_eos_scalars_kazfull(FTYPE *EOSextra, FTYPE *pr)
+{
+  FTYPE yemin,yemax;
+  FTYPE ynumin,ynumax;
+  FTYPE ylmin,ylmax;
+  FTYPE ye;
+
+
+  yemin=1.001*lineartablelimits[primarytable][TEOS][0];
+  yemax=0.999*lineartablelimits[primarytable][TEOS][1];
+  ynumin=1.001*lineartablelimits[primarytable][YNUEOS][0];
+  ynumax=0.999*lineartablelimits[primarytable][YNUEOS][1];
+  ylmin=yemin+ynumin;
+  ylmax=yemax+ynumax;
+
+
+  ye = pr[YL] - pr[YNU];
+
+  // have pr[YL] and pr[YNU] share the blame
+  if(ye<yemin){
+    pr[YL]  += -0.5*ye;
+    pr[YNU] += +0.5*ye;
+    // now effective ye is yemin
+    ye=yemin;
+  }
+
+  if(ye>yemax){
+    pr[YL]  += -0.5*ye+0.5;
+    pr[YNU] += +0.5*ye-0.5;
+    // Now effective ye is yemax
+    ye=yemax;
+  }
+
+  if(pr[YL]<ylmin){
+    pr[YL]  = ylmin;
+    pr[YNU] = ynumin;
+    // Now effective ye is ~0.0=1.001*lineartablelimits[primarytable][TEOS][0]
+    ye=yemin;
+    
+  }
+
+  // check result:
+  if(pr[YNU]<ynumin){
+    pr[YL]  = ye; // Y_l = Y_e in this case
+    pr[YNU] = ynumin;
+  }
+
+
+  
+
+}
+
 

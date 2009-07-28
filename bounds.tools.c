@@ -1375,7 +1375,8 @@ int bound_checks1(
   if(ispstag){
     ZSLOOP(inoutlohi[POINTDOWN][POINTDOWN][1], inoutlohi[POINTUP][POINTUP][1],inoutlohi[POINTDOWN][POINTDOWN][2], inoutlohi[POINTUP][POINTUP][2],inoutlohi[POINTDOWN][POINTDOWN][3], inoutlohi[POINTUP][POINTUP][3]){
       // Can't use FULLLOOP since different boundary types go different depths into boundary cells
-      PALLLOOP(pl){
+      //      PALLLOOP(pl){
+      PBOUNDLOOP(pliter,pl){
 	if(pl==B1 || pl==B2 || pl==B3){
 	  if(!finite(MACP0A1(prim,i,j,k,pl))){
 	    trigger++;
@@ -1387,7 +1388,8 @@ int bound_checks1(
   }
   else{
     ZSLOOP(inoutlohi[POINTDOWN][POINTDOWN][1], inoutlohi[POINTUP][POINTUP][1],inoutlohi[POINTDOWN][POINTDOWN][2], inoutlohi[POINTUP][POINTUP][2],inoutlohi[POINTDOWN][POINTDOWN][3], inoutlohi[POINTUP][POINTUP][3]){
-      PALLLOOP(pl){
+      //      PALLLOOP(pl){
+      PBOUNDLOOP(pliter,pl){
 	if(!finite(MACP0A1(prim,i,j,k,pl))){
 	  trigger++;
 	  dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,pl);
@@ -2804,7 +2806,10 @@ void check_spc_singularities_user(void)
   int numlocs,indloc,loc;
   int pl,pliter;
   LOCALMETRICTEMPVARS;
+  int doprintout;
 
+  if(nstep==0) doprintout=1;
+  else doprintout=0; // avoid print out when evolving metric and recalling this -- assume faily similar situation as at nstep==0
 
   ///////////////////////////
   //
@@ -2838,7 +2843,7 @@ void check_spc_singularities_user(void)
 #endif
 
 	if(singfound){
-	  dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
+	  if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
 	  localgdet[0]=0.0;
 #if(WHICHEOM!=WITHGDET)
 	  PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
@@ -2879,7 +2884,7 @@ void check_spc_singularities_user(void)
       j=0;
     }
     else if(poleloop==1 && mycpupos[2] == ncpux2-1 && BCtype[X2UP]==POLARAXIS){
-      j=N2;
+      j=N2-1+SHIFT2;
     }
     else continue;
     
@@ -2911,7 +2916,7 @@ void check_spc_singularities_user(void)
 #endif
 
 	if(needzero && singfound){
-	  dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
+	  if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
 	  localgdet[0]=0.0;
 #if(WHICHEOM!=WITHGDET)
 	  PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;

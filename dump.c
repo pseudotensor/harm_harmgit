@@ -1394,7 +1394,7 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // write EOS stuff
   // write out all stuff for all EOSs so uniform format to read for any run (otherwise need version information in file)
-  myset(datatype,&parlist,0,MAXPARLIST,writebuf); // numparms=6
+  myset(datatype,&parlist,0,MAXPARLIST,writebuf);
   myset(datatype,&temp,0,1,writebuf); // 1
   // write extras EOS stuff
   myset(datatype,extras,0,MAXNUMEXTRAS,writebuf); // numextras

@@ -1177,10 +1177,9 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
   ////////////////////////
   //
-  // set bound loop
+  // set bound loop (used to set boundary condition values for Mvsr_tot, etc.)
   //
   ///////////////////////
-  // SUPERGODMARK: Unsure if this is used:
   set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
 
 
@@ -1281,13 +1280,13 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   // diagnostics do not do this integrate() so they may be a substep out of "synch" with other diagnostics that are fully up to date
   // old way:
   //  GRAVLOOP(ii){
-  //    if(integrate(&dVvsr[ii],&dVvsr_tot[ii],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  //    if(integrate(&vrsqvsr[ii],&vrsqvsr_tot[ii],CUMULATIVETYPE2,enerregion)>=1) return(1);
+  //    if(integrate(&dVvsr[ii],&dVvsr_tot[ii],CUMULATIVETYPE,enerregion)>=1) return(1);
+  //    if(integrate(&vrsqvsr[ii],&vrsqvsr_tot[ii],CUMULATIVETYPE,enerregion)>=1) return(1);
   //  }
 
   // new way:
-  if(integrate(NUMGRAVPOS,&dVvsr[-N1BND],&dVvsr_tot[-N1BND],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  if(integrate(NUMGRAVPOS,&vrsqvsr[-N1BND],&vrsqvsr_tot[-N1BND],CUMULATIVETYPE2,enerregion)>=1) return(1);
+  if(integrate(NUMGRAVPOS,&dVvsr[-N1BND],&dVvsr_tot[-N1BND],CUMULATIVETYPE,enerregion)>=1) return(1);
+  if(integrate(NUMGRAVPOS,&vrsqvsr[-N1BND],&vrsqvsr_tot[-N1BND],CUMULATIVETYPE,enerregion)>=1) return(1);
 
 
   //////////////////////////////////////////////////////////////////
@@ -1830,7 +1829,14 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     Ptot = P + bsq*0.5 ; 
     dTrr = P*jacvol;
 
+
+
+#if(0)
+    // DEBUG:
     dualfprintf(fail_file,"i=%d :: rho0=%21.15g u=%21.15g :: dM=%21.15g dTrr=%21.15g :: P=%21.15g jacvol=%21.15g\n",i,rho,u,dM,dTrr,P,jacvol);
+#endif
+
+
     
     
 #endif // end if USENEW==0
@@ -1859,19 +1865,25 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   // diagnostics do not do this integrate() so they may be a substep out of "synch" with other diagnostics that are fully up to date
   // old way:
   //  GRAVLOOP(ii){
-  //    if(integrate(&dMvsr[ii],&dMvsr_tot[ii],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  //    if(integrate(&dJvsr[ii],&dJvsr_tot[ii],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  //    if(integrate(&dTrrvsr[ii],&dTrrvsr_tot[ii],CUMULATIVETYPE2,enerregion)>=1) return(1);
+  //    if(integrate(&dMvsr[ii],&dMvsr_tot[ii],CUMULATIVETYPE,enerregion)>=1) return(1);
+  //    if(integrate(&dJvsr[ii],&dJvsr_tot[ii],CUMULATIVETYPE,enerregion)>=1) return(1);
+  //    if(integrate(&dTrrvsr[ii],&dTrrvsr_tot[ii],CUMULATIVETYPE,enerregion)>=1) return(1);
   //  }
 
   // new way:
-  if(integrate(NUMGRAVPOS,&dMvsr[-N1BND],&dMvsr_tot[-N1BND],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  if(integrate(NUMGRAVPOS,&dJvsr[-N1BND],&dJvsr_tot[-N1BND],CUMULATIVETYPE2,enerregion)>=1) return(1);
-  if(integrate(NUMGRAVPOS,&dTrrvsr[-N1BND],&dTrrvsr_tot[-N1BND],CUMULATIVETYPE2,enerregion)>=1) return(1);
+  if(integrate(NUMGRAVPOS,&dMvsr[-N1BND],&dMvsr_tot[-N1BND],CUMULATIVETYPE,enerregion)>=1) return(1);
+  if(integrate(NUMGRAVPOS,&dJvsr[-N1BND],&dJvsr_tot[-N1BND],CUMULATIVETYPE,enerregion)>=1) return(1);
+  if(integrate(NUMGRAVPOS,&dTrrvsr[-N1BND],&dTrrvsr_tot[-N1BND],CUMULATIVETYPE,enerregion)>=1) return(1);
   
 
 
 
+#if(0)
+  // DEBUG:
+  GRAVLOOP(i){
+    dualfprintf(fail_file,"i=%d :: dMvsr_tot=%21.15g dJvsr_tot=%21.15g dTrrvsr_tot=%21.15g\n",i,dMvsr_tot[i],dJvsr_tot[i],dTrrvsr_tot[i]);
+  }
+#endif
 
 
 
@@ -1917,6 +1929,8 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // assumes outer boundary condition is outflow of some kind so nothing special to do
     Mvsr_tot[0] = 0.5*dMvsr_tot[0];
     Mvsrface1_tot[0] =0.0;
+
+
     for(ii=1;ii<ncpux1*N1+N1BND+1;ii++){ // GRAVLOOP +1 away from first iteration
       // Trapezium rule
       Mvsr_tot[ii]  = Mvsr_tot[ii-1] + 0.5*dMvsr_tot[ii-1]+0.5*dMvsr_tot[ii];
@@ -1928,6 +1942,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // this includes all active mass (explicitly includes extra half grid cell at outer edge)
     ii=ncpux1*N1-1;
     Mvsrface1_tot[ii] = Mrealouter_tot=Mvsr_tot[ii]+0.5*dMvsr_tot[ii]; // same as Mvsrface1_tot[ii]+dMvsr_tot[ii-1]
+
 
     //////////////////
     // now set boundary conditions on Mvsr_tot
@@ -1949,6 +1964,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     }
 
 
+
     //////////////////////
     //
     // determine Mvsr/r since want to interpolate that quantity rather than Mvsr directly
@@ -1961,6 +1977,8 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       // GODMARK
       //      MOrvsr_tot[ii] = Mvsrface1_tot[ii]/rcent_tot[ii];
     }
+
+
 
     //////////////////
     // now set boundary conditions on MOrvsr_tot
@@ -2003,8 +2021,12 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       // M can only grow, not shrink, then shouldn't create negative mass in inner-radial region
       //      Mvsr_tot[ii] += MAX(trueMouter-origMouter,0.0);
 
+#if(0)
+      // DEBUG:
+      dualfprintf(fail_file,"Mvsr_tot[%d]=%21.15g dMvsr_tot=%21.15g rho=%21.15g\n",ii,Mvsr_tot[ii],dMvsr_tot[ii],MACP0A1(pb,ii,0,0,RHO));
+#endif
 
-      //      dualfprintf(fail_file,"Mvsr_tot[%d]=%21.15g dMvsr=%21.15g rho=%21.15g\n",ii,Mvsr_tot[ii],dMvsr_tot[ii],MACP0A1(pb,ii,0,0,RHO));
+
     }
 
 
@@ -2310,7 +2332,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     //    DTd=1E-5; // get every dump
 
 
-#if(1)
+#if(0)
     if(didformblackhole==0){
       GRAVLOOP(ii) dualfprintf(fail_file,"r=%21.15g Mvsr=%21.15g Mvsrface1=%21.15g\n",rcent_tot[ii],Mvsr_tot[ii],Mvsrface1_tot[ii]);
     }

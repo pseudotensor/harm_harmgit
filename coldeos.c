@@ -151,3 +151,8 @@ void get_EOS_parms_coldgrmhd(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   return; // do nothing
 }
+
+void fix_primitive_eos_scalars_coldgrmhd(FTYPE *EOSextra, FTYPE *pr)
+{
+  return; // do nothing
+}

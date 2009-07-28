@@ -3106,6 +3106,15 @@ void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *par
 
 }
 
+// wrapper
+void fix_primitive_eos_scalars_simple(int i, int j, int k, int loc, FTYPE *pr)
+{
+
+  fix_primitive_eos_scalars(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),pr);
+
+
+}
+
 FTYPE compute_temp_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 

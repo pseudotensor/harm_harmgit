@@ -1956,6 +1956,16 @@ void check_bnd_num(void)
   }
   
 
+  if(DOENTROPY==DONOENTROPY && EOMTYPE==EOMENTROPYGRMHD){
+    dualfprintf(fail_file,"ERROR: Must have DOENTROPY enabled to use EOMENTROPYGRMHD\n");
+    myexit(34897562);
+  }
+
+  if(DOENTROPY==DONOENTROPY && HOT2ENTROPY){
+    dualfprintf(fail_file,"ERROR: Must have DOENTROPY enabled to use HOT2ENTROPY\n");
+    myexit(34897562);
+  }
+
 
 
   // external checks

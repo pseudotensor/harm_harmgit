@@ -3,6 +3,8 @@ extern FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTY
 extern FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *parlist);
+extern void fix_primitive_eos_scalars_simple(int i, int j, int k, int loc, FTYPE *pr);
+
 extern FTYPE compute_temp_simple(int i, int j, int k, int loc, FTYPE rho0, FTYPE u);
 extern int get_extrasprocessed_simple(int doall, int i, int j, int k, int loc, FTYPE *pr, FTYPE *extras, FTYPE *processed);
 extern FTYPE compute_u_from_entropy_simple(int i, int j, int k, int loc, FTYPE rho0, FTYPE entropy);
@@ -44,3 +46,4 @@ extern FTYPE compute_temp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern void compute_EOS_parms(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern void store_EOS_parms(int whicheos, int numparms, FTYPE *EOSextra, FTYPE *parlist);
 extern void get_EOS_parms(int whicheos, int*numparms, FTYPE *EOSextra, FTYPE *parlist);
+extern void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr);

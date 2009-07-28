@@ -76,10 +76,12 @@ int recompute_fluxpositions(int initialcall, int timeorder, int numtimeorders, l
   if(DOJETDIAG)  setjetflux(normalinitialcall,timeorder,numtimeorders,thenstep,thetime);
 
 
+
   // set ACTIVEREGION
   if(DOGRIDSECTIONING){
     setgridsectioning(compinitialcall,timeorder, numtimeorders, nstep,t);
   }
+
 
   return(0);
 
@@ -577,6 +579,11 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
     enerpos[X1DN]=0;
     enerpos[X1UP]=N1-1;
     enerpos[X2DN]=0;
+
+    // default:
+    enerpos[X2UP]=0;
+    jetedge[INNERJET]=FLUXNOTONGRID;
+
     i=0;
     for(j=0;j<=OUTM2;j++){
       bl_coord_coord(i, j, k, FACE2, X, V);
@@ -617,21 +624,21 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   else doflux[X1DN]=FLUXNOTONGRID;
 
   // right edge (any directional condition would do)
-  if((N1>1)&&(enerpos[X1DN]!=FLUXNOTONGRID)&&(mycpupos[1]==ncpux1-1)){
+  if((N1>1)&&(enerpos[X1UP]!=FLUXNOTONGRID)&&(mycpupos[1]==ncpux1-1)){
     doflux[X1UP]=OUTM1;
     if(doprintout) trifprintf("proc: %d doing inner jet flux X1UP\n",myid);
   }
   else doflux[X1UP]=FLUXNOTONGRID;
 
   // lower theta boundary
-  if((N2>1)&&(mycpupos[2]==0)){
+  if((N2>1)&&(enerpos[X2DN]!=FLUXNOTONGRID)&&(mycpupos[2]==0)){
     doflux[X2DN]=0;
     if(doprintout) trifprintf("proc: %d doing inner jet flux X2DN\n",myid);
   }
   else doflux[X2DN]=FLUXNOTONGRID;
   
   // upper theta boundary
-  if((N2>1)&&(jetedge[INNERJET]!=FLUXNOTONGRID)){ // only get flux if CPU has edge
+  if((N2>1)&&(enerpos[X2UP]!=FLUXNOTONGRID)&&(jetedge[INNERJET]!=FLUXNOTONGRID)){ // only get flux if CPU has edge
     doflux[X2UP]=jetedge[INNERJET];
     if(doprintout) trifprintf("proc: %d doing inner jet flux X2UP\n",myid);
   }
@@ -644,7 +651,7 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   else doflux[X3DN]=FLUXNOTONGRID;
 
   // right edge (any directional condition would do)
-  if((N3>1)&&(enerpos[X3DN]!=FLUXNOTONGRID)&&(mycpupos[3]==ncpux3-1)){
+  if((N3>1)&&(enerpos[X3UP]!=FLUXNOTONGRID)&&(mycpupos[3]==ncpux3-1)){
     doflux[X3UP]=OUTM3;
     if(doprintout) trifprintf("proc: %d doing inner jet flux X3UP\n",myid);
   }
@@ -679,6 +686,10 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   else if((startth<M_PI-thetajet)&&(endth>M_PI-thetajet)){
     enerpos[X1DN]=0;
     enerpos[X1UP]=N1-1;
+
+    // default:
+    enerpos[X2DN]=0;
+    jetedge[OUTERJET]=FLUXNOTONGRID;
     // if outer jet edge is on this CPU but not on boundary
     i=0;k=0;
     for(j=0;j<=OUTM2;j++){
@@ -696,6 +707,7 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
     enerpos[X3DN]=0;
     enerpos[X3UP]=N3-1;
 
+    //    dualfprintf(fail_file,"HIT2: %d %d %d %d %d %d\n",enerpos[X1DN],enerpos[X1UP],enerpos[X2DN],enerpos[X2UP],enerpos[X3DN],enerpos[X3UP]);
   }
   else if((startth>=M_PI-thetajet)&&(endth>=M_PI-thetajet)){
     // if cpu is entirely containe within outer jet
@@ -718,19 +730,19 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   }
   else doflux[X1DN]=FLUXNOTONGRID;
 
-  if((N1>1)&&(enerpos[X1DN]!=FLUXNOTONGRID)&&(mycpupos[1]==ncpux1-1)){
+  if((N1>1)&&(enerpos[X1UP]!=FLUXNOTONGRID)&&(mycpupos[1]==ncpux1-1)){
     doflux[X1UP]=OUTM1;
     if(doprintout) trifprintf("proc: %d doing outer jet flux X1UP\n",myid);
   }
   else doflux[X1UP]=FLUXNOTONGRID;
 
-  if((N2>1)&&(jetedge[OUTERJET]!=FLUXNOTONGRID)){
+  if((N2>1)&&(enerpos[X2DN]!=FLUXNOTONGRID)&&(jetedge[OUTERJET]!=FLUXNOTONGRID)){
     doflux[X2DN]=jetedge[OUTERJET];
     if(doprintout) trifprintf("proc: %d doing outer jet flux X2DN\n",myid);
   }
   else doflux[X2DN]=FLUXNOTONGRID;
 
-  if((N2>1)&&(mycpupos[2]==ncpux2-1)){
+  if((N2>1)&&(enerpos[X2UP]!=FLUXNOTONGRID)&&(mycpupos[2]==ncpux2-1)){
     doflux[X2UP]=OUTM2;
     if(doprintout) trifprintf("proc: %d doing outer jet flux X2UP\n",myid);
   }
@@ -743,14 +755,14 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
   }
   else doflux[X3DN]=FLUXNOTONGRID;
 
-  if((N3>1)&&(enerpos[X3DN]!=FLUXNOTONGRID)&&(mycpupos[3]==ncpux3-1)){
+  if((N3>1)&&(enerpos[X3UP]!=FLUXNOTONGRID)&&(mycpupos[3]==ncpux3-1)){
     doflux[X3UP]=OUTM3;
     if(doprintout) trifprintf("proc: %d doing outer jet flux X3UP\n",myid);
   }
   else doflux[X3UP]=FLUXNOTONGRID;
 
 
-  if(doprintout){
+  if(1||doprintout){
     DIRLOOP(dir) trifprintf("proc: %d %d outerjet: doflux[%d]=%d enerpos[%d]=%d\n",myid,OUTERJETREGION,dir,doflux[dir],dir,enerpos[dir]);
   }
 

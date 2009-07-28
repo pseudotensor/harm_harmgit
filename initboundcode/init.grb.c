@@ -992,7 +992,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
-  
   // diagnostic
   // determine nature of inner radial edge (assumes myid==0 is always there)
   if(myid==0){
@@ -1003,9 +1002,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     r=V[1];
     th=V[2];
     trifprintf("rmin(i=%d,X=%21.15g): %21.15g\n", i,X[1],r);
-    trifprintf("rmin/rh: %21.15g\n", r / Rhor );
+    trifprintf("r=%21.15g Rrhor=%21.15g :: rmin/rh: %21.15g\n", r / (fabs(Rhor)+SMALL) );
     //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
-    if(r/Rhor<=1.0){
+    if(r/(fabs(Rhor)+SMALL)<=1.0){
       trifprintf("inner grid is inside horizon\n");
     }
     else{

@@ -283,14 +283,6 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
 #endif
 
 
-  //////////////////////
-  //
-  // need to compute various things for EOS
-  // use primitive located where EOS will be used (pb)
-  //
-  //////////////////////
-  compute_EOS_parms(WHICHEOS,GLOBALPOINT(EOSextraglobal),pb);
-
   return(0);
 
 }
@@ -303,6 +295,16 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
 // things to do after advance()
 int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
+
+
+  //////////////////////
+  //
+  // need to compute various things for EOS
+  // use primitive located where EOS will be used (pb)
+  //
+  //////////////////////
+  compute_EOS_parms(WHICHEOS,GLOBALPOINT(EOSextraglobal),pb);
+
 
   /////////////////////////////////////
   //

@@ -1254,7 +1254,7 @@ void set_gcov_ks_bh_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   //  DLOOP(j,k) gcov[GIND(j,k)] = gcovtovks[GIND(j,k)];
   //  DLOOPA(j) gcovpert[j] = gcovtovkspert[j];
 
-
+  //  DLOOP(j,k) dualfprintf(fail_file,"gcovtovks[%d][%d]=%21.15g : %21.15g %21.15g %21.15g\n",j,k,gcovtovks[GIND(j,k)],MOrself,phiself,vrsqself);
 
 
 }

@@ -393,3 +393,8 @@ void get_EOS_parms_mignone(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   *numparms=0;
   return; // do nothing
 }
+
+void fix_primitive_eos_scalars_mignone(FTYPE *EOSextra, FTYPE *pr)
+{
+  return; // do nothing
+}

@@ -276,7 +276,6 @@ int dump_ener(int doener, int dordump, int call_code)
       //
       // GLOBALENERREGION STUFF (i.e. only done once over that region or just simply done once at all and just keeping within loop for simplicity)
       if(enerregion==GLOBALENERREGION){
-	// CUMULATIVETYPE2 for 1 data object per ii
 	if(DOLUMVSR){
 	  //for(ii=0;ii<ncpux1*N1;ii++)
 	  if(integrate(ncpux1*N1,&lumvsr[0],&lumvsr_tot[0],CUMULATIVETYPE,enerregion)>=1) return(1);
@@ -997,8 +996,11 @@ int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerre
     gettotal(1,&var,totalsizes,&var_tot);
     break;
   case CUMULATIVETYPE2:
+    // CUMULATIVETYPE2 for 1 data object per ii
     totalsizes[0]=1; // GODMARK: don't see point in this since just ignore numelements
     gettotal(1,&var,totalsizes,&var_tot);
+    // this case makes no sense currently, so fail
+    myexit(4983463);
     break;
   case CUMULATIVETYPE3:
     // this type not used right now

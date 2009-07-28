@@ -291,3 +291,7 @@ void get_EOS_parms_grbpwf99(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   return; // do nothing
 }
 
+void fix_primitive_eos_scalars_grbpwf99(FTYPE *EOSextra, FTYPE *pr)
+{
+  return; // do nothing
+}

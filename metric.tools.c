@@ -1829,7 +1829,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
 
 #if(DOEVOLVEMETRIC==1 && CONNDERTYPE==DIFFNUMREC)
-  // no choice in sense that NUMREC is too slow and unstable
+  // no choice in sense that NUMREC is too slow
   dualfprintf(fail_file,"Not good idea to use DOEVOLVEMETRIC==1 with CONNDERTYPE==DIFFNUMREC\n");
   myexit(7225);
 #endif
@@ -1854,6 +1854,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 				   ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
 				   ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
 				   );
+
+    // resetup Xl and Xh and signdX since above "compute" function will have overwritten X positions for non-existent dimensions
+    // if do this, must set truedelta correctly consistent in setup_delta()
+    setup_XlXh(X,truedelta,Xlgen,Xhgen,signdXgen);
 
 
     ////////////
@@ -1883,6 +1887,9 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 	  //if(i==j) conn[i][j][k] = (gcovperth[i] - gcovpertl[i]) / (Xh[k] - Xl[k]);
 	  // else 
 	  conn[i][j][k] = signdXgen[k]*(ghgen[k][GIND(i,j)] - glgen[k][GIND(i,j)]) / (Xhgen[k][k] - Xlgen[k][k]);
+
+	  //	  dualfprintf(fail_file,"ii=%d jj=%d kk=%d :: i=%d j=%d k=%d c=%21.15g gh=%21.15g gl=%21.15g Xh=%21.15g Xl=%21.15g\n",localptrgeom->i,localptrgeom->j,localptrgeom->k,i,j,k,conn[i][j][k],ghgen[k][GIND(i,j)],glgen[k][GIND(i,j)],Xhgen[k][k],Xlgen[k][k]);
+
 	}
       }
       
@@ -2140,7 +2147,7 @@ int setup_XlXh(FTYPE *X,FTYPE *truedelta, FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[ND
 	}
       }
 #endif
-      //			if(k==TT) dualfprintf(fail_file,"k=%d DELTAl=%21.15g DELTAl=%21.15g\n",k,MYDELTAl(DELTA,k),MYDELTAh(DELTA,k));
+      //      if(k==TT) dualfprintf(fail_file,"k=%d DELTAl=%21.15g DELTAh=%21.15g : true=%21.15g\n",k,MYDELTAl(truedelta[k],k),MYDELTAh(truedelta[k],k),truedelta[k]);
       // DEBUG
       //Xhgen[k][k] += DELTA;
       //			Xlgen[k][k] -= DELTA;

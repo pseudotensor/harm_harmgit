@@ -48,7 +48,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   int Utoprimgen_tryagain(int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_newtonstats *newtonstats);
   int Utoprimgen_tryagain2(int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_newtonstats *newtonstats);
   void convert_U_removerestmassfromuu(int utoprimverison, int removerestmassfromuu, FTYPE *U);
-  int invert_scalars(FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr);
+  int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr);
   int pl,pliter;
   PFTYPE lpflag;
   
@@ -145,7 +145,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   //
   ////////////////////////
 
-  invert_scalars(Uold,Ugeomfree0,Ugeomfree,pr0,pr);
+  invert_scalars(ptrgeom, Uold,Ugeomfree0,Ugeomfree,pr0,pr);
 
 
 
@@ -757,10 +757,16 @@ static int negdensitycheck(FTYPE *prim, PFTYPE *pflag)
 
 
 // perform U->p inversion on advected scalars
-int invert_scalars(FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr)
+int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr)
 {
-  FTYPE ye;
   FTYPE myrhouu0,oneOmyrhouu0;
+  int i,j,k,loc;
+
+
+  i=ptrgeom->i;
+  j=ptrgeom->j;
+  k=ptrgeom->k;
+  loc=ptrgeom->p;
   
   // Note that Y_e = Y_l - Y_\nu such that Y_e>0 and Y_e<1 as handled in EOS
 
@@ -775,48 +781,18 @@ int invert_scalars(FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FT
   pr0[YNU] = pr[YNU] = Ugeomfree[YNU]*oneOmyrhouu0;
 #endif
 
-  // Change the primitives to be limited by constraints on Y_e
-  // Do this so if out of bounds, Y_e can still recover eventually if fluid goes out of region where Y_\nu is large
-#if(DOYL!=DONOYL && DOYNU!=DONOYNU)
-  ye = pr[YL] - pr[YNU];
+  // Change the primitives to be constrained or fixed-up
+  fix_primitive_eos_scalars_simple(i,j,k,loc,pr);
 
-  // have pr[YL] and pr[YNU] share the blame
-  if(ye<0.0){
-    pr0[YL] = pr[YL]  += -0.5*ye;
-    pr0[YNU]= pr[YNU] += +0.5*ye;
-    // now effective ye is 0.0
-    ye=0.0;
-    // fix conserved quantities too
+  // overwrite pr0 and recompute conserved quantities with fixed-up primitives
+#if(DOYL!=DONOYL)
+  pr0[YL]=pr[YL];
     Uold[YL]=Ugeomfree0[YL]=Ugeomfree[YL] = pr[YL]*myrhouu0;
-    Uold[YNU]=Ugeomfree0[YNU]=Ugeomfree[YNU] = pr[YNU]*myrhouu0;
-  }
+#endif
 
-  if(ye>1.0){
-    pr0[YL] = pr[YL]  += -0.5*ye+0.5;
-    pr0[YNU]= pr[YNU] += +0.5*ye-0.5;
-    // Now effective ye is 1.0
-    ye=1.0;
-    Uold[YL]=Ugeomfree0[YL]=Ugeomfree[YL] = pr[YL]*myrhouu0;
-    Uold[YNU]=Ugeomfree0[YNU]=Ugeomfree[YNU] = pr[YNU]*myrhouu0;
-  }
-
-  if(pr[YL]<0.0){
-    pr0[YL] = pr[YL]  = 0.0;
-    pr0[YNU]= pr[YNU] = 0.0;
-    // Now effective ye is 0.0
-    ye=0.0;
-    Uold[YL]=Ugeomfree0[YL]=Ugeomfree[YL] = pr[YL]*myrhouu0;
-    Uold[YNU]=Ugeomfree0[YNU]=Ugeomfree[YNU] = pr[YNU]*myrhouu0;
-    
-  }
-
-  if(pr[YNU]<0.0){
-    pr0[YL] = pr[YL]  = ye; // Y_l = Y_e in this case
-    pr0[YNU]= pr[YNU] = 0.0;
-    Uold[YL]=Ugeomfree0[YL]=Ugeomfree[YL] = pr[YL]*myrhouu0;
-    Uold[YNU]=Ugeomfree0[YNU]=Ugeomfree[YNU] = pr[YNU]*myrhouu0;
-  }
-
+#if(DOYNU!=DONOYNU)
+  pr0[YNU]=pr[YNU];
+  Uold[YNU]=Ugeomfree0[YNU]=Ugeomfree[YNU] = pr[YNU]*myrhouu0;
 #endif
 
 

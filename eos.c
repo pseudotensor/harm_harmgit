@@ -207,6 +207,11 @@ void get_EOS_parms(int whicheos, int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   (*(ptr_get_EOS_parms[whicheos]))(numparms, EOSextra, parlist);
 }
 
+void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr)
+{
+  (*(ptr_fix_primitive_eos_scalars[whicheos]))(EOSextra, pr);
+}
+
 
 
 
@@ -308,6 +313,7 @@ int initeos_eomtype(void)
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_idealgas;
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_idealgas;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_idealgas;
+  ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_idealgas;
 
   //////////////////////////////////////////////////////
   whicheos=MIGNONE;
@@ -341,6 +347,7 @@ int initeos_eomtype(void)
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_mignone;
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_mignone;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_mignone;
+  ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_mignone;
 
   //////////////////////////////////////////////////////
   whicheos=GRBPWF99;
@@ -374,6 +381,7 @@ int initeos_eomtype(void)
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_grbpwf99;
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_grbpwf99;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_grbpwf99;
+  ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_grbpwf99;
 
   //////////////////////////////////////////////////////
   whicheos=KAZFULL;
@@ -407,6 +415,7 @@ int initeos_eomtype(void)
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_kazfull;
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_kazfull;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_kazfull;
+  ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_kazfull;
 
   //////////////////////////////////////////////////////
   whicheos=COLDEOS;
@@ -440,6 +449,7 @@ int initeos_eomtype(void)
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_coldgrmhd;
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_coldgrmhd;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_coldgrmhd;
+  ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_coldgrmhd;
   //////////////////////////////////////////////////////
 
 
