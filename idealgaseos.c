@@ -77,6 +77,7 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   pressure=pressure_rho0_u_idealgas(EOSextra,rho0,u);
   indexn=1.0/GAMMAM1;
 
+  // Entropy will be wrong when rho0 or pressure are non-positive
   if(rho0<SMALL) rho0=SMALL;
   if(pressure<SMALL) pressure=SMALL;
   
@@ -99,6 +100,7 @@ FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy
 
   indexn=1.0/GAMMAM1;
 
+  // u will be wrong when density is non-positive
   if(rho0<SMALL) rho0=SMALL;
   
   // entropy version of ie
@@ -121,8 +123,9 @@ static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0,
   pressure=pressure_wmrho0_idealgas(EOSextra,rho0,wmrho0);
   indexn=1.0/GAMMAM1;
 
-  if(rho0<SMALL) rho0=SMALL;
-  if(pressure<SMALL) pressure=SMALL;
+  // Don't limit rho0 and pressure since this is used for iterative scheme that requires to know if beyond valid domain or not.  Nan will be terminated during inversion.
+  //  if(rho0<SMALL) rho0=SMALL;
+  //  if(pressure<SMALL) pressure=SMALL;
   
   insideentropy=pow(pressure,indexn)/pow(rho0,indexn+1.0);
 
@@ -218,7 +221,8 @@ FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 {
   FTYPE dSdrho;
 
-  if(rho0<SMALL) rho0=SMALL;
+  // Don't limit rho0 and pressure since this is used for iterative scheme that requires to know if beyond valid domain or not.  Nan will be terminated during inversion.
+  //  if(rho0<SMALL) rho0=SMALL;
   
   dSdrho=GAMMA/((1.0-GAMMA)*rho0);
 

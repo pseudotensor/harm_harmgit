@@ -24,6 +24,10 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 
+static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatotptr);
+
+static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep);
 
 #include "kazfulleos_set_arrays.c"
 
@@ -803,14 +807,17 @@ void read_setup_eostable(void)
 	//
 	// put a floor in input sound speed since want to use log interpolation
 	//
+	// No, instead, if using log interpolation and quantity should be positive, force to avoid that point
 	////////////////
-	if(tabletemp[CS2ofRHOU]<=0.0){
-	  tabletemp[CS2ofRHOU]=SMALL; // just to avoid inf or NaN
-	  // and tell interpolation that this is an invalid data point to use
-	  tabletemp[TEMPU]=invalidtempcode/10.0;
-	  tabletemp[TEMPP]=invalidtempcode/10.0;
-	  tabletemp[TEMPCHI]=invalidtempcode/10.0;
-	}
+	//	if(tabletemp[CS2ofRHOU]<=0.0){
+	//	  tabletemp[CS2ofRHOU]=SMALL;
+	// and tell interpolation that this is an invalid data point to use
+	//tabletemp[TEMPU]=invalidtempcode/10.0;
+	//tabletemp[TEMPP]=invalidtempcode/10.0;
+	//tabletemp[TEMPCHI]=invalidtempcode/10.0;
+	//	}
+
+	
 
 
 	////////////////////////////////
@@ -897,6 +904,12 @@ void read_setup_eostable(void)
 	  // \tau/H for photons
 	  tabletemp[EXTRA21]/=(1.0/Lunit);
 	  tabletemp[EXTRA22]/=(1.0/Lunit);
+
+	  // DEBUG: log(fun) \propto A+B*log(rho) -> fun = 10^(A+B*log(rho)) = Q*rho^B
+	  // rho = exp(A+B*iii)
+	  //	  FTYPE fakerho = exp(0.0+1.0*iii);
+	  // tabletemp[EXTRA22]=1.0*pow(fakerho,3.0);
+	  //dualfprintf(fail_file,"GOD: iii=%d %21.15g\n",iii,tabletemp[EXTRA22]);
 
 	  // thermal number densities
 	  tabletemp[EXTRA23]/=(1.0/pow(Lunit,3.0));
@@ -1184,11 +1197,13 @@ FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int wh
 
 
 
+#define LOOPKAZIJKL for(iii=kazstartiii;iii<=kazendiii;iii++) for(jjj=kazstartjjj;jjj<=kazendjjj;jjj++)for(kkk=kazstartkkk;kkk<=kazendkkk;kkk++)for(lll=kazstartlll;lll<=kazendlll;lll++)
 
 
 
-// tri-linear + parabolic (density) interpolation
+// full parabolic interpolation
 // Uses globals so can make them thread safe instead of using static's that are not
+// Assumes H is not a dependent dimension as for whichdatatype==4
 FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray)
 {
   FTYPE tempcheck;
@@ -1198,10 +1213,9 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   FTYPE *totalfptr;
   int iii,jjj,kkk,lll;
   int whichtemp,whichdegenfun;
-  int whichinterp1,whichinterp2,loginterp;
+  int loginterp;
   FTYPE xmx0,AA,BB;
   FTYPE ieos,jeos,keos,leos,meos;
-  int EXTRASTART,EXTRAFINISH;
 
 
 
@@ -1210,7 +1224,6 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   jeos=indexarray[2];
   keos=indexarray[3];
   leos=indexarray[4];
-
 
 
 
@@ -1228,26 +1241,9 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 
 
+  // determine if should do log interpolation
+  loginterp=get_dologinterp(repeatedeos,tabledimen,degentable,whichtable,whichfun,whichindep);
 
-
-#if(DOLOGINTERP)
-
-  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
-  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
-
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
-  // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
-
-  if(whichinterp1||degentable==1) loginterp=1;
-  else if(whichinterp2) loginterp=0;
-  else{
-    dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear()\n",whichfun);
-    myexit(62662);
-  }
-#endif
 
 
 
@@ -1297,12 +1293,11 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   }
 
 
-    
   // Loop over nearby table values and determine bi-linearly interpolated value
   // 4-D means 2^4=16 positions
   // 2-D means 2^2=4 positions
   // get 3 values as function of density
-  for(iii=kazstartiii;iii<=kazendiii;iii++) for(jjj=kazstartjjj;jjj<=kazendjjj;jjj++)for(kkk=kazstartkkk;kkk<=kazendkkk;kkk++)for(lll=kazstartlll;lll<=kazendlll;lll++){
+  LOOPKAZIJKL{
 
 
 #if(CHECKIFVALIDEOSDATA)
@@ -1361,22 +1356,23 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     }
 
 
+    // general offset
+    offsetquant2_general(whichdegenfun, quant1, tfptr[iii][jjj][kkk][lll], &tfptr[iii][jjj][kkk][lll]);
 
-#if(DOLOGINTERP)
-      if(loginterp){
-	if(degentable==1){
-	  offsetquant2_general(whichdegenfun, quant1, tfptr[iii][jjj][kkk][lll], &tfptr[iii][jjj][kkk][lll]);
-	}
-	//	if(tfptr[iii][jjj][kkk][lll]<=0.0){
-	//	  dualfprintf(fail_file,"Negative of log10\n");
-	//	}
-	tfptr[iii][jjj][kkk][lll] = log10(tfptr[iii][jjj][kkk][lll]);
-      }
-#endif
-
+    if(tfptr[iii][jjj][kkk][lll]<=0.0){
+      loginterp=0; // override and avoid use of log interpolation (really should just avoid that point as in _linear method)
+    }
 
   }// end loop over dimensions
 
+
+
+  // logify
+  if(loginterp){
+    LOOPKAZIJKL{
+      tfptr[iii][jjj][kkk][lll] = log10(tfptr[iii][jjj][kkk][lll]);
+    }// end loop over dimensions
+  }
 
 
 
@@ -1395,9 +1391,11 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     BB = 0.5*(tfptr[1][jjj][kkk][lll]+tfptr[-1][jjj][kkk][lll]-2.0*tfptr[0][jjj][kkk][lll]);
     tfptr[0][jjj][kkk][lll] = tfptr[0][jjj][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
 
+#if(PRODUCTION==0)
     if(!isfinite(tfptr[0][jjj][kkk][lll])){
       dualfprintf(fail_file,"1notfinite, :: %d %d %d\n",jjj,kkk,lll);
     }
+#endif
     
   } // end over iii,jjj,kkk,lll
 
@@ -1409,9 +1407,11 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     BB = 0.5*(tfptr[0][1][kkk][lll]+tfptr[0][-1][kkk][lll]-2.0*tfptr[0][0][kkk][lll]);
     tfptr[0][0][kkk][lll] = tfptr[0][0][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
 
+#if(PRODUCTION==0)
     if(!isfinite(tfptr[0][0][kkk][lll])){
       dualfprintf(fail_file,"2notfinite, :: %d %d %d\n",0,kkk,lll);
     }
+#endif
 
 
   } // end over kkk,lll
@@ -1424,10 +1424,11 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     BB = 0.5*(tfptr[0][0][1][lll]+tfptr[0][0][-1][lll]-2.0*tfptr[0][0][0][lll]);
     tfptr[0][0][0][lll] = tfptr[0][0][0][lll] + AA*xmx0 + BB*xmx0*xmx0;
 
+#if(PRODUCTION==0)
     if(!isfinite(tfptr[0][0][0][lll])){
       dualfprintf(fail_file,"3notfinite, :: %d %d %d\n",0,0,lll);
     }
-
+#endif
     
   } // end over lll
 
@@ -1437,27 +1438,26 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   BB = 0.5*(tfptr[0][0][0][1]+tfptr[0][0][0][-1]-2.0*tfptr[0][0][0][0]);
   tfptr[0][0][0][0] = tfptr[0][0][0][0] + AA*xmx0 + BB*xmx0*xmx0;
   
+#if(PRODUCTION==0)
   if(!isfinite(tfptr[0][0][0][0])){
     dualfprintf(fail_file,"4notfinite, :: %d %d %d\n",0,0,0);
   }
   dualfprintf(fail_file,"4finite, :: %d %d %d : %21.15g\n",0,0,0,tfptr[0][0][0][0]);
+#endif
 
-
+  // final fully parabolic result
   totalffinal=tfptr[0][0][0][0];
-
-
-
-#if(DOLOGINTERP)
+  // unlogify
   if(loginterp){
     totalffinal=pow(10.0,totalffinal);
+    // invert offset
     if(degentable==1){
       offsetquant2_general_inverse(whichdegenfun, quant1, totalffinal, &totalffinal);
     }
   }
-#endif
 
 
-
+  // return final result
   return(totalffinal);
 
 }
@@ -1484,10 +1484,9 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
   FTYPE *tfptr;
   int iii,jjj,kkk,lll;
   int whichtemp,whichdegenfun;
-  int whichinterp1,whichinterp2,loginterp;
+  int loginterp;
   FTYPE xmx0,AA,BB;
   FTYPE ieos,jeos,keos,leos,meos;
-  int EXTRASTART,EXTRAFINISH;
 
 
 
@@ -1516,24 +1515,11 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
 
 
-#if(DOLOGINTERP)
+  // determine if should do log interpolation
+  loginterp=get_dologinterp(repeatedeos,tabledimen,degentable,whichtable,whichfun,whichindep);
 
-  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
-  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
 
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
-  // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
-  if(whichinterp1||degentable==1) loginterp=1;
-  else if(whichinterp2) loginterp=0;
-  else{
-    dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear()\n",whichfun);
-    myexit(62662);
-  }
-#endif
 
 
 
@@ -1732,11 +1718,49 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
 
 
+// determine whether should do log interpolation
+static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep)
+{
+  int EXTRASTART,EXTRAFINISH;
+  int whichinterp1,whichinterp2,loginterp;
+  int qi;
 
 
 
+#if(DOLOGINTERP)
+
+  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
+  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
+
+  // GODMARK: Can make array that stores this info, looked up by whichfun as index
+  // functions (F) F(rho0,u)
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  // functions (F) F(rho0,p)
+  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
+
+  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
+
+  if(1||degentable==0){ // always allow loginterp==1
+    if(whichinterp1||degentable==1) loginterp=1;
+    else if(whichinterp2) loginterp=0;
+    else{
+      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
+      //      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
+      myexit(62662);
+    }
+  }
+  else{
+    loginterp=0;
+  }
+#else
+  loginterp=0;
+#endif
 
 
+
+  return(loginterp);
+
+}
 
 
 
@@ -1749,9 +1773,8 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
   FTYPE totalf;
   int iii,jjj,kkk,lll,mmm;
   int whichtemp,whichdegenfun;
-  int whichinterp1,whichinterp2,loginterp;
+  int loginterp;
   FTYPE ieos,jeos,keos,leos,meos;
-  int EXTRASTART,EXTRAFINISH;
   int qi;
 
 
@@ -1777,34 +1800,8 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
 
 
-
-
-#if(DOLOGINTERP)
-
-  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
-  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
-
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
-  // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
-
-  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
-
-  if(1||degentable==0){ // always allow loginterp==1
-    if(whichinterp1||degentable==1) loginterp=1;
-    else if(whichinterp2) loginterp=0;
-    else{
-      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
-      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
-      myexit(62662);
-    }
-  }
-  else{
-    loginterp=0;
-  }
-#endif
+  // determine if should do log interpolation
+  loginterp=get_dologinterp(repeatedeos,tabledimen,degentable,whichtable,whichfun,whichindep);
 
 
 
@@ -1899,13 +1896,17 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 	if(degentable==1){
 	  offsetquant2_general(whichdegenfun, quant1, f[iii][jjj][kkk][lll][mmm], &f[iii][jjj][kkk][lll][mmm]);
 	}
-	f[iii][jjj][kkk][lll][mmm] = log10(f[iii][jjj][kkk][lll][mmm]);
+	if(f[iii][jjj][kkk][lll][mmm]>0.0){
+	  f[iii][jjj][kkk][lll][mmm] = log10(f[iii][jjj][kkk][lll][mmm]);
+	  totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
+	}
       }
+#else
+      totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
 #endif
 
       //dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
 
-      totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
 
       // DEBUG
       //      dualfprintf(fail_file,"tabledimen=%d degentable=%d whichtable=%d whichfun=%d whichdegenfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d :: f=%21.15g dist=%21.15g totalf=%21.15g\n",tabledimen, degentable, whichtable,whichfun,whichdegenfun,ii,iii,jj,jjj,kk,kkk,ll,lll,f[iii][jjj][kkk][lll],dist[iii][jjj][kkk][lll],totalf);
@@ -3850,6 +3851,23 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 
 
 
+void compute_Hglobal_new(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+
+  // 1) Take EOSextra, rho0, u from full overall-CPUs grid to a single smaller grid
+  // 2) Ray-trace out from emission zones to determine their optical depth : each CPU gets some fraction of rays
+  // 3) Take final per-CPU rays' resulting \tau and feed back to all CPUs.
+  // 4) Interpolate back \tau onto hydro grid.
+
+
+  // get lambdatot
+  //get_lambdatot(MAC(EOSextra,i,j,k),rho0,u,&lambdatot);
+
+
+
+}
+
+
 
 
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
@@ -3865,9 +3883,6 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
   FTYPE rho0,u;
   FTYPE Htest1,Htest2,Htest3,Htest4;
   int lambdatotextra;
-  int hi;
-  int whichfun;
-  FTYPE unu,snu,pnu,du;
 
 
   //  return; //assume initial H is good -- use to compare input and output for EOS
@@ -3882,6 +3897,8 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
   // first store lookups and computations per point
   COMPFULLLOOP{
 
+    //////////////////////////
+    // get geometry stuff
     coord_ijk(i,j,k,CENT,X); // doesn't matter if CENT or anyother thing is used since just an estimate
     bl_coord_ijk(i,j,k,CENT,V);
     dxdxprim_ijk(i,j,k,CENT,dxdxp);
@@ -3899,40 +3916,11 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
     u=MACP0A1(prim,i,j,k,UU);
 
 
+    // get lambdatot
+    get_lambdatot(MAC(EOSextra,i,j,k),rho0,u,&lambdatot);
 
 
-    /////////////////////
-    //
-    // determine what whichfun0 means for this table
-    // could put this in lookup with primarytable->whichtable, but expensive to put there and assume all tables same whichdatatype, so this is ok
-    //
-    /////////////////////
-    if(whichdatatype[primarytable]==3){
-      whichfun=EXTRA5;
-    }
-    else if(whichdatatype[primarytable]==4){
-      whichfun=EXTRA19;
-    }
-    else{
-      dualfprintf(fail_file,"Shouldn't request whichfun0=%d if primarytable=%d\n",LAMBDATOT,primarytable);
-      myexit(46763463);
-    }
-
-    if(whichdatatype[primarytable]==4){
-      unu = MACP0A1(EOSextra,i,j,k,UNUGLOBAL);
-      pnu = MACP0A1(EOSextra,i,j,k,PNUGLOBAL);
-      snu = MACP0A1(EOSextra,i,j,k,SNUGLOBAL);
-      du  = u - unu;
-    }
-    else{
-      du = u;
-    }
-
-
-
-    if(get_eos_fromtable(whichfun,UTOTDIFF,MAC(EOSextra,i,j,k),rho0,du,&lambdatot)){ // uses utotdiff=du
-      lambdatot=1.0E30; // then assume optically thin (worry if outside when rho>>the limit in the table?) GODMARK
-    }
+    // get d\tau/dL
     GLOBALMACP0A1(ptemparray,i,j,k,0) = lambdatot;
     GLOBALMACP0A1(ptemparray,i,j,k,1) = dr/(lambdatot+SMALL); // dtau for radial integral
     GLOBALMACP0A1(ptemparray,i,j,k,2) = rdth/(lambdatot+SMALL); // dtau for angular integral
@@ -3942,6 +3930,8 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
 
     
   }
+
+
 
 
 
@@ -4021,6 +4011,73 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
 #endif
 
 
+
+
+  ///////////////
+  //
+  // constrain resulting H
+  //
+  ///////////////
+  constrainH(EOSextra,prim);
+
+
+
+}
+
+
+
+// get lambdatot(rho0,u)
+static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatotptr)
+{
+  int whichd=UTOTDIFF;
+  int whichfun;
+  FTYPE unu,snu,pnu,du;
+
+
+
+  /////////////////////
+  //
+  // determine what whichfun0 means for this table
+  // could put this in lookup with primarytable->whichtable, but expensive to put there and assume all tables same whichdatatype, so this is ok
+  //
+  /////////////////////
+  if(whichdatatype[primarytable]==3){
+    whichfun=EXTRA5;
+  }
+  else if(whichdatatype[primarytable]==4){
+    whichfun=EXTRA19;
+  }
+  else{
+    dualfprintf(fail_file,"Shouldn't request whichfun0=%d if primarytable=%d\n",LAMBDATOT,primarytable);
+    myexit(46763463);
+  }
+
+  if(whichdatatype[primarytable]==4){
+    unu = EOSextra[UNUGLOBAL];
+    pnu = EOSextra[PNUGLOBAL];
+    snu = EOSextra[SNUGLOBAL];
+    du  = u - unu;
+  }
+  else{
+    du = u;
+  }
+
+
+
+  if(get_eos_fromtable(whichfun,whichd,EOSextra,rho0,du,lambdatotptr)){ // uses utotdiff=du
+    *lambdatotptr=BIG; // then assume optically thin (worry if outside when rho>>the limit in the table?) GODMARK
+  }
+
+}
+
+
+
+
+static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int hi;
+  int i,j,k;
+
   if(whichdatatype[primarytable]!=4){ // otherwise no need to limit since not using table lookup for H
     for(hi=0;hi<NUMHDIRECTIONS;hi++){
       COMPFULLLOOP{ 
@@ -4037,10 +4094,7 @@ void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (
   }
 
 
-
-
 }
-
 
 
 

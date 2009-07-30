@@ -455,6 +455,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   //
   //////////
   *lpflag= UTOPRIMNOFAIL;
+  retval=0;
 
 
   //////////////
@@ -465,12 +466,18 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   compute_setup_quantities(prim, U, ptrgeom, Qtcon, Bcon, Bcov, &Bsq,&QdotB,&QdotBsq,&Qtsq,&Qdotn,&Qdotnp,&D,&Sc,whicheos,EOSextra);
 
 
+
+
 #if(0)
   if(ptrgeom->i==1 && ptrgeom->j==18){
     DLOOPA(i) dualfprintf(fail_file,"Qtcon[%d]=%21.15g Bcon[%d]=%21.15g Bcov[%d]=%21.15g\n",i,Qtcon[i],i,Bcon[i],i,Bcov[i]);
     dualfprintf(fail_file,"Bsq=%21.15g QdotB=%21.15g QdotBsq=%21.15g Qtsq=%21.15g Qdotn=%21.15g Qdotnp=%21.15g D=%21.15g Sc=%21.15g\n",Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
   }
 #endif
+
+
+
+
 
   ////////////////////////////////
   //
@@ -480,100 +487,80 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
   if(eomtype==EOMFFDE){
     // then perform the analytic inversion with Lorentz factor limit
-    if(forcefree_inversion(ptrgeom, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim)) return(1);
-    else return(0) ;
+    if(forcefree_inversion(ptrgeom, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim)) retval++;
   }
+  else{
+    /////////////
+    //
+    // SETUP ITERATIVE METHODS (good for GRMHD or entropy GRMHD or cold GRMHD)
+    //
+    /////////////
+    retval+=set_guess_Wp(lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
+    /////////////////////////////////////////////////////////////////////////
+    //
+    //
+    // HOT GRMHD INVERTERS (obtain Wp)
+    //
+    /////////////////////////////////////////////////////////////////////////
+    if(eomtype==EOMGRMHD){
 
-
-  // SETUP ITERATIVE METHODS (good for GRMHD or entropy GRMHD or cold GRMHD)
-  retval=set_guess_Wp(lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-  if(retval) return(retval);
-
-
-
-
-
-
-
-
-
-  ////////////////////////////////////////
-  ///////////////////////////////////////
-  //
-  //  Obtain Wp
-  //
-  ////////////////////////////////////// 
-  ////////////////////////////////////// 
-
-
-
-
-
-  /////////////////////////////////////////////////////////////////////////
-  //
-  //
-  // HOT GRMHD INVERTERS
-  //
-  /////////////////////////////////////////////////////////////////////////
-  if(eomtype==EOMGRMHD){
-
-    // METHOD specific:
+      // METHOD specific:
 #if(WHICHHOTINVERTER==3)
-    retval = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #elif(WHICHHOTINVERTER==2)
-    retval = find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #elif(WHICHHOTINVERTER==1)
-    retval = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #else
-    dualfprintf(fail_file,"No such WHICHHOTINVERTER=%d\n",WHICHHOTINVERTER);
-    myexit(89285221);
+      dualfprintf(fail_file,"No such WHICHHOTINVERTER=%d\n",WHICHHOTINVERTER);
+      myexit(89285221);
 #endif
 
 
 #if(0)
-    retval = find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-    retvalother = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wpother, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-    retvalother2=find_root_1D_gen_scn(lpflag, eomtype, W_last, &W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval = find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retvalother = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wpother, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retvalother2=find_root_1D_gen_scn(lpflag, eomtype, W_last, &W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
-    //  Wp=Wpother;
-    if(retval!=retvalother || (fabs(Wp-Wpother)/(Wp+Wpother)>1E-13)){
-      dualfprintf(fail_file,"2D/1D: i=%d j=%d :: %d %d %d :: Wp_last=%21.15g  Wp=%21.15g Wpother=%21.15g\n",ptrgeom->i,ptrgeom->j,retval,retvalother,retvalother2,Wp_last,Wp,Wpother);
-      dualfprintf(fail_file,"scn W_last=%g W=%g D=%g  Wp_last=%g Wp=%g\n",W_last,W,D,W_last-D,W-D);
-      dualfprintf(fail_file,"rho0=%g u=%g p=%g gamma=%g gammasq=%g w=%g utsq=%g\n",rho0,u,p,gamma,gammasq,w,utsq);
-    }
+      //  Wp=Wpother;
+      if(retval!=retvalother || (fabs(Wp-Wpother)/(Wp+Wpother)>1E-13)){
+	dualfprintf(fail_file,"2D/1D: i=%d j=%d :: %d %d %d :: Wp_last=%21.15g  Wp=%21.15g Wpother=%21.15g\n",ptrgeom->i,ptrgeom->j,retval,retvalother,retvalother2,Wp_last,Wp,Wpother);
+	dualfprintf(fail_file,"scn W_last=%g W=%g D=%g  Wp_last=%g Wp=%g\n",W_last,W,D,W_last-D,W-D);
+	dualfprintf(fail_file,"rho0=%g u=%g p=%g gamma=%g gammasq=%g w=%g utsq=%g\n",rho0,u,p,gamma,gammasq,w,utsq);
+      }
 #endif // end comparing SCN and Jon method
 
 
 
-  } // end if hot GRMHD
+    } // end if hot GRMHD
   
 
-  /////////////////////////////////////////////////////////////////////////
-  //
-  //
-  // COLD GRMHD INVERTERS
-  //
-  /////////////////////////////////////////////////////////////////////////
-  else if(eomtype==EOMCOLDGRMHD){
+    /////////////////////////////////////////////////////////////////////////
+    //
+    //
+    // COLD GRMHD INVERTERS (obtain Wp)
+    //
+    /////////////////////////////////////////////////////////////////////////
+    else if(eomtype==EOMCOLDGRMHD){
 
 
 
 #if(WHICHCOLDINVERTER==0)
-    retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
-    //  if(*lpflag!=0){
-    //    dualfprintf(fail_file,"E'[W,v^2] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp0,Qdotnp,Qdotn,D);
-    //    *lpflag=0; // let E' try again
-    //  }
-    //  else{
-    //    dualfprintf(fail_file,"E'[W',v^2] equation gave good answer: Wp=%21.15g  Qdotnp=%21.15g\n",Wp0,Qdotnp);
-    //  }
+      //  if(*lpflag!=0){
+      //    dualfprintf(fail_file,"E'[W,v^2] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp0,Qdotnp,Qdotn,D);
+      //    *lpflag=0; // let E' try again
+      //  }
+      //  else{
+      //    dualfprintf(fail_file,"E'[W',v^2] equation gave good answer: Wp=%21.15g  Qdotnp=%21.15g\n",Wp0,Qdotnp);
+      //  }
 
-    retval=retval0;
-    Wp=Wp0;
+      retval+=retval0;
+      Wp=Wp0;
 
 
 
@@ -582,106 +569,117 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
 
-    // Do inversion using E'[W'] equation
-    retval1 = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      // Do inversion using E'[W'] equation
+      retval1 = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
 
 
 
-    //  if(*lpflag!=0){
-    //    dualfprintf(fail_file,"E'[W'] equation gave bad answer: Wp=%21.15g  Bsq=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp,Bsq,Qdotnp,Qdotn,D);
+      //  if(*lpflag!=0){
+      //    dualfprintf(fail_file,"E'[W'] equation gave bad answer: Wp=%21.15g  Bsq=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp,Bsq,Qdotnp,Qdotn,D);
 
-    //    for(i=0;i<4;i++) Qcovp[i] = U[QCOV0+i] ;
-    //    raise_g(Qcovp,ptrgeom->gcon,Qconp) ;  
+      //    for(i=0;i<4;i++) Qcovp[i] = U[QCOV0+i] ;
+      //    raise_g(Qcovp,ptrgeom->gcon,Qconp) ;  
 
-    //    for(i=0;i<4;i++) dualfprintf(fail_file,"%d Qcovp=%21.15g Qconp=%21.15g\n",i,Qcovp[i],Qconp[i]);
+      //    for(i=0;i<4;i++) dualfprintf(fail_file,"%d Qcovp=%21.15g Qconp=%21.15g\n",i,Qcovp[i],Qconp[i]);
 
 
-    //    *lpflag=0; // let momentum try again
-    //  }
-    //  else{
-    //    dualfprintf(fail_file,"Wp=%21.15g Bsq=%21.15g QdotB=%21.15g QdotBsq=%21.15g Qtsq=%21.15g Qdotnp=%21.15g D=%21.15g\n",Wp,Bsq,QdotB,QdotBsq,Qtsq,Qdotnp,D,Sc);
-    //    dualfprintf(fail_file,"E'[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp,Qdotnp);
-    //  }
+      //    *lpflag=0; // let momentum try again
+      //  }
+      //  else{
+      //    dualfprintf(fail_file,"Wp=%21.15g Bsq=%21.15g QdotB=%21.15g QdotBsq=%21.15g Qtsq=%21.15g Qdotnp=%21.15g D=%21.15g\n",Wp,Bsq,QdotB,QdotBsq,Qtsq,Qdotnp,D,Sc);
+      //    dualfprintf(fail_file,"E'[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp,Qdotnp);
+      //  }
 
   
-    retval=retval1;
-    Wp=Wp1;
+      retval+=retval1;
+      Wp=Wp1;
 
 
 
 #elif(WHICHCOLDINVERTER==2)
-    // Do inversion using P^2[W'] equation
+      // Do inversion using P^2[W'] equation
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
-    if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
-      dualfprintf(fail_file,"Wp_last=%21.15g\n",Wp_last);
-    }
+      if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
+	dualfprintf(fail_file,"Wp_last=%21.15g\n",Wp_last);
+      }
 #endif
 
-    retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-    //  if(*lpflag!=0){
-    //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
-    //    myexit(0);
-    //  }
-    //  else{
-    //    dualfprintf(fail_file,"P^2[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp2,Qdotnp);
-    //  }
+      retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      //  if(*lpflag!=0){
+      //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
+      //    myexit(0);
+      //  }
+      //  else{
+      //    dualfprintf(fail_file,"P^2[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp2,Qdotnp);
+      //  }
 
 
-    //  Wp = (Wp>Wp2) ? Wp2 : Wp;
-    retval=retval2;
-    Wp=Wp2;
+      //  Wp = (Wp>Wp2) ? Wp2 : Wp;
+      retval+=retval2;
+      Wp=Wp2;
 
 
 
 #elif(WHICHCOLDINVERTER==3)
-    // Do inversion using P^\alpha[W'] equation
+      // Do inversion using P^\alpha[W'] equation
 
 
-    retval3 = find_root_3D_gen_Palpha(lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval3 = find_root_3D_gen_Palpha(lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
 
-    //  if(*lpflag!=0){
-    //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
-    //    myexit(0);
-    //  }
-    //  else{
-    //    dualfprintf(fail_file,"P^2[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp2,Qdotnp);
-    //  }
+      //  if(*lpflag!=0){
+      //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
+      //    myexit(0);
+      //  }
+      //  else{
+      //    dualfprintf(fail_file,"P^2[W'] equation gave good answer: Wp=%21.15g Qdotnp=%21.15g\n",Wp2,Qdotnp);
+      //  }
 
 
-    //  Wp = (Wp>Wp3) ? Wp3 : Wp;
-    retval=retval3;
-    Wp=Wp3;
+      //  Wp = (Wp>Wp3) ? Wp3 : Wp;
+      retval+=retval3;
+      Wp=Wp3;
 
 #else
-    dualfprintf(fail_file,"No such WHICHCOLDINVERTER=%d\n",WHICHCOLDINVERTER);
-    myexit(89285224);
+      dualfprintf(fail_file,"No such WHICHCOLDINVERTER=%d\n",WHICHCOLDINVERTER);
+      myexit(89285224);
 #endif
 
 
 
 
-  } // end if eomtype==EOMCOLDGRMHD
-  else if(eomtype==EOMENTROPYGRMHD){
+    } // end if eomtype==EOMCOLDGRMHD
 
 
 
-    // METHOD specific:
+    /////////////////////////////////////////////////////////////////////////
+    //
+    //
+    // ENTROPY GRMHD INVERTERS (obtain Wp)
+    //
+    /////////////////////////////////////////////////////////////////////////
+    else if(eomtype==EOMENTROPYGRMHD){
+
+
+
+      // METHOD specific:
 #if(WHICHENTROPYINVERTER==0)
-    retval = find_root_1D_gen_Sc(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen_Sc(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #else
-    dualfprintf(fail_file,"No such WHICHENTROPYINVERTER=%d\n",WHICHENTROPYINVERTER);
-    myexit(89285225);
+      dualfprintf(fail_file,"No such WHICHENTROPYINVERTER=%d\n",WHICHENTROPYINVERTER);
+      myexit(89285225);
 #endif
 
 
 
-  } // end if-else structure over eomtype
+    } // end if-else structure over eomtype
+  }// end if doing non-analytic methods
+
 
 
 
@@ -692,11 +690,10 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   //
   /////////////////////
 
-  if(retval==0){
-    // check on result of inversion
-    check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-    
+  // check on result of inversion even if failure (i.e. even if retval>0)
+  check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
+  if(retval==0){
     //  Check if solution was found
     retval+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
     if(retval) return(retval);
@@ -899,6 +896,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
 {
   FTYPE u,p;
   FTYPE utsq;
+  FTYPE Ss;
   FTYPE gammasq,gamma,rho0,w;
   FTYPE bsq;
   FTYPE etaabs;
@@ -973,7 +971,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
     // RIGHT
   
     ////////////////// WRONG
-  //  if( JONGENNEWTSTUFF && (w+bsq)*gammasq >= GAMMASQCHECKRESID ) { // WRONG
+    //  if( JONGENNEWTSTUFF && (w+bsq)*gammasq >= GAMMASQCHECKRESID ) { // WRONG
     ///////////////// WRONG
 
     if(coldgrhd(lpflag, Qtsq, D, &Wpcoldhd)) Wpcoldhd=*Wp_last; // if failed to get coldGRHD Wp, then just use Wp_last
@@ -1028,14 +1026,29 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   // sometimes above gives invalid guess (Wp=0 or utsq<0) so fix
   numattemptstofixguess=0;
   while(1){
+
+    // under all eomtype's, ensure utsq reasonable for guess so Newton's method starts at reasonable value around which to work from
     // check  utsq from this guess for W
     utsq=utsq_calc(*W_last, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
-    if(utsq>=0.0){
-      // if utsq=nan, will fail
+
+    if(eomtype==EOMENTROPYGRMHD){
+      // for Entropy method, must also ensure Ss is reasonable
+      Ss=Ss_Wp_utsq(whicheos,EOSextra,*Wp_last,D,utsq);
+    }
+    else{
+      // just some dummy value
+      Ss=0.0;
+    }
+
+    if(utsq>=0.0 && utsq==utsq && Ss==Ss){
+      // if utsq=nan, will fail to reach here
+      // if Ss=nan, will fail to reach here
       break;
     }
     else{
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g D=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,D);
+#if(PRODUCTION==0)
+      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,Ss,D);
+#endif
       *Wp_last = MAX(*Wp_last*10.0,fabs(D));
       *W_last = *Wp_last + (D);
     }
@@ -2090,7 +2103,7 @@ static FTYPE dEprimedWp_new1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYP
 
 
 // 0 = -Sc + Sc[Wp] for entropy GRMHD
-static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
   FTYPE W;
@@ -2113,6 +2126,41 @@ static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,
     if(Ss_tmp!=Ss_tmp || result!=result) result=-VERYBIG; // indicates still problem
   }
 
+  // DEBUG:
+  //  dualfprintf(fail_file,"Sc_Wp: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
+
+  return(result);
+
+}
+
+// 0 = Wp(-Sc + Sc[Wp]) for entropy GRMHD
+// Noticed that original residual behaves like log(Wp) near the root, so that the derivative shoots too far.  Multiplying by Wp solves that problem.
+static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+  FTYPE result;
+  FTYPE W;
+  FTYPE utsq;
+  FTYPE Ss_tmp;
+
+
+  W = Wp+D;
+  utsq=utsq_calc(W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
+
+
+  if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+    result=-VERYBIG; // force residual to be large and negative so indicates a problem
+  }
+  else{
+    Ss_tmp=Ss_Wp_utsq(whicheos,EOSextra,Wp,D,utsq);
+    
+    result = Wp*(-Sc + D*Ss_tmp);
+
+    if(Ss_tmp!=Ss_tmp || result!=result) result=-VERYBIG; // indicates still problem
+  }
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"Sc_Wp: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
+
   return(result);
 
 }
@@ -2127,7 +2175,7 @@ static FTYPE dScdWp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
   FTYPE W;
   FTYPE utsq;
   FTYPE dvsq,dSs1,dSs2,dSsdWp;
-
+  FTYPE Ss;
 
   W = Wp+D;
   utsq=utsq_calc(W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
@@ -2139,13 +2187,22 @@ static FTYPE dScdWp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
     dSs1 = dSsdWp_calc_utsq(whicheos,EOSextra,Wp,D,utsq);
     dSs2 = dSsdvsq_calc2_Wp(whicheos,EOSextra, Wp, D, utsq );
     dSsdWp = dSs1  + dSs2*dvsq; // dSs/dW = dSs/dWp
+    Ss=Ss_Wp_utsq(whicheos,EOSextra,Wp,D,utsq);
     
-    result = D*dSsdWp;
+    // old result for old residual
+    //   result = D*dSsdWp;
+    
+    // new result for new residual
+    result = -Sc + D*(dSsdWp*Wp + Ss);
 
     // check for nan
     if(dvsq!=dvsq || dSs1!=dSs1 || dSs2!=dSs2 || dSsdWp!=dSsdWp || result!=result) result=0.0; // indicates still problem
 
   }
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"dScdWp:  Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: dvsq=%21.15g dSs1=%21.15g dSs2=%21.15g dSsdWp=%21.15g result=%21.15g\n",Wp,W,D,utsq,dvsq,dSs1,dSs2,dSsdWp,result);
+
 
   return(result);
 
@@ -3425,7 +3482,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   FTYPE dn[NEWT_DIM], del_f[NEWT_DIM];
 
   // Jon's modification
-  FTYPE residold[NEWT_DIM],xold[NEWT_DIM],dxold[NEWT_DIM],DAMPFACTOR[NEWT_DIM];
+  FTYPE DAMPFACTOR[NEWT_DIM];
 
   int   keep_iterating, i_increase, retval2,retval = 0;
   const int ltrace  = 0;
@@ -3470,6 +3527,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
+  // DEBUG:
   if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
     for(it=0;it<n;it++) dualfprintf(fail_file,"before funcd: x[%d]=%21.15g dx[%d]=%2.15g\n",it,x[it],it,dx[it]);
   }
@@ -3480,9 +3538,12 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   (*funcd) (x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
+  // DEBUG:
+  //  for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx);
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
+  // DEBUG:
   if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
     for(it=0;it<n;it++) dualfprintf(fail_file,"after funcd: x[%d]=%21.15g dx[%d]=%2.15g\n",it,x[it],it,dx[it]);
   }
@@ -3652,22 +3713,27 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 #if(JONGENNEWTSTUFF)
       if(n_iter==0){
 	for(id=0;id<n;id++) {
-	  xold[id]=x[id]; // original W
-	  dxold[id]=dx[id]; // original dW
-	  residold[id]=resid[id]; // original residual
+	  // start history
+	  x_older[id]=x[id];
+	  x_old[id]=x[id];
+	  dx_old[id]=dx[id];
+	  //	  xold[id]=x[id]; // original W
+	  //	  dxold[id]=dx[id]; // original dW
+	  //	  residold[id]=resid[id]; // original residual
 	}
       }
       else{ // only meaningful to consider goodness of W if compute residual from present W, not previous W.
 	for(id=0;id<n;id++){
 	  //  if(sign(residold[id])!=sign(resid[id])){ //  then passed over root -- bad in very relativistic case
-	  if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0	    
-	    if(1 || fabs(xold[0])>wglobal[2] || fabs(x_old[0])>wglobal[2]){ // always do now under more careful choice of when returns bad residual indicating problem
+	  if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0 or Ss=NaN
+	    //   if(1 || fabs(xold[0])>wglobal[2] || fabs(x_old[0])>wglobal[2]){ // always do now under more careful choice of when returns bad residual indicating problem
+	    if(1 || fabs(x_old[0])>wglobal[2]){ // always do now under more careful choice of when returns bad residual indicating problem
 	      // then ultrarelativistic and need to be more careful
 	      DAMPFACTOR[id]=0.5*DAMPFACTOR[id];
 	      x[id]=x_older[id]; // since current W is what gave bad residual and already saved it into x_old[0]
 	      dx[id]=dx_old[id]; // new dx is probably messed up (didn't yet save dx[0], so use dx_old[0]
 #if(PRODUCTION==0)
-	      if(debugfail>=2) dualfprintf(fail_file,"resetW: id=%d :: %21.15g %21.15g\n",id,x[id],dx[id]);
+	      if(debugfail>=2) dualfprintf(fail_file,"resetW: id=%d :: %21.15g %21.15g DAMPFACTOR=%21.15g\n",id,x[id],dx[id],DAMPFACTOR[id]);
 #endif
 	      // SUPERGODMARK: Noticed that if Mathematica solution can be found but gives utsq<0 then this damping leads to nearly circular loop till max iterations.
 	      diddamp=1;
@@ -3684,14 +3750,38 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 #endif
 	      return(1); // then old fails to work too
 	    }
+	    // reset old values so will use this good value if immediately hit bad solution
+	    // This restarts history
+	    x_older[id]=x[id];
+	    x_old[id]=x[id];
+	    dx_old[id]=dx[id];
 	  }
 	}
       }
 #endif
       
-      for( id = 0; id < n ; id++) {
-	x[id] += DAMPFACTOR[id]*dx[id]  ;
+
+      /////////////////////////
+      //
+      // Step forward with x+dx
+      //
+      /////////////////////////
+      if(eomtype==EOMENTROPYGRMHD){
+      	// Function to find root of is like log(Wp) , so near root, Newton can jump to negative Wp.  But for entropy method, this cannot be allowed without using very small DAMPFACTOR.  So instead, somewhat bracket the root between original Wp and 0.0
+      	for( id = 0; id < n ; id++) {
+      	  x[id] = MAX((x[id]+DAMPFACTOR[id]*dx[id]),(x[id]-0.0)/100.0);
+
+	  // DEBUG:
+	  //	  dualfprintf(fail_file,"id=%d newx=%21.15g using dx=%21.15g\n",id,x[id],dx[id]);
+	}
       }
+      else{
+	for( id = 0; id < n ; id++) {
+	  x[id] +=DAMPFACTOR[id]*dx[id]  ;
+	}
+      }
+
+
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
     if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){

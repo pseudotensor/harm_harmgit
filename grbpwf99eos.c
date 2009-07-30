@@ -5,57 +5,33 @@
 // p(rho0, u) (needed to get initial guess for W)
 FTYPE pressure_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure;
 
-  pressure = u*(2.0*rho0+u)/(3.0*(rho0+u));
-
-  return(pressure);
+  return(pressure_rho0_u_idealgas(EOSextra,rho0,u));
 }
 
 // u(rho0, p) (used for initial conditions)
 FTYPE u_rho0_p_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
-  return( 1.5*(p + 3.0*p*p/(2.0*rho0+sqrt(9.0*p*p+4.0*rho0*rho0))) );
+  return(u_rho0_p_idealgas(EOSextra,rho0,p));
 }
 
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE dpdu;
-
-  dpdu = 1.0/3.0*(1.0 + rho0*rho0/( (rho0+u)*(rho0+u)));
-
-  return(dpdu);
+  return(dpdu_rho0_u_idealgas(EOSextra,rho0,u));
 }
 
 // dp(rho0, u)/drho0
 FTYPE dpdrho0_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE dpdrho0;
-
-  dpdrho0 = u*u/(3.0*(rho0+u)*(rho0+u));
-
-  return(dpdrho0) ;
+  return(dpdrho0_rho0_u_idealgas(EOSextra,rho0,u));
 }
 
 
 // sound speed squared (for vchar.c)
 FTYPE cs2_compute_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE pressure;
-  FTYPE h;
-  FTYPE cs2;
-
-  pressure = pressure_rho0_u_grbpwf99(EOSextra,rho0,u);
-  h=rho0+u+pressure; // not specific h
-
-  cs2=pressure*(5.0*h - 8.0*pressure) / (3.0*h*(h-pressure));
-
-
-  //  dualfprintf(fail_file,"cs2=%21.15g pressure=%21.15g\n",cs2,pressure);
-
-  return(cs2);
-
+  return(cs2_compute_idealgas(EOSextra,rho0,u));
 }
 
 
@@ -63,26 +39,14 @@ FTYPE cs2_compute_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // S(rho0,u)
 FTYPE compute_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE entropy;
-
-  // not setup yet for TM EOS
-  entropy=compute_entropy_idealgas(EOSextra,rho0,u);
-
-  return(entropy);
-
+  return(compute_entropy_idealgas(EOSextra,rho0,u));
 }
 
 
 // u(rho0,S)
 FTYPE compute_u_from_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
-  FTYPE u;
-
-  // not setup yet for TM EOS
-  u = compute_u_from_entropy_idealgas(EOSextra,rho0,entropy);
-
-  return(u);
-
+  return(compute_u_from_entropy_idealgas(EOSextra,rho0,entropy));
 }
 
 
@@ -90,60 +54,31 @@ FTYPE compute_u_from_entropy_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy
 // used for dudp_calc
 FTYPE compute_dSdrho_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE dSdrho;
-
-  // not setup yet for TM EOS
-  dSdrho=compute_dSdrho_idealgas(EOSextra,rho0,u);
-
-  return(dSdrho);
-
+  return(compute_dSdrho_idealgas(EOSextra,rho0,u));
 }
 
 
 // used for dudp_calc
 FTYPE compute_dSdu_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-  FTYPE dSdu;
-
-  // not setup yet for TM EOS
-  dSdu = compute_dSdu_idealgas(EOSextra,rho0,u);
-
-  return(dSdu);
-
+  return(compute_dSdu_idealgas(EOSextra,rho0,u));
 }
 
 FTYPE compute_specificentropy_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE specificentropy;
-
-  // not setup yet for TM EOS
-  specificentropy=compute_specificentropy_wmrho0_idealgas(EOSextra,rho0,wmrho0);
-
-  return(specificentropy);
-
+  return(compute_specificentropy_wmrho0_idealgas(EOSextra,rho0,wmrho0));
 }
 
 
 
 FTYPE compute_dspecificSdrho_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE dSdchi;
-
-  // not setup yet for TM EOS
-  dSdchi=compute_dspecificSdrho_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
-
-  return(dSdchi);
+  return(compute_dspecificSdrho_wmrho0_idealgas(EOSextra,  rho0,  wmrho0));
 }
 
 FTYPE compute_dspecificSdwmrho0_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE dSdchi;
-
-  // not setup yet for TM EOS
-  dSdchi = compute_dspecificSdwmrho0_wmrho0_idealgas(EOSextra,  rho0,  wmrho0);
-
-  return(dSdchi);
-
+  return(compute_dspecificSdwmrho0_wmrho0_idealgas(EOSextra,  rho0,  wmrho0));
 }
 
 
@@ -151,64 +86,21 @@ FTYPE compute_dspecificSdwmrho0_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTY
 // p(rho0, w-rho0 = u+p)
 FTYPE pressure_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE Q,delta,delta2;
-  FTYPE pressure;
-
-  Q=wmrho0/rho0;
-  delta=9.0/25.0*wmrho0*(2.0+Q);
-  delta2=delta/rho0;
-
-  pressure=(5.0/8.0)*(wmrho0 - delta/(1.0+sqrt(1.0+delta2)));
-
-  return(pressure);
+  return(pressure_wmrho0_idealgas(EOSextra,  rho0,  wmrho0));
 }
 
 
-// 1 / (d(u+p)/dp)
-FTYPE compute_idwmrho0dp_grbpwf99_old(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
-{
-  FTYPE Q,delta,delta2;
-  FTYPE ddeltadwmrho0,idwmrho0dp;
-
-  Q=wmrho0/rho0;
-  delta=9.0/25.0*wmrho0*(2.0+Q);
-  delta2=delta/rho0;
-  
-  ddeltadwmrho0=18.0/25.0*(1.0+Q);
-
-  idwmrho0dp = 5.0/16.0*(2.0-ddeltadwmrho0/sqrt(1.0+delta2));
-
-  return(idwmrho0dp);
-
-}
 
 // 1 / (d(u+p)/dp) holding rho0 fixed
 FTYPE compute_idwmrho0dp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE pressure_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE idwmrho0dp;
-  FTYPE p;
-
-  p = pressure_wmrho0_grbpwf99(EOSextra, rho0, wmrho0);
-
-  idwmrho0dp = (2.0*wmrho0 + 2.0*rho0 - 5.0*p)/(5.0*rho0+5.0*wmrho0-8.0*p);
-
-  return(idwmrho0dp);
-
+  return(compute_idwmrho0dp_idealgas(EOSextra,  rho0,  wmrho0));
 }
 
 // 1 / (drho0/dp) holding wmrho0 fixed
 FTYPE compute_idrho0dp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE pressure_wmrho0_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
-  FTYPE idrho0dp;
-  FTYPE p;
-
-  p = pressure_wmrho0_grbpwf99(EOSextra, rho0, wmrho0);
-
-  idrho0dp = (2.0*wmrho0 - 5.0*p)/(5.0*rho0+5.0*wmrho0-8.0*p);
-
-  return(idrho0dp);
+  return(compute_idrho0dp_idealgas(EOSextra,  rho0,  wmrho0));
 }
 
 

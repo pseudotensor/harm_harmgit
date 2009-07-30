@@ -275,6 +275,32 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMENTROPYGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
 
 
+#if(1)
+      // DEBUG (for now keep on until entropy inversion code stabilizes)
+      // If utoprim_jon.c fails to find solution, then see if old 5D method finds solution.  If so, then complain so JCM can improve new inversion
+      lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+      if(lpflag!=UTOPRIMNOFAIL){
+
+	// copy over utoprim_jon result for check_on_inversion below
+	FTYPE prorig[NPR],pr0orig[NPR],Uoldorig[NPR],Uneworig[NPR];
+	PLOOP(pliter,pl){
+	  pr0orig[pl]=pr0[pl];
+	  prorig[pl]=pr[pl];
+	  Uoldorig[pl]=Uold[pl];
+	  Uneworig[pl]=Unew[pl];
+	}
+
+	// Get original inversion for entropy
+	MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
+	if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==0){
+	  check_on_inversion(&lpflag, pr0orig, prorig, ptrgeom, Uoldorig, Uneworig,newtonstats); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
+	  dualfprintf(fail_file,"Old inversion method worked while new failed\n");
+	  myexit(0);
+	}
+      }
+#endif
+
+
     }
 
   }

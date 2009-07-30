@@ -84,6 +84,7 @@ static FTYPE compute_inside_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u
 
   pressure=pressure_rho0_u_mignone(EOSextra,rho0,u);
 
+  // Entropy will be wrong when rho0 or pressure are non-positive
   if(rho0<SMALL) rho0=SMALL;
   if(u<SMALL) u=SMALL;
   if(pressure<SMALL) pressure=SMALL;
@@ -101,6 +102,7 @@ FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
   FTYPE u;
   FTYPE expfactor;
 
+  // u will be wrong when density is non-positive
   if(rho0<SMALL) rho0=SMALL;
 
   expfactor = exp(entropy/rho0)*pow(rho0,8.0/3.0);
@@ -117,6 +119,7 @@ FTYPE compute_dSdrho_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE dSdrho;
 
+  // Limiting the below values will likely confuse utoprim.orig.c inversion if reached
   if(rho0<SMALL) rho0=SMALL;
   if(u<SMALL) u=SMALL;
 
@@ -132,6 +135,7 @@ FTYPE compute_dSdu_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE dSdu;
 
+  // Limiting the below values will likely confuse utoprim.orig.c inversion if reached
   if(rho0<SMALL) rho0=SMALL;
   if(u<SMALL) u=SMALL;
 
@@ -149,9 +153,10 @@ FTYPE compute_entropy_wmrho0_mignone_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE w
   u=u_wmrho0_mignone(EOSextra, rho0, wmrho0);
   P=pressure_wmrho0_mignone(EOSextra, rho0, wmrho0);
 
-  if(rho0<SMALL) rho0=SMALL;
-  if(u<SMALL) u=SMALL;
-  if(P<SMALL) P=SMALL;
+  // Don't limit rho0 and pressure since this is used for iterative scheme that requires to know if beyond valid domain or not.  Nan will be terminated during inversion.
+  //  if(rho0<SMALL) rho0=SMALL;
+  //  if(u<SMALL) u=SMALL;
+  //  if(P<SMALL) P=SMALL;
 
   entropy = rho0*log(P*(rho0+u)/pow(rho0,8.0/3.0));
 
@@ -168,9 +173,10 @@ FTYPE compute_specificentropy_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE 
   u=u_wmrho0_mignone(EOSextra, rho0, wmrho0);
   P=pressure_wmrho0_mignone(EOSextra, rho0, wmrho0);
 
-  if(rho0<SMALL) rho0=SMALL;
-  if(u<SMALL) u=SMALL;
-  if(P<SMALL) P=SMALL;
+  // Don't limit rho0 and pressure since this is used for iterative scheme that requires to know if beyond valid domain or not.  Nan will be terminated during inversion.
+  //  if(rho0<SMALL) rho0=SMALL;
+  //  if(u<SMALL) u=SMALL;
+  //  if(P<SMALL) P=SMALL;
 
   specificentropy = log(P*(rho0+u)/pow(rho0,8.0/3.0));
 
