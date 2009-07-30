@@ -29,6 +29,9 @@
 // whether to try cold inversion if hot fails
 #define HOT2COLD 0
 
+// whether to try cold inversion if entropy fails
+#define ENTROPY2COLD 0
+
 
 // *NUMBER* OF DIMENSIONS FOR COMPUTATION
 // Can choose 3 and still do 1D optimized problems

@@ -20,11 +20,12 @@
 // fraction upon if greater will treat as failure if FAILIFBADCHECK is triggered
 #define CHECKONINVFRACFAIL (1E-1)
 
-static int negdensitycheck(FTYPE *prim, PFTYPE *pflag);
+static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag);
 static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats);
 static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew);
 static int compare_ffde_inversions(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats);
 
+static int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
 static int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
 
 
@@ -186,6 +187,19 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 #endif
 
 
+    ////////////////////
+    //  If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
+    ///////////////////
+    if(HOT2ENTROPY){
+      int hotpflag;
+      // get failure flag
+      hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+
+      if(hotpflag){
+	tryentropyinversion(hotpflag, pr0, pr, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
+      }      
+    }
+
 
 
     ////////////////////
@@ -193,7 +207,6 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     ///////////////////
     if(HOT2COLD){
       int hotpflag;
-
       // get failure flag
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -205,6 +218,86 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
+
+  }
+  else if(EOMTYPE==EOMENTROPYGRMHD){
+    ///////////////////////////////////////////////////
+    //
+    ///////////// ENTROPY GRMHD
+    //
+    ///////////////////////////////////////////////////
+    // direct entropy evolution (can use old Utoprim() or new code, but not all codes have entropy inversion)
+
+#if(0)
+    // GODMARK: I noticed that old 5D method is very poor in finding the solution in large gradients so fails alot leading to averaging and run-away field growths in semi-static regions leading to untrustable solution.
+    // original entropy inversion method (works fine)
+
+    // do inversion for entropy version of EOMs
+    // only one inversion is setup to handle this
+    PALLLOOP(k) prother[k]=pr0[k];
+    whichentropy=EVOLVEFULLENTROPY;
+      
+    ////////////////////////
+    // get entropy evolution (don't use failure -- otherfail)
+    MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
+
+
+
+#else
+
+
+    // new faster code within utoprim_jon.c
+    // This method seems very robust, hardly every failing to find solution, indicating that 5D method's inability to find solution was intrinsic to the 5D method NOT to the new conserved quantities.
+
+    // get entropy evolution inversion
+    MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMENTROPYGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
+
+
+#if(0)
+    // DEBUG
+    // If utoprim_jon.c fails to find solution, then see if old 5D method finds solution.  If so, then complain so JCM can improve new inversion
+    lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+    if(lpflag!=UTOPRIMNOFAIL){
+
+      // copy over utoprim_jon result for check_on_inversion below
+      FTYPE prorig[NPR],pr0orig[NPR],Uoldorig[NPR],Uneworig[NPR];
+      PLOOP(pliter,pl){
+	pr0orig[pl]=pr0[pl];
+	prorig[pl]=pr[pl];
+	Uoldorig[pl]=Uold[pl];
+	Uneworig[pl]=Unew[pl];
+      }
+
+      // Get original inversion for entropy
+      MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==0){
+	check_on_inversion(&lpflag, pr0orig, prorig, ptrgeom, Uoldorig, Uneworig,newtonstats); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
+	dualfprintf(fail_file,"Old inversion method worked while new failed\n");
+	myexit(0);
+      }
+    }
+#endif
+
+
+    ////////////////////
+    //  If entropy GRMHD failed or gets suspicious solution, revert to cold GRMHD if solution is cold
+    //  This is the same trycoldinversion() as for HOT2COLD
+    ///////////////////
+    if(ENTROPY2COLD){
+      int entropypflag;
+      // get failure flag
+      entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+	
+      if(entropypflag){
+	trycoldinversion(entropypflag, pr0, pr, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
+      }// end if entropypflag
+	
+    }
+
+
+
+
+#endif
 
   }
   else if(EOMTYPE==EOMCOLDGRMHD){
@@ -229,7 +322,6 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
   }
   else if(EOMTYPE==EOMFFDE){
-
     ///////////////////////////////////////////////////
     //
     ///////////// FORCE FREE
@@ -253,59 +345,20 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
   }
-  else if(EOMTYPE==EOMENTROPYGRMHD){
-    // direct entropy evolution (can use old Utoprim() or new code, but not all codes have entropy inversion)
-
-    if(0){
-      // original entropy inversion method (works fine)
-
-      // do inversion for entropy version of EOMs
-      // only one inversion is setup to handle this
-      PALLLOOP(k) prother[k]=pr0[k];
-      whichentropy=EVOLVEFULLENTROPY;
-      
-      ////////////////////////
-      // get entropy evolution (don't use failure -- otherfail)
-      MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
-    }
-    else{
-      // new faster code within utoprim_jon.c
-
-      // get entropy evolution inversion
-      MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMENTROPYGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
 
 
-#if(1)
-      // DEBUG (for now keep on until entropy inversion code stabilizes)
-      // If utoprim_jon.c fails to find solution, then see if old 5D method finds solution.  If so, then complain so JCM can improve new inversion
-      lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-      if(lpflag!=UTOPRIMNOFAIL){
 
-	// copy over utoprim_jon result for check_on_inversion below
-	FTYPE prorig[NPR],pr0orig[NPR],Uoldorig[NPR],Uneworig[NPR];
-	PLOOP(pliter,pl){
-	  pr0orig[pl]=pr0[pl];
-	  prorig[pl]=pr[pl];
-	  Uoldorig[pl]=Uold[pl];
-	  Uneworig[pl]=Unew[pl];
-	}
 
-	// Get original inversion for entropy
-	MYFUN(Utoprim(whichentropy,Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim", 1);
-	if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==0){
-	  check_on_inversion(&lpflag, pr0orig, prorig, ptrgeom, Uoldorig, Uneworig,newtonstats); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
-	  dualfprintf(fail_file,"Old inversion method worked while new failed\n");
-	  myexit(0);
-	}
-      }
+
+  ////////////
+  //
+  // modify failure flag if necessary
+  //
+  ////////////
+
+#if(DOEVOLVERHO)
+  negdensitycheck(finalstep, pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
 #endif
-
-
-    }
-
-  }
-
-
 
 
   ///////////////////////////////////////////////////
@@ -316,18 +369,6 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   // only output if failed
   //
   ///////////////////////////////////////////////////
-
-  ////////////
-  //
-  // modify failure flag if necessary
-  //
-  ////////////
-
-#if(DOEVOLVERHO)
-  if(finalstep){
-    negdensitycheck(pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
-  }
-#endif
 
   // for now only report if not just negative density failure
   lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
@@ -373,9 +414,89 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
+// use entropy grmhd if hot grmhd gives u<0 since then entropy is valid
+#define USEENTROPYIFHOTUNEG 1
+// use entropy grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+#define USEENTROPYIFHOTRHONEG 1
+// use entropy grmhd if hot grmhd leads to convergence or other "no solution" type failure
+#define USEENTROPYIFHOTFAILCONV 1
+
+// try entropy inversion of hot one fails
+int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
+{
+  int k;
+  FTYPE prhot[NPR],prentropy[NPR];
+  PFTYPE entropypflag;
+
+
+  //  dualfprintf(fail_file,"Got here in tryentropyinversion\n");
+
+  if( (USEENTROPYIFHOTRHONEG==0 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USEENTROPYIFHOTUNEG==0 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) ){
+    // then maybe not so bad failure
+    // e.g. if get here, do nothing when either rho<=0 or u<=0
+  }
+  else if( (USEENTROPYIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USEENTROPYIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USEENTROPYIFHOTFAILCONV==1 && hotpflag!=0) ){
+    // get here if want to fix up rho<=0, u<=0, or convergence failure
+    // First if() is needed since last conditional or else if() would trigger on any failure type
+    
+
+    // then bad failure, so try to use entropy grmhd
+    // restore backup in case previous inversion changed things
+    PALLLOOP(k){
+      prhot[k]=pr[k];
+      Ugeomfree[k]=Ugeomfree0[k];
+      pr[k]=pr0[k];
+    }
+    
+    
+    // get entropy evolution inversion
+    MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(EOMENTROPYGRMHD,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, &entropypflag, prentropy,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);
+    
+    
+    ///////////////////////////////////
+    //
+    // check if entropy solution is good
+    if(entropypflag==UTOPRIMNOFAIL){
+
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL; // default then is that no failure
+
+      // then keep entropy solution
+      PALLLOOP(k) pr[k]=prentropy[k];
+
+
+      // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
+      // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
+#if(PRODUCTION==0)      
+      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good! hotpflag=%d entropypflag=%d\n",hotpflag,entropypflag);
+#endif
+
+    }// else if entropypflag is bad
+    else{
+      // then both hot and entropy are bad, so keep hot
+      // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in entropy case!
+      // only can go to force-free if b^2/rho>>1 as well
+      // keep hotpflag and keep hot solution
+      PALLLOOP(k) pr[k]=prhot[k];
+
+#if(PRODUCTION==0)      
+      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and bad! hotpflag=%d entropypflag=%d\n",hotpflag,entropypflag);
+#endif
+
+    }
+        
+  }// if bad failure of some kind
+
+  return(0);
+}
+
+
+
+
 
 // use cold grmhd if hot grmhd gives u<0 since then cold is valid
 #define USECOLDIFHOTUNEG 1
+// use cold grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+#define USECOLDIFHOTRHONEG 1
 // use cold grmhd if hot grmhd leads to convergence or other "no solution" type failure
 #define USECOLDIFHOTFAILCONV 1
 
@@ -389,14 +510,15 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
 
   //  dualfprintf(fail_file,"Got here in trycoldinversion\n");
 
-  if(IFUTOPRIMFAILSOFTRHORELATED(hotpflag) || (USECOLDIFHOTUNEG==0 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) ){
+  if( (USECOLDIFHOTRHONEG==0 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USECOLDIFHOTUNEG==0 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) ){
     // then maybe not so bad failure
-    
+    // e.g. if get here, do nothing when either rho<=0 or u<=0
   }
-  else if( (USECOLDIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USECOLDIFHOTFAILCONV==1 && hotpflag!=0) ){
+  else if( (USECOLDIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USECOLDIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USECOLDIFHOTFAILCONV==1 && hotpflag!=0) ){
+    // get here if want to fix up rho<=0, u<=0, or convergence failure
+    // First if() is needed since last conditional or else if() would trigger on any failure type
     
-    
-    
+
     // then bad failure, so try to use cold grmhd
     // restore backup in case previous inversion changed things
     PALLLOOP(k){
@@ -424,7 +546,9 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
       
+#if(PRODUCTION==0)      
       if(debugfail>=2) dualfprintf(fail_file,"Tried cold and good! hotpflag=%d coldpflag=%d\n",hotpflag,coldpflag);
+#endif
 
       ///////////////////////////////
       //
@@ -447,11 +571,15 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
     }// else if coldpflag is bad
     else{
       // then both hot and cold are bad, so keep hot
-      // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in cold case!'
+      // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in cold case!
       // only can go to force-free if b^2/rho>>1 as well
       // keep hotpflag and keep hot solution
       PALLLOOP(k) pr[k]=prhot[k];
+
+#if(PRODUCTION==0)      
       if(debugfail>=2) dualfprintf(fail_file,"Tried cold and bad! hotpflag=%d coldpflag=%d\n",hotpflag,coldpflag);
+#endif
+
     }
         
   }// if bad failure of some kind
@@ -762,15 +890,15 @@ pr[6]=   0.0399035382308459 ;
 
 
 
-static int negdensitycheck(FTYPE *prim, PFTYPE *pflag)
+static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
 {
 
   //  return(0);
 
   //Inversion from the average value succeeded or has a negative density or internal energy
   if(IFUTOPRIMFAILSOFT(*pflag)) {
-      
-    if( prim[UU] < 0.0 ) {
+
+    if( prim[UU] < 0.0 && (finalstep&&STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP) || STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP) {
       *pflag = UTOPRIMFAILU2AVG2;
     }
   }
