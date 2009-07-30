@@ -353,7 +353,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   }
   else{
     // ensure failure reported if ret!=0
-    if(*lpflag==UTOPRIMNOFAIL || *lpflag==UTOPRIMFAILFIXED){
+    if(IFUTOPRIMNOFAILORFIXED(*lpflag)){
       *lpflag= ret+UTOPRIMFAILCONVRET+1;// related to UTOPRIMFAILCONVRET
     }
   }
@@ -551,7 +551,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
       retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
-      //  if(*lpflag!=0){
+      //  if(IFUTOPRIMFAIL(*lpflag)){
       //    dualfprintf(fail_file,"E'[W,v^2] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp0,Qdotnp,Qdotn,D);
       //    *lpflag=0; // let E' try again
       //  }
@@ -576,7 +576,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
 
-      //  if(*lpflag!=0){
+      //  if(IFUTOPRIMFAIL(*lpflag)){
       //    dualfprintf(fail_file,"E'[W'] equation gave bad answer: Wp=%21.15g  Bsq=%21.15g Qdotnp=%21.15g Qdotn=%21.15g D=%21.15g\n",Wp,Bsq,Qdotnp,Qdotn,D);
 
       //    for(i=0;i<4;i++) Qcovp[i] = U[QCOV0+i] ;
@@ -609,7 +609,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 #endif
 
       retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-      //  if(*lpflag!=0){
+      //  if(IFUTOPRIMFAIL(*lpflag)){
       //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
       //    myexit(0);
       //  }
@@ -632,7 +632,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
 
-      //  if(*lpflag!=0){
+      //  if(IFUTOPRIMFAIL(*lpflag)){
       //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
       //    myexit(0);
       //  }

@@ -284,7 +284,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 	if((pr[RHO]>=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILUNEG;
 	if((pr[RHO]<=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILRHOUNEG;
 
-	if(*lpflag!=UTOPRIMNOFAIL){
+	if(IFUTOPRIMNOFAILORFIXED(*lpflag)){
 	  //	PLOOP(pliter,pl) dualfprintf(fail_file,"U[%d]=%21.15g pr0[%d]=%21.15g pr[%d]=%21.15g\n",pl,U_target[pl],pl,pr0[pl],pl,pr[pl]);
 	}
 	PLOOP(pliter,pl) prnonrel[pl]=pr[pl];

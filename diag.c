@@ -2227,7 +2227,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
     if (primtoU(UNOTHING, prother[DISSSIMPLEINVCO], &qenergy, ptrgeom, Uother[DISSSIMPLEINVLAB2]) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
 
 
-    if(otherfail==UTOPRIMNOFAIL && AVOIDFULLINVERSION==0){
+    if(IFUTOPRIMNOFAILORFIXED(otherfail) && AVOIDFULLINVERSION==0){
       // if didn't fail, then setup qfull and conserved quantity associated with fullinv version of primitive
       //      if (get_stateforUdiss(prother[DISSFULLINVCO], ptrgeom, &qfull) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
       if (primtoU(UNOTHING, prother[DISSFULLINVCO], &qenergy, ptrgeom, Uother[DISSFULLINVLAB2]) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
@@ -2264,7 +2264,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 
       // report failure to invert
       if(DODISS){
-	if(otherfail!=UTOPRIMNOFAIL) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
+	if(UTOPRIMFAIL(otherfail)) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
       }
 
 
@@ -2298,7 +2298,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 		|| loopinv==DISSFULLINVLAB1 || loopinv==DISSFULLINVLAB1NOMAX
 		|| loopinv==DISSFULLINVLAB2 || loopinv==DISSFULLINVLAB2NOMAX
 		){
-	  if(otherfail==UTOPRIMNOFAIL) choseninv=DISSFULLINVCO;
+	  if(IFUTOPRIMNOFAILORFIXED(otherfail)) choseninv=DISSFULLINVCO;
 	  else choseninv=DISSSIMPLEINVCO; // still want some result
 	}
 	else{

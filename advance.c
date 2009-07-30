@@ -1605,7 +1605,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
   //WHAT IF INTERNAL ENERGY BECOMES SLIGHTLY NEGATIVE?  WE STILL CAN DO THE LIMITING IN PRIM QUANTITIES! -- coorrected but check! -- SUPERSASMARK TODO atch
   if( LIMIT_AC_PRIM_FRAC_CHANGE &&
       (
-       invert_from_point_flag == UTOPRIMNOFAIL || //atch added the below to still do the pt. vs. avg. check on primitives if the internal energy goes neg.
+       IFUTOPRIMNOFAILORFIXED(invert_from_point_flag) || //atch added the below to still do the pt. vs. avg. check on primitives if the internal energy goes neg.
        ( (IFUTOPRIMFAILSOFTNOTRHORELATED(invert_from_point_flag)) && (0 != STEPOVERNEGU) ) || //intermediate substep with stepping over u < 0
        ( (IFUTOPRIMFAILSOFTRHORELATED(invert_from_point_flag)) && (0 != STEPOVERNEGRHO) ) //intermediate substep with stepping over rho < 0
        )
@@ -1619,7 +1619,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
     invert_from_average_flag = GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
     //Inversion from the average value succeeded or has a negative density or internal energy
-    if( invert_from_average_flag == UTOPRIMNOFAIL  || IFUTOPRIMFAILSOFT(invert_from_average_flag) ) {
+    if( IFUTOPRIMNOFAILORFIXED(invert_from_average_flag) || IFUTOPRIMFAILSOFT(invert_from_average_flag) ) {
       //Inversion from both from the point and the average values succeeded
       //checks if the states' gamma factors and densities are different by more than a certain fraction
       //and if different, modify the point values such that they are not further than by MAX_AC_PRIM_FRAC_CHANGE
@@ -1636,7 +1636,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
         lpflag[FLAGUTOPRIMFAIL] = UTOPRIMFAILU2AVG2;
       }
 
-      //lpflag[FLAGUTOPRIMFAIL] = invert_from_point_flag;  //unneeded since it is alrady = UTOPRIMNOFAIL
+      //lpflag[FLAGUTOPRIMFAIL] = invert_from_point_flag;  //unneeded since it is alrady == UTOPRIMNOFAIL
 
     } // end if both point and average did NOT fail
     else {
@@ -1648,7 +1648,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       frac_avg_used = 0.0;  //used point value, i.e. zero fracion of the average value
     }
   }
-  else if( INVERTFROMAVERAGEIFFAILED && (invert_from_point_flag!=UTOPRIMNOFAIL) ) {  //failure  //atch correct
+  else if( INVERTFROMAVERAGEIFFAILED && (IFUTOPRIMFAIL(invert_from_point_flag)) ) {  //failure  //atch correct
     //inversion from the point value failed
 
     // if last substep -> revert to the average value, else if only negative densities then allow for substep.  If other type of failures, then never allow and revert to Uavg

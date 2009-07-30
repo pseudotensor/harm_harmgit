@@ -780,7 +780,7 @@
 // rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
 
 // see failfloorcount counter
-#define NUMFAILFLOORFLAGS 9
+#define NUMFAILFLOORFLAGS 11
 //  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -791,11 +791,15 @@
 #define COUNTUTOPRIMFAILRHOUNEG 6
 #define COUNTGAMMAPERC 7 // see fixup_checksolution()
 #define COUNTUPERC 8 // see fixup_checksolution()
+#define COUNTENTROPY 9
+#define COUNTCOLD 10
 
 // failure codes for utoprim failures
 // NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
 #define NANPFLAG -100 // bad pflag
-#define UTOPRIMFAILFIXED -1
+#define UTOPRIMFAILFIXEDCOLD -3
+#define UTOPRIMFAILFIXEDENTROPY -2
+#define UTOPRIMFAILFIXEDUTOPRIM -1
 #define UTOPRIMNOFAIL 0
 #define UTOPRIMFAILCONV 1
 #define UTOPRIMFAILCONVW     2
@@ -820,6 +824,13 @@
 
 #define IFUTOPRIMFAILSOFT(pflag) (IFUTOPRIMFAILSOFTRHORELATED(pflag)||IFUTOPRIMFAILSOFTNOTRHORELATED(pflag))
 
+#define IFUTOPRIMFAILFIXED(pflag) (pflag==UTOPRIMFAILFIXEDCOLD || pflag==UTOPRIMFAILFIXEDENTROPY || pflag==UTOPRIMFAILFIXEDUTOPRIM)
+
+#define IFUTOPRIMNOFAILORFIXED(pflag) (pflag==UTOPRIMFAILFIXEDCOLD || pflag==UTOPRIMFAILFIXEDENTROPY || pflag==UTOPRIMFAILFIXEDUTOPRIM || pflag==UTOPRIMNOFAIL)
+
+#define IFUTOPRIMNOFAIL(pflag) (pflag==UTOPRIMNOFAIL)
+
+#define IFUTOPRIMFAIL(pflag) (pflag>UTOPRIMNOFAIL)
 
 
 /* failure modes */

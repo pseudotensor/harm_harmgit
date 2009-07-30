@@ -3212,8 +3212,8 @@ FTYPE limit_fluxc2a_prim_change(
       GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL) = pflag_backup;   //restore the inversion flag
 
       if( 
-	 //(pflag_backup==UTOPRIMFAILUNEG || pflag_backup==UTOPRIMNOFAIL) && //not sure if can use this since it will always fix up the failure in the end
-	 (pflag_current==UTOPRIMFAILUNEG || pflag_current==UTOPRIMNOFAIL)   //if only u < 0 or no failure it is OK (since only check rho & gamma)
+	 //(pflag_backup==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_backup)) && //not sure if can use this since it will always fix up the failure in the end
+	 (pflag_current==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_current))   //if only u < 0 or no failure it is OK (since only check rho & gamma)
 	 ) {
 
 	//4. limit the flux c2a correction (difference btw. pr & pr_updated based on this difference

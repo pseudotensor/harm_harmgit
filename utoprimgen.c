@@ -257,7 +257,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     // DEBUG
     // If utoprim_jon.c fails to find solution, then see if old 5D method finds solution.  If so, then complain so JCM can improve new inversion
     lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-    if(lpflag!=UTOPRIMNOFAIL){
+    if(IFUTOPRIMFAIL(lpflag)){
 
       // copy over utoprim_jon result for check_on_inversion below
       FTYPE prorig[NPR],pr0orig[NPR],Uoldorig[NPR],Uneworig[NPR];
@@ -377,7 +377,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   if(IFUTOPRIMFAILSOFT(lpflag)){
     // then don't report info for now SUPERGODMARK
   }
-  else if(lpflag &&(debugfail>=1)){
+  else if(IFUTOPRIMFAIL(lpflag) &&(debugfail>=1)){
     dualfprintf(fail_file, "Failed to find a prim. var. solution!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g\n",t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx);
   }
 
@@ -435,7 +435,7 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree
     // then maybe not so bad failure
     // e.g. if get here, do nothing when either rho<=0 or u<=0
   }
-  else if( (USEENTROPYIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USEENTROPYIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USEENTROPYIFHOTFAILCONV==1 && hotpflag!=0) ){
+  else if( (USEENTROPYIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USEENTROPYIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USEENTROPYIFHOTFAILCONV==1 && IFUTOPRIMFAIL(hotpflag)) ){
     // get here if want to fix up rho<=0, u<=0, or convergence failure
     // First if() is needed since last conditional or else if() would trigger on any failure type
     
@@ -456,9 +456,9 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree
     ///////////////////////////////////
     //
     // check if entropy solution is good
-    if(entropypflag==UTOPRIMNOFAIL){
+    if(IFUTOPRIMNOFAILORFIXED(entropypflag)){
 
-      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL; // default then is that no failure
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDENTROPY; // default then is that no failure (or fixed-up failure)
 
       // then keep entropy solution
       PALLLOOP(k) pr[k]=prentropy[k];
@@ -469,6 +469,8 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree
 #if(PRODUCTION==0)      
       if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good! hotpflag=%d entropypflag=%d\n",hotpflag,entropypflag);
 #endif
+
+      
 
     }// else if entropypflag is bad
     else{
@@ -514,7 +516,7 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
     // then maybe not so bad failure
     // e.g. if get here, do nothing when either rho<=0 or u<=0
   }
-  else if( (USECOLDIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USECOLDIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USECOLDIFHOTFAILCONV==1 && hotpflag!=0) ){
+  else if( (USECOLDIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(hotpflag)) || (USECOLDIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)) || (USECOLDIFHOTFAILCONV==1 && IFUTOPRIMFAIL(hotpflag)) ){
     // get here if want to fix up rho<=0, u<=0, or convergence failure
     // First if() is needed since last conditional or else if() would trigger on any failure type
     
@@ -535,9 +537,9 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
     ///////////////////////////////////
     //
     // check if cold solution is good
-    if(coldpflag==UTOPRIMNOFAIL){
+    if(IFUTOPRIMNOFAILORFIXED(coldpflag)){
 
-      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL; // default then is that no failure
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDCOLD; // default then is that no failure (or fixed failure)
 
       // then keep cold solution
       PALLLOOP(k) pr[k]=prcold[k];
@@ -682,7 +684,7 @@ static int check_on_inversion(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_g
     // broke loop to check multiple directions
 
     PLOOP(pliter,pl){
-      if((*lpflag)!=0 || fdiff[pl]>CHECKONINVFRAC){
+      if(IFUTOPRIMFAIL(*lpflag) || fdiff[pl]>CHECKONINVFRAC){
 	if(
 	   ( (pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && EOMTYPE==EOMENTROPYGRMHD)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
 	    ){
@@ -1128,7 +1130,7 @@ int Utoprimgen_compare(int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom,
       dualfprintf(fail_file,"utoprimdiff: %d %ld :: %d %d %d :: %d ::  %21.15g   %21.15g   %21.15g %21.15g :: %d %d :: %21.15g %21.15g\n",steppart,nstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,pl,ptest1[pl]-ptest2[pl],(ptest1[pl]!=0.0) ? fabs(ptest1[pl]-ptest2[pl])/ptest1[pl] : ptest1[pl]-ptest2[pl],ptest1[pl],ptest2[pl],lntries1,lntries2,lerrx1,lerrx2);
     }
   }
-  if(lpflag1!=0 || lpflag2!=0){
+  if(IFUTOPRIMFAIL(lpflag1) || IFUTOPRIMFAIL(lpflag2)){
     dualfprintf(fail_file,"%d %ld :: %d %d %d :: lpflag1=%d lpflag2=%d errx1=%21.15g errx2=%21.15g\n",steppart,nstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag1,lpflag2,lerrx1,lerrx2);
   }
   if(lntries1>10 || lntries2>10){
@@ -1137,7 +1139,7 @@ int Utoprimgen_compare(int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom,
 
   
   // always do (use old utoprim)
-  if(lpflag1==0) PALLLOOP(pl){
+  if(IFUTOPRIMNOFAILORFIXED(lpflag1)) PALLLOOP(pl){
     pr[pl]=ptest1[pl];
     *lpflag=lpflag1;
   }
@@ -1240,7 +1242,7 @@ int Utoprimgen_tryagain_substep(int which, int parameter, FTYPE *Ugeomfree0, FTY
 
   // if really a bad failure that don't want / can't handle, then try again
   if(
-     (*lpflag!=0)
+     (IFUTOPRIMFAIL(*lpflag))
      &&(!((IFUTOPRIMFAILSOFTNOTRHORELATED(*lpflag))&&(STEPOVERNEGU)))
      &&(!((*lpflag==UTOPRIMFAILRHONEG)&&(STEPOVERNEGRHO)))
      &&(!((*lpflag==UTOPRIMFAILRHOUNEG)&&(STEPOVERNEGRHOU)))
