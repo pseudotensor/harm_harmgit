@@ -1963,7 +1963,13 @@ void check_bnd_num(void)
 
   if(DOENTROPY==DONOENTROPY && HOT2ENTROPY){
     dualfprintf(fail_file,"ERROR: Must have DOENTROPY enabled to use HOT2ENTROPY\n");
-    myexit(34897562);
+    myexit(13892345);
+  }
+
+
+  if(UTOPRIMVERSION == UTOPRIM5D1 && EOMTYPE==EOMENTROPYGRMHD){
+    dualfprintf(fail_file,"SUPERWARNING: Old 5D method often fails to find solution where solution to inversion does exist.  This can readily lead to completely wrong solutions due to failure fixups.\n");
+    myexit(3987634);
   }
 
 

@@ -2264,7 +2264,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 
       // report failure to invert
       if(DODISS){
-	if(UTOPRIMFAIL(otherfail)) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
+	if(IFUTOPRIMFAIL(otherfail)) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
       }
 
 

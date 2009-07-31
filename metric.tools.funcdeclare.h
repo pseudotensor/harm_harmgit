@@ -31,3 +31,6 @@ extern void get_and_copy_geometry(int ii, int jj, int kk, int pp, struct of_geom
 
 
 extern void set_igdet_old(struct of_geom *geom);
+
+extern void check_rmin(void);
+

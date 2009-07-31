@@ -528,7 +528,6 @@ void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle)
   FTYPE x2;
   int i;
   static int firsttime=1;
-  void interpfun(int i, FTYPE th2, FTYPE *theta, FTYPE *fun, FTYPE *answer);
   FTYPE myrho,myie,myvr,myomega3,myyl,myynu;
 
 
@@ -550,13 +549,13 @@ void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle)
     if(radius[i]>r) break;
   }
 
-  interpfun(i, r, radius, rho, &myrho);
-  interpfun(i, r, radius, ie, &myie);
-  interpfun(i, r, radius, vr, &myvr);
-  interpfun(i, r, radius, omega3, &myomega3);
-  interpfun(i, r, radius, yl, &myyl);
-  interpfun(i, r, radius, ynu, &myynu);
-  interpfun(i, r, radius, hcm, hcmsingle);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, rho, &myrho);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, ie, &myie);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, vr, &myvr);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, omega3, &myomega3);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, yl, &myyl);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, ynu, &myynu);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, hcm, hcmsingle);
     
   // units already converted
   pr[RHO]=myrho;
@@ -578,81 +577,6 @@ void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle)
 
 
 
-
-
-#define LINEARTYPE 0
-#define LOGTYPE 1
-#define QUADRATICTYPE 2
-
-//#define INTERPTYPE LOGTYPE
-//#define INTERPTYPE LINEARTYPE
-#define INTERPTYPE QUADRATICTYPE
-
-void interpfun(int i, FTYPE pos, FTYPE *xfun, FTYPE *fun, FTYPE *answer)
-{
-  FTYPE slope,intercept;
-  FTYPE slope1,slope2,xminusx0;
-  FTYPE f0,f1,f2,x0,x1,x2;
-
-
-
-  if(INTERPTYPE==LINEARTYPE){
-    // linearly interpolate fun using pos
-    //      *answer = fun[i-1] + (fun[i]-fun[i-1])/(xfun[i]-xfun[i-1])*(pos-xfun[i-1]);    
-    slope = (fun[i]-fun[i-1])/(xfun[i]-xfun[i-1]);
-    intercept = fun[i-1];
-    *answer = slope*(pos-xfun[i-1]) + intercept;
-
-  }
-  else if(INTERPTYPE==QUADRATICTYPE){
-    // quadratically interpolate fun using xfun
-    if(i-1<0){
-      f0=fun[i];
-      f1=fun[i+1];
-      f2=fun[i+2];
-      x0=xfun[i];
-      x1=xfun[i+1];
-      x2=xfun[i+2];	
-    }
-    else if(i+1>=NRADIAL){
-      f0=fun[i-2];
-      f1=fun[i-1];
-      f2=fun[i];
-      x0=xfun[i-2];
-      x1=xfun[i-1];
-      x2=xfun[i];	
-    }
-    else{
-      f0=fun[i-1];
-      f1=fun[i];
-      f2=fun[i+1];
-      x0=xfun[i-1];
-      x1=xfun[i];
-      x2=xfun[i+1];
-    }
-
-    slope2 = ((f0-f2)/(x0-x2) - (f2-f1)/(x2-x1))/(x0-x1);
-    slope1 = (f0-f1)/(x0-x1) + (f0-f2)/(x0-x2) - (f2-f1)/(x2-x1);
-    xminusx0 = (pos-x0);
-
-    *answer = slope2*pow(xminusx0,2.0) + slope1*xminusx0 + f0;
-  }
-  else if(INTERPTYPE==LOGTYPE){
-    // log interpolate fun using xfun
-    slope = log(fun[i]/fun[i-1])/log(xfun[i]/xfun[i-1]);
-    if(fabs(slope)<1E-10) *answer=fun[0];
-    else if(fun[i-1]<0.0){
-      // assume bi-log
-      *answer=-exp( slope*log(pos/xfun[i-1])+log(-fun[i-1]) );
-    }
-    else *answer=exp( slope*log(pos/xfun[i-1])+log(fun[i-1]) );
-
-    //dualfprintf(fail_file,"ii=%d jj=%d slope=%g myXfun=%g\n",ii,jj,slope,myXfun);
-  }
-
-
-
-}
 
 
 

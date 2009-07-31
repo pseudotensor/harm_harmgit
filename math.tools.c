@@ -81,3 +81,181 @@ FTYPE roundprecision(FTYPE value, int precision)
 }
 
 
+// to use generically (e.g. for parabolic interpolation), call like:
+// interpfun(QUADRATICTYPE,3,1,realposition,array from 0 of positions, array from 0 of values, output of answer);
+
+void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTYPE *fun, FTYPE *answer)
+{
+  FTYPE slope,intercept;
+  FTYPE slope1,slope2,xminusx0;
+  FTYPE f0,f1,f2,x0,x1,x2;
+  FTYPE linslope1,linslope2;
+
+
+  ///////////////////////////////////////
+  //
+  // First setup points to use.  Restrict if near edge of data
+  //
+  ///////////////////////////////////////
+  if(interptype==LINEARTYPE || interptype==LOGTYPE){
+    if(i-1<0){
+      f0=fun[i];
+      f1=fun[i+1];
+      x0=xfun[i];
+      x1=xfun[i+1];
+    }
+    else if(i+1>=numpoints){
+      f0=fun[i-1];
+      f1=fun[i];
+      x0=xfun[i-1];
+      x1=xfun[i];	
+    }
+    else{
+      f0=fun[i-1];
+      f1=fun[i];
+      x0=xfun[i-1];
+      x1=xfun[i];
+    }
+  }
+  else if(interptype==QUADRATICTYPE){
+
+    // quadratically interpolate fun using xfun
+    if(i-1<0){
+      f0=fun[i];
+      f1=fun[i+1];
+      f2=fun[i+2];
+      x0=xfun[i];
+      x1=xfun[i+1];
+      x2=xfun[i+2];	
+    }
+    else if(i+1>=numpoints){
+      f0=fun[i-2];
+      f1=fun[i-1];
+      f2=fun[i];
+      x0=xfun[i-2];
+      x1=xfun[i-1];
+      x2=xfun[i];	
+    }
+    else{
+      f0=fun[i-1];
+      f1=fun[i];
+      f2=fun[i+1];
+      x0=xfun[i-1];
+      x1=xfun[i];
+      x2=xfun[i+1];
+    }
+  }
+
+
+  ///////////////////////////////////////
+  //
+  // Interpolate
+  //
+  ///////////////////////////////////////
+
+
+  ///////////////////////////////////////
+  // LINEAR
+  ///////////////////////////////////////
+  if(interptype==LINEARTYPE){
+    // linearly interpolate fun using pos
+    slope = (f1-f0)/(x1-x0);
+    intercept = f0;
+    *answer = slope*(pos-x0) + intercept;
+  }
+  ///////////////////////////////////////
+  // Quadratic with limiters
+  ///////////////////////////////////////
+  else if(interptype==QUADRATICTYPE){
+
+    slope2 = ((f0-f2)/(x0-x2) - (f2-f1)/(x2-x1))/(x0-x1);
+    slope1 = (f0-f1)/(x0-x1) + (f0-f2)/(x0-x2) - (f2-f1)/(x2-x1);
+
+    linslope1=(f1-f0)/(x1-x0);
+    linslope2=(f2-f1)/(x2-x1);
+    
+    // MINM truncation:
+    if(linslope1*linslope2<0.0){
+#if(0)
+      if(pos<=x0){
+	*answer=f0;
+      }
+      else if(pos>=x0 && pos<=x1){
+	if(fabs(pos-x0)<fabs(pos-x1)) *answer=f0;
+	else *answer=f1;
+      }
+      else if(pos>=x1 && pos<=x2){
+	if(fabs(pos-x1)<fabs(pos-x2)) *answer=f1;
+	else *answer=f2;
+      }
+      else *answer=f2;
+#elif(1)
+      if(fabs(linslope1)<fabs(linslope2)){
+	slope = (f1-f0)/(x1-x0);
+	intercept = f0;
+	*answer = slope*(pos-x0) + intercept;
+      }
+      else{
+	slope = (f2-f1)/(x2-x1);
+	intercept = f1;
+	*answer = slope*(pos-x1) + intercept;
+      }
+#elif(0)
+      *answer=f1;
+#endif
+    }
+    else{
+      xminusx0 = (pos-x0);
+      *answer = slope2*pow(xminusx0,2.0) + slope1*xminusx0 + f0;
+    }
+
+#if(1)
+    // limit to original values' ranges
+    if(*answer>f0 && *answer>f1 && *answer>f2){
+      if(f0>f1 && f0>f2){
+	*answer=f0;
+      }
+      else if(f1>f0 && f1>f2){
+	*answer=f1;
+      }
+      else if(f2>f0 && f2>f1){
+	*answer=f2;
+      }
+    }
+    else if(*answer<f0 && *answer<f1 && *answer<f2){
+      if(f0<f1 && f0<f2){
+	*answer=f0;
+      }
+      else if(f1<f0 && f1<f2){
+	*answer=f1;
+      }
+      else if(f2<f0 && f2<f1){
+	*answer=f2;
+      }
+    }
+#endif
+
+  }
+  ///////////////////////////////////////
+  // Linear in Log
+  ///////////////////////////////////////
+  else if(interptype==LOGTYPE){
+    // log interpolate fun using xfun
+    slope = log(f1/f0)/log(x1/f0);
+    if(fabs(slope)<1E-10) *answer=f1;
+    else if(f0<0.0){
+      // assume bi-log
+      *answer=-exp( slope*log(pos/x0)+log(-f0) );
+    }
+    else *answer=exp( slope*log(pos/x0)+log(f0) );
+
+    //dualfprintf(fail_file,"ii=%d jj=%d slope=%g myXfun=%g\n",ii,jj,slope,myXfun);
+  }
+
+
+
+}
+
+
+
+

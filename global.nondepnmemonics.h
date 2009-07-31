@@ -262,6 +262,11 @@
 #define UTOPRIMAVG 1
 
 
+// interpolation function used by init.readdata.c and other code
+#define LINEARTYPE 0
+#define LOGTYPE 1
+#define QUADRATICTYPE 2 // includes limiters to ovoid overshoots and new extremums within 3 point domain
+
 
 
 ////////////////////////////////////////////////

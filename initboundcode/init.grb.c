@@ -972,8 +972,6 @@ int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr
 // checks location of horizon
 int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  int i,j,k;
-  FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
@@ -990,27 +988,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   }
 
 
-
-
-  // diagnostic
-  // determine nature of inner radial edge (assumes myid==0 is always there)
-  if(myid==0){
-    i=INFULL1;
-    j=k=0;
-    coord(i,j,k, FACE1, X);
-    bl_coord(X, V);
-    r=V[1];
-    th=V[2];
-    trifprintf("rmin(i=%d,X=%21.15g): %21.15g\n", i,X[1],r);
-    trifprintf("r=%21.15g Rrhor=%21.15g :: rmin/rh: %21.15g\n", r / (fabs(Rhor)+SMALL) );
-    //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
-    if(r/(fabs(Rhor)+SMALL)<=1.0){
-      trifprintf("inner grid is inside horizon\n");
-    }
-    else{
-      trifprintf("inner grid is outside horizon\n");
-    }
-  }
+  // check rmin
+  check_rmin();
 
 
   // check that singularities are properly represented by code
