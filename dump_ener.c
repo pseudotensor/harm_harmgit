@@ -330,7 +330,7 @@ int dump_ener(int doener, int dordump, int call_code)
       }
       else{
 	trifprintf("\n");
-	PDUMPLOOP(pliter,pl){
+	PLOOP(pliter,pl){
 	  ftemp0=(U_final[pl] - U_init[pl]);
 	  ftemp1=(U_final[pl]-fladd_tot[pl]-sourceadd_tot[pl]-(pcum_tot[X1DN][pl]+pcum_tot[X2DN][pl]+pcum_tot[X3DN][pl]) + (pcum_tot[X1UP][pl]+pcum_tot[X2UP][pl]+pcum_tot[X3UP][pl]) - U_init[pl]);
 	  trifprintf("U[%d]: ini,fin,fdf,del,tfdf,tdel: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
@@ -365,15 +365,15 @@ int dump_ener(int doener, int dordump, int call_code)
 	//
 	//////////////////////////
 	
-	// 2+NPR+COMPDIM*2*NPRDUMP+NPRDUMP+(2) terms
+	// 2+NPR+COMPDIM*2*NPR+NPR+(2) terms
 	// see jrdp3dener in gammie.m
 	myfprintf(ener_file,"%21.15g %ld ",t ,realnstep);
-	PDUMPLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", U_tot[pl]);
-	DIRLOOP(dir) PDUMPLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", pdot_tot[dir][pl]);
+	PLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", U_tot[pl]);
+	DIRLOOP(dir) PLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", pdot_tot[dir][pl]);
 	// COMPDIM*2*NPRDUMP more terms
-	DIRLOOP(dir) PDUMPLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", pcum_tot[dir][pl]);
-	PDUMPLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", fladd_tot[pl]);
-	PDUMPLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", sourceadd_tot[pl]);
+	DIRLOOP(dir) PLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", pcum_tot[dir][pl]);
+	PLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", fladd_tot[pl]);
+	PLOOP(pliter,pl) myfprintf(ener_file, "%21.15g ", sourceadd_tot[pl]);
 	myfprintf(ener_file, "%21.15g %21.15g ", divbmax,divbavg);
 	if(DODISS) for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) myfprintf(ener_file, "%21.15g ", diss_tot[dissloop]);
 	else for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) myfprintf(ener_file, "%21.15g ", -1.0); // dummy space holder
@@ -384,14 +384,14 @@ int dump_ener(int doener, int dordump, int call_code)
       // FLENER FILE (dir, pl, and linear summed terms for flux, floor, and source quantities)
       // (note the change in ordering for external file read in macros/functions)
       myfprintf(flener_file,"%21.15g %ld ",t,realnstep);
-      DIRLOOP(dir) PDUMPLOOP(pliter,pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdotterms_tot[dir][fl][pl]);
-      PDUMPLOOP(pliter,pl) FLOORLOOP(floor) myfprintf(flener_file, "%21.15g ", fladdterms_tot[floor][pl]);
-      PDUMPLOOP(pliter,pl) SCLOOP(sc) myfprintf(flener_file, "%21.15g ", sourceaddterms_tot[sc][pl]);
+      DIRLOOP(dir) PLOOP(pliter,pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdotterms_tot[dir][fl][pl]);
+      PLOOP(pliter,pl) FLOORLOOP(floor) myfprintf(flener_file, "%21.15g ", fladdterms_tot[floor][pl]);
+      PLOOP(pliter,pl) SCLOOP(sc) myfprintf(flener_file, "%21.15g ", sourceaddterms_tot[sc][pl]);
       
 
       if(enerregion==GLOBALENERREGION){ // only for total region for now
 	// only care about inner and outer radial part
-	for(dir=0;dir<=1;dir++) PDUMPLOOP(pliter,pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdottermsjet2_tot[dir][fl][pl]); // jet/pole values only
+	for(dir=0;dir<=1;dir++) PLOOP(pliter,pl) FLLOOP(fl) myfprintf(flener_file, "%21.15g ", pdottermsjet2_tot[dir][fl][pl]); // jet/pole values only
 
 	if(DOLUMVSR){
 	  // luminosity vs radius
@@ -418,8 +418,8 @@ int dump_ener(int doener, int dordump, int call_code)
 	  myfprintf(metricparmsener_file,"%21.15g %ld ",t,realnstep);
 
 	  // below 2 have been subsumed into its own full ener region (should have done in first place!)
-	  //PDUMPLOOP(pliter,pl) myfprintf(metricparmsener_file, "%21.15g ",horizonflux_tot[pl]);
-	  //PDUMPLOOP(pliter,pl) myfprintf(metricparmsener_file, "%21.15g ",horizoncum_tot[pl]);
+	  //PLOOP(pliter,pl) myfprintf(metricparmsener_file, "%21.15g ",horizonflux_tot[pl]);
+	  //PLOOP(pliter,pl) myfprintf(metricparmsener_file, "%21.15g ",horizoncum_tot[pl]);
 
 	  // first 2 are cumulative black hole mass and J in black hole metric units
 	  // next 1 is what black hole mass would be if adding so-far cumulated mass
@@ -607,15 +607,15 @@ void appendener(FILE* ener_file,SFTYPE (*pcum_tot)[NPR],SFTYPE*fladd_tot,SFTYPE 
 	gotit = 1;
 	for (l = 1; l <= NUMENERVAR; l++) {
 	  if ((l > 3+NPR+COMPDIM*2*NPR) && (l < 3+NPR+2*COMPDIM*2*NPR+NPR)) {
-	    DIRLOOP(dir) PDUMPLOOP(pliter,pl) {
+	    DIRLOOP(dir) PLOOP(pliter,pl) {
 	      fscanf(ener_file, "%lf", &pcum_tot[dir][pl]);
 	      l++;
 	    }
-	    PDUMPLOOP(pliter,pl) {
+	    PLOOP(pliter,pl) {
 	      fscanf(ener_file, "%lf", &fladd_tot[pl]);
 	      l++;
 	    }
-	    PDUMPLOOP(pliter,pl) {
+	    PLOOP(pliter,pl) {
 	      fscanf(ener_file, "%lf", &sourceadd_tot[pl]);
 	      l++;
 	    }

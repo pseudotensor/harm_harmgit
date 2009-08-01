@@ -363,7 +363,6 @@ void read_setup_eostable(void)
 
       // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
       // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correc tunits.
-      // SUPERGODMARK: NOT DONE!
       // ergPmev=1.60218E-6
       //  TRUENUCLEAROFFSET=(9.14*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
       // above gives 9.7346E-3
@@ -1078,7 +1077,7 @@ int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE
   }
   else{
 
-    if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+    if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
       dualfprintf(fail_file,"NOT IN LOOKUP: ifdegencheck=%d whichindep=%d qarray[1]=%21.15g qarray[2]=%21.15g\n",ifdegencheck,whichindep,qarray[1],qarray[2]);
       dualfprintf(fail_file,"lin0=%g lin1=%g\n",lineartablelimits[SIMPLETABLE][RHOEOS][0],lineartablelimits[SIMPLETABLE][RHOEOS][1]);
     }
@@ -1425,7 +1424,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
       includeptr[iii][jjj][kkk][lll]=0;
 
 #if(PRODUCTION==0)
-      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
@@ -1903,7 +1902,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
     }// end if good temperature or doing degentable
     else{
 
-      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
@@ -1944,7 +1943,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
     }
 
-    // GODMARK DEBUG:
+    // DEBUG:
     //    if(whichfun==TEMPU){
     //      dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,degentable,tfptr[iii]);
     //    }
@@ -2157,7 +2156,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
       //      dualfprintf(fail_file,"B %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
 
 
-      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+      if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d mm=%d mmm=%d :: temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,kazmm,mmm,tempcheck,invalidtempcode);
       }
@@ -2361,7 +2360,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
       else{
 
 
-	if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+	if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
 	  // DEBUG
 	  dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
 	}
@@ -2726,14 +2725,14 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 
 
-	// GODMARK: DEBUG
+	// DEBUG:
 	//	if(whichfun==TEMPU){
 	//	  dualfprintf(fail_file,":: whichtable=%d :: ieos=%21.15g jeos=%21.15g :: answer=%21.15g\n",whichtable[whichdegen],indexarray[1],indexarray[2],myanswer[whichdegen]);
 	//	}
 
 	if(whichdegen==1){
 
-	  // GODMARK: DEBUG
+	  // DEBUG:
 	  //	  if(whichfun==TEMPU){
 	  //	    dualfprintf(fail_file,":: ieos=%21.15g jeos=%21.15g :: q2orig=%21.15g q2new=%21.15g degen=%21.15g\n",indexarray[1],indexarray[2],qarray[2],qarray[2]-myanswer[whichdegen],myanswer[whichdegen]);
 	  //	  }
@@ -2816,7 +2815,7 @@ int get_whichindep(int whichfun)
 
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
-  // GODMARK: >=EXTRA1 assumes all extras are F(rho0,u), although for whichdatatype==4 some must be functions of \chi -- need to change if going to use that method
+  // GODMARK: >=EXTRA1 assumes all extras are F(rho0,u), although might need to be functions of \chi -- then would need to change
   whichcheck1=(whichfun==PofRHOU||whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||(whichfun>=EXTRA1)||whichfun==TEMPU);
 
   // functions (F) F(rho0,p)
@@ -2933,7 +2932,7 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
     // relevance of neutrinos can be estimated from size of dp vs. p_nu
     if(whichfun==PofRHOU){
       final = dfinal + pnu;
-      // DEBUG: GODMARK -- was on when debugging EOS
+      // DEBUG:-- was on when debugging EOS
       //      dualfprintf(fail_file,"PofRHOU final=%21.15g dfinal=%21.15g pnu=%21.15g\n",final,dfinal,pnu);
     }
     else if(whichfun==SofRHOU)   final = dfinal + snu;
@@ -3225,10 +3224,13 @@ FTYPE compute_u_from_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
   FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
 
   // GODMARK: no kaz solution yet since not needed yet
-  u=compute_u_from_entropy_mignone(EOSextra, rho0, entropy);
+  //  u=compute_u_from_entropy_mignone(EOSextra, rho0, entropy);
+
+  dualfprintf(fail_file,"compute_u_from_entropy_kazfull() not setup yet. Need to compute and store this in Matlab table.\n");
+  u=0.0; // GODMARK: not set yet
+  //  myexit(23458352);
 
   // if(get_eos_fromtable(UofRHOS,ENTROPYDIFF,EOSextra,rho0,entropy,Hglobal,TDYNORYEglobal, &u)){
-  //  u=0.0; // GODMARK: not set yet
   //}
 
   return(u);

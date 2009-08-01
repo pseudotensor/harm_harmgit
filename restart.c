@@ -859,10 +859,11 @@ int restart_read_defs_new(void)
     //
     // Define for cpu=0 only, which will continue to keep track of the total after restart
     //
-    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(pliter,pl) pcumreg[enerregion][dir][pl]=pcumreg_tot[enerregion][dir][pl];
-    ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fladdreg[enerregion][pl]=fladdreg_tot[enerregion][pl];
-    ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
-    ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
+    // Recall that PDUMPLOOP is only for primitives, while PLOOP should always be used for conserved quantities or fluxes
+    ENERREGIONLOOP(enerregion) DIRLOOP(dir) PLOOP(pliter,pl) pcumreg[enerregion][dir][pl]=pcumreg_tot[enerregion][dir][pl];
+    ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) fladdreg[enerregion][pl]=fladdreg_tot[enerregion][pl];
+    ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
+    ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
     TSCALELOOP(tscale) FLOORLOOP(floor) failfloorcountlocal[tscale][floor]=failfloorcountlocal_tot[tscale][floor];
 

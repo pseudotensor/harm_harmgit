@@ -918,7 +918,7 @@ int pre_init(int *argc, char **argv[])
     sourceadd=sourceaddreg[enerregion];
     diss=dissreg[enerregion];
 
-    PDUMPLOOP(pliter,pl){
+    PLOOP(pliter,pl){
       fladd[pl] = 0;
       FLOORLOOP(floor) fladdterms[floor][pl]=0;
       U_init[pl] = 0;

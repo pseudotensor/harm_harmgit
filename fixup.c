@@ -2240,7 +2240,7 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
     // used to determine nature of pre and post failure quantities
     fprintf(super_fail_file,"%21.15g %ld %d %d %d ",t,realnstep,steppart,numstepparts,whocalled);
     fprintf(super_fail_file,"%21.15g %21.15g %21.15g %d %d %d ",V[1],V[2],V[3],startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k);
-    PDUMPLOOP(pliter,pl) fprintf(super_fail_file,"%21.15g %21.15g %21.15g %21.15g ",pr0[pl],pr[pl],Ui[pl],Uf[pl]);
+    PLOOP(pliter,pl) fprintf(super_fail_file,"%21.15g %21.15g %21.15g %21.15g ",pr0[pl],pr[pl],Ui[pl],Uf[pl]);
     fprintf(super_fail_file,"\n");
     if(!(countoutput%1000)) fflush(super_fail_file);
     countoutput++;

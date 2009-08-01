@@ -302,14 +302,14 @@ void set_dump_content_dnumcolumns(int *numcolumns)
 
 
   // always NPRDUMP
-  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP*2 + 3 + 1 + NDIM * NDIM + 6 + 1
+  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + NDIM * NDIM + 6 + 1
 #if(CALCFARADAYANDCURRENTS)
 		    + NDIM*2
 		    + 2*6
 #endif
 		    ;
   else{
-    *numcolumns=3*3 + NPRDUMP*2 + 3 + 1 + NDIM * NDIM + 6 + 1 
+    *numcolumns=3*3 + NPRDUMP+NPR + 3 + 1 + NDIM * NDIM + 6 + 1 
 #if(CALCFARADAYANDCURRENTS)
       + NDIM*2
       + 2*6
@@ -443,7 +443,8 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //////////////////////
   //
   // output the conserved quantities since not easily inverted and at higher order aren't invertable from point primitives
-  PDUMPLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(udump,i,j,k,pl)),0,1,writebuf); // NPRDUMP
+  // PLOOP() used since conserved quantities always fill full PLOOP, while PDUMPLOOP is for primitives that may be duplicate among conserved quantities
+  PLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(udump,i,j,k,pl)),0,1,writebuf); // NPR
   myset(datatype,&divb,0,1,writebuf); // 1
 
   for (pl = 0; pl < NDIM; pl++)
