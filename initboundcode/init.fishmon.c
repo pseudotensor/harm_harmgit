@@ -240,7 +240,8 @@ int init_global(void)
 
 
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
-  FLUXB=FLUXCTTOTH;
+  //  FLUXB=FLUXCTTOTH;
+  FLUXB=FLUXCTSTAG;
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   BCtype[X1UP]=OUTFLOW;

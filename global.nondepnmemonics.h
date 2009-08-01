@@ -785,7 +785,7 @@
 // rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
 
 // see failfloorcount counter
-#define NUMFAILFLOORFLAGS 11
+#define NUMFAILFLOORFLAGS 12
 //  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -798,6 +798,12 @@
 #define COUNTUPERC 8 // see fixup_checksolution()
 #define COUNTENTROPY 9
 #define COUNTCOLD 10
+#define COUNTEOSLOOKUPFAIL 11
+
+// below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
+#define AVOIDI -100
+#define AVOIDJ -100
+#define AVOIDK -100
 
 // failure codes for utoprim failures
 // NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127

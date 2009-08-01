@@ -31,3 +31,7 @@ extern int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]);
 extern int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep);
 extern int inflow_check_3vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep);
 extern int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep);
+
+extern void diag_eosfaillookup(int i, int j, int k);
+
+

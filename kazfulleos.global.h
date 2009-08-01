@@ -380,7 +380,7 @@
 
 // NOTE: must be in same order and number as EOS independent vars
 // GODMARK: must also change MAXPARLIST in nondepnmemonics.h
-#define NUMNONSTANDARD (6+3)
+#define NUMNONSTANDARD (6+3+3)
 #define NUMEOSGLOBALS (NUMEXTRAINDEP+NUMNONSTANDARD)   // number of per CPU position-based data for EOS
 
 // these should be ordered and numbered such that correspond to EOS table independent variables
@@ -397,7 +397,10 @@
 #define UNUGLOBAL (H4GLOBAL+1)       // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define PNUGLOBAL (UNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define SNUGLOBAL (PNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
-
+// below 3 used to indicate position if EOS coming from grid
+#define IGLOBAL (SNUGLOBAL+1)
+#define JGLOBAL (IGLOBAL+1)
+#define KGLOBAL (JGLOBAL+1)
 
 
 // tolerance to check whether repeated case for i,j,k,rho0,u

@@ -3295,3 +3295,22 @@ void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][N
 
 }
 
+
+// counter for EOS table lookup failures
+void diag_eosfaillookup(int i, int j, int k)
+{
+  int whocalled = COUNTEOSLOOKUPFAIL;
+  int tscale;
+
+  // count every time corrects
+  if(DODEBUG){
+    if(i==AVOIDI && j==AVOIDJ && k==AVOIDK){
+      // then do nothing since don't know where failure occurred
+    }
+    else if(i<-N1BND || i>N1-1+N1BND ||j<-N2BND || j>N2-1+N2BND ||k<-N3BND || k>N3-1+N3BND ){
+      dualfprintf(fail_file,"In diag_eosfaillookup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,i,j,k);
+      myexit(24683463);
+    }
+    TSCALELOOP(tscale) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,whocalled)++;
+  }
+}

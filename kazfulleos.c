@@ -29,7 +29,6 @@ static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatot
 
 static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep);
 
-static FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
 
 
 #include "kazfulleos_set_arrays.c"
@@ -1164,6 +1163,7 @@ void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, in
 // quad-linear interpolation
 FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
+  FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
   FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
   FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
   FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
@@ -1186,6 +1186,9 @@ FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int wh
 #elif(0)
   // nearest dumb for all
   return(get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray,badlookup));
+#elif(0)
+  // nearest
+  return(get_eos_fromlookup_nearest(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray,badlookup));
 #elif(1)
   // linear
   return(get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray,badlookup));
@@ -1201,8 +1204,50 @@ FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int wh
 
 
 
+// determine whether should do log interpolation
+static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep)
+{
+  int EXTRASTART,EXTRAFINISH;
+  int whichinterp1,whichinterp2,loginterp;
+  int qi;
 
-#define LOOPKAZIJKL for(iii=kazstartiii;iii<=kazendiii;iii++) for(jjj=kazstartjjj;jjj<=kazendjjj;jjj++)for(kkk=kazstartkkk;kkk<=kazendkkk;kkk++)for(lll=kazstartlll;lll<=kazendlll;lll++)
+
+
+#if(DOLOGINTERP)
+
+  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
+  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
+
+  // GODMARK: Can make array that stores this info, looked up by whichfun as index
+  // functions (F) F(rho0,u)
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  // functions (F) F(rho0,p)
+  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
+
+  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
+
+  if(1||degentable==0){ // always allow loginterp==1
+    if(whichinterp1||degentable==1) loginterp=1;
+    else if(whichinterp2) loginterp=0;
+    else{
+      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
+      //      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
+      myexit(62662);
+    }
+  }
+  else{
+    loginterp=0;
+  }
+#else
+  loginterp=0;
+#endif
+
+
+
+  return(loginterp);
+
+}
+
 
 
 
@@ -1226,7 +1271,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   FTYPE *totalfptr;
   int iii,jjj,kkk,lll;
   int whichtemp,whichdegenfun;
-  int loginterp;
+  int shouldloginterp;
   FTYPE xmx0,AA,BB;
   FTYPE ieos,jeos,keos,leos,meos;
 
@@ -1259,9 +1304,8 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 
   // determine if should do log interpolation
-  loginterp=get_dologinterp(repeatedeos,tabledimen,degentable,whichtable,whichfun,whichindep);
-
-
+  shouldloginterp=get_dologinterp(repeatedeos,tabledimen,degentable,whichtable,whichfun,whichindep);
+  
 
 
   if(repeatedeos==0){
@@ -1269,22 +1313,24 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     kazii=ROUND2INT(ieos); //ii=(int)ieos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazii<1) kazii=1; // 0 is minimum
-    if(kazii>tablesize[whichtable][RHOEOS]-2) kazii=tablesize[whichtable][RHOEOS]-2; // N-1 is maximum
+    if(kazii>tablesize[whichtable][vartypearray[1]]-2) kazii=tablesize[whichtable][vartypearray[1]]-2; // N-1 is maximum
 
     kazjj=ROUND2INT(jeos); //kazjj=(int)jeos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
-    if(kazjj<1) kazjj=1; // 0 is minimum
-    if(kazjj>tablesize[whichtable][whichindep]-2) kazjj=tablesize[whichtable][whichindep]-2; // N-1 is maximum
+    if(degentable==0){
+      if(kazjj<1) kazjj=1; // 0 is minimum
+      if(kazjj>tablesize[whichtable][whichindep]-2) kazjj=tablesize[whichtable][whichindep]-2; // N-1 is maximum
+    }
 
     kazkk=ROUND2INT(keos); //kazkk=(int)keos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazkk<1) kazkk=1; // 0 is minimum
-    if(kazkk>tablesize[whichtable][TEOS]-2) kazkk=tablesize[whichtable][TEOS]-2; // N-1 is maximum
+    if(kazkk>tablesize[whichtable][vartypearray[3]]-2) kazkk=tablesize[whichtable][vartypearray[3]]-2; // N-1 is maximum
 
     kazll=ROUND2INT(leos); //kazll=(int)leos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazll<1) kazll=1; // 0 is minimum
-    if(kazll>tablesize[whichtable][YNUEOS]-2) kazll=tablesize[whichtable][YNUEOS]-2; // N-1 is maximum
+    if(kazll>tablesize[whichtable][vartypearray[4]]-2) kazll=tablesize[whichtable][vartypearray[4]]-2; // N-1 is maximum
 
     // if only choosing 1 value, then choose rounded version
     kaziio=ROUND2INT(ieos);
@@ -1296,18 +1342,25 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     // set range of loops for different table types
     // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
     // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
-    if(tablesize[whichtable][RHOEOS]!=1) { kazstartiii=-1; kazendiii=1;}
-    else{ kazstartiii=kazendiii=0; }
+    if(tablesize[whichtable][vartypearray[1]]==1) { kazstartiii=kazendiii=0; } // kazll will be 0
+    else if(tablesize[whichtable][vartypearray[1]]==2) { kazstartiii=0; kazendiii=1;} // kazll will be 0
+    else if(tablesize[whichtable][vartypearray[1]]>2) { kazstartiii=-1; kazendiii=1;}
 
-    if(degentable==0 || tablesize[whichtable][whichindep]!=1){ kazstartjjj=-1; kazendjjj=1;}
-    else {kazstartjjj=kazendjjj=0;}
+    if(degentable==1 || tablesize[whichtable][whichindep]==1) {kazstartjjj=kazendjjj=0;}
+    else if(tablesize[whichtable][whichindep]==2) { kazstartjjj=0; kazendjjj=1;}
+    else if(tablesize[whichtable][whichindep]>2) { kazstartjjj=-1; kazendjjj=1;}
 
-    if(tablesize[whichtable][TEOS]!=1){ kazstartkkk=-1; kazendkkk=1;}
-    else {kazstartkkk=kazendkkk=0;}
+    if(tablesize[whichtable][vartypearray[3]]==1) {kazstartkkk=kazendkkk=0;}
+    else if(tablesize[whichtable][vartypearray[3]]==2){ kazstartkkk=0; kazendkkk=1;}
+    else if(tablesize[whichtable][vartypearray[3]]>2){ kazstartkkk=-1; kazendkkk=1;}
      
-    if(tablesize[whichtable][YNUEOS]!=1){ kazstartlll=-1; kazendlll=1;}
-    else {kazstartlll=kazendlll=0;}
+    if(tablesize[whichtable][vartypearray[4]]==1) {kazstartlll=kazendlll=0;}
+    else if(tablesize[whichtable][vartypearray[4]]==2){ kazstartlll=0; kazendlll=1;}
+    else if(tablesize[whichtable][vartypearray[4]]>2){ kazstartlll=-1; kazendlll=1;}
   }
+
+
+#define LOOPKAZIJKL for(iii=kazstartiii;iii<=kazendiii;iii++) for(jjj=kazstartjjj;jjj<=kazendjjj;jjj++)for(kkk=kazstartkkk;kkk<=kazendkkk;kkk++)for(lll=kazstartlll;lll<=kazendlll;lll++)
 
 
   // Loop over nearby table values and determine bi-linearly interpolated value
@@ -1316,7 +1369,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   // get 3 values as function of density
   LOOPKAZIJKL{
 
-
+    
 #if(CHECKIFVALIDEOSDATA)
     if(degentable==0){
       // don't use values of table that have no inversion to temperature
@@ -1344,12 +1397,19 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
       }
 
-      if(tfptr[iii][jjj][kkk][lll]<=0.0){
-	loginterp=0; // override and avoid use of log interpolation (really should just avoid that point as in _linear method)
+
+      if(shouldloginterp && tfptr[iii][jjj][kkk][lll]<=0.0){
+	// avoid point if should have been log but value is <=0.0
+	includeptr[iii][jjj][kkk][lll]=0;
+      }
+      else{
+	includeptr[iii][jjj][kkk][lll]=1;
       }
 
       // set to include this point in interpolation
-      includeptr[iii][jjj][kkk][lll]=1;
+
+      // DEBUG:
+      //      dualfprintf(fail_file,"A %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
 
 
       // DEBUG
@@ -1358,15 +1418,20 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     }// end if good temperature or doing degentable
     else{
 
+      // DEBUG:
+      //      dualfprintf(fail_file,"B %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
+
       // set to NOT include point in interpolation
       includeptr[iii][jjj][kkk][lll]=0;
 
+#if(PRODUCTION==0)
       if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
 	// DEBUG
 	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
       }
+#endif
 
-    }
+    }// else if bad inversion
 
 
     // general offset
@@ -1378,7 +1443,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 
   // logify
-  if(loginterp){
+  if(shouldloginterp){
     LOOPKAZIJKL{
       if(includeptr[iii][jjj][kkk][lll]){
 	tfptr[iii][jjj][kkk][lll] = log10(tfptr[iii][jjj][kkk][lll]);
@@ -1402,27 +1467,40 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
     // have tfptr[iii][jjj][kkk][lll] @ iii=-1,0,1 with i=0 meaning ii and offset being ROUND2INT(ieos)
     // Form parabolic answer
     include2ptr[jjj][kkk][lll]=1; // default
-    if(includeptr[-1][jjj][kkk][lll] && includeptr[0][jjj][kkk][lll]&& includeptr[1][jjj][kkk][lll]){
+    if(kazstartiii<=-1 && kazendiii>=1 && includeptr[-1][jjj][kkk][lll] && includeptr[0][jjj][kkk][lll]&& includeptr[1][jjj][kkk][lll]){
       xmx0 = (ieos-(FTYPE)kazii);
       AA = 0.5*(tfptr[1][jjj][kkk][lll]-tfptr[-1][jjj][kkk][lll]);
       BB = 0.5*(tfptr[1][jjj][kkk][lll]+tfptr[-1][jjj][kkk][lll]-2.0*tfptr[0][jjj][kkk][lll]);
       tfptr[0][jjj][kkk][lll] = tfptr[0][jjj][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
+      // e.g. xmx0=0 -> tf[0]
+      // e.g. xmx0=-1 -> tf[0]-tf[1]/2+tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[-1]
+      // e.g. xmx0=1 -> tf[0]+tf[1]/2-tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[1]
     }
-    else if(includeptr[-1][jjj][kkk][lll] && includeptr[0][jjj][kkk][lll]){
+    else if(kazstartiii<=-1 && kazendiii>=0 && includeptr[-1][jjj][kkk][lll] && includeptr[0][jjj][kkk][lll]){
       // reduce to linear interpolation
       xmx0 = (ieos-(FTYPE)(kazii-1));
       AA=(tfptr[0][jjj][kkk][lll]-tfptr[-1][jjj][kkk][lll]);
       tfptr[0][jjj][kkk][lll] = tfptr[-1][jjj][kkk][lll] + AA*xmx0;
+      // e.g. xmx0=0 (ieos=kazii-1) -> tf[-1]
+      // e.g. xmx0=1 (ieos=kazii) -> tf[0]
     }
-    else if(includeptr[0][jjj][kkk][lll] && includeptr[1][jjj][kkk][lll]){
+    else if(kazstartiii<=0 && kazendiii>=1 && includeptr[0][jjj][kkk][lll] && includeptr[1][jjj][kkk][lll]){
       // reduce to linear interpolation
       xmx0 = (ieos-(FTYPE)(kazii));
       AA=(tfptr[1][jjj][kkk][lll]-tfptr[0][jjj][kkk][lll]);
       tfptr[0][jjj][kkk][lll] = tfptr[0][jjj][kkk][lll] + AA*xmx0;
     }
-    else if(includeptr[0][jjj][kkk][lll]){
+    else if(kazstartiii<=0 && kazendiii>=0 && includeptr[0][jjj][kkk][lll]){
       // reduce to nearest neighbor
       tfptr[0][jjj][kkk][lll] = tfptr[0][jjj][kkk][lll];
+    }
+    else if(kazstartiii<=-1 && kazendiii>=-1 && includeptr[-1][jjj][kkk][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][jjj][kkk][lll] = tfptr[-1][jjj][kkk][lll];
+    }
+    else if(kazstartiii<=1 && kazendiii>=1 && includeptr[1][jjj][kkk][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][jjj][kkk][lll] = tfptr[1][jjj][kkk][lll];
     }
     else{
       include2ptr[jjj][kkk][lll]=0;
@@ -1440,27 +1518,35 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   KAZPARALOOP2{
 
     include3ptr[kkk][lll]=1; // default
-    if(include2ptr[-1][kkk][lll] && include2ptr[0][kkk][lll] && include2ptr[1][kkk][lll]){
+    if(kazstartjjj<=-1 && kazendjjj>=1 && include2ptr[-1][kkk][lll] && include2ptr[0][kkk][lll] && include2ptr[1][kkk][lll]){
       xmx0 = (jeos-(FTYPE)kazjj);
       AA = 0.5*(tfptr[0][1][kkk][lll]-tfptr[0][-1][kkk][lll]);
       BB = 0.5*(tfptr[0][1][kkk][lll]+tfptr[0][-1][kkk][lll]-2.0*tfptr[0][0][kkk][lll]);
       tfptr[0][0][kkk][lll] = tfptr[0][0][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
     }
-    else if(include2ptr[-1][kkk][lll] && include2ptr[0][kkk][lll]){
+    else if(kazstartjjj<=-1 && kazendjjj>=0 && include2ptr[-1][kkk][lll] && include2ptr[0][kkk][lll]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii-1));
+      xmx0 = (jeos-(FTYPE)(kazjj-1));
       AA=(tfptr[0][0][kkk][lll]-tfptr[0][-1][kkk][lll]);
       tfptr[0][0][kkk][lll] = tfptr[0][-1][kkk][lll] + AA*xmx0;
     }
-    else if(include2ptr[0][kkk][lll] && include2ptr[1][kkk][lll]){
+    else if(kazstartjjj<=0 && kazendjjj>=1 && include2ptr[0][kkk][lll] && include2ptr[1][kkk][lll]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii));
+      xmx0 = (jeos-(FTYPE)(kazjj));
       AA=(tfptr[0][1][kkk][lll]-tfptr[0][0][kkk][lll]);
       tfptr[0][0][kkk][lll] = tfptr[0][0][kkk][lll] + AA*xmx0;
     }
-    else if(include2ptr[0][kkk][lll]){
+    else if(kazstartjjj<=0 && kazendjjj>=0 && include2ptr[0][kkk][lll]){
       // reduce to nearest neighbor
       tfptr[0][0][kkk][lll] = tfptr[0][0][kkk][lll];
+    }
+    else if(kazstartjjj<=-1 && kazendjjj>=-1 && include2ptr[-1][kkk][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][0][kkk][lll] = tfptr[0][-1][kkk][lll];
+    }
+    else if(kazstartjjj<=1 && kazendjjj>=1 && include2ptr[1][kkk][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][0][kkk][lll] = tfptr[0][1][kkk][lll];
     }
     else{
       include3ptr[kkk][lll]=0;
@@ -1479,27 +1565,35 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   KAZPARALOOP3{
 
     include4ptr[lll]=1; // default
-    if(include3ptr[-1][lll] && include3ptr[0][lll] && include3ptr[1][lll]){
+    if(kazstartkkk<=-1 && kazendkkk>=1 && include3ptr[-1][lll] && include3ptr[0][lll] && include3ptr[1][lll]){
       xmx0 = (keos-(FTYPE)kazkk);
       AA = 0.5*(tfptr[0][0][1][lll]-tfptr[0][0][-1][lll]);
       BB = 0.5*(tfptr[0][0][1][lll]+tfptr[0][0][-1][lll]-2.0*tfptr[0][0][0][lll]);
       tfptr[0][0][0][lll] = tfptr[0][0][0][lll] + AA*xmx0 + BB*xmx0*xmx0;
     }
-    else if(include3ptr[-1][lll] && include3ptr[0][lll]){
+    else if(kazstartkkk<=-1 && kazendkkk>=0 && include3ptr[-1][lll] && include3ptr[0][lll]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii-1));
+      xmx0 = (keos-(FTYPE)(kazkk-1));
       AA=(tfptr[0][0][0][lll]-tfptr[0][0][-1][lll]);
       tfptr[0][0][0][lll] = tfptr[0][0][-1][lll] + AA*xmx0;
     }
-    else if(include3ptr[0][lll] && include3ptr[1][lll]){
+    else if(kazstartkkk<=0 && kazendkkk>=1 && include3ptr[0][lll] && include3ptr[1][lll]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii));
+      xmx0 = (keos-(FTYPE)(kazkk));
       AA=(tfptr[0][0][1][lll]-tfptr[0][0][0][lll]);
       tfptr[0][0][0][lll] = tfptr[0][0][0][lll] + AA*xmx0;
     }
-    else if(include3ptr[0][lll]){
+    else if(kazstartkkk<=0 && kazendkkk>=0 && include3ptr[0][lll]){
       // reduce to nearest neighbor
       tfptr[0][0][0][lll] = tfptr[0][0][0][lll];
+    }
+    else if(kazstartkkk<=-1 && kazendkkk>=-1 && include3ptr[-1][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][0][0][lll] = tfptr[0][0][-1][lll];
+    }
+    else if(kazstartkkk<=1 && kazendkkk>=1 && include3ptr[1][lll]){
+      // reduce to nearest neighbor
+      tfptr[0][0][0][lll] = tfptr[0][0][1][lll];
     }
     else{
       include4ptr[lll]=0;
@@ -1515,31 +1609,48 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
   // final interpolation
   KAZPARALOOP4{
-    if(include4ptr[-1] && include4ptr[0] && include4ptr[1]){
+    if(kazstartlll<=-1 && kazendlll>=1 && include4ptr[-1] && include4ptr[0] && include4ptr[1]){
       xmx0 = (leos-(FTYPE)kazll);
       AA = 0.5*(tfptr[0][0][0][1]-tfptr[0][0][0][-1]);
       BB = 0.5*(tfptr[0][0][0][1]+tfptr[0][0][0][-1]-2.0*tfptr[0][0][0][0]);
       tfptr[0][0][0][0] = tfptr[0][0][0][0] + AA*xmx0 + BB*xmx0*xmx0;
     }
-    else if(include4ptr[-1] && include4ptr[0]){
+    else if(kazstartlll<=-1 && kazendlll>=0 && include4ptr[-1] && include4ptr[0]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii-1));
+      xmx0 = (leos-(FTYPE)(kazll-1));
       AA=(tfptr[0][0][0][0]-tfptr[0][0][0][-1]);
       tfptr[0][0][0][0] = tfptr[0][0][0][-1] + AA*xmx0;
     }
-    else if(include4ptr[0] && include4ptr[1]){
+    else if(kazstartlll<=0 && kazendlll>=1 && include4ptr[0] && include4ptr[1]){
       // reduce to linear interpolation
-      xmx0 = (ieos-(FTYPE)(kazii));
+      xmx0 = (leos-(FTYPE)(kazll));
       AA=(tfptr[0][0][0][1]-tfptr[0][0][0][0]);
       tfptr[0][0][0][0] = tfptr[0][0][0][0] + AA*xmx0;
     }
-    else if(include4ptr[0]){
+    else if(kazstartlll<=0 && kazendlll>=0 && include4ptr[0]){
       // reduce to nearest neighbor
       tfptr[0][0][0][0] = tfptr[0][0][0][0];
+    }
+    else if(kazstartlll<=-1 && kazendlll>=-1 && include4ptr[-1]){
+      // reduce to nearest neighbor
+      tfptr[0][0][0][0] = tfptr[0][0][0][-1];
+    }
+    else if(kazstartlll<=1 && kazendlll>=1 && include4ptr[1]){
+      // reduce to nearest neighbor
+      tfptr[0][0][0][0] = tfptr[0][0][0][1];
     }
     else{
       dualfprintf(fail_file,"No valid data points in table despite within table.\n");
       *badlookup=1;
+
+#if(0)
+      // DEBUG:
+      LOOPKAZIJKL{
+	dualfprintf(fail_file,"BOOB: %d : %d : %d %d %d %d : %d : %21.15g\n",degentable,shouldloginterp,iii,jjj,kkk,lll,includeptr[iii][jjj][kkk][lll],tfptr[iii][jjj][kkk][lll]);
+      }
+      dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll);
+#endif
+
       return(-BIG); // return value doesn't matter
       // no valid data points, so fail since should have caught this with the check if within table function
     }
@@ -1548,24 +1659,67 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   if(!isfinite(tfptr[0][0][0][0])){
     dualfprintf(fail_file,"4notfinite, :: %d %d %d\n",0,0,0);
   }
-  dualfprintf(fail_file,"4finite, :: %d %d %d : %21.15g\n",0,0,0,tfptr[0][0][0][0]);
+  //  dualfprintf(fail_file,"4finite, :: %d %d %d : %21.15g\n",0,0,0,tfptr[0][0][0][0]);
 #endif
 
   }  
 
+
+  ///////////////////////
+  //
   // final fully parabolic result
+  //
+  ///////////////////////
   totalffinal=tfptr[0][0][0][0];
-  // unlogify
-  if(loginterp){
-    totalffinal=pow(10.0,totalffinal);
-    // invert offset
-    if(degentable==1){
-      offsetquant2_general_inverse(whichdegenfun, quant1, totalffinal, &totalffinal);
+
+
+  ////////////////////////////
+  //
+  // enforce no new extrema to over overshoots in sharp regions of table
+  //
+  ////////////////////////////
+#if(1)
+  FTYPE largest=-BIG;
+  FTYPE smallest=BIG;
+  LOOPKAZIJKL{
+    if(includeptr[iii][jjj][kkk][lll]){
+      if(tfptr[iii][jjj][kkk][lll]>largest) largest=tfptr[iii][jjj][kkk][lll];
+      if(tfptr[iii][jjj][kkk][lll]<smallest) smallest=tfptr[iii][jjj][kkk][lll];
     }
   }
+  //  dualfprintf(fail_file,"DOG: %21.15g %21.15g %21.15g\n",totalffinal,smallest,largest);
+  if(totalffinal>largest) totalffinal=largest;
+  if(totalffinal<smallest) totalffinal=smallest;
+#endif
 
 
+  ///////////////////////////
+  //
+  // unlogify
+  //
+  //////////////////////////
+  if(shouldloginterp){
+    totalffinal=pow(10.0,totalffinal);
+  }
+
+  //////////////////////////
+  //
+  // invert offset
+  //
+  //////////////////////////
+  offsetquant2_general_inverse(whichdegenfun, quant1, totalffinal, &totalffinal);
+
+
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"totalffinal=%21.15g\n",totalffinal);
+
+
+  //////////////////////////////
+  //
   // return final result
+  //
+  //////////////////////////////
   return(totalffinal);
 
 }
@@ -1610,6 +1764,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
   int loginterp;
   FTYPE xmx0,AA,BB;
   FTYPE ieos,jeos,keos,leos,meos;
+  FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
 
 
 
@@ -1672,7 +1827,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
     if(tablesize[whichtable][vartypearray[1]]!=1) kazendiii=1;
     else kazendiii=0;
 
-    if(degentable==0 || tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
+    if(degentable==0 && tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
     else kazendjjj=0;
 
     if(tablesize[whichtable][vartypearray[3]]!=1) kazendkkk=1;
@@ -1830,49 +1985,6 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
 
 
 
-// determine whether should do log interpolation
-static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep)
-{
-  int EXTRASTART,EXTRAFINISH;
-  int whichinterp1,whichinterp2,loginterp;
-  int qi;
-
-
-
-#if(DOLOGINTERP)
-
-  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
-  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
-
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
-  // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
-
-  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
-
-  if(1||degentable==0){ // always allow loginterp==1
-    if(whichinterp1||degentable==1) loginterp=1;
-    else if(whichinterp2) loginterp=0;
-    else{
-      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
-      //      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
-      myexit(62662);
-    }
-  }
-  else{
-    loginterp=0;
-  }
-#else
-  loginterp=0;
-#endif
-
-
-
-  return(loginterp);
-
-}
 
 
 
@@ -1944,7 +2056,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
     if(tablesize[whichtable][vartypearray[1]]!=1) kazendiii=1;
     else kazendiii=0;
 
-    if(degentable==0 || tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
+    if(degentable==0 && tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
     else kazendjjj=0;
 
     if(tablesize[whichtable][vartypearray[3]]!=1) kazendkkk=1;
@@ -2029,7 +2141,10 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 	totaldist += dist[iii][jjj][kkk][lll][mmm];
       }
 
-      //dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
+      //      dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
+
+      // DEBUG:
+      //      dualfprintf(fail_file,"A %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
 
 
       // DEBUG
@@ -2037,6 +2152,9 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
     }// end if good temperature or doing degentable
     else{
+
+      // DEBUG:
+      //      dualfprintf(fail_file,"B %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
 
 
       if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
@@ -2049,48 +2167,34 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
   }// end loop over dimensions
 
 
+
   ////////////////////////////
   //
   // finally normalize
+  //
+  ////////////////////////////
   if(totaldist==0.0){
 
-#if(1)
     // new: (makes no sense to round to value that is not valid):
     *badlookup=1;
+    dualfprintf(fail_file,"No valid data points in table despite within table.\n");
+    dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll);
     return(-BIG);
-#else
-    // old:
-    // Good to know if not even close
-    // GODMARK: Should probably store mapping to closest EOS data in table and use that mapping in this case (like extrapolation, but since no rho0,u pair, assume not using valid "u" and so should really change "u" if we want to be consistent.
-
-    get_eos_fromlookup_nearest_dumb(repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep, quant1, vartypearray, indexarray, badlookup);
-
-    if(0&&debugfail>=2) dualfprintf(fail_file,"Never found temperature: degentable=%d whichtable=%d whichfun=%d whichindep=%d whichdegenfun=%d ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g totalf=%21.15g\n",degentable,whichtable,whichfun,whichindep,whichdegenfun,ieos,jeos,keos,leos,totalf);
-
-#endif
-
   }
   else{
     totalf /=totaldist;
 
-    //dualfprintf(fail_file,"A totaldist=%21.15g totalf=%21.15g\n",totaldist,totalf);
-
+    // invert log interpolation
     if(shouldloginterp){
       totalf=pow(10.0,totalf);
     }
 
+    // invert offset
     if(degentable==1){
       offsetquant2_general_inverse(whichdegenfun, quant1, totalf, &totalf);
     }
 
   }
-
-  //  dualfprintf(fail_file,"totaldist=%21.15g totalf=%21.15g\n",totaldist,totalf);
-
-  // GODMARK DEBUG:
-  //  if(whichfun==TEMPU){
-  //    dualfprintf(fail_file,"ii=%d jj=%d kk=%d ll=%d mm=%d :: degen=%d :: %g\n",kazii,kazjj,kazkk,kazll,kazmm,degentable,totalf);
-  //  }
 
 
   return(totalf);
@@ -2112,7 +2216,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
   FTYPE totaldist;
   FTYPE tempcheck;
   FTYPE totalf;
-  int iii,jjj,kkk,lll;
+  int iii,jjj,kkk,lll,mmm;
   int whichtemp,whichdegenfun;
   FTYPE ieos,jeos,keos,leos,meos;
 
@@ -2121,6 +2225,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
   jeos=indexarray[2];
   keos=indexarray[3];
   leos=indexarray[4];
+  meos=indexarray[5];
 
 
 
@@ -2140,11 +2245,19 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
 
   if(repeatedeos==0){
     // assume jeos, keos, leos set correctly for given degentable and tabledimen (i.e. are 0 or integers in those cases so d's computed correctly)
-    kazii=(int)ieos;
-    kazjj=(int)jeos;
-    kazkk=(int)keos;
-    kazll=(int)leos;
+    // if only choosing 1 value, then choose rounded version
+    kazii=ROUND2INT(ieos);
+    kazjj=ROUND2INT(jeos);
+    kazkk=ROUND2INT(keos);
+    kazll=ROUND2INT(leos);
+    kazmm=ROUND2INT(meos);
 	
+
+    if(kazii>=tablesize[whichtable][vartypearray[1]]) kazii=tablesize[whichtable][vartypearray[1]]-1;
+    if(kazjj>=tablesize[whichtable][vartypearray[2]]) kazjj=tablesize[whichtable][vartypearray[2]]-1;
+    if(kazkk>=tablesize[whichtable][vartypearray[3]]) kazkk=tablesize[whichtable][vartypearray[3]]-1;
+    if(kazll>=tablesize[whichtable][vartypearray[4]]) kazll=tablesize[whichtable][vartypearray[4]]-1;
+    if(kazmm>=tablesize[whichtable][vartypearray[5]]) kazmm=tablesize[whichtable][vartypearray[5]]-1;
 
     // set range of loops for different table types
     // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
@@ -2152,7 +2265,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
     if(tablesize[whichtable][vartypearray[1]]!=1) kazendiii=1;
     else kazendiii=0;
 
-    if(degentable==0 || tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
+    if(degentable==0 && tablesize[whichtable][vartypearray[2]]!=1) kazendjjj=1;
     else kazendjjj=0;
 
     if(tablesize[whichtable][vartypearray[3]]!=1) kazendkkk=1;
@@ -2164,67 +2277,105 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
   }
 
 
+  int gotgood=0;
 
-  totaldist=0.0;
-  // loop over to ensure obtained best nearest neighbor    
-  for(iii=0;iii<=kazendiii;iii++)for(jjj=0;jjj<=kazendjjj;jjj++)for(kkk=0;kkk<=kazendkkk;kkk++)for(lll=0;lll<=kazendlll;lll++){
-    
-    
+
+  // try ROUND2INT version first
 #if(CHECKIFVALIDEOSDATA)
-    if(degentable==0){
-      // don't use values of table that have no inversion to temperature
-      if(whichtable==SIMPLEZOOMTABLE) tempcheck=EOSMAC(eossimplezoomtable,whichtemp,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-      else if(whichtable==SIMPLETABLE) tempcheck=EOSMAC(eossimpletable,whichtemp,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-      else if(whichtable==FULLTABLE) tempcheck=EOSMAC(eostable,whichtemp,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-    }
-    //    dualfprintf(fail_file,"temp=%21.15g\n",tempcheck);
-    if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
+  if(degentable==0){
+    // don't use values of table that have no inversion to temperature
+    if(whichtable==SIMPLEZOOMTABLE) tempcheck=EOSMAC(eossimplezoomtable,whichtemp,kazmm,kazll,kazkk,kazjj,kazii);
+    else if(whichtable==SIMPLETABLE) tempcheck=EOSMAC(eossimpletable,whichtemp,kazmm,kazll,kazkk,kazjj,kazii);
+    else if(whichtable==FULLTABLE) tempcheck=EOSMAC(eostable,whichtemp,kazmm,kazll,kazkk,kazjj,kazii);
+  }
+  //    dualfprintf(fail_file,"temp=%21.15g\n",tempcheck);
+  if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-    if(1)
+  if(1)
 #endif
-    {
-      if(whichtable==SIMPLEZOOMTABLE){
-	if(degentable==0) totalf = EOSMAC(eossimplezoomtable,whichfun,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-	else totalf = EOSMAC(eosdegensimplezoomtable,whichdegenfun,0,kazll+lll,kazkk+kkk,0,kazii+iii);
-      }
-      else if(whichtable==SIMPLETABLE){
-	if(degentable==0) totalf = EOSMAC(eossimpletable,whichfun,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-	else totalf = EOSMAC(eosdegensimpletable,whichdegenfun,0,kazll+lll,kazkk+kkk,0,kazii+iii);
-      }
-      else if(whichtable==FULLTABLE){
-	if(degentable==0) totalf = EOSMAC(eostable,whichfun,0,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
-	else totalf = EOSMAC(eosdegentable,whichdegenfun,0,kazll+lll,kazkk+kkk,0,kazii+iii);
-      }
-      // terminate all 4 loops once have a single value
-      iii=kazendiii;
-      jjj=kazendjjj;
-      kkk=kazendkkk;
-      lll=kazendlll;
-      totaldist=1.0;
-
-    }// end if good temperature or doing degentable
-    else{
-
-
-      if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
-	// DEBUG
-	dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
-      }
-
-
+  {
+    if(whichtable==SIMPLEZOOMTABLE){
+      if(degentable==0) totalf = EOSMAC(eossimplezoomtable,whichfun,kazmm,kazll,kazkk,kazjj,kazii);
+      else  totalf = EOSMAC(eosdegensimplezoomtable,whichdegenfun,kazmm,kazll,kazkk,0,kazii);
     }
-  }// end loop over dimensions
+    else if(whichtable==SIMPLETABLE){
+      if(degentable==0) totalf = EOSMAC(eossimpletable,whichfun,kazmm,kazll,kazkk,kazjj,kazii);
+      else  totalf = EOSMAC(eosdegensimpletable,whichdegenfun,kazmm,kazll,kazkk,0,kazii);
+    }
+    else if(whichtable==FULLTABLE){
+      if(degentable==0) totalf = EOSMAC(eostable,whichfun,kazmm,kazll,kazkk,kazjj,kazii);
+      else totalf = EOSMAC(eosdegentable,whichdegenfun,kazmm,kazll,kazkk,0,kazii);
+    }
 
-
-  ////////////////////////////
-  //
-  // finally normalize
-  if(0&&debugfail>=2 && totaldist==0.0){
-    dualfprintf(fail_file,"Never found temperature: degentable=%d whichtable=%d whichfun=%d whichindep=%d whichdegenfun=%d ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g totalf=%21.15g\n",degentable,whichtable,whichfun,whichindep,whichdegenfun,ieos,jeos,keos,leos,totalf);
+    gotgood=1;
 
   }
 
-  return(totalf);
+
+
+  if(gotgood==0){
+    // if ROUND2INT version invalid, try picking another nearest neighbor
+
+#define LOOPKAZIJKLM for(iii=0;iii<=kazendiii;iii++)for(jjj=0;jjj<=kazendjjj;jjj++)for(kkk=0;kkk<=kazendkkk;kkk++)for(lll=0;lll<=kazendlll;lll++)for(mmm=0;mmm<=kazendmmm;mmm++)
+
+    // loop over to ensure obtained best nearest neighbor    
+    LOOPKAZIJKLM{
+    
+#if(CHECKIFVALIDEOSDATA)
+      if(degentable==0){
+	// don't use values of table that have no inversion to temperature
+	if(whichtable==SIMPLEZOOMTABLE) tempcheck=EOSMAC(eossimplezoomtable,whichtemp,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+	else if(whichtable==SIMPLETABLE) tempcheck=EOSMAC(eossimpletable,whichtemp,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+	else if(whichtable==FULLTABLE) tempcheck=EOSMAC(eostable,whichtemp,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+      }
+      //    dualfprintf(fail_file,"temp=%21.15g\n",tempcheck);
+      if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
+#else
+      if(1)
+#endif
+	{
+	  if(whichtable==SIMPLEZOOMTABLE){
+	    if(degentable==0) totalf = EOSMAC(eossimplezoomtable,whichfun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+	    else totalf = EOSMAC(eosdegensimplezoomtable,whichdegenfun,kazmm+mmm,kazll+lll,kazkk+kkk,0,kazii+iii);
+	  }
+	  else if(whichtable==SIMPLETABLE){
+	    if(degentable==0) totalf = EOSMAC(eossimpletable,whichfun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+	    else totalf = EOSMAC(eosdegensimpletable,whichdegenfun,kazmm+mmm,kazll+lll,kazkk+kkk,0,kazii+iii);
+	  }
+	  else if(whichtable==FULLTABLE){
+	    if(degentable==0) totalf = EOSMAC(eostable,whichfun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii);
+	    else totalf = EOSMAC(eosdegentable,whichdegenfun,kazmm+mmm,kazll+lll,kazkk+kkk,0,kazii+iii);
+	  }
+
+
+	  // terminate all 4 loops once have a single value
+	  iii=kazendiii;
+	  jjj=kazendjjj;
+	  kkk=kazendkkk;
+	  lll=kazendlll;
+	  mmm=kazendmmm;
+
+	  gotgood=1;
+
+	}// end if good temperature or doing degentable
+      else{
+
+
+	if(0&&debugfail>=2){ // DEBUG GODMARK: was turned on when debugging EOS
+	  // DEBUG
+	  dualfprintf(fail_file,"Out of Bounds based upon temperature: :: whichfun=%d ii=%d iii=%d jj=%d jjj=%d kk=%d kkk=%d ll=%d lll=%d temp=%21.15g invalidtempcode=%21.15g\n",whichfun,kazii,iii,kazjj,jjj,kazkk,kkk,kazll,lll,tempcheck,invalidtempcode);
+	}
+
+
+      }
+    }// end loop over dimensions
+  }// else if ROUNT2INT failed so picking nearest neighbor  
+
+  if(gotgood)  return(totalf);
+  else{
+    *badlookup=1;
+    return(-BIG);
+  }
 
 }
 
@@ -2290,11 +2441,6 @@ FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degen
     else totalf = EOSMAC(eosdegentable,whichdegenfun,kazmm,kazll,kazkk,0,kazii);
   }
 
-
-
-  if(0&&debugfail>=2 && whichfun==TEMPU){
-    dualfprintf(fail_file,"TEMPUCHECK1 :: :: ieos=%g jeos=%g keos=%g leos=%g :: ii=%d jj=%d kk=%d ll=%d :: degen=%d :: %g\n",ieos,jeos,keos,leos,kazii,kazjj,kazkk,kazll,degentable,totalf);
-  }
 
 
   return(totalf);
@@ -2438,13 +2584,17 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
       // get result
       whichdegen=whichdegenend; // whatever is done after degen table lookup and normal table lookup
       
-      if(gottable[whichdegen]==0 || gottable[1]!=gottable[0] || whichtable[1]!=whichtable[0]) return(1);// indicates "failure" and no answer within table
+      if(gottable[whichdegen]==0 || gottable[1]!=gottable[0] || whichtable[1]!=whichtable[0]){
+	diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+	return(1);// indicates "failure" and no answer within table
+      }
       else{
 	if(0&&debugfail>=2) dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
 	*answer=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[0], whichfun, whichindep, quant1, vartypearray, indexarray,&badlookup);
 
 	if(badlookup){
 	  dualfprintf(fail_file,"Repeated lookup got no valid lookup in table\n");
+	  diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	  return(1);// indicates "failure" and no answer within table
 	  //	  myexit(238592352);
 	}
@@ -2522,6 +2672,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 	  if(whichtable[0]!=whichtable[1]){
 	    dualfprintf(fail_file,"Degen and normal table selections different: %d %d\n",whichtable[0],whichtable[1]);
+	    diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	    return(1); // revert to non-tabulated EOS
 	  }
 	}
@@ -2555,6 +2706,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 	if(badlookup){
 	  dualfprintf(fail_file,"No answer within table\n");
+	  diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	  return(1);// indicates "failure" and no answer within table
 	}
 
@@ -2590,9 +2742,12 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 	  qarray[2] -= myanswer[whichdegen];
 
 
-	  //	  dualfprintf(fail_file,"answer=%21.15g : %21.15g %21.15g\n",myanswer[whichdegen],qarray[1],qarray[2]);
-	  //	  int loopit;
-	  //	  for(loopit=0;loopit<NUMEOSGLOBALS;loopit++) dualfprintf(fail_file,"EOSextra[%d]=%21.15g\n",loopit,EOSextra[loopit]);
+#if(0)
+	  // DEBUG:
+	  dualfprintf(fail_file,"answer=%21.15g : %21.15g %21.15g\n",myanswer[whichdegen],qarray[1],qarray[2]);
+	  int loopit;
+	  for(loopit=0;loopit<NUMEOSGLOBALS;loopit++) dualfprintf(fail_file,"EOSextra[%d]=%21.15g\n",loopit,EOSextra[loopit]);
+#endif
 	  
 
 	  if(qarray[2]<0.0){
@@ -2628,6 +2783,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
       } // end if within some table
       else{
 	dualfprintf(fail_file,"No answer within table\n");
+	diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	return(1);// indicates "failure" and no answer within table
       }
     }// end loop over degenerate and then normal table (or if ALLOWDEGENOFFSET==0, then only for normal table)
@@ -3430,9 +3586,19 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       // get extras (only those needed)
       if(get_eos_fromtable(EXTRA1,UTOTDIFF,EOSextra,quant1,dquant2,&qtautnueohcm)){
 	qtautnueohcm=0.0; // not in tables, assume optically thin
+
+	qtauanueohcm=0.0;
+	qtautnuebarohcm=0.0;
+	qtauanuebarohcm=0.0;
+	qtautmuohcm=0.0;
+	qtauamuohcm=0.0;
+	unue0=0.0;
+	unuebar0=0.0;
+	unumu0=0.0;
 	notintable=1;
       }
       if(!notintable){
+	// assume if one is in table, rest are.
 	// EXTRA1:  qtautnueohcm
 	// EXTRA2:  qtauanueohcm
 	// EXTRA3:  qtautnuebarohcm
@@ -3892,27 +4058,6 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
 
 
 
-// compute things beyond simple EOS independent variables
-void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
-{
-  void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  
-
-  //return; // see if HARM H is so different from stellar estimate of H that cuases bad temperature
-  // didn't matter
-
-  // compute H
-  compute_Hglobal(EOSextra,prim);
-  // compute Tdyn or Ye depending upon whichrnpmethod
-  compute_TDYNORYE_YNU_global(EOSextra,prim);
-  // compute neutriono u_\nu, p_\nu, and s_\nu
-  compute_ups_global(EOSextra,prim);
-
-
-}
-
 
 
 
@@ -3985,6 +4130,51 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 
 }
 
+
+// compute things beyond simple EOS independent variables
+void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+
+  ////////////////////////
+  //
+  // set grid indices
+  //
+  ////////////////////////
+  {
+    int i,j,k;
+    COMPFULLLOOP{
+      MACP0A1(EOSextra,i,j,k,IGLOBAL) = i;
+      MACP0A1(EOSextra,i,j,k,JGLOBAL) = j;
+      MACP0A1(EOSextra,i,j,k,KGLOBAL) = k;
+    }
+  }
+
+  /////////////////////////
+  //  
+  // compute H
+  //
+  /////////////////////////
+  compute_Hglobal(EOSextra,prim);
+
+  /////////////////////////
+  //  
+  // compute Tdyn or Ye depending upon whichrnpmethod
+  //  
+  /////////////////////////
+  compute_TDYNORYE_YNU_global(EOSextra,prim);
+
+  /////////////////////////
+  //  
+  // compute neutriono u_\nu, p_\nu, and s_\nu
+  //  
+  /////////////////////////
+  compute_ups_global(EOSextra,prim);
+
+
+}
 
 
 
