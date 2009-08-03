@@ -30,6 +30,9 @@ static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatot
 static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep);
 
 
+static FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp);
+static FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp);
+
 
 #include "kazfulleos_set_arrays.c"
 
@@ -64,7 +67,7 @@ void read_setup_eostable(void)
   int i;
   int numeosquantitiestype[MAXNUMDATATYPES];
   int testnumfscanfquantities,testnumfscanfquantitiesdegen;
-
+  int templikeiter;
 
 
 
@@ -112,9 +115,9 @@ void read_setup_eostable(void)
   // number of things corresponds to read-in number of quantities, not final table sizes
   i=0;
   tablesizeexpected[FULLTABLE][i]=EOSN1; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSN2; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSN2; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSN2; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[FULLTABLE][i]=EOSN2; i++;
+  }
   tablesizeexpected[FULLTABLE][i]=EOSN3; i++;
   tablesizeexpected[FULLTABLE][i]=EOSN4; i++;
   tablesizeexpected[FULLTABLE][i]=EOSN5; i++;
@@ -125,9 +128,9 @@ void read_setup_eostable(void)
 
   i=0;
   tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN1; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
+  }
   tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN3; i++;
   tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN4; i++;
   tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN5; i++;
@@ -138,9 +141,9 @@ void read_setup_eostable(void)
 
   i=0;
   tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN1; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
+  }
   tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN3; i++;
   tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN4; i++;
   tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN5; i++;
@@ -150,11 +153,11 @@ void read_setup_eostable(void)
   }
 
 
-  // setup what q1-q5 mean associated with the 5 dimensions of the arrays
+  // setup what q1-q5 mean associated with the 5 dimensions of the arrays related to NUMINDEPDIMENS and not NUMEOSINDEPS
   i=1;
   vartypearray[i]=RHOEOS;  i++;
   vartypearray[i]=UEOS;    i++; // UEOS used for reading table, but later changed for each whichindep
-  vartypearray[i]=TEOS;    i++;
+  vartypearray[i]=YEEOS;   i++;
   vartypearray[i]=YNUEOS;  i++;
   vartypearray[i]=HEOS;    i++;
   if(i!=NUMINDEPDIMENS+1){
@@ -165,12 +168,12 @@ void read_setup_eostable(void)
 
 
 
-  // setup what degen type q1-q"5" mean associated with the 5 dimensions of the arrays
+  // setup what degen type q1-q5 mean associated with the 5 dimensions of the arrays related to NUMINDEPDIMENS and not NUMEOSINDEPS
   i=1;
-  vardegentypearray[i]=RHOEOSDEGEN;  varnormalcompare2degentypearray[i] = RHOEOS; i++;
-  vardegentypearray[i]=TEOSDEGEN;    varnormalcompare2degentypearray[i] = TEOS;   i++;
-  vardegentypearray[i]=YNUEOSDEGEN;  varnormalcompare2degentypearray[i] = YNUEOS; i++;
-  vardegentypearray[i]=HEOSDEGEN;    varnormalcompare2degentypearray[i] = HEOS;   i++;
+  vardegentypearray[i]=RHOEOSDEGEN;  varnormalcompare2degentypearray[i] = RHOEOS;  i++;
+  vardegentypearray[i]=YEEOSDEGEN;   varnormalcompare2degentypearray[i] = YEEOS;   i++;
+  vardegentypearray[i]=YNUEOSDEGEN;  varnormalcompare2degentypearray[i] = YNUEOS;  i++;
+  vardegentypearray[i]=HEOSDEGEN;    varnormalcompare2degentypearray[i] = HEOS;    i++;
   if(i!=NUMEOSDEGENINDEPS+1){
     dualfprintf(fail_file,"vardegentypearray and varnormalcompare2degentypearray not setup for that many indepdimens: i=%d\n",i);
     myexit(3206886);
@@ -437,7 +440,7 @@ void read_setup_eostable(void)
 
 
       // file has rhob as fastest index
-      // here assumes tablesize of UEOS, PEOS, and CHIEOS are same
+      // here assumes tablesize of UEOS, PEOS, CHIEOS, and SEOS are same
       // assume jjj=0 to start since degen checks below depend on that
       // notice that vartypearray has same size as dimension of arrays and loops.
       for(mmm=0;mmm<tablesize[tableiter][vartypearray[5]];mmm++)for(lll=0;lll<tablesize[tableiter][vartypearray[4]];lll++)for(kkk=0;kkk<tablesize[tableiter][vartypearray[3]];kkk++)for(jjj=0;jjj<tablesize[tableiter][vartypearray[2]];jjj++)for(iii=0;iii<tablesize[tableiter][vartypearray[1]];iii++){
@@ -445,8 +448,8 @@ void read_setup_eostable(void)
 	testnumfscanfquantitiesdegen=0;
 
 	// first, get positions to make sure everything is consistent
-	fscanf(intable,"%d %d %d %d %d",&m,&n,&o,&p,&q);
-	testnumfscanfquantities += 1+1+1+1+1;
+	fscanf(intable,"%d %d %d %d %d",&m,&n,&o,&p,&q); // indexing related to NUMINDEPDIMENS not NUMEOSINDEPS
+	testnumfscanfquantities += NUMINDEPDIMENS;
 
 	if(m!=iii || n!=jjj || o!=kkk || p!=lll || q!=mmm){
 	  dualfprintf(fail_file,"Read-in table (%d) indicies inconsistent with expected indicies: m=%d iii=%d n=%d jjj=%d o=%d kkk=%d p=%d lll=%d q=%d mmm=%d\n",tableiter,m,iii,n,jjj,o,kkk,p,lll,q,mmm);
@@ -462,8 +465,8 @@ void read_setup_eostable(void)
 
 	if(jjj==0){ // degen table
 	  n=jjj;
-	  fscanf(indegentable,"%d %d %d %d",&m,&o,&p,&q);
-	  testnumfscanfquantitiesdegen += 1+1+1+1;
+	  fscanf(indegentable,"%d %d %d %d",&m,&o,&p,&q); // related to NUMEOSDEGENINDEPS
+	  testnumfscanfquantitiesdegen += NUMEOSDEGENINDEPS;
 	  if(m!=iii || n!=jjj || o!=kkk || p!=lll || q!=mmm){
 	    dualfprintf(fail_file,"Read-in degentable indicies inconsistent with expected indicies: m=%d iii=%d n=%d jjj=%d o=%d kkk=%d p=%d lll=%d q=%d mmm=%d\n",tableiter,m,iii,n,jjj,o,kkk,p,lll,q,mmm);
 	    myexit(166265);
@@ -487,7 +490,9 @@ void read_setup_eostable(void)
 
 	// true independent dimensions associated with free index
 	totalindex[vartypearray[1]]   = iii;
-	totalindex[CHIEOS] = totalindex[PEOS]=totalindex[UEOS]   = jjj; // notice that UEOS,PEOS,CHIEOS are actually same index
+	for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+	  totalindex[templikeiter] = jjj; // notice that UEOS,PEOS,CHIEOS,SEOS are actually associated with same index
+	}
 	totalindex[vartypearray[3]]   = kkk;
 	totalindex[vartypearray[4]]   = lll;
 	totalindex[vartypearray[5]]   = mmm;
@@ -642,7 +647,7 @@ void read_setup_eostable(void)
 #if(0)
 	// fifth, check degen table against normal table for proper use of independent variable offset
 	// check for all jjj
-	// now ensure that indep[normal table UEOS,PEOS,CHIEOS] + eosdegentable[UTOTDIFF,PTOTDIFF,CHIDIFF] = indepplusdegen[UTOTDIFF,PTOTDIFF,CHIDIFF] for degen'ed quantities
+	// now ensure that indep[normal table UEOS,PEOS,CHIEOS,SEOS] + eosdegentable[UTOTDIFF,PTOTDIFF,CHIDIFF,STOTDIFF] = indepplusdegen[UTOTDIFF,PTOTDIFF,CHIDIFF,STOTDIFF] for degen'ed quantities
 	// first and last are just read-in, while eosdegentable should be for all jjj, so use stored array for each tableiter
 	for(ii=0;ii<numeosdegenquantities[tableiter];ii++){
 	  // assume hit jjj==0 first time in loop
@@ -692,7 +697,8 @@ void read_setup_eostable(void)
 	  lineartablelimits[tableiter][UEOS][jj]/=Pressureunit;
 	  lineartablelimits[tableiter][PEOS][jj]/=Pressureunit;
 	  lineartablelimits[tableiter][CHIEOS][jj]/=Pressureunit;
-	  if(whichrnpmethod[tableiter]==0) lineartablelimits[tableiter][TEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_e
+	  lineartablelimits[tableiter][SEOS][jj]/=pow(Lunit,3.0); // Sden = 1/cc
+	  if(whichrnpmethod[tableiter]==0) lineartablelimits[tableiter][YEEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_e
 	  if(whichynumethod[tableiter]==0) lineartablelimits[tableiter][YNUEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_\nu
 	  lineartablelimits[tableiter][HEOS][jj]/=Lunit;
 	}
@@ -721,7 +727,7 @@ void read_setup_eostable(void)
       //      if(rho0unittype==0) tablelimits[tableiter][RHOEOS][2]=log10(pow(10.0,tablelimits[tableiter][RHOEOS][2])/rhounit);
       //      else tablelimits[tableiter][RHOEOS][2]=log10(pow(10.0,tablelimits[tableiter][RHOEOS][2])/rhomassunit);
       //      tablelimits[tableiter][UEOS][2]=log10(pow(10.0,tablelimits[tableiter][UEOS][2])/Pressureunit);
-      //      tablelimits[tableiter][TEOS][2]=log10(pow(10.0,tablelimits[tableiter][TEOS][2])/Tunit);
+      //      tablelimits[tableiter][YEEOS][2]=log10(pow(10.0,tablelimits[tableiter][YEEOS][2])/Tunit);
       //      tablelimits[tableiter][YNUEOS][2]=log10(pow(10.0,tablelimits[tableiter][YNUEOS][2])/Tunit);
       //      tablelimits[tableiter][HEOS][2]=log10(pow(10.0,tablelimits[tableiter][HEOS][2])/Lunit);
       
@@ -758,7 +764,7 @@ void read_setup_eostable(void)
       ///////////////////////////////
 
 
-      // UEOS gives same size as PEOS and CHIEOS
+      // UEOS gives same size as PEOS, CHIEOS, and SEOS
       for(mmm=0;mmm<tablesize[tableiter][vartypearray[5]];mmm++)for(lll=0;lll<tablesize[tableiter][vartypearray[4]];lll++)for(kkk=0;kkk<tablesize[tableiter][vartypearray[3]];kkk++)for(jjj=0;jjj<tablesize[tableiter][vartypearray[2]];jjj++)for(iii=0;iii<tablesize[tableiter][vartypearray[1]];iii++){
 	
 	// temp store
@@ -777,6 +783,9 @@ void read_setup_eostable(void)
 	tabletemp[UofRHOP]/=Pressureunit;
 	// dPdRHO0ofRHOU dimensionless
 	// dPdUofRHOU dimensionless
+
+	tabletemp[UofRHOS]/=Pressureunit;
+
 	tabletemp[CS2ofRHOU]/=(Vunit*Vunit);
 	// entropy density (erg/K/cc)
 	// kb doesn't convert units, but changes kb T to erg
@@ -803,20 +812,7 @@ void read_setup_eostable(void)
 	tabletemp[TEMPU]/=Tempunit;
 	tabletemp[TEMPP]/=Tempunit;
 	tabletemp[TEMPCHI]/=Tempunit;
-
-	////////////////
-	//
-	// put a floor in input sound speed since want to use log interpolation
-	//
-	// No, instead, if using log interpolation and quantity should be positive, force to avoid that point
-	////////////////
-	//	if(tabletemp[CS2ofRHOU]<=0.0){
-	//	  tabletemp[CS2ofRHOU]=SMALL;
-	// and tell interpolation that this is an invalid data point to use
-	//tabletemp[TEMPU]=invalidtempcode/10.0;
-	//tabletemp[TEMPP]=invalidtempcode/10.0;
-	//tabletemp[TEMPCHI]=invalidtempcode/10.0;
-	//	}
+	tabletemp[TEMPS]/=Tempunit;
 
 	
 
@@ -922,8 +918,17 @@ void read_setup_eostable(void)
 	//	for(jj=0;jj<numeosquantities[tableiter];jj++) dualfprintf(fail_file,"tableiter=%d tabletemp[%d][%d][%d][%d][%d][%d]=%21.15g\n",tableiter,jj,mmm,lll,kkk,jjj,iii,tabletemp[jj]);
 
 	if(jjj==0){// degen table
-	  for(jj=0;jj<numeosdegenquantities[tableiter];jj++){
-	    degentabletemp[jj]/=Pressureunit; // all are pressure units
+	  //	  for(jj=0;jj<numeosdegenquantities[tableiter];jj++){
+	  //	    degentabletemp[jj]/=Pressureunit; // all are pressure units
+	    //	  }
+	  degentabletemp[UTOTDIFF]/=Pressureunit; // pressure units
+	  degentabletemp[PTOTDIFF]/=Pressureunit; // pressure units
+	  degentabletemp[CHIDIFF]/=Pressureunit; // pressure units
+	  degentabletemp[STOTDIFF]/=pow(Lunit,3.0); // 1/cc
+
+	  if(numeosdegenquantities[tableiter]!=NUMEOSDEGENQUANTITIESMEM){
+	    dualfprintf(fail_file,"Degen table: expected %d but got %d\n",NUMEOSDEGENQUANTITIESMEM,numeosdegenquantities[tableiter]);
+	    myexit(13905826);
 	  }
 	}
 	
@@ -1047,7 +1052,7 @@ int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE
 {
   // don't assume tables are setup so q1 and q2 always have same range
   // assume all quantities depend on limits in same way, so "which" doesn't matter
-  // assume HEOS and TEOS are always withing range for now
+  // assume HEOS and YEEOS are always withing range for now
 
 
 
@@ -1150,7 +1155,7 @@ void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, in
     eos_lookup_degen(2,2,skip, whichtable, whichindep, vartypearray, qarray, indexarray);
   }
   else{
-    // if doing degentable, lookall up except q2=UEOS/PEOS/CHIEOS
+    // if doing degentable, lookall up except q2=UEOS/PEOS/CHIEOS/SEOS
     skip=2; 
     eos_lookup_degen(1,WHICHEOSDIMEN,skip,whichtable, whichindep, vartypearray, qarray, indexarray);
     indexarray[2]=0.0; // set 2 as 0 since degentable has this as 0 (may be floating -> integer issue in how this floating value is used)
@@ -1219,7 +1224,7 @@ static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int 
 
   // GODMARK: Can make array that stores this info, looked up by whichfun as index
   // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI);
+  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI||whichfun==UofRHOS||whichfun==TEMPS||whichfun==UofRHOS);
   // functions (F) F(rho0,p)
   whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
 
@@ -1299,6 +1304,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
   if(whichindep==UEOS) whichtemp=TEMPU;
   else if(whichindep==PEOS) whichtemp=TEMPP;
   else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
+  else if(whichindep==SEOS) whichtemp=TEMPS;
 
 
 
@@ -1787,6 +1793,7 @@ FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentab
   if(whichindep==UEOS) whichtemp=TEMPU;
   else if(whichindep==PEOS) whichtemp=TEMPP;
   else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
+  else if(whichindep==SEOS) whichtemp=TEMPS;
 
 
 
@@ -2020,6 +2027,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
   if(whichindep==UEOS) whichtemp=TEMPU;
   else if(whichindep==PEOS) whichtemp=TEMPP;
   else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
+  else if(whichindep==SEOS) whichtemp=TEMPS;
 
 
 
@@ -2238,6 +2246,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
   if(whichindep==UEOS) whichtemp=TEMPU;
   else if(whichindep==PEOS) whichtemp=TEMPP;
   else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
+  else if(whichindep==SEOS) whichtemp=TEMPS;
 
 
 
@@ -2518,7 +2527,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
   //
   //////////////////////
 
-  whichindep = get_whichindep(whichfun); // gets UEOS, PEOS, or CHIEOS
+  whichindep = get_whichindep(whichfun); // gets UEOS, PEOS, CHIEOS, or SEOS
   vartypearray[2]=whichindep; // used to translate q1-q5 to INDEP0-INDEP6, and used with limits and sizes of tables
 
 
@@ -2809,7 +2818,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 int get_whichindep(int whichfun)
 {
-  int whichcheck1,whichcheck2,whichcheck3;
+  int whichcheck1,whichcheck2,whichcheck3,whichcheck4;
   int whichindep;
 
 
@@ -2824,11 +2833,14 @@ int get_whichindep(int whichfun)
   // functions (F) F(rho0,\chi=u+p)
   whichcheck3=(whichfun==PofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP||whichfun==TEMPCHI);
 
+  whichcheck4=(whichfun==UofRHOS||whichfun==TEMPS);
+
 
   // determine which temperature to use to check inversion
   if(whichcheck1) whichindep=UEOS;
   else if(whichcheck2) whichindep=PEOS;
   else if(whichcheck3) whichindep=CHIEOS;
+  else if(whichcheck4) whichindep=SEOS;
   else{
     dualfprintf(fail_file,"Undefined whichfun=%d in get_whichindep()\n",whichfun);
     myexit(26867);
@@ -2889,7 +2901,7 @@ static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in
 FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn)
 {
   FTYPE final;
-  FTYPE unu,snu,pnu;
+  FTYPE unu,pnu,chinu,snu;
   FTYPE dfinal,dquant2;
   FTYPE quant2mod;
 
@@ -2898,47 +2910,54 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
     unu = EOSextra[UNUGLOBAL];
     pnu = EOSextra[PNUGLOBAL];
     snu = EOSextra[SNUGLOBAL];
+    chinu = (unu+pnu);
     if(whichd==UTOTDIFF)      dquant2  = quant2 - unu;
     else if(whichd==PTOTDIFF) dquant2  = quant2 - pnu;
-    else if(whichd==CHIDIFF)  dquant2  = quant2 - (unu+pnu);
+    else if(whichd==CHIDIFF)  dquant2  = quant2 - chinu;
+    else if(whichd==STOTDIFF) dquant2  = quant2 - snu;
   }
   else{
-    unu=snu=pnu=0.0;
+    unu=pnu=chinu=snu=0.0;
     dquant2 = quant2;
   }
 
 
 
   if(get_eos_fromtable(whichfun,whichd,EOSextra,quant1,dquant2,&dfinal)){ // input quant1,dquant2 and get dfinal
-    quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+    if(whichd==UTOTDIFF || whichd==CHIDIFF){
+      quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+    }
+    else if(whichd==STOTDIFF){
+      // SUPERGODMARK: Need to offset by u/(kb*t)
+      //      quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS     
+    }
     // otherwise use TM EOS
 #if(REDUCE2WHICHEOS==MIGNONE)
     if(whichfun==PofRHOU)        final = pressure_rho0_u_mignone(EOSextra,quant1, quant2mod); // use total quant2mod
+    else if(whichfun==UofRHOP)   final = u_rho0_p_mignone(EOSextra,quant1, quant2mod);
+    else if(whichfun==UofRHOS)   final = compute_u_from_entropy_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==SofRHOU)   final = compute_entropy_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==SSofRHOCHI)   final = compute_specificentropy_wmrho0_mignone(EOSextra,quant1, quant2mod);
-    else if(whichfun==UofRHOP)   final = u_rho0_p_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==PofRHOCHI) final = pressure_wmrho0_mignone(EOSextra,quant1, quant2mod);
 #elif(REDUCE2WHICHEOS==IDEALGAS)
     // use ideal EOS
     if(whichfun==PofRHOU)        final = pressure_rho0_u_idealgas(EOSextra,quant1, quant2mod); // use total quant2mod
+    else if(whichfun==UofRHOP)   final = u_rho0_p_idealgas(EOSextra,quant1, quant2mod);
+    else if(whichfun==UofRHOS)   final = compute_u_from_entropy_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==SofRHOU)   final = compute_entropy_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==SSofRHOCHI)   final = compute_specificentropy_wmrho0_idealgas(EOSextra,quant1, quant2mod);
-    else if(whichfun==UofRHOP)   final = u_rho0_p_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==PofRHOCHI) final = pressure_wmrho0_idealgas(EOSextra,quant1, quant2mod);    
 #endif
     dfinal=final;
   }
   else{
     // relevance of neutrinos can be estimated from size of dp vs. p_nu
-    if(whichfun==PofRHOU){
-      final = dfinal + pnu;
-      // DEBUG:-- was on when debugging EOS
-      //      dualfprintf(fail_file,"PofRHOU final=%21.15g dfinal=%21.15g pnu=%21.15g\n",final,dfinal,pnu);
-    }
-    else if(whichfun==SofRHOU)   final = dfinal + snu;
-    else if(whichfun==SSofRHOCHI)   final = dfinal + snu/quant1; // specific entropy is snu/rho0
-    else if(whichfun==UofRHOP)   final = dfinal + unu;
-    else if(whichfun==PofRHOCHI) final = dfinal + pnu;
+    if(whichfun==PofRHOU)          final = dfinal + pnu;
+    else if(whichfun==UofRHOP)     final = dfinal + unu;
+    else if(whichfun==UofRHOS)     final = dfinal + unu;
+    else if(whichfun==SofRHOU)     final = dfinal + snu;
+    else if(whichfun==SSofRHOCHI)  final = dfinal + snu/quant1; // specific entropy is snu/rho0 in code units
+    else if(whichfun==PofRHOCHI)   final = dfinal + pnu;
   }
 
   // sometimes need pure "gas" (non-neutrino) part of answer
@@ -2949,13 +2968,11 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
 
 
 // general function to interpolate between non-neutrino and neutrino values
-// used for those quantities not yet setup for exactly correct answer
+// used for those quantities not yet setup for exactly correct answer (more specifically, fudgefrac() used for derivatives that would otherwise involved mixed derivatives between gas and neutrino terms that are not easily computed/stored without many extra things to store
 FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2)
 {
   FTYPE final;
-  FTYPE dquant2,quant2nu,pnu,rhonu,chinu;
-  FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp);
-  FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp);
+  FTYPE dquant2,quant2nu,pnu,rhonu,chinu,snu;
   FTYPE nonneutrino,neutrino;
   FTYPE total;
   FTYPE ptot;
@@ -2967,18 +2984,31 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
   // SUPERMARK: JCM: Check that EOSextra is used for whichdatatype!=4
   pnu = EOSextra[PNUGLOBAL];
   rhonu = EOSextra[UNUGLOBAL];
+  snu = EOSextra[SNUGLOBAL];
   chinu = rhonu + pnu;
 
 
   // first get total pressure in order to frac-fudge the answer
   if(whichd==UTOTDIFF){
+    // pressure_dp_rho0_u() takes in P(rho0,u) not P(rho0,du), so feed in quant1,quant2
     ptot = pressure_dp_rho0_u_kazfull(EOSextra, quant1, quant2, &pgas); // need pgas to form chi since otherwise don't have it
     ugas = quant2 - rhonu; // ugas = utot - unu
     chigas = quant2 + pgas;
   }
+  else if(0&&whichd==PTOTDIFF){
+    // Not setup.  Not needed yet.  Would require (utot,ugas)[rho0,p]
+  }
   else if(whichd==CHIDIFF){
+    // pressure_dp_rho0_u() takes in P(rho0,u) not P(rho0,du), so feed in quant1,quant2
     ptot =pressure_dp_wmrho0_kazfull(EOSextra, quant1, quant2, &pgas); // don't need separate pgas
     chigas = quant2-chinu;
+  }
+  else if(0&&whichd==STOTDIFF){
+    // don't need fudgefrac(STOTDIFF) since only used for complicated functions like derivatives that have mixed derivatives between gas and neutrino terms
+    // pressure_dp_rho0_s() takes in P(rho0,Sden) not P(rho0,dSden), so feed in quant1,quant2
+    //    utot =u_du_rho0_s_kazfull(EOSextra, quant1, quant2, &ugas); // need ugas to form chi since otherwise don't have it
+    //    ptot =pressure_dp_rho0_s_kazfull(EOSextra, quant1, quant2, &pgas); // need pgas to form chi since otherwise don't have it
+    //    chigas = ugas+pgas;
   }
   else{
     dualfprintf(fail_file,"fudgefrac_kazfull() not setup for whichd=%d\n",whichd);
@@ -2996,6 +3026,7 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
     if(whichd==UTOTDIFF)      quant2nu = rhonu;
     else if(whichd==PTOTDIFF) quant2nu = pnu;
     else if(whichd==CHIDIFF)  quant2nu = chinu;
+    else if(whichd==STOTDIFF)  quant2nu = snu;
 
     dquant2 = quant2 - quant2nu;
 
@@ -3007,22 +3038,27 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
 
 
 
-  ///////////////
-  //
-  // set nuclear per baryon offset so can smoothly connect to ideal gas form of EOS
-  //
-  ///////////////
+  if(whichd==UTOTDIFF || whichd==CHIDIFF){
+    ///////////////
+    //
+    // set nuclear per baryon offset so can smoothly connect to ideal gas form of EOS
+    //
+    ///////////////
 
-  // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
-  quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1;
+    // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+    quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1;
 
-  if(whichdatatype[primarytable]==4){
-    dquant2mod = quant2mod - quant2nu;
+    if(whichdatatype[primarytable]==4){
+      dquant2mod = quant2mod - quant2nu;
+    }
+    else{
+      dquant2mod = quant2mod;
+    }
   }
   else{
-    dquant2mod = quant2mod;
+    quant2mod = quant2;
+    dquant2mod = dquant2;
   }
-
 
 
 
@@ -3137,7 +3173,7 @@ FTYPE pressure_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 // p(rho0, u) (used internally)
-FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp)
+static FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp)
 {
   FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
   return(dfun2fun_kazfull(PofRHOU, UTOTDIFF, EOSextra, rho0, u, dp));
@@ -3164,7 +3200,7 @@ FTYPE pressure_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 }
 
 // used internally
-FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp)
+static FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp)
 {
   FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
   return(dfun2fun_kazfull(PofRHOCHI, CHIDIFF, EOSextra, rho0, wmrho0, dp));
@@ -3186,7 +3222,7 @@ FTYPE dpdu_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // for this could store dp_\nu/drho0, which for whichdatatype==4 is 0 given other independent variables are rho0,T,Y_e,Y_\nu,H
 // for whichdatatype==4 check that dpnu/drho0 = 0 for whichdatatype==4 if ever want to use that method (not now)
 // dp(rho0, u)/drho0
-// GODMARK: frac-fudged (but perhaps shouldn't)
+// frac-fudged since dp/drho0 would otherwise involve dpnu/drho0 that would require storing many neutrino-related derivatives
 FTYPE dpdrho0_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2);
@@ -3203,9 +3239,8 @@ FTYPE cs2_compute_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 
-// exactly correct answer (not frac-fudged)
 // entropy as function of rho0 and internal energy (u)
-// S(rho0,u)
+// Sden(rho0,u)
 // tabulated ds(du), so first compute du and then ds and then s
 FTYPE compute_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
@@ -3214,27 +3249,13 @@ FTYPE compute_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   return(dfun2fun_kazfull(SofRHOU, UTOTDIFF, EOSextra, rho0, u, &ds));
 }
 
-// u(rho0,S)
-// here entropy is entropy density?
-// not needed for now
-// GODMARK: not corrected for ds -- well, doesn't even use table
+// u(rho0,Sden)
+// here S is entropy is entropy per unit volume
 FTYPE compute_u_from_entropy_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
-  FTYPE u;
-  FTYPE compute_u_from_entropy_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
-
-  // GODMARK: no kaz solution yet since not needed yet
-  //  u=compute_u_from_entropy_mignone(EOSextra, rho0, entropy);
-
-  dualfprintf(fail_file,"compute_u_from_entropy_kazfull() not setup yet. Need to compute and store this in Matlab table.\n");
-  u=0.0; // GODMARK: not set yet
-  //  myexit(23458352);
-
-  // if(get_eos_fromtable(UofRHOS,ENTROPYDIFF,EOSextra,rho0,entropy,Hglobal,TDYNORYEglobal, &u)){
-  //}
-
-  return(u);
-
+  FTYPE du;
+  FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
+  return(dfun2fun_kazfull(UofRHOS, STOTDIFF, EOSextra, rho0, entropy, &du));
 }
 
 
@@ -3313,9 +3334,10 @@ FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE
 
 
   if(whichdatatype[primarytable]==4){
-    if(whichd==UTOTDIFF) dquant2 = quant2 - EOSextra[UNUGLOBAL];
+    if(whichd==UTOTDIFF)      dquant2 = quant2 - EOSextra[UNUGLOBAL];
     else if(whichd==PTOTDIFF) dquant2 = quant2 - EOSextra[PNUGLOBAL];
-    else if(whichd==CHIDIFF) dquant2 = quant2 - (EOSextra[UNUGLOBAL]+EOSextra[PNUGLOBAL]);
+    else if(whichd==CHIDIFF)  dquant2 = quant2 - (EOSextra[UNUGLOBAL]+EOSextra[PNUGLOBAL]);
+    else if(whichd==STOTDIFF) dquant2 = quant2 - EOSextra[SNUGLOBAL];
   }
   else{
     dquant2 = quant2;
@@ -3323,7 +3345,7 @@ FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE
 
 
   if(get_eos_fromtable(whichfun,whichd,EOSextra,rho0,dquant2,&final)){ // uses dquant2
-    if(whichfun==TEMPU || whichfun==TEMPP || whichfun==TEMPCHI) final=0.0;
+    if(whichfun==TEMPU || whichfun==TEMPP || whichfun==TEMPCHI || whichfun==TEMPS) final=0.0;
     else if(whichfun==QDOTNU) final=0.0;
     else final=0.0; // use mignone?
   }  
@@ -3362,7 +3384,7 @@ FTYPE compute_temp_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 
 // temperature (direct lookup from differential quant2: dquant2)
-// whichfun = TEMPU + 0,1,2 for TEMPU,TEMPP,TEMPCHI
+// whichfun = TEMPU + 0,1,2,3 for TEMPU,TEMPP,TEMPCHI,TEMPS
 FTYPE compute_temp_whichd_kazfull(int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE dquant2)
 {
   FTYPE temp;
@@ -4085,8 +4107,8 @@ void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
   }
  
 
-  if(TDYNORYEtouse>lineartablelimits[primarytable][TEOS][1]) TDYNORYEtouse = lineartablelimits[primarytable][TEOS][1];
-  if(TDYNORYEtouse<lineartablelimits[primarytable][TEOS][0]) TDYNORYEtouse = lineartablelimits[primarytable][TEOS][0];
+  if(TDYNORYEtouse>lineartablelimits[primarytable][YEEOS][1]) TDYNORYEtouse = lineartablelimits[primarytable][YEEOS][1];
+  if(TDYNORYEtouse<lineartablelimits[primarytable][YEEOS][0]) TDYNORYEtouse = lineartablelimits[primarytable][YEEOS][0];
 
   if(YNUtouse>lineartablelimits[primarytable][YNUEOS][1]) YNUtouse = lineartablelimits[primarytable][YNUEOS][1];
   if(YNUtouse<lineartablelimits[primarytable][YNUEOS][0]) YNUtouse = lineartablelimits[primarytable][YNUEOS][0];
@@ -4477,8 +4499,8 @@ void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBA
     // This is also needed since TDYNORYE is used with other EOS table values and needs to be consistent
     // Note that when using simpletable that these restrictions won't matter
     // offset from strict linear table limits because log-linear conversion leads to error
-    if(TDYNORYEtouse>0.999*lineartablelimits[primarytable][TEOS][1]) TDYNORYEtouse = 0.999*lineartablelimits[primarytable][TEOS][1];
-    if(TDYNORYEtouse<1.001*lineartablelimits[primarytable][TEOS][0]) TDYNORYEtouse = 1.001*lineartablelimits[primarytable][TEOS][0];
+    if(TDYNORYEtouse>0.999*lineartablelimits[primarytable][YEEOS][1]) TDYNORYEtouse = 0.999*lineartablelimits[primarytable][YEEOS][1];
+    if(TDYNORYEtouse<1.001*lineartablelimits[primarytable][YEEOS][0]) TDYNORYEtouse = 1.001*lineartablelimits[primarytable][YEEOS][0];
 
     if(YNUtouse>0.999*lineartablelimits[primarytable][YNUEOS][1]) YNUtouse = 0.999*lineartablelimits[primarytable][YNUEOS][1];
     if(YNUtouse<1.001*lineartablelimits[primarytable][YNUEOS][0]) YNUtouse = 1.001*lineartablelimits[primarytable][YNUEOS][0];
@@ -4533,8 +4555,8 @@ void fix_primitive_eos_scalars_kazfull(FTYPE *EOSextra, FTYPE *pr)
   FTYPE ye;
 
 
-  yemin=1.001*lineartablelimits[primarytable][TEOS][0];
-  yemax=0.999*lineartablelimits[primarytable][TEOS][1];
+  yemin=1.001*lineartablelimits[primarytable][YEEOS][0];
+  yemax=0.999*lineartablelimits[primarytable][YEEOS][1];
   ynumin=1.001*lineartablelimits[primarytable][YNUEOS][0];
   ynumax=0.999*lineartablelimits[primarytable][YNUEOS][1];
   ylmin=yemin+ynumin;
@@ -4561,7 +4583,7 @@ void fix_primitive_eos_scalars_kazfull(FTYPE *EOSextra, FTYPE *pr)
   if(pr[YL]<ylmin){
     pr[YL]  = ylmin;
     pr[YNU] = ynumin;
-    // Now effective ye is ~0.0=1.001*lineartablelimits[primarytable][TEOS][0]
+    // Now effective ye is ~0.0=1.001*lineartablelimits[primarytable][YEEOS][0]
     ye=yemin;
     
   }

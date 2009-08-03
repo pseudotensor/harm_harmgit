@@ -24,7 +24,7 @@
 #define ALLOWFULLTABLE 1
 
 // whether to only use full table (0) for allow use of simple tables if can (1)
-#define ALLOWSIMPLETABLE 1
+#define ALLOWSIMPLETABLE 0
 
 // whether to use simplezoom table if can
 // zoom not needed anymore with new degen offset method
@@ -72,22 +72,73 @@
 #define SIMPLEZOOMTABLE 2
 
 
-// 5 true dimensions (rhob,u/p/chi/tk,tdynorye,tdynorynu,hcm)
+// 5 true dimensions (rhob,u/p/chi/sden/(tk),tdynorye,tdynorynu,hcm)
+// Recall that u/p/chi/sden/tk are all in same independent variable slot for different functions
 #define NUMINDEPDIMENS 5
-// what is contained within file (rhob,utotdiff,ptotdiff,chidiff,tdynorye,tdynorynu,hcm)
-#define NUMEOSINDEPS 7
+// what is contained within file (rhob,utotdiff/ptotdiff/chidiff/stotdiff,tdynorye,tdynorynu,hcm)
 
 
-#define NUMEXTRAINDEP 3 // other besides rho and u-versions
+#define NUMEOSINDEPS 8 // independent-like quantities that have read-in table limits [i.e. rho,u,p,chi,s,T,ynu,H]
 
 // these are fixed in order and number as consistent with what's read-in from file
-#define RHOEOS 0 // rest-mass density
+#define RHOEOS 0    // rest-mass density
 #define UEOS   1    // internal energy density: used for u
 #define PEOS   2    // pressure energy density: used for p
 #define CHIEOS 3    // enthalpy energy density: used for \chi
-#define TEOS   4    // tdynorye: dynamical time or Y_e // JONNEWMARK: Change TEOS -> YEEOS ?
-#define YNUEOS 5    // tdynorynu: dynamical time or Y_\nu
-#define HEOS   6    // height (not used normally anymore)
+#define SEOS   4    // entropy density: used for sden
+#define YEEOS  5    // tdynorye: dynamical time or Y_e
+#define YNUEOS 6    // tdynorynu: dynamical time or Y_\nu
+#define HEOS   7    // height (not used normally anymore)
+
+// begin and end types of temperature-originated quantities
+// which temperature-like independent is chosen using vartypearray[2]
+#define FIRSTTKLIKE UEOS
+#define LASTTKLIKE  SEOS
+
+
+
+///////////////////////
+//
+// these are fixed in order and number from read-in file
+
+// below used generally in code
+#define PofRHOU 0      // p(rho0,u)
+#define UofRHOP 1      // u(rho0,p)
+
+// below used for 5D inversion and sources.c
+#define DPDRHOofRHOU 2 // dpdrho0 |u (rho0,u)
+#define DPDUofRHOU 3   // dp/du |rho0 (rho0,u)
+
+// below used for wave speeds for Riemann solution's dissipation term
+#define CS2ofRHOU 4    // cs^2(rho0,u)
+
+// below used for simple dissipation entropy-inversion tracking same fluid element as energy-based inversion
+#define UofRHOS 5      // U(rho0,Sden)
+
+// below used for utoprim.orig.c (dudp_calc.c) entropy inversion
+#define SofRHOU 6      // S(rho0,u)
+#define DSDRHOofRHOU 7 // dS/drho0 |u (rho0,u)
+#define DSDUofRHOU 8   // dS/du |\rho0 (rho0,u)
+
+// below used for utoprim_jon.c entropy inversion
+#define SSofRHOCHI 9      // specificS(rho0,\chi)
+#define DSSDRHOofRHOCHI 10 // dspecificS/drho0 |\chi (rho0,\chi)
+#define DSSDCHIofRHOCHI 11   // dspecificS/d\chi |\rho0 (rho0,\chi)
+
+// below used for utoprim_jon.c hot inversion
+#define PofRHOCHI 12    // P(rho0,\chi)  \chi = u+p
+#define IDRHO0DP 13     // 1/(d\rho0/dp) |\chi
+#define IDCHIDP 14      // 1/(d\chi/dp) |\rho0
+
+// below used to define temperature and if <invalidtemperature this indicates not in valid part of table (i.e. interpolation from T->u leads to general u range that is mapped onto fixed u range, so final table bounds original table)
+#define TEMPU 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPP 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPCHI 17 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPS 18 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+
+// last index of quantities above
+#define LASTEOSQUANTITIESBASE TEMPS
+
 
 
 // below ending # corresponds to whichrnpmethod
@@ -100,7 +151,7 @@
 // for degen table, eox_extract.m has 9 total
 
 // number of base quantities to *store* from table made by eos_extract.m starting from PofRHOU
-#define NUMEOSQUANTITIESBASE (2 + 2 + 1 + 3 + 3 + 3 + 3)  // 17 : eosquantities
+#define NUMEOSQUANTITIESBASE (1+LASTEOSQUANTITIESBASE) // for memory, so 1+lastindex
 
 // for memory optimization, specifiy which datatype
 #define WHICHDATATYPEGENERAL 4
@@ -122,34 +173,7 @@
 #else
 #define NUMEOSQUANTITIESMEM (MAX(MAX(MAX(NUMEOSQUANTITIESTYPE1,NUMEOSQUANTITIESTYPE2),NUMEOSQUANTITIESTYPE3),NUMEOSQUANTITIESTYPE4))
 #endif
-// these are fixed in order and number from read-in file
-#define PofRHOU 0      // p(rho0,u)
-#define UofRHOP 1      // u(rho0,p)
 
-#define DPDRHOofRHOU 2 // dpdrho0 |u (rho0,u)
-#define DPDUofRHOU 3   // dp/du |rho0 (rho0,u)
-
-#define CS2ofRHOU 4    // cs^2(rho0,u)
-
-// below used for utoprim.orig.c (dudp_calc.c) entropy inversion
-#define SofRHOU 5      // S(rho0,u)
-#define DSDRHOofRHOU 6 // dS/drho0 |u (rho0,u)
-#define DSDUofRHOU 7   // dS/du |\rho0 (rho0,u)
-
-// below used for utoprim_jon.c entropy inversion
-#define SSofRHOCHI 8      // specificS(rho0,\chi)
-#define DSSDRHOofRHOCHI 9 // dspecificS/drho0 |\chi (rho0,\chi)
-#define DSSDCHIofRHOCHI 10   // dspecificS/d\chi |\rho0 (rho0,\chi)
-
-#define PofRHOCHI 11    // P(rho0,\chi)  \chi = u+p
-#define IDRHO0DP 12     // 1/(d\rho0/dp) |\chi
-#define IDCHIDP 13      // 1/(d\chi/dp) |\rho0
-
-#define TEMPU 14 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPP 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPCHI 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-
-#define LASTEOSQUANTITIESBASE TEMPCHI
 
 // so-called "extras" in eos_extract.m: Those things that didn't require extra processing as independent variables or derivatives -- just interpolated from T -> U only
 // extras:
@@ -272,7 +296,7 @@
 
 
 // degen offset quantities for independent variables utot,ptot, chi
-#define NUMEOSDEGENQUANTITIESMEM (3) // utotdiff, ptotdiff, chidiff
+#define NUMEOSDEGENQUANTITIESMEM (4) // utotdiff, ptotdiff, chidiff, stotdiff
 
 #define NUMEOSDEGENINDEPS (NUMINDEPDIMENS-1) // rho, tdynorye, tdynorynu, H
 
@@ -281,7 +305,7 @@
 
 // independents for degen table
 #define RHOEOSDEGEN 0
-#define TEOSDEGEN 1
+#define YEEOSDEGEN 1
 #define YNUEOSDEGEN 2
 #define HEOSDEGEN 3
 
@@ -291,6 +315,7 @@
 #define UTOTDIFF (UEOS-1)   // should always resolve to: 0
 #define PTOTDIFF (PEOS-1)   // :1
 #define CHIDIFF  (CHIEOS-1) // :2
+#define STOTDIFF (SEOS-1)   // :3
 
 
 
@@ -329,16 +354,16 @@
 #define EOSN1 100
 #define EOSN2 50
 #define EOSN3 50
-#define EOSN4 20
+#define EOSN4 2
 #define EOSN5 1         // H not tabulated
 
 // EOS table with assumptions
 // If EOSSIMPLEN5==1, then assumed height such that optically thin problem
 // If EOSSIMPLEN3==1, then assumed Y_e(\rhob,T) (not usual except perhaps for testing)
 // degenerate table assumes to be same size except N2=1
-#define EOSSIMPLEN1 50
-#define EOSSIMPLEN2 50
-#define EOSSIMPLEN3 50
+#define EOSSIMPLEN1 1
+#define EOSSIMPLEN2 1
+#define EOSSIMPLEN3 1
 #define EOSSIMPLEN4 1   // here Y_\nu~0 (optically thin)
 #define EOSSIMPLEN5 1   // H not tabulated
 
@@ -377,6 +402,7 @@
 // should be 4
 #define NUMHDIRECTIONS 4
 
+#define NUMEXTRAINDEP (1+2) // other besides rho and u-versions [i.e. 1 is just offset for memory to start at index=1.  2 is for rho,u]
 
 // NOTE: must be in same order and number as EOS independent vars
 // GODMARK: must also change MAXPARLIST in nondepnmemonics.h
@@ -384,10 +410,10 @@
 #define NUMEOSGLOBALS (NUMEXTRAINDEP+NUMNONSTANDARD)   // number of per CPU position-based data for EOS
 
 // these should be ordered and numbered such that correspond to EOS table independent variables
-// rho, u/p/chi, Y_e, Y_\nu, H
-// 1    2        3    4      5 == 5D
-// do NOT correspond to expanded independent variables list from EOS as read-in (i.e. not RHOEOS, UEOS, PEOS, CHIEOS, TEOS, YNUEOS,  HEOS)
-#define FIRSTEOSGLOBAL 3 // 1=rho, 2=u/p/chi, 3=Y_e, 4=Y_\nu 5=H
+// rho, u/p/chi/sden, Y_e, Y_\nu, H
+// 1    2              3     4    5 == 5D
+// do NOT correspond to expanded independent variables list from EOS as read-in (i.e. not RHOEOS, UEOS, PEOS, CHIEOS, SEOS,  YEEOS, YNUEOS,  HEOS)
+#define FIRSTEOSGLOBAL (NUMEXTRAINDEP) // 1=rho, 2=u/p/chi/sden, 3=Y_e, 4=Y_\nu 5=H
 #define TDYNORYEGLOBAL (FIRSTEOSGLOBAL)             // Tdyn or Y_e depending upon whichrnpmethod
 #define YNUGLOBAL (TDYNORYEGLOBAL+1) // Tdyn or Y_\nu depending upon whichynumethod
 #define HGLOBAL (YNUGLOBAL+1)        // scale-height (for method that uses this for EOS, some averaged version of H
