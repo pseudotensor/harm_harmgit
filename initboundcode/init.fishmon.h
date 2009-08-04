@@ -167,7 +167,7 @@
 #define MCOORD KSCOORDS
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
-#define FIELDSTAGMEM 0 // testing
+#define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0

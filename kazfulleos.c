@@ -34,6 +34,14 @@ static FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FT
 static FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp);
 
 
+static int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable);
+static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
+static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
+static int get_whichindep(int whichfun);
+static FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+
+
+
 #include "kazfulleos_set_arrays.c"
 
 
@@ -1050,7 +1058,7 @@ void read_setup_eostable(void)
 // here we only presume to care about density and internal energy, while H and T are presumed to be truncated rather than extended with some alternative
 // ifdegencheck: 0 = normal table check  1 = ignores q2 (u,p,chi) since generally q2 is largest range possible and later will restrict/check if within the full table
 // whichindep = which independent variable (based upon which function looking up)
-int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable)
+static int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable)
 {
   // don't assume tables are setup so q1 and q2 always have same range
   // assume all quantities depend on limits in same way, so "which" doesn't matter
@@ -1110,7 +1118,7 @@ int iswithin_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE
 // u here stands for utotdiff,ptotdiff,and chidiff depending upon whichindep
 // here only need to look up jeos associated with u
 // notice that qarray and vartypearray start at 1 not 0
-void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
 {
   FTYPE logq[NUMINDEPDIMENS+1];
   FTYPE prelogq[NUMINDEPDIMENS+1];
@@ -1144,7 +1152,7 @@ void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichind
 
 
 // whichdegen: 1 = do degen lookup  0 = do normal lookup without energy indepenent variable lookup
-void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
 {
 
   void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
@@ -1166,15 +1174,20 @@ void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, in
 }
 
 
-// quad-linear interpolation
-FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
+
+
+static FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+static FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+static FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+static FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+static FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
+
+
+
+
+// General EOS interpolation wrapper
+static FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
-  FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
-  FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
-  FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
-  FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
-  FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
-  
 
   // default is good lookup
   *badlookup=0;
@@ -1260,7 +1273,7 @@ static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int 
 // full parabolic interpolation
 // Uses globals so can make them thread safe instead of using static's that are not
 // Assumes H is not a dependent dimension as for whichdatatype==4
-FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
+static FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
   FTYPE tempcheck;
   FTYPE totalf[3][3][3][3]; // 3 values for parabolic interpolation
@@ -1757,7 +1770,7 @@ FTYPE get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int dege
 
 
 // tri-linear + parabolic (density) interpolation
-FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
+static FTYPE get_eos_fromlookup_parabolic(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
   FTYPE totaldist[3];
   FTYPE *tdist;
@@ -2225,7 +2238,7 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
 
 // nearest neighbor interpolation but caution to temperature defined or not
-FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
+static FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
   FTYPE totaldist;
   FTYPE tempcheck;
@@ -2400,7 +2413,7 @@ FTYPE get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable
 //#define index2array(name,fun) name[fun][indexarray[5]][indexarray[4]][indexarray[3]][indexarray[2]][indexarray[1]]
 
 // nearest neighbor interpolation with no temperature check
-FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
+static FTYPE get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup)
 {
   FTYPE totalf;
   int whichdegenfun;
@@ -2509,7 +2522,6 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
   int getwhichtable;
   int repeatedeos;
   // variables need to keep so can quickly get EOS values if repeated input q1-q5
-  int get_whichindep(int whichfun);
   int badlookup;
 
 
@@ -2830,7 +2842,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
 
 
-int get_whichindep(int whichfun)
+static int get_whichindep(int whichfun)
 {
   int whichcheck1,whichcheck2,whichcheck3,whichcheck4;
   int whichindep;
@@ -2884,7 +2896,7 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
   if(whichd==UTOTDIFF || whichd==CHIDIFF){
     // nuclear offset
     // assumes lsoffset in helm/jon_lsbox.f is offsetting only energy/baryon = u/\rho_0
-    *quant2out = (quant2in/quant1 + TRUENUCLEAROFFSET)*quant1;
+    *quant2out = quant2in + TRUENUCLEAROFFSET*quant1;
   }
 
 
@@ -2895,7 +2907,7 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
-  *quant2out = (quant2in/quant1 + DEGENNUCLEAROFFSET)*quant1;
+  *quant2out = quant2in + DEGENNUCLEAROFFSET*quant1;
 
   return(0);
 
@@ -2904,15 +2916,16 @@ static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE 
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
-  *quant2out = (quant2in/quant1 - DEGENNUCLEAROFFSET)*quant1;
+  *quant2out = quant2in - DEGENNUCLEAROFFSET*quant1;
 
   return(0);
 
 }
 
+static FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn);
 
 // tabulated dfun[du] and need to get u=u+unu and then fun= dfun+fun_nu
-FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn)
+static FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *dfinalreturn)
 {
   FTYPE final;
   FTYPE unu,pnu,chinu,snu;
@@ -2939,11 +2952,11 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
 
   if(get_eos_fromtable(whichfun,whichd,EOSextra,quant1,dquant2,&dfinal)){ // input quant1,dquant2 and get dfinal
     if(whichd==UTOTDIFF || whichd==CHIDIFF){
-      quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
     }
     else if(whichd==STOTDIFF){
       // SUPERGODMARK: Need to offset by u/(kb*t)
-      //      quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS     
+      //      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS     
     }
     // otherwise use TM EOS
 #if(REDUCE2WHICHEOS==MIGNONE)
@@ -2983,7 +2996,7 @@ FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, 
 
 // general function to interpolate between non-neutrino and neutrino values
 // used for those quantities not yet setup for exactly correct answer (more specifically, fudgefrac() used for derivatives that would otherwise involved mixed derivatives between gas and neutrino terms that are not easily computed/stored without many extra things to store
-FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2)
+static FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2)
 {
   FTYPE final;
   FTYPE dquant2,quant2nu,pnu,rhonu,chinu,snu;
@@ -3060,7 +3073,7 @@ FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1,
     ///////////////
 
     // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
-    quant2mod = (quant2/quant1 + FAKE2IDEALNUCLEAROFFSET)*quant1;
+    quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1;
 
     if(whichdatatype[primarytable]==4){
       dquant2mod = quant2mod - quant2nu;
@@ -3222,6 +3235,7 @@ static FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho
 
 
 
+static FTYPE fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2);
 
 
 
@@ -3826,7 +3840,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 // function is (rho0,u/p/chi)
 // for now assume only needed as function of quant2=u.  Assumes this function called infrequently outside iterative routines
 // Point is that anyways we are doing an approximation, and save memory and gain simplicity by avoiding tabulating other f(rho0,chi) quantities
-int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu)
+static int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu)
 {
   int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
   int toreturn;
@@ -4169,12 +4183,13 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 }
 
 
+static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+
 // compute things beyond simple EOS independent variables
 void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
   ////////////////////////
   //
@@ -4216,7 +4231,7 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
 
 
 
-void compute_Hglobal_new(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+static void compute_Hglobal_new(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
   // 1) Take EOSextra, rho0, u from full overall-CPUs grid to a single smaller grid
@@ -4237,7 +4252,7 @@ void compute_Hglobal_new(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTY
 
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
 // EOSextra is not input here -- rather part of output.
-void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
   int ii,jj,kk;
@@ -4471,7 +4486,7 @@ static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE
 
 
 // assumes this is computed every timestep (or substep) before anything else computed
-void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
   //  int jj;
@@ -4529,12 +4544,12 @@ void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBA
 }
 
 
+static int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu);
 
 
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
-void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+static void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu);
   FTYPE rho0,u;
   FTYPE rho_nu, p_nu, s_nu;
   int i,j,k;
