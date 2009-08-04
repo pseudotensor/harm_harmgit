@@ -104,16 +104,15 @@
 // below used generally in code
 #define PofRHOU 0      // p(rho0,u)
 #define UofRHOP 1      // u(rho0,p)
+// below used for simple dissipation entropy-inversion tracking same fluid element as energy-based inversion
+#define UofRHOS 2      // U(rho0,Sden)
 
 // below used for 5D inversion and sources.c
-#define DPDRHOofRHOU 2 // dpdrho0 |u (rho0,u)
-#define DPDUofRHOU 3   // dp/du |rho0 (rho0,u)
+#define DPDRHOofRHOU 3 // dpdrho0 |u (rho0,u)
+#define DPDUofRHOU 4   // dp/du |rho0 (rho0,u)
 
 // below used for wave speeds for Riemann solution's dissipation term
-#define CS2ofRHOU 4    // cs^2(rho0,u)
-
-// below used for simple dissipation entropy-inversion tracking same fluid element as energy-based inversion
-#define UofRHOS 5      // U(rho0,Sden)
+#define CS2ofRHOU 5    // cs^2(rho0,u)
 
 // below used for utoprim.orig.c (dudp_calc.c) entropy inversion
 #define SofRHOU 6      // S(rho0,u)

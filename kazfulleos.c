@@ -479,10 +479,10 @@ void read_setup_eostable(void)
 
 	// second, read in the independent variable values and compare with expected value
 	for(ii=0;ii<NUMEOSINDEPS;ii++){
-	  fscanf(intable,"%lf",&indep[ii]); // rhob, Udiff, Pdiff, CHIdiff, tdynorye, tdynorynu, H   for given grid value
+	  fscanf(intable,"%lf",&indep[ii]); // rhob, Udiff, Pdiff, CHIdiff, Sdiff, tdynorye, tdynorynu, H   for given grid value
 	  testnumfscanfquantities += 1;
 	}
-	// read-in UofUdiff, PofPdiff, CHIofCHIdiff -- used to check degen offset calculation in HARM
+	// read-in UofUdiff, PofPdiff, CHIofCHIdiff, SofSdiff -- used to check degen offset calculation in HARM
 	for(ii=0;ii<numeosdegenquantities[tableiter];ii++){
 	  fscanf(intable,"%lf",&indepplusdegen[ii]);
 	  testnumfscanfquantities += 1;
@@ -505,7 +505,7 @@ void read_setup_eostable(void)
 	    // check consistency between normal and degen tablef or independent variables (assumes jjj!=0 in normal table is same for these quantities as jjj==0)
 	  
 	    if(fabs(indepdegen[vardegentypearray[ii]]-indep[varnormalcompare2degentypearray[ii]])>TABLETOL){
-	      dualfprintf(fail_file,"degen table not consistent with normal table (tableiter=%d ii=%d) for %d %d: %21.15g %21.15g\n",tableiter,ii,vardegentypearray[ii],vartypearray[ii],indepdegen[vardegentypearray[ii]],indep[varnormalcompare2degentypearray[ii]]);
+	      dualfprintf(fail_file,"degen table not consistent with normal table (tableiter=%d ii=%d iii=%d jjj=%d kkk=%d lll=%d mmm=%d) for %d %d: %21.15g %21.15g\n",tableiter,ii,iii,jjj,kkk,lll,mmm,vardegentypearray[ii],vartypearray[ii],indepdegen[vardegentypearray[ii]],indep[varnormalcompare2degentypearray[ii]]);
 	    }
 	  }
 	}
@@ -697,7 +697,7 @@ void read_setup_eostable(void)
 	  lineartablelimits[tableiter][UEOS][jj]/=Pressureunit;
 	  lineartablelimits[tableiter][PEOS][jj]/=Pressureunit;
 	  lineartablelimits[tableiter][CHIEOS][jj]/=Pressureunit;
-	  lineartablelimits[tableiter][SEOS][jj]/=pow(Lunit,3.0); // Sden = 1/cc
+	  lineartablelimits[tableiter][SEOS][jj]/=(1.0/pow(Lunit,3.0)); // Sden = 1/cc
 	  if(whichrnpmethod[tableiter]==0) lineartablelimits[tableiter][YEEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_e
 	  if(whichynumethod[tableiter]==0) lineartablelimits[tableiter][YNUEOS][jj]/=Tunit; // otherwise no conversion for dimensionless Y_\nu
 	  lineartablelimits[tableiter][HEOS][jj]/=Lunit;
@@ -787,6 +787,8 @@ void read_setup_eostable(void)
 	tabletemp[UofRHOS]/=Pressureunit;
 
 	tabletemp[CS2ofRHOU]/=(Vunit*Vunit);
+
+
 	// entropy density (erg/K/cc)
 	// kb doesn't convert units, but changes kb T to erg
 	// presumes entropy is used with energy as in first-law: dQ = (kbT)dS where kbT is in ergs
@@ -2126,6 +2128,13 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 
       dist[iii][jjj][kkk][lll][mmm] = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdl[mmm];
 
+      // DEBUG:
+      //      if(whichfun==CS2ofRHOU){
+      //	dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
+      //	dualfprintf(fail_file,"A %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
+      //	dualfprintf(fail_file,"totaldist=%21.15g\n",totaldist);
+      //      }
+
 
       if(degentable==1){
 	offsetquant2_general(whichdegenfun, quant1, f[iii][jjj][kkk][lll][mmm], &f[iii][jjj][kkk][lll][mmm]);
@@ -2147,11 +2156,9 @@ FTYPE get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable,
 	totalf +=f[iii][jjj][kkk][lll][mmm]*dist[iii][jjj][kkk][lll][mmm];
 	totaldist += dist[iii][jjj][kkk][lll][mmm];
       }
-
-      //      dualfprintf(fail_file,"f[%d][%d][%d][%d][%d]=%21.15g dist=%21.15g\n",iii,jjj,kkk,lll,mmm,f[iii][jjj][kkk][lll][mmm],dist[iii][jjj][kkk][lll][mmm]);
+      
 
       // DEBUG:
-      //      dualfprintf(fail_file,"A %d %d %d %d : %d %d %d %d : tempcheck=%21.15g\n",kazii,kazjj,kazkk,kazll,kazii+iii,kazjj+jjj,kazkk+kkk,kazll+lll,tempcheck);
 
 
       // DEBUG
@@ -2598,6 +2605,9 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
       }
       else{
 	if(0&&debugfail>=2) dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
+	// DEBUG:
+	//	dualfprintf(fail_file,"CHECKLOOKUP:(repeated) %d %d %d : %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichdegen,whichfun);
+
 	*answer=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[0], whichfun, whichindep, quant1, vartypearray, indexarray,&badlookup);
 
 	if(badlookup){
@@ -2709,11 +2719,15 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 	  }
 	}
 
+	// DEBUG:
 	// now compute result
+	//	if(whichdegen==0&&whichfun==CS2ofRHOU){
+	//	dualfprintf(fail_file,"CHECKLOOKUP: %d %d %d : %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichdegen,whichfun);
+	  //	}
 	myanswer[whichdegen]=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichdegen], whichfun, whichindep, quant1, vartypearray, indexarray,&badlookup);
 
 	if(badlookup){
-	  dualfprintf(fail_file,"No answer within table\n");
+	  dualfprintf(fail_file,"Looked up, but no answer within table: %d %d\n",whichtable[whichdegen],whichfun);
 	  diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	  return(1);// indicates "failure" and no answer within table
 	}
@@ -2790,7 +2804,7 @@ static int get_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE qu
 
       } // end if within some table
       else{
-	dualfprintf(fail_file,"No answer within table\n");
+	dualfprintf(fail_file,"No answer within table: %d %d\n",whichtable[whichdegen],whichfun);
 	diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	return(1);// indicates "failure" and no answer within table
       }
