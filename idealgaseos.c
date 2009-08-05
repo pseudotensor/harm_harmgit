@@ -66,8 +66,8 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // The prefactor constant doesn't matter for entropy evolution/inversion or sound speed evaluations as long as everything is self-consistent.
 //
 // entropy (in energy/volume) as function of rho0 and internal energy (u)
-// S(rho0,u)
-// entropy = \rho\ln( p^n/\rho^{n+1} )
+// Sden(rho0,u)
+// entropy density = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
@@ -91,7 +91,7 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// u(rho0,S)
+// u(rho0,Sden = U[ENTROPY]/U[RHO]*pr[RHO])
 FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
   FTYPE rho,ie,pressure;
@@ -135,6 +135,7 @@ static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0,
 
 
 // used for dudp_calc
+// dSden/drho0
 FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE indexn;
@@ -155,6 +156,7 @@ FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 
 // used for dudp_calc
+// dSden/du
 FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE indexn;
@@ -170,8 +172,8 @@ FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 // entropy as function of rho0 and internal energy (u)
-// S(rho0,\chi=u+p)
-// entropy = \rho\ln( p^n/\rho^{n+1} )
+// Sden(rho0,\chi=u+p)
+// entropy density = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE insideentropy,entropy;
@@ -185,8 +187,8 @@ FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 }
 
 // specific entropy as function of rho0 and internal energy (u)
-// S(rho0,\chi=u+p)
-// entropy = \rho\ln( p^n/\rho^{n+1} )
+// Ss(rho0,\chi=u+p)
+// specific entropy = \ln( p^n/\rho^{n+1} )
 FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE insideentropy,specificentropy;
@@ -201,6 +203,7 @@ FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE
 
 // used for utoprim_jon when doing entropy evolution
 // Because P=(\gamma-1)u, then holding \chi=w-\rho_0 constant is the same as holding u constant
+// dSden/drho0
 FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdrho;
@@ -217,6 +220,7 @@ FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE w
 
 }
 
+// dSspecific/drho0
 FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdrho;
@@ -234,6 +238,7 @@ FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 
 
 // used for utoprim_jon when doing entropy evolution
+// dSden/d\chi
 FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
@@ -247,6 +252,7 @@ FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYP
 }
 
 // used for utoprim_jon when doing entropy evolution
+// dSspecific/d\chi
 FTYPE compute_dspecificSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
