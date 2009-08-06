@@ -137,7 +137,9 @@
 #undef MINPREFORDER
 #undef SHOCKINDICATOR
 #undef WHICHPARA
+#undef HOT2ENTROPY
 #undef HOT2COLD
+#undef ENTROPY2COLD
 
 
 #define MAXWELL PRIMMAXWELL
@@ -187,7 +189,7 @@
 #define DOEVOLVEMETRIC 0
 #define EVOLVEMETRICSUBSTEP 1 // evolve metric every substep
 #define LIMITSOURCES 1
-#define LIMITDTWITHSOURCETERM 0 // doesn't work right
+#define LIMITDTWITHSOURCETERM 1
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
 #define DODISS 0
@@ -200,17 +202,18 @@
 
 //set this and the following one to unity to use the DONOR interpolated states for computing wavespeeds
 #if(1 || SPLITNPR==1 || FIELDSTAGMEM==1) // should also be on if FLUXB==FIELDSTAG
-#define STOREWAVESPEEDS 1 // no choice
+#define STOREWAVESPEEDS 2 // no choice
 #else
 #define STOREWAVESPEEDS 0 // choice
 #endif
 
-#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS) // choice really
+#define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS>0) // choice really
 
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1
 #define WHICHVEL VELREL4
 #define WHICHEOM WITHGDET
+//#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles. // still seems wrong -- need to test.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
 #define EOMTYPE EOMGRMHD
@@ -224,13 +227,17 @@
 
 #if(DODISS || DOLUMVSR || DODISSVSR)
 // for diss: testing CHANGINGMARK
-#define DOENTROPY DOEVOLVECOMPAREENTROPY
+#define DOENTROPY DOEVOLVEENTROPY
 #define WHICHENTROPYEVOLVE EVOLVEFULLENTROPY
 #else
 // no diss/entropy
 #define DOENTROPY DONOENTROPY
 #define WHICHENTROPYEVOLVE EVOLVESIMPLEENTROPY
 #endif
+
+// force entropy variable enabled so can use HOT2ENTROPY
+#undef DOENTROPY
+#define DOENTROPY DOEVOLVEENTROPY
 
 
 #define FIXUPAFTERINIT 1
@@ -258,7 +265,8 @@
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFGAMMIE // DEBUG
+#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1
@@ -313,7 +321,9 @@
 #undef DO_VORTICITY_IMAGE
 #define DO_VORTICITY_IMAGE 0
 
-#define HOT2COLD 0
+#define HOT2ENTROPY 1
+#define HOT2COLD 1
+#define ENTROPY2COLD 1
 
 #define ACCURATESINCOS 1
 
