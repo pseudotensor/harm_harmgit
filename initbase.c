@@ -1488,8 +1488,9 @@ int post_par_set(void)
 
   trifprintf("useghostplusactive=%d extrazones4emf=%d\n",useghostplusactive,extrazones4emf);
 
-  special3dspc=N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
+  special3dspc=(dx[3]*totalsize[3]>=1-SMALL) && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
 
+  trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
 
   trifprintf("Setting orders\n");
   orders_set();
