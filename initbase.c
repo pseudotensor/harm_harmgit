@@ -615,6 +615,7 @@ int prepre_init(void)
   periodicx1=0;
   periodicx2=0;
   periodicx3=0;// GODMARK: periodic in \phi for 3D spherical polar
+  dofull2pi=1;
 
   if(USEMPI&&USEROMIO){
     binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
@@ -1488,7 +1489,7 @@ int post_par_set(void)
 
   trifprintf("useghostplusactive=%d extrazones4emf=%d\n",useghostplusactive,extrazones4emf);
 
-  special3dspc=(dx[3]*totalsize[3]>=1-SMALL) && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
+  special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
 
   trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
 
