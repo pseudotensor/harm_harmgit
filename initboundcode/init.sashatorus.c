@@ -17,6 +17,7 @@
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
+static FTYPE rhodisk;
 
 
 static FTYPE nz_func(FTYPE R) ;
@@ -41,6 +42,8 @@ int pre_init_specific_init(void)
   h_over_r=0.3;
   // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
   h_over_r_jet=2.0*h_over_r;
+
+  rhodisk=1.0;
 
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
 
@@ -200,15 +203,6 @@ int init_grid(void)
   a = 0.95 ; //so that Risco ~ 2
   
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
-  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = 0.0;
-  Rout = 1.e5;
-#elif(WHICHPROBLEM==GRBJET)
-  R0 = -3.0;
-  Rout = 1E5;
-#endif
-
  
   Rhor=rhor_calc(0);
 
@@ -221,6 +215,17 @@ int init_grid(void)
   //set Rin by hand:
   Rin = 0.8 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
 #endif
+
+
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
+  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  R0 = 0.3 * Rin;
+  Rout = 1.e4;
+#elif(WHICHPROBLEM==GRBJET)
+  R0 = -3.0;
+  Rout = 1E5;
+#endif
+
 
   return(0);
 }
@@ -276,7 +281,7 @@ int init_global(void)
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
-  tf = 100000.0;
+  tf = 1e4;
 
   /* dumping frequency, in units of M */
   DTdumpgen[DTDISS]=DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = 50.;
@@ -360,29 +365,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     //to have initial vector potential to be saved in panalytic array
   }
 
-
-
-
-  
-  // diagnostic
-  // determine nature of inner radial edge (assumes myid==0 is always there)
-  if(myid==0){
-    i=INFULL1;
-    j=k=0;
-    coord(i,j,k, FACE1, X);
-    bl_coord(X, V);
-    r=V[1];
-    th=V[2];
-    trifprintf("rmin(i=%d,X=%21.15g): %21.15g\n", i,X[1],r);
-    trifprintf("rmin/rh: %21.15g\n", r / Rhor );
-    //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
-    if(r/Rhor<=1.0){
-      trifprintf("inner grid is inside horizon\n");
-    }
-    else{
-      trifprintf("inner grid is outside horizon\n");
-    }
-  }
+  // check rmin
+  check_rmin();
 
 
   // check that singularities are properly represented by code
@@ -724,7 +708,9 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*prim)[NS
 
     /* vertical field version*/
     if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISKVERT)){
-      vpot += 0.5*r*sin(th)*sin(th) ;
+      FTYPE rpow;
+      rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+      vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
     }
 
 
@@ -796,6 +782,7 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   eqline=1;
   parms[0]=rin;
+  parms[1]=rhodisk;
 
   funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
   if(funreturn!=0) return(funreturn);
@@ -949,13 +936,14 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   //  torus_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
   //jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
 
+#if(1)
   enerregiondef[POINTDOWN][1]=0;
   enerregiondef[POINTUP][1]=totalsize[1]-1;
   enerregiondef[POINTDOWN][2]=0;
   enerregiondef[POINTUP][2]=totalsize[2]-1;
   enerregiondef[POINTDOWN][3]=0;
   enerregiondef[POINTUP][3]=totalsize[3]-1;
-
+#endif
 
   return(0);
 }

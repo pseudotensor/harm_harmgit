@@ -11,8 +11,8 @@
 #undef N3
 #endif
 
-#define N1 16
-#define N2 16
+#define N1 64
+#define N2 64
 #define N3 1
 
 // atch adjusts
@@ -170,7 +170,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
-#define PRODUCTION 1
+#define PRODUCTION 0
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 
