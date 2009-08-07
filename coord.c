@@ -186,8 +186,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     npow2=4.0; //power exponent
-    cpow2=0.25; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-    rbr = 20;  //radius at which hyperexponentiation kicks in
+    cpow2=0.05; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = 200.;  //radius at which hyperexponentiation kicks in
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
     /////////////////////
