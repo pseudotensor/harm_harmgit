@@ -198,6 +198,11 @@ void compute_EOS_parms(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSG
   (*(ptr_compute_EOS_parms[whicheos]))(EOSextra,prim);
 }
 
+void compute_EOS_parms_full(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  (*(ptr_compute_EOS_parms_full[whicheos]))(EOSextra,prim);
+}
+
 void store_EOS_parms(int whicheos, int numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   (*(ptr_store_EOS_parms[whicheos]))(numparms,EOSextra,parlist);
@@ -310,6 +315,7 @@ int initeos_eomtype(void)
   ptr_compute_temp[whicheos] = &compute_temp_idealgas;
       
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_idealgas;
+  ptr_compute_EOS_parms_full[whicheos] = &compute_EOS_parms_idealgas; // same as non-full
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_idealgas;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_idealgas;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_idealgas;
@@ -344,6 +350,7 @@ int initeos_eomtype(void)
   ptr_compute_temp[whicheos] = &compute_temp_mignone;
       
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_mignone;
+  ptr_compute_EOS_parms_full[whicheos] = &compute_EOS_parms_mignone; // same as non-full
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_mignone;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_mignone;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_mignone;
@@ -378,6 +385,7 @@ int initeos_eomtype(void)
   ptr_compute_temp[whicheos] = &compute_temp_grbpwf99;
       
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_grbpwf99;
+  ptr_compute_EOS_parms_full[whicheos] = &compute_EOS_parms_grbpwf99; // same as non-full
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_grbpwf99;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_grbpwf99;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_grbpwf99;
@@ -412,9 +420,18 @@ int initeos_eomtype(void)
   ptr_compute_temp[whicheos] = &compute_temp_kazfull;
       
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_kazfull;
+  ptr_compute_EOS_parms_full[whicheos] = &compute_EOS_parms_full_kazfull; // different than non-full
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_kazfull;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_kazfull;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_kazfull;
+
+  // initialize repeated qarray's
+  int qi;
+  for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarray[qi]=-BIG;
+  for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarrayextras[qi]=-BIG;
+  doallextrasold=-1;
+  kaziio=kazjjo=kazkko=kazllo=kazmmo=-100;
+
 
   //////////////////////////////////////////////////////
   whicheos=COLDEOS;
@@ -446,6 +463,7 @@ int initeos_eomtype(void)
   ptr_compute_temp[whicheos] = &compute_temp_coldgrmhd;
 
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_coldgrmhd;
+  ptr_compute_EOS_parms_full[whicheos] = &compute_EOS_parms_coldgrmhd; // same as non-full
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_coldgrmhd;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_coldgrmhd;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_coldgrmhd;

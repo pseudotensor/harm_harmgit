@@ -31,8 +31,6 @@
 #define USEOPENMP (USINGOPENMP) // choice (set through makehead.inc)
 
 
-// whether to allow Kaz EOS table
-#define ALLOWKAZEOS 0 // expensive for OpenMP due to many large globals, so normally disable unless required
 #include "kazfulleos.global.h" // for array sizes
 
 //////////////////

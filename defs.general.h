@@ -340,6 +340,7 @@ void (*ptr_compute_allextras[NUMEOSS])(int justnum, FTYPE *EOSextra, FTYPE rho0,
 int (*ptr_get_extrasprocessed[NUMEOSS])(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
 FTYPE (*ptr_compute_temp[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 void (*ptr_compute_EOS_parms[NUMEOSS])(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS],  FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+void (*ptr_compute_EOS_parms_full[NUMEOSS])(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS],  FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 void (*ptr_store_EOS_parms[NUMEOSS])(int numparms, FTYPE *EOSextra, FTYPE *parlist);
 void (*ptr_get_EOS_parms[NUMEOSS])(int*numparms, FTYPE *EOSextra, FTYPE *parlist);
 void (*ptr_fix_primitive_eos_scalars[NUMEOSS])(FTYPE *EOSextra, FTYPE *pr);

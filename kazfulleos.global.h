@@ -14,6 +14,9 @@
 // 5) change bounds so loops over bounding vars rather than only up to B3
 // 6) rescale() depends often on final quantity being B3
 
+// whether to allow Kaz EOS table
+#define ALLOWKAZEOS 0 // expensive for OpenMP due to many large globals, so normally disable unless required
+
 //////////////////////////////
 //
 // Some often changable variables
@@ -401,21 +404,21 @@
 // should be 4
 #define NUMHDIRECTIONS 4
 
-#define NUMEXTRAINDEP (1+2) // other besides rho and u-versions [i.e. 1 is just offset for memory to start at index=1.  2 is for rho,u]
 
-// NOTE: must be in same order and number as EOS independent vars
-// GODMARK: must also change MAXPARLIST in nondepnmemonics.h
-#define NUMNONSTANDARD (6+3+3)
-#define NUMEOSGLOBALS (NUMEXTRAINDEP+NUMNONSTANDARD)   // number of per CPU position-based data for EOS
+
+// NOTE: EOSextra[] starts at 1, not 0, index.  Shift occurs in pointer assignment.  Don't need extra 1 element.
+
+
 
 // these should be ordered and numbered such that correspond to EOS table independent variables
-// rho, u/p/chi/sden, Y_e, Y_\nu, H
-// 1    2              3     4    5 == 5D
 // do NOT correspond to expanded independent variables list from EOS as read-in (i.e. not RHOEOS, UEOS, PEOS, CHIEOS, SEOS,  YEEOS, YNUEOS,  HEOS)
-#define FIRSTEOSGLOBAL (NUMEXTRAINDEP) // 1=rho, 2=u/p/chi/sden, 3=Y_e, 4=Y_\nu 5=H
-#define TDYNORYEGLOBAL (FIRSTEOSGLOBAL)             // Tdyn or Y_e depending upon whichrnpmethod
-#define YNUGLOBAL (TDYNORYEGLOBAL+1) // Tdyn or Y_\nu depending upon whichynumethod
-#define HGLOBAL (YNUGLOBAL+1)        // scale-height (for method that uses this for EOS, some averaged version of H
+#define RHOGLOBAL (-2) // dummy reference
+#define UGLOBAL (-1) // dummy reference
+#define TDYNORYEGLOBAL (0)        // Tdyn or Y_e depending upon whichrnpmethod
+#define YNU0GLOBAL     (TDYNORYEGLOBAL+1) // Tdyn or Y_\nu depending upon whichynumethod
+#define YNU0OLDGLOBAL  (YNU0GLOBAL+1)     // Tdyn or Y_\nu depending upon whichynumethod
+#define YNUOLDGLOBAL   (YNU0OLDGLOBAL+1)  // Tdyn or Y_\nu depending upon whichynumethod
+#define HGLOBAL        (YNUOLDGLOBAL+1)   // scale-height (for method that uses this for EOS, some averaged version of H
 #define H2GLOBAL (HGLOBAL+1)         // 2,3,4 are other directions for axisymmetric emission
 #define H3GLOBAL (H2GLOBAL+1) 
 #define H4GLOBAL (H3GLOBAL+1) 
@@ -426,6 +429,26 @@
 #define IGLOBAL (SNUGLOBAL+1)
 #define JGLOBAL (IGLOBAL+1)
 #define KGLOBAL (JGLOBAL+1)
+
+// Ye should always be first
+// Note that RHO,U,etc. GLOBAL should resolve to 1,2,3,4,5
+// below is whatever comes after RHO and U
+#define FIRSTEOSGLOBAL (TDYNORYEGLOBAL)
+#define LASTEOSGLOBAL (KGLOBAL)
+
+// NOTE: must be in same order and number as EOS independent vars
+// number of per CPU position-based data for EOS
+//#define NUMEOSGLOBALS (1+3+4+3+3)
+#define NUMEOSGLOBALS (LASTEOSGLOBAL-FIRSTEOSGLOBAL+1)
+
+
+
+// maximum number of extra variables in kazfulleos.c
+// placed here so can know this when dumping and dump file is always same
+#define MAXNUMEXTRAS 24
+// 14-0 = 14
+#define MAXPARLIST (NUMEOSGLOBALS) // for get_EOS_parms()
+#define MAXPROCESSEDEXTRAS 13 // for using get_extrasprocessed()
 
 
 // tolerance to check whether repeated case for i,j,k,rho0,u

@@ -12,9 +12,10 @@ FTYPE kazdi[2],kazdj[2],kazdk[2],kazdl[2],kazdm[2];
 int gottable[2]; //={0,0}; // for degen and non-degen case : should end up same!
 int whichtable[2];
 FTYPE indexarray[NUMINDEPDIMENS+1];
-FTYPE qoldarray[NUMINDEPDIMENS+1];
 FTYPE resultold[NUMEOSQUANTITIESMEM];
 int repeatedfun[NUMEOSQUANTITIESMEM];
 FTYPE extrasold[MAXNUMEXTRAS];
 FTYPE processedold[MAXPROCESSEDEXTRAS];
 FTYPE qoldarray[NUMINDEPDIMENS+1];
+FTYPE qoldarrayextras[NUMINDEPDIMENS+1];
+int doallextrasold;

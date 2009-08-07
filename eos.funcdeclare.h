@@ -44,6 +44,7 @@ extern void compute_allextras(int whicheos, int justnum, FTYPE *EOSextra, FTYPE 
 extern int get_extrasprocessed(int whicheos, int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
 extern FTYPE compute_temp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern void compute_EOS_parms(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+extern void compute_EOS_parms_full(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern void store_EOS_parms(int whicheos, int numparms, FTYPE *EOSextra, FTYPE *parlist);
 extern void get_EOS_parms(int whicheos, int*numparms, FTYPE *EOSextra, FTYPE *parlist);
 extern void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr);

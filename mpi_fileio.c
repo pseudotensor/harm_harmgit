@@ -1583,8 +1583,8 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
   dualfprintf(fail_file,"got here2\n");
   */
 #endif
-#endif
   logsfprintf("mpiios_init end: sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
+#endif
 
 }
 

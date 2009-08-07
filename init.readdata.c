@@ -1,6 +1,5 @@
 
 
-
 int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int set_zamo_velocity(int whichvel, struct of_geom *ptrgeom, FTYPE *pr);
@@ -75,15 +74,32 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   //  dualfprintf(fail_file,"YLYNU: i=%d yl=%21.15g ynu=%21.15g\n",i,pr[YL],pr[YNU]);
 
 
+  ////////////////////////////////////
+  //
+  // Setup EOSextra for kazfulleos.c
+  // parlist starts its index at 0 with EOSextra["TDYNORYEGLOBAL"]
+  //
   // why not just call to compute EOSglobal things? (only because of H)
   // only matters for Kaz EOS and should be in correct order and type of quantity
-  parlist[0]=pr[YL]-pr[YNU]; // Y_e
-  parlist[1]=pr[YNU]; // Y_\nu
-  parlist[2]=parlist[3]=parlist[4]=parlist[5]=hcmsingle; // H
-  parlist[6]=parlist[7]=parlist[8]=0.0; // unu=pnu=snu=0 as first guess
-  parlist[9]=i;
-  parlist[10]=j;
-  parlist[11]=k;
+  parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=pr[YL]-pr[YNU]; // Y_e
+  parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // Y_\nu
+  parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // no older yet, so indicate that by using same value
+  parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // no older yet, so indicate that by using same value
+
+
+  int hi;
+  for(hi=0;hi<NUMHDIRECTIONS;hi++){
+    parlist[HGLOBAL-FIRSTEOSGLOBAL+hi]=hcmsingle; // H
+  }
+  // first guess is neutrinos have U=P=S=0
+  parlist[UNUGLOBAL-FIRSTEOSGLOBAL]=0.0;
+  parlist[PNUGLOBAL-FIRSTEOSGLOBAL]=0.0;
+  parlist[SNUGLOBAL-FIRSTEOSGLOBAL]=0.0;
+
+  parlist[IGLOBAL-FIRSTEOSGLOBAL]=i;
+  parlist[JGLOBAL-FIRSTEOSGLOBAL]=j;
+  parlist[KGLOBAL-FIRSTEOSGLOBAL]=k;
+
   store_EOS_parms(WHICHEOS,NUMEOSGLOBALS,GLOBALMAC(EOSextraglobal,i,j,k),parlist);
 
 

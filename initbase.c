@@ -300,7 +300,7 @@ int init(int *argc, char **argv[])
 	}
 	// END DEBUG
 	///////////////////////////////
-      }
+      }// end if doing diagnostics and production==0
 
       
       // after all parameters and primitives are set, then can set these items
@@ -630,7 +630,7 @@ int prepre_init(void)
 
   /////////////////////
   //
-  // Initialize global EOS pointers
+  // Initialize global EOS pointers and initial repeated array values (originally static)
   //
   /////////////////////
   initeos_eomtype();
@@ -1339,7 +1339,8 @@ int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NS
   // need to compute various things for EOS
   // also done per timestep in step_ch.c
   // GODMARK: Check that no EOS call is before this point 
-  compute_EOS_parms(WHICHEOS, GLOBALPOINT(EOSextraglobal),prim);
+  compute_EOS_parms_full(WHICHEOS, GLOBALPOINT(EOSextraglobal),prim);
+
 
 
   // in synch always here

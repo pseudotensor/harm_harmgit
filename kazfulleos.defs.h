@@ -17,6 +17,9 @@ static FTYPE lineartablelimits[NUMTBLS][NUMEOSINDEPS][TBLLINEARITEMS];
 // first [4] : as first [4] above
 static int tablesize[NUMTBLS][NUMEOSINDEPS];
 
+static int vartypeeosextraarray[NUMINDEPDIMENS+1];
+static int vartypeheightarray[NUMHDIRECTIONS+1];
+
 static int vartypearray[NUMINDEPDIMENS+1];
 static int varnormalcompare2degentypearray[NUMEOSDEGENINDEPS+1]; // to be used to compare against degen table
 static int vardegentypearray[NUMEOSDEGENINDEPS+1];

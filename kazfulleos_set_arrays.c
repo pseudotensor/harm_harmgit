@@ -46,6 +46,16 @@ void kazfulleos_set_arrays_multidimen(void)
 
   GLOBALPOINT(EOSextraglobal) = (FTYPE PTRMACP0A1(EOSextraglobal,N1M,N2M,N3M,NUMEOSGLOBALS)) (&(BASEMACP0A1(EOSextraglobal,N1BND,N2BND,N3BND,-FIRSTEOSGLOBAL))); // -FIRSTEOSGLOBAL so EOSextraglobal[FIRSTEOSGLOBAL] is a_EOSextraglobal[0]
 
+  // indicate that IGLOBAL and other things have not been set yet.
+  // Used to indicate if starting iterating on Ynu0 yet
+  int i,j,k;
+  COMPFULLLOOP{
+    GLOBALMACP0A1(EOSextraglobal,i,j,k,IGLOBAL) = -100;
+    GLOBALMACP0A1(EOSextraglobal,i,j,k,JGLOBAL) = -100;
+    GLOBALMACP0A1(EOSextraglobal,i,j,k,KGLOBAL) = -100;
+  }
+
+
 #endif
 
 
