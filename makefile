@@ -18,10 +18,10 @@ endif
 # WATCH OUT FOR SPACES, etc. AFTER ASSIGNMENTS!!!!
 USEBG=0
 USEQB=0
-USEUB=0
+USEUB=1
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
-USEICCINTEL=1
+USEICCINTEL=0
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -109,12 +109,20 @@ ifeq ($(USEPGCC),1)
 MCC=mpicc
 endif    
 
+ifeq ($(USEUB),1)
+MCC=/usr/bin/mpicc.mpich
+USEGCC=1
+ECHOSWITCH=
+USELAPACK=0
+endif
+
 endif    
 #################### DONE IF USEMPI
 
 ifeq ($(USEUB),1)
 USEGCC=1
 ECHOSWITCH=
+USELAPACK=0
 endif
 
 

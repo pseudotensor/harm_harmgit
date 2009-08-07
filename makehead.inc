@@ -100,7 +100,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=1
+USEOPENMP=0
 
 
 $(warning USEMPI is $(USEMPI))

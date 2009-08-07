@@ -43,6 +43,21 @@ static FTYPE r1jet,njet,rpjet;
 // for defcoord=JET3COORDS
 static FTYPE r0jet,rsjet,Qjet;
 
+// for SJETCOORDS
+static FTYPE fracphi;
+static FTYPE npow2;
+static FTYPE cpow2;
+static FTYPE rbr;
+static FTYPE x1br;
+static FTYPE fracdisk;
+static FTYPE fracjet;
+static FTYPE rsjet;
+static FTYPE r0jet;
+static FTYPE r0mono;
+static FTYPE r0disk;
+static FTYPE jetnu;
+
+
 // for defcoord=JET6COORDS
 static FTYPE ntheta,htheta,rsjet2,r0jet2;
 
@@ -162,6 +177,69 @@ void set_coord_parms_nodeps(int defcoordlocal)
       rsjet=80.0;
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
     }
+  }
+  else if (defcoordlocal == SJETCOORDS) {
+    /////////////////////
+    // RADIAL GRID SETUP
+    /////////////////////
+    npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+
+    //radial hyperexponential grid
+    npow2=4.0; //power exponent
+    cpow2=0.25; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = 20;  //radius at which hyperexponentiation kicks in
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
+
+    /////////////////////
+    //ANGULAR GRID SETUP
+    /////////////////////
+
+    //transverse resolution fraction devoted to different components
+    //(sum should be <1)
+    fracdisk = 0.15;
+    fracjet = 0.2;
+
+    jetnu = 0.75;  //the nu-parameter that determines jet shape
+
+    //subtractor, controls the size of the last few cells close to axis:
+    //if rsjet = 0, then no modification
+    //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
+    //                which makes the timestep larger
+    rsjet = 0.6; 
+
+    //distance at which theta-resolution is exactly uniform in jet;
+    //otherwise, near-uniform near jet axis but less resolution further from it
+    r0jet = 12;    
+
+    //distance at which disk part of the grid becomes monopolar
+    //the smaller r0mono, the smaller the thickness of the disk 
+    //to resolve
+    r0mono = 6;
+
+    //distance after which the disk grid collimates to merge with the jet grid
+    //should be roughly outer edge of the disk
+    r0disk = 40;
+
+    /////////////////////
+    //PHI GRID SETUP
+    /////////////////////
+    if( dofull2pi ) {
+      fracphi = 1.;
+    }
+    else {
+      fracphi = 0.25;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+    }
+
+
+
+#if(0)
+    // must be same as in dxdxp() -- atch: don't worry for now since use numerical dxdxp
+    r1jet=2.8;
+    njet=0.3;
+    r0jet=20.0;
+    rsjet=80.0;
+    Qjet=1.3; // chosen to help keep jet resolved even within disk region
+#endif
   }
   else if (defcoordlocal == JET6COORDS) {
 
@@ -386,6 +464,8 @@ void set_coord_parms_deps(int defcoordlocal)
   }
   else if (defcoordlocal == JET3COORDS) {
   }
+  else if (defcoordlocal == SJETCOORDS) {
+  }
   else if (defcoordlocal == JET6COORDS) {
   }
   else if (defcoordlocal == JET5COORDS) {
@@ -489,6 +569,9 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET3COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
+      else if (defcoordlocal == SJETCOORDS) {
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0mono,r0disk,jetnu);
+      }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2);
       }
@@ -580,6 +663,10 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == JET3COORDS) {
 	fscanf(in,HEADER6IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet);
+      }
+      else if (defcoordlocal == SJETCOORDS) {
+	fscanf(in,HEADER7IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&fracphi);
+	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0mono,&r0disk,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fscanf(in,HEADER10IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2);
@@ -676,6 +763,25 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
+  else if (defcoordlocal == SJETCOORDS) {
+    MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    //new params
+    MPI_Bcast(&fracphi, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&fracdisk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&fracjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0mono, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  }
   else if (defcoordlocal == JET6COORDS) {
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -762,7 +868,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE X0;
   // for defcoord=JET5COORDS
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
- 
+  //for SJETCOORDS
+  FTYPE theexp;
+  FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
+  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+  FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+  FTYPE  fac, faker, ror0nu;
+
 
 
   // below will give correct dxdxp[1][1], etc.
@@ -919,6 +1031,44 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else{
       V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
     }
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+  }
+  else if (defcoord == SJETCOORDS) {
+    theexp = npow*X[1];
+
+    if( X[1] > x1br ) {
+      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    }
+    V[1] = R0+exp(theexp);
+
+#if(0) //JON's method
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+
+    if(X[2]<0.5){
+      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
+    }
+    else{
+      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+    }
+#elif(1) //SASHA's
+    fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
+
+    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0mono,0.5*r0mono,r0mono)*minlin(V[1],r0disk,0.5*r0disk,r0mono)/r0mono - rsjet*Rin;
+    
+    ror0nu = pow( faker/r0jet, jetnu/2 );
+
+    if( X[2] < -0.5 ) {
+      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
+    }
+    else if( X[2] >  0.5 ) {
+      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
+    }
+    else {
+      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
+    }
+#endif
+
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
   }
@@ -1765,6 +1915,11 @@ void set_points()
 {
   int jj;
 
+  //for SJETCOORDS
+  FTYPE x1max0, x1max;
+  int iter;
+  const FTYPE RELACC = 1e-14;
+  const int ITERMAX = 50;
 
   // below 2 things not used since we set X[0] directly using t
   startx[0]=0;
@@ -1865,6 +2020,41 @@ void set_points()
     dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
     dx[2] = 1. / totalsize[2];
     dx[3] = 1.0/totalsize[3];
+  } 
+  else if (defcoord == SJETCOORDS) {
+    startx[1] = log(Rin-R0)/npow;
+
+    if( Rout < rbr ) {
+      x1max = log(Rout-R0)/npow;
+    }
+    else {
+      x1max0 = 1;
+      x1max = 2;
+
+      //find the root via iterations
+      for( iter = 0; iter < ITERMAX; iter++ ) {
+        if( fabs((x1max - x1max0)/x1max) < RELACC ) {
+          break;
+        }
+        x1max0 = x1max;
+        x1max = pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br;
+      }
+
+      if( iter == ITERMAX ) {
+        trifprintf( "Error: iteration procedure for finding x1max has not converged: x1max = %g, dx1max/x1max = %g, iter = %d\n",
+                    x1max, (x1max-x1max0)/x1max, iter );
+	exit(1);
+      }
+      else {
+        trifprintf( "x1max = %g (dx1max/x1max = %g, itno = %d)\n", x1max, (x1max-x1max0)/x1max, iter );
+      }
+    }
+
+    startx[2] = -1.;
+    startx[3] = 0.;
+    dx[1] = ( x1max - startx[1] ) /totalsize[1];
+    dx[2] = 2. / totalsize[2];
+    dx[3] = fracphi/totalsize[3];
   } 
   else if (defcoord == JET6COORDS) { // same as JET3COORDS since radial grid same
     startx[1] = pow(log(Rin-R0),1.0/npow);
@@ -2057,6 +2247,17 @@ FTYPE setRin(int ihor)
     }
   }
   else if(defcoord == JET3COORDS){
+    // see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
+    if(npow==1.0){
+      ftemp=ihoradjust/(FTYPE)totalsize[1];
+      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    }
+    else{
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+    }
+  }
+  else if(defcoord == SJETCOORDS){
     // see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
@@ -2899,3 +3100,72 @@ void coord_ijk(int i, int j, int k, int loc, FTYPE *X)
 }
 
 
+
+//smooth step function: 
+// Ftr = 0 if x < 0, Ftr = 1 if x > 1 and smoothly interps. in btw.
+FTYPE Ftr( FTYPE x )
+{
+  FTYPE res;
+
+  if( x <= 0 ) {
+    res = 0;
+  }
+  else if( x >= 1 ) {
+    res = 1;
+  }
+  else {
+    res = (64 + cos(5*M_PI*x) + 70*sin((M_PI*(-1 + 2*x))/2.) + 5*sin((3*M_PI*(-1 + 2*x))/2.))/128.;
+  }
+
+  return( res );
+}
+
+FTYPE Ftrgenlin( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb )
+{
+  FTYPE Ftr( FTYPE x );
+  FTYPE res;
+
+  res = (x*ya)/xa + (-((x*ya)/xa) + ((x - xb)*(1 - yb))/(1 - xb) + yb)*Ftr((x - xa)/(-xa + xb));
+  
+  return( res );
+}
+
+FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb )
+{
+  FTYPE Ftr( FTYPE x );
+  FTYPE res;
+
+  res = ya + (yb-ya)*Ftr( (x-xa)/(xb-xa) );
+  
+  return( res );
+}
+
+FTYPE Fangle( FTYPE x )
+{
+  FTYPE res;
+
+  if( x <= 0 ) {
+    res = 0;
+  }
+  else if( x >= 1 ) {
+    res = x;
+  }
+  else {
+    res = (1 + x + (-140*sin((M_PI*(1 + x))/2.) + (10*sin((3*M_PI*(1 + x))/2.))/3. + (2*sin((5*M_PI*(1 + x))/2.))/5.)/(64.*M_PI))/2.;
+  }
+
+  return( res );
+  
+}
+
+FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 )
+{
+  FTYPE Fangle( FTYPE x );
+  return( y0 - dx * Fangle(-(x-x0)/dx) );
+}
+
+FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 )
+{
+  FTYPE Fangle( FTYPE x );
+  return( y0 + dx * Fangle((x-x0)/dx) );
+}

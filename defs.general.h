@@ -307,6 +307,7 @@ int *interporder;
 
 // SOME GEOMETRIC VARIABLES
 int special3dspc;
+int dofull2pi;
 
 int numbercpu[ 3+1 ];
 
