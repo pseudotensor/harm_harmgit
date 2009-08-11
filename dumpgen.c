@@ -2,7 +2,7 @@
 
 
 
-int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Datatype datatype, char *fileprefix, char *fileformat, char *filesuffix, int (*headerfun) (int bintxt, FILE*headerptr),int (*setgetcontent) (int i, int j, int k, MPI_Datatype datatype, void*setbuf))
+int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Datatype datatype, char *fileprefix, char *fileformat, char *filesuffix, int (*headerfun) (int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr),int (*setgetcontent) (int i, int j, int k, MPI_Datatype datatype, void*setbuf))
 {
   int i = 0, j = 0, k = 0, l = 0, col = 0;
   FILE **fpp;
@@ -25,7 +25,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   int binextension;
   int checkstatus;
   int gopastlinebreak(FILE *stream);
-
+  int whichdumpversion;
 
   ////////////
   //
@@ -54,6 +54,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 
 
   numcolumns=dnumcolumns[whichdump];
+  whichdumpversion=dnumversion[whichdump];
   docolsplit=DOCOLSPLIT[whichdump]; // docolsplit global var for now
 
 
@@ -190,7 +191,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       //  read or write header: header is read/written in whatever style chosen to the top of each dump file created
       //
       ///////////////////////////////////
-      headerfun(headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+      headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
 
       ////////////////////////////
       //

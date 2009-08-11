@@ -194,7 +194,7 @@ int extrarestartfunction_old(void)
 
 
 // headerptr created and only used here OR passed a given pointer
-int read_restart_header_old(int bintxt, FILE*headerptr)
+int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr)
 {
   int ii;
   int dir,pl,pliter;
@@ -555,7 +555,7 @@ int restart_read_defs_old(void)
 
 
 
-int write_restart_header_old(int bintxt,FILE*headerptr)
+int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns, int bintxt,FILE*headerptr)
 {
   int dir,pl,pliter,floor,tscale;
   int enerregion;

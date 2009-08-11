@@ -27,12 +27,12 @@
 
 
 int extrarestartfunction_old(void);
-int read_restart_header_old(int bintxt, FILE*headerptr);
+int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr);
 int restart_read_defs_old(void);
-int write_restart_header_old(int bintxt,FILE*headerptr);
+int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns, int bintxt,FILE*headerptr);
 
 int extrarestartfunction_new(void);
-int read_restart_header_new(int bintxt, FILE*headerptr);
+int read_restart_header_new(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr);
 int restart_read_defs_new(void);
-int write_restart_header_new(int bintxt,FILE*headerptr);
+int write_restart_header_new(int whichdump, int whichdumpversion, int numcolumns, int bintxt,FILE*headerptr);
 

@@ -55,11 +55,18 @@ int init_dumps(void)
 
   ///////////////////////////
   //
+  // Output nprlist information to SM-readable file
+  //
+  ///////////////////////////
+  output_nprlist_info();
+
+  ///////////////////////////
+  //
   // setup number of columns per dump file
   // (see dumpgen.c or dump.c for how used)
   //
   ///////////////////////////
-  init_dnumcolumns();
+  init_dnumcolumns_dnumversion();
 
   ///////////////////////////
   //
@@ -75,68 +82,148 @@ int init_dumps(void)
 }
 
 
+void output_nprlist_info(void)
+{
+  int pliter,pl;
+  int numversion;
+  int numlines;
+  FILE *out;
+  
+  // only CPU=0
+  if(myid==0){
+
+    out=fopen("nprlistinfo.dat","wt");
+    if(out==NULL){
+      dualfprintf(fail_file,"Couldn't open nprlistinfo.dat\n");
+      myexit(12358235);
+    }
+
+    numlines=7;
+    numversion=0; // version number of this file
+    
+    myfprintf(out,"%d %d\n",numlines,numversion);
+
+    // NPR: (conserved quantities: U0-U? in SM)
+    PLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPR2INTERP:
+    PINTERPLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPR2NOTINTERP:
+    PNOTINTERPLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPRBOUND:
+    PBOUNDLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPRFLUXBOUND:
+    PFLUXBOUNDLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPRDUMP:
+    PDUMPLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+    // NPRINVERT:
+    PINVERTLOOP(pliter,pl){
+      myfprintf(out,"%d ",pl);
+    }
+    if(pliter==0) myfprintf(out,"-1"); // nothing in this list
+    myfprintf(out,"\n");
+
+
+    fclose(out);
+
+  }// end if CPU==0
+
+
+}
+
 
 
 // setup number of columns per dump file (see dumpgen.c or dump.c for how used)
-void init_dnumcolumns(void)
+void init_dnumcolumns_dnumversion(void)
 {
   char dumpnamelist[NUMDUMPTYPES][MAXFILENAME]=MYDUMPNAMELIST;
   int i;
 
-  extern void set_image_content_dnumcolumns(int *numcolumns);
-  extern void set_rdump_content_dnumcolumns(int *numcolumns);
-  extern void set_rmetricdump_read_content_dnumcolumns(int *numcolumns);
-  extern void set_rmetricdump_content_dnumcolumns(int *numcolumns);
-  extern void set_dump_content_dnumcolumns(int *numcolumns);
-  extern void set_gdump_content_dnumcolumns(int *numcolumns);
-  extern void set_avg_content_dnumcolumns(int *numcolumns);
-  extern void set_avg2_content_dnumcolumns(int *numcolumns);
-  extern void set_debug_content_dnumcolumns(int *numcolumns);
-  extern void set_enodebug_content_dnumcolumns(int *numcolumns);
-  extern void set_fieldline_content_dnumcolumns(int *numcolumns);
-  extern void set_dissdump_content_dnumcolumns(int *numcolumns);
-  extern void set_dumpother_content_dnumcolumns(int *numcolumns);
-  extern void set_fluxdump_content_dnumcolumns(int *numcolumns);
-  extern void set_eosdump_content_dnumcolumns(int *numcolumns);
-  extern void set_vpotdump_content_dnumcolumns(int *numcolumns);
+  extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_avg2_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
 
 
 
 
-  // always 0 for fake dump
-  dnumcolumns[FAKEDUMPCOL]=0;
+  // always numcolumns=0 for fake dump
+  // version=0 shouldn't matter for fake dump
+  dnumcolumns[FAKEDUMPCOL]=0; dnumversion[FAKEDUMPCOL]=0;
+  
 
   // image
-  set_image_content_dnumcolumns(&dnumcolumns[IMAGECOL]);
+  set_image_content_dnumcolumns_dnumversion(&dnumcolumns[IMAGECOL],&dnumversion[IMAGECOL]);
   // rdump
-  set_rdump_content_dnumcolumns(&dnumcolumns[RDUMPCOL]);
+  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RDUMPCOL],&dnumversion[RDUMPCOL]);
   // rmetricdump
-  set_rmetricdump_content_dnumcolumns(&dnumcolumns[RMETRICDUMPCOL]);
+  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RMETRICDUMPCOL],&dnumversion[RMETRICDUMPCOL]);
   // dump
-  set_dump_content_dnumcolumns(&dnumcolumns[DUMPCOL]);
+  set_dump_content_dnumcolumns_dnumversion(&dnumcolumns[DUMPCOL],&dnumversion[DUMPCOL]);
   // gdump
-  set_gdump_content_dnumcolumns(&dnumcolumns[GDUMPCOL]);
+  set_gdump_content_dnumcolumns_dnumversion(&dnumcolumns[GDUMPCOL],&dnumversion[GDUMPCOL]);
   // avg
-  set_avg_content_dnumcolumns(&dnumcolumns[AVGCOL]);
+  set_avg_content_dnumcolumns_dnumversion(&dnumcolumns[AVGCOL],&dnumversion[AVGCOL]);
   // avg2
-  set_avg2_content_dnumcolumns(&dnumcolumns[AVG2COL]);
+  set_avg2_content_dnumcolumns_dnumversion(&dnumcolumns[AVG2COL],&dnumversion[AVG2COL]);
   // debug
-  set_debug_content_dnumcolumns(&dnumcolumns[DEBUGCOL]);
+  set_debug_content_dnumcolumns_dnumversion(&dnumcolumns[DEBUGCOL],&dnumversion[DEBUGCOL]);
   // enodebug
-  set_enodebug_content_dnumcolumns(&dnumcolumns[ENODEBUGCOL]);
+  set_enodebug_content_dnumcolumns_dnumversion(&dnumcolumns[ENODEBUGCOL],&dnumversion[ENODEBUGCOL]);
   // fieldline
-  set_fieldline_content_dnumcolumns(&dnumcolumns[FIELDLINECOL]);
+  set_fieldline_content_dnumcolumns_dnumversion(&dnumcolumns[FIELDLINECOL],&dnumversion[FIELDLINECOL]);
   // dissdump
-  set_dissdump_content_dnumcolumns(&dnumcolumns[DISSDUMPCOL]);
+  set_dissdump_content_dnumcolumns_dnumversion(&dnumcolumns[DISSDUMPCOL],&dnumversion[DISSDUMPCOL]);
   // dumpother
-  set_dumpother_content_dnumcolumns(&dnumcolumns[DUMPOTHERCOL]);
+  set_dumpother_content_dnumcolumns_dnumversion(&dnumcolumns[DUMPOTHERCOL],&dnumversion[DUMPOTHERCOL]);
   // fluxdump
-  set_fluxdump_content_dnumcolumns(&dnumcolumns[FLUXDUMPCOL]);
+  set_fluxdump_content_dnumcolumns_dnumversion(&dnumcolumns[FLUXDUMPCOL],&dnumversion[FLUXDUMPCOL]);
   // eosdump
-  set_eosdump_content_dnumcolumns(&dnumcolumns[EOSDUMPCOL]);
+  set_eosdump_content_dnumcolumns_dnumversion(&dnumcolumns[EOSDUMPCOL],&dnumversion[EOSDUMPCOL]);
   // vpotdump
-  set_vpotdump_content_dnumcolumns(&dnumcolumns[VPOTDUMPCOL]);
+  set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPCOL],&dnumversion[VPOTDUMPCOL]);
 
 
 
@@ -198,29 +285,29 @@ void writesyminfo( void )
 }
 
 
-int dump_header(int bintxt, FILE *headerptr)
+int dump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
-  int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
   int retval;
 
-  retval=dump_header_general(realnstep,dt, bintxt, headerptr);
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, realnstep,dt, bintxt, headerptr);
 
   return(retval);
 
 }
 
-int fluxdump_header(int bintxt, FILE *headerptr)
+int fluxdump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
-  int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
   int retval;
 
-  retval=dump_header_general(fluxdumprealnstep,fluxdumpdt, bintxt, headerptr);
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, fluxdumprealnstep,fluxdumpdt, bintxt, headerptr);
 
   return(retval);
 
 }
 
-int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
+int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
 {
   int realtotalsize[NDIM];
   FTYPE realstartx[NDIM];
@@ -280,14 +367,23 @@ int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *h
     fwrite(&Rout,sizeof(FTYPE),1,headerptr);
     fwrite(&hslope,sizeof(FTYPE),1,headerptr);
     fwrite(&localdt,sizeof(FTYPE),1,headerptr);
-    fwrite(&MBH,sizeof(int),1,headerptr);
-    fwrite(&QBH,sizeof(int),1,headerptr);
+    fwrite(&MBH,sizeof(FTYPE),1,headerptr);
+    fwrite(&QBH,sizeof(FTYPE),1,headerptr);
+    fwrite(&is,sizeof(int),1,headerptr);
+    fwrite(&ie,sizeof(int),1,headerptr);
+    fwrite(&js,sizeof(int),1,headerptr);
+    fwrite(&je,sizeof(int),1,headerptr);
+    fwrite(&ks,sizeof(int),1,headerptr);
+    fwrite(&ke,sizeof(int),1,headerptr);
+    fwrite(&whichdump,sizeof(int),1,headerptr);
+    fwrite(&whichdumpversion,sizeof(int),1,headerptr);
+    fwrite(&numcolumns,sizeof(int),1,headerptr);
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #endif
   }
   fflush(headerptr);
@@ -297,7 +393,7 @@ int dump_header_general(long localrealnstep, SFTYPE localdt, int bintxt, FILE *h
 
 
 // number of columns for dump file
-void set_dump_content_dnumcolumns(int *numcolumns)
+void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
 
@@ -320,6 +416,10 @@ void set_dump_content_dnumcolumns(int *numcolumns)
       *numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
     }
   }
+
+
+  // Version number:
+  *numversion=0;
 
 }
 
@@ -526,13 +626,16 @@ int debugdump(long dump_cnt)
 }
 
 
-extern void set_debug_content_dnumcolumns(int *numcolumns)
+extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(DODEBUG){
     *numcolumns=NUMFAILFLOORFLAGS*NUMTSCALES;
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
 
 }
 
@@ -555,7 +658,6 @@ int enodebugdump(long dump_cnt)
   char fileprefix[MAXFILENAME];
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
-  int eno_dump_header(int bintxt, FILE *headerptr);
 
 
   trifprintf("begin dumping enodebug dump# %ld ... ",dump_cnt);
@@ -578,7 +680,7 @@ int enodebugdump(long dump_cnt)
 
 
 
-void set_enodebug_content_dnumcolumns(int *numcolumns)
+void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(DOENODEBUG){
@@ -586,6 +688,10 @@ void set_enodebug_content_dnumcolumns(int *numcolumns)
     *numcolumns=(3-1)* NUMENOINTERPTYPES * (NPR-4) * NUMENODEBUGS;  //SASMARK2
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 
 }
 
@@ -600,58 +706,14 @@ int enodebug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
-int eno_dump_header(int bintxt, FILE *headerptr)
+int eno_dump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
-  int realtotalsize[NDIM];
-  FTYPE realstartx[NDIM];
-  FTYPE X[NDIM];
-  int loc=CENT;
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int retval;
 
-  realtotalsize[1]=totalsize[1]+2*EXTRADUMP1;
-  realtotalsize[2]=totalsize[2]+2*EXTRADUMP2;
-  realtotalsize[3]=totalsize[3]+2*EXTRADUMP3;
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, realnstep,dt, bintxt, headerptr);
 
-  // get real startx's (assumes rectangular grid)
-  coord(0-EXTRADUMP1,0,0,loc,X);
-  realstartx[1]=X[1];
-  coord(0,0-EXTRADUMP2,0,loc,X);
-  realstartx[2]=X[2];
-  coord(0,0,0-EXTRADUMP3,loc,X);
-  realstartx[3]=X[3];
-  
-  // dx is the same (constant)
-
-  // 15+3=18 elements total
-  if(bintxt==BINARYOUTPUT){
-    fwrite(&tsteppartf,sizeof(FTYPE),1,headerptr);
-    fwrite(&realtotalsize[1],sizeof(int),1,headerptr);
-    fwrite(&realtotalsize[2],sizeof(int),1,headerptr);
-    fwrite(&realtotalsize[3],sizeof(int),1,headerptr);
-    fwrite(&realstartx[1],sizeof(FTYPE),1,headerptr);
-    fwrite(&realstartx[2],sizeof(FTYPE),1,headerptr);
-    fwrite(&realstartx[3],sizeof(FTYPE),1,headerptr);
-    fwrite(&dx[1],sizeof(FTYPE),1,headerptr);
-    fwrite(&dx[2],sizeof(FTYPE),1,headerptr);
-    fwrite(&dx[3],sizeof(FTYPE),1,headerptr);
-    fwrite(&realnstep,sizeof(long),1,headerptr);
-    fwrite(&gam,sizeof(FTYPE),1,headerptr);
-    fwrite(&a,sizeof(FTYPE),1,headerptr);
-    fwrite(&R0,sizeof(FTYPE),1,headerptr);
-    fwrite(&Rin,sizeof(FTYPE),1,headerptr);
-    fwrite(&Rout,sizeof(FTYPE),1,headerptr);
-    fwrite(&hslope,sizeof(FTYPE),1,headerptr);
-    fwrite(&dt,sizeof(FTYPE),1,headerptr);
-    fwrite(&defcoord,sizeof(int),1,headerptr);
-  }
-  else{
-#if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord,steppart);
-#elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],realnstep,gam,a,R0,Rin,Rout,hslope,dt,defcoord, steppart);
-#endif
-  }
-  fflush(headerptr);
-  return(0);
+  return(retval);
 }	
 
 
@@ -689,7 +751,7 @@ int avgdump(long dump_cnt)
 }
 
 
-void set_avg_content_dnumcolumns(int *numcolumns)
+void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // 36+29+8*2+4*2+2+12*2+96*2=339
@@ -713,6 +775,10 @@ void set_avg_content_dnumcolumns(int *numcolumns)
   if(DOAVG2){
     *numcolumns-=224;
   }
+
+  // Version number:
+  *numversion=0;
+
 
 
 }
@@ -806,7 +872,7 @@ int avg2dump(long dump_cnt)
 
 }
 
-void set_avg2_content_dnumcolumns(int *numcolumns)
+void set_avg2_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
 
@@ -814,6 +880,10 @@ void set_avg2_content_dnumcolumns(int *numcolumns)
     *numcolumns=10 + 224; // otherwise doesn't exist so don't need to set
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 
 
 }
@@ -882,7 +952,7 @@ int gdump(long dump_cnt)
 
 
 
-extern void set_gdump_content_dnumcolumns(int *numcolumns)
+extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
 
@@ -891,6 +961,9 @@ extern void set_gdump_content_dnumcolumns(int *numcolumns)
   //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
   *numcolumns=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
   //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
+
+  // Version number:
+  *numversion=0;
 
 }
 
@@ -1007,12 +1080,16 @@ int fieldlinedump(long dump_cnt)
 }
 
 
-extern void set_fieldline_content_dnumcolumns(int *numcolumns)
+extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
   if(DOFIELDLINE){
     *numcolumns=NUMFIELDLINEQUANTITIES;
   }
   else *numcolumns=0;
+
+
+  // Version number:
+  *numversion=0;
 
 }
 
@@ -1180,13 +1257,17 @@ int dissdump(long dump_cnt)
 }
 
 
-void set_dissdump_content_dnumcolumns(int *numcolumns)
+void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(DODISS){
     *numcolumns=NUMDISSFUNPOS;
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 }
 
 
@@ -1232,13 +1313,17 @@ int dumpother(long dump_cnt)
 }
 
 
-void set_dumpother_content_dnumcolumns(int *numcolumns)
+void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(DODUMPOTHER){ // panalytic + numpother quantities
     *numcolumns=NPR+NUMPOTHER;
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 
 }
 
@@ -1291,13 +1376,17 @@ int fluxdumpdump(long dump_cnt)
   
 }
 
-void set_fluxdump_content_dnumcolumns(int *numcolumns)
+void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(FLUXDUMP){ // dU, flux, and ppprimitives for flux
     *numcolumns=NUMFLUXDUMP;
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 
 }
 
@@ -1346,7 +1435,7 @@ int eosdump(long dump_cnt)
 }
 
 
-void set_eosdump_content_dnumcolumns(int *numcolumns)
+void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   //#if(WHICHEOS==KAZFULL)
@@ -1356,6 +1445,10 @@ void set_eosdump_content_dnumcolumns(int *numcolumns)
   //#else
   //  *numcolumns=0;
   //#endif
+
+  // Version number:
+  *numversion=0;
+
 
 }
 
@@ -1437,13 +1530,17 @@ int vpotdump(long dump_cnt)
 
 
 
-void set_vpotdump_content_dnumcolumns(int *numcolumns)
+void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   if(DOVPOTDUMP){
     *numcolumns=NUMVPOTDUMP;
   }
   else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
 
 
 }
@@ -1500,7 +1597,8 @@ int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   return (0);
 }
 
-int fakedump_header(int bintxt, FILE *headerptr)
+
+int fakedump_header(int whichdump, int whichdumpversion, int numcolumns,int bintxt, FILE *headerptr)
 {
   int fake;
 
@@ -1520,3 +1618,4 @@ int fakedump_header(int bintxt, FILE *headerptr)
   fflush(headerptr);
   return(0);
 }	
+

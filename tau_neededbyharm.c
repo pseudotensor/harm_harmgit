@@ -31,14 +31,14 @@ dependent variable in table */
     doublereal d__1;
 
     /* Local variables */
-    static doublereal n_nutau0__, u_nutau0__, n_nuebar__, u_nuebar__, 
+     doublereal n_nutau0__, u_nutau0__, n_nuebar__, u_nuebar__, 
 	    n_nuelth__, ntauatau, qtauatau, ntauttau, qtauttau, n_nuebar0__, 
 	    u_nuebar0__, h__, u_photon0__, nm_nuebar__, qm_nuebar__, 
 	    ntaua_nue__, qtaua_nue__, ntaut_nue__, qtaut_nue__, tauphoton, nb,
 	     nm, n_nuebarth__, n_nuebarth0__;
     extern doublereal rate_2stream__(doublereal *, doublereal *, doublereal *,
 	     doublereal *, doublereal *);
-    static doublereal nmel, qmel, nmmu, qmmu, ntaua_nuebar__, qtaua_nuebar__, 
+     doublereal nmel, qmel, nmmu, qmmu, ntaua_nuebar__, qtaua_nuebar__, 
 	    ntauatauohcm, qtaut_nuebar__, qtauatauohcm, ntaut_nuebar__, 
 	    tauphotonabs, ntauttauohcm, qtauttauohcm, n_nue__, small, u_nue__,
 	     nmtau, qmtau, n_nue0__, u_nue0__, n_nuel__, nm_nue__, qm_nue__, 
@@ -46,10 +46,10 @@ dependent variable in table */
 	    n_nutau__;
     extern doublereal density_2stream__(doublereal *, doublereal *, 
 	    doublereal *);
-    static doublereal ntauamu, qtauamu;
+     doublereal ntauamu, qtauamu;
     extern doublereal tdifffromlambda_(doublereal *, doublereal *, doublereal 
 	    *);
-    static doublereal u_nutau__, ntautmu, qtautmu, n_nueth0__;
+     doublereal u_nutau__, ntautmu, qtautmu, n_nueth0__;
 
 /* ====================================================================== */
 /* outputs */
@@ -206,13 +206,13 @@ ith using lambdaintot for Tthermaltot */
 	doublereal *qtauamuohcm, doublereal *rho_nu__, doublereal *p_nu__, 
 	doublereal *s_nu__)
 {
-    static doublereal u_nutau0__, u_nuebar__, qtauatau, qtauttau, u_nuebar0__,
+     doublereal u_nutau0__, u_nuebar__, qtauatau, qtauttau, u_nuebar0__,
 	     h__, qtaua_nue__, qtaut_nue__, nb, qtaua_nuebar__, 
 	    qtaut_nuebar__, qtauatauohcm, qtauttauohcm, small, u_nue__, 
 	    u_nue0__, u_nuel__, u_numu__, u_numu0__;
     extern doublereal density_2stream__(doublereal *, doublereal *, 
 	    doublereal *);
-    static doublereal qtauamu, u_nutau__, qtautmu;
+     doublereal qtauamu, u_nutau__, qtautmu;
 
 /* ====================================================================== */
 /* outputs */
@@ -273,7 +273,7 @@ doublereal rate_2stream__(doublereal *clight, doublereal *h__, doublereal *
     doublereal ret_val;
 
     /* Local variables */
-    static doublereal prefactor, small, osqrt3;
+     doublereal prefactor, small, osqrt3;
 
 /*     2-stream approximation for volume rate */
 /* ===================================================================== */
@@ -297,7 +297,7 @@ doublereal density_2stream__(doublereal *density, doublereal *tautot,
     doublereal ret_val;
 
     /* Local variables */
-    static doublereal twosqrt3, small;
+     doublereal twosqrt3, small;
 
 /*     2-stream approximation for density */
 /*     As tau->0, final density->0 */
@@ -322,7 +322,7 @@ doublereal tdifffromlambda_(doublereal *clight, doublereal *h__, doublereal *
     doublereal ret_val, d__1, d__2;
 
     /* Local variables */
-    static doublereal small;
+    doublereal small;
 
 /*     diffusion time limited by speed of light */
 /* ===================================================================== */

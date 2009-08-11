@@ -40,7 +40,6 @@ static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichin
 static int get_whichindep(int whichfun);
 static FTYPE get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep, FTYPE quant1, int *vartypearray, FTYPE *indexarray, int *badlookup);
 
-static int iterateynu0(FTYPE *EOSextra, FTYPE *pr);
 
 
 #include "kazfulleos_set_arrays.c"
@@ -3545,15 +3544,24 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   FTYPE frac;
   int notintable;
   int whichd;
+  FTYPE testextras[MAXNUMEXTRAS];
+
 
  
-
-  //  int loopit,numloops=1000;
-  int loopit,numloops=0;
+#if(0)
+  // BEGIN DEBUG LOOP
+  int loopit,numloops=1000;
+  //int loopit,numloops=0;
+  FTYPE logynu0;
   for(loopit=0;loopit<=numloops;loopit++){
-    if(doall) EOSextra[YNU0GLOBAL]=1E-15 + (1.0-1E-15)/(1000.0)*loopit;
+    //if(doall) EOSextra[YNU0GLOBAL]=1E-15 + (1.0-1E-15)/(1000.0)*loopit;
+    if(doall){
+      logynu0=-15 + (1.0-(-15))/(1000.0)*loopit;
+      logynu0=-7 + (1.0-(-7))/(1000.0)*loopit;
+      EOSextra[YNU0GLOBAL]=pow(10.0,logynu0);
+    }
     else numloops=0;
-
+#endif
 
 
   if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"doall=%d\n",doall);
@@ -3632,6 +3640,37 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     if(doall){
       // get extras (function of rho0,du as tabulated)
       compute_allextras_du_kazfull(0, EOSextra, quant1, dquant2, &numextrasreturn, extras);
+
+
+#if(0)
+      // DEBUG:
+      ei=-1;
+      ei++;  testextras[ei]=2.313057286241873E-009/(1.0/Lunit);
+      ei++;  testextras[ei]=2.713713102758627E-011/(1.0/Lunit);
+      ei++;  testextras[ei]=1.569556488872701E-008/(1.0/Lunit);
+      ei++;  testextras[ei]=5.342111503769025E-014/(1.0/Lunit);
+      ei++;  testextras[ei]=2.057814079059060E-009/(1.0/Lunit);
+      ei++;  testextras[ei]=1.096473627400667E-014/(1.0/Lunit);
+      ei++;  testextras[ei]=1.481348570684876E-009/(1.0/Lunit);
+      ei++;  testextras[ei]=1.238443974759171E-011/(1.0/Lunit);
+      ei++;  testextras[ei]=1.176101873401969E-008/(1.0/Lunit);
+      ei++;  testextras[ei]=3.017955829870171E-014/(1.0/Lunit);
+      ei++;  testextras[ei]=1.293887908702487E-009/(1.0/Lunit);
+      ei++;  testextras[ei]=5.894535354846674E-015/(1.0/Lunit);
+      ei++;  testextras[ei]=1.484470216153997E+025/(energyunit/pow(Lunit,3.0));
+      ei++;  testextras[ei]=1.484470216153997E+025/(energyunit/pow(Lunit,3.0));
+      ei++;  testextras[ei]=2.968941988288588E+025/(energyunit/pow(Lunit,3.0));
+      ei++;  testextras[ei]=4.169196104458902E+030/(1.0/pow(Lunit,3.0));
+      ei++;  testextras[ei]=4.169196104458902E+030/(1.0/pow(Lunit,3.0));
+      ei++;  testextras[ei]=8.338413581438167E+030/(1.0/pow(Lunit,3.0));
+      ei++;  testextras[ei]=664039105.329363/(Lunit);
+      ei++;  testextras[ei]=4304671623.94283/(Lunit);
+      ei++;  testextras[ei]=3818185478.20807/(1.0/Lunit);
+      ei++;  testextras[ei]=3183162641.50992/(1.0/Lunit);
+      ei++;  testextras[ei]=1.170948788427859E+032/(1.0/pow(Lunit,3.0));
+      ei++;  testextras[ei]=4.111239894021138E+028/(1.0/pow(Lunit,3.0));
+      //      for(ei=0;ei<MAXNUMEXTRAS;ei++) extras[ei]=testextras[ei];
+#endif
 
 
       if(numextrasreturn!=0){
@@ -3847,19 +3886,156 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
   }// end if not repeated lookup
 
+#if(0)
+  // qarray[3+] are always stored in EOSextra
+  for(qi=1;qi<=NUMINDEPDIMENS;qi++){
+    dualfprintf(fail_file,"qi=%d qarray[qi] =%21.15g\n",qi,qarray[qi]);
+  }
 
+  if(doall) dualfprintf(fail_file,"TOPLOT %21.15g %21.15g\n",EOSextra[YNU0GLOBAL],processed[YNULOCAL]);
+  
+  if(doall){
+    for(ei=0;ei<MAXNUMEXTRAS;ei++) dualfprintf(fail_file,"extras[%d]=%21.15g %21.15g\n",ei,extras[ei],testextras[ei]);
+    for(ei=0;ei<MAXPROCESSEDEXTRAS;ei++) dualfprintf(fail_file,"processed[%d]=%21.15g\n",ei,processed[ei]);
+  }
+
+  }// end DEBUG LOOP
+  
+  myexit(0);
+#endif
+
+
+  return(0);
+
+
+}
+
+
+
+
+static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
+static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
+static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
+static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
+
+
+
+
+// assumes this is computed every timestep (or substep) or at least on some timescale that H changes
+static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  FTYPE rho0,u;
+  FTYPE rho_nu, p_nu, s_nu;
+  int i,j,k;
+
+
+
+  if(whichdatatype[primarytable]!=4) return; // doesn't need to be done if !=4
+
+  COMPFULLLOOP{
+    compute_and_iterate_upsnu(UTOTDIFF, MAC(EOSextra,i,j,k), MAC(prim,i,j,k));
+  }
+
+}
+
+// assumes this is computed every timestep (or substep) or at least on some timescale that H changes
+static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  FTYPE rho0,u;
+  FTYPE rho_nu, p_nu, s_nu;
+  int i,j,k;
+
+
+
+  if(whichdatatype[primarytable]!=4) return; // doesn't need to be done if !=4
+
+  COMPFULLLOOP{
+    compute_and_iterate_ynu0_upsnu(UTOTDIFF, MAC(EOSextra,i,j,k), MAC(prim,i,j,k));
+  }
+
+}
+
+
+
+
+
+// whichd = UTOTDIFF,PTOTDIFF,CHIDIFF
+// get neutrino rho_nu, p_nu, s_nu
+// function is (rho0,u/p/chi)
+// for now assume only needed as function of quant2=u.  Assumes this function called infrequently outside iterative routines
+// Point is that anyways we are doing an approximation, and save memory and gain simplicity by avoiding tabulating other f(rho0,chi) quantities
+static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr)
+{
+  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
+  int toreturn;
+  FTYPE extras[MAXNUMEXTRAS];
+  FTYPE processed[MAXPROCESSEDEXTRAS];
+
+
+  // assume WHICHD==UTOTDIFF only
+  toreturn=get_extrasprocessed_kazfull(0, EOSextra, pr, extras, processed);
+
+  // iterate u_nu, p_nu, and s_nu
+  iterateupsnu(processed,pr,EOSextra);
+
+  return(toreturn);
+}
+
+
+// call this if not calling sources so can iterate Ynu0
+static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr)
+{
+  //  int whichd=UTOTDIFF;
+  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
+  int toreturn;
+  FTYPE extras[MAXNUMEXTRAS];
+  FTYPE processed[MAXPROCESSEDEXTRAS];
+
+  // assume WHICHD==UTOTDIFF only
+  // 1 below means doall extras and processed
+  toreturn=get_extrasprocessed_kazfull(1, EOSextra, pr, extras, processed);
+
+  // iterate u_nu, p_nu, and s_nu
+  iterateupsnu(processed,pr,EOSextra);
+
+  // iterate Ynu0
+  iterateynu0(processed,pr,EOSextra);
+
+  return(toreturn);
+
+}
+
+
+
+
+// iterate u_nu, p_nu, and s_nu
+static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
+{
 
   /////////////////
   //
   // Iterate rho_nu, p_nu, and s_nu for table lookup
   //
-
-
-
   // assume DO WANT to update EOSextraglobal[UNUGLOBAL,PNUGLOBAL,SNUGLOBAL][i][j][k] since input is actual value on grid
   EOSextra[UNUGLOBAL] = processed[RHONU];
   EOSextra[PNUGLOBAL] = processed[PNU];
   EOSextra[SNUGLOBAL] = processed[SNU];
+
+  return(0);
+
+}
+
+
+// iterate Ynu0
+// only can be done if doall was used when creating processed[], since otherwise processed[YNULOCAL] has not been recalled or computed
+static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
+{
+  FTYPE damp;
+  FTYPE ynu0old=EOSextra[YNU0GLOBAL];
+  FTYPE ynu0older=EOSextra[YNU0OLDGLOBAL];
+  FTYPE ynuold=processed[YNULOCAL];
+  FTYPE ynuolder=EOSextra[YNUOLDGLOBAL];
+  FTYPE odRdYnu0,R,errR;
 
 
 
@@ -3888,114 +4064,56 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   // So need to store Ynu0older and Ynu[Ynu0older].  Have at first Ynu0old and computed above Ynu[Ynu0old]
   // Then Ynu0new = Ynu0old + dYnu0
 
-  if(doall) dualfprintf(fail_file,"TOPLOT %21.15g %21.15g\n",EOSextra[YNU0GLOBAL],processed[YNULOCAL]);
+
+
+  
+  //    damp=1.0;
+  damp=0.20;
+  R = (-pr[YNU] + ynuold);
+  errR = fabs(R/(fabs(pr[YNU])+fabs(ynuold)+SMALL));
+
+  if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: steppart=%d nstep=%ld R=%21.15g errR=%21.15g\n",steppart,nstep,R,errR);
+
+  if(errR<0.05){
+    // don't try to do better if already accurate to less than 5%
+      
+    if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: ynu0old=%21.15g ynu0older=%21.15g : ynuold=%21.15g ynuolder=%21.15g : final=%21.15g\n",ynu0old,ynu0older,ynuold,ynuolder,EOSextra[YNU0GLOBAL]);
 
   }
+  else{// then try to get better Ynu0
 
-  //  if(doall) myexit(0);
+    if(ynuold==ynuolder || ynu0old==ynu0older){
+      // If just first iteration, so no older information, so just use small slope to change so next iteration can get slope
+      // If reached here after first iteration, then don't change Ynu0 much.  Just push so can get slope in case evolves
+      // ok that I push it in same sense of Ynu-Ynulocal since just need a push to somewhere else
 
-  if(doall){ // only can be done if doall since otherwise processed[YNULOCAL] has not been recalled or computed
-    FTYPE damp;
-    FTYPE ynu0old=EOSextra[YNU0GLOBAL];
-    FTYPE ynu0older=EOSextra[YNU0OLDGLOBAL];
-    FTYPE ynuold=processed[YNULOCAL];
-    FTYPE ynuolder=EOSextra[YNUOLDGLOBAL];
-    damp=1.0;
-    FTYPE odRdYnu0,R,errR;
-    R = (-pr[YNU] + ynuold);
-    errR = fabs(R/(fabs(pr[YNU])+fabs(ynuold)+SMALL));
-
-    if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: steppart=%d nstep=%ld R=%21.15g errR=%21.15g\n",steppart,nstep,R,errR);
-
-    if(errR<0.05){
-      // don't try to do better if already accurate to less than 5%
-      
-      if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: ynu0old=%21.15g ynu0older=%21.15g : ynuold=%21.15g ynuolder=%21.15g : final=%21.15g\n",ynu0old,ynu0older,ynuold,ynuolder,EOSextra[YNU0GLOBAL]);
-
+      // odRdYnu0 = 1/ (dR/dYnu0)
+      odRdYnu0=0.1*errR;
     }
-    else{// then try to get better Ynu0
+    else{
+      // standard derivative
+      // odRdYnu0 = 1/ (dR/dYnu0)
+      odRdYnu0=(ynu0old-ynu0older)/(ynuold-ynuolder);
+    }
 
-      if(ynuold==ynuolder || ynu0old==ynu0older){
-	// If just first iteration, so no older information, so just use small slope to change so next iteration can get slope
-	// If reached here after first iteration, then don't change Ynu0 much.  Just push so can get slope in case evolves
-	// ok that I push it in same sense of Ynu-Ynulocal since just need a push to somewhere else
+    // iterate
+    EOSextra[YNU0GLOBAL] += -damp*R*odRdYnu0;
 
-	// odRdYnu0 = 1/ (dR/dYnu0)
-	odRdYnu0=0.1*errR;
-      }
-      else{
-	// standard derivative
-	// odRdYnu0 = 1/ (dR/dYnu0)
-	odRdYnu0=(ynu0old-ynu0older)/(ynuold-ynuolder);
-      }
-
-      // iterate
-      EOSextra[YNU0GLOBAL] += -damp*R*odRdYnu0;
-
-      if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: odRdYnu0=%21.15g ynu0old=%21.15g ynu0older=%21.15g : ynuold=%21.15g ynuolder=%21.15g : finalYnu0=%21.15g\n",odRdYnu0,ynu0old,ynu0older,ynuold,ynuolder,EOSextra[YNU0GLOBAL]);
+    if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: odRdYnu0=%21.15g ynu0old=%21.15g ynu0older=%21.15g : ynuold=%21.15g ynuolder=%21.15g : finalYnu0=%21.15g\n",odRdYnu0,ynu0old,ynu0older,ynuold,ynuolder,EOSextra[YNU0GLOBAL]);
       
-      // need to limit Ynu0 to table (assumes reasonable behavior for above iteration!)
-      if(EOSextra[YNU0GLOBAL]>0.999*lineartablelimits[primarytable][YNUEOS][1]) EOSextra[YNU0GLOBAL] = 0.999*lineartablelimits[primarytable][YNUEOS][1];
-      if(EOSextra[YNU0GLOBAL]<1.001*lineartablelimits[primarytable][YNUEOS][0]) EOSextra[YNU0GLOBAL] = 1.001*lineartablelimits[primarytable][YNUEOS][0];
-    }// end else if error large enough to need correction
+    // need to limit Ynu0 to table (assumes reasonable behavior for above iteration!)
+    if(EOSextra[YNU0GLOBAL]>0.999*lineartablelimits[primarytable][YNUEOS][1]) EOSextra[YNU0GLOBAL] = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+    if(EOSextra[YNU0GLOBAL]<1.001*lineartablelimits[primarytable][YNUEOS][0]) EOSextra[YNU0GLOBAL] = 1.001*lineartablelimits[primarytable][YNUEOS][0];
+  }// end else if error large enough to need correction
 
 
-    // store old value into older values
-    EOSextra[YNU0OLDGLOBAL] = ynu0old;
-    EOSextra[YNUOLDGLOBAL] = ynuold;
-  }
-
+  // store old value into older values
+  EOSextra[YNU0OLDGLOBAL] = ynu0old;
+  EOSextra[YNUOLDGLOBAL] = ynuold;
 
 
   return(0);
-
-
 }
-
-
-
-
-
-
-// whichd = UTOTDIFF,PTOTDIFF,CHIDIFF
-// get neutrino rho_nu, p_nu, s_nu
-// function is (rho0,u/p/chi)
-// for now assume only needed as function of quant2=u.  Assumes this function called infrequently outside iterative routines
-// Point is that anyways we are doing an approximation, and save memory and gain simplicity by avoiding tabulating other f(rho0,chi) quantities
-static int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu)
-{
-  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
-  int toreturn;
-  FTYPE extras[MAXNUMEXTRAS];
-  FTYPE processed[MAXPROCESSEDEXTRAS];
-
-
-  // assume WHICHD==UTOTDIFF only
-  toreturn=get_extrasprocessed_kazfull(0, EOSextra, pr, extras, processed);
-  *rho_nu=processed[RHONU];
-  *p_nu=processed[PNU];
-  *s_nu=processed[SNU];
-
-  return(toreturn);
-}
-
-
-// call this if not calling sources so can iterate Ynu0
-static int iterateynu0(FTYPE *EOSextra, FTYPE *pr)
-{
-  int whichd=UTOTDIFF;
-  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
-  int toreturn;
-  FTYPE extras[MAXNUMEXTRAS];
-  FTYPE processed[MAXPROCESSEDEXTRAS];
-
-  // assume WHICHD==UTOTDIFF only
-  // 1 below means doall extras and processed
-  toreturn=get_extrasprocessed_kazfull(1, EOSextra, pr, extras, processed);
-
-  return(toreturn);
-}
-
 
 
 
@@ -4359,7 +4477,7 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 static void compute_IJKglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS]);
 static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-static void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
 // compute things beyond simple EOS independent variables
@@ -4389,35 +4507,28 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
 
   /////////////////////////
   //  
-  // compute neutriono u_\nu, p_\nu, and s_\nu
+  // 1) Iterate Ynu0 if whichdatatype==4
+  // 2) Compute neutriono u_\nu, p_\nu, and s_\nu
   //  
   /////////////////////////
-  compute_ups_global(EOSextra,prim);
+  compute_ynu0_upsnu_global(EOSextra,prim);
 
 
 }
 
 // compute things beyond simple EOS independent variables
+// "full" really means at t=0 for now, so do multiple times.
 void compute_EOS_parms_full_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
   ////////////////////
   //
-  // normal updates
+  // do normal update 10 times so converged solution at t=0
   //
   ////////////////////
-  compute_EOS_parms_kazfull(EOSextra,prim);
-
-  /////////////////////////
-  //  
-  // compute neutriono u_\nu, p_\nu, and s_\nu, and update Ynu0 using full extras
-  //  
-  /////////////////////////
-  if(whichdatatype[primarytable]==4){
-    int i,j,k;
-    COMPFULLLOOP{
-      iterateynu0(MAC(EOSextra,i,j,k),MAC(prim,i,j,k));
-    }
+  int i;
+  for(i=0;i<10;i++){
+    compute_EOS_parms_kazfull(EOSextra,prim);
   }
 
 
@@ -4748,32 +4859,6 @@ static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUME
 }
 
 
-static int get_rhops_nu(int whichd, FTYPE *EOSextra, FTYPE *pr, FTYPE *rho_nu, FTYPE *p_nu, FTYPE *s_nu);
-
-
-// assumes this is computed every timestep (or substep) or at least on some timescale that H changes
-static void compute_ups_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
-{
-  FTYPE rho0,u;
-  FTYPE rho_nu, p_nu, s_nu;
-  int i,j,k;
-
-
-
-  if(whichdatatype[primarytable]!=4) return; // doesn't need to be done if !=4
-
-
-  COMPFULLLOOP{
-
-    get_rhops_nu(UTOTDIFF, MAC(EOSextra,i,j,k), MAC(prim,i,j,k), &rho_nu, &p_nu, &s_nu);
-
-    MACP0A1(EOSextra,i,j,k,UNUGLOBAL) =  rho_nu;
-    MACP0A1(EOSextra,i,j,k,PNUGLOBAL) =  p_nu;
-    MACP0A1(EOSextra,i,j,k,SNUGLOBAL) =  s_nu;
-
-  }
-
-}
 
 
 

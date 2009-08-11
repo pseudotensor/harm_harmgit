@@ -95,7 +95,7 @@ int restart_init(int which)
   ////////////////
   trifprintf("before write_restart_header(TEXTOUTPUT,log_file)\n");
   fprintf(log_file,"header contents below\n"); fflush(log_file);
-  write_restart_header(TEXTOUTPUT,log_file);
+  write_restart_header(RDUMPCOL,dnumversion[RDUMPCOL],dnumcolumns[RDUMPCOL],TEXTOUTPUT,log_file);
 
   ////////////////
   //
@@ -196,12 +196,14 @@ int restart_write(long dump_cnt)
 
 
 // number of columns for restart
-void set_rdump_content_dnumcolumns(int *numcolumns)
+void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // always NPR
   *numcolumns=NPR*2; // primitives and conservatives
   //  *numcolumns=NPR; // primitives only
+
+  *numversion=0;
 }
 
 
@@ -313,12 +315,12 @@ int restartmetric_write(long dump_cnt)
 }
 
 
-void set_rmetricdump_content_dnumcolumns(int *numcolumns)
+void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
-  extern void set_rmetricdump_read_content_dnumcolumns(int *numcolumns);
+  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
   // same as read:
-  set_rmetricdump_read_content_dnumcolumns(numcolumns);
+  set_rmetricdump_read_content_dnumcolumns_dnumversion(numcolumns,numversion);
 
 }
 
@@ -385,7 +387,7 @@ int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebu
 
 
 
-int write_restartmetric_header(int bintxt, FILE *headerptr)
+int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
   // nothing so far
@@ -393,7 +395,7 @@ int write_restartmetric_header(int bintxt, FILE *headerptr)
   return(0);
 }
 
-int read_restartmetric_header(int bintxt, FILE *headerptr)
+int read_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
   // nothing so far
@@ -438,7 +440,7 @@ int restartmetric_read(long dump_cnt)
 
 
 // number of columns
-void set_rmetricdump_read_content_dnumcolumns(int *numcolumns)
+void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
 
@@ -459,6 +461,9 @@ void set_rmetricdump_read_content_dnumcolumns(int *numcolumns)
   else{
     *numcolumns=0;
   }
+
+  *numversion=0;
+
 
 }
 
@@ -551,7 +556,7 @@ int bcast_restart_header(void)
 
 
 // headerptr created and only used here OR passed a given pointer
-int read_restart_header_new(int bintxt, FILE*headerptr)
+int read_restart_header_new(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr)
 {
   int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*headerptr);
   int bcasthead;
@@ -565,7 +570,7 @@ int read_restart_header_new(int bintxt, FILE*headerptr)
 
 
 
-int write_restart_header_new(int bintxt,FILE*headerptr)
+int write_restart_header_new(int whichdump, int whichdumpversion, int numcolumns, int bintxt,FILE*headerptr)
 {
   int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*headerptr);
   int bcasthead;

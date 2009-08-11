@@ -64,7 +64,8 @@ extern int find_horizon(int fromwhere);
 
 // initialize DUMP stuff
 extern int init_dumps(void);
-extern void init_dnumcolumns(void);
+extern void output_nprlist_info(void);
+extern void init_dnumcolumns_dnumversion(void);
 
 
 

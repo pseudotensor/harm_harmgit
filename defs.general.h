@@ -238,6 +238,7 @@ int debugfail;
 FTYPE uttdiscr;  // OPENMPNOTE: Ensure those are set as threadprivate [noted only for WHICHVEL==VEL3]
 int jonchecks;
 int dnumcolumns[NUMDUMPTYPES];
+int dnumversion[NUMDUMPTYPES];
 struct blink * blinkptr0[NUMDUMPTYPES];
 struct blink * cpulinkptr0[NUMDUMPTYPES];
 int DOCOLSPLIT[NUMDUMPTYPES];

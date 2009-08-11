@@ -389,7 +389,7 @@ int image(long dump_cnt, int whichpl, int scale, int limits, int vartype)
 }
 
 
-int image_header(int bintxt, FILE *headerptr)
+int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 { 
   int realtotalsize[NDIM];
 
@@ -455,11 +455,14 @@ int image_header(int bintxt, FILE *headerptr)
 
 
 
-extern void set_image_content_dnumcolumns(int *numcolumns)
+extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // now setup the data output/input organization for chunking method for each number of columns
   *numcolumns=1;
+
+
+  *numversion=0;
 }
 
 
