@@ -1294,7 +1294,7 @@ int init_uniformdensity(int *whichvel, int*whichcoord, int i, int j, int k, FTYP
 
 // set vector potential
 // assumes normal field in pr
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, q;
   FTYPE r,th;

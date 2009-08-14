@@ -487,7 +487,7 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 	  // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
 	  DLOOPA(userdir){
-	    init_vpot_user(&whichcoord, userdir, i,j,k, prim, V, &vpotuser[userdir]);
+	    init_vpot_user(&whichcoord, userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
 	  }
 
 	  // convert from user coordinate to PRIMECOORDS

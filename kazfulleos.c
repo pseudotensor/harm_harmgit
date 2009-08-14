@@ -829,15 +829,19 @@ void read_setup_eostable(void)
 	tabletemp[SofRHOU]/=(1.0/pow(Lunit,3.0));
 	// Note that often people will plot "entropy per baryon" that is "SofRHOU"/(\rho/m_b) that is dimensionless entropy per baryon
 	// From HARM quantities, convert back to cgs and then compute above
-	// below is (1/cc) / (erg/cc) \propto 1/erg since we have rho as rho c^2
-	tabletemp[DSDRHOofRHOU]/=(1.0/energyunit);
+	// Note that in HARM, we *define* $Sden = Ss/(\rho_0 c^2)$ with the extra $m_b c^2$ baggage, so units should account for that.
+
+	// below is (1/cc) / (erg/cc) \propto 1/erg since we *input* rho as rho c^2
+	tabletemp[DSDRHOofRHOU]/=(1.0/energyunit); 
 	tabletemp[DSDUofRHOU]/=(1.0/energyunit);
 
-	// SSofRHOCHI is nearly dimensionless (really has units of 1/mb since obtained by division of Sden by \rho_0 instead of n_b)
+	// SSofRHOCHI is nearly dimensionless (really has units of 1/(mb c^2) since obtained by division of Sden by (\rho_0 c^2) instead of n_b)
+	tabletemp[SSofRHOCHI]/=(1.0/energyunit);
 
-	// DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of 1/Pressureunit
-	tabletemp[DSSDRHOofRHOCHI]/=Pressureunit;
-	tabletemp[DSSDCHIofRHOCHI]/=Pressureunit;
+	// DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of Ss/(rho0 c^2) since Ss has units of 1/(mb c^2) and input rho with units of rho*c^2
+	tabletemp[DSSDRHOofRHOCHI]/=(1.0/(energyunit*Pressureunit));
+	tabletemp[DSSDCHIofRHOCHI]/=(1.0/(energyunit*Pressureunit));
+
 	
 	tabletemp[PofRHOCHI]/=Pressureunit;
 	// IDRHO0DP is dimensionless
