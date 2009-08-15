@@ -62,8 +62,8 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   ///////////////////////
 
   dumpfuncgen[IMAGEDUMPTYPE]=&image_dump;
-  dumpfuncgen[RESTARTDUMPTYPE]=restart_write;
-  dumpfuncgen[RESTARTMETRICDUMPTYPE]=restartmetric_write;
+  dumpfuncgen[RESTARTDUMPTYPE]=&restart_write;
+  dumpfuncgen[RESTARTMETRICDUMPTYPE]=&restartmetric_write;
   dumpfuncgen[MAINDUMPTYPE]=&dump;
   dumpfuncgen[GRIDDUMPTYPE]=&gdump;
   dumpfuncgen[AVG1DUMPTYPE]=&avgdump;

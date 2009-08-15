@@ -1,0 +1,33 @@
+How to use emacs more efficiently for many changes across multiple files
+Version 1 Created by Jonathan M. at 6:07am.
+While emacs and its regexp are great, I never knew one could be even more powerful with TAGS in emacs that allows you to process multiple files. Without this, I'd have to use VC++ with its broken regexp and horrible key sequences and/or mouse clicks required.
+
+While there are many linux and other emacs ways of doing multiple files, nothing worked out for me very well except the use of TAGS.
+
+When converting my code to the new general storage format and other changes, it became crucial to have multiple file regexp change ability. And one can easily do it!
+
+With emacs, one does something like the following:
+
+1) cd <base harm tree>
+2) ctags -e *.c *.h initboundcode/*.c initboundcode/*.h <enter>
+3) emacs & <enter>
+4) ALT-X
+5) visit-tags-table <enter>
+6) <enter> # this loads by default the file: TAGS that I already created but that #2 created.
+
+Now your TAG stuff is loaded and you are ready for multiple file processing. There are special "tag" commands:
+
+ALT-X tags-query-replace
+ALT-X tags-search
+
+and others. The above 2 are just like:
+
+ALT-X query-replace-regexp
+CTRL-S OR ALT-X search-forward
+ALT-X search-forward-regexp
+
+that do regexp research replace, search, and regexp search, respectively.
+
+There is apparently no "dumb" version of tags-query-replace, so that means even your input has to be regexp (e.g. to search for array[123] one must search for array\[123\]). Output is always non-regexp except for regexp variables.
+
+-Jon
