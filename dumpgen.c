@@ -706,7 +706,7 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
   
   // only have checks for this case so far
-  if(readwrite==READFILE && whichdump==RDUMPCOL){
+  if(readwrite==READFILE && whichdump==RESTARTDUMPTYPE){
 
 
     ///////////////////////

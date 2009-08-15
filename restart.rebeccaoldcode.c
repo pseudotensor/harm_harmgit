@@ -159,15 +159,15 @@ int extrarestartfunction_old(void)
 
 
   // must set some things manually then
-  DTdumpgen[DTDISS] = DTdumpgen[DTDUMP]/5.0;
-  dumpcntgen[DTDISS]=dumpcntgen[DTDUMP]*5; // not exactly right, so should manually set
+  DTdumpgen[DISSDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/5.0;
+  dumpcntgen[DISSDUMPTYPE]=dumpcntgen[MAINDUMPTYPE]*5; // not exactly right, so should manually set
 
 
-  DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP];
-  DTdumpgen[DTFIELDLINE]=DTdumpgen[DTENER];
+  DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE];
+  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[ENERDUMPTYPE];
 
-  dumpcntgen[DTFLUX]=dumpcntgen[DTOTHER]=dumpcntgen[DTEOS]=dumpcntgen[DTVPOT]=dumpcntgen[DTDUMP];
-  dumpcntgen[DTFIELDLINE]=dumpcntgen[DTENER];
+  dumpcntgen[FLUXDUMPTYPE]=dumpcntgen[OTHERDUMPTYPE]=dumpcntgen[EOSDUMPTYPE]=dumpcntgen[VPOTDUMPTYPE]=dumpcntgen[MAINDUMPTYPE];
+  dumpcntgen[FIELDLINEDUMPTYPE]=dumpcntgen[ENERDUMPTYPE];
 
 
   // these things were not stored in old restart file
@@ -218,18 +218,18 @@ int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns,
     fread(&gam, sizeof(FTYPE), 1, headerptr);
     fread(&cour, sizeof(FTYPE), 1, headerptr);
       
-    fread(&DTdumpgen[DTDUMP], sizeof(SFTYPE), 1, headerptr);
-    fread(&DTdumpgen[DTAVG], sizeof(SFTYPE), 1, headerptr);
-    fread(&DTdumpgen[DTENER], sizeof(SFTYPE), 1, headerptr);
-    fread(&DTdumpgen[DTIMAGE], sizeof(SFTYPE), 1, headerptr);
+    fread(&DTdumpgen[MAINDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fread(&DTdumpgen[AVG1DUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fread(&DTdumpgen[ENERDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fread(&DTdumpgen[IMAGEDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
     // fread(&DTr, sizeof(SFTYPE), 1, headerptr) ;
     fread(&DTr, sizeof(long), 1, headerptr);
-    fread(&DTdumpgen[DTDEBUG], sizeof(SFTYPE), 1, headerptr);
-    fread(&dumpcntgen[DTDUMP], sizeof(long), 1, headerptr);
-    fread(&dumpcntgen[DTIMAGE], sizeof(long), 1, headerptr);
+    fread(&DTdumpgen[DEBUGDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fread(&dumpcntgen[MAINDUMPTYPE], sizeof(long), 1, headerptr);
+    fread(&dumpcntgen[IMAGEDUMPTYPE], sizeof(long), 1, headerptr);
     fread(&rdump_cnt, sizeof(long), 1, headerptr);
-    fread(&dumpcntgen[DTAVG], sizeof(long), 1, headerptr);
-    fread(&dumpcntgen[DTDEBUG], sizeof(long), 1, headerptr);
+    fread(&dumpcntgen[AVG1DUMPTYPE], sizeof(long), 1, headerptr);
+    fread(&dumpcntgen[DEBUGDUMPTYPE], sizeof(long), 1, headerptr);
       
       
     fread(&dt, sizeof(SFTYPE), 1, headerptr);
@@ -332,7 +332,7 @@ int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns,
     fscanf(headerptr,RESTARTHEADEROLD,
 	   &idum1,&idum2,&idum3,
 	   &t,&tf,&nstep,&a,&gam,&cour,
-	   &(DTdumpgen[DTDUMP]),&(DTdumpgen[DTAVG]),&(DTdumpgen[DTENER]),&(DTdumpgen[DTIMAGE]),&DTr,&(DTdumpgen[DTDEBUG]),&(dumpcntgen[DTDUMP]),&(dumpcntgen[DTIMAGE]),&rdump_cnt,&(dumpcntgen[DTAVG]),&(dumpcntgen[DTDEBUG]),
+	   &(DTdumpgen[MAINDUMPTYPE]),&(DTdumpgen[AVG1DUMPTYPE]),&(DTdumpgen[ENERDUMPTYPE]),&(DTdumpgen[IMAGEDUMPTYPE]),&DTr,&(DTdumpgen[DEBUGDUMPTYPE]),&(dumpcntgen[MAINDUMPTYPE]),&(dumpcntgen[IMAGEDUMPTYPE]),&rdump_cnt,&(dumpcntgen[AVG1DUMPTYPE]),&(dumpcntgen[DEBUGDUMPTYPE]),
 	   &dt,&lim[1],&lim[2],&lim[3],&TIMEORDER,&fluxmethod,&FLUXB,&UTOPRIMVERSION,&failed,
 	   &R0,&Rin,&Rout,&hslope,&defcoord,
 	   &BCtype[X1UP],&BCtype[X1DN],&BCtype[X2UP],&BCtype[X2DN],&BCtype[X3UP],&BCtype[X3DN],
@@ -450,17 +450,17 @@ int restart_read_defs_old(void)
   MPI_Bcast(&gam, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&cour, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   
-  MPI_Bcast(&DTdumpgen[DTDUMP], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&DTdumpgen[DTAVG], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&DTdumpgen[DTENER], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&DTdumpgen[DTIMAGE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&DTdumpgen[MAINDUMPTYPE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&DTdumpgen[AVG1DUMPTYPE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&DTdumpgen[ENERDUMPTYPE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&DTdumpgen[IMAGEDUMPTYPE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&DTr, 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&DTdumpgen[DTDEBUG], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&dumpcntgen[DTDUMP], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&dumpcntgen[DTIMAGE], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&DTdumpgen[DEBUGDUMPTYPE], 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&dumpcntgen[MAINDUMPTYPE], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&dumpcntgen[IMAGEDUMPTYPE], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&rdump_cnt, 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&dumpcntgen[DTAVG], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
-  MPI_Bcast(&dumpcntgen[DTDEBUG], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&dumpcntgen[AVG1DUMPTYPE], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&dumpcntgen[DEBUGDUMPTYPE], 1, MPI_LONG, MPIid[0], MPI_COMM_GRMHD);
   
   MPI_Bcast(&dt, 1, MPI_SFTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&lim[1], 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
@@ -577,18 +577,18 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
     fwrite(&gam, sizeof(FTYPE), 1, headerptr);
     fwrite(&cour, sizeof(FTYPE), 1, headerptr);
       
-    fwrite(&DTdumpgen[DTDUMP], sizeof(SFTYPE), 1, headerptr);
-    fwrite(&DTdumpgen[DTAVG], sizeof(SFTYPE), 1, headerptr);
-    fwrite(&DTdumpgen[DTENER], sizeof(SFTYPE), 1, headerptr);
-    fwrite(&DTdumpgen[DTIMAGE], sizeof(SFTYPE), 1, headerptr);
+    fwrite(&DTdumpgen[MAINDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fwrite(&DTdumpgen[AVG1DUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fwrite(&DTdumpgen[ENERDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fwrite(&DTdumpgen[IMAGEDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
     // fwrite(&DTr, sizeof(SFTYPE),1, headerptr) ;
     fwrite(&DTr, sizeof(long), 1, headerptr);
-    fwrite(&DTdumpgen[DTDEBUG], sizeof(SFTYPE), 1, headerptr);
-    fwrite(&dumpcntgen[DTDUMP], sizeof(long), 1, headerptr);
-    fwrite(&dumpcntgen[DTIMAGE], sizeof(long), 1, headerptr);
+    fwrite(&DTdumpgen[DEBUGDUMPTYPE], sizeof(SFTYPE), 1, headerptr);
+    fwrite(&dumpcntgen[MAINDUMPTYPE], sizeof(long), 1, headerptr);
+    fwrite(&dumpcntgen[IMAGEDUMPTYPE], sizeof(long), 1, headerptr);
     fwrite(&rdump_cnt, sizeof(long), 1, headerptr);
-    fwrite(&dumpcntgen[DTAVG], sizeof(long), 1, headerptr);
-    fwrite(&dumpcntgen[DTDEBUG], sizeof(long), 1, headerptr);
+    fwrite(&dumpcntgen[AVG1DUMPTYPE], sizeof(long), 1, headerptr);
+    fwrite(&dumpcntgen[DEBUGDUMPTYPE], sizeof(long), 1, headerptr);
       
     fwrite(&dt, sizeof(SFTYPE), 1, headerptr);
     fwrite(&lim[1], sizeof(int), 1, headerptr);
@@ -688,7 +688,7 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
     fprintf(headerptr,WRITERESTARTHEADEROLD,
 	    totalsize[1],totalsize[2], totalsize[3], //3
 	    t,tf,nstep,a,gam,cour, // 6
-	    DTdumpgen[DTDUMP],DTdumpgen[DTAVG],DTdumpgen[DTENER],DTdumpgen[DTIMAGE],DTr,DTdumpgen[DTDEBUG],dumpcntgen[DTDUMP],dumpcntgen[DTIMAGE],rdump_cnt,dumpcntgen[DTAVG],dumpcntgen[DTDEBUG], // 11
+	    DTdumpgen[MAINDUMPTYPE],DTdumpgen[AVG1DUMPTYPE],DTdumpgen[ENERDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],DTr,DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[MAINDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],rdump_cnt,dumpcntgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE], // 11
 	    dt,lim[1],lim[2],lim[3],TIMEORDER,fluxmethod,FLUXB,UTOPRIMVERSION,failed,  // 3
 	    R0,Rin,Rout,hslope,defcoord, // 5
 	    BCtype[X1UP],BCtype[X1DN],BCtype[X2UP],BCtype[X2DN],BCtype[X3UP],BCtype[X3DN], // 6

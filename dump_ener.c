@@ -603,7 +603,7 @@ void appendener(FILE* ener_file,SFTYPE (*pcum_tot)[NPR],SFTYPE*fladd_tot,SFTYPE 
       
       fscanf(ener_file, "%lf", &tcheck);
       
-      if (fabs(tcheck - t) < 0.5 *DTdumpgen[DTENER]) {
+      if (fabs(tcheck - t) < 0.5 *DTdumpgen[ENERDUMPTYPE]) {
 	gotit = 1;
 	for (l = 1; l <= NUMENERVAR; l++) {
 	  if ((l > 3+NPR+COMPDIM*2*NPR) && (l < 3+NPR+2*COMPDIM*2*NPR+NPR)) {

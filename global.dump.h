@@ -10,7 +10,7 @@ extern int dump_header(int whichdump, int whichdumpversion, int numcolumns, int 
 extern int avgdump(long avg_cnt);
 extern int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
-extern int avgdump2(long avg_cnt);
+extern int avg2dump(long avg_cnt);
 extern int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
 extern int debugdump(long debug_cnt);
@@ -42,6 +42,9 @@ extern int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writ
 
 extern int vpotdump(long dump_cnt);
 extern int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
+extern int failfloordudump(long dump_cnt);
+extern int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
 extern int fakedump(void);
 extern int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);

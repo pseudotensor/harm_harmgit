@@ -302,6 +302,11 @@ PFTYPE BASEMACP0A0(pflagfailorig,N1M,N2M,N3M);	/* used to keep original pflag so
 CTYPE BASEMACP0A2(failfloorcount,N1M,N2M,N3M,NUMTSCALES,NUMFAILFLOORFLAGS); // number of failures and floor adjustments for each zone
 #endif
 
+/* for debug */
+#if(DOFLOORDIAG)
+CTYPE BASEMACP0A1(failfloordu,N1M,N2M,N3M,NPR); // change in conserved quantities due to number of failures and floor adjustments for each zone
+#endif
+
 
 ////////////////////////////////////////////////
 //

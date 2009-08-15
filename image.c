@@ -360,7 +360,7 @@ int image(long dump_cnt, int whichpl, int scale, int limits, int vartype)
 
 
 
-  whichdump=IMAGECOL;
+  whichdump=IMAGEDUMPTYPE;
   datatype=MPI_UNSIGNED_CHAR;
 
   // actual prefix

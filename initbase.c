@@ -950,6 +950,11 @@ int pre_init(int *argc, char **argv[])
   // start counter
   // full loop since user may choose to count something in boundary zones
   if(DODEBUG) FULLLOOP TSCALELOOP(tscale) FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,floor)=0;
+
+  // start du diag_fixup() sum
+  // full loop since user may choose to count something in boundary zones
+  if(DOFLOORDIAG) FULLLOOP PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=0.0;
+
 #if(CALCFARADAYANDCURRENTS)
   // zero out jcon since outer boundaries not set ever since j^\mu involves spatial derivatives that don't exist outside a certain point
   for(pl=0;pl<NDIM;pl++) FULLLOOP GLOBALMACP0A1(jcon,i,j,k,pl)=0.0;
@@ -1105,7 +1110,7 @@ int init_defglobal(void)
 
   tf = 1.0;
   
-  for(dtloop=0;dtloop<NUMDTDS;dtloop++) DTdumpgen[dtloop]=1.0;
+  for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++) DTdumpgen[dtloop]=1.0;
   //  DTd = DTavg = DTdebug = 1.0;
   //  DTener=1.0;
   //  DTi=1.0;

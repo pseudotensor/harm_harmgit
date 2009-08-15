@@ -3,10 +3,14 @@
 
 /* diagnostics subroutine */
 
-#define DIAGREPORT {trifprintf("t=%21.15g to do: tener=%21.15g (dt=%21.15g): dump_cnt=%ld @ t=%21.15g (dt=%21.15g) : avg_cnt=%ld @ t=%21.15g (dt=%21.15g) : debug_cnt=%ld @ t=%21.15g (dt=%21.15g) : image_cnt=%ld @ t=%21.15g (dt=%21.15g): restart=%d @ nstep=%ld (dt=%ld)\n",t,tdumpgen[DTENER],DTdumpgen[DTENER],dumpcntgen[DTDUMP],tdumpgen[DTDUMP],DTdumpgen[DTDUMP],dumpcntgen[DTAVG],tdumpgen[DTAVG],DTdumpgen[DTAVG],dumpcntgen[DTDEBUG],tdumpgen[DTDEBUG],DTdumpgen[DTDEBUG],dumpcntgen[DTIMAGE],tdumpgen[DTIMAGE],DTdumpgen[DTIMAGE],whichrestart,nrestart,DTr);}
+#define DIAGREPORT {trifprintf("t=%21.15g to do: tener=%21.15g (dt=%21.15g): dump_cnt=%ld @ t=%21.15g (dt=%21.15g) : avg_cnt=%ld @ t=%21.15g (dt=%21.15g) : debug_cnt=%ld @ t=%21.15g (dt=%21.15g) : image_cnt=%ld @ t=%21.15g (dt=%21.15g): restart=%d @ nstep=%ld (dt=%ld)\n",t,tdumpgen[ENERDUMPTYPE],DTdumpgen[ENERDUMPTYPE],dumpcntgen[MAINDUMPTYPE],tdumpgen[MAINDUMPTYPE],DTdumpgen[MAINDUMPTYPE],dumpcntgen[AVG1DUMPTYPE],tdumpgen[AVG1DUMPTYPE],DTdumpgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE],tdumpgen[DEBUGDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],tdumpgen[IMAGEDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],whichrestart,nrestart,DTr);}
 
 
-static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *dogdump, int *dordump, int *doareamap, int *dodumpgen);
+
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen);
+static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart);
+static int post_dump(int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart);
+
 
 
 // OPENMPNOTE: Assume diag() not called by multiple threads, so static's are ok (including firsttime)
@@ -20,16 +24,15 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   int pl,pliter;
   FTYPE asym[NPR], norm[NPR], maxasym[NPR];
   
-  FILE *dumpcnt_filegen[NUMDTDS];
-  static SFTYPE tlastgen[NUMDTDS];
+  FILE *dumpcnt_filegen[NUMDUMPTYPES];
+  static SFTYPE tlastgen[NUMDUMPTYPES];
   static SFTYPE tlastareamap;
-  static long long int dumpcgen[NUMDTDS];
+  static long long int dumpcgen[NUMDUMPTYPES];
   static long long int restartc;
-  static SFTYPE tdumpgen[NUMDTDS];
+  static SFTYPE tdumpgen[NUMDUMPTYPES];
   static long long int nlastrestart,nrestart;
-  int dogdump,dordump,doareamap;
-  //  int doavg, dordump,dodump,doener,doimagedump,doareamap,dodebug,dofieldlinedump;
-  int dodumpgen[NUMDTDS];
+  int doareamap;
+  int dodumpgen[NUMDUMPTYPES];
   int dtloop;
 
   int dir,interpi,enodebugi;
@@ -37,6 +40,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   int enodebugdump(long dump_cnt);
   int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int whichDT;
+  int (*dumpfuncgen[NUMDUMPTYPES])(long dump_cnt);
+
+  
 
 
 
@@ -48,10 +54,43 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 
+
+  ///////////////////////
+  //
+  // Setup pointers to dump functions
+  //
+  ///////////////////////
+
+  dumpfuncgen[IMAGEDUMPTYPE]=&image_dump;
+  dumpfuncgen[RESTARTDUMPTYPE]=restart_write;
+  dumpfuncgen[RESTARTMETRICDUMPTYPE]=restartmetric_write;
+  dumpfuncgen[MAINDUMPTYPE]=&dump;
+  dumpfuncgen[GRIDDUMPTYPE]=&gdump;
+  dumpfuncgen[AVG1DUMPTYPE]=&avgdump;
+  dumpfuncgen[AVG2DUMPTYPE]=&avg2dump;
+  dumpfuncgen[DEBUGDUMPTYPE]=&debugdump;
+  dumpfuncgen[FIELDLINEDUMPTYPE]=&fieldlinedump;
+  dumpfuncgen[ENODEBUGDUMPTYPE]=&enodebugdump;
+  dumpfuncgen[DISSDUMPTYPE]=&dissdump;
+  dumpfuncgen[OTHERDUMPTYPE]=&dumpother;
+  dumpfuncgen[FLUXDUMPTYPE]=&fluxdumpdump;
+  dumpfuncgen[EOSDUMPTYPE]=&eosdump;
+  dumpfuncgen[VPOTDUMPTYPE]=&vpotdump;
+  dumpfuncgen[FAILFLOORDUDUMPTYPE]=&failfloordudump;
+  // ENERDUMPTYPE : not standard spatial dump file and not standard prototype
+  dumpfuncgen[ENERDUMPTYPE]=NULL;
+  // FAKEDUMPTYPE : not called in standard way (fakedump()) and not standard type of function prototype anyways
+  dumpfuncgen[FAKEDUMPTYPE]=NULL;
+
+
+
+
+
   ///////////////////////////
   //
   // setup timing of writes to files
   //
+  ///////////////////////////
 
   if ((call_code == INIT_OUT) || (firsttime == 1)) {
     
@@ -59,54 +98,43 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     nlastrestart = (long) (DTr*(SFTYPE)((localrealnstep/DTr))-1);
     tlastareamap = localt-SMALL;
 
-    for(dtloop=0;dtloop<NUMDTDS;dtloop++){
+    for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
       tlastgen[dtloop] = DTdumpgen[dtloop]*(SFTYPE)((long long int)(t/DTdumpgen[dtloop]))-SMALL;
     }
 
-    //    tlastener  = DTener*(SFTYPE)((int)(t/DTener))-SMALL;
-    //tlastdump  = DTd*(SFTYPE)((int)(t/DTd))-SMALL;
-    //tlastavg  = DTavg*(SFTYPE)((int)(t/DTavg))-SMALL;
-    //tlastimage = DTi*(SFTYPE)((int)(t/DTi))-SMALL;
-    //tlastdebug  = DTdebug*(SFTYPE)((int)(t/DTdebug))-SMALL;
-
-    for(dtloop=0;dtloop<NUMDTDS;dtloop++){
+    for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
       dumpcgen[dtloop]=0;
     }
-    //    dumpc = avgc = imagec = restartc = enerc = debugc = 0;
 
     if (RESTARTMODE == 0) {
 
-      for(dtloop=0;dtloop<NUMDTDS;dtloop++){
+      for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
 	tdumpgen[dtloop]=localt;
       }
 
 
       nrestart = localnstep;
       // override defaults:
-      tdumpgen[DTAVG]=localt+DTdumpgen[DTAVG]; // do next time
+      tdumpgen[AVG1DUMPTYPE]=localt+DTdumpgen[AVG1DUMPTYPE]; // do next time
+      tdumpgen[AVG2DUMPTYPE]=localt+DTdumpgen[AVG2DUMPTYPE]; // do next time
 
-      //      tdump = timage = tener = t;
-      //      tavg=t+DTavg; // do next time
 
-      for(dtloop=0;dtloop<NUMDTDS;dtloop++){
+      for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
 	dumpcntgen[dtloop]=0;
       }
 
-      //      dump_cnt = 0;
-      //      image_cnt = 0;
-      //      rdump_cnt = 0;
-      //      avg_cnt = 0;
-      //      debug_cnt = 0;
-
       appendold = 0;
-    } else {
+
+    }
+    else{
+
       setrestart(&appendold);
 
       // assuming started at t=0 and localnstep=0 for original run
       // time to dump NEXT
       nrestart = (long)(DTr*(SFTYPE)((localrealnstep/DTr)+1));
 
-      for(dtloop=0;dtloop<NUMDTDS;dtloop++){
+      for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
 	tdumpgen[dtloop]=DTdumpgen[dtloop]*(SFTYPE)((long long int)(localt/DTdumpgen[dtloop])+1);
       }
 
@@ -118,18 +146,23 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
   
+
   ///////////////////////
   //
   // setup what we will dump this call to diag()
   //
-  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, &dogdump, &dordump, &doareamap, dodumpgen);
+  ////////////////////////
+  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, &doareamap, dodumpgen);
 
 
-
-  /// check if only wanted to know if next time would lead to making a dump file
+  //////////////////
+  //
+  // check if only wanted to know if next time would lead to making a dump file
   // used so only compute expensive things during step for diagnostics if outputting diagnostics
+  //
+  //////////////////
   if(call_code==FUTURE_OUT){
-    if(dodumpgen[DTDUMP]) return(DOINGFUTUREOUT);
+    if(dodumpgen[MAINDUMPTYPE]) return(DOINGFUTUREOUT);
     else return(0);
   }
 
@@ -156,14 +189,17 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 
-
+  ////////////////////////////////////////
+  //
   // extra bounding for diagnostics
+  //
+  ////////////////////////////////////////
   if(
      // if doing simulbccalc type loop in step_ch.c then need to bound when doing diagnostics since not done yet
-     (SIMULBCCALC>=1 && (dodumpgen[DTDUMP]||dordump||dodumpgen[DTENER]))
+     (SIMULBCCALC>=1 && (dodumpgen[MAINDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE]||dodumpgen[ENERDUMPTYPE]))
      // assume if PRODUCTION==1 then user knows divB won't be computed at MPI boundaries and that's ok.  Don't want to compute so avoid bounding that slows things down.  Assume ok to still compute dump file version, just not ener version that may be too often
-     || (PRODUCTION==0 && (dodumpgen[DTDUMP]||dodumpgen[DTENER]))
-     || (PRODUCTION==1 && (dodumpgen[DTDUMP]))
+     || (PRODUCTION==0 && (dodumpgen[MAINDUMPTYPE]||dodumpgen[ENERDUMPTYPE]))
+     || (PRODUCTION==1 && (dodumpgen[MAINDUMPTYPE]))
      ){
 
     // for dump, rdump, and divb in ener
@@ -191,103 +227,66 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   //  bound_uavg(STAGEM1,localt,GLOBALPOINT(udump), 1);
 #endif
 
-  //////////////////////
-  //
-  // ener dump (integrated quantities: integrate and possibly  dump them too (if dodumpgen[DTENER]==1))
-  //
-  /////////////////////
 
-  // need integratd quantities for restart dump, but don't write them to ener file.
-  if(dodumpgen[DTENER]||dordump){
-    // get integrated quantities and possiblly dump them to files
-    dump_ener(dodumpgen[DTENER],dordump,call_code);
+
+
+
+
+
+  ///////////////////////
+  //
+  // Things to compute before creating dumping
+  //
+  ///////////////////////
+
+  if(DOAVGDIAG){
+    // do every time step
+    // assume can't fail, but can apparently
+    if(average_calc(dodumpgen[AVG1DUMPTYPE]||dodumpgen[AVG2DUMPTYPE])>=1) return(1);
   }
 
+
+
+
+
+  //////////////////////
+  //
+  // ener dump (integrated quantities: integrate and possibly  dump them too (if dodumpgen[ENERDUMPTYPE]==1))
+  // need integratd quantities for restart dump, but don't write them to ener file.
+  // (not part of standard NUMDUMPTYPES array)
+  /////////////////////
+  if(dodumpgen[ENERDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE]){
+    // get integrated quantities and possiblly dump them to files
+    dump_ener(dodumpgen[ENERDUMPTYPE],dodumpgen[RESTARTDUMPTYPE],call_code);
+  }
+
+
+  ///////////////////
+  //
   // output other things not put into restart file AND update time to output to ener files
-  if(dodumpgen[DTENER]){
+  //
+  // (not part of standard NUMDUMPTYPES array)
+  ///////////////////
+
+  if(dodumpgen[ENERDUMPTYPE]){
     if(COMPUTEFRDOT){
       frdotout(); // need to include all terms and theta fluxes on horizon/outer edge at some point GODMARK
     }
-
-    // only update DT if wrote upon ener-type file period
-    whichDT=DTENER;
-    // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    tlastgen[DTENER]=localt;
-  }
-
-
-
-
-  ///////////////////////
-  //
-  // RESTART DUMP
-  //
-  ///////////////////////
-  
-
-  if(dordump){
-    DIAGREPORT;
-    trifprintf("dumping: restart: %d localnstep: %ld nlastrestart: %ld nrestart: %ld restartc: %d\n", whichrestart,localrealnstep,nlastrestart,nrestart,restartc);
-
-    restart_write((long)whichrestart);	// 0 1 0 1 0 1 ...
-    if(DOEVOLVEMETRIC) restartmetric_write((long)whichrestart);
-
-    restartsteps[whichrestart] = localrealnstep;
-    whichrestart = !whichrestart;
-
-    restartc = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)nrestart)/((FTYPE)DTr)));
-    nrestart = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTr)) + restartc) * DTr;
-    nlastrestart=localrealnstep;
-  }
-      
-  
-
-
-
-  ///////////////////////
-  //
-  // DEBUG DUMP
-  //
-  ///////////////////////
-  
-  if(dodumpgen[DTDEBUG]){
-    DIAGREPORT;
-    trifprintf("debug dumping: debug_cnt=%ld : t=%21.15g tlastdebug=%21.15g tdebug=%21.15g debugc=%d\n", dumpcntgen[DTDEBUG],localt,tlastgen[DTDEBUG],tdumpgen[DTDEBUG],dumpcgen[DTDEBUG]);
     
-    /* make regular dump file */
-    if (debugdump(dumpcntgen[DTDEBUG]) >= 1){
-      dualfprintf(fail_file,"unable to print debug dump file\n");
-      return (1);
-    }
-
-    if(DOENODEBUG){
-      /* make regular dump file */
-      if (enodebugdump(dumpcntgen[DTDEBUG]) >= 1){
-	dualfprintf(fail_file,"unable to print enodebug dump file\n");
-	return (1);
-      }
-    }
-
-    // iterate counter
-    dumpcntgen[DTDEBUG]++;
-    whichDT=DTDEBUG;
+    // only update DT if wrote upon ener-type file period
+    whichDT=ENERDUMPTYPE;
     // below is really floor to nearest integer plus 1
     dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
     tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    // output number of dumps
-    myfopen("dumps/0_numdebug.dat","w","error opening debug dump count file\n",&dumpcnt_filegen[DTDEBUG]);      
-    myfprintf(dumpcnt_filegen[DTDEBUG], "# Number of debug dumps\n%ld\n", dumpcntgen[DTDEBUG]);
-    myfclose(&dumpcnt_filegen[DTDEBUG],"Couldn't close debugcnt_file");
-    tlastgen[DTDEBUG]=localt;
+    tlastgen[ENERDUMPTYPE]=localt;
   }
-
+  
+      
 
 
   ///////////////////////
   //
-  // AREA MAP
+  // AREA MAP (not part of standard NUMDUMPTYPES array)
   //
   ///////////////////////
   
@@ -296,207 +295,55 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     tlastareamap=t;
   }
 
-  ///////////////////////
-  //
-  // IMAGE
-  //
-  ///////////////////////
-
-  if(dodumpgen[DTIMAGE]){
-    DIAGREPORT;
-    trifprintf("image dump %ld : t=%21.15g tlastimage=%21.15g timage=%21.15g imagec=%d\n", dumpcntgen[DTIMAGE], localt,tlastgen[DTIMAGE],tdumpgen[DTIMAGE],dumpcgen[DTIMAGE]);
-    
-    
-    /* make regular image file */
-    if(image_dump(dumpcntgen[DTIMAGE])>=1) return(1);
-
-    // iterate counter
-    dumpcntgen[DTIMAGE]++;
-
-    whichDT=DTIMAGE;
-    // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    // output number of images
-    myfopen("images/0_numimages.dat","w","error opening image count file\n",&dumpcnt_filegen[DTIMAGE]);      
-    myfprintf(dumpcnt_filegen[DTIMAGE], "# Number of images\n%ld\n", dumpcntgen[DTIMAGE]);
-    myfclose(&dumpcnt_filegen[DTIMAGE],"Couldn't close imagecnt_file");
-    tlastgen[DTIMAGE]=localt;
-  }
-
-
-  ///////////////////////
-  //
-  // FIELDLINE
-  //
-  ///////////////////////
-
-  if(dodumpgen[DTFIELDLINE]){
-    DIAGREPORT;
-    trifprintf("fieldline dump %ld : t=%21.15g tlastfieldline=%21.15g tfieldline=%21.15g fieldlinec=%d\n", dumpcntgen[DTFIELDLINE], localt,tlastgen[DTFIELDLINE],tdumpgen[DTFIELDLINE],dumpcgen[DTFIELDLINE]);
-    
-    // (after processing) equivalent to image in interest
-    if(fieldlinedump(dumpcntgen[DTFIELDLINE])>=1) return(1);
-
-    // iterate counter
-    dumpcntgen[DTFIELDLINE]++;
-
-    whichDT=DTFIELDLINE;
-    // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    // output number of fieldlines
-    myfopen("dumps/0_numfieldlines.dat","w","error opening fieldline count file\n",&dumpcnt_filegen[DTFIELDLINE]);
-    myfprintf(dumpcnt_filegen[DTFIELDLINE], "# Number of fieldlines\n%ld\n", dumpcntgen[DTFIELDLINE]);
-    myfclose(&dumpcnt_filegen[DTFIELDLINE],"Couldn't close fieldlinecnt_file");
-    tlastgen[DTFIELDLINE]=localt;
-  }
-
-
 
 
 
 
   ///////////////////////
   //
-  // DUMP
+  // Loop over dumps creation
   //
   ///////////////////////
   
-  if(dodumpgen[DTDUMP]){
-    DIAGREPORT;
-    trifprintf("dumping: dump_cnt=%ld : t=%21.15g tlastdump=%21.15g tdump=%21.15g dumpc=%d\n", dumpcntgen[DTDUMP],localt,tlastgen[DTDUMP],tdumpgen[DTDUMP],dumpcgen[DTDUMP]);
-
-
-    if(dnumcolumns[EOSDUMPCOL]>0){ // otherwise no point
-      if (eosdump(dumpcntgen[DTDUMP]) >= 1){
-	dualfprintf(fail_file,"unable to print eosdump file\n");
-	return (1);
-      }
-    }
-
-    if(DOVPOTDUMP){
-      if (vpotdump(dumpcntgen[DTDUMP]) >= 1){
-	dualfprintf(fail_file,"unable to print vpotdump file\n");
-	return (1);
-      }
-    }
-
-
-    // so can restart at a dump without reconstructing the rdump from a dump.
-    // Also, if run out of disk space then normal rdump's can be corrupted
-    restart_write(-(long)dumpcntgen[DTDUMP]-1);
-    if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntgen[DTDUMP]-1);
-
-
-    if(FLUXDUMP){
-      if (fluxdumpdump(dumpcntgen[DTDUMP]) >= 1){
-	dualfprintf(fail_file,"unable to print fluxdump file\n");
-	return (1);
-      }
-    }
-
-    if(DODUMPOTHER){
-      if (dumpother(dumpcntgen[DTDUMP]) >= 1){
-	dualfprintf(fail_file,"unable to print dumpother file\n");
-	return (1);
-      }
-    }
+  int dumptypeiter;
+  for(dumptypeiter=0;dumptypeiter<NUMDUMPTYPES;dumptypeiter++){
     
+    if(dodumpgen[dumptypeiter]&&dumpfuncgen[dumptypeiter]!=NULL){
+      // pre_dump:
+      pre_dump(dumptypeiter,t,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen,whichrestart,restartc,localrealnstep,nrestart,DTr,nlastrestart);
+      
 
-
-    if(DODISS){
-      /* make dissdump file */
-      if (dissdump(dumpcntgen[DTDUMP]) >= 1){
-	dualfprintf(fail_file,"unable to print dissdump file\n");
+      if((*(dumpfuncgen[dumptypeiter]))(dumpcntgen[dumptypeiter]) >= 1){
+	dualfprintf(fail_file,"unable to print %s file\n",dumpnamelist[dumptypeiter]);
 	return (1);
       }
+      
+      // special cases
+      if(dumptypeiter==MAINDUMPTYPE){
+	// MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
+	// so can restart at a dump without reconstructing the rdump from a dump.
+	// Also, if run out of disk space then normal rdump's can be corrupted
+	restart_write(-(long)dumpcntgen[dumptypeiter]-1);
+	if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntgen[dumptypeiter]-1);
+      }
+      
+      // post_dump:
+      post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart);
     }
-
-
-    /* make regular dump file */
-    if (dump(dumpcntgen[DTDUMP]) >= 1){
-      dualfprintf(fail_file,"unable to print dump file\n");
-      return (1);
-    }
-
-
-    if(DOEVOLVEMETRIC&&(N2==1)&&(N3==1)&&(DOGDUMPDIAG)&&(!GAMMIEDUMP)&&((RESTARTMODE==0))){
-      // only reasonable to do if 1-D
-      gdump(dumpcntgen[DTDUMP]);
-    }
-
-    // iterate counter
-    dumpcntgen[DTDUMP]++;
-    whichDT=DTDUMP;
-    // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    // output number of dumps
-    myfopen("dumps/0_numdumps.dat","w","error opening dump count file\n",&dumpcnt_filegen[DTDUMP]);      
-    myfprintf(dumpcnt_filegen[DTDUMP], "# Number of dumps\n%ld\n", dumpcntgen[DTDUMP]);
-    myfclose(&dumpcnt_filegen[DTDUMP],"Couldn't close dumpcnt_file");
-    tlastgen[DTDUMP]=localt;
   }
 
 
+  ///////////////////
+  // special cases
+  ///////////////////
 
-
-  ///////////////////////
-  //
-  // AVG
-  //
-  ///////////////////////
-
-  if(DOAVGDIAG){
-    // do every time step
-    // assume can't fail, but can apparently
-    if(average_calc(dodumpgen[DTAVG])>=1) return(1);
+  // GRIDDUMPTYPE special case
+  // Only done at t=0 or for 1D on synch with MAINDUMPTYPE
+  // output grid (probaly want both fullgrid (to make sure ok) and compute grid to compare with data dumps
+  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
+    // -1 means no file number on filename
+    gdump(-1);
   }
-
-  
-  if(dodumpgen[DTAVG]){
-    DIAGREPORT
-    trifprintf("avging dump: avg_cnt=%ld : t=%21.15g tlastavg=%21.15g tavg=%21.15g avgc=%d\n", dumpcntgen[DTAVG],localt,tlastgen[DTAVG],tdumpgen[DTAVG],dumpcgen[DTAVG]);
-    
-    /* make avg dump file */
-    if (avgdump(dumpcntgen[DTAVG]) >= 1){
-      dualfprintf(fail_file,"unable to print avg file\n");
-      return (1);
-    }
-#if(DOAVG2)
-    /* make avg dump file */
-    if (avgdump2(dumpcntgen[DTAVG]) >= 1){
-      dualfprintf(fail_file,"unable to print avg2 file\n");
-      return (1);
-    }
-#endif
-
-    // iterate counter
-    dumpcntgen[DTAVG]++;
-
-    whichDT=DTAVG;
-    // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
-    // output number of avgs
-    myfopen("dumps/0_numavgs.dat","w","error opening avg count file\n",&dumpcnt_filegen[DTAVG]);      
-    myfprintf(dumpcnt_filegen[DTAVG], "# Number of avgs\n%ld\n", dumpcntgen[DTAVG]);
-    myfclose(&dumpcnt_filegen[DTAVG],"Couldn't close avgcnt_file");
-    tlastgen[DTAVG]=localt;
-  }
-
-
-  //////////////////////
-  //
-  // Grid dump
-  //
-  /////////////////////
-
-  if(dogdump) gdump(-1); // -1 means no file number on filename
-
-
-
 
 
 
@@ -517,13 +364,13 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   ////////////////////////
 
   if(DODEBUG){ // shouldn't clear these till after ener and debug dump done so both have all timescale data.
-
+    
 #pragma omp parallel // need no global non-arrays
     {
       int i,j,k,floor;
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;  // constant loop parameters for entire region, so can be shared
 
-      if(dodumpgen[DTENER]){
+      if(dodumpgen[ENERDUMPTYPE]){
 	// cleanse the ener time scale for the failure diag
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
 	OPENMP3DLOOPBLOCK{
@@ -534,7 +381,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       }// end if
     
 
-      if(dodumpgen[DTDEBUG]){
+      if(dodumpgen[DEBUGDUMPTYPE]){
 	// clense failure diag
 	////ZLOOP
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
@@ -544,7 +391,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 	}// end 3D loop
       }// end if
 
-      if(dodumpgen[DTIMAGE]){
+      if(dodumpgen[IMAGEDUMPTYPE]){
 	// clense the failure counts for this time scale
 	/////ZLOOP
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
@@ -559,7 +406,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
   if(DOENODEBUG){
-    if(dodumpgen[DTDEBUG]){
+    if(dodumpgen[DEBUGDUMPTYPE]){
       int i,j,k;
       FULLLOOP DIMENLOOP(dir) INTERPENOTYPELOOP(interpi) PDIAGLOOP(pl) ENODEBUGLOOP(enodebugi){
 	if(dir<=2 && pl<=U2){
@@ -572,7 +419,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   if(0&&DODISS){
     // clear diss (I don't see why one should do this and tie results to dump frequency)
-    if(dodumpgen[DTDUMP]){
+    if(dodumpgen[MAINDUMPTYPE]){
       int i,j,k;
       FULLLOOP{
 	for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++){
@@ -633,75 +480,209 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 
-
-
-int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *dogdump, int *dordump, int *doareamap, int *dodumpgen)
+static int pre_dump(
+int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,
+int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart)
 {
 
-  // output grid (probaly want both fullgrid (to make sure ok) and compute grid to compare with data dumps
-  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
-    *dogdump=1;
+  DIAGREPORT;
+  if(whichDT==RESTARTDUMPTYPE || whichDT==RESTARTMETRICDUMPTYPE){
+    // integer based period
+    trifprintf("dumping: restart: %d localnstep: %ld nlastrestart: %ld nrestart: %ld restartc: %d\n", whichrestart,localrealnstep,nlastrestart,nrestart,restartc);
   }
-  else *dogdump=0;
-
-  if((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ){
-    *dordump=1;
+  else{
+    trifprintf("dumping: dump_cnt=%ld : t=%21.15g tlastdump=%21.15g tdump=%21.15g dumpc=%d\n", dumpcntgen[whichDT],localt,tlastgen[whichDT],tdumpgen[whichDT],dumpcgen[whichDT]);
   }
-  else *dordump=0;
+  return(0);
+}
 
 
+
+static int post_dump(
+int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,
+long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart)
+{
+  char temps[MAXFILENAME];
+  char temps2[MAXFILENAME];
+  char temps3[MAXFILENAME];
+
+
+  if(whichDT==RESTARTDUMPTYPE || whichDT==RESTARTMETRICDUMPTYPE){
+    // integer based period
+    // 0 1 0 1 0 1 ...
+    
+    restartsteps[*whichrestart] = localrealnstep;
+    *whichrestart = !(*whichrestart);
+    
+    *restartc = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nrestart))/((FTYPE)DTr)));
+    *nrestart = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTr)) + (*restartc)) * DTr;
+    *nlastrestart=localrealnstep;
+  }
+  else{
+    
+    // iterate counter
+    dumpcntgen[whichDT]++;
+    // below is really floor to nearest integer plus 1
+    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
+    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
+    
+    // output number of dumps
+    sprintf(temps,  "dumps/0_num%d_%s_dumps.dat",whichDT,dumpnamelist[whichDT]);
+    sprintf(temps2, "error opening %d %s dump count file\n",whichDT,dumpnamelist[whichDT]);
+    sprintf(temps3, "Couldn't close %d %s dumpcnt_file",whichDT,dumpnamelist[whichDT]);
+    
+    myfopen(temps,"w",temps2,&dumpcnt_filegen[whichDT]);      
+    myfprintf(dumpcnt_filegen[whichDT], "# Number of %d %s dumps\n%ld\n",whichDT,dumpnamelist[whichDT],dumpcntgen[whichDT]);
+    myfclose(&dumpcnt_filegen[whichDT],temps3);
+    tlastgen[whichDT]=localt;
+  }
+  
+  
+  return(0);
+}
+
+
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen)
+{
+
+
+  
   if((DOAREAMAPDIAG)&&(localt != tlastareamap)&&(dofailmap)&&(localnstep>=steptofailmap)){
     *doareamap=1;
   }
   else *doareamap=0;
-
-
-  ////////////////////////////
-  //
-  // rest are on NUMDTDS list
-  //
-  ////////////////////////////
-
-
-  if( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTDUMP])&&(localt >= tdumpgen[DTDUMP] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  ){
-    dodumpgen[DTDUMP]=1;
-  }
-  else dodumpgen[DTDUMP]=0;
-
-  if( ((DODEBUG)&&(DOENODEBUGEVERYSUBSTEP||DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTDEBUG])&&(localt >= tdumpgen[DTDEBUG] || call_code==FINAL_OUT))) )  ){
-    dodumpgen[DTDEBUG]=1;
-  }
-  else dodumpgen[DTDEBUG]=0;
-
   
-  if((DOAVGDIAG)&&((localt!=tlastgen[DTAVG])&&(localt >= tdumpgen[DTAVG] || call_code==FINAL_OUT))){
-    dodumpgen[DTAVG]=1;
+  
+  ////////////////////////////
+  //
+  // rest are on NUMDUMPTYPES list
+  //
+  ////////////////////////////
+  
+  // IMAGEDUMPTYPE
+  if((dnumcolumns[IMAGEDUMPTYPE]>0)&&((DOIMAGEDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[IMAGEDUMPTYPE])&&(localt >= tdumpgen[IMAGEDUMPTYPE] || call_code==FINAL_OUT))) )){
+    dodumpgen[IMAGEDUMPTYPE]=1;
   }
-  else dodumpgen[DTAVG]=0;
-    
+  else dodumpgen[IMAGEDUMPTYPE]=0;
 
+
+  // RESTARTDUMPTYPE
+  if((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ){
+    dodumpgen[RESTARTDUMPTYPE]=1;
+  }
+  else dodumpgen[RESTARTDUMPTYPE]=0;
+  
+  // RESTARTMETRICDUMPTYPE
+  if(DOEVOLVEMETRIC&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
+    dodumpgen[RESTARTMETRICDUMPTYPE]=1;
+  }
+  else dodumpgen[RESTARTMETRICDUMPTYPE]=0;
+  
+  
+  // MAINDUMPTYPE
+  if((dnumcolumns[MAINDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[MAINDUMPTYPE])&&(localt >= tdumpgen[MAINDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[MAINDUMPTYPE]=1;
+  }
+  else dodumpgen[MAINDUMPTYPE]=0;
+  
+  
+  
+  // GRIDDUMPTYPE
+  // output grid (probaly want both fullgrid (to make sure ok) and compute grid to compare with data dumps
+  // only reasonable to do if 1-D
+  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(DOEVOLVEMETRIC&&(N2==1)&&(N3==1)&&(DOGDUMPDIAG)&&(!GAMMIEDUMP)&&((RESTARTMODE==0)))){
+    dodumpgen[GRIDDUMPTYPE]=1;
+  }
+  else dodumpgen[GRIDDUMPTYPE]=0;
+  
+  
+  
+  
+  // AVG1DUMPTYPE  
+  if((dnumcolumns[AVG1DUMPTYPE]>0)&&((DOAVGDIAG)&&((localt!=tlastgen[AVG1DUMPTYPE])&&(localt >= tdumpgen[AVG1DUMPTYPE] || call_code==FINAL_OUT)))){
+    dodumpgen[AVG1DUMPTYPE]=1;
+  }
+  else dodumpgen[AVG1DUMPTYPE]=0;
+  
+  // AVG2DUMPTYPE  
+  if((DOAVG2&&dnumcolumns[AVG2DUMPTYPE]>0)&&((DOAVGDIAG)&&((localt!=tlastgen[AVG2DUMPTYPE])&&(localt >= tdumpgen[AVG2DUMPTYPE] || call_code==FINAL_OUT)))){
+    dodumpgen[AVG2DUMPTYPE]=1;
+  }
+  else dodumpgen[AVG2DUMPTYPE]=0;
+  
+  
+  
+  // DEBUGDUMPTYPE
+  if((dnumcolumns[DEBUGDUMPTYPE]>0)&&( ((DODEBUG)&&(DOENODEBUGEVERYSUBSTEP||DODIAGEVERYSUBSTEP||((localt!=tlastgen[DEBUGDUMPTYPE])&&(localt >= tdumpgen[DEBUGDUMPTYPE] || call_code==FINAL_OUT))) )  )){
+    dodumpgen[DEBUGDUMPTYPE]=1;
+  }
+  else dodumpgen[DEBUGDUMPTYPE]=0;
+  
+  
+  
+  // FIELDLINEDUMPTYPE
+  if((dnumcolumns[FIELDLINEDUMPTYPE]>0)&&((DOFIELDLINE)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[FIELDLINEDUMPTYPE])&&(localt >= tdumpgen[FIELDLINEDUMPTYPE] || call_code==FINAL_OUT))) )){
+    dodumpgen[FIELDLINEDUMPTYPE]=1;
+  }
+  else dodumpgen[FIELDLINEDUMPTYPE]=0;
+  
+  
+  // ENODEBUGDUMPTYPE
+  if((DOENODEBUG&&dnumcolumns[ENODEBUGDUMPTYPE]>0)&&( ((DODEBUG)&&(DOENODEBUGEVERYSUBSTEP||DODIAGEVERYSUBSTEP||((localt!=tlastgen[ENODEBUGDUMPTYPE])&&(localt >= tdumpgen[ENODEBUGDUMPTYPE] || call_code==FINAL_OUT))) )  )){
+    dodumpgen[ENODEBUGDUMPTYPE]=1;
+  }
+  else dodumpgen[ENODEBUGDUMPTYPE]=0;
+  
+  
+  // DISSDUMPTYPE
+  if((dnumcolumns[DISSDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DISSDUMPTYPE])&&(localt >= tdumpgen[DISSDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[DISSDUMPTYPE]=1;
+  }
+  else dodumpgen[DISSDUMPTYPE]=0;
+  
+  // OTHERDUMPTYPE
+  if((dnumcolumns[OTHERDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[OTHERDUMPTYPE])&&(localt >= tdumpgen[OTHERDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[OTHERDUMPTYPE]=1;
+  }
+  else dodumpgen[OTHERDUMPTYPE]=0;
+  
+  // FLUXDUMPTYPE
+  if((dnumcolumns[FLUXDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[FLUXDUMPTYPE])&&(localt >= tdumpgen[FLUXDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[FLUXDUMPTYPE]=1;
+  }
+  else dodumpgen[FLUXDUMPTYPE]=0;
+  
+  
+  
+  // EOSDUMPTYPE
+  if( (dnumcolumns[EOSDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[EOSDUMPTYPE])&&(localt >= tdumpgen[EOSDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[EOSDUMPTYPE]=1;
+  }
+  else dodumpgen[EOSDUMPTYPE]=0;
+  
+  // VPOTDUMPTYPE
+  if((dnumcolumns[VPOTDUMPTYPE]>0)&&( (((DOVPOTDUMP)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[VPOTDUMPTYPE])&&(localt >= tdumpgen[VPOTDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ) ) ) ))) ){
+    dodumpgen[VPOTDUMPTYPE]=1;
+  }
+  else dodumpgen[VPOTDUMPTYPE]=0;
+
+
+  // FAILFLOORDUDUMPTYPE
+  if((dnumcolumns[FAILFLOORDUDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[FAILFLOORDUDUMPTYPE])&&(localt >= tdumpgen[FAILFLOORDUDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[FAILFLOORDUDUMPTYPE]=1;
+  }
+  else dodumpgen[FAILFLOORDUDUMPTYPE]=0;
+  
+  
+  // ENERDUMPTYPE (dnumcolumns[ENERDUMPTYPE]==0 is normal)
   // t!=tlast avoids duplicate entries
-  if(DOENERDIAG&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTENER])&&( (localt >= tdumpgen[DTENER])||(call_code==INIT_OUT)||(call_code==FINAL_OUT)||firsttime)))){
-    dodumpgen[DTENER]=1;
+  if(DOENERDIAG&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[ENERDUMPTYPE])&&( (localt >= tdumpgen[ENERDUMPTYPE])||(call_code==INIT_OUT)||(call_code==FINAL_OUT)||firsttime)))){
+    dodumpgen[ENERDUMPTYPE]=1;
   }
-  else dodumpgen[DTENER]=0;
-
-
-  /* image dump at regular intervals */
-  if((DOIMAGEDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTIMAGE])&&(localt >= tdumpgen[DTIMAGE] || call_code==FINAL_OUT))) ){
-    dodumpgen[DTIMAGE]=1;
-  }
-  else dodumpgen[DTIMAGE]=0;
-
-
-  /* fieldline dump at regular intervals */
-  // use image time period
-  if((DOFIELDLINE)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DTFIELDLINE])&&(localt >= tdumpgen[DTFIELDLINE] || call_code==FINAL_OUT))) ){
-    dodumpgen[DTFIELDLINE]=1;
-    dumpcntgen[DTFIELDLINE]=dumpcntgen[DTIMAGE]; // force to go with image dump (needed also so restart() knows the count)
-  }
-  else dodumpgen[DTFIELDLINE]=0;
-
+  else dodumpgen[ENERDUMPTYPE]=0;
+  
+  
+  // FAKEDUMPTYPE is fake dump controlled in other code
 
 
 

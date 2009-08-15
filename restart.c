@@ -95,7 +95,7 @@ int restart_init(int which)
   ////////////////
   trifprintf("before write_restart_header(TEXTOUTPUT,log_file)\n");
   fprintf(log_file,"header contents below\n"); fflush(log_file);
-  write_restart_header(RDUMPCOL,dnumversion[RDUMPCOL],dnumcolumns[RDUMPCOL],TEXTOUTPUT,log_file);
+  write_restart_header(RESTARTDUMPTYPE,dnumversion[RESTARTDUMPTYPE],dnumcolumns[RESTARTDUMPTYPE],TEXTOUTPUT,log_file);
 
   ////////////////
   //
@@ -171,7 +171,7 @@ int restart_write(long dump_cnt)
 
   trifprintf("begin dumping rdump# %ld ... ",dump_cnt);
 
-  whichdump=RDUMPCOL;
+  whichdump=RESTARTDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/rdump");
   if(dump_cnt>=0) {
@@ -237,7 +237,7 @@ int restart_read(long dump_cnt)
 
   trifprintf("begin reading rdump# %ld ... ",dump_cnt);
 
-  whichdump=RDUMPCOL;
+  whichdump=RESTARTDUMPTYPE;
   datatype=MPI_FTYPE;
   bintxt=binaryoutput;
   strcpy(fileprefix,"dumps/rdump");
@@ -291,7 +291,7 @@ int restartmetric_write(long dump_cnt)
 
   trifprintf("begin dumping rmetricdump# %ld ... ",dump_cnt);
 
-  whichdump=RMETRICDUMPCOL;
+  whichdump=RESTARTMETRICDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/rmetricdump");
   if(dump_cnt>=0) {
@@ -325,7 +325,7 @@ void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numve
 }
 
 
-// must be consistent with dnumcolumns[RMETRICDUMPCOL]
+// must be consistent with dnumcolumns[RESTARTMETRICDUMPTYPE]
 int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int gridpos;
@@ -419,7 +419,7 @@ int restartmetric_read(long dump_cnt)
   dualfprintf(fail_file,"Reading in old metric, but so far need to bound somehow since no BCs but needed!\n");
   myexit(2496736);
 
-  whichdump=RMETRICDUMPCOL;
+  whichdump=RESTARTMETRICDUMPTYPE;
   datatype=MPI_FTYPE;
   bintxt=binaryoutput;
   strcpy(fileprefix,"dumps/rmetricdump");
@@ -719,9 +719,9 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   
   // reorganized order for DT related stuff
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTr, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTdumpgen[0], sizeof(SFTYPE), sheaderone, NUMDTDS, MPI_SFTYPE, headerptr);
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTdumpgen[0], sizeof(SFTYPE), sheaderone, NUMDUMPTYPES, MPI_SFTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&rdump_cnt, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDTDS, MPI_LONG, headerptr);
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDUMPTYPES, MPI_LONG, headerptr);
   
   
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prMAX[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);

@@ -244,7 +244,7 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 	    // Note that this only accounts for full diag() call, but  not diag_flux or diag_source*.  Wouldn't want to time those since timing operations would be too expensive for ACCURATE versions of those calls that are done per i,j,k.
 #define DIAGFACTOR (10.0)
 	    
-	    for(ii=0;ii<NUMDTDS;ii++){
+	    for(ii=0;ii<NUMDUMPTYPES;ii++){
 	      // Compute how many seconds, below which if logging is taking place could impact performance and so is reported to user in the perf file
 	      // Compute total wall time for non-diagnostic computations: (walltimelocal-diagwalltimelocal)
 	      // Then compare that to time taken by diagnostics: diagwalltimelocal

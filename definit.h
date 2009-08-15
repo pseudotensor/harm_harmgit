@@ -289,6 +289,10 @@
 // 0: don't output debug dump file or ener file(ener is based on dump counts)
 // 1: do
 
+#define DOFLOORDIAG 1
+// 0: don't output file with diag_fixup() activated changes in conserved quantities
+// 1: do
+
 
 // whether to dump vector potential
 #define DOVPOTDUMP (1 && TRACKVPOT)

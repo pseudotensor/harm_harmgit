@@ -265,11 +265,11 @@ int post_init_specific_init(void)
 
 
 
-  DTdumpgen[DTDISS]=DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = DTd;
-  DTdumpgen[DTAVG] = DTavg;
-  DTdumpgen[DTFIELDLINE]=DTdumpgen[DTENER] = DTener;
-  DTdumpgen[DTIMAGE] = DTi;
-  DTdumpgen[DTDEBUG] = DTdebug;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = DTd;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTavg;
+  DTdumpgen[DTENER] = DTener;
+  DTdumpgen[FIELDLINEDUMPTYPE] =DTdumpgen[IMAGEDUMPTYPE] = DTi;
+  DTdumpgen[DEBUGDUMPTYPE] = DTdebug;
 
 
 
@@ -4330,7 +4330,7 @@ void write_riemannproblem_params_to_file( FTYPE rhol, FTYPE pl, FTYPE ul, FTYPE 
 
 // assumes normal field in pr and position-based input
 // need to set whichcoord and A
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   FTYPE AA,R0,r,x0,y0;
   extern FTYPE csc(FTYPE arg);

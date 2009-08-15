@@ -948,19 +948,19 @@
 
 
 // time period between dumps for various types of dumps
-#define NUMDTDS 11
-
-#define DTDUMP 0
-#define DTAVG 1
-#define DTENER 2
-#define DTIMAGE 3
-#define DTDEBUG 4
-#define DTDISS 5
-#define DTFIELDLINE 6
-#define DTFLUX 7
-#define DTOTHER 8
-#define DTEOS 9
-#define DTVPOT 10
+// NO, use "COL" names now
+//#define NUMDTDS 11
+//#define DTDUMP 0
+//#define DTAVG 1
+//#define DTENER 2
+//#define DTIMAGE 3
+//#define DTDEBUG 4
+//#define DTDISS 5
+//#define DTFIELDLINE 6
+//#define DTFLUX 7
+//#define DTOTHER 8
+//#define DTEOS 9
+//#define DTVPOT 10
 
 
 
@@ -1030,26 +1030,32 @@
 #define ENERFNAME "ener.out"
 #define GENERFNAME "gener.out"
 
-#define NUMDUMPTYPES 16
 
-#define IMAGECOL 0
-#define RDUMPCOL 1
-#define RMETRICDUMPCOL 2
-#define DUMPCOL 3
-#define GDUMPCOL 4
-#define AVGCOL 5
-#define AVG2COL 6 // used when needing AVG2COL to avoid too large a file size for avgdump
-#define DEBUGCOL 7
-#define FIELDLINECOL 8
-#define ENODEBUGCOL 9
-#define DISSDUMPCOL 10
-#define DUMPOTHERCOL 11
-#define FLUXDUMPCOL 12
-#define EOSDUMPCOL 13
-#define VPOTDUMPCOL 14
-#define FAKEDUMPCOL 15
 
-#define MYDUMPNAMELIST {"IMAGECOL","RDUMPCOL","RMETRICDUMPCOL","DUMPCOL","GDUMPCOL","AVGCOL","AVG2COL","DEBUGCOL","FIELDLINECOL","ENODEBUGCOL","DISSDUMPCOL","DUMPOTHERCOL","FLUXDUMPCOL","EOSDUMPCOL","VPOTDUMPCOL","FAKEDUMPCOL"}
+// these dump types also control period of output
+// Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "COL"
+#define NUMDUMPTYPES 18 // number of dump types listed below
+
+#define IMAGEDUMPTYPE 0
+#define RESTARTDUMPTYPE 1
+#define RESTARTMETRICDUMPTYPE 2
+#define MAINDUMPTYPE 3
+#define GRIDDUMPTYPE 4
+#define AVG1DUMPTYPE 5
+#define AVG2DUMPTYPE 6 // used when needing AVG2DUMPTYPE to avoid too large a file size for avgdump
+#define DEBUGDUMPTYPE 7
+#define FIELDLINEDUMPTYPE 8
+#define ENODEBUGDUMPTYPE 9
+#define DISSDUMPTYPE 10
+#define OTHERDUMPTYPE 11
+#define FLUXDUMPTYPE 12
+#define EOSDUMPTYPE 13
+#define VPOTDUMPTYPE 14
+#define FAILFLOORDUDUMPTYPE 15
+#define ENERDUMPTYPE 16
+#define FAKEDUMPTYPE 17
+
+#define MYDUMPNAMELIST {"IMAGEDUMPTYPE","RESTARTDUMPTYPE","RESTARTMETRICDUMPTYPE","MAINDUMPTYPE","GRIDDUMPTYPE","AVG1DUMPTYPE","AVG2DUMPTYPE","DEBUGDUMPTYPE","FIELDLINEDUMPTYPE","ENODEBUGDUMPTYPE","DISSDUMPTYPE","OTHERDUMPTYPE","FLUXDUMPTYPE","EOSDUMPTYPE","VPOTDUMPTYPE","FAILFLOORDUDUMPTYPE","ENERDUMPTYPE","FAKEDUMPTYPE"}
 
 
 #define NUMIMAGEPARMS 3

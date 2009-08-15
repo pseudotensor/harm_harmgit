@@ -814,12 +814,12 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
     //    ftemp=5.0;
 
 
-    DTdumpgen[DTDISS]=DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = ftemp;
-    DTdumpgen[DTAVG] = DTdumpgen[DTDUMP];
-    DTdumpgen[DTENER] = DTdumpgen[DTDUMP]/10.0;
-    DTdumpgen[DTIMAGE] = DTdumpgen[DTENER];
-    DTdumpgen[DTFIELDLINE] = DTdumpgen[DTIMAGE];
-    DTdumpgen[DTDEBUG] = DTdumpgen[DTDUMP];
+    DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = ftemp;
+    DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
+    DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
+    DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[ENERDUMPTYPE];
+    DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+    DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[MAINDUMPTYPE];
 
     BCtype[X1DN]=OUTFLOW;
     
@@ -845,17 +845,17 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
     // steps DT in powers of 10X
     //    newDTref = MAX(thetime,pow((int)log10(fabs(thetime)),10.0));
 
-    //    newDTref = DTdumpgen[DTDUMP]*10.0;
+    //    newDTref = DTdumpgen[MAINDUMPTYPE]*10.0;
 
     newDTref = round(rlo*ftemp);
 
 
-    DTdumpgen[DTDISS]=DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = newDTref;
-    DTdumpgen[DTAVG] = DTdumpgen[DTDUMP];
-    DTdumpgen[DTENER] = DTdumpgen[DTDUMP]/10.0;
-    DTdumpgen[DTIMAGE] = DTdumpgen[DTENER];
-    DTdumpgen[DTFIELDLINE] = DTdumpgen[DTIMAGE];
-    DTdumpgen[DTDEBUG] = DTdumpgen[DTDUMP];
+    DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = newDTref;
+    DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
+    DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
+    DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[ENERDUMPTYPE];
+    DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+    DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[MAINDUMPTYPE];
 
     // change to free outflow?  Allows inflow and outflow.  Always extrapolates.
     //    BCtype[X1DN]=FREEOUTFLOW;

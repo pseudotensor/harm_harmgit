@@ -24,21 +24,23 @@
 
 /* Follow these steps to create a new dump file
 
-1) defs.h: create the storage variable if needed
+1) defs.???.h: create the storage variable if needed
 
-2) set_array.c : shift variable if necessary (follow examples)
+2) set_array???.c : shift variable if necessary (follow examples)
 
-3) global.h : change NUMDUMPTYPES and add label
+3) global.nondepnmemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
 
-4) global.h change NUMDTDS and add another entry if want separate timing of output
+4) global.???.h change NUMDUMPTYPES and add another entry if want separate timing of output
 
-5) initbase.c : add dnumcolumns[LABEL]=NUMCOLUMNS where NUMCOLUMNS is number of entries in dump file
+5) dump.c : add dnumcolumns[LABEL]=NUMCOLUMNS where NUMCOLUMNS is number of entries in dump file
 
 6) dump.c : follow examples from here (dump() uses dump_header() and dump_content()).  One must define the header and content function and the wrapper (3 functions) or use an existing header function
 
 7) diag.c : follow example of "dump", dumpc, tlastdump, etc.
 
 8) init.c : DTdumpgen, dumpcntgen, and other things.
+
+9) global.dump.h : add global prototypes
 
 */
 
@@ -165,7 +167,7 @@ void output_nprlist_info(void)
 // setup number of columns per dump file (see dumpgen.c or dump.c for how used)
 void init_dnumcolumns_dnumversion(void)
 {
-  char dumpnamelist[NUMDUMPTYPES][MAXFILENAME]=MYDUMPNAMELIST;
+  char tempdumpnamelist[NUMDUMPTYPES][MAXFILENAME]=MYDUMPNAMELIST;
   int i;
 
   extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -184,46 +186,55 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
 
+
+  // assign local to global -- do this since global not easily assigned to value with defs and decs approach
+  int dumpiter;
+  for(dumpiter=0;dumpiter<NUMDUMPTYPES;dumpiter++){
+    strcpy(dumpnamelist[dumpiter],tempdumpnamelist[dumpiter]);
+  }
 
 
 
   // always numcolumns=0 for fake dump
   // version=0 shouldn't matter for fake dump
-  dnumcolumns[FAKEDUMPCOL]=0; dnumversion[FAKEDUMPCOL]=0;
+  dnumcolumns[FAKEDUMPTYPE]=0; dnumversion[FAKEDUMPTYPE]=0;
   
 
   // image
-  set_image_content_dnumcolumns_dnumversion(&dnumcolumns[IMAGECOL],&dnumversion[IMAGECOL]);
+  set_image_content_dnumcolumns_dnumversion(&dnumcolumns[IMAGEDUMPTYPE],&dnumversion[IMAGEDUMPTYPE]);
   // rdump
-  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RDUMPCOL],&dnumversion[RDUMPCOL]);
+  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
   // rmetricdump
-  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RMETRICDUMPCOL],&dnumversion[RMETRICDUMPCOL]);
+  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
   // dump
-  set_dump_content_dnumcolumns_dnumversion(&dnumcolumns[DUMPCOL],&dnumversion[DUMPCOL]);
+  set_dump_content_dnumcolumns_dnumversion(&dnumcolumns[MAINDUMPTYPE],&dnumversion[MAINDUMPTYPE]);
   // gdump
-  set_gdump_content_dnumcolumns_dnumversion(&dnumcolumns[GDUMPCOL],&dnumversion[GDUMPCOL]);
+  set_gdump_content_dnumcolumns_dnumversion(&dnumcolumns[GRIDDUMPTYPE],&dnumversion[GRIDDUMPTYPE]);
   // avg
-  set_avg_content_dnumcolumns_dnumversion(&dnumcolumns[AVGCOL],&dnumversion[AVGCOL]);
+  set_avg_content_dnumcolumns_dnumversion(&dnumcolumns[AVG1DUMPTYPE],&dnumversion[AVG1DUMPTYPE]);
   // avg2
-  set_avg2_content_dnumcolumns_dnumversion(&dnumcolumns[AVG2COL],&dnumversion[AVG2COL]);
+  set_avg2_content_dnumcolumns_dnumversion(&dnumcolumns[AVG2DUMPTYPE],&dnumversion[AVG2DUMPTYPE]);
   // debug
-  set_debug_content_dnumcolumns_dnumversion(&dnumcolumns[DEBUGCOL],&dnumversion[DEBUGCOL]);
+  set_debug_content_dnumcolumns_dnumversion(&dnumcolumns[DEBUGDUMPTYPE],&dnumversion[DEBUGDUMPTYPE]);
   // enodebug
-  set_enodebug_content_dnumcolumns_dnumversion(&dnumcolumns[ENODEBUGCOL],&dnumversion[ENODEBUGCOL]);
+  set_enodebug_content_dnumcolumns_dnumversion(&dnumcolumns[ENODEBUGDUMPTYPE],&dnumversion[ENODEBUGDUMPTYPE]);
   // fieldline
-  set_fieldline_content_dnumcolumns_dnumversion(&dnumcolumns[FIELDLINECOL],&dnumversion[FIELDLINECOL]);
+  set_fieldline_content_dnumcolumns_dnumversion(&dnumcolumns[FIELDLINEDUMPTYPE],&dnumversion[FIELDLINEDUMPTYPE]);
   // dissdump
-  set_dissdump_content_dnumcolumns_dnumversion(&dnumcolumns[DISSDUMPCOL],&dnumversion[DISSDUMPCOL]);
+  set_dissdump_content_dnumcolumns_dnumversion(&dnumcolumns[DISSDUMPTYPE],&dnumversion[DISSDUMPTYPE]);
   // dumpother
-  set_dumpother_content_dnumcolumns_dnumversion(&dnumcolumns[DUMPOTHERCOL],&dnumversion[DUMPOTHERCOL]);
+  set_dumpother_content_dnumcolumns_dnumversion(&dnumcolumns[OTHERDUMPTYPE],&dnumversion[OTHERDUMPTYPE]);
   // fluxdump
-  set_fluxdump_content_dnumcolumns_dnumversion(&dnumcolumns[FLUXDUMPCOL],&dnumversion[FLUXDUMPCOL]);
+  set_fluxdump_content_dnumcolumns_dnumversion(&dnumcolumns[FLUXDUMPTYPE],&dnumversion[FLUXDUMPTYPE]);
   // eosdump
-  set_eosdump_content_dnumcolumns_dnumversion(&dnumcolumns[EOSDUMPCOL],&dnumversion[EOSDUMPCOL]);
+  set_eosdump_content_dnumcolumns_dnumversion(&dnumcolumns[EOSDUMPTYPE],&dnumversion[EOSDUMPTYPE]);
   // vpotdump
-  set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPCOL],&dnumversion[VPOTDUMPCOL]);
+  set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPTYPE],&dnumversion[VPOTDUMPTYPE]);
+  // failfloordudump
+  set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
 
 
 
@@ -253,7 +264,7 @@ int dump(long dump_cnt)
 
   trifprintf("begin dumping dump# %ld ... ",dump_cnt);
 
-  whichdump=DUMPCOL;
+  whichdump=MAINDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/dump");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
@@ -610,7 +621,7 @@ int debugdump(long dump_cnt)
 
   trifprintf("begin dumping debug dump# %ld ... ",dump_cnt);
 
-  whichdump=DEBUGCOL;
+  whichdump=DEBUGDUMPTYPE;
   datatype=MPI_CTYPE;
   strcpy(fileprefix,"dumps/debug");
   strcpy(fileformat,"%04ld");
@@ -662,7 +673,7 @@ int enodebugdump(long dump_cnt)
 
   trifprintf("begin dumping enodebug dump# %ld ... ",dump_cnt);
 
-  whichdump=ENODEBUGCOL;
+  whichdump=ENODEBUGDUMPTYPE;
   //  datatype=MPI_FTYPE;
   datatype=MPI_CTYPE;
   strcpy(fileprefix,"dumps/enodebug");
@@ -735,7 +746,7 @@ int avgdump(long dump_cnt)
 
   trifprintf("begin dumping avgdump# %ld ... ",dump_cnt);
 
-  whichdump=AVGCOL;
+  whichdump=AVG1DUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/avg");
   strcpy(fileformat,"%04ld");
@@ -857,7 +868,7 @@ int avg2dump(long dump_cnt)
 
   trifprintf("begin dumping avg2dump# %ld ... ",dump_cnt);
 
-  whichdump=AVG2COL;
+  whichdump=AVG2DUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/avg2");
   strcpy(fileformat,"%04ld");
@@ -936,7 +947,7 @@ int gdump(long dump_cnt)
 
   trifprintf("begin dumping gdump# %ld ... ",dump_cnt);
 
-  whichdump=GDUMPCOL;
+  whichdump=GRIDDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/gdump");
   strcpy(fileformat,"%04ld");
@@ -1063,7 +1074,7 @@ int fieldlinedump(long dump_cnt)
 
   trifprintf("begin dumping fieldlinedump# %ld ... ",dump_cnt);
 
-  whichdump=FIELDLINECOL;
+  whichdump=FIELDLINEDUMPTYPE;
   datatype=MPI_FLOAT; // don't need good precision
   strcpy(fileprefix,"dumps/fieldline");
   strcpy(fileformat,"%04ld");
@@ -1241,7 +1252,7 @@ int dissdump(long dump_cnt)
 
   trifprintf("begin dumping dissdump# %ld ... ",dump_cnt);
 
-  whichdump=DISSDUMPCOL;
+  whichdump=DISSDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/dissdump");
   strcpy(fileformat,"%04ld");
@@ -1293,7 +1304,7 @@ int dumpother(long dump_cnt)
 
   trifprintf("begin dumping dumpother# %ld ... ",dump_cnt);
 
-  whichdump=DUMPOTHERCOL;
+  whichdump=OTHERDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/dumpother");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
@@ -1361,7 +1372,7 @@ int fluxdumpdump(long dump_cnt)
 
   trifprintf("begin dumping fluxdump# %ld ... ",dump_cnt);
 
-  whichdump=FLUXDUMPCOL;
+  whichdump=FLUXDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/fluxdump");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
@@ -1415,7 +1426,7 @@ int eosdump(long dump_cnt)
 
   trifprintf("begin dumping eosdump# %ld ... ",dump_cnt);
 
-  whichdump=EOSDUMPCOL;
+  whichdump=EOSDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/eosdump");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
@@ -1513,7 +1524,7 @@ int vpotdump(long dump_cnt)
 
   trifprintf("begin dumping vpotdump# %ld ... ",dump_cnt);
 
-  whichdump=VPOTDUMPCOL;
+  whichdump=VPOTDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/vpotdump");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep
@@ -1560,6 +1571,72 @@ int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
+
+
+
+
+int failfloordudump(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+
+
+  trifprintf("begin dumping failfloordudump# %ld ... ",dump_cnt);
+
+  whichdump=FAILFLOORDUDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/failfloordudump");
+  strcpy(fileformat,"%04ld");  //atch adjust dump every substep
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,failfloordudump_content)>=1) return(1);
+
+  trifprintf("end dumping failfloordudump# %ld ... ",dump_cnt);
+
+
+  return(0);
+  
+}
+
+
+
+void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+
+  if(DOFLOORDIAG){
+    *numcolumns=NPR;
+  }
+  else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
+
+
+}
+
+
+int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+  int pl;
+
+  myset(datatype,&GLOBALMAC(failfloordu,i,j,k),0,NPR,writebuf); // NPR
+  
+  return (0);
+}
+
+
+
+
+
+
+
+
+
+// fake dump so can push out data in case still in MPI=2 delayed writing buffer
 int fakedump(void)
 {
   MPI_Datatype datatype;
@@ -1571,7 +1648,7 @@ int fakedump(void)
 
   trifprintf("begin dumping fakedump");
 
-  whichdump=FAKEDUMPCOL;
+  whichdump=FAKEDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/fakedump");
   strcpy(fileformat,"%04ld");  //atch adjust dump every substep

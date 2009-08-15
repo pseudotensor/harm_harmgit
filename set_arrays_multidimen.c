@@ -411,6 +411,11 @@ void set_arrays_multidimen()
   FULLLOOP  TSCALELOOP(tscale) FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,floor)=valueinit;
 #endif
 
+#if(DOFLOORDIAG)
+  GLOBALPOINT(failfloordu) = (FTYPE PTRMACP0A1(failfloordu,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(failfloordu,N1BND,N2BND,N3BND,0)));
+  FULLLOOP  PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=valueinit;
+#endif
+
 
   ////////////////////////////////////////////////
   //

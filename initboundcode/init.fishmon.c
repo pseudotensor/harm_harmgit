@@ -273,17 +273,17 @@ int init_global(void)
   tf = 2000.0;
 
   /* dumping frequency, in units of M */
-  DTdumpgen[DTDISS]=DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = 50.;
-  DTdumpgen[DTAVG] = 50.0;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
   // ener period
-  DTdumpgen[DTENER] = 2.0;
+  DTdumpgen[ENERDUMPTYPE] = 2.0;
   /* image file frequ., in units of M */
-  DTdumpgen[DTIMAGE] = 2.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 2.0;
   // fieldline locked to images so can overlay
-  DTdumpgen[DTFIELDLINE] = DTdumpgen[DTIMAGE];
+  DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   /* debug file */  
-  DTdumpgen[DTDEBUG] = 50.0;
+  DTdumpgen[DEBUGDUMPTYPE] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 3000;

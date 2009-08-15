@@ -1785,10 +1785,9 @@ int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int dir, s
   VARSTATIC FTYPE entropy;
   int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr);
 
-  // get entropy
+  // get entropy [entropy can be any value]
   entropy=entropyflux/q->ucon[dir];
   ufromentropy_calc(ptrgeom, entropy, pr);
-
 
   return(0);
 }
@@ -3065,9 +3064,10 @@ int set_zamo_ucon(struct of_geom *ptrgeom, FTYPE *ucon)
 
 
 // entropy wrapper
+// this function should NOT be called by utoprim_jon.c inversion
 int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
 {
-
+  
   *entropy = compute_entropy_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
 
   return(0);
@@ -3090,8 +3090,13 @@ FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 }
 
 // wrapper
+// this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
+
+  // unlike inversion, require non-NaN entropy, so force rho,u to be positive
+  if(rho<SMALL) rho=SMALL;
+  if(u<SMALL) u=SMALL;
 
   return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
 
@@ -3131,8 +3136,13 @@ int get_extrasprocessed_simple(int doall, int i, int j, int k, int loc, FTYPE *p
 }
 
 
+// this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_u_from_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE entropy)
 {
+
+  // unlike inversion, require non-NaN entropy, so force rho,u to be positive
+  if(rho<SMALL) rho=SMALL;
+  // entropy can be any value
 
   return(compute_u_from_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k), rho, entropy));
 

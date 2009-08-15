@@ -304,12 +304,12 @@ int init_global(void)
   /* output choices */
   tf = 8000.0;
 
-  DTdumpgen[DTFLUX]=DTdumpgen[DTOTHER]=DTdumpgen[DTEOS]=DTdumpgen[DTVPOT]=DTdumpgen[DTDUMP] = 50.;			/* dumping frequency, in units of M */
-  DTdumpgen[DTDISS]=DTdumpgen[DTDUMP]/5.0;
-  DTdumpgen[DTAVG] = 50.0;
-  DTdumpgen[DTFIELDLINE]=DTdumpgen[DTENER] = 2.0;			/* logfile frequency, in units of M */
-  DTdumpgen[DTIMAGE] = 2.0;			/* image file frequ., in units of M */
-  DTdumpgen[DTDEBUG] = 1000.0; /* debug file */
+  DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;			/* dumping frequency, in units of M */
+  DTdumpgen[DISSDUMPTYPE]=DTdumpgen[MAINDUMPTYPE]/5.0;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
+  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[DTENER] = 2.0;			/* logfile frequency, in units of M */
+  DTdumpgen[IMAGEDUMPTYPE] = 2.0;			/* image file frequ., in units of M */
+  DTdumpgen[DEBUGDUMPTYPE] = 1000.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
   DTr = 1000;			/* restart file period in steps */
 #elif(WHICHPROBLEM==GRBJET)
@@ -842,7 +842,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define FIELDTYPE DISKFIELD
 
 // assumes normal field in pr
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, u_av, q, fieldhor;
   FTYPE r,th;

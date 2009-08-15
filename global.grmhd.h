@@ -119,7 +119,7 @@
 //
 // DODIAGS==0 or 1 can change things alot due to per-substep diagnostics being enabled.
 // E.g.: File writing in general should be stretched in period to avoid slowing down code.  File writing can severely slow things down if too frequent.  Consider ROMIO and Jon's non-blocking file writing.
-// E.g.: Same model described above w.r.t. PRODUCTION=0/1 goes to 80K ZCPS with DODIAGS=0.  Ensure that DTENER (and image/etc. creation) does not have too small a period.
+// E.g.: Same model described above w.r.t. PRODUCTION=0/1 goes to 80K ZCPS with DODIAGS=0.  Ensure that ENERDUMPTYPE (and image/etc. creation) does not have too small a period.
 //
 //
 //
