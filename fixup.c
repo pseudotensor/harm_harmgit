@@ -250,10 +250,10 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
     }
 
     int indexfinalstep;
-    if(finalstep) indexfinalstep=1;
-    else indexfinalstep=0;
+    indexfinalstep=0;
     TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
     if(finalstep){
+      indexfinalstep=1;
       // iterate finalstep version
       TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
     }
@@ -456,10 +456,10 @@ int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, in
   // count every time corrects, not just on conserved quantity tracking time
   if(DODEBUG){
     int indexfinalstep;
-    if(finalstep) indexfinalstep=1;
-    else indexfinalstep=0;
+    indexfinalstep=0;
     TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
     if(finalstep){
+      indexfinalstep=1;
       // iterate finalstep version
       TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
     }
