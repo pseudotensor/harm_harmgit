@@ -766,8 +766,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sourceaddreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
 
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
-  //TSCALELOOP(tscale) FLOORLOOP(floor)
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0],sizeof(CTYPE),ctypeheaderone,NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+  //FAILFLOORLOOP(indexfinalstep,tscale,floor)
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
 
   // end new June 6,2003
 
@@ -851,7 +851,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 int restart_read_defs_new(void)
 {
   int enerregion;
-  int floor,tscale;
+  int indexfinalstep,floor,tscale;
   int dissloop;
   int dir,pl,pliter;
   int ii;
@@ -870,7 +870,7 @@ int restart_read_defs_new(void)
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
-    TSCALELOOP(tscale) FLOORLOOP(floor) failfloorcountlocal[tscale][floor]=failfloorcountlocal_tot[tscale][floor];
+    FAILFLOORLOOP(indexfinalstep,tscale,floor) failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
 
 
     if(DODISS) ENERREGIONLOOP(enerregion) for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) dissreg[enerregion][dissloop]=dissreg_tot[enerregion][dissloop];

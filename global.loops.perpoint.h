@@ -154,6 +154,7 @@
 #define GRIDLOOP(gridpos) for(gridpos=0;gridpos<NPG;gridpos++)
 
 
+
 /////////////////////////////////////
 /////////////////////////////////////
 //
@@ -211,5 +212,8 @@
 
 #define ENODEBUGLOOP(enodebugi) for(enodebugi=0;enodebugi<NUMENODEBUGS;enodebugi++)
 
+// simple loop over 0 and 1 for failfloorcount[]
+#define FINALSTEPLOOP(indexfinalstep) for(indexfinalstep=0;indexfinalstep<=1;indexfinalstep++)
 
+#define FAILFLOORLOOP(indexfinalstep,tscale,floor) FINALSTEPLOOP(indexfinalstep) TSCALELOOP(tscale) FLOORLOOP(floor)
 

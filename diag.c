@@ -37,6 +37,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   int dir,interpi,enodebugi;
   int dissloop;
+  int indexfinalstep;
   int enodebugdump(long dump_cnt);
   int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int whichDT;
@@ -376,7 +377,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 	OPENMP3DLOOPBLOCK{
 	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
 	  ////      ZLOOP{
-	  FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,ENERTS,floor) =0;
+	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,ENERTS,floor) =0;
 	}// end 3D loop
       }// end if
     
@@ -387,7 +388,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
 	OPENMP3DLOOPBLOCK{
 	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,DEBUGTS,floor) =0;
+	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,DEBUGTS,floor) =0;
 	}// end 3D loop
       }// end if
 
@@ -397,7 +398,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
 	OPENMP3DLOOPBLOCK{
 	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,IMAGETS,floor) =0;
+	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,IMAGETS,floor) =0;
 	}// end 3D loop
       }// end if
     }// end parallel region (and implied barrier)

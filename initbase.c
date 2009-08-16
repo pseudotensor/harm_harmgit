@@ -949,7 +949,8 @@ int pre_init(int *argc, char **argv[])
   
   // start counter
   // full loop since user may choose to count something in boundary zones
-  if(DODEBUG) FULLLOOP TSCALELOOP(tscale) FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,floor)=0;
+  int indexfinalstep;
+  if(DODEBUG) FULLLOOP FAILFLOORLOOP(indexfinalstep,tscale,floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor)=0;
 
   // start du diag_fixup() sum
   // full loop since user may choose to count something in boundary zones

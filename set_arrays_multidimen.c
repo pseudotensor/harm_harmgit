@@ -15,7 +15,7 @@ void set_arrays_multidimen()
   int pl2;
   int ii;
   int jj;
-  int floor,pf, tscale,dtstage;
+  int indexfinalstep,floor,pf, tscale,dtstage;
   FTYPE valueinit;
   int dir,interpi,enodebugi;
   int dimen;
@@ -407,8 +407,8 @@ void set_arrays_multidimen()
   FULLLOOP  GLOBALMACP0A0(pflagfailorig,i,j,k) = NANPFLAG;
 
 #if(DODEBUG)
-  GLOBALPOINT(failfloorcount) = (CTYPE PTRMACP0A2(failfloorcount,N1M,N2M,N3M,NUMTSCALES,NUMFAILFLOORFLAGS)) (&(BASEMACP0A2(failfloorcount,N1BND,N2BND,N3BND,0,0)));  //SASMARK: added another [0] on the right -- was a memory leak? atch
-  FULLLOOP  TSCALELOOP(tscale) FLOORLOOP(floor) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,floor)=valueinit;
+  GLOBALPOINT(failfloorcount) = (CTYPE PTRMACP0A3(failfloorcount,N1M,N2M,N3M,2,NUMTSCALES,NUMFAILFLOORFLAGS)) (&(BASEMACP0A3(failfloorcount,N1BND,N2BND,N3BND,0,0,0)));
+  FULLLOOP  FAILFLOORLOOP(indexfinalstep,tscale,floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor)=valueinit;
 #endif
 
 #if(DOFLOORDIAG)

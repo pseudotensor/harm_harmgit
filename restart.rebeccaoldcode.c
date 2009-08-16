@@ -314,7 +314,7 @@ int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns,
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fread(&fladdreg_tot[enerregion][pl],sizeof(FTYPE),1,headerptr);
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fread(&sourceaddreg_tot[enerregion][pl],sizeof(FTYPE),1,headerptr);
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fread(&Ureg_init_tot[enerregion][pl],sizeof(FTYPE),1,headerptr);
-    TSCALELOOP(tscale) FLOORLOOP(floor) fread(&failfloorcountlocal_tot[tscale][floor],sizeof(CTYPE),1,headerptr);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fread(&failfloorcountlocal_tot[0][tscale][floor],sizeof(CTYPE),1,headerptr); // keep old style with finalstep==0
     // end new June 6,2003
 
     //    if(DODISS&&0) ENERREGIONLOOP(enerregion) fread(&dissreg_tot[enerregion],sizeof(FTYPE),1,headerptr);
@@ -361,9 +361,9 @@ int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns,
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fscanf(headerptr,HEADEROLDONEIN,&sourceaddreg_tot[enerregion][pl]);
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fscanf(headerptr,HEADEROLDONEIN,&Ureg_init_tot[enerregion][pl]);
 #if(COUNTTYPE==LONGLONGINTTYPE)
-    TSCALELOOP(tscale) FLOORLOOP(floor) fscanf(headerptr,"%lld",&failfloorcountlocal_tot[tscale][floor]);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fscanf(headerptr,"%lld",&failfloorcountlocal_tot[0][tscale][floor]);
 #elif(COUNTTYPE==DOUBLETYPE)
-    TSCALELOOP(tscale) FLOORLOOP(floor) fscanf(headerptr,"%lf",&failfloorcountlocal_tot[tscale][floor]);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fscanf(headerptr,"%lf",&failfloorcountlocal_tot[0][tscale][floor]);
 #endif
     // end new June 6,2003
     
@@ -428,7 +428,7 @@ int restart_read_defs_old(void)
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
-    TSCALELOOP(tscale) FLOORLOOP(floor) failfloorcountlocal[tscale][floor]=failfloorcountlocal_tot[tscale][floor];
+    TSCALELOOP(tscale) FLOORLOOP(floor) failfloorcountlocal[0][tscale][floor]=failfloorcountlocal_tot[0][tscale][floor];
 
 
     //    if(DODISS&&0) ENERREGIONLOOP(enerregion) dissreg[enerregion][0]=dissreg_tot[enerregion][0];
@@ -671,7 +671,7 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fwrite(&sourceaddreg_tot[enerregion][pl],sizeof(FTYPE),1,headerptr);
     ENERREGIONLOOP(enerregion) PDUMPLOOP(pliter,pl) fwrite(&Ureg_init_tot[enerregion][pl],sizeof(FTYPE),1,headerptr);
 
-    TSCALELOOP(tscale) FLOORLOOP(floor) fwrite(&failfloorcountlocal_tot[tscale][floor],sizeof(CTYPE),1,headerptr);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fwrite(&failfloorcountlocal_tot[0][tscale][floor],sizeof(CTYPE),1,headerptr);
     // end new June 6,2003
 
     //    if(DODISS&&0) ENERREGIONLOOP(enerregion) fwrite(&dissreg_tot[enerregion][0],sizeof(FTYPE),1,headerptr);
@@ -738,9 +738,9 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
 
 
 #if(COUNTTYPE==LONGLONGINTTYPE)
-    TSCALELOOP(tscale) FLOORLOOP(floor) fprintf(headerptr,"%lld ",failfloorcountlocal_tot[tscale][floor]);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fprintf(headerptr,"%lld ",failfloorcountlocal_tot[0][tscale][floor]);
 #elif(COUNTTYPE==DOUBLETYPE)
-    TSCALELOOP(tscale) FLOORLOOP(floor) fprintf(headerptr,"%21.15g ",failfloorcountlocal_tot[tscale][floor]);
+    TSCALELOOP(tscale) FLOORLOOP(floor) fprintf(headerptr,"%21.15g ",failfloorcountlocal_tot[0][tscale][floor]);
 #endif
 
     // 309 + 4*9 = 345

@@ -130,8 +130,8 @@ FTYPE defcon;
 // don't track this separately in other regions except global region
 SFTYPE frdot[N1][NPR];
 SFTYPE pdottermsjet2[COMPDIM*2][NUMFLUXTERMS][NPR];
-CTYPE failfloorcountlocal[NUMTSCALES][NUMFAILFLOORFLAGS]; // don't track this separately in jet
-CTYPE failfloorcountlocal_tot[NUMTSCALES][NUMFAILFLOORFLAGS]; // don't track this separately in jet
+CTYPE failfloorcountlocal[2][NUMTSCALES][NUMFAILFLOORFLAGS]; // don't track this separately in jet
+CTYPE failfloorcountlocal_tot[2][NUMTSCALES][NUMFAILFLOORFLAGS]; // don't track this separately in jet
 
 // general stuff for ener.out file for regions to completely track, including terms within flux
 int dothisenerreg[NUMENERREGIONS];

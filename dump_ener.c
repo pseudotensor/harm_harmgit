@@ -37,7 +37,7 @@ int dump_ener(int doener, int dordump, int call_code)
 
 
   char dfnam[MAXFILENAME], ifnam[MAXFILENAME];
-  int i, j, k, pl, pliter, l, dir,sc,fl,floor,tscale;
+  int i, j, k, pl, pliter, l, dir,sc,fl,indexfinalstep,floor,tscale;
   int dissloop;
   //  FILE *imagecnt_file, *dumpcnt_file,*avgcnt_file,*debugcnt_file,*lumvsrcnt_file,*dissvsrcnt_file;
 
@@ -296,8 +296,8 @@ int dump_ener(int doener, int dordump, int call_code)
 	// debug
 	if(DODEBUG){
 	  //TSCALELOOP(tscale)
-	  // below is special integratel and for CONSTYPE performs integration over GLOBALMACP0A2(failfloorcount,i,j,k,tscale,pl) for each enerregion
-	  if(integratel(NUMTSCALES*NUMFAILFLOORFLAGS,&failfloorcountlocal[0][0],&failfloorcountlocal_tot[0][0],CONSTYPE,enerregion)>=1) return(1);
+	  // below is special integratel and for CONSTYPE performs integration over GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,pl) for each enerregion
+	  if(integratel(2*NUMTSCALES*NUMFAILFLOORFLAGS,&failfloorcountlocal[0][0][0],&failfloorcountlocal_tot[0][0][0],CONSTYPE,enerregion)>=1) return(1);
 	}
       }
       trifprintf("AI%d",enerregion);
@@ -514,11 +514,13 @@ int dump_ener(int doener, int dordump, int call_code)
 	  myfprintf(debug_file,"%d %d %d ",waveglobaldti[2],waveglobaldtj[2],waveglobaldtk[2]);
 	  myfprintf(debug_file,"%d %d %d ",waveglobaldti[3],waveglobaldtj[3],waveglobaldtk[3]);
 	  myfprintf(debug_file,"%d %d ",horizoni,horizoncpupos1);
+	  FAILFLOORLOOP(indexfinalstep,tscale,floor){
 #if(COUNTTYPE==LONGLONGINTTYPE)
-	    TSCALELOOP(tscale) FLOORLOOP(floor) myfprintf(debug_file, "%lld ", failfloorcountlocal_tot[tscale][floor]);
+	    myfprintf(debug_file, "%lld ", failfloorcountlocal_tot[indexfinalstep][tscale][floor]);
 #elif(COUNTTYPE==DOUBLETYPE)
-	    TSCALELOOP(tscale) FLOORLOOP(floor) myfprintf(debug_file, "%21.15g ", failfloorcountlocal_tot[tscale][floor]);
+	    myfprintf(debug_file, "%21.15g ", failfloorcountlocal_tot[indexfinalstep][tscale][floor]);
 #endif
+	  }
 	}
       }
 
@@ -961,8 +963,8 @@ int counttotal(int enerregion, CTYPE *vars, int num)
   ZLOOP { // diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
     if(WITHINENERREGION(enerpos,i,j,k) ){
       for(variter=0;variter<num;variter++){
-	// looping over [0][variter] is equivalent to original TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
-	vars[variter] += GLOBALMACP0A2(failfloorcount,i,j,k,0,variter) ;
+	// looping over [0][variter] is equivalent to original FINALSTEPLOOP TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
+	vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
       }
     }
   }

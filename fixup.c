@@ -248,8 +248,18 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
       dualfprintf(fail_file,"In diag_fixup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       myexit(24683463);
     }
-    TSCALELOOP(tscale) GLOBALMACP0A2(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,tscale,whocalled)++;
+
+    int indexfinalstep;
+    if(finalstep) indexfinalstep=1;
+    else indexfinalstep=0;
+    TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+    if(finalstep){
+      // iterate finalstep version
+      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+    }
   }
+
+
 
 
 
@@ -263,13 +273,133 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
   /////////////////////////////////////////
 
   if(finalstep > 0){
-    ENERREGIONLOOP(enerregion){ // could be designed more efficiently, but not called too often
+
+
+    ///////////
+    //
+    // determine if within correctable region
+    //
+    ///////////
+    if( DOENOFLUX != NOENOFLUX ) {
+      is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
+    }
+    else{
+      is_within_correctable_region=1; // assume diag_fixup() only called where ok to do change to ucons!
+    }
+
+
+    ///////////
+    //
+    // determine if should do correction to ucons
+    // only correct once -- should really put correction somewhere else.
+    //
+    ///////////
+    docorrectuconslocal=docorrectucons  && is_within_correctable_region;
+
+
+    ////////////////////////
+    //      
+    // Get Ui and Uf.  Don't do this inside enerregion because no point since assume diag_fixup() called in limited regions of i,j,k anyways.
+    //
+    // only account if within active zones for that region
+    //
+    // Only valid if not higher order method or if MERGED method where conserved (except field) are at points as also the primitives are
+    //
+    ////////////////////////
+
+    /////////////////////////
+    // before any changes
+    failreturn=get_state(pr0,ptrgeom,&q);
+    if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
+    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Ui);
+    if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
+	
+    // after any changes
+    failreturn=get_state(pr,ptrgeom,&q);
+    if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
+    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Uf);
+    if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
+
+
+    /////////////
+    //
+    // Get deltaUavg[] and also modify ucons if required and should
+    //
+    /////////////
+
+    if(DOENOFLUX != NOENOFLUX) {  //SASMARKx: adjust the conserved quantity to correspond to the adjusted primitive quanitities
+      // Correction to conserved quantities not exactly accurate because using point values where should use averaged values
+      // notice that geometry comes after subtractions/additions of EOMs
+      UtoU(UDIAG,UEVOLVE,ptrgeom,Ui,Uprefixup);  // convert from UDIAG -> UEVOLVE
+      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,Upostfixup); // convert from UDIAG -> UEVOLVE
+	  
+      PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
+	  
+      if(docorrectuconslocal){
+	// correct ucons if requested
+	//adjust the averaged conserved quantity by the same amt. as the point conserved quantity
+	PALLLOOP(pl) ucons[pl] += Upostfixup[pl] - Uprefixup[pl];  
+
+	// old code: UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype (jon's comment)
+	// the above line actually converts fixed up U from diagnostic form of U (with gdet) 
+	// to evolution form of U (maybe withnogdet) and replaces the avg. conserved quantity (ADT)
+      }
+
+    }
+    else if(0){
+
+      // this method doesn't work:
+      UtoU(UEVOLVE,UDIAG,ptrgeom,ucons,Uiavg); // convert from UNOTHING->returntype
+
+      if(docorrectuconslocal){
+	// notice that geometry comes after subtractions/additions of EOMs
+	UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype
+      }
+	  
+      PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Uiavg[pl];
+    }
+    else{
+      // original HARM method
+      // don't modify ucons
+
+      PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
+    }
+
+
+    ///////////////////
+    //
+    // get correction
+    //
+    //////////////////
+    PALLLOOP(pl){
+	    
+      // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+      // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+      dUincell[pl]=dVF * deltaUavg[pl];
+
+      if(DOFLOORDIAG){
+	// only store this diagnostic once (not for each enerregion)
+	// Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
+	// Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
+	GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
+      }
+
+    }// end over pl's
+
+
+
+
+    //////////////
+    //
+    // Loop over ENERREGIONs
+    //
+    //////////////
+    ENERREGIONLOOP(enerregion){
 
       // setup pointers to enerregion diagnostics
       enerpos=enerposreg[enerregion];
       fladd=fladdreg[enerregion];
       fladdterms=fladdtermsreg[enerregion];
-
 
 
       ///////////
@@ -279,130 +409,31 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
       ///////////
       is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
-      ///////////
-      //
-      // determine if within correctable region
-      //
-      ///////////
-      if( DOENOFLUX != NOENOFLUX ) {
-	is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
-      }
-      else{
-	is_within_correctable_region=is_within_diagnostic_region;
-      }
 
-      ///////////
+      /////////////////////////
       //
-      // determine if should do correction to ucons
-      // only correct once -- should really put correction somewhere else.
-      //
-      ///////////
-      docorrectuconslocal=docorrectucons && enerregion==GLOBALENERREGION && is_within_correctable_region;
-
-
-
-      ////////////////////////
-      //      
-      // Get Ui and Uf
-      // only account if within active zones for that region
-      //
-      // Only valid if not higher order method or if MERGED method where conserved (except field) are at points as also the primitives are
+      // diagnostics (both for enerregion and single-region types)
       //
       /////////////////////////
-      if(is_within_diagnostic_region || is_within_correctable_region){
-	// before any changes
-	failreturn=get_state(pr0,ptrgeom,&q);
-	if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-	failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Ui);
-	if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
-	
-	// after any changes
-	failreturn=get_state(pr,ptrgeom,&q);
-	if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-	failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Uf);
-	if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
+      if(is_within_diagnostic_region){
 
-
-
-
-	/////////////
-	//
-	// Get deltaUavg[] and also modify ucons if required and should
-	//
-	/////////////
-
-	if(DOENOFLUX != NOENOFLUX) {  //SASMARKx: adjust the conserved quantity to correspond to the adjusted primitive quanitities
-	  // Correction to conserved quantities not exactly accurate because using point values where should use averaged values
-	  // notice that geometry comes after subtractions/additions of EOMs
-	  UtoU(UDIAG,UEVOLVE,ptrgeom,Ui,Uprefixup);  // convert from UDIAG -> UEVOLVE
-	  UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,Upostfixup); // convert from UDIAG -> UEVOLVE
-	  
-	  PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
-	  
-	  if(docorrectuconslocal){
-	    // correct ucons if requested
-	    //adjust the averaged conserved quantity by the same amt. as the point conserved quantity
-	    PALLLOOP(pl) ucons[pl] += Upostfixup[pl] - Uprefixup[pl];  
-
-	    // old code: UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype (jon's comment)
-	    // the above line actually converts fixed up U from diagnostic form of U (with gdet) 
-	    // to evolution form of U (maybe withnogdet) and replaces the avg. conserved quantity (ADT)
-	  }
-
-	}
-	else if(0){
-
-	  // this method doesn't work:
-	  UtoU(UEVOLVE,UDIAG,ptrgeom,ucons,Uiavg); // convert from UNOTHING->returntype
-
-	  if(docorrectuconslocal){
-	    // notice that geometry comes after subtractions/additions of EOMs
-	    UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype
-	  }
-	  
-	  PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Uiavg[pl];
-	}
-	else{
-	  // original HARM method
-	  // don't modify ucons
-
-	  PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
-	}
-      
-
-
-
-	/////////////////////////
-	//
-	// diagnostics (both for enerregion and single-region types)
-	//
-	/////////////////////////
-	if(is_within_diagnostic_region){
-
-	  PALLLOOP(pl){
+	PALLLOOP(pl){
 	    
-	    // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
-	    // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
-	    dUincell[pl]=dVF * deltaUavg[pl];
+	  // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+	  // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+	  dUincell[pl]=dVF * deltaUavg[pl];
 
-	    fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
-	    fladd[pl] += dUincell[pl];
+	  fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
+	  fladd[pl] += dUincell[pl];
 	    
-	    if(DOFLOORDIAG && enerregion==GLOBALENERREGION){
-	      // only store this diagnostic once (not for each enerregion)
-	      // Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
-	      // Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
-	      GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
-	    }
 
-	  }// end over pl's
-	}// end if within diagnostic region
+	}// end over pl's
+      }// end if within diagnostic region
 
-
-
-      }// end if within diagnostic or correctable region
     }// end over enerregions
+
   }// end if finalstep>0
+
 
 
   return(0);
@@ -424,12 +455,61 @@ int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, in
 
   // count every time corrects, not just on conserved quantity tracking time
   if(DODEBUG){
-    TSCALELOOP(tscale) GLOBALMACP0A2(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,tscale,whocalled)++;
+    int indexfinalstep;
+    if(finalstep) indexfinalstep=1;
+    else indexfinalstep=0;
+    TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+    if(finalstep){
+      // iterate finalstep version
+      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+    }
   }
+
+
 
 
   if(finalstep>0){ // only account if on full timestep (assume only called if finalstep==1
 
+
+    ///////////
+    //
+    // First get correction (don't do inside enerregion loop since would be overly expensive and assume will need correction for at least one enerregion)
+    //
+    ///////////
+
+    ///////////
+    //
+    // Change ucons
+    //
+    ///////////
+    if(DOENOFLUX != NOENOFLUX){ // JONMARK
+      // notice that geometry comes after subtractions/additions of EOMs
+      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype
+    }
+
+
+    ////////////////////////
+    //
+    // compute dUincell[] and diagnostics
+    //
+    ////////////////////////
+    PALLLOOP(pl){
+
+      dUincell[pl]=dVF * (Uf[pl]-Ui[pl]);
+
+      if(DOFLOORDIAG && enerregion==GLOBALENERREGION){
+	GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
+      }
+
+    }// end over pl's
+
+
+
+    ////////////////////
+    //
+    // Loop over ENERREGIONs
+    //
+    ////////////////////
     ENERREGIONLOOP(enerregion){ // could be designed more efficiently, but not called too often
 
       ///////////
@@ -448,14 +528,6 @@ int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, in
       ///////////
       if(WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k)){
 
-	if(DOENOFLUX != NOENOFLUX){ // JONMARK
-	  if(enerregion==GLOBALENERREGION){// only correct once -- ucons[] is not a per-enerregion quantity
-	    // notice that geometry comes after subtractions/additions of EOMs
-	    UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UNOTHING->returntype
-	  }
-	}
-
-
 	////////////////////////
 	//
 	// diagnostics
@@ -463,15 +535,8 @@ int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, in
 	////////////////////////
 	PALLLOOP(pl){
 
-	  dUincell[pl]=dVF * (Uf[pl]-Ui[pl]);
-
 	  fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
 	  fladd[pl] += dUincell[pl];
-
-	  if(DOFLOORDIAG && enerregion==GLOBALENERREGION){
-	    GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
-	  }
-
 
 	}
       }
@@ -480,7 +545,6 @@ int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, in
 
 
 
-  //  fprintf(stderr,"after diag_fixup\n"); fflush(stderr);
 
   return(0);
 }
@@ -1693,7 +1757,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     MACP0A1(lpflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDUTOPRIM;
 
 
-    // now adjust uf or ucum so agrees
+    // now adjust uf or ucum so agrees [already done in diag_fixup() but only if final step.  This allows one to do it on any step in case want to control behavior of conserved quantities or primitive quantities used to create fluxes.
     if(ADJUSTCONSERVEDQUANTITY&&docorrectucons){
 
       if((ADJUSTCONSERVEDQUANTITY==1)&&(finalstep)) doadjustcons=1;
@@ -3416,6 +3480,7 @@ void diag_eosfaillookup(int i, int j, int k)
       dualfprintf(fail_file,"In diag_eosfaillookup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,i,j,k);
       myexit(24683463);
     }
-    TSCALELOOP(tscale) GLOBALMACP0A2(failfloorcount,i,j,k,tscale,whocalled)++;
+    int indexfinalstep;
+    FINALSTEPLOOP(indexfinalstep) TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
   }
 }

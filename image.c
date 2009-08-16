@@ -197,8 +197,8 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
       else if(vartype==2){ // failure quantity (no diff from below right now -- could zoom in on single failure regions)
 	if(whichpl<NUMFAILFLOORFLAGS){
 	  floor=whichpl;
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A2(failfloorcount,i,j,k,IMAGETS,floor);
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A2(failfloorcount,i,j,k,IMAGETS,floor)+1);
+	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // always finalstep==0
+	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // always finalstep==0
 	}
       }
     }
@@ -230,8 +230,8 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
       else if(vartype==2){ // failure quantity
 	if(whichpl<NUMFAILFLOORFLAGS){
 	  floor=whichpl;
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A2(failfloorcount,i,j,k,IMAGETS,floor);
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A2(failfloorcount,i,j,k,IMAGETS,floor)+1);
+	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // finalstep==0
+	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // finalstep==0
 	}
       }
     }

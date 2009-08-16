@@ -641,7 +641,7 @@ extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numv
 {
 
   if(DODEBUG){
-    *numcolumns=NUMFAILFLOORFLAGS*NUMTSCALES;
+    *numcolumns=2*NUMFAILFLOORFLAGS*NUMTSCALES;
   }
   else *numcolumns=0;
 
@@ -653,7 +653,7 @@ extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numv
 int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   // could also make everything FTYPE and convert like for normal i,j dump file
-  myset(datatype,GLOBALMACP0A1(failfloorcount,i,j,k,0),0,NUMTSCALES*NUMFAILFLOORFLAGS,writebuf);
+  myset(datatype,GLOBALMAC(failfloorcount,i,j,k),0,2*NUMTSCALES*NUMFAILFLOORFLAGS,writebuf);
     
   return(0);
 }
