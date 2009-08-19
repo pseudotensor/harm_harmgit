@@ -196,8 +196,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //transverse resolution fraction devoted to different components
     //(sum should be <1)
-    fracdisk = 0.15;
-    fracjet = 0.2;
+    fracdisk = 0.2;
+    fracjet = 0.5;
 
     jetnu = 0.75;  //the nu-parameter that determines jet shape
 
@@ -205,11 +205,11 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //if rsjet = 0, then no modification
     //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
     //                which makes the timestep larger
-    rsjet = 0.6; 
+    rsjet = 0.7; 
 
     //distance at which theta-resolution is exactly uniform in jet;
     //otherwise, near-uniform near jet axis but less resolution further from it
-    r0jet = 12;    
+    r0jet = 4;    
 
     //distance at which disk part of the grid becomes monopolar
     //the smaller r0mono, the smaller the thickness of the disk 
@@ -2258,15 +2258,8 @@ FTYPE setRin(int ihor)
     }
   }
   else if(defcoord == SJETCOORDS){
-    // see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
-    if(npow==1.0){
-      ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
-    }
-    else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
-    }
+    dualfprintf( fail_file, "setRin(): not implemented for SJETCOORDS\n" );
+    myexit(1);
   }
   else if(defcoord == JET6COORDS){
     // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
