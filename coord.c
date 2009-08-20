@@ -2315,11 +2315,10 @@ FTYPE setRin(int ihor)
     myexit(1);
     return(-1);
   }
-  else{
-    dualfprintf(fail_file,"Shouldn't reach end of setRin: defcoord=%d\n",defcoord);
-    myexit(1);
-    return(-1);
-  }
+
+  dualfprintf(fail_file,"Shouldn't reach end of setRin: defcoord=%d\n",defcoord);
+  myexit(1);
+  return(-1);
 
 }
 
