@@ -22,6 +22,7 @@ static FTYPE rhodisk;
 
 static FTYPE nz_func(FTYPE R) ;
 
+static int read_data(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
 int prepre_init_specific_init(void)
@@ -109,6 +110,7 @@ int init_consts(void)
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define GRBJET 1
 #define KEPDISK 2
+#define THINDISKJET 3
 
 // For blandford problem also need to set:
 // 0) WHICHPROBLEM 2
@@ -177,6 +179,7 @@ Questions for Roger:
 */
 
 
+//#define WHICHPROBLEM THINDISKJET // choice
 #define WHICHPROBLEM NORMALTORUS // choice
 
 
@@ -187,6 +190,8 @@ int init_defcoord(void)
   // define coordinate type
   //defcoord = 9;
   defcoord = SJETCOORDS;
+#elif(WHICHPROBLEM==THINDISKJET)
+	defcoord = REBECCAGRID;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -206,24 +211,23 @@ int init_grid(void)
  
   Rhor=rhor_calc(0);
 
-  hslope = 0.3;  //sas: use a constant slope as Jon suggests in the comments
+  hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
-
-#if(0)
-  setRin_withchecks(&Rin);
-#elif(1)
-  //set Rin by hand:
-  Rin = 0.8 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-#endif
 
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = 0.3 * Rin;
+	Rin = 0.8 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+	R0 = 0.3 * Rin;
   Rout = 1.e4;
 #elif(WHICHPROBLEM==GRBJET)
-  R0 = -3.0;
+	setRin_withchecks(&Rin);
+	R0 = -3.0;
   Rout = 1E5;
+#elif(WHICHPROBLEM==THINDISKJET)
+	Rin = 0.92 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+	R0 = 0.3;
+	Rout = 50;
 #endif
 
 
@@ -253,7 +257,7 @@ int init_global(void)
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKJET)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -279,7 +283,7 @@ int init_global(void)
 
 
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKJET)
   /* output choices */
   tf = 1e4;
 
@@ -313,6 +317,12 @@ int init_global(void)
 #endif
 
 
+	//cooling: only for thin disk-jet
+#if(WHICHPROBLEM==THINDISKJET)
+	cooling = 3;
+#else
+	cooling = 0;
+#endif
 
   return(0);
 
@@ -348,6 +358,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
+#elif(WHICHPROBLEM==THINDISKJET)
+  //rin = Risco;
+	rin = 6. ;
+	////////////////////////////////////
+	//
+  // read data from Rebecca's file
+	//
+	////////////////////////////////////
+	read_data(prim);
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -378,6 +397,93 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 }
 
 
+int read_data ( FTYPE ( *p ) [NSTORE2][NSTORE3][NPR] )
+{
+	int i,j, k;
+	SFTYPE tabr;
+	SFTYPE tabo;
+	FILE * fpr;
+	FILE * fpo;
+	int ti, tj , tk;
+	int procno;
+	int nscanned1, nscanned2;
+	long lineno, numused;
+	int myk;
+
+
+
+
+#if( USEMPI )
+	for ( procno = 0; procno < numprocs; procno++ )
+	{
+		if ( myid == procno )
+		{
+			trifprintf ( "myid is %d\n",myid );
+#endif
+			//////
+			//
+			//  Open file for reading
+
+			//      fp = fopen( fname, "rb" );
+
+			fpr=fopen ( "./mytest", "r" );
+
+
+
+			if ( NULL != fpr )
+			{
+				lineno = 0;
+				numused = 0;
+
+				while ( ( nscanned1 = fscanf ( fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo ) ) == 5 )
+				{
+					///////
+					//
+					//  Check if within range and if within, save it to the array
+					//  i, j - local grid indices for this processor, ti, tj - global
+
+					// trifprintf("startpos1=%d, startpos2=%d \n", startpos[1], startpos[2]);
+
+					i = ti - 1 - startpos[1];
+					j = tj - 1 - startpos[2];
+					k = tk - 1 - startpos[3];
+
+					if ( i >= INFULL1 && i <= OUTFULL1 &&
+					     j >= INFULL2 && j <= OUTFULL2 && k==0 )
+					{
+
+						for ( myk = INFULL3; myk <= OUTFULL3; myk++ )
+						{
+							p[i][j][myk][RHO] = tabr;
+							p[i][j][myk][U3] = tabo;
+						}
+
+						//trifprintf ( "i=%d, j=%d, myk=%d rho=%lg U3=%lg\n", i, j, myk, tabr, tabo );
+
+						numused++;
+					}
+					lineno++;
+				}
+				// Close file
+				fclose ( fpr );
+				//
+				///////
+			}
+			else
+			{
+				// if null report and fail!
+				dualfprintf ( fail_file,"No Rebecca file 1\n" );
+				myexit ( 246346 );
+			}
+#if(USEMPI)
+		}
+		MPI_Barrier ( MPI_COMM_GRMHD );
+	}
+#endif
+	return ( 0 );
+
+}
+
 
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
@@ -397,13 +503,107 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+	int init_dsandvels_thindiskjet(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==THINDISKJET)
+	return(init_dsandvels_thindiskjet(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
 
+}
+
+// unnormalized density
+int init_dsandvels_thindiskjet(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+{
+  
+	SFTYPE randfact;
+	SFTYPE sth, cth;
+	SFTYPE ur, uh, up, u, mrho;
+	FTYPE X[NDIM],V[NDIM],r,th,R;
+	struct of_geom realgeom,geom;
+  
+  
+	/* for disk interior */
+	SFTYPE l, lnh, expm2chi, up1;
+	SFTYPE DD, AA, SS, thin, sthin, cthin, DDin, AAin, SSin;
+	SFTYPE kappa, hm1;
+	SFTYPE rmax, lfish_calc(SFTYPE rmax);
+	SFTYPE rh;
+	int pl;
+
+
+	coord(i, j,k,  CENT, X);
+	bl_coord(X, V);
+ 
+	r=V[1];
+	th=V[2];
+
+  //  trifprintf("this is i, j, k ,r, th %d, %d, %d , %g, %g\n", i, j, k,r, th);
+  //  fprintf(stderr,"proc: %d : %d %d\n",myid,i,j); fflush(stderr);
+  
+  //  beta=1.e2;
+	beta=100;
+	randfact=0.1;
+  //rin = (1. + h_over_r)*Risco;
+	//rin = 20. ;  //should be set elsewhere
+  
+  
+  
+	/* region outside disk */
+	R = r*sin(th) ;
+  
+  // pr[RHO]=tabrho[i][j][0];
+  //pr[U3]=tabom[i][j][0];   
+
+
+	if(r<rin || pr[0] < 10e-24)
+	{
+		//trifprintf("density still zero r is %g \n", r);
+		pr[RHO]=1E-30;
+    // small density will indicate to atmosphere to change it
+
+		*whichvel=WHICHVEL;
+		*whichcoord=PRIMECOORDS;
+
+
+	}
+
+	else{
+		mrho=pr[0];
+		u = 0.01*(pow(mrho,gam))/(gam - 1.) ;
+    //    u=0;
+		ur = 0. ;
+		uh = 0. ;
+
+    //  up = 1./(pow(r,1.5) + a) ;
+    // solution for 3-vel
+
+
+
+
+    //  p[i][j][UU] = u* (1. + randfact * (ranc(0) - 0.5));
+    //  p[i][j][UU]= u* (1. + randfact * (ranc(0) - 0.5));
+		pr[UU]=u* (1. + randfact * (ranc(0,0) - 0.5));
+
+		pr[U1] = ur ;
+		pr[U2] = uh ;    
+
+    //pr[U3]=1./pow(r, 1.5);
+		trifprintf("r=%lf, rho=%lf, i=%d, j=%d\n", r, mrho, i, j);
+
+		PLOOPBONLY(pl) pr[pl] = pstag[pl] = 0.0;
+
+
+		*whichvel=VEL3;
+		*whichcoord=BLCOORDS;
+
+
+	}
+	return(0);
+ 
 }
 
 
