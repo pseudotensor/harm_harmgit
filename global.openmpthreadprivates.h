@@ -40,7 +40,6 @@
 // OPENMPNOTE: Should figure out way to make the below local to eos functions rahter than global, but this is ok for now
 // OPENMPNOTE: Redid how set EOS functions (oustide parallel regions) so no longer need the below as threadprivate
 // Below were included in "state" and "full" threadprivate before moved outside parallel regions
-//#define OPENMPEOSPRIVATE ptr_pressure_rho0_u,ptr_compute_u_from_entropy,ptr_u_rho0_p,ptr_dpdu_rho0_u,ptr_dpdrho0_rho0_u,ptr_cs2_compute,ptr_compute_dSdrho,ptr_compute_dSdu,ptr_compute_entropy,ptr_pressure_wmrho0,ptr_compute_idwmrho0dp,ptr_compute_idrho0dp,ptr_compute_qdot,ptr_compute_sources_EOS,ptr_compute_allextras,ptr_get_extrasprocessed,ptr_compute_temp,ptr_compute_EOS_parms,ptr_store_EOS_parms,ptr_get_EOS_parms
 
 #define INDEXPARAMETERSNAMES kaziiwhichd,kazjjwhichd,kazkkwhichd,kazllwhichd,kazmmwhichd, \
     kaziiowhichd,kazjjowhichd,kazkkowhichd,kazllowhichd,kazmmowhichd,			\

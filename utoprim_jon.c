@@ -1888,13 +1888,6 @@ static FTYPE Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
   W2 = W*W;
   S = QdotB;
 
-#if(CRAZYDEBUG&&DEBUGINDEX)
-  //  if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
-  if(ifileglobal==0 && jfileglobal==31 && nstep==51 && steppart==2){
-    dualfprintf(fail_file,"Qtsq=%21.15g Bsq=%21.15g D=%21.15g S=%21.15g Wp=%21.15g\n",Qtsq,Bsq,D,S,Wp);
-  }
-#endif
-
   result = -Qtsq*W2 + Wp*(D+W)*(W2 + Bsq*Y) - Y*S*S;
 
   return(result);
@@ -1932,7 +1925,7 @@ static FTYPE dPsqdWp_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdo
 
 // 0 = -E' + E'[Wp] for hot GRMHD (can be used for cold GRMHD too)
 // while this has poles near bad roots, the E\propto Wp for ultra relativistic case, so easy to find root
-static FTYPE Eprime_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
   FTYPE X,X2,W;
@@ -1948,7 +1941,7 @@ static FTYPE Eprime_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
   utsq=utsq_calc(W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
 
 
-  // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
+  // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime_unopt() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
 
   if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
     result=-VERYBIG; // force residual to be large and negative so indicates a problem
@@ -1973,7 +1966,7 @@ static FTYPE Eprime_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
 // It is ok that there exists a term (1-dpdW) since even with ideal gas EOS in non-rel limit (1-dpdWp) still order unity
 // as above, while poles near bad roots, linear dependence makes easier to find roots.
 // OPTMARK: Note that I already tried removing if-else and has no effect (05/20/09)
-static FTYPE dEprimedWp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE dEprimedWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
   FTYPE X,X3,W;
@@ -2127,7 +2120,7 @@ static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
   }
 
   // DEBUG:
-  //  dualfprintf(fail_file,"Sc_Wp: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
+  //  dualfprintf(fail_file,"Sc_Wp_old: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
 
   return(result);
 
@@ -2135,7 +2128,7 @@ static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
 
 // 0 = Wp(-Sc + Sc[Wp]) for entropy GRMHD
 // Noticed that original residual behaves like log(Wp) near the root, so that the derivative shoots too far.  Multiplying by Wp solves that problem.
-static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
   FTYPE W;
@@ -2159,7 +2152,7 @@ static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,
   }
 
   // DEBUG:
-  //  dualfprintf(fail_file,"Sc_Wp: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
+  //  dualfprintf(fail_file,"Sc_Wp_unopt: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
 
   return(result);
 
@@ -2169,7 +2162,7 @@ static FTYPE Sc_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,
 
 
 // dSc/dWp [ Wp ] for entropy GRMHD
-static FTYPE dScdWp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE dScdWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
   FTYPE W;
@@ -2207,6 +2200,14 @@ static FTYPE dScdWp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
   return(result);
 
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -2811,23 +2812,19 @@ static FTYPE res_sq_1d_orig_scn(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,
 
 
 
-
-static void func_Eprime(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+// unoptimized vresion of func_Eprime
+static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW;
   //  FTYPE dv = 1.0e-10;
   const int ltrace = 0;
   FTYPE Wp;
-
+  
 
   Wp = x[0];
 
-  // OPTMARK:
-  // Optimize for any EOS table lookup by computing P(\rho_0,\chi), dP/d\rho_0 and dP/d\chi now.
-  // Otherwise, Eprime_Wp() and dEprimeWp() (as previously coded) repeated these calls and made calls for each EOS term while now can make a pipelined call and obtain all 3 EOS values at once.
-
-  resid[0] = Eprime_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-  jac[0][0] = drdW = dEprimedWp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  resid[0] = Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  jac[0][0] = drdW = dEprimedWp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
   dx[0] = -resid[0]/drdW;
@@ -2842,13 +2839,13 @@ static void func_Eprime(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
 
 
 // res_sq_Eprime() (or any pure residual function) is only called by line searching method
-static FTYPE res_sq_Eprime(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE res_sq_Eprime_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
   FTYPE resid;
 
   Wp = x[0];
-  resid = Eprime_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  resid = Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
   return(  0.5*resid*resid );
 
@@ -2858,6 +2855,188 @@ static FTYPE res_sq_Eprime(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 
 
 
+// get first part of kinetic stuff for func() or resid_sq()
+// for optimized version of func()
+static void get_kinetics_part1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra,  FTYPE *W, FTYPE *X, FTYPE *X2, FTYPE *X3, FTYPE *utsq, FTYPE *gamma, FTYPE *gammasq, FTYPE *rho0, FTYPE *wmrho0)
+{
+
+  /////////////
+  //
+  // compute common quantities
+  //
+  /////////////
+
+
+  *W = Wp+D;
+  *X = Bsq + *W + SMALL;
+  *X2 = (*X)  *(*X);
+  *X3 = (*X2) *(*X);
+
+  *utsq=utsq_calc(*W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
+
+  // get \gamma^2, \gamma, \chi, and \rho_0 (no EOS used):
+  *gammasq=1.0+ (*utsq);
+  *gamma=sqrt(*gammasq);
+  *wmrho0=wmrho0_compute_utsq(Wp, D, *utsq, *gamma, *gammasq);
+  *rho0=D/(*gamma);
+
+
+
+}
+
+// get kinetic stuff for func() or resid_sq()
+// for optimized version of func()
+static void get_kinetics_part2(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra,  FTYPE W, FTYPE X, FTYPE X2, FTYPE X3, FTYPE utsq, FTYPE gamma, FTYPE gammasq, FTYPE rho0, FTYPE wmrho0,FTYPE *dvsq,FTYPE *dwmrho0dW,FTYPE *drho0dW,FTYPE *dwmrho0dvsq,FTYPE *drho0dvsq)
+{
+
+  // get dEprimedWp
+  *dvsq = dvsq_dW(W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // no precision problem -- and no EOS calls inside -- purely kinetic
+  *dwmrho0dW = 1.0/gammasq;
+  *drho0dW = 0.0; // because \rho=D/\gamma and holding utsq fixed
+
+  *dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
+  *drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
+
+
+}
+
+
+
+
+
+// optimized version of func_Eprime()
+// optimized in sense that minimizes extra kinetic calculations AND EOS lookups
+static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+  //  FTYPE dv = 1.0e-10;
+  const int ltrace = 0;
+
+
+  ////////////////
+  //
+  // Get some kinetic quantities
+  //
+  ////////////////
+  FTYPE Wp;
+  FTYPE X,X2,X3,W;
+  FTYPE utsq;
+  FTYPE gamma,gammasq;
+  FTYPE rho0,wmrho0;
+  Wp = x[0];
+  get_kinetics_part1(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra,  &W, &X, &X2, &X3, &utsq, &gamma, &gammasq, &rho0, &wmrho0);
+
+
+  ////////////////
+  //
+  // Now can get thermodynamical quantities and results from them
+  //
+  ////////////////
+  // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
+  FTYPE Eprime,dEprimedWp;
+  if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+    Eprime=-VERYBIG; // force residual to be large and negative so indicates a problem
+    dEprimedWp=0.0; // indicates a problem
+
+    resid[0]=Eprime;
+    jac[0][0]=dEprimedWp;
+    dx[0] = VERYBIG;
+    *f = 0.5*(Eprime*Eprime);
+    *df = -2. * (*f);
+
+  }
+  else{
+    ////////////////
+    //
+    // Now can get pressure and other thermodynamical quantities
+    // Optimize for any EOS table lookup by computing P(\rho_0,\chi), dP/d\rho_0 and dP/d\chi now.
+    // Otherwise, Eprime_Wp() and dEprimeWp() (as previously coded) repeated these calls and made calls for each EOS term while now can make a pipelined call and obtain all 3 EOS values at once.
+    //
+    ////////////////
+    FTYPE pofchi,dpdrho,dpdchi;
+    getall_forinversion(whicheos,EOMGRMHD,CHIDIFF,EOSextra,rho0,wmrho0,&pofchi,&dpdrho,&dpdchi);
+
+    /////////////////
+    //
+    // get Eprime
+    // Note that -E'=Qdotnp
+    //
+    /////////////////
+    Eprime = Qdotnp + Wp - pofchi + 0.5*Bsq + 0.5*(Bsq*Qtsq-QdotBsq)/X2;
+
+
+    if(pofchi!=pofchi || Eprime!=Eprime) Eprime=-VERYBIG; // indicates still problem
+
+    //////////////////
+    //
+    // Get derivative-related kinetics
+    //
+    //////////////////
+    FTYPE dvsq,dwmrho0dW,drho0dW;
+    FTYPE dwmrho0dvsq,drho0dvsq;
+    get_kinetics_part2(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra,  W, X, X2, X3, utsq, gamma, gammasq, rho0, wmrho0, &dvsq,&dwmrho0dW,&drho0dW,&dwmrho0dvsq,&drho0dvsq);
+
+    ////////////////////////
+    //
+    // get mixed kinetic-thermal derivatives
+    //
+    ///////////////////////
+    FTYPE dpdW,dpdvsq,dpdWp;
+    dpdW   = drho0dW   *dpdrho  +     dwmrho0dW *dpdchi; // dP/dW' holding utsq fixed
+    dpdvsq = drho0dvsq *dpdrho  +   dwmrho0dvsq *dpdchi;
+    dpdWp = dpdW  + dpdvsq*dvsq; // dp/dW = dp/dWp [total derivative]
+
+    ////////////////////////
+    //
+    // get dEprimedWp
+    //
+    ///////////////////////
+    dEprimedWp = (1.0 - dpdWp) - (Bsq*Qtsq - QdotBsq)/X3;
+
+
+    // check for nan
+    if(dvsq!=dvsq || dpdW!=dpdW || dpdvsq!=dpdvsq || dpdWp!=dpdWp || dEprimedWp!=dEprimedWp) dEprimedWp=0.0; // indicates still problem
+
+
+    ////////////////////////
+    //
+    // residual, jacobian, and step
+    //
+    ///////////////////////
+    resid[0]=Eprime;
+    jac[0][0]=dEprimedWp;
+    dx[0] = -Eprime/dEprimedWp;
+    *f = 0.5*(Eprime*Eprime);
+    *df = -2. * (*f);
+
+  }
+
+
+
+
+
+}
+
+
+// res_sq_Eprime() (or any pure residual function) is only called by line searching method
+static FTYPE res_sq_Eprime_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+  FTYPE jac[NEWT_DIM][NEWT_DIM]; // dummy variable, return value not used
+  FTYPE f,df; // dummy, return value not used
+  int n=1; // true for this residual
+  FTYPE resid[NEWT_DIM];
+
+  // just call func_Eprime_opt() since more optimized than before -- could optimize further but don't often or at all use this function
+  func_Eprime_opt(x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
+
+  return(  0.5*resid[0]*resid[0] );
+
+
+}
+
+
+
+
+// not that this is well-optimized.  Psq_Wp() and dPsqdWp_Wp() don't use subfunctions like "_unopt" versions for hot and entropy inversions.  Also no EOS functions to call.
 static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW,Wp;
@@ -2895,7 +3074,7 @@ static FTYPE res_sq_Psq(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
 
 
-static void func_Sc(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Sc_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW;
   //  FTYPE dv = 1.0e-10;
@@ -2905,8 +3084,8 @@ static void func_Sc(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM]
 
   Wp = x[0];
 
-  resid[0] = Sc_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-  jac[0][0] = drdW = dScdWp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  resid[0] = Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  jac[0][0] = drdW = dScdWp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
   dx[0] = -resid[0]/drdW;
@@ -2920,15 +3099,144 @@ static void func_Sc(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM]
 }
 
 
-static FTYPE res_sq_Sc(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static FTYPE res_sq_Sc_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
   FTYPE resid;
 
   Wp = x[0];
-  resid = Sc_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  resid = Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
   return(  0.5*resid*resid );
+
+
+}
+
+
+// optimized version of func_Sc()
+// very similar to optimized version of func_Eprime() but different "getall_forinversion()" call and different residual and derivative
+static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+
+
+  ////////////////
+  //
+  // Get some kinetic quantities
+  //
+  ////////////////
+  FTYPE Wp;
+  FTYPE X,X2,X3,W;
+  FTYPE utsq;
+  FTYPE gamma,gammasq;
+  FTYPE rho0,wmrho0;
+  Wp = x[0];
+  get_kinetics_part1(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra,  &W, &X, &X2, &X3, &utsq, &gamma, &gammasq, &rho0, &wmrho0);
+
+
+  ////////////////
+  //
+  // Now can get thermodynamical quantities and results from them
+  //
+  ////////////////
+  // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
+  FTYPE Scprime,dScprimedWp;
+  if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+    Scprime=-VERYBIG; // force residual to be large and negative so indicates a problem
+    dScprimedWp=0.0; // indicates a problem
+
+    resid[0]=Scprime;
+    jac[0][0]=dScprimedWp;
+    dx[0] = -Scprime/dScprimedWp;
+    *f = 0.5*(Scprime*Scprime);
+    *df = -2. * (*f);
+
+  }
+  else{
+    ////////////////
+    //
+    // Now can get pressure and other thermodynamical quantities
+    // Optimize for any EOS table lookup by computing P(\rho_0,\chi), dP/d\rho_0 and dP/d\chi now.
+    // Otherwise, Eprime_Wp() and dEprimeWp() (as previously coded) repeated these calls and made calls for each EOS term while now can make a pipelined call and obtain all 3 EOS values at once.
+    //
+    ////////////////
+    FTYPE Ssofchi,dSsdrho,dSsdchi;
+    getall_forinversion(whicheos,EOMENTROPYGRMHD,CHIDIFF,EOSextra,rho0,wmrho0,&Ssofchi,&dSsdrho,&dSsdchi);
+
+    /////////////////
+    //
+    // get Scprime
+    //
+    /////////////////
+    Scprime = Wp*(-Sc + D*Ssofchi);
+
+
+    if(Ssofchi!=Ssofchi || Scprime!=Scprime) Scprime=-VERYBIG; // indicates still problem
+
+    //////////////////
+    //
+    // Get derivative-related kinetics
+    //
+    //////////////////
+    FTYPE dvsq,dwmrho0dW,drho0dW;
+    FTYPE dwmrho0dvsq,drho0dvsq;
+    get_kinetics_part2(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra,  W, X, X2, X3, utsq, gamma, gammasq, rho0, wmrho0, &dvsq,&dwmrho0dW,&drho0dW,&dwmrho0dvsq,&drho0dvsq);
+
+    ////////////////////////
+    //
+    // get mixed kinetic-thermal derivatives
+    //
+    ///////////////////////
+    FTYPE dSsdW,dSsdvsq,dSsdWp;
+    dSsdW =   drho0dW   *dSsdrho +   dwmrho0dW   *dSsdchi; // dSs/dW' holding utsq fixed
+    dSsdvsq = drho0dvsq *dSsdrho +   dwmrho0dvsq *dSsdchi;
+    dSsdWp = dSsdW  + dSsdvsq*dvsq; // dSs/dW = dSs/dWp [total derivative]
+
+    ////////////////////////
+    //
+    // get dScprimeWp
+    //
+    ///////////////////////
+    // old result for old residual
+    ////   dScprimedWp = D*dSsdWp;
+    
+    // new result for new residual
+    dScprimedWp = -Sc + D*(dSsdWp*Wp + Ssofchi);
+
+    // check for nan
+    if(dvsq!=dvsq || dSsdW!=dSsdW || dSsdvsq!=dSsdvsq || dSsdWp!=dSsdWp || dScprimedWp!=dScprimedWp) dScprimedWp=0.0; // indicates still problem
+
+
+    ////////////////////////
+    //
+    // residual, jacobian, and step
+    //
+    ///////////////////////
+    resid[0]=Scprime;
+    jac[0][0]=dScprimedWp;
+    dx[0] = -Scprime/dScprimedWp;
+    *f = 0.5*(Scprime*Scprime);
+    *df = -2. * (*f);
+
+  }
+
+
+
+}
+
+
+// optimized version of res_sq_Sc()
+// just calls func_Sc_opt() for now since more optimized than original res_sq_Sc() still.  Could optimize further, but don't require only residual unless doing line searching that don't currently do.
+static FTYPE res_sq_Sc_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+  FTYPE jac[NEWT_DIM][NEWT_DIM]; // dummy variable, return value not used
+  FTYPE f,df; // dummy, return value not used
+  int n=1; // true for this residual
+  FTYPE resid[NEWT_DIM];
+
+  // just call func_Eprime_opt() since more optimized than before -- could optimize further but don't often or at all use this function
+  func_Sc_opt(x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
+
+  return(  0.5*resid[0]*resid[0] );
 
 
 }
@@ -3294,7 +3602,8 @@ static int find_root_1D_gen_Eprime(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE 
 
   x_1d[0] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Eprime, res_sq_Eprime, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  // Note u sing func_Eprime_opt() and res_sq_Eprime_opt() : optimized versions.
+  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Eprime_opt, res_sq_Eprime_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3360,7 +3669,8 @@ static int find_root_1D_gen_Sc(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xne
 
   x_1d[0] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Sc, res_sq_Sc, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  // Note, using optimized versions of func_Sc() and res_sq_Sc()
+  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Sc_opt, res_sq_Sc_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif

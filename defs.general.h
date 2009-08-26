@@ -345,6 +345,7 @@ void (*ptr_compute_EOS_parms_full[NUMEOSS])(FTYPE (*EOSextra)[NSTORE2][NSTORE3][
 void (*ptr_store_EOS_parms[NUMEOSS])(int numparms, FTYPE *EOSextra, FTYPE *parlist);
 void (*ptr_get_EOS_parms[NUMEOSS])(int*numparms, FTYPE *EOSextra, FTYPE *parlist);
 void (*ptr_fix_primitive_eos_scalars[NUMEOSS])(FTYPE *EOSextra, FTYPE *pr);
+void (*ptr_getall_forinversion[NUMEOSS])(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu);
 
 FTYPE SQRTMINNUMREPRESENT;
 

@@ -545,7 +545,8 @@ static FTYPE fudgefracsingle_kazfull(int whichfun, int whichd, FTYPE *EOSextra, 
 
 // returns all 3 quantities for inversion based upon p(\rho_0,\chi) or sspec(\rho_0,\chi)
 // note that no optimization for 5D method based upon p(\rho_0,u), but could set that up.  Would have to add P to dP table for simplicity.
-int get_stuff_forinversion_kazfull(int eomtype, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
+// Note that quant2 must coincide with quantity obtaining.  So far quant2=wmrho0=\chi for whichd=CHIDIFF quantities.
+void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
 {
   FTYPE utot, ugas, unu;
   FTYPE ptot, pgas, pnu;
@@ -561,7 +562,6 @@ int get_stuff_forinversion_kazfull(int eomtype, FTYPE *EOSextra, FTYPE quant1, F
   int badlookups[MAXEOSPIPELINE];
   int iffun[MAXEOSPIPELINE];
   int whichtablesubtype;
-  int whichd;
   int numcols,coli;
 
   int returnfun,returndfunofrho,returndfunofu;
@@ -569,6 +569,17 @@ int get_stuff_forinversion_kazfull(int eomtype, FTYPE *EOSextra, FTYPE quant1, F
   int whichfun;
   int simplefudge;
 
+
+
+  ///////////////
+  //
+  // Quickly return if doing cold or force-free
+  //
+  ///////////////
+  if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE){
+    *fun=*dfunofrho=*dfunofu=0.0;
+    return; // done!
+  }
 
 
   ///////////////
@@ -581,14 +592,14 @@ int get_stuff_forinversion_kazfull(int eomtype, FTYPE *EOSextra, FTYPE quant1, F
     returnfun = PofRHOCHI;
     returndfunofrho = IDRHO0DP;
     returndfunofu = IDCHIDP;
-    whichd=CHIDIFF;
+    //    whichd=CHIDIFF;  // read-in now
   }
   else if(eomtype==EOMENTROPYGRMHD){
     whichtablesubtype=SUBTYPESSPEC;
     returnfun = SSofRHOCHI;
     returndfunofrho = DSSDRHOofRHOCHI;
     returndfunofu = DSSDCHIofRHOCHI;
-    whichd=CHIDIFF;
+    //    whichd=CHIDIFF;  // read-in now
   }
   numcols = numcolintablesubtype[whichtablesubtype];
 
@@ -713,7 +724,12 @@ int get_stuff_forinversion_kazfull(int eomtype, FTYPE *EOSextra, FTYPE quant1, F
   // return whether successful
   //
   ////////////////////////
-  return(failreturn);
+  if(failreturn){
+    *fun=sqrt(-1); // force failure for now
+  }
+
+
+  return;
 
 }
 

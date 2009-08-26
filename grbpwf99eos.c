@@ -187,3 +187,9 @@ void fix_primitive_eos_scalars_grbpwf99(FTYPE *EOSextra, FTYPE *pr)
 {
   return; // do nothing
 }
+
+void getall_forinversion_grbpwf99(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
+{
+  getall_forinversion_idealgas(eomtype,whichd,EOSextra,quant1,quant2,fun,dfunofrho,dfunofu);
+  return;
+}

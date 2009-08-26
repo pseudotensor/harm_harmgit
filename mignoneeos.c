@@ -404,3 +404,42 @@ void fix_primitive_eos_scalars_mignone(FTYPE *EOSextra, FTYPE *pr)
 {
   return; // do nothing
 }
+
+
+// this could be optimized since redundant calculations
+// worry about missed branch predictions?
+void getall_forinversion_mignone(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
+{
+
+  if(eomtype==EOMGRMHD){
+    if(whichd==CHIDIFF){
+      // PofRHOCHI
+      *fun=pressure_wmrho0_mignone(EOSextra, quant1, quant2);
+      *dfunofrho=compute_idrho0dp_mignone(EOSextra, quant1, quant2);
+      *dfunofu=compute_idwmrho0dp_mignone(EOSextra, quant1, quant2);
+    }
+    else if(whichd==UTOTDIFF){
+      *fun=pressure_rho0_u_mignone(EOSextra, quant1, quant2);
+      *dfunofrho=dpdrho0_rho0_u_mignone(EOSextra, quant1, quant2);
+      *dfunofu=dpdu_rho0_u_mignone(EOSextra, quant1, quant2);
+    }
+  }
+  else if(eomtype==EOMENTROPYGRMHD){
+    // NOTE: for \chi version it's specific entropy and for u version it's entropy density
+    if(whichd==CHIDIFF){
+      *fun=compute_specificentropy_wmrho0_mignone(EOSextra, quant1, quant2);
+      *dfunofrho=compute_dspecificSdrho_wmrho0_mignone(EOSextra, quant1, quant2);
+      *dfunofu=compute_dspecificSdwmrho0_wmrho0_mignone(EOSextra, quant1, quant2);
+    }
+    else if(whichd==UTOTDIFF){
+      *fun=compute_entropy_mignone(EOSextra, quant1, quant2);
+      *dfunofrho=compute_dSdrho_mignone(EOSextra, quant1, quant2);
+      *dfunofu=compute_dSdu_mignone(EOSextra, quant1, quant2);
+    }
+  }
+  else if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE){
+    *fun=*dfunofrho=*dfunofu=0.0;
+  }
+
+  return; // done!
+}

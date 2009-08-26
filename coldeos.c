@@ -156,3 +156,12 @@ void fix_primitive_eos_scalars_coldgrmhd(FTYPE *EOSextra, FTYPE *pr)
 {
   return; // do nothing
 }
+
+void getall_forinversion_coldgrmhd(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
+{
+
+  *fun=0.0;
+  *dfunofrho=0.0;
+  *dfunofu=0.0;
+
+}

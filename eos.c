@@ -217,9 +217,10 @@ void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr)
   (*(ptr_fix_primitive_eos_scalars[whicheos]))(EOSextra, pr);
 }
 
-
-
-
+void getall_forinversion(int whicheos, int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
+{
+  return( (*(ptr_getall_forinversion[whicheos]))(eomtype, whichd, EOSextra,quant1,quant2,fun,dfunofrho,dfunofu) );
+}
 
 
 
@@ -319,6 +320,8 @@ int initeos_eomtype(void)
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_idealgas;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_idealgas;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_idealgas;
+  ptr_getall_forinversion[whicheos] = &getall_forinversion_idealgas;
+
 
   //////////////////////////////////////////////////////
   whicheos=MIGNONE;
@@ -346,7 +349,6 @@ int initeos_eomtype(void)
   ptr_compute_allextras[whicheos] = &compute_allextras_mignone;
   ptr_get_extrasprocessed[whicheos] = &get_extrasprocessed_mignone;
 
-
   ptr_compute_temp[whicheos] = &compute_temp_mignone;
       
   ptr_compute_EOS_parms[whicheos] = &compute_EOS_parms_mignone;
@@ -354,6 +356,7 @@ int initeos_eomtype(void)
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_mignone;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_mignone;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_mignone;
+  ptr_getall_forinversion[whicheos] = &getall_forinversion_mignone;
 
   //////////////////////////////////////////////////////
   whicheos=GRBPWF99;
@@ -389,6 +392,8 @@ int initeos_eomtype(void)
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_grbpwf99;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_grbpwf99;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_grbpwf99;
+  ptr_getall_forinversion[whicheos] = &getall_forinversion_grbpwf99;
+
 
   //////////////////////////////////////////////////////
   whicheos=KAZFULL;
@@ -424,6 +429,9 @@ int initeos_eomtype(void)
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_kazfull;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_kazfull;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_kazfull;
+  ptr_getall_forinversion[whicheos] = &getall_forinversion_kazfull;
+
+
 
 #if(ALLOWKAZEOS)
   // initialize repeated qarray's
@@ -471,6 +479,9 @@ int initeos_eomtype(void)
   ptr_store_EOS_parms[whicheos] = &store_EOS_parms_coldgrmhd;
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_coldgrmhd;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_coldgrmhd;
+  ptr_getall_forinversion[whicheos] = &getall_forinversion_coldgrmhd;
+
+
   //////////////////////////////////////////////////////
 
 
