@@ -425,12 +425,16 @@ int initeos_eomtype(void)
   ptr_get_EOS_parms[whicheos] = &get_EOS_parms_kazfull;
   ptr_fix_primitive_eos_scalars[whicheos] = &fix_primitive_eos_scalars_kazfull;
 
+#if(ALLOWKAZEOS)
   // initialize repeated qarray's
-  int qi;
-  for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarray[qi]=-BIG;
-  for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarrayextras[qi]=-BIG;
+  int qi,whichd;
+  for(whichd=0;whichd<NUMEOSDEGENQUANTITIESMEM1;whichd++){
+    for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarray[whichd][qi]=-BIG;
+    kaziiowhichd[whichd]=kazjjowhichd[whichd]=kazkkowhichd[whichd]=kazllowhichd[whichd]=kazmmowhichd[whichd]=INITKAZINDEX;
+  }
+  for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarrayextras[qi]=-BIG; // all same UEOS independent variable, so no need for [whichd] dependence
   doallextrasold=-1;
-  kaziio=kazjjo=kazkko=kazllo=kazmmo=-100;
+#endif
 
 
   //////////////////////////////////////////////////////

@@ -42,8 +42,14 @@
 // Below were included in "state" and "full" threadprivate before moved outside parallel regions
 //#define OPENMPEOSPRIVATE ptr_pressure_rho0_u,ptr_compute_u_from_entropy,ptr_u_rho0_p,ptr_dpdu_rho0_u,ptr_dpdrho0_rho0_u,ptr_cs2_compute,ptr_compute_dSdrho,ptr_compute_dSdu,ptr_compute_entropy,ptr_pressure_wmrho0,ptr_compute_idwmrho0dp,ptr_compute_idrho0dp,ptr_compute_qdot,ptr_compute_sources_EOS,ptr_compute_allextras,ptr_get_extrasprocessed,ptr_compute_temp,ptr_compute_EOS_parms,ptr_store_EOS_parms,ptr_get_EOS_parms
 
+#define INDEXPARAMETERSNAMES kaziiwhichd,kazjjwhichd,kazkkwhichd,kazllwhichd,kazmmwhichd, \
+    kaziiowhichd,kazjjowhichd,kazkkowhichd,kazllowhichd,kazmmowhichd,			\
+    kazstartiiiwhichd,kazstartjjjwhichd,kazstartkkkwhichd,kazstartlllwhichd,kazstartmmmwhichd, \
+    kazendiiiwhichd,kazendjjjwhichd,kazendkkkwhichd,kazendlllwhichd,kazendmmmwhichd,	\
+    kazdiwhichd,kazdjwhichd,kazdkwhichd,kazdlwhichd,kazdmwhichd
+
 // below defined in kazfulleos.c [enabled or disabled below using ALLOWKAZEOS]
-#define OPENMPKAZEOSPRIVATE kazii,kazjj,kazkk,kazll,kazmm,kaziio,kazjjo,kazkko,kazllo,kazmmo,kazstartiii,kazstartjjj,kazstartkkk,kazstartlll,kazstartmmm,kazendiii,kazendjjj,kazendkkk,kazendlll,kazendmmm,kazdi,kazdj,kazdk,kazdl,kazdm,gottable,whichtable,indexarray,qoldarray,qoldarrayextras,resultold,repeatedfun,extrasold,processedold,doallextrasold
+#define OPENMPKAZEOSPRIVATE INDEXPARAMETERSNAMES,indexarray,qoldarray,whichtable,resultold,repeatedfun,qoldarrayextras,extrasold,processedold,doallextrasold
 
 
 

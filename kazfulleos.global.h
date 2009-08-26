@@ -11,8 +11,6 @@
 // 1) New H calculation (MAKE MPI)
 // 3) check additional code that's presently in debug mode
 // 4) check MPI stuff here and for gravity
-// 5) change bounds so loops over bounding vars rather than only up to B3
-// 6) rescale() depends often on final quantity being B3
 
 // whether to allow Kaz EOS table
 #define ALLOWKAZEOS 0 // expensive for OpenMP due to many large globals, so normally disable unless required
@@ -68,11 +66,22 @@
 //
 ///////////////////////////////
 
-// assume degen table is always stored along with corresponding normal table
-#define NUMTBLS 3
-#define FULLTABLE 0
-#define SIMPLETABLE 1
-#define SIMPLEZOOMTABLE 2
+
+
+//////////////
+//
+// here:
+// [independent variables]
+// rhob = rho0 -- rest-mass density in g/cc
+// tk = Temperature in Kelvin
+// hcm = height of medium in cm
+// tdynorye = dynamical time in seconds (assumed NSE time) OR Y_e
+//
+// [dependent variables]
+// p_tot = total pressure in cgs units
+// u_tot = u = internal relativistic comoving energy (no rest-mass) in cgs units
+// s_tot = total entropy density in comoving frame in cgs units
+
 
 
 // 5 true dimensions (rhob,u/p/chi/sden/(tk),tdynorye,tdynorynu,hcm)
@@ -100,47 +109,181 @@
 
 
 
+
+
+
+
+/////////////////////////////
+//
+// Setup input file table names
+//
+/////////////////////////////
+
+
+#define EOSHEADNAME "eosnew.head"
+#define EOSTABLENAME "eosnew.dat"
+#define EOSDEGENTABLENAME "eosdegennew.dat"
+
+#define EOSSIMPLEHEADNAME "eossimplenew.head"
+#define EOSSIMPLETABLENAME "eossimplenew.dat"
+#define EOSDEGENSIMPLETABLENAME "eosdegensimplenew.dat"
+
+#define EOSSIMPLEZOOMHEADNAME "eossimplezoomnew.head"
+#define EOSSIMPLEZOOMTABLENAME "eossimplezoomnew.dat"
+#define EOSDEGENSIMPLEZOOMTABLENAME "eosdegensimplezoomnew.dat"
+
+
+
+
+
+
+
+
+
+////////////////////
+//
+// Setup HARM EOS version of degeneracy table
+//
+///////////////////
+
+
+// rho, tdynorye, tdynorynu, H
+// independents for degen table
+// For accessing degen table N1,N3,N4,N5 (N2 skipped via use of vardegentablearray[]
+#define NUMEOSDEGENINDEPS (NUMINDEPDIMENS-1)
+#define RHOEOSDEGEN 0
+#define YEEOSDEGEN 1
+#define YNUEOSDEGEN 2
+#define HEOSDEGEN 3
+
+// degen offset quantities for independent variables utot,ptot, chi
+// utotoffset,in,out, ptotoffset,in,out, chioffset,in,out, stotoffset,in,out
+#define NUMEOSDEGENQUANTITIESMEM1 (4)
+// these are fixed in order and number from read-in file
+// so can access functional degentable of independent variables by whichindep-1
+// below is also mapped to "whichd" variable
+#define UTOTDIFF (UEOS-1)   // should always resolve to: 0
+#define PTOTDIFF (PEOS-1)   // :1
+#define CHIDIFF  (CHIEOS-1) // :2
+#define STOTDIFF (SEOS-1)   // :3
+
+// fastest indexed quantities in degen table
+#define NUMEOSDEGENQUANTITIESMEM2 (3)
+// table is accessed via: (like) r= R0 + exp(x1[i]), with r ranging from Rin to Rout, then:
+
+#define EOSOFFSET 0 // like R0
+#define EOSIN 1 // like Rin
+#define EOSOUT 2 // like Rout
+#define FIRSTEOSDEGEN EOSOFFSET
+#define LASTEOSDEGEN EOSOUT
+#define FIRSTEOSQUANTITY FIRSTEOSDEGEN // first in list of quantities can grab per whichd
+
+
+
+// for reading-in degen table
+#define NUMEOSDEGENQUANTITIESNOTSTOREDin (NUMEOSDEGENINDEPS*2) // not stored degen quantities
+
+#define NUMEOSDEGENQUANTITIESin (NUMEOSDEGENQUANTITIESMEM1*NUMEOSDEGENQUANTITIESMEM2) // stored degen quantities
+// labels for inputting degen table (should be NUMEOSDEGENQUANTITIESin of them)
+// must have offset's as first 4 in order in order for set_arrays_eostable(), etc. to be correct
+#define UTOTOFFSETin 0
+#define PTOTOFFSETin UTOTOFFSETin+1
+#define CHIOFFSETin  UTOTOFFSETin+2
+#define STOTOFFSETin UTOTOFFSETin+3
+#define UTOTINin NUMEOSDEGENQUANTITIESMEM1
+#define PTOTINin UTOTINin+1
+#define CHIINin  UTOTINin+2
+#define STOTINin UTOTINin+3
+#define UTOTOUTin NUMEOSDEGENQUANTITIESMEM1*2
+#define PTOTOUTin UTOTOUTin+1
+#define CHIOUTin  UTOTOUTin+2
+#define STOTOUTin UTOTOUTin+3
+
+// for seteostable() and kazfulleos.c
+#define ISNOTDEGENTABLE 0
+#define ISDEGENTABLE 1
+
+// below used for table lookup in case want to access degen quantities directly for some reason
+#define NUMEOSDEGENQUANTITIESMEM NUMEOSDEGENQUANTITIESMEM2
+
 ///////////////////////
 //
-// these are fixed in order and number from read-in file
+// Setup INPUT for normal (non-degen) table macro names
+// these are FIXED in order and number from *read-in* file
+//
+////////////////////////
 
-// below used generally in code
-#define PofRHOU 0      // p(rho0,u)
-#define UofRHOP 1      // u(rho0,p)
+#define NUMEOSQUANTITIESNOTSTOREDin (NUMINDEPDIMENS+NUMEOSINDEPS+NUMEOSDEGENQUANTITIESMEM1)
+
+#define PofRHOUin 0      // p(rho0,u)
+#define UofRHOPin 1      // u(rho0,p)
 // below used for simple dissipation entropy-inversion tracking same fluid element as energy-based inversion
-#define UofRHOS 2      // U(rho0,Sden)
+#define UofRHOSin 2      // U(rho0,Sden)
 
 // below used for 5D inversion and sources.c
-#define DPDRHOofRHOU 3 // dpdrho0 |u (rho0,u)
-#define DPDUofRHOU 4   // dp/du |rho0 (rho0,u)
+#define DPDRHOofRHOUin 3 // dpdrho0 |u (rho0,u)
+#define DPDUofRHOUin 4   // dp/du |rho0 (rho0,u)
 
 // below used for wave speeds for Riemann solution's dissipation term
-#define CS2ofRHOU 5    // cs^2(rho0,u)
+#define CS2ofRHOUin 5    // cs^2(rho0,u)
 
 // below used for utoprim.orig.c (dudp_calc.c) entropy inversion
-#define SofRHOU 6      // S(rho0,u)
-#define DSDRHOofRHOU 7 // dS/drho0 |u (rho0,u)
-#define DSDUofRHOU 8   // dS/du |\rho0 (rho0,u)
+#define SofRHOUin 6      // S(rho0,u)
+#define DSDRHOofRHOUin 7 // dS/drho0 |u (rho0,u)
+#define DSDUofRHOUin 8   // dS/du |\rho0 (rho0,u)
 
 // below used for utoprim_jon.c entropy inversion
-#define SSofRHOCHI 9      // specificS(rho0,\chi)
-#define DSSDRHOofRHOCHI 10 // dspecificS/drho0 |\chi (rho0,\chi)
-#define DSSDCHIofRHOCHI 11   // dspecificS/d\chi |\rho0 (rho0,\chi)
+#define SSofRHOCHIin 9      // specificS(rho0,\chi)
+#define DSSDRHOofRHOCHIin 10 // dspecificS/drho0 |\chi (rho0,\chi)
+#define DSSDCHIofRHOCHIin 11   // dspecificS/d\chi |\rho0 (rho0,\chi)
 
 // below used for utoprim_jon.c hot inversion
-#define PofRHOCHI 12    // P(rho0,\chi)  \chi = u+p
-#define IDRHO0DP 13     // 1/(d\rho0/dp) |\chi
-#define IDCHIDP 14      // 1/(d\chi/dp) |\rho0
+#define PofRHOCHIin 12    // P(rho0,\chi)  \chi = u+p
+#define IDRHO0DPin 13     // 1/(d\rho0/dp) |\chi
+#define IDCHIDPin 14      // 1/(d\chi/dp) |\rho0
 
 // below used to define temperature and if <invalidtemperature this indicates not in valid part of table (i.e. interpolation from T->u leads to general u range that is mapped onto fixed u range, so final table bounds original table)
-#define TEMPU 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPP 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPCHI 17 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPS 18 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPUin 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPPin 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPCHIin 17 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPSin 18 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
 
 // last index of quantities above
-#define LASTEOSQUANTITIESBASE TEMPS
+#define LASTEOSQUANTITIESBASEin TEMPSin
 
+// number of base quantities to *store* from table made by eos_extract.m starting from PofRHOU
+#define NUMEOSQUANTITIESBASEin (1+LASTEOSQUANTITIESBASEin) // for memory, so 1+lastindex
+
+// so-called "extras" in eos_extract.m: Those things that didn't require extra processing as independent variables or derivatives -- just interpolated from T -> U only
+// extras:
+
+#define EXTRA1in  LASTEOSQUANTITIESBASEin+1
+#define EXTRA2in  EXTRA1in+1
+#define EXTRA3in  EXTRA1in+2
+#define EXTRA4in  EXTRA1in+3
+#define EXTRA5in  EXTRA1in+4
+#define EXTRA6in  EXTRA1in+5
+#define EXTRA7in  EXTRA1in+6
+#define EXTRA8in  EXTRA1in+7
+#define EXTRA9in  EXTRA1in+8
+#define EXTRA10in EXTRA1in+9
+#define EXTRA11in EXTRA1in+10
+#define EXTRA12in EXTRA1in+11
+#define EXTRA13in EXTRA1in+12
+#define EXTRA14in EXTRA1in+13
+#define EXTRA15in EXTRA1in+14
+#define EXTRA16in EXTRA1in+15
+#define EXTRA17in EXTRA1in+16
+#define EXTRA18in EXTRA1in+17
+#define EXTRA19in EXTRA1in+18
+#define EXTRA20in EXTRA1in+19
+#define EXTRA21in EXTRA1in+20
+#define EXTRA22in EXTRA1in+21
+#define EXTRA23in EXTRA1in+22
+#define EXTRA24in EXTRA1in+23
+
+#define FIRSTEXTRAin EXTRA1in
+#define LASTEXTRAin EXTRA24in
 
 
 // below ending # corresponds to whichrnpmethod
@@ -152,8 +295,6 @@
 // eos_extract always makes 24 + extras = 10 iterators + 14 eosquantities + extras
 // for degen table, eox_extract.m has 9 total
 
-// number of base quantities to *store* from table made by eos_extract.m starting from PofRHOU
-#define NUMEOSQUANTITIESBASE (1+LASTEOSQUANTITIESBASE) // for memory, so 1+lastindex
 
 // for memory optimization, specifiy which datatype
 #define WHICHDATATYPEGENERAL 4
@@ -165,22 +306,141 @@
 
 // for different datatypes have different extra things
 #define MAXNUMDATATYPES 4
-#define NUMEOSQUANTITIESTYPE1 (NUMEOSQUANTITIESBASE + 1)  // (Full EOS, rho,T,H)
-#define NUMEOSQUANTITIESTYPE2 (NUMEOSQUANTITIESBASE + 16) // (non-neutrino EOS, rho,T,Y_e)
-#define NUMEOSQUANTITIESTYPE3 (NUMEOSQUANTITIESBASE + 11) // (Full EOS, rho,T,Y_e,Y_nu but H-dependent)
-#define NUMEOSQUANTITIESTYPE4 (NUMEOSQUANTITIESBASE + 24) // (non-neutrino EOS, rho,T,Y_e,Y_\nu)
+// below used for both "in"put tables and HARM EOS tables
+#define NUMEXTRAEOSQUANTITIESTYPE1 (1)  // (Full EOS, rho,T,H)
+#define NUMEXTRAEOSQUANTITIESTYPE2 (16) // (non-neutrino EOS, rho,T,Y_e)
+#define NUMEXTRAEOSQUANTITIESTYPE3 (11) // (Full EOS, rho,T,Y_e,Y_nu but H-dependent)
+#define NUMEXTRAEOSQUANTITIESTYPE4 (24) // (non-neutrino EOS, rho,T,Y_e,Y_\nu)
 
-#if(WHICHDATATYPEGENERAL==3)
-#define NUMEOSQUANTITIESMEM NUMEOSQUANTITIESTYPE3
-#else
-#define NUMEOSQUANTITIESMEM (MAX(MAX(MAX(NUMEOSQUANTITIESTYPE1,NUMEOSQUANTITIESTYPE2),NUMEOSQUANTITIESTYPE3),NUMEOSQUANTITIESTYPE4))
+// number of columns to read-in for a table
+#define NUMEOSQUANTITIESTYPE1in (NUMEOSQUANTITIESBASEin+NUMEXTRAEOSQUANTITIESTYPE1)
+#define NUMEOSQUANTITIESTYPE2in (NUMEOSQUANTITIESBASEin+NUMEXTRAEOSQUANTITIESTYPE2)
+#define NUMEOSQUANTITIESTYPE3in (NUMEOSQUANTITIESBASEin+NUMEXTRAEOSQUANTITIESTYPE3)
+#define NUMEOSQUANTITIESTYPE4in (NUMEOSQUANTITIESBASEin+NUMEXTRAEOSQUANTITIESTYPE4)
+
+// for simple arrays handling input tables
+#define MAXNUMEOSQUANTITIESin (MAX(MAX(MAX(NUMEOSQUANTITIESTYPE1in,NUMEOSQUANTITIESTYPE2in),NUMEOSQUANTITIESTYPE3in),NUMEOSQUANTITIESTYPE4in))
+
+
+
+// maximum size of pipeline is maximum number of things stored during read-in
+#define MAXEOSPIPELINE (MAXNUMEOSQUANTITIESin+NUMEOSDEGENQUANTITIESin)
+
+
+///////////////////
+//
+// Setup HARM EOS tables
+//
+///////////////////
+
+// assume degen table is always stored along with corresponding normal table
+#define NUMTBLS 3
+#define NOTABLE -1 // just used to indicate no table setup, not to be iterated over, so don't include in NUMTBLS
+#define FULLTABLE 0
+#define SIMPLETABLE 1
+#define SIMPLEZOOMTABLE 2
+
+// number of table subtypes per table
+// Degeneracy is unique table compared to others because size is 1 for temperature-like dimension N2, but still include in list
+#define NUMTABLESUBTYPES 10
+#define SUBTYPEDEGEN 0
+#define SUBTYPESTANDARD 1
+#define SUBTYPEGUESS 2
+#define SUBTYPEDISS 3
+#define SUBTYPEDP 4
+#define SUBTYPESDEN 5
+#define SUBTYPESSPEC 6
+#define SUBTYPEPOFCHI 7
+#define SUBTYPETEMP 8
+#define SUBTYPEEXTRA 9
+
+///////////////////////
+//
+// Setup HARM EOS table names
+// These can be in any order per table subtype except TEMP types
+// Note that each of these tables should be function of *same* independent variables (except TEMP table where only one of them is to be accessed), while one should have tables (even with same independent variables) broken-up enough if some functions are basically not used together ever
+//
+////////////////////////
+#define NUMEOSSTANDARDQUANTITIESMEM 2
+#define PofRHOU (LASTEOSDEGEN+1)
+#define CS2ofRHOU (PofRHOU+1)
+#define FIRSTEOSSTANDARD PofRHOU
+#define LASTEOSSTANDARD CS2ofRHOU
+
+#define NUMEOSGUESSQUANTITIESMEM 1
+#define UofRHOP (LASTEOSSTANDARD+1)
+#define FIRSTEOSGUESS UofRHOP
+#define LASTEOSGUESS UofRHOP
+
+#define NUMEOSDISSQUANTITIESMEM 1
+#define UofRHOS (LASTEOSGUESS+1)
+#define FIRSTEOSDISS UofRHOS
+#define LASTEOSDISS UofRHOS
+
+#define NUMEOSDPQUANTITIESMEM 2
+#define DPDRHOofRHOU (LASTEOSDISS+1)
+#define DPDUofRHOU (LASTEOSDISS+2)
+#define FIRSTEOSDP DPDRHOofRHOU
+#define LASTEOSDP DPDUofRHOU
+
+#define NUMEOSSDENQUANTITIESMEM 3
+#define SofRHOU (LASTEOSDP+1)
+#define DSDRHOofRHOU (LASTEOSDP+2)
+#define DSDUofRHOU (LASTEOSDP+3)
+#define FIRSTEOSSDEN DSDRHOofRHOU
+#define LASTEOSSDEN DSDUofRHOU
+
+#define NUMEOSSSPECQUANTITIESMEM 3
+#define SSofRHOCHI (LASTEOSSDEN+1)
+#define DSSDRHOofRHOCHI (LASTEOSSDEN+2)
+#define DSSDCHIofRHOCHI (LASTEOSSDEN+3)
+#define FIRSTEOSSSPEC SSofRHOCHI
+#define LASTEOSSSPEC DSSDCHIofRHOCHI
+
+#define NUMEOSPOFCHIQUANTITIESMEM 3
+#define PofRHOCHI (LASTEOSSSPEC+1)
+#define IDRHO0DP (LASTEOSSSPEC+2)
+#define IDCHIDP (LASTEOSSSPEC+3)
+#define FIRSTEOSPOFCHI PofRHOCHI
+#define LASTEOSPOFCHI IDCHIDP
+
+// TEMP? must be in same order as  UEOS, PEOS, CHIEOS, SEOS and DIFF versions for easy array access
+#define NUMEOSTEMPQUANTITIESMEM2 1 // number per whichd
+#define NUMEOSTEMPQUANTITIESMEM NUMEOSTEMPQUANTITIESMEM2
+#define TEMPGEN (LASTEOSPOFCHI+1)
+#define FIRSTEOSTEMP TEMPGEN
+#define LASTEOSTEMP TEMPGEN
+
+#define NUMEOSTEMPQUANTITIESMEM1 NUMEOSDEGENQUANTITIESMEM1 // total number over all whichd
+#define TEMPU UTOTDIFF
+#define TEMPP PTOTDIFF
+#define TEMPCHI CHIDIFF
+#define TEMPS STOTDIFF
+
+#if(WHICHDATATYPEGENERAL==1)
+#define NUMEOSEXTRAQUANTITIES NUMEXTRAEOSQUANTITIESTYPE1
+#elif(WHICHDATATYPEGENERAL==2)
+#define NUMEOSEXTRAQUANTITIES NUMEXTRAEOSQUANTITIESTYPE2
+#elif(WHICHDATATYPEGENERAL==3)
+#define NUMEOSEXTRAQUANTITIES NUMEXTRAEOSQUANTITIESTYPE3
+#elif(WHICHDATATYPEGENERAL==4)
+#define NUMEOSEXTRAQUANTITIES NUMEXTRAEOSQUANTITIESTYPE4
 #endif
 
 
-// so-called "extras" in eos_extract.m: Those things that didn't require extra processing as independent variables or derivatives -- just interpolated from T -> U only
-// extras:
+#define NUMEOSEXTRAQUANTITIESMEM NUMEOSEXTRAQUANTITIES
 
-#define EXTRA1  LASTEOSQUANTITIESBASE+1
+// maximum number of extra variables in kazfulleos.c
+// some constant so dump files don't change
+#define MAXNUMEXTRAS 24
+
+#if(MAXNUMEXTRAS<NUMEOSEXTRAQUANTITIES)
+#error "Need to make MAXNUMEXTRAS larger."
+#endif
+
+
+// up to 24 extras so far with WHICHDATATYPE==4
+#define EXTRA1  (LASTEOSTEMP+1)
 #define EXTRA2  EXTRA1+1
 #define EXTRA3  EXTRA1+2
 #define EXTRA4  EXTRA1+3
@@ -205,11 +465,23 @@
 #define EXTRA23 EXTRA1+22
 #define EXTRA24 EXTRA1+23
 
+#define FIRSTEOSEXTRA EXTRA1
+#define LASTEOSEXTRA EXTRA24
+
+
+#define LASTEOSQUANTITY LASTEOSEXTRA // last in list of quantities can grab per whichd
+
+// number of quantities can look up per whichd
+#define NUMEOSQUANTITIES (LASTEOSQUANTITY-FIRSTEOSQUANTITY+1)
+#define NUMEOSQUANTITIESMEM (LASTEOSQUANTITY+1) // don't offset variables that use this, but want to allow first quantity to be non-zero, so use this amount (more than required)
+
+
 // used to map request to correct EXTRA for given table that uses certain whichdatatype
 #define LAMBDATOT -100
 #define QDOTNU -101
 
 
+// BELOW FOR HARM EOS TABLES, not inputs
 // whichdatatype==1
 // EXTRA1: Neutrino cooling rate (erg/s/cm^2)
 #define DATATYPE1_EXTRAFINAL EXTRA1
@@ -279,8 +551,8 @@
 
 
 
-// processed quantities
-// MAXPROCESSEDEXTRAS is set in nondepnmenmics.h
+// names for processed quantities
+#define NUMPROCESSEDEXTRAS 13 // for using get_extrasprocessed().
 #define QPHOTON 0
 #define QNEUTRINO 1
 #define GRADDOTRHOUYL 2
@@ -295,29 +567,12 @@
 #define ENUE 11
 #define ENUEBAR 12
 
+// Below for dumping processed quantities.  Needs to be constant (not changing alot) so consistent dump files
+#define MAXPROCESSEDEXTRAS 13
 
-
-// degen offset quantities for independent variables utot,ptot, chi
-#define NUMEOSDEGENQUANTITIESMEM (4) // utotdiff, ptotdiff, chidiff, stotdiff
-
-#define NUMEOSDEGENINDEPS (NUMINDEPDIMENS-1) // rho, tdynorye, tdynorynu, H
-
-#define NUMEOSDEGENQUANTITIESBASE (NUMEOSDEGENINDEPS*2)
-#define NUMEOSDEGENQUANTITIES (NUMEOSDEGENQUANTITIESBASE+NUMEOSDEGENQUANTITIESMEM)
-
-// independents for degen table
-#define RHOEOSDEGEN 0
-#define YEEOSDEGEN 1
-#define YNUEOSDEGEN 2
-#define HEOSDEGEN 3
-
-
-// these are fixed in order and number from read-in file
-// so can access functional degentable of independent variables by whichindep-1
-#define UTOTDIFF (UEOS-1)   // should always resolve to: 0
-#define PTOTDIFF (PEOS-1)   // :1
-#define CHIDIFF  (CHIEOS-1) // :2
-#define STOTDIFF (SEOS-1)   // :3
+#if(MAXPROCESSEDEXTRAS<NUMPROCESSEDEXTRAS)
+#error "Need to make MAXPROCESSEDEXTRAS larger."
+#endif
 
 
 
@@ -325,39 +580,45 @@
 
 
 
-//////////////
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////
 //
-// here:
-// [independent variables]
-// rhob = rho0 -- rest-mass density in g/cc
-// tk = Temperature in Kelvin
-// hcm = height of medium in cm
-// tdynorye = dynamical time in seconds (assumed NSE time) OR Y_e
-//
-// [dependent variables]
-// p_tot = total pressure in cgs units
-// u_tot = u = internal relativistic comoving energy (no rest-mass) in cgs units
-// s_tot = total entropy density in comoving frame in cgs units
-
-
-
-
-
-
-///////////////
+// Setup INPUT and HARM EOS table sizes for N1,N2,N3,N4,N5.
+// Both INPUT and HARM EOS table sizes are same for these dimensions associated with independent variables
 //
 // EOSN1=rho0
 // EOSN2=u or p or chi
 // EOSN3=tdynorye in seconds or Y_e
 // EOSN4=tdynorynu in seconds or Y_\nu
 // EOSN5=height in cm
+//
+////////////////////////////
 
 // full EOS table w/ neutrino part to be computed during run-time
-#define EOSN1 100
-#define EOSN2 50
-#define EOSN3 50
-#define EOSN4 2
-#define EOSN5 1         // H not tabulated
+#define EOSFULLN1 200
+#define EOSFULLN2 200
+#define EOSFULLN3 50
+#define EOSFULLN4 10
+#define EOSFULLN5 1         // H not tabulated
+
+#define EOSFULLDEGENN1 EOSFULLN1
+#define EOSFULLDEGENN2 (1) // always 1
+#define EOSFULLDEGENN3 EOSFULLN3
+#if(WHICHDATATYPEGENERAL==4)
+#define EOSFULLDEGENN4 (1) // Then degen table is not function of neutrino term Y_\nu
+#else
+#define EOSFULLDEGENN4 EOSFULLN4
+#endif
+#define EOSFULLDEGENN5 EOSFULLN5 // should be 1 anyways
 
 // EOS table with assumptions
 // If EOSSIMPLEN5==1, then assumed height such that optically thin problem
@@ -369,6 +630,16 @@
 #define EOSSIMPLEN4 1   // here Y_\nu~0 (optically thin)
 #define EOSSIMPLEN5 1   // H not tabulated
 
+#define EOSSIMPLEDEGENN1 EOSSIMPLEN1
+#define EOSSIMPLEDEGENN2 (1) // always 1
+#define EOSSIMPLEDEGENN3 EOSSIMPLEN3
+#if(WHICHDATATYPEGENERAL==4)
+#define EOSSIMPLEDEGENN4 (1)
+#else
+#define EOSSIMPLEDEGENN4 EOSSIMPLEN4
+#endif
+#define EOSSIMPLEDEGENN5 EOSSIMPLEN5 // should be 1
+
 // EOS table with assumed Height (small) and assumed tdynorye (large)
 // degenerate table assumes to be same size except N2=1
 // NOT USED RIGHT NOW
@@ -378,6 +649,16 @@
 #define EOSSIMPLEZOOMN4 1
 #define EOSSIMPLEZOOMN5 1
 
+#define EOSSIMPLEZOOMDEGENN1 EOSSIMPLEZOOMN1
+#define EOSSIMPLEZOOMDEGENN2 (1)
+#define EOSSIMPLEZOOMDEGENN3 EOSSIMPLEZOOMN3
+#if(WHICHDATATYPEGENERAL==4)
+#define EOSSIMPLEZOOMDEGENN4 (1)
+#else
+#define EOSSIMPLEZOOMDEGENN4 EOSSIMPLEZOOMN4
+#endif
+#define EOSSIMPLEZOOMDEGENN5 EOSSIMPLEZOOMN5
+
 // GODMARK: could have a table for Ynu=thermalized and have an array that stores when source term forces Ynu to be perfectly thermal, and use that table in that case.
 // generating it now
 
@@ -386,7 +667,7 @@
 
 ///////////////
 //
-// Table limits
+// Table limits indices
 
 #define UPDOWN 2 // 0=down 1=up
 
@@ -396,19 +677,30 @@
 
 
 
+
+
 ////////////////////////////////////
+//
+// Setup EOSextra[]
 //
 // Some global position variables used to determine EOS
 //
+/////////////////////////////////////
 
 // should be 4
 #define NUMHDIRECTIONS 4
 
+#if(NUMHDIRECTIONS!=4)
+#error "NUMHDIRECTIONS should be 4"
+#endif
 
 
-// NOTE: EOSextra[] starts at 1, not 0, index.  Shift occurs in pointer assignment.  Don't need extra 1 element.
 
-
+////////////////////////////////////
+//
+// Setup macros to variables in EOSextra[]
+//
+/////////////////////////////////////
 
 // these should be ordered and numbered such that correspond to EOS table independent variables
 // do NOT correspond to expanded independent variables list from EOS as read-in (i.e. not RHOEOS, UEOS, PEOS, CHIEOS, SEOS,  YEEOS, YNUEOS,  HEOS)
@@ -440,16 +732,17 @@
 // number of per CPU position-based data for EOS
 //#define NUMEOSGLOBALS (1+3+4+3+3)
 #define NUMEOSGLOBALS (LASTEOSGLOBAL-FIRSTEOSGLOBAL+1)
-
-
-
-// maximum number of extra variables in kazfulleos.c
-// placed here so can know this when dumping and dump file is always same
-#define MAXNUMEXTRAS 24
-// 14-0 = 14
 #define MAXPARLIST (NUMEOSGLOBALS) // for get_EOS_parms()
-#define MAXPROCESSEDEXTRAS 13 // for using get_extrasprocessed()
 
+
+
+
+
+///////////////////////////
+//
+// Some constants, tolerances, etc.
+//
+///////////////////////////
 
 // tolerance to check whether repeated case for i,j,k,rho0,u
 #define OLDTOLERANCE (1E-14)
@@ -463,14 +756,49 @@
 #define INVALIDTEMP (5E-20)
 
 
-#define EOSHEADNAME "eosnew.head"
-#define EOSTABLENAME "eosnew.dat"
-#define EOSDEGENTABLENAME "eosdegennew.dat"
 
-#define EOSSIMPLEHEADNAME "eossimplenew.head"
-#define EOSSIMPLETABLENAME "eossimplenew.dat"
-#define EOSDEGENSIMPLETABLENAME "eosdegensimplenew.dat"
+// initialize kaziio, etc. with this so first call has no old index used
+#define INITKAZINDEX -100
 
-#define EOSSIMPLEZOOMHEADNAME "eossimplezoomnew.head"
-#define EOSSIMPLEZOOMTABLENAME "eossimplezoomnew.dat"
-#define EOSDEGENSIMPLEZOOMTABLENAME "eosdegensimplezoomnew.dat"
+
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//
+// define EOS array macros to avoid some confusion with spatial array macros
+//
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+#define GENEOSPOINT(prefix,name) prefix##name
+#define GENEOSTABLEMAC(prefix,name,a1,a2,a3,a4,a5,a6,a7) prefix##name[a1][a2][a3][a4][a5][a6][a7]
+//
+#define EOSBASEPOINT(name) GENEOSPOINT(a_,name) // not used
+#define BASEEOSMAC(name,a1,a2,a3,a4,a5,a6,a7) GENEOSTABLEMAC(a_,name,a1,a2,a3,a4,a5,a6,a7)
+//
+#define EOSPOINT(name) GENEOSPOINT(,name)
+#define EOSMAC(name,a1,a2,a3,a4,a5,a6,a7) GENEOSTABLEMAC(,name,a1,a2,a3,a4,a5,a6,a7)
+#define PTRDEFEOSMAC(name,a1,a2,a3,a4,a5,a6,a7) (*EOSPOINT(name))[a2][a3][a4][a5][a6][a7]
+#define PTREOSMAC(name,a1,a2,a3,a4,a5,a6,a7) (*)[a2][a3][a4][a5][a6][a7]
+
+
+
+
+// e.g. superdefs.h like: double BASEEOSMAC(name,....)
+//      superdefs.pointers.h like: double PTRDEFEOSMAC(name,....)
+// set_arrays_multidimen.c like: EOSPOINT(name) = (double PTREOSMAC(name,..)) (&(BASEEOSMAC(name,...)));
+//
+// \([_a-zA-Z0-9]+\)\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]
+//     -> BASEEOSMAC(\1,\2,\3,\4,\5,\6,\7) [kazfulleos.c at top and kazfulleos_set_arrays.c for most-RHS of pointer shifting code]
+//  OR -> EOSMAC(\1,\2,\3,\4,\5,\6,\7) [kazfulleos.c in code]
+//
+// (\*) *\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\] *) *( *& *(\([_a-zA-Z0-9]+\)(\([_a-zA-Z0-9]+\),
+//     -> (*)PTR\6(\7,FILL,\1,\2,\3,\4,\5)) (&(\6(\7,   [in kazfulleos_set_arrays.c]
+// Then :
+//     -> (\*)PTRBASEEOSMAC -> PTREOSMAC    [in kazfulleos_set_arrays.c]
+// Then:
+// Replace (e.g.) eostable with EOSPOINT
+//
+// 
+// ( *\* *\([_a-zA-Z0-9+-]+\) *) *\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\] *;
+//     -> PTRDEFEOSMAC(\1,FILL,\2,\3,\4,\5,\6); [defining pointer in kazfulleos.c just after BASEEOSMAC defines global array]
+//

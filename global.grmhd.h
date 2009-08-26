@@ -617,3 +617,18 @@
 //
 //
 //
+
+
+
+
+// Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu):
+// On orange do:
+// 1) ssh -N -f -L 2134:portal.astro.washington.edu:22 jon@ki-rh42.slac.stanford.edu  
+// then still on orange do to ssh to jdexter@portal.astro.washington.edu through ki-rh42:
+// 2) ssh -p 2134 jdexter@localhost
+// OR to scp
+// 3) scp -P 2134 dump???? jdexter@localhost:/astro/net/scratch1/jdexter/mb09/quadrupole_rout40/
+// In either case you'll need to enter the jdexter password on portal.astro.washington.edu.
+
+
+

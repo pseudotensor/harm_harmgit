@@ -2822,6 +2822,10 @@ static void func_Eprime(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
 
   Wp = x[0];
 
+  // OPTMARK:
+  // Optimize for any EOS table lookup by computing P(\rho_0,\chi), dP/d\rho_0 and dP/d\chi now.
+  // Otherwise, Eprime_Wp() and dEprimeWp() (as previously coded) repeated these calls and made calls for each EOS term while now can make a pipelined call and obtain all 3 EOS values at once.
+
   resid[0] = Eprime_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
   jac[0][0] = drdW = dEprimedWp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
@@ -2837,6 +2841,7 @@ static void func_Eprime(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
 }
 
 
+// res_sq_Eprime() (or any pure residual function) is only called by line searching method
 static FTYPE res_sq_Eprime(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;

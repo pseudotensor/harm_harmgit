@@ -19,47 +19,7 @@
 // Then use OpenMP or pthreads to parallelize over each position.
 // Then only memory grabbing is p in multi-D and other very expensive things like the metric that would likely be too expensive to recompute for each index for p.
 
-
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-//
-// first define other array macros to avoid some confusion with spatial arrays
-//
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-#define GENEOSPOINT(prefix,name) prefix##name
-#define GENEOSTABLEMAC(prefix,name,a1,a2,a3,a4,a5,a6) prefix##name[a1][a2][a3][a4][a5][a6]
-//
-#define EOSBASEPOINT(name) GENEOSPOINT(a_,name) // not used
-#define BASEEOSMAC(name,a1,a2,a3,a4,a5,a6) GENEOSTABLEMAC(a_,name,a1,a2,a3,a4,a5,a6)
-//
-#define EOSPOINT(name) GENEOSPOINT(,name)
-#define EOSMAC(name,a1,a2,a3,a4,a5,a6) GENEOSTABLEMAC(,name,a1,a2,a3,a4,a5,a6)
-#define PTRDEFEOSMAC(name,a1,a2,a3,a4,a5,a6) (*EOSPOINT(name))[a2][a3][a4][a5][a6]
-#define PTREOSMAC(name,a1,a2,a3,a4,a5,a6) (*)[a2][a3][a4][a5][a6]
-// e.g. superdefs.h like: double BASEEOSMAC(name,....)
-//      superdefs.pointers.h like: double PTRDEFEOSMAC(name,....)
-// set_arrays_multidimen.c like: EOSPOINT(name) = (double PTREOSMAC(name,..)) (&(BASEEOSMAC(name,...)));
-//
-// \([_a-zA-Z0-9]+\)\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]
-//     -> BASEEOSMAC(\1,\2,\3,\4,\5,\6,\7) [kazfulleos.c at top and kazfulleos_set_arrays.c for most-RHS of pointer shifting code]
-//  OR -> EOSMAC(\1,\2,\3,\4,\5,\6,\7) [kazfulleos.c in code]
-//
-// (\*) *\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\] *) *( *& *(\([_a-zA-Z0-9]+\)(\([_a-zA-Z0-9]+\),
-//     -> (*)PTR\6(\7,FILL,\1,\2,\3,\4,\5)) (&(\6(\7,   [in kazfulleos_set_arrays.c]
-// Then :
-//     -> (\*)PTRBASEEOSMAC -> PTREOSMAC    [in kazfulleos_set_arrays.c]
-// Then:
-// Replace (e.g.) eostable with EOSPOINT
-//
-// 
-// ( *\* *\([_a-zA-Z0-9+-]+\) *) *\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\]\[\([_a-zA-Z0-9+-]+\)\] *;
-//     -> PTRDEFEOSMAC(\1,FILL,\2,\3,\4,\5,\6); [defining pointer in kazfulleos.c just after BASEEOSMAC defines global array]
-//
-
-
-
+// See kazfulleos.global.h for some non-spatial array macros for general EOS
 
 
 
