@@ -756,7 +756,7 @@ FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE
   
   // do lookup
   if(getsingle_eos_fromtable(whichfun,whichd,EOSextra,rho0,dquant2,&final)){ // uses dquant2
-    if(whichfun==TEMPU || whichfun==TEMPP || whichfun==TEMPCHI || whichfun==TEMPS) final=0.0;
+    if(whichfun==TEMPGEN) final=0.0;
     else if(whichfun==QDOTNU) final=0.0;
     else final=0.0; // use mignone?
   }  
@@ -948,7 +948,6 @@ FTYPE compute_temp_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 
 // temperature (direct lookup from differential quant2: dquant2)
-// whichfun = TEMPU + 0,1,2,3 for TEMPU,TEMPP,TEMPCHI,TEMPS
 FTYPE compute_temp_whichd_kazfull(int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE dquant2)
 {
   FTYPE temp;

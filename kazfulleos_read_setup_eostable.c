@@ -1,67 +1,229 @@
 // initialization and read-in of tables
 // accesses global EOS arrays but only once for entire simulation
 
+static void setvartypeinfo(void);
+static void settablesubtypeinfo(void);
+static void assigntablecolumnnumbers(int i);
+static void settablesizeexpected(int tablesizeexpected[][NUMEOSINDEPS]);
 
 
 static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double value);
 static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double *value);
 
-static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep);
 static int get_dologinterp_subtype(int whichtablesubtype, int coli);
 static int get_dologinterp_subtype_wrapper(int degentable, int whichtablesubtype, int numcols, int *shouldloginterp);
 
 static void bcast_kazeos(void);
 
 
-// reads in table for EOS and sets up the table parameters
-void read_setup_eostable(void)
+
+
+// sets up number of quantities to read-in from file
+// numeosquantitiestypein[i] used for reading in non-degen data that will be stored (non-stored must also be in table and used for checking consistency)
+// numeosdegenquantitiesin[i] used for reading in degen data that will be stored
+// NUMEOSDEGENQUANTITIESMEM1 : UofUdiffout, PofPdiffout, CHIofCHIdiffout, SofSdiffout read-in to be checked, not stored
+// extralimits[i][0/1] used for interpolation
+static void assigntablecolumnnumbers(int i)
 {
-  FILE *inhead;
-  FILE *intable;
-  FILE *indegentable;
-  int	ii,jj;
-  int m,n,o,p,q; // 5 dimension labels
-  int iii,jjj,kkk,lll,mmm; // for 5 dimensions of table
-  int ppp,qqq;
-  int totalindex[NUMEOSINDEPS];
-  FTYPE indep[NUMEOSINDEPS];
-  FTYPE indepplusdegen[NUMEOSDEGENINDEPS];
-  FTYPE indepdegen[NUMEOSDEGENINDEPS];
-  FTYPE lstepdep,diff,lindep,lindeptry;
-  char headername[NUMTBLS][MAXFILENAME];
-  char tablename[NUMTBLS][MAXFILENAME];
-  char degentablename[NUMTBLS][MAXFILENAME];
-  int tableiter;
-  int tablesizeexpected[NUMTBLS][NUMEOSINDEPS];
-  double tabletemp[NUMEOSQUANTITIESMEM]; // same type as tables
-  double degentabletemp[NUMEOSDEGENQUANTITIESin]; // same type as tables
-  int sizematch; // 0 = table sizes don't match  1 = they match
-  double valuetemp[MAXNUMEOSQUANTITIESin],degenvaluetemp[NUMEOSDEGENQUANTITIESin];
-  FTYPE errordegen,errordegen2;
-  int iteri;
+  int extratype;
+
+  if(i==FULLTABLE || i==SIMPLETABLE || i==SIMPLEZOOMTABLE) extratype=0;
+  if(i==EXTRAFULLTABLE || i==EXTRASIMPLETABLE || i==EXTRASIMPLEZOOMTABLE) extratype=1;
+
+
+  if( ((i==FULLTABLE || i==EXTRAFULLTABLE) && ALLOWFULLTABLE) || ((i==SIMPLETABLE || i==EXTRASIMPLETABLE) && ALLOWSIMPLETABLE) || ((i==SIMPLEZOOMTABLE || i==EXTRASIMPLEZOOMTABLE) && ALLOWSIMPLEZOOMTABLE) ){
+
+    if(extratype==0 && WHICHDATATYPEGENERAL!=4){
+      numeosquantitiesin[i]=NUMEOSQUANTITIESBASEin;
+      // can't split with other data types
+      if(WHICHDATATYPEGENERAL==4) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
+      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
+      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
+      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
+      // always same number
+      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
+      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
+      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      if(WHICHDATATYPEGENERAL==1){
+	extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE1_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==2){
+	extralimits[i][0]=EXTRA2; extralimits[i][1]=DATATYPE2_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==3){
+	extralimits[i][0]=EXTRA3; extralimits[i][1]=DATATYPE3_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==4){
+	extralimits[i][0]=EXTRA4; extralimits[i][1]=DATATYPE4_EXTRAFINAL;
+      }
+    }
+    else if(extratype==0 && WHICHDATATYPEGENERAL==4){
+      // no extras in table then
+      numeosquantitiesin[i]=NUMEOSQUANTITIESBASEin;
+      // always same number
+      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
+      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
+      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      extralimits[i][0]=0; extralimits[i][1]=-1; // so never touches extras
+    }
+    else if(extratype==1 && WHICHDATATYPEGENERAL!=4){
+      // then nothing in extra table since all in full table
+      numeosquantitiesin[i]=0;
+      numeosdegenquantitiesin[i]=0;
+      numallquantitiesin[i]=0;
+      numalldegenquantitiesin[i]=0;
+      extralimits[i][0]=0; extralimits[i][1]=-1; // so never touches extras
+    }
+    else if(extratype==1 && WHICHDATATYPEGENERAL==4){
+      numeosquantitiesin[i]=NUMTEMPin; // still must have temperature and that is present in same file as extras
+      // then all in extra table
+      if(WHICHDATATYPEGENERAL==4) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
+      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
+      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
+      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
+      // always same number
+      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
+      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
+      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      if(WHICHDATATYPEGENERAL==1){
+	extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE1_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==2){
+	extralimits[i][0]=EXTRA2; extralimits[i][1]=DATATYPE2_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==3){
+	extralimits[i][0]=EXTRA3; extralimits[i][1]=DATATYPE3_EXTRAFINAL;
+      }
+      else if(WHICHDATATYPEGENERAL==4){
+	extralimits[i][0]=EXTRA4; extralimits[i][1]=DATATYPE4_EXTRAFINAL;
+      }
+    }
+  }
+  else{
+    // then nothing in table
+    numeosquantitiesin[i]=0;
+    numeosdegenquantitiesin[i]=0;
+    numallquantitiesin[i]=0;
+    numalldegenquantitiesin[i]=0;
+  }
+
+
+
+}
+
+
+
+
+
+// setup expected read-in sizes for tables
+// note that each primary table has a degen and temperature partner separated in memory (although degen is separate file while temperature is in file)
+static void settablesizeexpected(int tablesizeexpected[][NUMEOSINDEPS])
+{
   int i;
-  int numeosquantitiestypein[MAXNUMDATATYPES];
-  int testnumfscanfquantities,testnumfscanfquantitiesdegen;
   int templikeiter;
 
+  ///////////
+  //
+  // number of things corresponds to read-in number of quantities, not final table sizes
+  //
+  ///////////
 
+  // FULLTABLE
+  i=0;
+  tablesizeexpected[FULLTABLE][i]=EOSFULLN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[FULLTABLE][i]=EOSFULLN2; i++;
+  }
+  tablesizeexpected[FULLTABLE][i]=EOSFULLN3; i++;
+  tablesizeexpected[FULLTABLE][i]=EOSFULLN4; i++;
+  tablesizeexpected[FULLTABLE][i]=EOSFULLN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206882);
+  }
 
+  // EXTRAFULLTABLE
+  i=0;
+  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN2; i++;
+  }
+  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN3; i++;
+  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN4; i++;
+  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206882);
+  }
 
-  trifprintf("Setting up Kaz EOS table\n");
+  // SIMPLETABLE
+  i=0;
+  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
+  }
+  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN3; i++;
+  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN4; i++;
+  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206883);
+  }
+  // EXTRASIMPLETABLE
+  i=0;
+  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN2; i++;
+  }
+  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN3; i++;
+  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN4; i++;
+  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206883);
+  }
 
+  // SIMPLEZOOMTABLE
+  i=0;
+  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
+  }
+  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN3; i++;
+  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN4; i++;
+  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206884);
+  }
 
-
-  if(ALLOWKAZEOS==0){
-    dualfprintf(fail_file,"Need to have ALLOWKAZEOS==1 if using Kaz EOS\n");
-    myexit(93458635);
+  // EXTRASIMPLEZOOMTABLE
+  i=0;
+  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN1; i++;
+  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN2; i++;
+  }
+  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN3; i++;
+  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN4; i++;
+  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN5; i++;
+  if(i!=NUMEOSINDEPS){
+    dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
+    myexit(3206884);
   }
 
 
 
 
-  if(ALLOWFULLTABLE) primarytable=FULLTABLE;
-  else if(ALLOWSIMPLETABLE) primarytable=SIMPLETABLE;
-  else if(ALLOWSIMPLEZOOMTABLE) primarytable=SIMPLEZOOMTABLE;
+}
+
+
+
+
+
+static void settablesubtypeinfo(void)
+{
+  int iteri;
+
 
   ///////////////////////////////////////////////
   //
@@ -137,71 +299,22 @@ void read_setup_eostable(void)
     }
   }
 
-  ///////////////////////////////////////////////
-  //
-  // Set expected sizes of full tables (not degen tables, for which N2=1)
-  //
-  ///////////////////////////////////////////////
-
-  // numeosquantitiestypein[i] used for reading in data
-  // numeosdegenquantitiesin[i] used for reading in degen data that will be stored
-  // NUMEOSDEGENQUANTITIESMEM1 : UofUdiffout, PofPdiffout, CHIofCHIdiffout, SofSdiffout read-in to be checked, not stored
-  // extralimits[i][0/1] used for interpolation
-  i=0;
-  numeosquantitiestypein[i]=NUMEOSQUANTITIESTYPE1in;  numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin; extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE1_EXTRAFINAL; i++;
-  numeosquantitiestypein[i]=NUMEOSQUANTITIESTYPE2in;  numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin; extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE2_EXTRAFINAL; i++;
-  numeosquantitiestypein[i]=NUMEOSQUANTITIESTYPE3in;  numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin; extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE3_EXTRAFINAL; i++;
-  numeosquantitiestypein[i]=NUMEOSQUANTITIESTYPE4in;  numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin; extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE4_EXTRAFINAL; i++;
-  if(i!=MAXNUMDATATYPES){
-    dualfprintf(fail_file,"numeosquantitiestypein not setup for that many data types: i=%d\n",i);
-    myexit(3206881);
-  }
 
 
-  ///////////
-  //
-  // number of things corresponds to read-in number of quantities, not final table sizes
-  //
-  ///////////
-  i=0;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[FULLTABLE][i]=EOSFULLN2; i++;
-  }
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN3; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN4; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206882);
-  }
 
-  i=0;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
-  }
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN3; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN4; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206883);
-  }
+}
 
-  i=0;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
-  }
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN3; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN4; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206884);
-  }
 
+
+
+
+
+
+
+
+static void setvartypeinfo(void)
+{
+  int i;
 
   ///////////
   //
@@ -271,6 +384,106 @@ void read_setup_eostable(void)
 
 
 
+}
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////
+//
+// reads in table for EOS and sets up the table parameters
+//
+////////////////////////
+void read_setup_eostable(void)
+{
+  FILE *inhead;
+  FILE *intable;
+  FILE *indegentable;
+  int	ii,jj;
+  int m,n,o,p,q; // 5 dimension labels
+  int iii,jjj,kkk,lll,mmm; // for 5 dimensions of table
+  int ppp,qqq;
+  int totalindex[NUMEOSINDEPS];
+  FTYPE indep[NUMEOSINDEPS];
+  FTYPE indepplusdegen[NUMEOSDEGENINDEPS];
+  FTYPE indepdegen[NUMEOSDEGENINDEPS];
+  FTYPE lstepdep,diff,lindep,lindeptry;
+  char headername[NUMTBLS][MAXFILENAME];
+  char tablename[NUMTBLS][MAXFILENAME];
+  char degentablename[NUMTBLS][MAXFILENAME];
+  int tableiter;
+  int tablesizeexpected[NUMTBLS][NUMEOSINDEPS];
+  double tabletemp[NUMEOSQUANTITIESMEM]; // same type as tables
+  double degentabletemp[NUMEOSDEGENQUANTITIESin]; // same type as tables
+  int sizematch; // 0 = table sizes don't match  1 = they match
+  double valuetemp[MAXNUMEOSQUANTITIESin],degenvaluetemp[NUMEOSDEGENQUANTITIESin];
+  FTYPE errordegen,errordegen2;
+  int i;
+  int numeosquantitiestypein[MAXNUMDATATYPES];
+  int testnumfscanfquantities,testnumfscanfquantitiesdegen;
+  int templikeiter;
+
+
+
+  trifprintf("Setting up Kaz EOS table\n");
+
+
+
+  if(ALLOWKAZEOS==0){
+    dualfprintf(fail_file,"Need to have ALLOWKAZEOS==1 if using Kaz EOS\n");
+    myexit(93458635);
+  }
+
+
+
+  ///////////////////////////////////////////////
+  //
+  // Set which table type is primary
+  //
+  ///////////////////////////////////////////////
+  if(ALLOWFULLTABLE) primarytable=FULLTABLE;
+  else if(ALLOWSIMPLETABLE) primarytable=SIMPLETABLE;
+  else if(ALLOWSIMPLEZOOMTABLE) primarytable=SIMPLEZOOMTABLE;
+
+
+
+  ///////////////////////////////////////////////
+  //
+  // Set table subtype information
+  //
+  ///////////////////////////////////////////////
+  settablesubtypeinfo();
+
+
+  ///////////////////////////////////////////////
+  //
+  // Set expected number of columns of dataf or each table
+  //
+  ///////////////////////////////////////////////
+  for(i=0;i<NUMTBLS;i++) assigntablecolumnnumbers(i);
+
+  
+  ///////////////////////////////////////////////
+  //
+  // Set expected sizes of tables
+  //
+  ///////////////////////////////////////////////
+  settablesizeexpected(tablesizeexpected);
+  
+
+  ///////////////////////////////////////////////
+  //
+  // set vartype translation arrays
+  //
+  ///////////////////////////////////////////////
+  setvartypeinfo();
 
 
   ///////////////
@@ -299,26 +512,37 @@ void read_setup_eostable(void)
   if(myid==0){
 
 
+
     ///////////////////////////////////////////////
     //
     // Set file names
     //
     ///////////////////////////////////////////////
 
-    // header and table names
-    strcpy(headername[FULLTABLE],EOSHEADNAME);
-    strcpy(tablename[FULLTABLE],EOSTABLENAME);
-    strcpy(degentablename[FULLTABLE],EOSDEGENTABLENAME);
+    strcpy(headername[FULLTABLE],EOSFULLHEADNAME);
+    strcpy(tablename[FULLTABLE],EOSFULLTABLENAME);
+    strcpy(degentablename[FULLTABLE],EOSFULLTABLEDEGENNAME);
 
+    strcpy(headername[EXTRAFULLTABLE],EOSEXTRAFULLHEADNAME);
+    strcpy(tablename[EXTRAFULLTABLE],EOSEXTRAFULLTABLENAME);
+    strcpy(degentablename[EXTRAFULLTABLE],EOSEXTRAFULLTABLEDEGENNAME);
 
     strcpy(headername[SIMPLETABLE],EOSSIMPLEHEADNAME);
     strcpy(tablename[SIMPLETABLE],EOSSIMPLETABLENAME);
-    strcpy(degentablename[SIMPLETABLE],EOSDEGENSIMPLETABLENAME);
+    strcpy(degentablename[SIMPLETABLE],EOSSIMPLETABLEDEGENNAME);
+
+    strcpy(headername[EXTRASIMPLETABLE],EOSEXTRASIMPLEHEADNAME);
+    strcpy(tablename[EXTRASIMPLETABLE],EOSEXTRASIMPLETABLENAME);
+    strcpy(degentablename[EXTRASIMPLETABLE],EOSEXTRASIMPLETABLEDEGENNAME);
 
     strcpy(headername[SIMPLEZOOMTABLE],EOSSIMPLEZOOMHEADNAME);
     strcpy(tablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLENAME);
-    strcpy(degentablename[SIMPLEZOOMTABLE],EOSDEGENSIMPLEZOOMTABLENAME);
+    strcpy(degentablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLEDEGENNAME);
 
+    strcpy(headername[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMHEADNAME);
+    strcpy(tablename[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMTABLENAME);
+    strcpy(degentablename[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMTABLEDEGENNAME);
+ 
 
 
 
@@ -334,8 +558,11 @@ void read_setup_eostable(void)
 
       // avoid tables not needed since should not expect user has copied or created such tables if not using them
       if(tableiter==FULLTABLE && ALLOWFULLTABLE==0) continue;
+      if(tableiter==EXTRAFULLTABLE && (ALLOWFULLTABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
       if(tableiter==SIMPLETABLE && ALLOWSIMPLETABLE==0) continue;
+      if(tableiter==EXTRASIMPLETABLE && (ALLOWSIMPLETABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
       if(tableiter==SIMPLEZOOMTABLE && ALLOWSIMPLEZOOMTABLE==0) continue;
+      if(tableiter==EXTRASIMPLEZOOMTABLE && (ALLOWSIMPLEZOOMTABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
 
 
 
@@ -381,16 +608,6 @@ void read_setup_eostable(void)
       }
 
 
-
-      //////////////
-      //
-      // Assign non-degen table total columns
-      //
-      //////////////
-      numeosquantitiesin[tableiter]=numeosquantitiestypein[whichdatatype[tableiter]-1]; // number of input columns that will be stored somewhere in global arrays
-      // table has the below items (some read-in and checked, others stored)
-      numallquantitiesin[tableiter]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[tableiter];
-      numalldegenquantitiesin[tableiter]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[tableiter];
 
 
       //////////////
@@ -478,7 +695,11 @@ void read_setup_eostable(void)
 	  lineartablelimits[tableiter][ii][2]=1.0/log10(inputtablelimits[tableiter][ii][4]); // 1.0 divided by "normal log(base)" (used for mapping)
 	  lineartablelimits[tableiter][ii][3]=inputtablelimits[tableiter][ii][5]; // linear offset
 	}
-      }
+	
+      }// done over NUMEOSINDEPS
+
+
+
 
 
       ////////////////////////
@@ -512,10 +733,12 @@ void read_setup_eostable(void)
 
       /////////////////
       //
-      // Temperature table limits not read in, just for user use
+      // Temperature table limits in header not read in, just for user use
       //
       /////////////////
       
+
+
 
 
 
@@ -811,18 +1034,25 @@ void read_setup_eostable(void)
 	for(ii=0;ii<NUMEOSDEGENQUANTITIESMEM1;ii++){
 	  // assume hit jjj==0 first time in loop
 
-	  // access read-in quantities
 	  FTYPE U0,UIN,UOUT,NN,testindepplusdegen;
-	  U0=degenvaluetemp[ii];
-	  UIN=degenvaluetemp[ii+NUMEOSDEGENQUANTITIESMEM1];
-	  UOUT=degenvaluetemp[ii+2*NUMEOSDEGENQUANTITIESMEM1];
-	  NN = tablesizeexpected[tableiter][UEOS]; // UEOS,PEOS,CHIEOS,SEOS all same dimension
-	  // already checked that indep is consistent, so can use indep[ii] or (FTYPE)jjj/NN below for "i/N"
-	  testindepplusdegen = U0 + (UIN-U0)*pow( (UOUT-U0)/(UIN-U0), (FTYPE)jjj/NN);
+	  if(utotdegencut[tableiter]>=2){
+	    // access read-in quantities
+	    U0=degenvaluetemp[ii];
+	    UIN=degenvaluetemp[ii+NUMEOSDEGENQUANTITIESMEM1];
+	    UOUT=degenvaluetemp[ii+2*NUMEOSDEGENQUANTITIESMEM1];
+	    NN = tablesizeexpected[tableiter][UEOS]; // UEOS,PEOS,CHIEOS,SEOS all same dimension
+	    // already checked that indep is consistent, so can use indep[ii] or (FTYPE)jjj/NN below for "i/N"
+	    testindepplusdegen = U0 + (UIN-U0)*pow( (UOUT-U0)/(UIN-U0), (FTYPE)jjj/NN);
+	  }
+	  else{
+	    // u = utotdiff + utotoffset 
+	    U0=degenvaluetemp[ii];
+	    testindepplusdegen = U0 + indep[ii];
+	  }
 
 	  errordegen=fabs(testindepplusdegen-indepplusdegen[ii])/(fabs(testindepplusdegen)+(indepplusdegen[ii])+SMALL);
 	  if(errordegen>TABLETOL){
-	    dualfprintf(fail_file,"Degen not correct: iii=%d jjj=%d kkk=%d lll=%d mmm=%d:: ii=%d :: error=%21.15g :: U0=%21.15g UIN=%21.15g UOUT=%21.15g NN=%21.15g (jjj/N=%21.15g) :: %21.15g\n",iii,jjj,kkk,lll,mmm,ii,errordegen,U0,UIN,UOUT,NN,(FTYPE)jjj/NN,testindepplusdegen);
+	    dualfprintf(fail_file,"Degen not correct: iii=%d jjj=%d kkk=%d lll=%d mmm=%d:: ii=%d :: error=%21.15g :: U0=%21.15g  :: %21.15g %21.15g %21.15g\n",iii,jjj,kkk,lll,mmm,ii,errordegen,U0,UIN,UOUT,testindepplusdegen);
 	  }
 
 	}
@@ -960,151 +1190,166 @@ void read_setup_eostable(void)
 	if(jjj==0) for(jj=0;jj<numeosdegenquantitiesin[tableiter];jj++) get_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,&degentabletemp[jj]);
 
 
-	tabletemp[PofRHOUin]/=Pressureunit;
-	tabletemp[UofRHOPin]/=Pressureunit;
-	// dPdRHO0ofRHOU dimensionless
-	// dPdUofRHOU dimensionless
 
-	tabletemp[UofRHOSin]/=Pressureunit;
+	// see if non-extras are in table
+	if(tableiter==FULLTABLE || tableiter==SIMPLETABLE ||  tableiter==SIMPLEZOOMTABLE || WHICHDATATYPEGENERAL!=4){
 
-	tabletemp[CS2ofRHOUin]/=(Vunit*Vunit);
+	  tabletemp[PofRHOUin]/=Pressureunit;
+	  tabletemp[UofRHOPin]/=Pressureunit;
+	  // dPdRHO0ofRHOU dimensionless
+	  // dPdUofRHOU dimensionless
+
+	  tabletemp[UofRHOSin]/=Pressureunit;
+
+	  tabletemp[CS2ofRHOUin]/=(Vunit*Vunit);
 
 
-	// entropy density (erg/K/cc)
-	// kb doesn't convert units, but changes kb T to erg
-	// presumes entropy is used with energy as in first-law: dQ = (kbT)dS where kbT is in ergs
-	// previously had units of entropy density as erg/K/cc, but now units read-in are just 1/cc to avoid use of pointless kb
-	tabletemp[SofRHOUin]/=(1.0/pow(Lunit,3.0));
-	// Note that often people will plot "entropy per baryon" that is "SofRHOU"/(\rho/m_b) that is dimensionless entropy per baryon
-	// From HARM quantities, convert back to cgs and then compute above
-	// Note that in HARM, we *define* $Sden = Ss/(\rho_0 c^2)$ with the extra $m_b c^2$ baggage, so units should account for that.
+	  // entropy density (erg/K/cc)
+	  // kb doesn't convert units, but changes kb T to erg
+	  // presumes entropy is used with energy as in first-law: dQ = (kbT)dS where kbT is in ergs
+	  // previously had units of entropy density as erg/K/cc, but now units read-in are just 1/cc to avoid use of pointless kb
+	  tabletemp[SofRHOUin]/=(1.0/pow(Lunit,3.0));
+	  // Note that often people will plot "entropy per baryon" that is "SofRHOU"/(\rho/m_b) that is dimensionless entropy per baryon
+	  // From HARM quantities, convert back to cgs and then compute above
+	  // Note that in HARM, we *define* $Sden = Ss/(\rho_0 c^2)$ with the extra $m_b c^2$ baggage, so units should account for that.
 
-	// below is (1/cc) / (erg/cc) \propto 1/erg since we *input* rho as rho c^2
-	tabletemp[DSDRHOofRHOUin]/=(1.0/energyunit); 
-	tabletemp[DSDUofRHOUin]/=(1.0/energyunit);
+	  // below is (1/cc) / (erg/cc) \propto 1/erg since we *input* rho as rho c^2
+	  tabletemp[DSDRHOofRHOUin]/=(1.0/energyunit); 
+	  tabletemp[DSDUofRHOUin]/=(1.0/energyunit);
 
-	// SSofRHOCHI is nearly dimensionless (really has units of 1/(mb c^2) since obtained by division of Sden by (\rho_0 c^2) instead of n_b)
-	tabletemp[SSofRHOCHIin]/=(1.0/energyunit);
+	  // SSofRHOCHI is nearly dimensionless (really has units of 1/(mb c^2) since obtained by division of Sden by (\rho_0 c^2) instead of n_b)
+	  tabletemp[SSofRHOCHIin]/=(1.0/energyunit);
 
-	// DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of Ss/(rho0 c^2) since Ss has units of 1/(mb c^2) and input rho with units of rho*c^2
-	tabletemp[DSSDRHOofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
-	tabletemp[DSSDCHIofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
+	  // DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of Ss/(rho0 c^2) since Ss has units of 1/(mb c^2) and input rho with units of rho*c^2
+	  tabletemp[DSSDRHOofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
+	  tabletemp[DSSDCHIofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
 
 	
-	tabletemp[PofRHOCHIin]/=Pressureunit;
-	// IDRHO0DP is dimensionless
-	// IDCHIDP is dimensionless
-	
+	  tabletemp[PofRHOCHIin]/=Pressureunit;
+	  // IDRHO0DP is dimensionless
+	  // IDCHIDP is dimensionless
+	}	
+
+
+	// *always* have temperature in table
 	// TEMP used for diagnostics, not used otherwise
 	tabletemp[TEMPUin]/=Tempunit;
 	tabletemp[TEMPPin]/=Tempunit;
 	tabletemp[TEMPCHIin]/=Tempunit;
 	tabletemp[TEMPSin]/=Tempunit;
+	  
+	
+
+	// see if extras are in table
+	if(tableiter==EXTRAFULLTABLE || tableiter==EXTRASIMPLETABLE ||  tableiter==EXTRASIMPLEZOOMTABLE || WHICHDATATYPEGENERAL!=4){
+
+	  ////////////////////////////////
+	  //
+	  // deal with extra quantities
+	  if(whichdatatype[tableiter]==1){
+	    // Qm is in erg/s/cm^3 (Qvol, not Qsurf)
+	    // this is divided by H when used as a volume rate
+	    tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
+	  }
+	  else if(whichdatatype[tableiter]==2){
+	    // \tau/H
+	    tabletemp[EXTRA1in]/=(1.0/Lunit);
+	    tabletemp[EXTRA2in]/=(1.0/Lunit);
+	    tabletemp[EXTRA3in]/=(1.0/Lunit);
+	    tabletemp[EXTRA4in]/=(1.0/Lunit);
+	    tabletemp[EXTRA5in]/=(1.0/Lunit);
+	    tabletemp[EXTRA6in]/=(1.0/Lunit);
+	    tabletemp[EXTRA7in]/=(1.0/Lunit);
+	    tabletemp[EXTRA8in]/=(1.0/Lunit);
+	    tabletemp[EXTRA9in]/=(1.0/Lunit);
+	    tabletemp[EXTRA10in]/=(1.0/Lunit);
+	    tabletemp[EXTRA11in]/=(1.0/Lunit);
+	    tabletemp[EXTRA12in]/=(1.0/Lunit);
+	    //	  \Gamma = 1/s
+	    tabletemp[EXTRA13in]/=(1.0/Tunit);
+	    tabletemp[EXTRA14in]/=(1.0/Tunit);
+	    tabletemp[EXTRA15in]/=(1.0/Tunit);
+	    tabletemp[EXTRA16in]/=(1.0/Tunit);
+	  }
+	  else if(whichdatatype[tableiter]==3){
+	    // Qphoton=erg/s/cm^3
+	    tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
+
+	    // Qm=erg/s/cm^3
+	    tabletemp[EXTRA2in]/=(edotunit/(Lunit*Lunit*Lunit));
+	  
+	    // graddotrhouyl=\rho/sec = m_b/s/cm^3
+	    // \nabla_\mu (\rho_0 u^\mu Y_e) =  (m_b/H) (\dot{N}_{\bar{\nu}_e} - \dot{N}_{\nu_e}) 
+	    if(rho0unittype==0) tabletemp[EXTRA3in]/=(rhounit/Tunit);
+	    else tabletemp[EXTRA3in]/=(rhomassunit/Tunit);
+	  
+	    // Tthermaltot
+	    tabletemp[EXTRA4in]/=Tunit;
+	    tabletemp[EXTRA5in]/=Tunit;
+
+	    // lambdatot = mean free path such that H = [\int (dr/\lambda)] / [1/\lambda]
+	    // and \tau = \int dr/\lambda
+	    tabletemp[EXTRA6in]/=Lunit;
+	    tabletemp[EXTRA7in]/=Lunit;
+
+	    // Enuglobal : erg
+	    tabletemp[EXTRA8in]/=energyunit;
+	    tabletemp[EXTRA9in]/=energyunit;
+	    tabletemp[EXTRA10in]/=energyunit;
+
+	    // no conversion for Ynuthermal that's dimensionless EXTRA11
+	  }
+	  else if(whichdatatype[tableiter]==4){
+	    // \tau/H
+	    tabletemp[EXTRA1in]/=(1.0/Lunit);
+	    tabletemp[EXTRA2in]/=(1.0/Lunit);
+	    tabletemp[EXTRA3in]/=(1.0/Lunit);
+	    tabletemp[EXTRA4in]/=(1.0/Lunit);
+	    tabletemp[EXTRA5in]/=(1.0/Lunit);
+	    tabletemp[EXTRA6in]/=(1.0/Lunit);
+	    tabletemp[EXTRA7in]/=(1.0/Lunit);
+	    tabletemp[EXTRA8in]/=(1.0/Lunit);
+	    tabletemp[EXTRA9in]/=(1.0/Lunit);
+	    tabletemp[EXTRA10in]/=(1.0/Lunit);
+	    tabletemp[EXTRA11in]/=(1.0/Lunit);
+	    tabletemp[EXTRA12in]/=(1.0/Lunit);
+	    // energy densities
+	    tabletemp[EXTRA13in]/=(Pressureunit);
+	    tabletemp[EXTRA14in]/=(Pressureunit);
+	    tabletemp[EXTRA15in]/=(Pressureunit);
+	    // number densities
+	    tabletemp[EXTRA16in]/=(1.0/pow(Lunit,3.0));
+	    tabletemp[EXTRA17in]/=(1.0/pow(Lunit,3.0));
+	    tabletemp[EXTRA18in]/=(1.0/pow(Lunit,3.0));
+	    // mean free paths (length)
+	    tabletemp[EXTRA19in]/=(Lunit);
+	    tabletemp[EXTRA20in]/=(Lunit);
+	    // \tau/H for photons
+	    tabletemp[EXTRA21in]/=(1.0/Lunit);
+	    tabletemp[EXTRA22in]/=(1.0/Lunit);
+
+	    // DEBUG: log(fun) \propto A+B*log(rho) -> fun = 10^(A+B*log(rho)) = Q*rho^B
+	    // rho = exp(A+B*iii)
+	    //	  FTYPE fakerho = exp(0.0+1.0*iii);
+	    // tabletemp[EXTRA22in]=1.0*pow(fakerho,3.0);
+	    //dualfprintf(fail_file,"GOD: iii=%d %21.15g\n",iii,tabletemp[EXTRA22in]);
+
+	    // thermal number densities
+	    tabletemp[EXTRA23in]/=(1.0/pow(Lunit,3.0));
+	    tabletemp[EXTRA24in]/=(1.0/pow(Lunit,3.0));
+	  }
+
+	}// end if converting extras
 
 	
 
 
-	////////////////////////////////
+	////////////////////
 	//
-	// deal with extra quantities
-	if(whichdatatype[tableiter]==1){
-	  // Qm is in erg/s/cm^3 (Qvol, not Qsurf)
-	  // this is divided by H when used as a volume rate
-	  tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
-	}
-	else if(whichdatatype[tableiter]==2){
-	  // \tau/H
-	  tabletemp[EXTRA1in]/=(1.0/Lunit);
-	  tabletemp[EXTRA2in]/=(1.0/Lunit);
-	  tabletemp[EXTRA3in]/=(1.0/Lunit);
-	  tabletemp[EXTRA4in]/=(1.0/Lunit);
-	  tabletemp[EXTRA5in]/=(1.0/Lunit);
-	  tabletemp[EXTRA6in]/=(1.0/Lunit);
-	  tabletemp[EXTRA7in]/=(1.0/Lunit);
-	  tabletemp[EXTRA8in]/=(1.0/Lunit);
-	  tabletemp[EXTRA9in]/=(1.0/Lunit);
-	  tabletemp[EXTRA10in]/=(1.0/Lunit);
-	  tabletemp[EXTRA11in]/=(1.0/Lunit);
-	  tabletemp[EXTRA12in]/=(1.0/Lunit);
-	  //	  \Gamma = 1/s
-	  tabletemp[EXTRA13in]/=(1.0/Tunit);
-	  tabletemp[EXTRA14in]/=(1.0/Tunit);
-	  tabletemp[EXTRA15in]/=(1.0/Tunit);
-	  tabletemp[EXTRA16in]/=(1.0/Tunit);
-	}
-	else if(whichdatatype[tableiter]==3){
-	  // Qphoton=erg/s/cm^3
-	  tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
-
-	  // Qm=erg/s/cm^3
-	  tabletemp[EXTRA2in]/=(edotunit/(Lunit*Lunit*Lunit));
-	  
-	  // graddotrhouyl=\rho/sec = m_b/s/cm^3
-	  // \nabla_\mu (\rho_0 u^\mu Y_e) =  (m_b/H) (\dot{N}_{\bar{\nu}_e} - \dot{N}_{\nu_e}) 
-	  if(rho0unittype==0) tabletemp[EXTRA3in]/=(rhounit/Tunit);
-	  else tabletemp[EXTRA3in]/=(rhomassunit/Tunit);
-	  
-	  // Tthermaltot
-	  tabletemp[EXTRA4in]/=Tunit;
-	  tabletemp[EXTRA5in]/=Tunit;
-
-	  // lambdatot = mean free path such that H = [\int (dr/\lambda)] / [1/\lambda]
-	  // and \tau = \int dr/\lambda
-	  tabletemp[EXTRA6in]/=Lunit;
-	  tabletemp[EXTRA7in]/=Lunit;
-
-	  // Enuglobal : erg
-	  tabletemp[EXTRA8in]/=energyunit;
-	  tabletemp[EXTRA9in]/=energyunit;
-	  tabletemp[EXTRA10in]/=energyunit;
-
-	  // no conversion for Ynuthermal that's dimensionless EXTRA11
-	}
-	else if(whichdatatype[tableiter]==4){
-	  // \tau/H
-	  tabletemp[EXTRA1in]/=(1.0/Lunit);
-	  tabletemp[EXTRA2in]/=(1.0/Lunit);
-	  tabletemp[EXTRA3in]/=(1.0/Lunit);
-	  tabletemp[EXTRA4in]/=(1.0/Lunit);
-	  tabletemp[EXTRA5in]/=(1.0/Lunit);
-	  tabletemp[EXTRA6in]/=(1.0/Lunit);
-	  tabletemp[EXTRA7in]/=(1.0/Lunit);
-	  tabletemp[EXTRA8in]/=(1.0/Lunit);
-	  tabletemp[EXTRA9in]/=(1.0/Lunit);
-	  tabletemp[EXTRA10in]/=(1.0/Lunit);
-	  tabletemp[EXTRA11in]/=(1.0/Lunit);
-	  tabletemp[EXTRA12in]/=(1.0/Lunit);
-	  // energy densities
-	  tabletemp[EXTRA13in]/=(Pressureunit);
-	  tabletemp[EXTRA14in]/=(Pressureunit);
-	  tabletemp[EXTRA15in]/=(Pressureunit);
-	  // number densities
-	  tabletemp[EXTRA16in]/=(1.0/pow(Lunit,3.0));
-	  tabletemp[EXTRA17in]/=(1.0/pow(Lunit,3.0));
-	  tabletemp[EXTRA18in]/=(1.0/pow(Lunit,3.0));
-	  // mean free paths (length)
-	  tabletemp[EXTRA19in]/=(Lunit);
-	  tabletemp[EXTRA20in]/=(Lunit);
-	  // \tau/H for photons
-	  tabletemp[EXTRA21in]/=(1.0/Lunit);
-	  tabletemp[EXTRA22in]/=(1.0/Lunit);
-
-	  // DEBUG: log(fun) \propto A+B*log(rho) -> fun = 10^(A+B*log(rho)) = Q*rho^B
-	  // rho = exp(A+B*iii)
-	  //	  FTYPE fakerho = exp(0.0+1.0*iii);
-	  // tabletemp[EXTRA22in]=1.0*pow(fakerho,3.0);
-	  //dualfprintf(fail_file,"GOD: iii=%d %21.15g\n",iii,tabletemp[EXTRA22in]);
-
-	  // thermal number densities
-	  tabletemp[EXTRA23in]/=(1.0/pow(Lunit,3.0));
-	  tabletemp[EXTRA24in]/=(1.0/pow(Lunit,3.0));
-	}
-
-
-	
-	//	for(jj=0;jj<numeosquantities[tableiter];jj++) dualfprintf(fail_file,"tableiter=%d tabletemp[%d][%d][%d][%d][%d][%d]=%21.15g\n",tableiter,jj,mmm,lll,kkk,jjj,iii,tabletemp[jj]);
-
-	if(jjj==0){// degen table
+	// convert units for degen table
+	//
+	////////////////////
+	if(jjj==0){
 
 	  degentabletemp[UTOTOFFSETin]/=Pressureunit; // pressure units
 	  degentabletemp[PTOTOFFSETin]/=Pressureunit; // pressure units
@@ -1132,7 +1377,7 @@ void read_setup_eostable(void)
 
 	////////////////
 	//
-	// temp restore
+	// temp restore back into arrays
 	//
 	///////////////
 
@@ -1215,12 +1460,19 @@ static void bcast_kazeos(void)
   //
   // kazfulleos.defs.h globals:
   //
+  // regexp from kazfulleos.defs.h:
+  // static \([_a-zA-Z]+\) \([_a-zA-Z0-9]+\)\[\(.*\)\]; -> MPI_Bcast(&\2[0],\3,MPI_\1,MPIid[0],MPI_COMM_GRMHD);
+  // THEN:
+  // 1) raise (e.g.) MPI_int -> MPI_INT
+  // 2) replace ]['s with * in data size and add [0]'s to &array as required (same number of ]['s replaced)
+  //
   /////////////////////////////
 
-  MPI_Bcast(&numeosquantitiesin,NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numeosdegenquantitiesin,NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numallquantitiesin,MAXNUMDATATYPES,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numalldegenquantitiesin,MAXNUMDATATYPES,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosdegenquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numallquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numalldegenquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&extralimits[0][0],NUMTBLS*2,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&inputtablelimits[0][0][0],NUMTBLS*NUMEOSINDEPS*TBLITEMS,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&tablelimits[0][0][0],NUMTBLS*NUMEOSINDEPS*TBLITEMS,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
@@ -1235,11 +1487,6 @@ static void bcast_kazeos(void)
   MPI_Bcast(&vardegentypearray[0],NUMEOSDEGENINDEPS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&varnormalcompare2degentypearray[0],NUMEOSDEGENINDEPS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
-  // regexp from kazfulleos.defs.h:
-  // static \([_a-zA-Z]+\) \([_a-zA-Z0-9]+\)\[\(.*\)\]; -> MPI_Bcast(&\2[0],\3,MPI_\1,MPIid[0],MPI_COMM_GRMHD);
-  // THEN:
-  // 1) raise (e.g.) MPI_int -> MPI_INT
-  // 2) replace ]['s with * in data size and add [0]'s to &array as required (same number of ]['s replaced)
 
   MPI_Bcast(&numcolintablesubtype[0],NUMTABLESUBTYPES,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&whichdintablesubtype[0],NUMTABLESUBTYPES,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
@@ -1264,7 +1511,6 @@ static void bcast_kazeos(void)
 
   MPI_Bcast(&primarytable,1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
-  MPI_Bcast(&extralimits[0][0],MAXNUMDATATYPES*2,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&FAKE2IDEALNUCLEAROFFSET,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&TRUENUCLEAROFFSET,1,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
@@ -1291,7 +1537,9 @@ static void bcast_kazeos(void)
   // double BASEEOSMAC(\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\),\([a-zA-Z0-9]+\)); ->
   // MPI_Bcase(&(BASEEOSMAC(\1,0,0,0,0,0,0,0)),\2*\3*\4*\5*\6*\7*\8,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   // NOTE!  We are using BASEEOSMAC() so can just use BASEEOSMAC(name,0,0,0,0,0,0,0) instead of having to add shift
+
 #if(WHICHEOS==KAZFULL)
+
   // full
   MPI_Bcase(&(BASEEOSMAC(eosfulltabledegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSFULLDEGENN5*EOSFULLDEGENN4*EOSFULLDEGENN3*EOSFULLDEGENN2*EOSFULLDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eosfulltablestandard,0,0,0,0,0,0,0)),1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSSTANDARDQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
@@ -1302,7 +1550,13 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eosfulltablesspec,0,0,0,0,0,0,0)),1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSSSPECQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eosfulltablepofchi,0,0,0,0,0,0,0)),1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSPOFCHIQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eosfulltabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eosfulltableextra,0,0,0,0,0,0,0)),1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+
+  // different size for extra table
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextra,0,0,0,0,0,0,0)),1*EOSEXTRAFULLN5*EOSEXTRAFULLN4*EOSEXTRAFULLN3*EOSEXTRAFULLN2*EOSEXTRAFULLN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+#if(WHICHDATATYPEGENERAL==4)
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRAFULLDEGENN5*EOSEXTRAFULLDEGENN4*EOSEXTRAFULLDEGENN3*EOSEXTRAFULLDEGENN2*EOSEXTRAFULLDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRAFULLTEMPN5*EOSEXTRAFULLTEMPN4*EOSEXTRAFULLTEMPN3*EOSEXTRAFULLTEMPN2*EOSEXTRAFULLTEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+#endif
 
   // simple
   MPI_Bcase(&(BASEEOSMAC(eossimpletabledegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSSIMPLEDEGENN5*EOSSIMPLEDEGENN4*EOSSIMPLEDEGENN3*EOSSIMPLEDEGENN2*EOSSIMPLEDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
@@ -1314,7 +1568,15 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eossimpletablesspec,0,0,0,0,0,0,0)),1*EOSSIMPLEN5*EOSSIMPLEN4*EOSSIMPLEN3*EOSSIMPLEN2*EOSSIMPLEN1*NUMEOSSSPECQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eossimpletablepofchi,0,0,0,0,0,0,0)),1*EOSSIMPLEN5*EOSSIMPLEN4*EOSSIMPLEN3*EOSSIMPLEN2*EOSSIMPLEN1*NUMEOSPOFCHIQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eossimpletabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEN5*EOSSIMPLEN4*EOSSIMPLEN3*EOSSIMPLEN2*EOSSIMPLEN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eossimpletableextra,0,0,0,0,0,0,0)),1*EOSSIMPLEN5*EOSSIMPLEN4*EOSSIMPLEN3*EOSSIMPLEN2*EOSSIMPLEN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+
+  // different size for extra table
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextra,0,0,0,0,0,0,0)),1*EOSEXTRASIMPLEN5*EOSEXTRASIMPLEN4*EOSEXTRASIMPLEN3*EOSEXTRASIMPLEN2*EOSEXTRASIMPLEN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+#if(WHICHDATATYPEGENERAL==4)
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRASIMPLEDEGENN5*EOSEXTRASIMPLEDEGENN4*EOSEXTRASIMPLEDEGENN3*EOSEXTRASIMPLEDEGENN2*EOSEXTRASIMPLEDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRASIMPLETEMPN5*EOSEXTRASIMPLETEMPN4*EOSEXTRASIMPLETEMPN3*EOSEXTRASIMPLETEMPN2*EOSEXTRASIMPLETEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+#endif
+
+
 
   // simple zoom
   MPI_Bcase(&(BASEEOSMAC(eossimplezoomtabledegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSSIMPLEZOOMDEGENN5*EOSSIMPLEZOOMDEGENN4*EOSSIMPLEZOOMDEGENN3*EOSSIMPLEZOOMDEGENN2*EOSSIMPLEZOOMDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
@@ -1326,8 +1588,16 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eossimplezoomtablesspec,0,0,0,0,0,0,0)),1*EOSSIMPLEZOOMN5*EOSSIMPLEZOOMN4*EOSSIMPLEZOOMN3*EOSSIMPLEZOOMN2*EOSSIMPLEZOOMN1*NUMEOSSSPECQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eossimplezoomtablepofchi,0,0,0,0,0,0,0)),1*EOSSIMPLEZOOMN5*EOSSIMPLEZOOMN4*EOSSIMPLEZOOMN3*EOSSIMPLEZOOMN2*EOSSIMPLEZOOMN1*NUMEOSPOFCHIQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcase(&(BASEEOSMAC(eossimplezoomtabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEZOOMN5*EOSSIMPLEZOOMN4*EOSSIMPLEZOOMN3*EOSSIMPLEZOOMN2*EOSSIMPLEZOOMN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextra,0,0,0,0,0,0,0)),1*EOSSIMPLEZOOMN5*EOSSIMPLEZOOMN4*EOSSIMPLEZOOMN3*EOSSIMPLEZOOMN2*EOSSIMPLEZOOMN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+ 
+  // different size for extra table
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextra,0,0,0,0,0,0,0)),1*EOSEXTRASIMPLEZOOMN5*EOSEXTRASIMPLEZOOMN4*EOSEXTRASIMPLEZOOMN3*EOSEXTRASIMPLEZOOMN2*EOSEXTRASIMPLEZOOMN1*NUMEOSEXTRAQUANTITIESMEM,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+#if(WHICHDATATYPEGENERAL==4)
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRASIMPLEZOOMDEGENN5*EOSEXTRASIMPLEZOOMDEGENN4*EOSEXTRASIMPLEZOOMDEGENN3*EOSEXTRASIMPLEZOOMDEGENN2*EOSEXTRASIMPLEZOOMDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRASIMPLEZOOMTEMPN5*EOSEXTRASIMPLEZOOMTEMPN4*EOSEXTRASIMPLEZOOMTEMPN3*EOSEXTRASIMPLEZOOMTEMPN2*EOSEXTRASIMPLEZOOMTEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_DOUBLE,MPIid[0],MPI_COMM_GRMHD);
 #endif
+
+#endif // end if(WHICHEOS==KAZFULL)
+
 
 
 #endif // end if USEMPI
@@ -1346,182 +1616,318 @@ static void bcast_kazeos(void)
 // translate input EOS table columns into HARM EOS arrays
 // input jjj should be 0 if inputting degen table data
 // only used by read_setup_eostable()
+// for simple and simplezoom, just use full block and replace "fulltable" -> "simpletable"
+// note that name of array for extra stuff is "tableextra" and "tableextradegen", so the "extra" is at end of name rather than as "eosextra..." as in macro names
 static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double value)
 {
+
+
+  // overrides:
+  // then modify indices since different sub tables have different dimensions.  This will cause repeated-reads to put into same locations in memory.
+  if(WHICHDATATYPEGENERAL==4){
+    if(
+       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) ||
+       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAinextra && incol>LASTEXTRAinextra)) ||
+       whichdegen==1
+       ){
+      // then table not storing mmm or lll, so set to zero
+      mmm=lll=0;
+    }
+  }
+  if(whichdegen){
+    jjj=0; // in case not already set
+  }
 
 
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE){
+  else if(whichtable==FULLTABLE || whichtable==EXTRAFULLTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
-      if(incol==CS2ofRHOUin) EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOPin) EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
+      if(whichtable==FULLTABLE){
+	if(incol==PofRHOUin) EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
+	if(incol==CS2ofRHOUin) EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOSin) EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
+	if(incol==UofRHOPin) EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
 
-      if(incol==DPDRHOofRHOUin) EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
-      if(incol==DPDUofRHOUin) EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
+	if(incol==UofRHOSin) EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
 
-      if(incol==SofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
-      if(incol==DSDRHOofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
-      if(incol==DSDUofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
+	if(incol==DPDRHOofRHOUin) EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
+	if(incol==DPDUofRHOUin) EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
 
-      if(incol==SSofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
-      if(incol==DSSDRHOofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
-      if(incol==DSSDCHIofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
+	if(incol==SofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
+	if(incol==DSDRHOofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
+	if(incol==DSDUofRHOUin) EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
 
-      if(incol==PofRHOCHIin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
-      if(incol==IDRHO0DPin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
-      if(incol==IDCHIDPin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
+	if(incol==SSofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
+	if(incol==DSSDRHOofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
+	if(incol==DSSDCHIofRHOCHIin) EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
 
-      if(incol==TEMPUin) EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU)=value;
-      if(incol==TEMPPin) EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP)=value;
-      if(incol==TEMPCHIin) EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI)=value;
-      if(incol==TEMPSin) EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS)=value;
+	if(incol==PofRHOCHIin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
+	if(incol==IDRHO0DPin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
+	if(incol==IDCHIDPin) EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) EOSMAC(eosfulltabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eosfulltabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eosfulltabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eosfulltabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+      }
+      else{
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPinextra) EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIinextra) EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSinextra) EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+      }
     }
     else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+      // degen tables the same but with different name
+      if(whichtable==FULLTABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+
+	  if(incol==UTOTINin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+
+	  if(incol==UTOTOUTin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
       }
-      else{ // utotdegencut[whichtable]>=2
-	if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 
-	if(incol==UTOTINin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==PTOTINin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==CHIINin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==STOTINin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==UTOTINin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
 
-	if(incol==UTOTOUTin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==PTOTOUTin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==CHIOUTin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==STOTOUTin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==UTOTOUTin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
       }
     }
   }
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE){ // just table full block and replace "fulltable" -> "simpletable"
+  else if(whichtable==SIMPLETABLE || whichtable==EXTRASIMPLETABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
-      if(incol==CS2ofRHOUin) EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOPin) EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
+      if(whichtable==SIMPLETABLE){
+	if(incol==PofRHOUin) EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
+	if(incol==CS2ofRHOUin) EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOSin) EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
+	if(incol==UofRHOPin) EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
 
-      if(incol==DPDRHOofRHOUin) EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
-      if(incol==DPDUofRHOUin) EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
+	if(incol==UofRHOSin) EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
 
-      if(incol==SofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
-      if(incol==DSDRHOofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
-      if(incol==DSDUofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
+	if(incol==DPDRHOofRHOUin) EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
+	if(incol==DPDUofRHOUin) EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
 
-      if(incol==SSofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
-      if(incol==DSSDRHOofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
-      if(incol==DSSDCHIofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
+	if(incol==SofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
+	if(incol==DSDRHOofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
+	if(incol==DSDUofRHOUin) EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
 
-      if(incol==PofRHOCHIin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
-      if(incol==IDRHO0DPin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
-      if(incol==IDCHIDPin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
+	if(incol==SSofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
+	if(incol==DSSDRHOofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
+	if(incol==DSSDCHIofRHOCHIin) EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
 
-      if(incol==TEMPUin) EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU)=value;
-      if(incol==TEMPPin) EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP)=value;
-      if(incol==TEMPCHIin) EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI)=value;
-      if(incol==TEMPSin) EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS)=value;
+	if(incol==PofRHOCHIin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
+	if(incol==IDRHO0DPin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
+	if(incol==IDCHIDPin) EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
-    }
-    else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	if(incol==TEMPUin) EOSMAC(eossimpletabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eossimpletabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eossimpletabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eossimpletabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
       }
       else{
-	if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPinextra) EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIinextra) EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSinextra) EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+      }
+    }
+    else{
+      // degen tables the same but with different name
+      if(whichtable==SIMPLETABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 
-	if(incol==UTOTINin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==PTOTINin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==CHIINin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==STOTINin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==UTOTINin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
 
-	if(incol==UTOTOUTin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==PTOTOUTin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==CHIOUTin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==STOTOUTin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==UTOTOUTin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
+      }
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+
+	  if(incol==UTOTINin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+
+	  if(incol==UTOTOUTin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
       }
     }
   }
 #endif
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE){ // just table full block and replace "fulltable" -> "simpletable"
+  else if(whichtable==SIMPLEZOOMTABLE || whichtable==EXTRASIMPLEZOOMTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
-      if(incol==CS2ofRHOUin) EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOPin) EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
+      if(whichtable==SIMPLEZOOMTABLE){
+	if(incol==PofRHOUin) EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU)=value;
+	if(incol==CS2ofRHOUin) EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU)=value;
 
-      if(incol==UofRHOSin) EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
+	if(incol==UofRHOPin) EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP)=value;
 
-      if(incol==DPDRHOofRHOUin) EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
-      if(incol==DPDUofRHOUin) EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
+	if(incol==UofRHOSin) EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS)=value;
 
-      if(incol==SofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
-      if(incol==DSDRHOofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
-      if(incol==DSDUofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
+	if(incol==DPDRHOofRHOUin) EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU)=value;
+	if(incol==DPDUofRHOUin) EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU)=value;
 
-      if(incol==SSofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
-      if(incol==DSSDRHOofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
-      if(incol==DSSDCHIofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
+	if(incol==SofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU)=value;
+	if(incol==DSDRHOofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU)=value;
+	if(incol==DSDUofRHOUin) EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU)=value;
 
-      if(incol==PofRHOCHIin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
-      if(incol==IDRHO0DPin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
-      if(incol==IDCHIDPin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
+	if(incol==SSofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI)=value;
+	if(incol==DSSDRHOofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI)=value;
+	if(incol==DSSDCHIofRHOCHIin) EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI)=value;
 
-      if(incol==TEMPUin) EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU)=value;
-      if(incol==TEMPPin) EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP)=value;
-      if(incol==TEMPCHIin) EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI)=value;
-      if(incol==TEMPSin) EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS)=value;
+	if(incol==PofRHOCHIin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI)=value;
+	if(incol==IDRHO0DPin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP)=value;
+	if(incol==IDCHIDPin) EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP)=value;
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
-    }
-    else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	if(incol==TEMPUin) EOSMAC(eossimplezoomtabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eossimplezoomtabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eossimplezoomtabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eossimplezoomtabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
       }
       else{
-	if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
-	if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPinextra) EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIinextra) EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSinextra) EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+      }
+    }
+    else{
+      // degen tables the same but with different name
+      if(whichtable==SIMPLEZOOMTABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 
-	if(incol==UTOTINin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==PTOTINin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==CHIINin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
-	if(incol==STOTINin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==UTOTINin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
 
-	if(incol==UTOTOUTin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==PTOTOUTin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==CHIOUTin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
-	if(incol==STOTOUTin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==UTOTOUTin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
+      }
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
+
+	  if(incol==UTOTINin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==PTOTINin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==CHIINin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+	  if(incol==STOTINin) EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN)=value;
+
+	  if(incol==UTOTOUTin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==PTOTOUTin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==CHIOUTin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	  if(incol==STOTOUTin) EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT)=value;
+	}
       }
     }
   }
@@ -1547,187 +1953,326 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 
 
 // translate HARM EOS table columns into input type columns (i.e. eosarray -> value)
-// note that "incol" is *input* column number, not HARM EOS numbers, so this function should be just like seteostable() except LHS and RHS are flipped, so regexp it:
-// EOSMAC(\(.*\)=value; -> *value=EOSMAC(\1);
-// and last parameter goes from "double value" -> "double *value"
+// note that "incol" is *input* column number, not HARM EOS numbers, so this function should be just like seteostable() except LHS and RHS are flipped,
+// so regexp it:
+// EOSMAC(\(.*\))=value; -> *value=EOSMAC(\1);
+// and last function parameter goes from "double value" -> "double *value"
+//
 // input jjj should be 0 if inputting degen table data
 // only used by read_setup_eostable()
 static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double *value)
 {
 
 
+  
+
+
+  // overrides:
+  // then modify indices since different sub tables have different dimensions.  This will cause repeated-reads to put into same locations in memory.
+  if(WHICHDATATYPEGENERAL==4){
+    if(
+       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) ||
+       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAinextra && incol>LASTEXTRAinextra)) ||
+       whichdegen==1
+       ){
+      // then table not storing mmm or lll, so set to zero
+      mmm=lll=0;
+    }
+  }
+  if(whichdegen){
+    jjj=0; // in case not already set
+  }
+
+
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE){
+  else if(whichtable==FULLTABLE || whichtable==EXTRAFULLTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) *value=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
-      if(incol==CS2ofRHOUin) *value=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOPin) *value=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
+      if(whichtable==FULLTABLE){
+	if(incol==PofRHOUin) *value=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
+	if(incol==CS2ofRHOUin) *value=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOSin) *value=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
+	if(incol==UofRHOPin) *value=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
 
-      if(incol==DPDRHOofRHOUin) *value=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
-      if(incol==DPDUofRHOUin) *value=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
+	if(incol==UofRHOSin) *value=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
 
-      if(incol==SofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
-      if(incol==DSDRHOofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
-      if(incol==DSDUofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
+	if(incol==DPDRHOofRHOUin) *value=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
+	if(incol==DPDUofRHOUin) *value=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
 
-      if(incol==SSofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
-      if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
-      if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
+	if(incol==SofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
+	if(incol==DSDRHOofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
+	if(incol==DSDUofRHOUin) *value=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
 
-      if(incol==PofRHOCHIin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
-      if(incol==IDRHO0DPin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
-      if(incol==IDCHIDPin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
+	if(incol==SSofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
+	if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
+	if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
 
-      if(incol==TEMPUin) *value=EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU);
-      if(incol==TEMPPin) *value=EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP);
-      if(incol==TEMPCHIin) *value=EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI);
-      if(incol==TEMPSin) *value=EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS);
+	if(incol==PofRHOCHIin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
+	if(incol==IDRHO0DPin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
+	if(incol==IDCHIDPin) *value=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-    }
-    else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	if(incol==TEMPUin) *value=EOSMAC(eosfulltabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eosfulltabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eosfulltabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eosfulltabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
       }
       else{
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) *value=EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPinextra) *value=EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIinextra) *value=EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSinextra) *value=EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+      }
+    }
+    else{
+      // degen tables the same but with different name
+      if(whichtable==FULLTABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 
-	if(incol==UTOTINin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==PTOTINin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==CHIINin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==STOTINin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==UTOTINin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
 
-	if(incol==UTOTOUTin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==PTOTOUTin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==CHIOUTin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==STOTOUTin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==UTOTOUTin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
+      }
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+
+	  if(incol==UTOTINin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+
+	  if(incol==UTOTOUTin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
       }
     }
   }
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE){ // just table full block and replace "fulltable" -> "simpletable"
+  else if(whichtable==SIMPLETABLE || whichtable==EXTRASIMPLETABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) *value=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
-      if(incol==CS2ofRHOUin) *value=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOPin) *value=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
+      if(whichtable==SIMPLETABLE){
+	if(incol==PofRHOUin) *value=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
+	if(incol==CS2ofRHOUin) *value=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOSin) *value=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
+	if(incol==UofRHOPin) *value=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
 
-      if(incol==DPDRHOofRHOUin) *value=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
-      if(incol==DPDUofRHOUin) *value=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
+	if(incol==UofRHOSin) *value=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
 
-      if(incol==SofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
-      if(incol==DSDRHOofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
-      if(incol==DSDUofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
+	if(incol==DPDRHOofRHOUin) *value=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
+	if(incol==DPDUofRHOUin) *value=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
 
-      if(incol==SSofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
-      if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
-      if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
+	if(incol==SofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
+	if(incol==DSDRHOofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
+	if(incol==DSDUofRHOUin) *value=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
 
-      if(incol==PofRHOCHIin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
-      if(incol==IDRHO0DPin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
-      if(incol==IDCHIDPin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
+	if(incol==SSofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
+	if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
+	if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
 
-      if(incol==TEMPUin) *value=EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU);
-      if(incol==TEMPPin) *value=EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP);
-      if(incol==TEMPCHIin) *value=EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI);
-      if(incol==TEMPSin) *value=EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS);
+	if(incol==PofRHOCHIin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
+	if(incol==IDRHO0DPin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
+	if(incol==IDCHIDPin) *value=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-    }
-    else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	if(incol==TEMPUin) *value=EOSMAC(eossimpletabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eossimpletabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eossimpletabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eossimpletabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
       }
       else{
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) *value=EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPinextra) *value=EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIinextra) *value=EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSinextra) *value=EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+      }
+    }
+    else{
+      // degen tables the same but with different name
+      if(whichtable==SIMPLETABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 
-	if(incol==UTOTINin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==PTOTINin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==CHIINin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==STOTINin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==UTOTINin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
 
-	if(incol==UTOTOUTin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==PTOTOUTin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==CHIOUTin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==STOTOUTin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==UTOTOUTin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
+      }
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+
+	  if(incol==UTOTINin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+
+	  if(incol==UTOTOUTin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
       }
     }
   }
 #endif
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE){ // just table full block and replace "fulltable" -> "simpletable"
+  else if(whichtable==SIMPLEZOOMTABLE || whichtable==EXTRASIMPLEZOOMTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
-      if(incol==PofRHOUin) *value=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
-      if(incol==CS2ofRHOUin) *value=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOPin) *value=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
+      if(whichtable==SIMPLEZOOMTABLE){
+	if(incol==PofRHOUin) *value=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,PofRHOU);
+	if(incol==CS2ofRHOUin) *value=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,CS2ofRHOU);
 
-      if(incol==UofRHOSin) *value=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
+	if(incol==UofRHOPin) *value=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,UofRHOP);
 
-      if(incol==DPDRHOofRHOUin) *value=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
-      if(incol==DPDUofRHOUin) *value=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
+	if(incol==UofRHOSin) *value=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,UofRHOS);
 
-      if(incol==SofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
-      if(incol==DSDRHOofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
-      if(incol==DSDUofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
+	if(incol==DPDRHOofRHOUin) *value=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDRHOofRHOU);
+	if(incol==DPDUofRHOUin) *value=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,DPDUofRHOU);
 
-      if(incol==SSofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
-      if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
-      if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
+	if(incol==SofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,SofRHOU);
+	if(incol==DSDRHOofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDRHOofRHOU);
+	if(incol==DSDUofRHOUin) *value=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,DSDUofRHOU);
 
-      if(incol==PofRHOCHIin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
-      if(incol==IDRHO0DPin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
-      if(incol==IDCHIDPin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
+	if(incol==SSofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,SSofRHOCHI);
+	if(incol==DSSDRHOofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDRHOofRHOCHI);
+	if(incol==DSSDCHIofRHOCHIin) *value=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,DSSDCHIofRHOCHI);
 
-      if(incol==TEMPUin) *value=EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPU);
-      if(incol==TEMPPin) *value=EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPP);
-      if(incol==TEMPCHIin) *value=EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPCHI);
-      if(incol==TEMPSin) *value=EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,TEMPS);
+	if(incol==PofRHOCHIin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,PofRHOCHI);
+	if(incol==IDRHO0DPin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDRHO0DP);
+	if(incol==IDCHIDPin) *value=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,IDCHIDP);
 
-      if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-    }
-    else{
-      if(utotdegencut[whichtable]<=1){
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	if(incol==TEMPUin) *value=EOSMAC(eossimplezoomtabletemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eossimplezoomtabletemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eossimplezoomtabletemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eossimplezoomtabletemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+
+	// note that if WHICHDATATYPEGENERAL==4, below is just not used
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
       }
       else{
-	if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
-	if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
+	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUinextra) *value=EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPinextra) *value=EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIinextra) *value=EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSinextra) *value=EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+      }
+    }
+    else{
+      // degen tables the same but with different name
+      if(whichtable==SIMPLEZOOMTABLE){
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 
-	if(incol==UTOTINin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==PTOTINin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==CHIINin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
-	if(incol==STOTINin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==UTOTINin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
 
-	if(incol==UTOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==PTOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==CHIOUTin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
-	if(incol==STOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==UTOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
+      }
+      else{
+	if(utotdegencut[whichtable]<=1){
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	}
+	else{ // utotdegencut[whichtable]>=2
+	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
+
+	  if(incol==UTOTINin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==PTOTINin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==CHIINin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+	  if(incol==STOTINin) *value=EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSIN);
+
+	  if(incol==UTOTOUTin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==PTOTOUTin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==CHIOUTin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	  if(incol==STOTOUTin) *value=EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOUT);
+	}
       }
     }
   }
@@ -1737,51 +2282,6 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 
 
 
-
-// determine whether should do log interpolation
-// not used anymore with new multi-table approach
-static int get_dologinterp(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichfun, int whichindep)
-{
-  int EXTRASTART,EXTRAFINISH;
-  int whichinterp1,whichinterp2,loginterp;
-  int qi;
-
-
-
-#if(DOLOGINTERP)
-
-  EXTRASTART=extralimits[whichdatatype[whichtable]-1][0];
-  EXTRAFINISH=extralimits[whichdatatype[whichtable]-1][1];
-
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  whichinterp1=(whichfun==PofRHOCHI||whichfun==UofRHOP||whichfun==TEMPP||whichfun==PofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||(whichfun>=EXTRASTART && whichfun<=EXTRAFINISH)||whichfun==TEMPU||whichfun==TEMPCHI||whichfun==UofRHOS||whichfun==TEMPS||whichfun==UofRHOS);
-  // functions (F) F(rho0,p)
-  whichinterp2=(whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP);
-
-  //dualfprintf(fail_file,"whichfun=%d whichinterp1=%d whichinterp2=%d\n",whichfun,whichinterp1,whichinterp2);
-
-  if(1||degentable==0){ // always allow loginterp==1
-    if(whichinterp1||degentable==1) loginterp=1;
-    else if(whichinterp2) loginterp=0;
-    else{
-      dualfprintf(fail_file,"Undefined whichfun=%d in get_eos_fromlookup_linear(): %d %d %d %d %d %d\n",whichfun, repeatedeos, tabledimen, degentable, whichtable, whichfun, whichindep);
-      //      for(qi=1;qi<=NUMINDEPDIMENS+1;qi++) dualfprintf(fail_file,"%d : vartypearray=%d indexarray=%d\n",qi,vartypearray[qi],indexarray[qi]);
-      myexit(62662);
-    }
-  }
-  else{
-    loginterp=0;
-  }
-#else
-  loginterp=0;
-#endif
-
-
-
-  return(loginterp);
-
-}
 
 
 

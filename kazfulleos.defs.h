@@ -10,6 +10,7 @@ static int numeosquantitiesin[NUMTBLS]; // stored number of quantities per indep
 static int numeosdegenquantitiesin[NUMTBLS]; // stored number of quantities per independent variable in read-in degen table
 static int numallquantitiesin[NUMTBLS]; // total number of quantities per independent variable in read-in table
 static int numalldegenquantitiesin[NUMTBLS]; // total number of quantities per independent variable in read-in degen table
+static int extralimits[NUMTBLS][2]; // limits for extras
 
 // first [4] : above 4 types of independent variables
 // second [4] : 0 = lower log_base limit, 1 = upper log_base limit, 2=step, 3 = divisor of grid position 4=base of log, 5 = log10 value of offset for log_base stepping so can control how resolved
@@ -29,9 +30,6 @@ static int vartypeheightarray[NUMHDIRECTIONS+1];
 static int vardegentypearray[NUMEOSDEGENINDEPS+1];
 static int varnormalcompare2degentypearray[NUMEOSDEGENINDEPS+1]; // to be used to compare against degen table
 
-// translates input table columns that are to be stored into HARM EOS values
-//static int vartranslateinput2output[MAXNUMEOSQUANTITIESin
-
 
 static int numcolintablesubtype[NUMTABLESUBTYPES];
 static int whichdintablesubtype[NUMTABLESUBTYPES];
@@ -50,7 +48,6 @@ static int whichdatatype[NUMTBLS],utotdegencut[NUMTBLS],numc[NUMTBLS],numextras[
 
 static int primarytable=NOTABLE; // NOTABLE indicates no EOS setup/read-in yet
 
-static int extralimits[MAXNUMDATATYPES][2];
 
 
 static FTYPE FAKE2IDEALNUCLEAROFFSET;

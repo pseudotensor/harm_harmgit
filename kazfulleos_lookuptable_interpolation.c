@@ -175,14 +175,6 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   whichdegenfun = whichindep-1;
 
 
-  // determine which temperature to use to check inversion
-  // GODMARK: this could be stored in array where index is whichindep and output is whichtemp
-  //  if(whichindep==UEOS) whichtemp=TEMPU;
-  //  else if(whichindep==PEOS) whichtemp=TEMPP;
-  //  else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
-  //  else if(whichindep==SEOS) whichtemp=TEMPS;
-
-
   //////////
   //
   // determine if should do log interpolation
@@ -228,6 +220,7 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
     kazjjo=ROUND2INT(jeos);
     kazkko=ROUND2INT(keos);
     kazllo=ROUND2INT(leos);
+    kazmmo=0;
     
 
     // set range of loops for different table types
@@ -248,6 +241,11 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
     if(tablesize[whichtable][vartypearray[4]]==1) {kazstartlll=kazendlll=0;}
     else if(tablesize[whichtable][vartypearray[4]]==2){ kazstartlll=0; kazendlll=1;}
     else if(tablesize[whichtable][vartypearray[4]]>2){ kazstartlll=-1; kazendlll=1;}
+
+    // overrides:
+    // only extra table is function of Ynu or H if whichdatatype==4
+    if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){kazll=kazmm=kazllo=kazmmo=meos=leos=kazstartlll=kazendlll=0;}
+
   }
 
 
@@ -688,14 +686,6 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
   whichdegenfun = whichindep-1;
 
 
-  // determine which temperature to use to check inversion
-  // GODMARK: this could be stored in array where index is whichindep and output is whichtemp
-  //  if(whichindep==UEOS) whichtemp=TEMPU;
-  //  else if(whichindep==PEOS) whichtemp=TEMPP;
-  //  else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
-  //  else if(whichindep==SEOS) whichtemp=TEMPS;
-
-
 
 
   /////////////
@@ -748,9 +738,13 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
 
     if(tablesize[whichtable][vartypearray[3]]!=1) kazendkkk=1;
     else kazendkkk=0;
-    
+
     if(tablesize[whichtable][vartypearray[4]]!=1) kazendlll=1;
     else kazendlll=0;
+
+    // overrides:
+    // only extra table is function of Ynu or H if whichdatatype==4
+    if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){ kazll=leos=kazendlll=kazdl[1]=kazmm=meos=kazendmmm=kazdm[1]=0; kazdl[0]=kazdm[0]=1.0;}
 
   }
 
@@ -969,13 +963,6 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
   whichdegenfun = whichindep-1;
 
 
-  // determine which temperature to use to check inversion
-  // GODMARK: this could be stored in array where index is whichindep and output is whichtemp
-  //  if(whichindep==UEOS) whichtemp=TEMPU;
-  //  else if(whichindep==PEOS) whichtemp=TEMPP;
-  //  else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
-  //  else if(whichindep==SEOS) whichtemp=TEMPS;
-
 
 
   // determine if should do log interpolation
@@ -1027,6 +1014,11 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
     if(kazkk+kazendkkk>=tablesize[whichtable][vartypearray[3]]) kazendkkk=kazkk;
     if(kazll+kazendlll>=tablesize[whichtable][vartypearray[4]]) kazendlll=kazll;
     if(kazmm+kazendmmm>=tablesize[whichtable][vartypearray[5]]) kazendmmm=kazmm;
+
+    // overrides:
+    // only extra table is function of Ynu or H if whichdatatype==4
+    if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){leos=meos=kazll=kazmm=kazdl[1]=kazdm[1]=kazendlll=kazendmmm=0; kazdl[0]=kazdm[0]=1.0;}
+
 
   }
 
@@ -1182,14 +1174,6 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
   whichdegenfun = whichindep-1;
 
 
-  // determine which temperature to use to check inversion
-  // GODMARK: this could be stored in array where index is whichindep and output is whichtemp
-  //  if(whichindep==UEOS) whichtemp=TEMPU;
-  //  else if(whichindep==PEOS) whichtemp=TEMPP;
-  //  else if(whichindep==CHIEOS) whichtemp=TEMPCHI;
-  //  else if(whichindep==SEOS) whichtemp=TEMPS;
-
-
 
 
   if(repeatedeos==0){
@@ -1222,6 +1206,13 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
     
     if(tablesize[whichtable][vartypearray[4]]!=1) kazendlll=1;
     else kazendlll=0;
+
+    if(tablesize[whichtable][vartypearray[5]]!=1) kazendmmm=1;
+    else kazendmmm=0;
+
+    // overrides:
+    // only extra table is function of Ynu or H if whichdatatype==4
+    if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){leos=meos=kazll=kazmm=kazendlll=kazendmmm=0;}
  
   }
 
@@ -1351,6 +1342,10 @@ static int get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSPROTOTYPES, int repeat
   if(kazmm>=tablesize[whichtable][vartypearray[5]]) kazmm=tablesize[whichtable][vartypearray[5]]-1;
 
 
+  // overrides:
+  // only extra table is function of Ynu or H if whichdatatype==4
+  if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){kazll=kazmm=kazendlll=kazendmmm=0;}
+
   // get value
   get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
   
@@ -1378,102 +1373,188 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
   //  int whichdlocal;
 
 
+#if(PRODUCTION==0)
+  // overrides based upon true memory allocated as only required
+  if(WHICHDATATYPEGENERAL==4){
+    if(whichtablesubtype!=SUBTYPEEXTRA){
+      if(mmm!=0 || lll!=0){
+	// Then non-extras have no Ynu or H dependence
+	// should ensure loops don't use non-zero mmm or lll
+	dualfprintf(fail_file,"Bad get_arrays_eostable_direct: mmm=%d lll=%d whichtablesubtype=%d\n",mmm,lll,whichtablesubtype);
+	myexit(4633221);
+      }
+    }
+  }
+  if(whichtablesubtype==SUBTYPEDEGEN){
+    if(jjj!=0){
+      dualfprintf(fail_file,"Bad get_arrays_eostable_direct: degen: mmm=%d lll=%d whichtablesubtype=%d\n",mmm,lll,whichtablesubtype);
+      myexit(4633222);
+    }
+  }
+#endif
+
+
+
   // get number of columns possible for this whichtablesubtype
   numcols = numcolintablesubtype[whichtablesubtype];
   //  whichdlocal = whichdintablesubtype[whichtablesubtype]; // could ensure that whichd==whichdlocal for non-degen and non-temp
 
 
+
+
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE){
+  else if(whichtable==FULLTABLE||whichtable==EXTRAFULLTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
-      else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
-      else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
-      else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
-      else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
-      else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
-      else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
-      // temp table special like degen table such that only 1 returned temp associated with whichd value
-      else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
-      else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
-      // in principle can request degen data directly, so allow this
-      else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      if(whichtable==FULLTABLE){
+	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
+	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
+	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
+	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
+	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
+	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
+	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
+	// temp table special like degen table such that only 1 returned temp associated with whichd value
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
+	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      }
+      else if(whichtable==EXTRAFULLTABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+      }
     }
     else{
-      // then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-      // get basic utotoffset
-      values[0] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-      if(utotdegencut[whichtable]>=2){
-	// then also get other things
-	values[1] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	values[2] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+      if(whichtable==FULLTABLE){
+	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
+	// get basic utotoffset
+	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
+	values[0] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  // then also get other things
+	  values[1] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
+      }
+      else if(whichtable==EXTRAFULLTABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	values[0] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  values[1] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
       }
     }// end else if degentable      
   }// end if fulltable
 #endif
-
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE){
+  else if(whichtable==SIMPLETABLE||whichtable==EXTRASIMPLETABLE){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
-      else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
-      else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
-      else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
-      else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
-      else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
-      else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
-      // temp table special like degen table such that only 1 returned temp associated with whichd value
-      else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
-      else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
-      // in principle can request degen data directly, so allow this
-      else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      if(whichtable==SIMPLETABLE){
+	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
+	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
+	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
+	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
+	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
+	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
+	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
+	// temp table special like degen table such that only 1 returned temp associated with whichd value
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
+	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      }
+      else if(whichtable==EXTRASIMPLETABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+      }
     }
     else{
-      // then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-      // get basic utotoffset
-      values[0] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-      if(utotdegencut[whichtable]>=2){
-	// then also get other things
-	values[1] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	values[2] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+      if(whichtable==SIMPLETABLE){
+	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
+	// get basic utotoffset
+	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
+	values[0] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  // then also get other things
+	  values[1] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
+      }
+      else if(whichtable==EXTRASIMPLETABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	values[0] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  values[1] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
       }
     }// end else if degentable      
   }// end if simpletable
 #endif
-
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE){
+  else if(whichtable==SIMPLEZOOMTABLE||whichtable==EXTRASIMPLEZOOMTABLE){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
-      else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
-      else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
-      else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
-      else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
-      else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
-      else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
-      // temp table special like degen table such that only 1 returned temp associated with whichd value
-      else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
-      else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
-      // in principle can request degen data directly, so allow this
-      else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      if(whichtable==SIMPLEZOOMTABLE){
+	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSTANDARD);}
+	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSGUESS);}
+	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDISS);}
+	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDP);}
+	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSDEN);}
+	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSSSPEC);}
+	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSPOFCHI);}
+	// temp table special like degen table such that only 1 returned temp associated with whichd value
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);} // whichd used
+	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+      }
+      else if(whichtable==EXTRASIMPLEZOOMTABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+	// in principle can request degen data directly, so allow this
+	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN);} // whichd used
+	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSEXTRA);}
+      }
     }
     else{
-      // then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-      // get basic utotoffset
-      values[0] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-      if(utotdegencut[whichtable]>=2){
-	// then also get other things
-	values[1] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	values[2] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+      if(whichtable==SIMPLEZOOMTABLE){
+	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
+	// get basic utotoffset
+	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
+	values[0] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  // then also get other things
+	  values[1] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
+      }
+      else if(whichtable==EXTRASIMPLEZOOMTABLE){
+	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+	values[0] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
+	if(utotdegencut[whichtable]>=2){
+	  values[1] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
+	  values[2] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
+	}
       }
     }// end else if degentable      
   }// end if simplezoomtable
 #endif
+
 
 
 }
@@ -1487,7 +1568,14 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, double *values)
 {
   int numcols,coli;
-  //  int whichdlocal;
+
+
+  // overrides based upon true memory allocated as only required
+  // override instead of pre-condition because this function is called inside loop over other tables
+  if(WHICHDATATYPEGENERAL==4){
+    // Then temp has no Ynu or H dependence
+    mmm=lll=0;
+  }
 
 
   // get number of columns possible for this whichtablesubtype
@@ -1497,20 +1585,29 @@ static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, i
   }
 #if(ALLOWFULLTABLE==1)
   else if(whichtable==FULLTABLE){
-    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltabletemp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
   }// end if fulltable
+  else if(whichtable==EXTRAFULLTABLE){
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+  }// end if extrafulltable
 #endif
   // simple table is just copy-paste from full table with fulltable->simpletable
 #if(ALLOWSIMPLETABLE==1)
   else if(whichtable==SIMPLETABLE){
-    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletabletemp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
   }// end if simpletable
+  else if(whichtable==EXTRASIMPLETABLE){
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+  }// end if extrasimpletable
 #endif
   // simplezoom table is just copy-paste from full table with fulltable->simplezoomtable
 #if(ALLOWSIMPLEZOOMTABLE==1)
   else if(whichtable==SIMPLEZOOMTABLE){
-    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtabletemp,0,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
   }// end if simplezoomtable
+  else if(whichtable==EXTRASIMPLEZOOMTABLE){
+    for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSTEMP);
+  }// end if extrasimplezoomtable
 #endif
 
 

@@ -32,11 +32,10 @@
 ///////////////
 static int getsingle_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answer);
 static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answers, int *badlookups);
-static int which_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable);
+static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable);
 static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
 static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
 static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
-static int get_whichindep(int whichfun);
 static int get_whichindep_fromwhichd(int whichd, int *whichindep);
 static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
 
@@ -325,7 +324,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
       // see if within table, and if so lookup interpolated result
 
       // can't predict that when taking subtraction on utot -> utotdiff that will end up within same table, so always get both tables
-      failreturn += which_eostable(whichdegen,whichindep, vartypearray, qarray, &whichtable[whichd][whichdegen]);
+      failreturn += which_eostable(whichtablesubtype,whichdegen,whichindep, vartypearray, qarray, &whichtable[whichd][whichdegen]);
 
       // check if got a table, and if so then use it, otherwise return(1) and assume using off-table values
       if(whichtable[whichd][whichdegen]==NOTABLE){
@@ -449,8 +448,9 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 // here we only presume to care about density and internal energy, while H and T are presumed to be truncated rather than extended with some alternative
 // ifdegencheck: 0 = normal table check  1 = ignores q2 (u,p,chi) since generally q2 is largest range possible and later will restrict/check if within the full table
 // whichindep = which independent variable (based upon which function looking up)
-static int which_eostable(int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable)
+static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable)
 {
+  int whichtabletry;
   // don't assume tables are setup so q1 and q2 always have same range
   // assume all quantities depend on limits in same way, so "which" doesn't matter
   // assume HEOS and YEEOS are always withing range for now
@@ -464,33 +464,42 @@ static int which_eostable(int ifdegencheck, int whichindep, int *vartypearray, F
   // Note that for q2, for utotdegencut>=2 that qarray[2] is actually an fractional index "i/N"=lutotdiff, and lineartablelimits[] is correctly that range of "i/N"=lutotdiff from 0..1.0
   /////////////////////////////
 
-  if(ALLOWFULLTABLE
-	  &&
-	  qarray[1]>=lineartablelimits[FULLTABLE][vartypearray[1]][0] && qarray[1]<=lineartablelimits[FULLTABLE][vartypearray[1]][1]
-	  &&
-	  (ifdegencheck || qarray[2]>=lineartablelimits[FULLTABLE][vartypearray[2]][0] && qarray[2]<=lineartablelimits[FULLTABLE][vartypearray[2]][1])
-	  ){
-    *whichtable=FULLTABLE;
-    return(0);
+#if(ALLOWFULLTABLE)
+  if(whichtablesubtype==SUBTYPEEXTRA && WHICHDATATYPEGENERAL==4){
+    whichtabletry=EXTRAFULLTABLE;
   }
-  else if(ALLOWSIMPLETABLE
-	  &&
-	  qarray[1]>=lineartablelimits[SIMPLETABLE][vartypearray[1]][0] && qarray[1]<=lineartablelimits[SIMPLETABLE][vartypearray[1]][1]
-	  &&
-	  (ifdegencheck || qarray[2]>=lineartablelimits[SIMPLETABLE][vartypearray[2]][0] && qarray[2]<=lineartablelimits[SIMPLETABLE][vartypearray[2]][1])
+  else whichtabletry=FULLTABLE;
+    
+  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearray[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearray[1]][1]
+     &&
+     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearray[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearray[2]][1])
      ){
-    *whichtable=SIMPLETABLE;
+    *whichtable=whichtabletry;
     return(0);
   }
-  else{
+#endif
+#if(ALLOWSIMPLETABLE)
+  if(whichtablesubtype==SUBTYPEEXTRA && WHICHDATATYPEGENERAL==4){
+    whichtabletry=EXTRASIMPLETABLE;
+  }
+  else whichtabletry=SIMPLETABLE;
+    
+  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearray[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearray[1]][1]
+     &&
+     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearray[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearray[2]][1])
+     ){
+    *whichtable=whichtabletry;
+    return(0);
+  }
+#endif
 
-    if(0&&debugfail>=2){ // DEBUG: was turned on when debugging EOS
-      dualfprintf(fail_file,"NOT IN LOOKUP: ifdegencheck=%d whichindep=%d qarray[1]=%21.15g qarray[2]=%21.15g\n",ifdegencheck,whichindep,qarray[1],qarray[2]);
-      dualfprintf(fail_file,"lin0=%g lin1=%g\n",lineartablelimits[SIMPLETABLE][RHOEOS][0],lineartablelimits[SIMPLETABLE][RHOEOS][1]);
-    }
-    *whichtable=NOTABLE;
-    return(0);
+
+  if(debugfail>=2){ // DEBUG: was turned on when debugging EOS
+    dualfprintf(fail_file,"NOT IN LOOKUP: ifdegencheck=%d whichindep=%d qarray[1]=%21.15g qarray[2]=%21.15g\n",ifdegencheck,whichindep,qarray[1],qarray[2]);
+    dualfprintf(fail_file,"lin0=%g lin1=%g\n",lineartablelimits[SIMPLETABLE][RHOEOS][0],lineartablelimits[SIMPLETABLE][RHOEOS][1]);
   }
+  *whichtable=NOTABLE;
+  return(1);
 
   // GODMARK:
   // alternative to this function is that we simply place a floor on the linear values of rho, u, H, and T so always within table values
@@ -690,42 +699,6 @@ static int get_whichindep_fromwhichd(int whichd, int *whichindep)
 }
 
 
-
-// obtain whichfun from whichindep
-// Not used anymore
-static int get_whichindep(int whichfun)
-{
-  int whichcheck1,whichcheck2,whichcheck3,whichcheck4;
-  int whichindep;
-
-
-  // GODMARK: Can make array that stores this info, looked up by whichfun as index
-  // functions (F) F(rho0,u)
-  // GODMARK: >=EXTRA1 assumes all extras are F(rho0,u), although might need to be functions of \chi -- then would need to change
-  whichcheck1=(whichfun==PofRHOU||whichfun==DPDRHOofRHOU||whichfun==DPDUofRHOU||whichfun==CS2ofRHOU||whichfun==SofRHOU||whichfun==SSofRHOCHI||whichfun==DSDRHOofRHOU||whichfun==DSDUofRHOU||whichfun==DSSDRHOofRHOCHI||whichfun==DSSDCHIofRHOCHI||(whichfun>=EXTRA1)||whichfun==TEMPU);
-
-  // functions (F) F(rho0,p)
-  whichcheck2=(whichfun==UofRHOP||whichfun==TEMPP);
-
-  // functions (F) F(rho0,\chi=u+p)
-  whichcheck3=(whichfun==PofRHOCHI||whichfun==IDRHO0DP||whichfun==IDCHIDP||whichfun==TEMPCHI);
-
-  whichcheck4=(whichfun==UofRHOS||whichfun==TEMPS);
-
-
-  // determine which temperature to use to check inversion
-  if(whichcheck1) whichindep=UEOS;
-  else if(whichcheck2) whichindep=PEOS;
-  else if(whichcheck3) whichindep=CHIEOS;
-  else if(whichcheck4) whichindep=SEOS;
-  else{
-    dualfprintf(fail_file,"Undefined whichfun=%d in get_whichindep()\n",whichfun);
-    myexit(26867);
-  }
-
-  return(whichindep);
-
-}
 
 
 
