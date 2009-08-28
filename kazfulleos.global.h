@@ -84,7 +84,9 @@
 #define TBLLINEARITEMS (UPDOWN+2)
 
 
-
+// for calling usereduced_eos()
+#define REDUCENOOFFSET 0
+#define REDUCEUSEOFFSET 1
 
 
 
@@ -111,7 +113,7 @@
 
 
 // initialize kaziio, etc. with this so first call has no old index used
-#define INITKAZINDEX -100
+#define INITKAZINDEX (-100)
 
 
 

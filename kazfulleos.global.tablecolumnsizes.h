@@ -25,11 +25,11 @@
 // 5 true dimensions (rhob,u/p/chi/sden/(tk),tdynorye,tdynorynu,hcm)
 // Recall that u/p/chi/sden/tk are all in same independent variable slot for different functions
 #define NUMINDEPDIMENS 5
+
+
+
 // what is contained within file (rhob,utotdiff/ptotdiff/chidiff/stotdiff,tdynorye,tdynorynu,hcm)
-
-
 #define NUMEOSINDEPS 8 // independent-like quantities that have read-in table limits [i.e. rho,u,p,chi,s,T,ynu,H]
-
 // these are fixed in order and number as consistent with what's read-in from file
 #define RHOEOS 0    // rest-mass density
 #define UEOS   1    // internal energy density: used for u
@@ -41,9 +41,12 @@
 #define HEOS   7    // height (not used normally anymore)
 
 // begin and end types of temperature-originated quantities
-// which temperature-like independent is chosen using vartypearray[2]
+// which temperature-like independent is chosen using vartypearraylocal[2]
 #define FIRSTTKLIKE UEOS
 #define LASTTKLIKE  SEOS
+
+
+
 
 
 ////////////////////
@@ -51,7 +54,6 @@
 // Setup HARM EOS version of degeneracy table
 //
 ///////////////////
-
 
 // rho, tdynorye, tdynorynu, H
 // independents for degen table
@@ -82,7 +84,7 @@
 #define EOSOUT 2 // like Rout
 #define FIRSTEOSDEGEN EOSOFFSET
 #define LASTEOSDEGEN EOSOUT
-#define FIRSTEOSQUANTITY FIRSTEOSDEGEN // first in list of quantities can grab per whichd
+#define FIRSTEOSQUANTITY FIRSTEOSDEGEN // FIRST in list of quantities can grab per whichd
 
 
 
@@ -122,6 +124,7 @@
 // SUPERNOTE: all tables should have the non-stored data used for checking table consistency
 #define NUMEOSQUANTITIESNOTSTOREDin (NUMINDEPDIMENS+NUMEOSINDEPS+NUMEOSDEGENQUANTITIESMEM1)
 
+// Stored-data labels:
 #define PofRHOUin 0      // p(rho0,u)
 #define UofRHOPin 1      // u(rho0,p)
 // below used for simple dissipation entropy-inversion tracking same fluid element as energy-based inversion
@@ -152,17 +155,10 @@
 // below used to define temperature and if <invalidtemperature this indicates not in valid part of table (i.e. interpolation from T->u leads to general u range that is mapped onto fixed u range, so final table bounds original table)
 #define NUMTEMPin NUMEOSDEGENQUANTITIESMEM1
 #define TEMPUin 15 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPPin 16 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPCHIin 17 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
-#define TEMPSin 18 // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPPin (TEMPUin+1) // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPCHIin (TEMPUin+2) // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
+#define TEMPSin (TEMPUin+3) // temperature in Kelvin (doesn't need to be function of H or TDYNORYE, but can change later)
 
-// for "pure" extra table:
-#define TEMPUinextra 0
-#define TEMPPinextra 1
-#define TEMPCHIinextra 2
-#define TEMPSinextra 3
-#define FIRSTEOSQUANTITIESBASEinextra TEMPUinextra
-#define LASTEOSQUANTITIESBASEinextra TEMPSinextra
 
 // last index of quantities above
 #define LASTEOSQUANTITIESBASEin TEMPSin
@@ -201,21 +197,26 @@
 #define FIRSTEXTRAin EXTRA1in
 #define LASTEXTRAin EXTRA24in
 
+
+
+//////////////////////////////////
+// for "pure" extra table:
 // when reading-in "pure" extra table
+#define TEMPUinextra 0
+#define TEMPPinextra 1
+#define TEMPCHIinextra 2
+#define TEMPSinextra 3
+#define FIRSTEOSQUANTITIESBASEinextra TEMPUinextra
+#define LASTEOSQUANTITIESBASEinextra TEMPSinextra
+#define NUMEOSQUANTITIESBASEinextra (LASTEOSQUANTITIESBASEinextra-FIRSTEOSQUANTITIESBASEinextra+1)
+
 #define EXTRA1inextra LASTEOSQUANTITIESBASEinextra+1
 #define EXTRA24inextra EXTRA1inextra+23
 #define FIRSTEXTRAinextra EXTRA1inextra
 #define LASTEXTRAinextra EXTRA24inextra
 
 
-// below ending # corresponds to whichrnpmethod
-// monotonized is 22 + extras
-// for input, total is 7 + extras
-// totals for input are 8 23 16 is present original data for version1,2,3, then eos_extract adds:
-// for normal table, eos_extract.m adds 3 (degens) + 3 (tk's) = 6 total normal added
-// totals for input after eos_extract are: 7+extra+6
-// eos_extract always makes 24 + extras = 10 iterators + 14 eosquantities + extras
-// for degen table, eox_extract.m has 9 total
+
 
 
 // for memory optimization, must specifiy which datatype
@@ -226,6 +227,7 @@
 #if(WHICHEOSDIMEN==4 && WHICHDATATYPEGENERAL!=4)
 #error WHICHEOSDIMEN and WHICHDATATYPEGENERAL inconsistent
 #endif
+
 
 // for different datatypes have different extra things
 #define MAXNUMDATATYPES 4
@@ -278,7 +280,9 @@
 #define SUBTYPESSPEC 6
 #define SUBTYPEPOFCHI 7
 #define SUBTYPETEMP 8
-#define SUBTYPEEXTRA 9
+#define SUBTYPEEXTRA 9 // extra is separate table when WHICHDATATYPEGENERAL==4
+
+
 
 ///////////////////////
 //
@@ -313,7 +317,7 @@
 #define SofRHOU (LASTEOSDP+1)
 #define DSDRHOofRHOU (LASTEOSDP+2)
 #define DSDUofRHOU (LASTEOSDP+3)
-#define FIRSTEOSSDEN DSDRHOofRHOU
+#define FIRSTEOSSDEN SofRHOU
 #define LASTEOSSDEN DSDUofRHOU
 
 #define NUMEOSSSPECQUANTITIESMEM 3
@@ -349,8 +353,8 @@
 #define NUMEOSEXTRAQUANTITIES NUMEXTRAEOSQUANTITIESTYPE4
 #endif
 
-
 #define NUMEOSEXTRAQUANTITIESMEM NUMEOSEXTRAQUANTITIES
+
 
 // maximum number of extra variables in kazfulleos.c
 // some constant so dump files don't change

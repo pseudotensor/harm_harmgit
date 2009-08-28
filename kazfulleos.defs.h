@@ -6,10 +6,12 @@
 // SUPERNOTE: Must create corresponding MPI_Bcast() for these in kazfulleos_read_setup_eostable.c
 //
 ////////////////
-static int numeosquantitiesin[NUMTBLS]; // stored number of quantities per independent variable in read-in table
-static int numeosdegenquantitiesin[NUMTBLS]; // stored number of quantities per independent variable in read-in degen table
-static int numallquantitiesin[NUMTBLS]; // total number of quantities per independent variable in read-in table
-static int numalldegenquantitiesin[NUMTBLS]; // total number of quantities per independent variable in read-in degen table
+static int numeosquantitiesinstandardlist[NUMTBLS]; // standard number of of canonical list of columns corresponding to "in" format.  Should be same for standard and extra tables, for example.
+static int numeosdegenquantitiesinstandardlist[NUMTBLS]; // (for degen table) standard number of of canonical list of columns corresponding to "in" format.  Should be same for standard and extra tables, for example.
+static int numeosquantitiesinfile[NUMTBLS]; // stored number of quantities per independent variable in read-in table
+static int numeosdegenquantitiesinfile[NUMTBLS]; // stored number of quantities per independent variable in read-in degen table
+static int numallquantitiesinfile[NUMTBLS]; // total number of quantities per independent variable in read-in table
+static int numalldegenquantitiesinfile[NUMTBLS]; // total number of quantities per independent variable in read-in degen table
 static int extralimits[NUMTBLS][2]; // limits for extras
 
 // first [4] : above 4 types of independent variables
@@ -23,7 +25,7 @@ static FTYPE lineartablelimits[NUMTBLS][NUMEOSINDEPS][TBLLINEARITEMS]; // makes 
 static int tablesize[NUMTBLS][NUMEOSINDEPS];
 
 static int vartypeeosextraarray[NUMINDEPDIMENS+1];
-static int vartypearray[NUMINDEPDIMENS+1];
+static int vartypearray[NUMINDEPDIMENS+1]; // unchanging
 
 static int vartypeheightarray[NUMHDIRECTIONS+1];
 
@@ -53,7 +55,8 @@ static int primarytable=NOTABLE; // NOTABLE indicates no EOS setup/read-in yet
 static FTYPE FAKE2IDEALNUCLEAROFFSET;
 static FTYPE TRUENUCLEAROFFSET, DEGENNUCLEAROFFSET;
 static FTYPE lsoffset, fakelsoffset;
-static int didsetupkazeos;
+
+static int didsetupkazeos; // OPENMPMARK: changes once, but master thread only calls setup
 
 
 

@@ -233,7 +233,7 @@
 // SIMPLETABLE:
 #define EOSSIMPLEHEADNAME "eossimplenew.head"
 #define EOSSIMPLETABLENAME "eossimplenew.dat"
-#define EOSSIMPLETABLEDEGENNAME "eosdegensimplenew.dat"
+#define EOSSIMPLETABLEDEGENNAME "eossimpledegennew.dat"
 // EXTRASIMPLETABLE:
 #define EOSEXTRASIMPLEHEADNAME "eosextrasimplenew.head"
 #define EOSEXTRASIMPLETABLENAME "eosextrasimplenew.dat"

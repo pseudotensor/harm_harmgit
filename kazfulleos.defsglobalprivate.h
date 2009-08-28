@@ -28,6 +28,7 @@ int repeatedfun[NUMTABLESUBTYPES][MAXEOSPIPELINE];
 
 ///////////////
 // old EOS table position and results for extras and processed
+// only whichd==UTOTDIFF required
 FTYPE qoldarrayextras[NUMINDEPDIMENS+1];
 FTYPE extrasold[MAXNUMEXTRAS];
 FTYPE processedold[MAXPROCESSEDEXTRAS];

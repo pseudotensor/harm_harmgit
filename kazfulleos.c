@@ -32,12 +32,12 @@
 ///////////////
 static int getsingle_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answer);
 static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answers, int *badlookups);
-static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable);
-static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
-static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
-static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
+static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearraylocal, FTYPE *qarray, int *whichtable);
+static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray);
+static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray);
+static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray);
 static int get_whichindep_fromwhichd(int whichd, int *whichindep);
-static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
+static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray);
 
 
 
@@ -50,7 +50,7 @@ static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int which
 
 
 
-
+// non-pipelined way to get single value from pipelined lookup
 static int getsingle_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *answer)
 {
   FTYPE answers[MAXEOSPIPELINE];
@@ -117,7 +117,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
   int repeatedeos;
   int numcols;
   int failreturn=0;
-
+  int vartypearraylocal[NUMINDEPDIMENS+1];
   
 
 
@@ -126,10 +126,17 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
   // Ensure that setup table
   //
   ///////////////////////////////
+#if(PRODUCTION==0)
   if(didsetupkazeos==0){
     dualfprintf(fail_file,"Requested WHICHEOS=KAZEOS but didn't initialize kaz table by calling read_setup_eostable()\n");
     myexit(151068); 
   }
+
+  // For repeatedeos, don't want coincidence where (e.g.) utotdiff==stotdiff and think repeated.  Need independents to be same.  Now controlled with using [whichd] on qoldarray
+  if(whichd!=whichdintablesubtype[whichtablesubtype]){
+    dualfprintf(fail_file,"lookup not setup for different whichd=%d in this whichtablesubtype=%d\n",whichd,whichtablesubtype);
+  }
+#endif
 
 
   //////////////////////
@@ -138,7 +145,12 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
   //
   //////////////////////
   get_whichindep_fromwhichd(whichd,&whichindep);
-  vartypearray[2]=whichindep; // used to translate q1-q5 to INDEP0-INDEP6, and used with limits and sizes of tables
+  // used to translate q1-q5 to INDEP0-INDEP6, and used with limits and sizes of tables
+  for(qi=1;qi<=NUMINDEPDIMENS;qi++){
+    vartypearraylocal[qi]=vartypearray[qi]; // use of global, which is ok since unchanging
+  }
+  // OVERRIDE global value for temperature-like quantity
+  vartypearraylocal[2]=whichindep;
 
 
   ///////////
@@ -180,13 +192,11 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
   //
   //////////////////////////////////////////////////////
 
+
   repeatedeos=1;
-  repeatedeos*=(whichd==whichdintablesubtype[whichtablesubtype]); // don't want coincidence where (e.g.) utotdiff==stotdiff and think repeated.  Need independents to be same.
   for(qi=1;qi<=WHICHEOSDIMEN;qi++){ // only need to repeat used independent variables, not all
     repeatedeos*=(fabs(qarray[qi]-qoldarray[whichd][qi])<OLDTOLERANCE);
   }
-
-
 
 
 
@@ -228,7 +238,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 
     //////////
     //
-    // get quantities not stored in repeated array
+    // get quantities not stored in repeated array but grid index is same as previous since repeatedeos
     //
     //////////
     if(stilltoget){
@@ -254,12 +264,12 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	//if(debugfail>=2) dualfprintf(fail_file,"CHECKLOOKUP:(repeated) %d %d %d : %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichdegen,whichfun);
 
 	// directly used old indexarray that is valid since independents unchanged
-	failreturn += get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichd][whichdegen], whichtablesubtype, iffun, whichindep, quant1, vartypearray, indexarray[whichd], myanswers[whichdegen],badlookups);
+	failreturn += get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichd][whichdegen], whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray[whichd], myanswers[whichdegen],badlookups);
 
 	for(coli=0;coli<numcols;coli++){
 	  if(iffun[coli]){
 	    if(badlookups[coli]){
-	      dualfprintf(fail_file,"Repeated lookup got no valid lookup in table\n");
+	      dualfprintf(fail_file,"Repeated lookup got no valid lookup in table\n"); // actually bad failure
 	      diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	    } // end if bad lookup
 	    else{
@@ -324,7 +334,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
       // see if within table, and if so lookup interpolated result
 
       // can't predict that when taking subtraction on utot -> utotdiff that will end up within same table, so always get both tables
-      failreturn += which_eostable(whichtablesubtype,whichdegen,whichindep, vartypearray, qarray, &whichtable[whichd][whichdegen]);
+      failreturn += which_eostable(whichtablesubtype,whichdegen,whichindep, vartypearraylocal, qarray, &whichtable[whichd][whichdegen]);
 
       // check if got a table, and if so then use it, otherwise return(1) and assume using off-table values
       if(whichtable[whichd][whichdegen]==NOTABLE){
@@ -337,8 +347,10 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	}
 	// return now since nothing else to do
 	return(0); // but not hard failure
+
       }
       else{
+
 	// check that degen and normal table resolved to same table, since can't use degen value from one table to get values from another table
 	if(whichdegen==whichdegenend){
 
@@ -364,7 +376,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	// for whichdegen==1, below does set indexarray[][2]=0 for accessing degen table
 	//
 	////////////
-	eos_lookup_prepost_degen(whichdegen, whichtable[whichd][whichdegen], whichindep, vartypearray, qarray, indexarray[whichd]);
+	eos_lookup_prepost_degen(whichdegen, whichtable[whichd][whichdegen], whichindep, vartypearraylocal, qarray, indexarray[whichd]);
 
 
 
@@ -377,7 +389,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	// For whichdegen==0, presume qarray[2] correct for lookup and so lookup quantities within subtable=whichtablesubtype and lookup those quantities listed as iffun[whichfun]=1
 	//
 	////////////////////////////
-	failreturn=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichd][whichdegen], whichtablesubtype, iffun, whichindep, quant1, vartypearray, indexarray[whichd],myanswers[whichdegen],badlookups);
+	failreturn=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[whichd][whichdegen], whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray[whichd],myanswers[whichdegen],badlookups);
 
 
 
@@ -389,7 +401,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	for(coli=0;coli<numcols;coli++){
 	  if(iffun[coli]){
 	    if(badlookups[coli]){
-	      dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d :: %d : %d %d\n",coli,whichtable[whichd][whichdegen],whichd,whichdegen);
+	      if(debugfail>=2) dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d :: %d : %d %d\n",coli,whichtable[whichd][whichdegen],whichd,whichdegen);
 	      diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 	    }
 	  }
@@ -404,7 +416,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 	  // myanswers[whichdegen] should have multiple values with utotdegencut>=2
 	  //
 	  ////////////////////////////
-	  eos_lookup_modify_qarray(whichdegen, myanswers[whichdegen],whichtable[whichd][whichdegen],whichindep,vartypearray,qarray,indexarray[whichd]);
+	  eos_lookup_modify_qarray(whichdegen, myanswers[whichdegen],whichtable[whichd][whichdegen],whichindep,vartypearraylocal,qarray,indexarray[whichd]);
 	}
 
 
@@ -415,7 +427,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
 	if(badlookups[coli]==0){
-	  answers[coli]=myanswers[0][coli];
+	  answers[coli]=myanswers[ISNOTDEGENTABLE][coli];
 	}
       }
     }
@@ -448,7 +460,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 // here we only presume to care about density and internal energy, while H and T are presumed to be truncated rather than extended with some alternative
 // ifdegencheck: 0 = normal table check  1 = ignores q2 (u,p,chi) since generally q2 is largest range possible and later will restrict/check if within the full table
 // whichindep = which independent variable (based upon which function looking up)
-static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearray, FTYPE *qarray, int *whichtable)
+static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichindep, int *vartypearraylocal, FTYPE *qarray, int *whichtable)
 {
   int whichtabletry;
   // don't assume tables are setup so q1 and q2 always have same range
@@ -470,9 +482,9 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
   }
   else whichtabletry=FULLTABLE;
     
-  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearray[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearray[1]][1]
+  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearraylocal[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearraylocal[1]][1]
      &&
-     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearray[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearray[2]][1])
+     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearraylocal[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearraylocal[2]][1])
      ){
     *whichtable=whichtabletry;
     return(0);
@@ -484,9 +496,9 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
   }
   else whichtabletry=SIMPLETABLE;
     
-  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearray[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearray[1]][1]
+  if(qarray[1]>=lineartablelimits[whichtabletry][vartypearraylocal[1]][0] && qarray[1]<=lineartablelimits[whichtabletry][vartypearraylocal[1]][1]
      &&
-     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearray[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearray[2]][1])
+     (ifdegencheck || qarray[2]>=lineartablelimits[whichtabletry][vartypearraylocal[2]][0] && qarray[2]<=lineartablelimits[whichtabletry][vartypearraylocal[2]][1])
      ){
     *whichtable=whichtabletry;
     return(0);
@@ -521,8 +533,8 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
 // rho0,u,H,T have independent lookups for mapping to i,j,k,l and already done in eos_lookup_degen()
 // u here stands for utotdiff,ptotdiff,and chidiff depending upon whichindep
 // here only need to look up jeos associated with u
-// notice that qarray and vartypearray start at 1 not 0
-static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+// notice that qarray and vartypearraylocal start at 1 not 0
+static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray)
 {
   FTYPE logq[NUMINDEPDIMENS+1];
   FTYPE prelogq[NUMINDEPDIMENS+1];
@@ -541,10 +553,10 @@ static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int w
   for(qi=begin;qi<=end;qi++){
     if(qi==skip) continue;
     
-    prelogq[qi] = MAX(qarray[qi]    -lineartablelimits[whichtable][vartypearray[qi]]  [3],SMALL);
-    logq[qi]    = log10(prelogq[qi])*lineartablelimits[whichtable][vartypearray[qi]][2];
+    prelogq[qi] = MAX(qarray[qi]    -lineartablelimits[whichtable][vartypearraylocal[qi]]  [3],SMALL);
+    logq[qi]    = log10(prelogq[qi])*lineartablelimits[whichtable][vartypearraylocal[qi]][2];
 
-    indexarray[qi] = (logq[qi]   -tablelimits[whichtable][vartypearray[qi]]  [0])*tablelimits[whichtable][vartypearray[qi]]  [3];
+    indexarray[qi] = (logq[qi]   -tablelimits[whichtable][vartypearraylocal[qi]]  [0])*tablelimits[whichtable][vartypearraylocal[qi]]  [3];
 
     // DEBUG:
     //    dualfprintf(fail_file,"qi=%d qarray=%21.15g prelogq=%21.15g logq=%21.15g indexarray=%21.15g\n",qi,qarray[qi],prelogq[qi],logq[qi],indexarray[qi]);
@@ -556,14 +568,14 @@ static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int w
 
 
 // for this function, presume qarray[2] is in lutotdiff="i/N" form, so simpler conversion to "i" units
-static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray)
 {
   int qi;
 
   for(qi=begin;qi<=end;qi++){
     if(qi==skip) continue;
     
-    indexarray[qi] = (qarray[qi])*tablelimits[whichtable][vartypearray[qi]]  [3]; // tablelimits[][][3] is N[qi], so gives index
+    indexarray[qi] = (qarray[qi])*tablelimits[whichtable][vartypearraylocal[qi]]  [3]; // tablelimits[][][3] is N[qi], so gives index
 
   }
 
@@ -572,10 +584,10 @@ static void eos_lookup_degen_utotdegencut23(int begin, int end, int skip, int wh
 
 
 // whichdegen: 1 = do degen lookup  0 = do normal lookup without energy indepenent variable lookup
-static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray)
 {
 
-  void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray);
+  void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray);
   int skip;
 
 
@@ -583,16 +595,16 @@ static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichin
     // if normal table after degen table, then only need to get q2 location
     skip = -1000;
     if(utotdegencut[whichtable]>=2){
-      eos_lookup_degen_utotdegencut23(2,2,skip, whichtable, whichindep, vartypearray, qarray, indexarray);
+      eos_lookup_degen_utotdegencut23(2,2,skip, whichtable, whichindep, vartypearraylocal, qarray, indexarray);
     }
     else{
-      eos_lookup_degen(2,2,skip, whichtable, whichindep, vartypearray, qarray, indexarray);
+      eos_lookup_degen(2,2,skip, whichtable, whichindep, vartypearraylocal, qarray, indexarray);
     }
   }
   else{
     // if doing degentable, lookall up except q2=UEOS/PEOS/CHIEOS/SEOS
     skip=2; 
-    eos_lookup_degen(1,WHICHEOSDIMEN,skip,whichtable, whichindep, vartypearray, qarray, indexarray);
+    eos_lookup_degen(1,WHICHEOSDIMEN,skip,whichtable, whichindep, vartypearraylocal, qarray, indexarray);
     indexarray[2]=0.0; // set 2 as 0 since degentable has this as 0 (may be floating -> integer issue in how this floating value is used)
   }
 
@@ -629,8 +641,8 @@ static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichin
 
 // If utotdegencut<=1: Translate qarray[2] from {utot,ptot,chi,stot} -> {utotdiff,ptotdiff,chidiff,stotdiff}
 // If utotdegencut>=2: Translate qarray[2] from {utot,ptot,chi,stot} -> {lutotdiff,lptotdiff,lchidiff,lstotdiff} that actually correspond to "i/N" : the fractional index of the grid
-// vartypearray[2] resolves to one of UEOS,PEOS,CHIEOS,SEOS as set globally when starting lookup
-static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int whichtable, int whichindep, int *vartypearray, FTYPE *qarray, FTYPE *indexarray)
+// vartypearraylocal[2] resolves to one of UEOS,PEOS,CHIEOS,SEOS as set globally when starting lookup
+static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPE *indexarray)
 {
 
   /////////////////////////
@@ -647,7 +659,7 @@ static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int which
     // here myanswers[EOSOFFSET] = utotoffset
     FTYPE UTOTOFFSET=myanswers[EOSOFFSET];
     qarray[2] = qarray[2] - UTOTOFFSET;
-    qarray[2] = MAX(qarray[2],lineartablelimits[whichtable][vartypearray[2]][0]); // lowest value of utotdiff = utot-utotoffset = utotoffset-utotoffset = 0.0 or minimum of table
+    qarray[2] = MAX(qarray[2],lineartablelimits[whichtable][vartypearraylocal[2]][0]); // lowest value of utotdiff = utot-utotoffset = utotoffset-utotoffset = 0.0 or minimum of table
 
 
   }
@@ -663,7 +675,7 @@ static void eos_lookup_modify_qarray(int whichdegen, FTYPE *myanswers, int which
     qarray[2] = log10( (UTOT-UTOT0)/(UTOTIN-UTOT0) )/log10( (UTOTOUT-UTOT0)/(UTOTIN-UTOT0) );
 
     // min of utotdegencut>=2 table format is lutotdiff="i/N"=0 and at this point qarray[2]=lutotdiff
-    qarray[2] = MAX(qarray[2],lineartablelimits[whichtable][vartypearray[2]][0]);
+    qarray[2] = MAX(qarray[2],lineartablelimits[whichtable][vartypearraylocal[2]][0]);
 
     // presume ok to let qarray[2] be beyond "i/N" after which ideal gas EOS used
   }

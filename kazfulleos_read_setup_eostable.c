@@ -1,9 +1,14 @@
+/////////////////////////
+//
 // initialization and read-in of tables
 // accesses global EOS arrays but only once for entire simulation
+//
+/////////////////////////
 
+static int isextratable(int i);
+static void assigntablecolumnnumbers(int i);
 static void setvartypeinfo(void);
 static void settablesubtypeinfo(void);
-static void assigntablecolumnnumbers(int i);
 static void settablesizeexpected(int tablesizeexpected[][NUMEOSINDEPS]);
 
 
@@ -19,31 +24,99 @@ static void bcast_kazeos(void);
 
 
 // sets up number of quantities to read-in from file
-// numeosquantitiestypein[i] used for reading in non-degen data that will be stored (non-stored must also be in table and used for checking consistency)
-// numeosdegenquantitiesin[i] used for reading in degen data that will be stored
+// numeosdegenquantitiesinfile[i] used for reading in degen data that will be stored
 // NUMEOSDEGENQUANTITIESMEM1 : UofUdiffout, PofPdiffout, CHIofCHIdiffout, SofSdiffout read-in to be checked, not stored
 // extralimits[i][0/1] used for interpolation
-static void assigntablecolumnnumbers(int i)
+//
+// Sets following globals:
+//    numeosquantitiesinfile[i]
+//    numeosdegenquantitiesinfile[i]
+//    numallquantitiesinfile[i]
+//    numalldegenquantitiesinfile[i]
+//    extralimits[i][0,1]
+//
+//    numeosquantitiesinstandardlist[i]
+//    numeosdegenquantitiesinstandardlist[i]
+//
+//
+
+// before storing, reorder to be like standard "in" format for EOS quantities:
+// Should be ONLY part of code that refers to the "inextra" versions of input macro labels except for use of "NUMEOSQUANTITIESBASEinextra" for total number of such quantities to read-in from file
+void reorder_extratype(int isextratype, int numeosquantitiesinfile, FTYPE *values)
+{
+  int i,j;
+
+
+  if(isextratype){
+    // then translate "inextra" positions to "in" positions so rest of code can be the same
+    FTYPE oldvalues[MAXEOSPIPELINE];
+
+    for(i=0;i<numeosquantitiesinfile;i++){
+      oldvalues[i]=values[i];
+    }
+    
+    // copy over temperatures
+    for(i=TEMPUinextra;i<=TEMPSinextra;i++){
+      j = i-TEMPUinextra + TEMPUin;
+      values[j] = oldvalues[i];
+    }
+
+    // copy over extras
+    for(i=FIRSTEXTRAinextra;i<=LASTEXTRAinextra;i++){
+      // this copies up to all possible extras, which is excessive for older whichdatatype's, but still within sizes of arrays
+      j = i-FIRSTEXTRAinextra + FIRSTEXTRAin;
+      values[j] = oldvalues[i];
+    }    
+
+  }
+  else{
+    // then already in canonical order
+  }
+
+  // now values is in canonical order so only have to refer to "in" instead of "inextra"
+
+}
+
+
+static int isextratable(int i)
 {
   int extratype;
 
   if(i==FULLTABLE || i==SIMPLETABLE || i==SIMPLEZOOMTABLE) extratype=0;
-  if(i==EXTRAFULLTABLE || i==EXTRASIMPLETABLE || i==EXTRASIMPLEZOOMTABLE) extratype=1;
+  else if(i==EXTRAFULLTABLE || i==EXTRASIMPLETABLE || i==EXTRASIMPLEZOOMTABLE) extratype=1;
+
+  return(extratype);
+}
+
+
+static void assigntablecolumnnumbers(int i)
+{
+  int extratype;
+
+  // get whether extra type or not
+  extratype=isextratable(i);
 
 
   if( ((i==FULLTABLE || i==EXTRAFULLTABLE) && ALLOWFULLTABLE) || ((i==SIMPLETABLE || i==EXTRASIMPLETABLE) && ALLOWSIMPLETABLE) || ((i==SIMPLEZOOMTABLE || i==EXTRASIMPLEZOOMTABLE) && ALLOWSIMPLEZOOMTABLE) ){
 
     if(extratype==0 && WHICHDATATYPEGENERAL!=4){
-      numeosquantitiesin[i]=NUMEOSQUANTITIESBASEin;
+      // THEN FULL SET OF QUANTITIES IN TABLE
+
+      // stored-normal quantities:
+      numeosquantitiesinfile[i]=NUMEOSQUANTITIESBASEin;
       // can't split with other data types
-      if(WHICHDATATYPEGENERAL==4) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
-      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
-      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
-      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
-      // always same number
-      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
-      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
-      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      if(WHICHDATATYPEGENERAL==4) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
+      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
+      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
+      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
+
+      // stored degen quantities:
+      numeosdegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESin;
+
+      // non-stored + stored:
+      numallquantitiesinfile[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesinfile[i];
+      // non-stored + stored:
+      numalldegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesinfile[i];
       if(WHICHDATATYPEGENERAL==1){
 	extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE1_EXTRAFINAL;
       }
@@ -58,33 +131,36 @@ static void assigntablecolumnnumbers(int i)
       }
     }
     else if(extratype==0 && WHICHDATATYPEGENERAL==4){
-      // no extras in table then
-      numeosquantitiesin[i]=NUMEOSQUANTITIESBASEin;
+      // NO EXTRAS IN TABLE THEN
+
+      numeosquantitiesinfile[i]=NUMEOSQUANTITIESBASEin;
       // always same number
-      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
-      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
-      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      numeosdegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESin;
+      numallquantitiesinfile[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesinfile[i];
+      numalldegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesinfile[i];
       extralimits[i][0]=0; extralimits[i][1]=-1; // so never touches extras
     }
     else if(extratype==1 && WHICHDATATYPEGENERAL!=4){
-      // then nothing in extra table since all in full table
-      numeosquantitiesin[i]=0;
-      numeosdegenquantitiesin[i]=0;
-      numallquantitiesin[i]=0;
-      numalldegenquantitiesin[i]=0;
+      // THEN NOTHING IN EXTRA TABLE SINCE ALL IN FULL TABLE
+
+      numeosquantitiesinfile[i]=0;
+      numeosdegenquantitiesinfile[i]=0;
+      numallquantitiesinfile[i]=0;
+      numalldegenquantitiesinfile[i]=0;
       extralimits[i][0]=0; extralimits[i][1]=-1; // so never touches extras
     }
     else if(extratype==1 && WHICHDATATYPEGENERAL==4){
-      numeosquantitiesin[i]=NUMTEMPin; // still must have temperature and that is present in same file as extras
+      // THEN ONLY EXTRAS (with temperature as required to validate lookup)
+      numeosquantitiesinfile[i]=NUMEOSQUANTITIESBASEinextra; // still must have temperature and that is present in same file as extras
       // then all in extra table
-      if(WHICHDATATYPEGENERAL==4) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
-      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
-      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
-      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesin[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
-      // always same number
-      numeosdegenquantitiesin[i]=NUMEOSDEGENQUANTITIESin;
-      numallquantitiesin[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesin[i];
-      numalldegenquantitiesin[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesin[i];
+      if(WHICHDATATYPEGENERAL==4) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
+      else if(WHICHDATATYPEGENERAL==3) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
+      else if(WHICHDATATYPEGENERAL==2) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
+      else if(WHICHDATATYPEGENERAL==1) numeosquantitiesinfile[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
+
+      numeosdegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESin;
+      numallquantitiesinfile[i]=NUMEOSQUANTITIESNOTSTOREDin + numeosquantitiesinfile[i];
+      numalldegenquantitiesinfile[i]=NUMEOSDEGENQUANTITIESNOTSTOREDin + numeosdegenquantitiesinfile[i];
       if(WHICHDATATYPEGENERAL==1){
 	extralimits[i][0]=EXTRA1; extralimits[i][1]=DATATYPE1_EXTRAFINAL;
       }
@@ -101,12 +177,27 @@ static void assigntablecolumnnumbers(int i)
   }
   else{
     // then nothing in table
-    numeosquantitiesin[i]=0;
-    numeosdegenquantitiesin[i]=0;
-    numallquantitiesin[i]=0;
-    numalldegenquantitiesin[i]=0;
+    numeosquantitiesinfile[i]=0;
+    numeosdegenquantitiesinfile[i]=0;
+    numallquantitiesinfile[i]=0;
+    numalldegenquantitiesinfile[i]=0;
+    extralimits[i][0]=0; extralimits[i][1]=-1; // so never touches extras
   }
 
+
+  ////////////////////
+  // standard canonical list
+
+  // stored-normal quantities:
+  numeosquantitiesinstandardlist[i]=NUMEOSQUANTITIESBASEin;
+  // can't split with other data types
+  if(WHICHDATATYPEGENERAL==4) numeosquantitiesinstandardlist[i]+=NUMEXTRAEOSQUANTITIESTYPE4;
+  else if(WHICHDATATYPEGENERAL==3) numeosquantitiesinstandardlist[i]+=NUMEXTRAEOSQUANTITIESTYPE3;
+  else if(WHICHDATATYPEGENERAL==2) numeosquantitiesinstandardlist[i]+=NUMEXTRAEOSQUANTITIESTYPE2;
+  else if(WHICHDATATYPEGENERAL==1) numeosquantitiesinstandardlist[i]+=NUMEXTRAEOSQUANTITIESTYPE1;
+  
+  // stored degen quantities:
+  numeosdegenquantitiesinstandardlist[i]=NUMEOSDEGENQUANTITIESin;
 
 
 }
@@ -252,7 +343,7 @@ static void settablesubtypeinfo(void)
   whichdintablesubtype[SUBTYPEPOFCHI]=CHIDIFF;
   whichdintablesubtype[SUBTYPETEMP]=-1; // table accessed in special way based upon "whichd" during lookup
 
-  // coli+firsteos = whichfun
+  // Get "firsteos" for setting whichfun=coli+firsteos where coli starts from 0 for all subtables
   firsteosintablesubtype[SUBTYPEDEGEN]=FIRSTEOSDEGEN;
   firsteosintablesubtype[SUBTYPESTANDARD]=FIRSTEOSSTANDARD;
   firsteosintablesubtype[SUBTYPEGUESS]=FIRSTEOSGUESS;
@@ -323,7 +414,7 @@ static void setvartypeinfo(void)
   ///////////
   i=1;
   vartypearray[i]=RHOEOS;  i++;
-  vartypearray[i]=UEOS;    i++; // UEOS used for reading table, but later changed for each whichindep
+  vartypearray[i]=UEOS;    i++; // UEOS used for reading table, but later used to change vartypearraylocal for each whichindep or whichd
   vartypearray[i]=YEEOS;   i++;
   vartypearray[i]=YNUEOS;  i++;
   vartypearray[i]=HEOS;    i++;
@@ -369,7 +460,7 @@ static void setvartypeinfo(void)
 
   ///////////
   //
-  // setup what degen type q1-q5 mean associated with the 5 dimensions of the arrays related to NUMINDEPDIMENS and not NUMEOSINDEPS
+  // setup what degen type q1-q4 mean associated with the 5 dimensions of the arrays related to NUMEOSDEGENINDEPS (similar to NUMINDEPDIMENS since all difference between NUMINDEPDIMENS and not NUMEOSINDEPS are temperature-like quantities)
   //
   ///////////
   i=1;
@@ -406,7 +497,7 @@ void read_setup_eostable(void)
   FILE *inhead;
   FILE *intable;
   FILE *indegentable;
-  int	ii,jj;
+  int ii,jj;
   int m,n,o,p,q; // 5 dimension labels
   int iii,jjj,kkk,lll,mmm; // for 5 dimensions of table
   int ppp,qqq;
@@ -420,15 +511,16 @@ void read_setup_eostable(void)
   char degentablename[NUMTBLS][MAXFILENAME];
   int tableiter;
   int tablesizeexpected[NUMTBLS][NUMEOSINDEPS];
-  double tabletemp[NUMEOSQUANTITIESMEM]; // same type as tables
-  double degentabletemp[NUMEOSDEGENQUANTITIESin]; // same type as tables
+  double tabletemp[NUMEOSQUANTITIESMEM]; // size of read-in and stored columns
+  double degentabletemp[NUMEOSDEGENQUANTITIESin]; // size of read-in and stored columns
   int sizematch; // 0 = table sizes don't match  1 = they match
   double valuetemp[MAXNUMEOSQUANTITIESin],degenvaluetemp[NUMEOSDEGENQUANTITIESin];
   FTYPE errordegen,errordegen2;
   int i;
-  int numeosquantitiestypein[MAXNUMDATATYPES];
   int testnumfscanfquantities,testnumfscanfquantitiesdegen;
   int templikeiter;
+
+
 
 
 
@@ -602,11 +694,16 @@ void read_setup_eostable(void)
 	myexit(626236);
       }
 
-      if(whichdatatype[tableiter]>MAXNUMDATATYPES){
+      if(whichdatatype[tableiter]>MAXNUMDATATYPES){ // no longer relevant code
 	dualfprintf(fail_file,"Increase MAXNUMDATATYPES to %d\n",whichdatatype[tableiter]);
 	myexit(626237);
       }
 
+      // new check since optimized everything for only 1 datatype per run
+      if(whichdatatype[tableiter]!=WHICHDATATYPEGENERAL){
+	dualfprintf(fail_file,"whichdatatype=%d while WHICHDATATYPEGENERAL=%d\n",whichdatatype[tableiter],WHICHDATATYPEGENERAL);
+	myexit(239752266);
+      }
 
 
 
@@ -615,9 +712,9 @@ void read_setup_eostable(void)
       // check number of quantities in normal (non-degen table)
       //
       //////////////
-      if(numc[tableiter]!=numallquantitiesin[tableiter]){
-	dualfprintf(fail_file,"numcolumns=%d but code expected %d\n",numc[tableiter],numallquantitiesin[tableiter]);
-	dualfprintf(fail_file,"tableiter=%d whichdatatype=%d :: %d %d %d %d\n",tableiter,whichdatatype[tableiter],NUMINDEPDIMENS,NUMEOSINDEPS,NUMEOSDEGENQUANTITIESMEM1,numeosquantitiesin[tableiter]);
+      if(numc[tableiter]!=numallquantitiesinfile[tableiter]){
+	dualfprintf(fail_file,"numcolumns=%d but code expected %d\n",numc[tableiter],numallquantitiesinfile[tableiter]);
+	dualfprintf(fail_file,"tableiter=%d whichdatatype=%d :: %d %d %d %d\n",tableiter,whichdatatype[tableiter],NUMINDEPDIMENS,NUMEOSINDEPS,NUMEOSDEGENQUANTITIESMEM1,numeosquantitiesinfile[tableiter]);
 	myexit(16623);
       }
       
@@ -766,6 +863,8 @@ void read_setup_eostable(void)
       }
 
 
+
+
       ////////////
       //
       // done with header, so close file
@@ -785,6 +884,8 @@ void read_setup_eostable(void)
       //
       // now read-in table as written
       //
+      // Each table has its own degen table, so process both at the same time
+      //
       //////////////////////////////////
       
       // open eostable file
@@ -797,7 +898,7 @@ void read_setup_eostable(void)
       // open eosdegentable file
       if( (indegentable = fopen(degentablename[tableiter],"rb"))==NULL){
 	dualfprintf(fail_file,"No such file %s\n",degentablename[tableiter]);
-	myexit(166255);
+	myexit(2382662);
       }
 
 
@@ -820,7 +921,7 @@ void read_setup_eostable(void)
 	  for(jj=0;jj<NUMEOSINDEPS;jj++){
 	    dualfprintf(fail_file,"tablesize[%d][%d]=%d\n",tableiter,jj,tablesize[tableiter][jj]);
 	  }
-	  dualfprintf(fail_file,"Total number of EOS quantities=%d (Ensure file has correct number of columns!)\n",numallquantitiesin[tableiter]);
+	  dualfprintf(fail_file,"Total number of EOS quantities=%d (Ensure file has correct number of columns!)\n",numallquantitiesinfile[tableiter]);
 	  
 	  myexit(16626);
 	}
@@ -961,10 +1062,16 @@ void read_setup_eostable(void)
 
 
 	// normal table
-	for(ppp=0;ppp<numeosquantitiesin[tableiter];ppp++){ // look over only to-be stored quantities
+	for(ppp=0;ppp<numeosquantitiesinfile[tableiter];ppp++){ // look over only to-be stored quantities
 	  fscanf(intable,DOUBLEINPUT,&valuetemp[ppp]); // double values
 	  testnumfscanfquantities += 1;
 
+	  // before storing, reorder to be like standard "in" format for EOS quantities:
+	  reorder_extratype(isextratable(i),numeosquantitiesinfile[tableiter],valuetemp);
+	  // not in canonical list order/position
+	}
+
+	for(ppp=0;ppp<numeosquantitiesinstandardlist[tableiter];ppp++){ // look over only to-be stored quantities
 	  set_arrays_eostable(ISNOTDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,ppp,valuetemp[ppp]);
 	}
 
@@ -972,7 +1079,7 @@ void read_setup_eostable(void)
 
 	// degen table
 	if(jjj==0){
-	  for(ppp=0;ppp<numeosdegenquantitiesin[tableiter];ppp++){
+	  for(ppp=0;ppp<numeosdegenquantitiesinfile[tableiter];ppp++){
 	    fscanf(indegentable,DOUBLEINPUT,&degenvaluetemp[ppp]); // double values
 
 	    if(degenvaluetemp[ppp]<=0.0 && DOLOGINTERP){
@@ -983,36 +1090,36 @@ void read_setup_eostable(void)
 	    }
 
 	    testnumfscanfquantitiesdegen += 1;
+	  }
 
+	  for(ppp=0;ppp<numeosdegenquantitiesinstandardlist[tableiter];ppp++){
 	    // jjj==0 already
 	    set_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,ppp,degenvaluetemp[ppp]);
-
 	  }
 	}
 	else{
 	  // this is just for checks, store back into simple array the degen table
-	  for(ppp=0;ppp<numeosdegenquantitiesin[tableiter];ppp++){
-	    get_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,0,iii,ppp,&degenvaluetemp[ppp]); // must choose jjj=0
+	  for(ppp=0;ppp<numeosdegenquantitiesinstandardlist[tableiter];ppp++){
+	    get_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,0,iii,ppp,&degenvaluetemp[ppp]); // must choose jjj=0 -- actually, get_arrays_eostable() handles "jjj" issue
 	  }
 	}
 
 
 	// check that read-in quantities agrees with expected number so far:
- 	if(testnumfscanfquantities!=numallquantitiesin[tableiter]){
-	  dualfprintf(fail_file,"Total number of scanned EOS quantities=%d doesn't agree with expected amount=%d (whichdatatype=%d tableiter=%d)\n",testnumfscanfquantities,numallquantitiesin[tableiter],whichdatatype[tableiter],tableiter);
+ 	if(testnumfscanfquantities!=numallquantitiesinfile[tableiter]){
+	  dualfprintf(fail_file,"Total number of scanned EOS quantities=%d doesn't agree with expected amount=%d (whichdatatype=%d tableiter=%d)\n",testnumfscanfquantities,numallquantitiesinfile[tableiter],whichdatatype[tableiter],tableiter);
 	  myexit(2873626);
 	}
 
 	if(jjj==0){
-	  if(testnumfscanfquantitiesdegen!=numalldegenquantitiesin[tableiter]){
-	    dualfprintf(fail_file,"Total number of scanned degen EOS quantities=%d doesn't agree with expected amount=%d\n",testnumfscanfquantitiesdegen,numalldegenquantitiesin[tableiter]);
+	  if(testnumfscanfquantitiesdegen!=numalldegenquantitiesinfile[tableiter]){
+	    dualfprintf(fail_file,"Total number of scanned degen EOS quantities=%d doesn't agree with expected amount=%d\n",testnumfscanfquantitiesdegen,numalldegenquantitiesinfile[tableiter]);
 	    myexit(2873627);
 	  }
 	}
 
 
 
-#if(1)
 	//////////////////////////////
 	//
 	// fifth, check degen table against normal table for proper use of independent variable offset
@@ -1056,7 +1163,6 @@ void read_setup_eostable(void)
 	  }
 
 	}
-#endif
 
 
 
@@ -1066,7 +1172,12 @@ void read_setup_eostable(void)
 	// continue onto next row
       }// end loop over all rows
       
+
+      ////////////////
+      //
       // done reading in table from file
+      //
+      ////////////////
       fclose(intable);
       fclose(indegentable);
       
@@ -1185,50 +1296,48 @@ void read_setup_eostable(void)
 	///////////////
 	
 	// normal table
-	for(jj=0;jj<numeosquantitiesin[tableiter];jj++) get_arrays_eostable(ISNOTDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,&tabletemp[jj]);
+	for(jj=0;jj<numeosquantitiesinstandardlist[tableiter];jj++) get_arrays_eostable(ISNOTDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,&tabletemp[jj]);
 	// degen table
-	if(jjj==0) for(jj=0;jj<numeosdegenquantitiesin[tableiter];jj++) get_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,&degentabletemp[jj]);
+	if(jjj==0) for(jj=0;jj<numeosdegenquantitiesinstandardlist[tableiter];jj++) get_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,&degentabletemp[jj]);
 
 
 
-	// see if non-extras are in table
-	if(tableiter==FULLTABLE || tableiter==SIMPLETABLE ||  tableiter==SIMPLEZOOMTABLE || WHICHDATATYPEGENERAL!=4){
+	// note that we process all entries for "in" in tabletemp since doesn't matter if certain table has no such quantity since will ignore irrelevant converted value later.  Just keeps code simple and avoiding conditionals
 
-	  tabletemp[PofRHOUin]/=Pressureunit;
-	  tabletemp[UofRHOPin]/=Pressureunit;
-	  // dPdRHO0ofRHOU dimensionless
-	  // dPdUofRHOU dimensionless
+	tabletemp[PofRHOUin]/=Pressureunit;
+	tabletemp[UofRHOPin]/=Pressureunit;
+	// dPdRHO0ofRHOU dimensionless
+	// dPdUofRHOU dimensionless
 
-	  tabletemp[UofRHOSin]/=Pressureunit;
+	tabletemp[UofRHOSin]/=Pressureunit;
 
-	  tabletemp[CS2ofRHOUin]/=(Vunit*Vunit);
+	tabletemp[CS2ofRHOUin]/=(Vunit*Vunit);
 
 
-	  // entropy density (erg/K/cc)
-	  // kb doesn't convert units, but changes kb T to erg
-	  // presumes entropy is used with energy as in first-law: dQ = (kbT)dS where kbT is in ergs
-	  // previously had units of entropy density as erg/K/cc, but now units read-in are just 1/cc to avoid use of pointless kb
-	  tabletemp[SofRHOUin]/=(1.0/pow(Lunit,3.0));
-	  // Note that often people will plot "entropy per baryon" that is "SofRHOU"/(\rho/m_b) that is dimensionless entropy per baryon
-	  // From HARM quantities, convert back to cgs and then compute above
-	  // Note that in HARM, we *define* $Sden = Ss/(\rho_0 c^2)$ with the extra $m_b c^2$ baggage, so units should account for that.
+	// entropy density (erg/K/cc)
+	// kb doesn't convert units, but changes kb T to erg
+	// presumes entropy is used with energy as in first-law: dQ = (kbT)dS where kbT is in ergs
+	// previously had units of entropy density as erg/K/cc, but now units read-in are just 1/cc to avoid use of pointless kb
+	tabletemp[SofRHOUin]/=(1.0/pow(Lunit,3.0));
+	// Note that often people will plot "entropy per baryon" that is "SofRHOU"/(\rho/m_b) that is dimensionless entropy per baryon
+	// From HARM quantities, convert back to cgs and then compute above
+	// Note that in HARM, we *define* $Sden = Ss/(\rho_0 c^2)$ with the extra $m_b c^2$ baggage, so units should account for that.
 
-	  // below is (1/cc) / (erg/cc) \propto 1/erg since we *input* rho as rho c^2
-	  tabletemp[DSDRHOofRHOUin]/=(1.0/energyunit); 
-	  tabletemp[DSDUofRHOUin]/=(1.0/energyunit);
+	// below is (1/cc) / (erg/cc) \propto 1/erg since we *input* rho as rho c^2
+	tabletemp[DSDRHOofRHOUin]/=(1.0/energyunit); 
+	tabletemp[DSDUofRHOUin]/=(1.0/energyunit);
 
-	  // SSofRHOCHI is nearly dimensionless (really has units of 1/(mb c^2) since obtained by division of Sden by (\rho_0 c^2) instead of n_b)
-	  tabletemp[SSofRHOCHIin]/=(1.0/energyunit);
+	// SSofRHOCHI is nearly dimensionless (really has units of 1/(mb c^2) since obtained by division of Sden by (\rho_0 c^2) instead of n_b)
+	tabletemp[SSofRHOCHIin]/=(1.0/energyunit);
 
-	  // DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of Ss/(rho0 c^2) since Ss has units of 1/(mb c^2) and input rho with units of rho*c^2
-	  tabletemp[DSSDRHOofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
-	  tabletemp[DSSDCHIofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
+	// DSSDRHOofRHOCHI, DSSDCHIofRHOCHI have units of Ss/(rho0 c^2) since Ss has units of 1/(mb c^2) and input rho with units of rho*c^2
+	tabletemp[DSSDRHOofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
+	tabletemp[DSSDCHIofRHOCHIin]/=(1.0/(energyunit*Pressureunit));
 
 	
-	  tabletemp[PofRHOCHIin]/=Pressureunit;
-	  // IDRHO0DP is dimensionless
-	  // IDCHIDP is dimensionless
-	}	
+	tabletemp[PofRHOCHIin]/=Pressureunit;
+	// IDRHO0DP is dimensionless
+	// IDCHIDP is dimensionless
 
 
 	// *always* have temperature in table
@@ -1240,106 +1349,102 @@ void read_setup_eostable(void)
 	  
 	
 
-	// see if extras are in table
-	if(tableiter==EXTRAFULLTABLE || tableiter==EXTRASIMPLETABLE ||  tableiter==EXTRASIMPLEZOOMTABLE || WHICHDATATYPEGENERAL!=4){
 
-	  ////////////////////////////////
-	  //
-	  // deal with extra quantities
-	  if(whichdatatype[tableiter]==1){
-	    // Qm is in erg/s/cm^3 (Qvol, not Qsurf)
-	    // this is divided by H when used as a volume rate
-	    tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
-	  }
-	  else if(whichdatatype[tableiter]==2){
-	    // \tau/H
-	    tabletemp[EXTRA1in]/=(1.0/Lunit);
-	    tabletemp[EXTRA2in]/=(1.0/Lunit);
-	    tabletemp[EXTRA3in]/=(1.0/Lunit);
-	    tabletemp[EXTRA4in]/=(1.0/Lunit);
-	    tabletemp[EXTRA5in]/=(1.0/Lunit);
-	    tabletemp[EXTRA6in]/=(1.0/Lunit);
-	    tabletemp[EXTRA7in]/=(1.0/Lunit);
-	    tabletemp[EXTRA8in]/=(1.0/Lunit);
-	    tabletemp[EXTRA9in]/=(1.0/Lunit);
-	    tabletemp[EXTRA10in]/=(1.0/Lunit);
-	    tabletemp[EXTRA11in]/=(1.0/Lunit);
-	    tabletemp[EXTRA12in]/=(1.0/Lunit);
-	    //	  \Gamma = 1/s
-	    tabletemp[EXTRA13in]/=(1.0/Tunit);
-	    tabletemp[EXTRA14in]/=(1.0/Tunit);
-	    tabletemp[EXTRA15in]/=(1.0/Tunit);
-	    tabletemp[EXTRA16in]/=(1.0/Tunit);
-	  }
-	  else if(whichdatatype[tableiter]==3){
-	    // Qphoton=erg/s/cm^3
-	    tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
+	////////////////////////////////
+	//
+	// deal with extra quantities
+	if(whichdatatype[tableiter]==1){
+	  // Qm is in erg/s/cm^3 (Qvol, not Qsurf)
+	  // this is divided by H when used as a volume rate
+	  tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
+	}
+	else if(whichdatatype[tableiter]==2){
+	  // \tau/H
+	  tabletemp[EXTRA1in]/=(1.0/Lunit);
+	  tabletemp[EXTRA2in]/=(1.0/Lunit);
+	  tabletemp[EXTRA3in]/=(1.0/Lunit);
+	  tabletemp[EXTRA4in]/=(1.0/Lunit);
+	  tabletemp[EXTRA5in]/=(1.0/Lunit);
+	  tabletemp[EXTRA6in]/=(1.0/Lunit);
+	  tabletemp[EXTRA7in]/=(1.0/Lunit);
+	  tabletemp[EXTRA8in]/=(1.0/Lunit);
+	  tabletemp[EXTRA9in]/=(1.0/Lunit);
+	  tabletemp[EXTRA10in]/=(1.0/Lunit);
+	  tabletemp[EXTRA11in]/=(1.0/Lunit);
+	  tabletemp[EXTRA12in]/=(1.0/Lunit);
+	  //	  \Gamma = 1/s
+	  tabletemp[EXTRA13in]/=(1.0/Tunit);
+	  tabletemp[EXTRA14in]/=(1.0/Tunit);
+	  tabletemp[EXTRA15in]/=(1.0/Tunit);
+	  tabletemp[EXTRA16in]/=(1.0/Tunit);
+	}
+	else if(whichdatatype[tableiter]==3){
+	  // Qphoton=erg/s/cm^3
+	  tabletemp[EXTRA1in]/=(edotunit/(Lunit*Lunit*Lunit));
 
-	    // Qm=erg/s/cm^3
-	    tabletemp[EXTRA2in]/=(edotunit/(Lunit*Lunit*Lunit));
+	  // Qm=erg/s/cm^3
+	  tabletemp[EXTRA2in]/=(edotunit/(Lunit*Lunit*Lunit));
 	  
-	    // graddotrhouyl=\rho/sec = m_b/s/cm^3
-	    // \nabla_\mu (\rho_0 u^\mu Y_e) =  (m_b/H) (\dot{N}_{\bar{\nu}_e} - \dot{N}_{\nu_e}) 
-	    if(rho0unittype==0) tabletemp[EXTRA3in]/=(rhounit/Tunit);
-	    else tabletemp[EXTRA3in]/=(rhomassunit/Tunit);
+	  // graddotrhouyl=\rho/sec = m_b/s/cm^3
+	  // \nabla_\mu (\rho_0 u^\mu Y_e) =  (m_b/H) (\dot{N}_{\bar{\nu}_e} - \dot{N}_{\nu_e}) 
+	  if(rho0unittype==0) tabletemp[EXTRA3in]/=(rhounit/Tunit);
+	  else tabletemp[EXTRA3in]/=(rhomassunit/Tunit);
 	  
-	    // Tthermaltot
-	    tabletemp[EXTRA4in]/=Tunit;
-	    tabletemp[EXTRA5in]/=Tunit;
+	  // Tthermaltot
+	  tabletemp[EXTRA4in]/=Tunit;
+	  tabletemp[EXTRA5in]/=Tunit;
 
-	    // lambdatot = mean free path such that H = [\int (dr/\lambda)] / [1/\lambda]
-	    // and \tau = \int dr/\lambda
-	    tabletemp[EXTRA6in]/=Lunit;
-	    tabletemp[EXTRA7in]/=Lunit;
+	  // lambdatot = mean free path such that H = [\int (dr/\lambda)] / [1/\lambda]
+	  // and \tau = \int dr/\lambda
+	  tabletemp[EXTRA6in]/=Lunit;
+	  tabletemp[EXTRA7in]/=Lunit;
 
-	    // Enuglobal : erg
-	    tabletemp[EXTRA8in]/=energyunit;
-	    tabletemp[EXTRA9in]/=energyunit;
-	    tabletemp[EXTRA10in]/=energyunit;
+	  // Enuglobal : erg
+	  tabletemp[EXTRA8in]/=energyunit;
+	  tabletemp[EXTRA9in]/=energyunit;
+	  tabletemp[EXTRA10in]/=energyunit;
 
-	    // no conversion for Ynuthermal that's dimensionless EXTRA11
-	  }
-	  else if(whichdatatype[tableiter]==4){
-	    // \tau/H
-	    tabletemp[EXTRA1in]/=(1.0/Lunit);
-	    tabletemp[EXTRA2in]/=(1.0/Lunit);
-	    tabletemp[EXTRA3in]/=(1.0/Lunit);
-	    tabletemp[EXTRA4in]/=(1.0/Lunit);
-	    tabletemp[EXTRA5in]/=(1.0/Lunit);
-	    tabletemp[EXTRA6in]/=(1.0/Lunit);
-	    tabletemp[EXTRA7in]/=(1.0/Lunit);
-	    tabletemp[EXTRA8in]/=(1.0/Lunit);
-	    tabletemp[EXTRA9in]/=(1.0/Lunit);
-	    tabletemp[EXTRA10in]/=(1.0/Lunit);
-	    tabletemp[EXTRA11in]/=(1.0/Lunit);
-	    tabletemp[EXTRA12in]/=(1.0/Lunit);
-	    // energy densities
-	    tabletemp[EXTRA13in]/=(Pressureunit);
-	    tabletemp[EXTRA14in]/=(Pressureunit);
-	    tabletemp[EXTRA15in]/=(Pressureunit);
-	    // number densities
-	    tabletemp[EXTRA16in]/=(1.0/pow(Lunit,3.0));
-	    tabletemp[EXTRA17in]/=(1.0/pow(Lunit,3.0));
-	    tabletemp[EXTRA18in]/=(1.0/pow(Lunit,3.0));
-	    // mean free paths (length)
-	    tabletemp[EXTRA19in]/=(Lunit);
-	    tabletemp[EXTRA20in]/=(Lunit);
-	    // \tau/H for photons
-	    tabletemp[EXTRA21in]/=(1.0/Lunit);
-	    tabletemp[EXTRA22in]/=(1.0/Lunit);
+	  // no conversion for Ynuthermal that's dimensionless EXTRA11
+	}
+	else if(whichdatatype[tableiter]==4){
+	  // \tau/H
+	  tabletemp[EXTRA1in]/=(1.0/Lunit);
+	  tabletemp[EXTRA2in]/=(1.0/Lunit);
+	  tabletemp[EXTRA3in]/=(1.0/Lunit);
+	  tabletemp[EXTRA4in]/=(1.0/Lunit);
+	  tabletemp[EXTRA5in]/=(1.0/Lunit);
+	  tabletemp[EXTRA6in]/=(1.0/Lunit);
+	  tabletemp[EXTRA7in]/=(1.0/Lunit);
+	  tabletemp[EXTRA8in]/=(1.0/Lunit);
+	  tabletemp[EXTRA9in]/=(1.0/Lunit);
+	  tabletemp[EXTRA10in]/=(1.0/Lunit);
+	  tabletemp[EXTRA11in]/=(1.0/Lunit);
+	  tabletemp[EXTRA12in]/=(1.0/Lunit);
+	  // energy densities
+	  tabletemp[EXTRA13in]/=(Pressureunit);
+	  tabletemp[EXTRA14in]/=(Pressureunit);
+	  tabletemp[EXTRA15in]/=(Pressureunit);
+	  // number densities
+	  tabletemp[EXTRA16in]/=(1.0/pow(Lunit,3.0));
+	  tabletemp[EXTRA17in]/=(1.0/pow(Lunit,3.0));
+	  tabletemp[EXTRA18in]/=(1.0/pow(Lunit,3.0));
+	  // mean free paths (length)
+	  tabletemp[EXTRA19in]/=(Lunit);
+	  tabletemp[EXTRA20in]/=(Lunit);
+	  // \tau/H for photons
+	  tabletemp[EXTRA21in]/=(1.0/Lunit);
+	  tabletemp[EXTRA22in]/=(1.0/Lunit);
 
-	    // DEBUG: log(fun) \propto A+B*log(rho) -> fun = 10^(A+B*log(rho)) = Q*rho^B
-	    // rho = exp(A+B*iii)
-	    //	  FTYPE fakerho = exp(0.0+1.0*iii);
-	    // tabletemp[EXTRA22in]=1.0*pow(fakerho,3.0);
-	    //dualfprintf(fail_file,"GOD: iii=%d %21.15g\n",iii,tabletemp[EXTRA22in]);
+	  // DEBUG: log(fun) \propto A+B*log(rho) -> fun = 10^(A+B*log(rho)) = Q*rho^B
+	  // rho = exp(A+B*iii)
+	  //	  FTYPE fakerho = exp(0.0+1.0*iii);
+	  // tabletemp[EXTRA22in]=1.0*pow(fakerho,3.0);
+	  //dualfprintf(fail_file,"GOD: iii=%d %21.15g\n",iii,tabletemp[EXTRA22in]);
 
-	    // thermal number densities
-	    tabletemp[EXTRA23in]/=(1.0/pow(Lunit,3.0));
-	    tabletemp[EXTRA24in]/=(1.0/pow(Lunit,3.0));
-	  }
-
-	}// end if converting extras
+	  // thermal number densities
+	  tabletemp[EXTRA23in]/=(1.0/pow(Lunit,3.0));
+	  tabletemp[EXTRA24in]/=(1.0/pow(Lunit,3.0));
+	}
 
 	
 
@@ -1368,8 +1473,8 @@ void read_setup_eostable(void)
 	    degentabletemp[STOTOUTin]/=(1.0/pow(Lunit,3.0)); // 1/cc
 	  }
 
-	  if(numeosdegenquantitiesin[tableiter]!=NUMEOSDEGENQUANTITIESin){
-	    dualfprintf(fail_file,"Degen table: expected %d but got %d\n",NUMEOSDEGENQUANTITIESin,numeosdegenquantitiesin[tableiter]);
+	  if(numeosdegenquantitiesinstandardlist[tableiter]!=NUMEOSDEGENQUANTITIESin){
+	    dualfprintf(fail_file,"Degen table: expected %d but got %d\n",NUMEOSDEGENQUANTITIESin,numeosdegenquantitiesinstandardlist[tableiter]);
 	    myexit(13905826);
 	  }
 	}
@@ -1382,9 +1487,11 @@ void read_setup_eostable(void)
 	///////////////
 
 	// normal table
-	for(jj=0;jj<numeosquantitiesin[tableiter];jj++) set_arrays_eostable(ISNOTDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,tabletemp[jj]);
+	for(jj=0;jj<numeosquantitiesinstandardlist[tableiter];jj++) set_arrays_eostable(ISNOTDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,tabletemp[jj]);
 	// degen table
-	if(jjj==0) for(jj=0;jj<numeosdegenquantitiesin[tableiter];jj++) set_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,degentabletemp[jj]);
+	if(jjj==0) for(jj=0;jj<numeosdegenquantitiesinstandardlist[tableiter];jj++) set_arrays_eostable(ISDEGENTABLE,tableiter,mmm,lll,kkk,jjj,iii,jj,degentabletemp[jj]);
+
+
 
       } // end loop over table
 
@@ -1468,10 +1575,12 @@ static void bcast_kazeos(void)
   //
   /////////////////////////////
 
-  MPI_Bcast(&numeosquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numeosdegenquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numallquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&numalldegenquantitiesin[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosquantitiesinstandardlist[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosdegenquantitiesinstandardlist[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosquantitiesinfile[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numeosdegenquantitiesinfile[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numallquantitiesinfile[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&numalldegenquantitiesinfile[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&extralimits[0][0],NUMTBLS*2,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&inputtablelimits[0][0][0],NUMTBLS*NUMEOSINDEPS*TBLITEMS,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
@@ -1618,6 +1727,7 @@ static void bcast_kazeos(void)
 // only used by read_setup_eostable()
 // for simple and simplezoom, just use full block and replace "fulltable" -> "simpletable"
 // note that name of array for extra stuff is "tableextra" and "tableextradegen", so the "extra" is at end of name rather than as "eosextra..." as in macro names
+// no longer refer to macro label "inextra" since put into canonical order and position before calling set_ or get_ functions
 static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double value)
 {
 
@@ -1626,9 +1736,9 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   // then modify indices since different sub tables have different dimensions.  This will cause repeated-reads to put into same locations in memory.
   if(WHICHDATATYPEGENERAL==4){
     if(
-       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) ||
-       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAinextra && incol>LASTEXTRAinextra)) ||
-       whichdegen==1
+       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) || // for all non-extras in normal table
+       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) || // for temperature in extra table
+       (whichdegen==1)
        ){
       // then table not storing mmm or lll, so set to zero
       mmm=lll=0;
@@ -1678,11 +1788,11 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPPinextra) EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPCHIinextra) EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPSinextra) EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
       }
     }
     else{
@@ -1775,11 +1885,11 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPPinextra) EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPCHIinextra) EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPSinextra) EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
       }
     }
     else{
@@ -1872,11 +1982,11 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPPinextra) EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPCHIinextra) EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
-	if(incol==TEMPSinextra) EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA)=value; // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPPin) EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPCHIin) EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
+	if(incol==TEMPSin) EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN)=value;
       }
     }
     else{
@@ -1960,20 +2070,18 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 //
 // input jjj should be 0 if inputting degen table data
 // only used by read_setup_eostable()
+// no longer refer to macro label "inextra" since put into canonical order and position before calling set_ or get_ functions
 static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, int incol, double *value)
 {
 
-
   
-
-
   // overrides:
   // then modify indices since different sub tables have different dimensions.  This will cause repeated-reads to put into same locations in memory.
   if(WHICHDATATYPEGENERAL==4){
     if(
-       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) ||
-       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAinextra && incol>LASTEXTRAinextra)) ||
-       whichdegen==1
+       ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) || // for all non-extras in normal table
+       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin && incol>LASTEXTRAin)) || // for temperature in extra table
+       (whichdegen==1)
        ){
       // then table not storing mmm or lll, so set to zero
       mmm=lll=0;
@@ -2023,11 +2131,11 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) *value=EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPPinextra) *value=EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPCHIinextra) *value=EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPSinextra) *value=EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) *value=EOSMAC(eosfulltableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eosfulltableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eosfulltableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eosfulltableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
       }
     }
     else{
@@ -2120,11 +2228,11 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) *value=EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPPinextra) *value=EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPCHIinextra) *value=EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPSinextra) *value=EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) *value=EOSMAC(eossimpletableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eossimpletableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eossimpletableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eossimpletableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
       }
     }
     else{
@@ -2217,11 +2325,11 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
       }
       else{
 	// incol is different then since extras start with 4 temperature quantities and then rest of normal extras
-	if(incol>=FIRSTEXTRAinextra && incol<=LASTEXTRAinextra) *value=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAinextra+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
-	if(incol==TEMPUinextra) *value=EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPPinextra) *value=EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPCHIinextra) *value=EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
-	if(incol==TEMPSinextra) *value=EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol>=FIRSTEXTRAin && incol<=LASTEXTRAin) *value=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,incol-FIRSTEXTRAin+FIRSTEOSEXTRA); // assumes extra's are ordered in sequence
+	if(incol==TEMPUin) *value=EOSMAC(eossimplezoomtableextratemp,UTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPPin) *value=EOSMAC(eossimplezoomtableextratemp,PTOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPCHIin) *value=EOSMAC(eossimplezoomtableextratemp,CHIDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
+	if(incol==TEMPSin) *value=EOSMAC(eossimplezoomtableextratemp,STOTDIFF,mmm,lll,kkk,jjj,iii,TEMPGEN);
       }
     }
     else{

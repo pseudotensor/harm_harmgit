@@ -30,6 +30,15 @@ static int prepare_fudgefrac_kazfull(
 				     FTYPE *ptot, FTYPE *pgas, // outputs
 				     FTYPE *chitot, FTYPE *chigas // outputs
 				     );
+static int prepare_fudgefrac_input_dpofwhichd_kazfull(
+						      int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, // inputs
+						      FTYPE unu, FTYPE pnu, FTYPE chinu, FTYPE snu, // inputs
+						      FTYPE dpfun, // inputs
+						      FTYPE *utot, FTYPE *ugas, // outputs
+						      FTYPE *ptot, FTYPE *pgas, // outputs
+						      FTYPE *chitot, FTYPE *chigas // outputs
+						      );
+
 static int preparepart2_fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, // inputs
 					  FTYPE quant2nu, FTYPE quant2, // inputs
 					  FTYPE *fakeneutrino, FTYPE *faketotal // outputs
@@ -183,7 +192,7 @@ static int dfun2fun_inputdquant2_kazfull(int whichfun, int whichd, FTYPE *EOSext
   //
   ///////////////////
   if(badlookup){
-    usereduced_eos(1,whichfun,whichd,EOSextra,quant1,quant2,final);
+    usereduced_eos(REDUCEUSEOFFSET,whichfun,whichd,EOSextra,quant1,quant2,final); // final is pointer for output
     *dfinal=*final; // correct dfinal
   }
   else{
@@ -208,7 +217,7 @@ static int usereduced_eos(int domod, int whichfun, int whichd, FTYPE *EOSextra, 
   FTYPE quant2mod;
 
 
-  if(domod){
+  if(domod==REDUCEUSEOFFSET){
     if(whichd==UTOTDIFF || whichd==CHIDIFF){
       quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
     }
@@ -276,15 +285,14 @@ static int prepare_fudgefrac_kazfull(
 				     FTYPE *chitot, FTYPE *chigas // outputs
 				     )
 {
+  FTYPE dpfun;
+
 
   // first get total pressure in order to frac-fudge the answer
   if(whichd==UTOTDIFF){
     // pressure_dp_rho0_u() takes in P(rho0,u) not P(rho0,du), so feed in quant1,quant2
     *ptot = pressure_dp_rho0_u_kazfull(EOSextra, quant1, quant2, pgas); // need pgas to form chi since otherwise don't have it
-    *utot = quant2;
-    *ugas = *utot - unu; // *ugas = *utot - unu
-    *chigas = quant2 + *pgas;
-    *chitot = *chigas + chinu;
+    dpfun=*pgas;
   }
   else if(0&&whichd==PTOTDIFF){
     // Not setup.  Not needed yet.  Would require (utot,ugas)[rho0,p]
@@ -292,10 +300,7 @@ static int prepare_fudgefrac_kazfull(
   else if(whichd==CHIDIFF){
     // pressure_dp_rho0_u() takes in P(rho0,u) not P(rho0,du), so feed in quant1,quant2
     *ptot =pressure_dp_wmrho0_kazfull(EOSextra, quant1, quant2, pgas); // don't need separate pgas
-    *chitot = quant2;
-    *chigas = *chitot - chinu;
-    *utot = *chitot - *ptot;
-    *ugas = *utot - unu;
+    dpfun=*pgas;
   }
   else if(0&&whichd==STOTDIFF){
     // don't need fudgefrac(STOTDIFF) since only used for complicated functions like derivatives that have mixed derivatives between gas and neutrino terms
@@ -310,6 +315,13 @@ static int prepare_fudgefrac_kazfull(
   }
 
 
+  // get other dependent results
+  prepare_fudgefrac_input_dpofwhichd_kazfull(whichd, EOSextra, quant1, quant2,
+					     unu, pnu, chinu, snu,
+					     dpfun,
+					     utot, ugas,
+					     ptot, pgas,
+					     chitot, chigas);
 
 
 
@@ -337,8 +349,8 @@ static int prepare_fudgefrac_input_dpofwhichd_kazfull(
     *ptot = *pgas + pnu;
 
     *utot = quant2;
-    *ugas = *utot - unu; // *ugas = *utot - unu
-    *chigas = quant2 + *pgas;
+    *ugas = *utot - unu;
+    *chigas = *ugas + *pgas;
     *chitot = *chigas + chinu;
   }
   else if(0&&whichd==PTOTDIFF){
@@ -391,10 +403,10 @@ static int preparepart2_fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSex
   // GODMARK: Assume at least that if neutrino pressure is dominant then treat like mixture of gas+neutrinos
   //
   ////////////////////////////////////////
-  usereduced_eos(0,whichfun,whichd, EOSextra, quant1, quant2nu, fakeneutrino);
+  usereduced_eos(REDUCENOOFFSET,whichfun,whichd, EOSextra, quant1, quant2nu, fakeneutrino);
 
   // reduce to using totals if not within table
-  usereduced_eos(1,whichfun,whichd, EOSextra, quant1, quant2, faketotal);
+  usereduced_eos(REDUCEUSEOFFSET,whichfun,whichd, EOSextra, quant1, quant2, faketotal);
 
   return(0);
 }
@@ -555,7 +567,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   FTYPE dquant2,quant2nu;
   FTYPE fakeneutrino,faketotal;
 
-  FTYPE deltafun;
+  FTYPE deltafun; // pgas really
 
   FTYPE nonneutrinos[MAXEOSPIPELINE];
   FTYPE finals[MAXEOSPIPELINE];
@@ -588,18 +600,18 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   //
   ///////////////
   if(eomtype==EOMGRMHD){
+    // whichd==CHIDIFF
     whichtablesubtype=SUBTYPEPOFCHI;
     returnfun = PofRHOCHI;
     returndfunofrho = IDRHO0DP;
     returndfunofu = IDCHIDP;
-    //    whichd=CHIDIFF;  // read-in now
   }
   else if(eomtype==EOMENTROPYGRMHD){
+    // whichd==CHIDIFF
     whichtablesubtype=SUBTYPESSPEC;
     returnfun = SSofRHOCHI;
     returndfunofrho = DSSDRHOofRHOCHI;
     returndfunofu = DSSDCHIofRHOCHI;
-    //    whichd=CHIDIFF;  // read-in now
   }
   numcols = numcolintablesubtype[whichtablesubtype];
 
@@ -634,6 +646,8 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
     simplefudge=1;
   }
   else{
+    // don't have pressure to use to interpolate result, so have to do full fudge
+    // only have to do for coli==0 and have for rest of coli>0
     simplefudge=0;
   }
 
@@ -642,6 +656,10 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   // get final results for function and its derivatives
   //
   ////////////////////////
+
+  // used to indicate if already hit derivative "coli" so must already have computed deltafun
+  int hitdercoli=0;
+
   for(coli=0;coli<numcols;coli++){ // don't need to deal with iffun since want all
 
     whichfun = coli+firsteosintablesubtype[whichtablesubtype];
@@ -654,7 +672,19 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
       //
       ////////////////////////
 
-      if(simplefudge){
+      if(simplefudge==0 && hitdercoli==0){
+	// then need to look up pressure still
+	prepare_fudgefrac_kazfull(whichd, EOSextra, quant1, quant2,
+				  unu, pnu, chinu, snu,
+				  &utot, &ugas,
+				  &ptot, &pgas,
+				  &chitot, &chigas
+				  );
+
+	deltafun=pgas; // after coli==0,  have this for all other coli
+	hitdercoli=1; // so never come back into this if-else segment
+      }
+      else{
 	// special prepare_fudgefrac that inputs already-looked-up p-pnu
 	prepare_fudgefrac_input_dpofwhichd_kazfull(whichd, EOSextra, quant1, quant2,
 						   unu, pnu, chinu, snu,
@@ -664,22 +694,14 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
 						   &chitot, &chigas
 						   );
       }
-      else{
-	// then need to look up pressure still
-	prepare_fudgefrac_kazfull(whichd, EOSextra, quant1, quant2,
-				  unu, pnu, chinu, snu,
-				  &utot, &ugas,
-				  &ptot, &pgas,
-				  &chitot, &chigas
-				  );
 
-      }
 
       // get preparepart2_fudgefrac(), which is done per final derivative quantity
       preparepart2_fudgefrac_kazfull(whichfun, whichd, EOSextra, quant1,
 				     quant2nu, quant2,
 				     &fakeneutrino, &faketotal
 				     );
+
       
       if(failreturn==0){
 	// finish fudgefrac(), which is done per final derivative quantity
@@ -712,8 +734,12 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
       // then process non-derivative using finish_dfun2fun()
 
       // finish dffun2fun(), which is done for the non-derivative quantity
-      FTYPE dfun; // don't need dfun
-      dfun2fun_inputdquant2_kazfull(whichfun, whichd, EOSextra, quant1, quant2, dquant2, unu, pnu, chinu, snu, badlookups[coli], &dfun, fun);
+      FTYPE dfun=nonneutrinos[coli];
+      // below can change dfun, but change not used
+      dfun2fun_inputdquant2_kazfull(whichfun, whichd, EOSextra, quant1, quant2, dquant2, unu, pnu, chinu, snu, badlookups[coli], &dfun, &finals[coli]);
+
+      // assign final avlues
+      *fun=finals[coli];
 
     }
   }// end over coli
@@ -738,24 +764,22 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
 
 
 // used for fully tabulated quantities that are functions of du/dp/dchi with whichdatatype==4
-FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE quant2)
+FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2)
 {
   FTYPE final;
   FTYPE dquant2;
+  FTYPE unu, pnu, chinu, snu, quant2nu;
 
-  if(whichdatatype[primarytable]==4){
-    if(whichd==UTOTDIFF)      dquant2 = quant2 - EOSextra[UNUGLOBAL];
-    else if(whichd==PTOTDIFF) dquant2 = quant2 - EOSextra[PNUGLOBAL];
-    else if(whichd==CHIDIFF)  dquant2 = quant2 - (EOSextra[UNUGLOBAL]+EOSextra[PNUGLOBAL]);
-    else if(whichd==STOTDIFF) dquant2 = quant2 - EOSextra[SNUGLOBAL];
-  }
-  else{
-    dquant2 = quant2;
-  }
+  ///////////////////
+  //
+  // get dquant2 for lookup and get associated \nu quantities for the final answer
+  //
+  ///////////////////
+  get_dquant2(whichd, EOSextra, quant1, quant2, &dquant2, &unu, &pnu, &chinu, &snu, &quant2nu);
 
   
   // do lookup
-  if(getsingle_eos_fromtable(whichfun,whichd,EOSextra,rho0,dquant2,&final)){ // uses dquant2
+  if(getsingle_eos_fromtable(whichfun,whichd,EOSextra,quant1,dquant2,&final)){ // uses dquant2
     if(whichfun==TEMPGEN) final=0.0;
     else if(whichfun==QDOTNU) final=0.0;
     else final=0.0; // use mignone?
