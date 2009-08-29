@@ -24,8 +24,8 @@ static FTYPE lineartablelimits[NUMTBLS][NUMEOSINDEPS][TBLLINEARITEMS]; // makes 
 // first [4] : as first [4] above
 static int tablesize[NUMTBLS][NUMEOSINDEPS];
 
-static int vartypeeosextraarray[NUMINDEPDIMENS+1];
-static int vartypearray[NUMINDEPDIMENS+1]; // unchanging
+static int vartypeeosextraarray[NUMINDEPDIMENSMEM];
+static int vartypearray[NUMINDEPDIMENSMEM]; // unchanging
 
 static int vartypeheightarray[NUMHDIRECTIONS+1];
 

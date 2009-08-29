@@ -25,8 +25,20 @@
 // 5 true dimensions (rhob,u/p/chi/sden/(tk),tdynorye,tdynorynu,hcm)
 // Recall that u/p/chi/sden/tk are all in same independent variable slot for different functions
 #define NUMINDEPDIMENS 5
-
-
+// note these start at 1 not 0, so memory should always be allocated with NUMINDEPDIMENS+1
+#define NUMINDEPDIMENSMEM (NUMINDEPDIMENS+1)
+//
+// below fed into procedures as function arguments
+#define NONEINDEP -1000
+#define RHOINDEP 1
+#define TEMPLIKEINDEP 2
+// below stored in EOSextra[]
+#define YEINDEP 3
+#define YNUINDEP 4
+#define HINDEP 5
+#define FIRSTINDEPDIMEN RHOINDEP
+#define LASTINDEPDIMENUSED MIN(WHICHEOSDIMEN,HINDEP) // only works if rho,u,ye,ynu,h start at 1
+#define LASTINDEPDIMEN HINDEP
 
 // what is contained within file (rhob,utotdiff/ptotdiff/chidiff/stotdiff,tdynorye,tdynorynu,hcm)
 #define NUMEOSINDEPS 8 // independent-like quantities that have read-in table limits [i.e. rho,u,p,chi,s,T,ynu,H]
@@ -55,6 +67,9 @@
 //
 ///////////////////
 
+// utotdegencut==DEGENCUTLASTOLDVERSION is last of old versions of cutting that only used utotoffset
+#define DEGENCUTLASTOLDVERSION 1
+
 // rho, tdynorye, tdynorynu, H
 // independents for degen table
 // For accessing degen table N1,N3,N4,N5 (N2 skipped via use of vardegentablearray[]
@@ -70,6 +85,7 @@
 // these are fixed in order and number from read-in file
 // so can access functional degentable of independent variables by whichindep-1
 // below is also mapped to "whichd" variable
+#define NOSUCHDIFF -1
 #define UTOTDIFF (UEOS-1)   // should always resolve to: 0
 #define PTOTDIFF (PEOS-1)   // :1
 #define CHIDIFF  (CHIEOS-1) // :2

@@ -868,7 +868,7 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = tf/100.0;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
   // ener period
-  DTdumpgen[DTENER] = DTdumpgen[MAINDUMPTYPE]/10.0;
+  DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
   // fieldline locked to images so can overlay
@@ -891,7 +891,7 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = tf/1000.0;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
   // ener period
-  DTdumpgen[DTENER] = DTdumpgen[MAINDUMPTYPE]/100.0;
+  DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/100.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
   // fieldline locked to images so can overlay
@@ -913,7 +913,7 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = tf/100.0;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
   // ener period
-  DTdumpgen[DTENER] = DTdumpgen[MAINDUMPTYPE]/100.0;
+  DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/100.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
   // fieldline locked to images so can overlay
@@ -932,7 +932,7 @@ int init_global(void)
 
 
 
-  trifprintf("tf=%g DTd=%g DTavg=%g DTener=%g DTi=%g DTdebug=%g DTr=%d\n",tf,DTdumpgen[MAINDUMPTYPE],DTdumpgen[AVG1DUMPTYPE],DTdumpgen[DTENER],DTdumpgen[IMAGEDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],DTr);
+  trifprintf("tf=%g DTd=%g DTavg=%g DTener=%g DTi=%g DTdebug=%g DTr=%d\n",tf,DTdumpgen[MAINDUMPTYPE],DTdumpgen[AVG1DUMPTYPE],DTdumpgen[ENERDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],DTr);
 
   return(0);
 

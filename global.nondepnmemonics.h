@@ -948,7 +948,7 @@
 
 
 // time period between dumps for various types of dumps
-// NO, use "COL" names now
+// NO, use "DUMPTYPE" names now
 //#define NUMDTDS 11
 //#define DTDUMP 0
 //#define DTAVG 1
@@ -1033,7 +1033,7 @@
 
 
 // these dump types also control period of output
-// Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "COL"
+// Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "DUMPTYPE"
 #define NUMDUMPTYPES 18 // number of dump types listed below
 
 #define IMAGEDUMPTYPE 0

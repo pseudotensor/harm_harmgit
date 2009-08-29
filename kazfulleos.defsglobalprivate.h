@@ -15,8 +15,8 @@ int kazendiiiwhichd[NUMEOSDEGENQUANTITIESMEM1],kazendjjjwhichd[NUMEOSDEGENQUANTI
 FTYPE kazdiwhichd[NUMEOSDEGENQUANTITIESMEM1][2],kazdjwhichd[NUMEOSDEGENQUANTITIESMEM1][2],kazdkwhichd[NUMEOSDEGENQUANTITIESMEM1][2],kazdlwhichd[NUMEOSDEGENQUANTITIESMEM1][2],kazdmwhichd[NUMEOSDEGENQUANTITIESMEM1][2];
 
 // each "whichd" has its own indexarray and qoldarray so independently repeatable
-FTYPE indexarray[NUMEOSDEGENQUANTITIESMEM1][NUMINDEPDIMENS+1]; // [UTOTDIFF, etc.][q1-q5]
-FTYPE qoldarray[NUMEOSDEGENQUANTITIESMEM1][NUMINDEPDIMENS+1];
+FTYPE indexarray[NUMEOSDEGENQUANTITIESMEM1][NUMINDEPDIMENSMEM]; // [UTOTDIFF, etc.][q1-q5]
+FTYPE qoldarray[NUMEOSDEGENQUANTITIESMEM1][NUMINDEPDIMENSMEM];
 // whichtable: which table qarray led to (is ==NOTABLE for not within any table)
 int whichtable[NUMEOSDEGENQUANTITIESMEM1][2];
 
@@ -29,7 +29,7 @@ int repeatedfun[NUMTABLESUBTYPES][MAXEOSPIPELINE];
 ///////////////
 // old EOS table position and results for extras and processed
 // only whichd==UTOTDIFF required
-FTYPE qoldarrayextras[NUMINDEPDIMENS+1];
+FTYPE qoldarrayextras[NUMINDEPDIMENSMEM];
 FTYPE extrasold[MAXNUMEXTRAS];
 FTYPE processedold[MAXPROCESSEDEXTRAS];
 int doallextrasold;

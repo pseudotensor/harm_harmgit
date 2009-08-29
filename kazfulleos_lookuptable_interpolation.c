@@ -1112,7 +1112,8 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
 
 	if(debugfail>=2){
 	  dualfprintf(fail_file,"No valid data points in table despite within table.\n");
-	  dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll);
+	  dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
+	  dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
 	}
 
       }
@@ -1446,7 +1447,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// get basic utotoffset
 	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
 	values[0] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  // then also get other things
 	  values[1] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
@@ -1455,7 +1456,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       else if(whichtable==EXTRAFULLTABLE){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	values[0] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  values[1] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
 	}
@@ -1496,7 +1497,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// get basic utotoffset
 	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
 	values[0] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  // then also get other things
 	  values[1] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
@@ -1505,7 +1506,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       else if(whichtable==EXTRASIMPLETABLE){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	values[0] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  values[1] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
 	}
@@ -1546,7 +1547,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// get basic utotoffset
 	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
 	values[0] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  // then also get other things
 	  values[1] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
@@ -1555,7 +1556,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       else if(whichtable==EXTRASIMPLEZOOMTABLE){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	values[0] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>=2){
+	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
 	  values[1] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
 	  values[2] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
 	}

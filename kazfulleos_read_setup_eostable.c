@@ -333,7 +333,7 @@ static void settablesubtypeinfo(void)
   numcolintablesubtype[SUBTYPETEMP]=NUMEOSTEMPQUANTITIESMEM; // table accessed in special way based upon "whichd" during lookup
 
   // below is one of UTOTDIFF,PTOTDIFF,CHIDIFF,STOTDIFF (there are NUMEOSDEGENQUANTITIESMEM1 of these)
-  whichdintablesubtype[SUBTYPEDEGEN]=-1; // more complicated table, dealt with in special way
+  whichdintablesubtype[SUBTYPEDEGEN]=NOSUCHDIFF; // more complicated table, dealt with in special way
   whichdintablesubtype[SUBTYPESTANDARD]=UTOTDIFF;
   whichdintablesubtype[SUBTYPEGUESS]=PTOTDIFF;
   whichdintablesubtype[SUBTYPEDISS]=STOTDIFF;
@@ -341,7 +341,7 @@ static void settablesubtypeinfo(void)
   whichdintablesubtype[SUBTYPESDEN]=UTOTDIFF;
   whichdintablesubtype[SUBTYPESSPEC]=CHIDIFF;
   whichdintablesubtype[SUBTYPEPOFCHI]=CHIDIFF;
-  whichdintablesubtype[SUBTYPETEMP]=-1; // table accessed in special way based upon "whichd" during lookup
+  whichdintablesubtype[SUBTYPETEMP]=NOSUCHDIFF; // table accessed in special way based upon "whichd" during lookup
 
   // Get "firsteos" for setting whichfun=coli+firsteos where coli starts from 0 for all subtables
   firsteosintablesubtype[SUBTYPEDEGEN]=FIRSTEOSDEGEN;
@@ -402,7 +402,7 @@ static void settablesubtypeinfo(void)
 
 
 
-
+// note we define over full LASTINDEPDIMEN not just up to LASTINDEPDIMENUSED, so anything that tries to access mapping can still do it, even for non-existent dimension
 static void setvartypeinfo(void)
 {
   int i;
@@ -519,7 +519,7 @@ void read_setup_eostable(void)
   int i;
   int testnumfscanfquantities,testnumfscanfquantitiesdegen;
   int templikeiter;
-
+  long long int numberofdegenerrors[4],totalnumberofdegen; // 0=TABLETOL 1=0.01 2=0.1 3=TABLETOLTRUNCATION
 
 
 
@@ -694,6 +694,32 @@ void read_setup_eostable(void)
 	myexit(626236);
       }
 
+      // check that number of extras is correct
+      if(isextratable(tableiter) && WHICHDATATYPEGENERAL==4 || WHICHDATATYPEGENERAL!=4){
+	// only check if extras should be there
+	
+	// now check how many extras should be there
+	if(
+	   (WHICHDATATYPEGENERAL==1 && numextras[tableiter]!=NUMEXTRAEOSQUANTITIESTYPE1) ||
+	   (WHICHDATATYPEGENERAL==2 && numextras[tableiter]!=NUMEXTRAEOSQUANTITIESTYPE2) ||
+	   (WHICHDATATYPEGENERAL==3 && numextras[tableiter]!=NUMEXTRAEOSQUANTITIESTYPE3) ||
+	   (WHICHDATATYPEGENERAL==4 && numextras[tableiter]!=NUMEXTRAEOSQUANTITIESTYPE4)
+	   ){
+	  dualfprintf(fail_file,"Wrong number of extras.  header says: %d\n",numextras[tableiter]);
+	  myexit(8923742);
+	}
+	// else correct
+      }
+      else{
+	// then should be 0 extras
+	if(numextras[tableiter]!=0){
+	  dualfprintf(fail_file,"Wrong number of extras.  header says: %d but should be 0\n",numextras[tableiter]);
+	  myexit(8923743);
+	}
+      }
+
+
+
       if(whichdatatype[tableiter]>MAXNUMDATATYPES){ // no longer relevant code
 	dualfprintf(fail_file,"Increase MAXNUMDATATYPES to %d\n",whichdatatype[tableiter]);
 	myexit(626237);
@@ -779,7 +805,7 @@ void read_setup_eostable(void)
 	
 	// below used to truncate(limit) input values so lookup doesn't have as many conditionals
 	// lineartablelimits does NOT include degen offset, so these are combined with offset when used since offset is function of rhob,hcm,tdynorye
-	if((utotdegencut[tableiter]>=2)&&(ii>=FIRSTTKLIKE || ii<=LASTTKLIKE)){
+	if((utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE)){
 	  // no log-conversion for limits
 	  lineartablelimits[tableiter][ii][0]=inputtablelimits[tableiter][ii][0];
 	  lineartablelimits[tableiter][ii][1]=inputtablelimits[tableiter][ii][1];
@@ -850,9 +876,9 @@ void read_setup_eostable(void)
       }
 
       if(!sizematch){
-	dualfprintf(fail_file,"Size of table does not match\n");
+	dualfprintf(fail_file,"Size of table does not match (tableiter=%d)\n",tableiter);
 	for(ii=0;ii<NUMEOSINDEPS;ii++){
-	  dualfprintf(fail_file,"tablesize[%d]=%d\n",ii,tablesize[tableiter][ii]);
+	  dualfprintf(fail_file,"read-in tablesize[%d]=%d\n",ii,tablesize[tableiter][ii]);
 	}
 	dualfprintf(fail_file,"EOSN's = ");
 	for(ii=0;ii<NUMEOSINDEPS;ii++){
@@ -900,6 +926,11 @@ void read_setup_eostable(void)
 	dualfprintf(fail_file,"No such file %s\n",degentablename[tableiter]);
 	myexit(2382662);
       }
+
+
+      // initialize table degen errors:
+      numberofdegenerrors[0]=numberofdegenerrors[1]=numberofdegenerrors[2]=numberofdegenerrors[3]=0;
+      totalnumberofdegen=0;
 
 
       // file has rhob as fastest index
@@ -1004,6 +1035,15 @@ void read_setup_eostable(void)
 	/////////////////
 	for(ii=0;ii<NUMEOSINDEPS;ii++){
 
+
+	  if(!isextratable(tableiter) && WHICHDATATYPEGENERAL==4){
+	    // then do not check consistency of table for Ynu or H independents since redudant information was removed so no such dimensions even though range is the same as before.
+	    if(ii==YNUEOS || ii==HEOS) continue; // skip till iterate ii again
+	    // actually, this is already avoided by if(tablesize>1) check below
+	  }
+
+
+
 	  if(tablesize[tableiter][ii]>1){ // only check actual table and assume degen table consistent
 
 	    // get step (consistent with how step is computed in Kaz's code and in matlab script eos_extract.m)
@@ -1020,7 +1060,7 @@ void read_setup_eostable(void)
 
 
 	    
-	    if((utotdegencut[tableiter]>=2)&&(ii>=FIRSTTKLIKE || ii<=LASTTKLIKE)){
+	    if((utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE)){
 	      // grid is just 0..1
 	      // then indep already logified and contains all offsets (i.e. lineartablelimits[tableiter][ii][3]=0 required and lineartablelimits[tableiter][ii][2]=1/log10(10.0)=1 required for now)
 	      lindep = indep[ii];
@@ -1041,11 +1081,14 @@ void read_setup_eostable(void)
 	    // get x using lookup from tablular index (didn't need to change)
 	    lindeptry=tablelimits[tableiter][ii][0] + totalindex[ii]*lstepdep;
 	    // compare to be sure same
-	    diff = fabs(lindep-lindeptry)/(fabs(lindep)+fabs(lindeptry));
+	    //	    diff = fabs(lindep-lindeptry)/(fabs(lindep)+fabs(lindeptry));
+	    // normalize below by range of limits instead of local values since otherwise if lindeptry or lindep is near 0 then relative error erroneously is large with old diff above
+	    diff = fabs(lindep-lindeptry)/(tablelimits[tableiter][ii][1]-tablelimits[tableiter][ii][0]);
 	    if(diff>TABLETOL){
 	      dualfprintf(fail_file,"Grid position data is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-lindep=%21.15g lindeptry=%21.15g diff=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,lindep,lindeptry,diff);
 	      dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g totalindex[%d]=%d lstepdep=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],ii,totalindex[ii],lstepdep);
-	      dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",lindep,lineartablelimits[tableiter][ii][3],lineartablelimits[tableiter][ii]);
+	      dualfprintf(fail_file,"indep=%21.15g lindep=%21.15g [3]=%21.15g [2]=%21.15g\n",indep[ii],lindep,lineartablelimits[tableiter][ii][3],lineartablelimits[tableiter][ii][2]);
+	      dualfprintf(fail_file,"Trigger: %d\n",(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE));
 	      myexit(16628);
 	    }
 	  }
@@ -1124,6 +1167,8 @@ void read_setup_eostable(void)
 	//
 	// fifth, check degen table against normal table for proper use of independent variable offset
 	//
+	// Note that indepplusdegen was independently interpolated quantity instead of being constructed after the fact.  So this should only result in agreement to *truncation* error in the Matlab interpolation and NOT machine error.  This is the point of this check -- not to check that table is formatted correctly, but to test actual accuracy of interpolations.  That is, indep[] is from original HELM table.  So this check tests accuracy of Matlab interpolations from T->U,P,CHI,S space *and* the subtraction of degeneracy cut *and* interpolation of original u,p,chi,s from HELM table to HARM table.
+	//
 	//////////////////////////////
 	// check for all jjj
 
@@ -1142,24 +1187,32 @@ void read_setup_eostable(void)
 	  // assume hit jjj==0 first time in loop
 
 	  FTYPE U0,UIN,UOUT,NN,testindepplusdegen;
-	  if(utotdegencut[tableiter]>=2){
+	  if(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION){ // all temperature-like quantities here
 	    // access read-in quantities
 	    U0=degenvaluetemp[ii];
 	    UIN=degenvaluetemp[ii+NUMEOSDEGENQUANTITIESMEM1];
 	    UOUT=degenvaluetemp[ii+2*NUMEOSDEGENQUANTITIESMEM1];
 	    NN = tablesizeexpected[tableiter][UEOS]; // UEOS,PEOS,CHIEOS,SEOS all same dimension
-	    // already checked that indep is consistent, so can use indep[ii] or (FTYPE)jjj/NN below for "i/N"
+	    // already checked that indep is consistent, so can use indep[RHOEOS+ii] or (FTYPE)jjj/NN below for "i/N"
 	    testindepplusdegen = U0 + (UIN-U0)*pow( (UOUT-U0)/(UIN-U0), (FTYPE)jjj/NN);
 	  }
 	  else{
 	    // u = utotdiff + utotoffset 
 	    U0=degenvaluetemp[ii];
-	    testindepplusdegen = U0 + indep[ii];
+	    testindepplusdegen = U0 + indep[RHOEOS+ii];
 	  }
 
 	  errordegen=fabs(testindepplusdegen-indepplusdegen[ii])/(fabs(testindepplusdegen)+(indepplusdegen[ii])+SMALL);
-	  if(errordegen>TABLETOL){
-	    dualfprintf(fail_file,"Degen not correct: iii=%d jjj=%d kkk=%d lll=%d mmm=%d:: ii=%d :: error=%21.15g :: U0=%21.15g  :: %21.15g %21.15g %21.15g\n",iii,jjj,kkk,lll,mmm,ii,errordegen,U0,UIN,UOUT,testindepplusdegen);
+
+	  if(errordegen>=TABLETOL) numberofdegenerrors[0]++;
+	  if(errordegen>=0.01) numberofdegenerrors[1]++;
+	  if(errordegen>=0.1) numberofdegenerrors[2]++;
+	  if(errordegen>=TABLETOLTRUNCATION) numberofdegenerrors[3]++;
+	  totalnumberofdegen++;
+
+	  if(errordegen>=TABLETOLTRUNCATION){
+	    dualfprintf(fail_file,"Degen not correct: iii=%d jjj=%d kkk=%d lll=%d mmm=%d:: ii=%d :: error=%21.15g :: U0=%21.15g  UIN=%21.15g UOUT=%21.15g\n",iii,jjj,kkk,lll,mmm,ii,errordegen,U0,UIN,UOUT);
+	    dualfprintf(fail_file,"file has indepplusdegen=%21.15g while testindepplusdegen=%21.15g\n",indepplusdegen[ii],testindepplusdegen);
 	  }
 
 	}
@@ -1184,6 +1237,8 @@ void read_setup_eostable(void)
       
       // report read-in
       trifprintf("Done reading in EOS table: tableiter=%d of %d\n",tableiter,NUMTBLS-1);
+      trifprintf("Number of degen errors: %lld %lld %lld %lld out of total=%lld\n",numberofdegenerrors[0],numberofdegenerrors[1],numberofdegenerrors[2],numberofdegenerrors[3],totalnumberofdegen);
+
 
 
 
@@ -1201,7 +1256,8 @@ void read_setup_eostable(void)
 	if(jj!=2){ // log of base has no units conversion, but rest do
 	  if(rho0unittype==0) lineartablelimits[tableiter][RHOEOS][jj]/=rhounit;
 	  else lineartablelimits[tableiter][RHOEOS][jj]/=rhomassunit;
-	  if(utotdegencut[tableiter]>=2){
+
+	  if(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION){ // all temperature-like quantities here
 	    // For utotdegencut==2 or 3 the lineartablelimits are dimensionless as log(index) that is really meaningless
 	    // essentially, for utotdegencut==2 or 3, the units are emedded in storing U0, UIN, and UOUT like quantities
 	  }
@@ -1222,7 +1278,7 @@ void read_setup_eostable(void)
 	for(ii=0;ii<UPDOWN;ii++){
 	  // log_base(Rin-R0), log_base(Rout-R0), which gives same result as if shifted x_in and x_out by -log_base(r_units)
 	  // log(Rin-R0)/log(base) for both Rout and Rin
-	  if(utotdegencut[tableiter]>=2){
+	  if((utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(jj>=FIRSTTKLIKE && jj<=LASTTKLIKE)){
 	    // for temperature-like jj's, no need to recompute since already lutotdiff="i/N" like quantities
 	    tablelimits[tableiter][jj][ii]=lineartablelimits[tableiter][jj][ii];
 	  }
@@ -1461,7 +1517,7 @@ void read_setup_eostable(void)
 	  degentabletemp[CHIOFFSETin]/=Pressureunit; // pressure units
 	  degentabletemp[STOTOFFSETin]/=(1.0/pow(Lunit,3.0)); // 1/cc
 
-	  if(utotdegencut[tableiter]>=2){
+	  if(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION){
 	    degentabletemp[UTOTINin]/=Pressureunit; // pressure units
 	    degentabletemp[PTOTINin]/=Pressureunit; // pressure units
 	    degentabletemp[CHIINin]/=Pressureunit; // pressure units
@@ -1588,8 +1644,8 @@ static void bcast_kazeos(void)
   MPI_Bcast(&lineartablelimits[0][0][0],NUMTBLS*NUMEOSINDEPS*TBLLINEARITEMS,MPI_FTYPE,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&tablesize[0][0],NUMTBLS*NUMEOSINDEPS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
-  MPI_Bcast(&vartypeeosextraarray[0],NUMINDEPDIMENS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&vartypearray[0],NUMINDEPDIMENS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&vartypeeosextraarray[0],NUMINDEPDIMENSMEM,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&vartypearray[0],NUMINDEPDIMENSMEM,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&vartypeheightarray[0],NUMHDIRECTIONS+1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
@@ -1798,13 +1854,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==FULLTABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -1822,13 +1878,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -1895,13 +1951,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==SIMPLETABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -1919,13 +1975,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -1992,13 +2048,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==SIMPLEZOOMTABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -2016,13 +2072,13 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==STOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==PTOTOFFSETin) EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
 	  if(incol==CHIOFFSETin) EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET)=value;
@@ -2141,13 +2197,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==FULLTABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
@@ -2165,13 +2221,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eosfulltableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eosfulltableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
@@ -2238,13 +2294,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==SIMPLETABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
@@ -2262,13 +2318,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimpletableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimpletableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
@@ -2335,13 +2391,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
     else{
       // degen tables the same but with different name
       if(whichtable==SIMPLEZOOMTABLE){
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtabledegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
@@ -2359,13 +2415,13 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
 	}
       }
       else{
-	if(utotdegencut[whichtable]<=1){
+	if(utotdegencut[whichtable]<=DEGENCUTLASTOLDVERSION){
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==STOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,STOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	}
-	else{ // utotdegencut[whichtable]>=2
+	else{ // utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION
 	  if(incol==UTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,UTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==PTOTOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,PTOTDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);
 	  if(incol==CHIOFFSETin) *value=EOSMAC(eossimplezoomtableextradegen,CHIDIFF,mmm,lll,kkk,jjj,iii,EOSOFFSET);

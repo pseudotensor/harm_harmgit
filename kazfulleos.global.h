@@ -105,6 +105,10 @@
 // tolerance for checks on input values of table
 #define TABLETOL (1E-14)
 
+// tolerance for truncation error-level checks
+// beyond 30% accuracy start reporting issues
+#define TABLETOLTRUNCATION (0.3)
+
 // value of read-in temperature such that below this is treated as indicating an invalid (rho0,u) EOS pair
 // actual read-in value is 1E-20, but using 5E-20 guarantees no machine-error choices and works with floats too
 // also, generally is more accurate as temperature since problems with inversion are near T~0

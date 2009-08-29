@@ -307,7 +307,7 @@ int init_global(void)
   DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;			/* dumping frequency, in units of M */
   DTdumpgen[DISSDUMPTYPE]=DTdumpgen[MAINDUMPTYPE]/5.0;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
-  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[DTENER] = 2.0;			/* logfile frequency, in units of M */
+  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[ENERDUMPTYPE] = 2.0;			/* logfile frequency, in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 2.0;			/* image file frequ., in units of M */
   DTdumpgen[DEBUGDUMPTYPE] = 1000.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */

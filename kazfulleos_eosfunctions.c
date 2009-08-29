@@ -1071,7 +1071,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   FTYPE qphoton,qm,graddotrhouyl,tthermaltot,tdifftot,rho_nu,p_nu,s_nu,ynulocal,Ynuthermal,enu,enue,enuebar;
   FTYPE qphoton_a[NUMHDIRECTIONS],qm_a[NUMHDIRECTIONS],graddotrhouyl_a[NUMHDIRECTIONS],tthermaltot_a[NUMHDIRECTIONS],tdifftot_a[NUMHDIRECTIONS],rho_nu_a[NUMHDIRECTIONS],p_nu_a[NUMHDIRECTIONS],s_nu_a[NUMHDIRECTIONS],ynulocal_a[NUMHDIRECTIONS],Ynuthermal_a[NUMHDIRECTIONS],enu_a[NUMHDIRECTIONS],enue_a[NUMHDIRECTIONS],enuebar_a[NUMHDIRECTIONS];
   FTYPE dquant2;
-  FTYPE qarray[NUMINDEPDIMENS+1];
+  FTYPE qarray[NUMINDEPDIMENSMEM];
   int repeatedeos;
   int qi;
   int hi;
@@ -1118,10 +1118,10 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
   // setup array
-  qarray[1]=quant1;
-  qarray[2]=dquant2;
+  qarray[RHOINDEP]=quant1;
+  qarray[TEMPLIKEINDEP]=dquant2;
   // qarray[3+] are always stored in EOSextra
-  for(qi=3;qi<=NUMINDEPDIMENS;qi++){
+  for(qi=TEMPLIKEINDEP+1;qi<=LASTINDEPDIMENUSED;qi++){
     qarray[qi] = EOSextra[vartypeeosextraarray[qi]];
   }
 
@@ -1129,7 +1129,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   if(doallextrasold==doall){
     // check if repeated case (doesn't matter if i,j,k same since result only depends on all qarray values)
     repeatedeos=1;
-    for(qi=1;qi<=WHICHEOSDIMEN;qi++){ // only need to repeat used independent variables, not all
+    for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++){ // only need to repeat used independent variables, not all
       repeatedeos*=(fabs(qarray[qi]-qoldarrayextras[qi])<OLDTOLERANCE);
       if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"qi=%d %21.15g %21.15g\n",qi,qarray[qi],qoldarrayextras[qi]);
     }
@@ -1406,7 +1406,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
     // setup old values
-    for(qi=1;qi<=NUMINDEPDIMENS;qi++) qoldarrayextras[qi]=qarray[qi];
+    for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) qoldarrayextras[qi]=qarray[qi];
     if(doall){
       for(ei=0;ei<MAXNUMEXTRAS;ei++) extrasold[ei]=extras[ei];
       for(ei=0;ei<MAXPROCESSEDEXTRAS;ei++) processedold[ei]=processed[ei];
@@ -1421,8 +1421,8 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   }// end if not repeated lookup
 
 #if(0)
-  // qarray[3+] are always stored in EOSextra
-  for(qi=1;qi<=NUMINDEPDIMENS;qi++){
+  // qarray[YEINDEP+] are always stored in EOSextra
+  for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++){
     dualfprintf(fail_file,"qi=%d qarray[qi] =%21.15g\n",qi,qarray[qi]);
   }
 
