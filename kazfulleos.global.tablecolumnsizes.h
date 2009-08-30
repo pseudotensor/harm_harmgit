@@ -67,6 +67,11 @@
 //
 ///////////////////
 
+// for seteostable() and kazfulleos.c
+#define ISNOTDEGENTABLE 0
+#define ISDEGENTABLE 1
+
+
 // utotdegencut==DEGENCUTLASTOLDVERSION is last of old versions of cutting that only used utotoffset
 #define DEGENCUTLASTOLDVERSION 1
 
@@ -94,6 +99,11 @@
 // fastest indexed quantities in degen table
 #define NUMEOSDEGENQUANTITIESMEM2 (3)
 // table is accessed via: (like) r= R0 + exp(x1[i]), with r ranging from Rin to Rout, then:
+
+// below used for table lookup in case want to access degen quantities directly for some reason
+#define NUMEOSDEGENQUANTITIESMEMNEW NUMEOSDEGENQUANTITIESMEM2
+#define NUMEOSDEGENQUANTITIESMEMOLD 1
+
 
 #define EOSOFFSET 0 // like R0
 #define EOSIN 1 // like Rin
@@ -123,12 +133,6 @@
 #define CHIOUTin  UTOTOUTin+2
 #define STOTOUTin UTOTOUTin+3
 
-// for seteostable() and kazfulleos.c
-#define ISNOTDEGENTABLE 0
-#define ISDEGENTABLE 1
-
-// below used for table lookup in case want to access degen quantities directly for some reason
-#define NUMEOSDEGENQUANTITIESMEM NUMEOSDEGENQUANTITIESMEM2
 
 ///////////////////////
 //
@@ -177,6 +181,7 @@
 
 
 // last index of quantities above
+#define FIRSTEOSQUANTITIESBASEin PofRHOUin
 #define LASTEOSQUANTITIESBASEin TEMPSin
 
 // number of base quantities to *store* from table made by eos_extract.m starting from PofRHOU
@@ -218,6 +223,7 @@
 //////////////////////////////////
 // for "pure" extra table:
 // when reading-in "pure" extra table
+// only used to convert to canonical format for these variables
 #define TEMPUinextra 0
 #define TEMPPinextra 1
 #define TEMPCHIinextra 2

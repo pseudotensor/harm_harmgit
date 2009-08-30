@@ -51,6 +51,9 @@
 // And those functions in eos_extract.m interpolated as log are here interpolated as log
 // 0 or 1
 #define DOLOGINTERP 1
+// whether to prelogify table values that should be log interpolated
+#define DOPRELOGIFY DOLOGINTERP
+#define OUTOFBOUNDSPRELOGIFY BIG // 10^(BIG) is used to trigger that value is out of bounds and was unable to be logified (i.e. <=0.0 before log).  Impossible to have had value logify to BIG, so works.  Note that this is in code units.
 
 
 // which EOS to reduce to if beyond table
@@ -59,6 +62,22 @@
 // ensure that gamideal is chosen
 // GODMARK: Could choose nearest tabulated value of dp/du|rho0 and dp/dchi|rho0 for gamideal when indeps are rho0,u and rho0,chi
 
+// pick size of data type for EOS stuff
+#define REALTYPEEOS DOUBLETYPE
+
+#if(REALTYPEEOS==DOUBLETYPE)
+#define FTYPEEOS double
+#define MPI_FTYPEEOS MPI_DOUBLE
+#define EOSHEADERONEIN "%lf"
+#elif(REALTYPEEOS==FLOATTYPE)
+#define FTYPEEOS float
+#define MPI_FTYPEEOS MPI_FLOAT
+#define EOSHEADERONEIN "%f"
+#elif(REALTYPEEOS==LONGDOUBLETYPE)
+#define FTYPEEOS long double
+#define MPI_FTYPEEOS MPI_LONG_DOUBLE
+#define EOSHEADERONEIN "%Lf"
+#endif
 
 
 #include "kazfulleos.global.tablecolumnsizes.h"
@@ -142,9 +161,9 @@
 
 
 
-// e.g. superdefs.h like: double BASEEOSMAC(name,....)
-//      superdefs.pointers.h like: double PTRDEFEOSMAC(name,....)
-// set_arrays_multidimen.c like: EOSPOINT(name) = (double PTREOSMAC(name,..)) (&(BASEEOSMAC(name,...)));
+// e.g. superdefs.h like: FTYPEEOS BASEEOSMAC(name,....)
+//      superdefs.pointers.h like: FTYPEEOS PTRDEFEOSMAC(name,....)
+// set_arrays_multidimen.c like: EOSPOINT(name) = (FTYPEEOS PTREOSMAC(name,..)) (&(BASEEOSMAC(name,...)));
 //
 // \([_a-zA-Z0-9]+\)\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]\[\([_\>a-zA-Z0-9+-\ ()]+\)\]
 //     -> BASEEOSMAC(\1,\2,\3,\4,\5,\6,\7) [kazfulleos.c at top and kazfulleos_set_arrays.c for most-RHS of pointer shifting code]

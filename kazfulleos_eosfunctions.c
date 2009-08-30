@@ -164,7 +164,15 @@ static FTYPE dfun2fun_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE q
   //
   //////////////
   *dfinalreturn=dfinal;
-  
+ 
+
+  // DEBUG:
+  //  if(whichfun==PofRHOU){
+  //    dualfprintf(fail_file,"whichd=%d EOSe[0]=%21.15g ig=%d q1=%21.15g q2=%21.15g dquant2=%21.15g unu=%21.15g pnu=%21.15g chinu=%21.15g snu=%21.15g quant2unu=%21.15g\n",whichd,EOSextra[TDYNORYEGLOBAL],(int)EOSextra[IGLOBAL],quant1,quant2,dquant2,unu,pnu,chinu,snu,quant2nu);
+  //    dualfprintf(fail_file,"dfinal=%21.15g final=%21.15g : %d\n",dfinal,final,badlookup);
+  //  }
+
+ 
   //////////////
   //
   // return final full answer
@@ -613,7 +621,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
     returndfunofrho = DSSDRHOofRHOCHI;
     returndfunofu = DSSDCHIofRHOCHI;
   }
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = numcolintablesubtype[whichtablesubtype]; // ok use of numcolintablesubtype
 
   // setup iffun
   for(coli=0;coli<numcols;coli++) iffun[coli]=1; // want all!

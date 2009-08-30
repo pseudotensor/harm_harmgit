@@ -71,7 +71,7 @@ The columns (126 of them) correspond to:
 
 
 Explicit coords are defcoord=JET3COORDS=9 and corresponds to (where V[1,2,3]={r,\theta,\phi}):
-	 
+
 
     npow=1.0;
     r1jet=2.8;
@@ -79,7 +79,7 @@ Explicit coords are defcoord=JET3COORDS=9 and corresponds to (where V[1,2,3]={r,
     r0jet=20.0;
     rsjet=80.0;
     Qjet=1.3;
-    
+
     V[1] = R0+exp(pow(X[1],npow)) ;
 
     myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
@@ -92,7 +92,7 @@ Explicit coords are defcoord=JET3COORDS=9 and corresponds to (where V[1,2,3]={r,
     }
 
     V[3]=2.0*M_PI*X[3];
-    
+
     startx[1] = pow(log(Rin-R0),1.0/npow);
     startx[2] = 0.;
     startx[3] = 0.;
@@ -142,6 +142,51 @@ void metptomet_ucov_simple(FTYPE idxdxp[][NDIM], FTYPE*ucov)
   DLOOPA(j) ucov[j] = tmp[j];
 }
 
+
+------------------------
+
+To convert from MKS to KS to BL, here's a semi-latex write-up:
+
+u^\mu[MKS] = {uu0,uu1,uu2,uu3}
+u_\mu[MKS] = {ud0,ud1,ud2,ud3}
+
+so that:
+
+u^t[KS] = uu0
+u^r[BL]=u^r[KS] = uu1*dxdxp11 + uu2*dxdxp12
+u^\theta[BL]=u^\theta[KS] = uu1*dxdxp21 + uu2*dxdxp22
+u^\phi[KS] = uu3
+
+and:
+
+u_t[KS] = ud0
+u_r[KS] = ud1*idxdxp11 + ud2*idxdxp21
+u_\theta[KS] = ud1*idxdxp12+ud2*idxdxp22
+u_\phi[KS] = ud3
+
+where:
+
+# inverse of dx^{ks}/dx^{mks}
+idxdxp11=dxdxp22/(dxdxp22*dxdxp11-dxdxp21*dxdxp12)
+idxdxp12=dxdxp12/(dxdxp21*dxdxp12-dxdxp22*dxdxp11)
+idxdxp21=dxdxp21/(dxdxp21*dxdxp12-dxdxp22*dxdxp11)
+idxdxp22=dxdxp11/(dxdxp22*dxdxp11-dxdxp21*dxdxp12)
+
+The transformation to BL is:
+
+u^t[BL] = u^t[KS] - (2r/\Delta) u^r[KS]
+u^r[BL] = u^r[KS]
+u^\theta[BL] = u^\theta[KS]
+u^\phi[BL] = u^\phi[KS] - (a/\Delta) u^r[KS]
+
+where $\Delta = r^2 - 2r + a^2$.
+
+and also:
+
+u_t[BL] = u_t[KS]
+u_r[BL] = (2r u_t[KS] + \Delta u_r[KS] + a u_\phi[KS])/\Delta
+u_\theta[BL] = u_\theta[KS]
+u_\phi[BL] = u_\phi[KS]
 
 
 

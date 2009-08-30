@@ -36,8 +36,8 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
 static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPE *indexarray, FTYPE *answers, int *badlookups);
 static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPE *indexarray, FTYPE *answers, int *badlookups);
 
-static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, double *values);
-static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, double *values);
+static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values);
+static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values);
 
 
 
@@ -108,6 +108,7 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   FTYPE tempcheck;
   FTYPE tempanswers[MAXEOSPIPELINE];
   int shouldloginterp[MAXEOSPIPELINE];
+  int localbadlookups[MAXEOSPIPELINE];
 
   FTYPE totalf[MAXEOSPIPELINE][3][3][3][3]; // 3 values for parabolic interpolation
   FTYPE (*tfptr)[3][3][3][3];
@@ -140,7 +141,7 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   // get number of columns possible for this whichtablesubtype
   //
   ///////////////
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
 
 
 
@@ -248,19 +249,8 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
 
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
-  if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){kazll=kazmm=kazllo=kazmmo=meos=leos=kazstartlll=kazendlll=0;}
-
-
-
-
-  //////////////////////
-  //
-  // Set that default return that no bad lookups
-  //
-  //////////////////////
-  for(coli=0;coli<numcols;coli++){
-    badlookups[coli]=0;
-  }
+  if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){kazll=kazmm=kazllo=kazmmo=leos=meos=kazstartlll=kazendlll=kazstartmmm=kazendmmm=0;}
+  if(whichtablesubtype==SUBTYPEDEGEN){kazjj=kazjjo=jeos=kazstartjjj=kazendjjj=0;}
 
 
 
@@ -295,7 +285,7 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
       for(coli=0;coli<numcols;coli++){
 	if(iffun[coli]){
 
-	  if(shouldloginterp[coli] && tempanswers[coli]<=0.0){
+	  if(shouldloginterp[coli] && (tempanswers[coli]<=0.0 && DOPRELOGIFY==0 ||tempanswers[coli]>=0.99999*OUTOFBOUNDSPRELOGIFY && DOPRELOGIFY==1) ){
 	    // avoid point if should have been log but value is <=0.0
 	    includeptr[coli][iii][jjj][kkk][lll]=0;
 	  }
@@ -324,6 +314,8 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   }// end loop over dimensions
 
 
+
+
   //////////////////////
   //
   // logify
@@ -331,15 +323,23 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   //////////////////////
   for(coli=0;coli<numcols;coli++){
     if(iffun[coli]){
+#if(DOLOGINTERP && DOPRELOGIFY)
+      // then above check for logification already sufficient
+#else 
       if(shouldloginterp[coli]){
 	LOOPKAZIJKL{
 	  if(includeptr[coli][iii][jjj][kkk][lll]){
-	    tfptr[coli][iii][jjj][kkk][lll] = log10(tfptr[coli][iii][jjj][kkk][lll]);
+	    if(tfptr[coli][iii][jjj][kkk][lll]>0.0) tfptr[coli][iii][jjj][kkk][lll] = log10(tfptr[coli][iii][jjj][kkk][lll]);
+	    else includeptr[coli][iii][jjj][kkk][lll]=0; // then force to not include
 	  }
 	}// end loop over dimensions
       }// end if logifying
+#endif
+
     }// end iffun==1
   }// end over coli
+
+
 
 
 
@@ -355,6 +355,7 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
   //////////////
   for(coli=0;coli<numcols;coli++){
     if(iffun[coli]){
+      localbadlookups[coli]=0; // default is to succeed
   
       KAZPARALOOP1{
 
@@ -547,8 +548,8 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
 
 
 	  dualfprintf(fail_file,"No valid data points in table despite within table.\n");
-	  badlookups[coli]=1;
 	  // no valid data points, so return badlookup
+	  localbadlookups[coli]=1;
 	  // GODMARK: Should have caught this with the check if within table function, so could return failure
 	  //	  return(1);
 
@@ -565,52 +566,55 @@ static int get_eos_fromlookup_parabolicfull(INDEXPARAMETERSPROTOTYPES, int repea
 
 
 
-      ///////////////////////
-      //
-      // final fully parabolic result
-      //
-      ///////////////////////
-      answers[coli]=tfptr[coli][0][0][0][0];
+      if(localbadlookups[coli]==0){
+
+	///////////////////////
+	//
+	// final fully parabolic result
+	//
+	///////////////////////
+	answers[coli]=tfptr[coli][0][0][0][0];
 
 
-      ////////////////////////////
-      //
-      // enforce no new extrema to over overshoots in sharp regions of table
-      //
-      ////////////////////////////
+	////////////////////////////
+	//
+	// enforce no new extrema to over overshoots in sharp regions of table
+	//
+	////////////////////////////
 #if(1)
-      FTYPE largest=-BIG;
-      FTYPE smallest=BIG;
-      LOOPKAZIJKL{
-	if(includeptr[coli][iii][jjj][kkk][lll]){
-	  if(tfptr[coli][iii][jjj][kkk][lll]>largest) largest=tfptr[coli][iii][jjj][kkk][lll];
-	  if(tfptr[coli][iii][jjj][kkk][lll]<smallest) smallest=tfptr[coli][iii][jjj][kkk][lll];
+	FTYPE largest=-BIG;
+	FTYPE smallest=BIG;
+	LOOPKAZIJKL{
+	  if(includeptr[coli][iii][jjj][kkk][lll]){
+	    if(tfptr[coli][iii][jjj][kkk][lll]>largest) largest=tfptr[coli][iii][jjj][kkk][lll];
+	    if(tfptr[coli][iii][jjj][kkk][lll]<smallest) smallest=tfptr[coli][iii][jjj][kkk][lll];
+	  }
 	}
-      }
-      if(answers[coli]>largest) answers[coli]=largest;
-      if(answers[coli]<smallest) answers[coli]=smallest;
+	if(answers[coli]>largest) answers[coli]=largest;
+	if(answers[coli]<smallest) answers[coli]=smallest;
 #endif
 
 
-      ///////////////////////////
-      //
-      // unlogify
-      //
-      //////////////////////////
-      if(shouldloginterp[coli]){
-	answers[coli]=pow(10.0,answers[coli]);
-      }
+	///////////////////////////
+	//
+	// unlogify (if either logified here or prelogified)
+	//
+	//////////////////////////
+	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
 
-      //////////////////////////
-      //
-      // invert offset
-      //
-      //////////////////////////
-      if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+	//////////////////////////
+	//
+	// invert offset
+	//
+	//////////////////////////
+	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+	badlookups[coli]=0; // finally return that have good answer
+
+      } // end if local was not bad lookup
 
     }// end iffun==1
   }// end over coli
-
+  
 
 
   //////////////////////////////
@@ -643,6 +647,9 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
   FTYPE tempanswers[MAXEOSPIPELINE];
   int shouldloginterp[MAXEOSPIPELINE];
 
+  int localiffun[MAXEOSPIPELINE]; // need because we do multiple lookups here
+  int localbadlookups[MAXEOSPIPELINE];
+
   FTYPE dist;
   FTYPE tempcheck;
   int whichdegenfun;
@@ -657,9 +664,9 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
 
-
+  
 
   ///////////
   //
@@ -750,6 +757,7 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
   if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){ kazll=leos=kazendlll=kazdl[1]=kazmm=meos=kazendmmm=kazdm[1]=0; kazdl[0]=kazdm[0]=1.0;}
+  if(whichtablesubtype==SUBTYPEDEGEN){ kazjj=jeos=kazendjjj=kazdj[1]=0; kazdj[0]=1.0;}
 
 
     
@@ -767,6 +775,8 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
       }
     }
   }
+
+
 
 
 
@@ -809,6 +819,13 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
 	if(iffun[coli]){
 	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
   
+#if(DOLOGINTERP && DOPRELOGIFY)
+	  // only add if non-log or if should be log and not out of bounds
+	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
+	    tfptr[coli][iii] += tempanswers[coli]*dist;
+	    tdist[coli][iii] += dist;
+	  }
+#else 
 	  if(shouldloginterp[coli]){
 	    if(tempanswers[coli]<=0.0){
 	      // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
@@ -824,6 +841,8 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
 	    tfptr[coli][iii] += tempanswers[coli]*dist;
 	    tdist[coli][iii] += dist;
 	  }// else if not log interp
+#endif
+
 	}// end if doing this coli
       }// end over coli      
     }// end if good temperature or doing degentable
@@ -833,15 +852,6 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
   }// end loop over dimensions
 
 
-
-  //////////////////////
-  //
-  // Set that default return that no bad lookups
-  //
-  //////////////////////
-  for(coli=0;coli<numcols;coli++){
-    badlookups[coli]=0;
-  }
 
 
 
@@ -858,7 +868,15 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
 	// check if any bad lookups
-	if(tdist[coli][iii]==0.0) badany++;
+	if(tdist[coli][iii]==0.0){
+	  badany++;
+	  localiffun[coli]=1;
+	  localbadlookups[coli]=1;
+	}
+	else{
+	  localiffun[coli]=0;
+	  localbadlookups[coli]=0; // already good
+	}
       }
     }
       
@@ -866,21 +884,23 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
     // never found good temperature, so look up nearest_dumb()
     // GODMARK: Could instead reduce from parabolic to lower order since using nearest_dumb() is probably a bad idea
     if(badany){
-      get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSTOSUBPASS, repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray, tempanswers, badlookups); // this can overwrite default badlookups from 0->1
+      get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSTOSUBPASS, repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray, tempanswers, localbadlookups); // this can overwrite default localbadlookups from 0->1
 
       // do offset and logify, but only if badlookup before but goodlookup from nearest_dumb()
       for(coli=0;coli<numcols;coli++){
-	if(iffun[coli]){
-	  if(tdist[coli][iii]==0.0 && badlookups[coli]==0){ // only do if fixing no-temperature lookup
-	    if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
-	    if(shouldloginterp[coli]){
-	      tfptr[coli][iii] = log10(tempanswers[coli]);
-	    }
-	    else{
-	      tfptr[coli][iii] = tempanswers[coli];
-	    }
-	  }// end if badlookups==0
-	}// end iffun==1
+	if(tdist[coli][iii]==0.0 && localiffun[coli] && localbadlookups[coli]==0){
+	  // only do if fixing no-temperature lookup
+	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
+	  
+#if(DOLOGINTERP && DOPRELOGIFY)
+	  // only add if non-log or if should be log and not out of bounds
+	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) tfptr[coli][iii] = tempanswers[coli];
+#else 
+	  if(shouldloginterp[coli]) tfptr[coli][iii] = log10(tempanswers[coli]);
+	  else tfptr[coli][iii] = tempanswers[coli];
+#endif
+	  
+	}// end if localbadlookups==0
       }//end over coli
     }// end if any bad values that need to be looked-up with nearest_dumb()
 
@@ -906,16 +926,16 @@ static int get_eos_fromlookup_parabolic(INDEXPARAMETERSPROTOTYPES, int repeatede
   //////////////////////////////
   for(coli=0;coli<numcols;coli++){
     if(iffun[coli]){
-      if(badlookups[coli]==0){
+      if(localbadlookups[coli]==0){
 	xmx0 = (ieos-(FTYPE)kazii);
 	AA = 0.5*(tfptr[coli][1]-tfptr[coli][-1]);
 	BB = 0.5*(tfptr[coli][1]+tfptr[coli][-1]-2.0*tfptr[coli][0]);
 	answers[coli] = tfptr[coli][0] + AA*xmx0 + BB*xmx0*xmx0;
 	
-	if(shouldloginterp[coli]){
-	  answers[coli]=pow(10.0,answers[coli]);
-	}
+	// either prelogify or not, we have to unlogify if should have logified
+	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
 	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+	badlookups[coli]=0; // finally return that was good lookup
       }
     }
   }
@@ -950,7 +970,7 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
 
 
   ieos=indexarray[1];
@@ -1023,6 +1043,7 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
   if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){leos=meos=kazll=kazmm=kazdl[1]=kazdm[1]=kazendlll=kazendmmm=0; kazdl[0]=kazdm[0]=1.0;}
+  if(whichtablesubtype==SUBTYPEDEGEN){jeos=kazjj=kazdj[1]=kazendjjj=0; kazdj[0]=1.0;}
 
 
 
@@ -1068,7 +1089,15 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
       for(coli=0;coli<numcols;coli++){
 	if(iffun[coli]){
 	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
-  
+
+
+#if(DOLOGINTERP && DOPRELOGIFY)
+	  // only add if non-log or if should be log and not out of bounds
+	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
+	    totalanswers[coli] += tempanswers[coli]*dist;
+	    totaldist[coli] += dist;
+	  }
+#else 
 	  if(shouldloginterp[coli]){
 	    if(tempanswers[coli]<=0.0){
 	      // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
@@ -1084,6 +1113,8 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
 	    totalanswers[coli] += tempanswers[coli]*dist;
 	    totaldist[coli] += dist;
 	  }// else if not log interp
+#endif
+
 	}// end if doing this coli
       }// end over coli      
 
@@ -1107,9 +1138,6 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
     if(iffun[coli]){
       if(totaldist[coli]==0.0){
 
-	// return that was bad lookup
-	badlookups[coli]=1;
-
 	if(debugfail>=2){
 	  dualfprintf(fail_file,"No valid data points in table despite within table.\n");
 	  dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
@@ -1118,17 +1146,20 @@ static int get_eos_fromlookup_linear(INDEXPARAMETERSPROTOTYPES, int repeatedeos,
 
       }
       else{
-	// return that was good lookup
-	badlookups[coli]=0;
 
 	// get normalized answer
 	answers[coli] = totalanswers[coli]/totaldist[coli];
 
 	// invert log interpolation
+	// either prelogify or not, we have to unlogify if should have logified
 	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
 	
 	// invert offset
 	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+	
+	// finally return that was good lookup
+	badlookups[coli]=0;
+
       }// end else if totaldist!=0.0
     }// end iffun==1
   }// end over coli
@@ -1158,14 +1189,16 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
 {
   FTYPE totaldist;
   FTYPE tempcheck;
-  int iii,jjj,kkk,lll,mmm;
   int whichdegenfun;
+  int iii,jjj,kkk,lll,mmm;
   FTYPE ieos,jeos,keos,leos,meos;
+  int shouldloginterp[MAXEOSPIPELINE];
+  int localbadlookups[MAXEOSPIPELINE];
   int numcols,coli;
-
+  int gotgood;
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
 
 
   ieos=indexarray[1];
@@ -1180,6 +1213,9 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
   // definition consistent with numerical assignments of indecies of arrays
   whichdegenfun = whichindep-1;
 
+
+  // determine if should do log interpolation
+  get_dologinterp_subtype_wrapper(degentable, whichtablesubtype, numcols, shouldloginterp);
 
 
 
@@ -1223,6 +1259,7 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
   if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){leos=meos=kazll=kazmm=kazendlll=kazendmmm=0;}
+  if(whichtablesubtype==SUBTYPEDEGEN){jeos=kazjj=kazendjjj=0;}
 
 
 
@@ -1232,7 +1269,9 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
   // try ROUND2INT version first
   //
   ////////////
-  int gotgood=0;
+  // default is that bad lookup
+  for(coli=0;coli<numcols;coli++) localbadlookups[coli]=1;
+
 #if(CHECKIFVALIDEOSDATA)
   if(degentable==0){
     // don't use values of table that have no inversion to temperature
@@ -1244,8 +1283,26 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
 #endif
   {
     get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
-    gotgood=1;
+
+
+    for(coli=0;coli<numcols;coli++) {
+      if(iffun[coli]){
+#if(DOLOGINTERP && DOPRELOGIFY)
+	// only add if non-log or if should be log and not out of bounds
+	if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
+#else
+	if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
+#endif
+      }// end iffun==1
+    }// end over coli
   }
+
+
+  ////////////////////////
+  // check if all good
+  ////////////////////////
+  gotgood=1; for(coli=0;coli<numcols;coli++) if(iffun[coli]) if(localbadlookups[coli]==1) gotgood=0;
+
 
 
   ////////////
@@ -1272,33 +1329,50 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
       {
 	get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
-	// terminate all 4 loops once have a single value
-	iii=kazendiii;
-	jjj=kazendjjj;
-	kkk=kazendkkk;
-	lll=kazendlll;
-	mmm=kazendmmm;
-	// set that got good
-	gotgood=1;
+	for(coli=0;coli<numcols;coli++){
+	  if(iffun[coli]){
+#if(DOLOGINTERP && DOPRELOGIFY)
+	    // only add if non-log or if should be log and not out of bounds
+	    if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
+#else
+	    if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
+#endif
+	  }// end iffun==1
+	}// end over coli
+
+	////////////////////////
+	// see if should keep going and trying to get all or some values
+	// check if all good
+	////////////////////////
+	gotgood=1; for(coli=0;coli<numcols;coli++) if(iffun[coli]) if(localbadlookups[coli]==1) gotgood=0;
+
+	if(gotgood){
+	  // terminate all 4 loops once have all good values
+	  iii=kazendiii;
+	  jjj=kazendjjj;
+	  kkk=kazendkkk;
+	  lll=kazendlll;
+	  mmm=kazendmmm;
+	}
 
       }// end if did find a good temperature or doing degentable
     }// end loop over dimensions
   }// else if ROUNT2INT failed so picking nearest neighbor  
 
 
-  ////////////
-  //
-  // If still failed to find a valid EOS value, then report/return that bad lookup
-  //
-  ////////////
-  if(gotgood==0){
-    // return that was bad lookup
-    for(coli=0;coli<numcols;coli++) badlookups[coli]=1;
+
+
+#if(DOLOGINTERP && DOPRELOGIFY)
+    // then still need to unlogify even if didn't logify here since no interpolation, but prelogify did occur still.
+  for(coli=0;coli<numcols;coli++){
+    if(shouldloginterp[coli] && iffun[coli] && localbadlookups[coli]==0){
+      answers[coli]=pow(10.0,answers[coli]);
+      // finall return that good lookup
+      badlookups[coli]=0;
+    }
   }
-  else{
-    // return that was not bad lookup
-    for(coli=0;coli<numcols;coli++) badlookups[coli]=0;
-  }
+#endif
+
 
   /////////////
   //
@@ -1317,14 +1391,20 @@ static int get_eos_fromlookup_nearest(INDEXPARAMETERSPROTOTYPES, int repeatedeos
 static int get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSPROTOTYPES, int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPE *indexarray, FTYPE *answers, int *badlookups)
 {
   int whichdegenfun;
+  int shouldloginterp[MAXEOSPIPELINE];
+  int localbadlookups[MAXEOSPIPELINE];
   int numcols,coli;
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
 
   // definition consistent with numerical assignments of indeces of arrays
   whichdegenfun = whichindep-1;
+
+
+  // determine if should do log interpolation
+  get_dologinterp_subtype_wrapper(degentable, whichtablesubtype, numcols, shouldloginterp);
 
 
   if(repeatedeos==0){
@@ -1355,12 +1435,40 @@ static int get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSPROTOTYPES, int repeat
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
   if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){kazll=kazmm=kazendlll=kazendmmm=0;}
+  if(whichtablesubtype==SUBTYPEDEGEN){kazjj=kazendjjj=0;}
+
 
   // get value
   get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+
+
+  for(coli=0;coli<numcols;coli++) localbadlookups[coli]=1; // default to bad
+
+  // return whether was bad lookup
+#if(DOLOGINTERP && DOPRELOGIFY)
+  // only add if non-log or if should be log and not out of bounds
+  for(coli=0;coli<numcols;coli++) if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
+#else
+  for(coli=0;coli<numcols;coli++) if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
+#endif
+
+
+#if(DOLOGINTERP && DOPRELOGIFY)
+  // then still need to unlogify even if didn't logify here since no interpolation, but prelogify did occur still.
+  for(coli=0;coli<numcols;coli++) if(shouldloginterp[coli] && localbadlookups[coli]==0)  answers[coli]=pow(10.0,answers[coli]);
+#endif
+
+  // return that was good answer
+  for(coli=0;coli<numcols;coli++) if(localbadlookups[coli]==0) badlookups[coli]=0;
+
+
+
+  // DEBUG:
+  //  if(whichtablesubtype==SUBTYPESTANDARD||whichtablesubtype==SUBTYPEDEGEN){
+  //    for(coli=0;coli<numcols;coli++) if(iffun[coli]) dualfprintf(fail_file,"kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d whichtablesubtype=%d answers[coli=%d]=%21.15g bad=%d\n",kazii,kazjj,kazkk,kazll,kazmm,whichtablesubtype,coli,answers[coli],badlookups[coli]);
+  //    dualfprintf(fail_file,"%d %d %d %d %d %d %21.15g\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
+  //  }
   
-  // return that was not bad lookup
-  for(coli=0;coli<numcols;coli++) badlookups[coli]=0;
   
   // return that no bad failure
   return(0);
@@ -1377,7 +1485,7 @@ static int get_eos_fromlookup_nearest_dumb(INDEXPARAMETERSPROTOTYPES, int repeat
 
 // kinda like get_arrays_eostable() but directly grab multiple columns of data from a given table subtype
 // simple and simplezoom table code is just copy-paste from full table with fulltable->simpletable and fulltable->simplezoomtable
-static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, double *values)
+static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
 {
   int numcols,coli;
   //  int whichdlocal;
@@ -1406,7 +1514,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[whichtablesubtype];
+  numcols = get_numcols(whichtable,whichtablesubtype);
   //  whichdlocal = whichdintablesubtype[whichtablesubtype]; // could ensure that whichd==whichdlocal for non-degen and non-temp
 
 
@@ -1442,24 +1550,12 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       }
     }
     else{
+      // then ignore whichtablesubtype
       if(whichtable==FULLTABLE){
-	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-	// get basic utotoffset
-	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
-	values[0] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  // then also get other things
-	  values[1] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
       else if(whichtable==EXTRAFULLTABLE){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	values[0] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  values[1] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
     }// end else if degentable      
   }// end if fulltable
@@ -1492,24 +1588,12 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       }
     }
     else{
+      // then ignore whichtablesubtype
       if(whichtable==SIMPLETABLE){
-	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-	// get basic utotoffset
-	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
-	values[0] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  // then also get other things
-	  values[1] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
       else if(whichtable==EXTRASIMPLETABLE){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	values[0] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  values[1] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
     }// end else if degentable      
   }// end if simpletable
@@ -1542,24 +1626,12 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       }
     }
     else{
+      // then ignore whichtablesubtype
       if(whichtable==SIMPLEZOOMTABLE){
-	// then ignore whichtablesubtype and iffun[] since must be degen lookup and need all quantities
-	// get basic utotoffset
-	// starts at 0 as coli=0 is start.  Later mapped to whichfun type
-	values[0] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  // then also get other things
-	  values[1] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
       else if(whichtable==EXTRASIMPLEZOOMTABLE){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	values[0] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOFFSET);
-	if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
-	  values[1] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSIN);
-	  values[2] = EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,0,iii,EOSOUT);
-	}
+	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli+FIRSTEOSDEGEN); // whichd used
       }
     }// end else if degentable      
   }// end if simplezoomtable
@@ -1575,7 +1647,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 
 
 // like get_arrays_eostable_direct(), but only for temperature that ignores associated variable actually looking up
-static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, double *values)
+static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
 {
   int numcols,coli;
 
@@ -1589,7 +1661,8 @@ static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, i
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = numcolintablesubtype[SUBTYPETEMP];
+  numcols = get_numcols(whichtable,SUBTYPETEMP);
+
 
   if(0){
   }
