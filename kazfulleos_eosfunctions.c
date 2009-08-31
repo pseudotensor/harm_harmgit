@@ -55,6 +55,29 @@ static FTYPE fudgefracsingle_kazfull(int whichfun, int whichd, FTYPE *EOSextra, 
 static FTYPE compute_tabulated_kazfull(int whichfun, int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
 
+
+static void reduce_extras(int whichtablesubtype, int *iffun, int whichd, FTYPE *EOSextra,FTYPE rho0, FTYPE du, FTYPE *extras, int *badlookups);
+
+static void compute_allextras_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras);
+static void compute_notallextras1_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras);
+static void compute_notallextras1_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras);
+
+
+
+static void compute_IJKglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS]);
+static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+
+
+
+static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
+static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
+static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
+static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
+
+
+
 // general offset for energy per baryon to be applied always before accessing table with nuclear EOS
 // quant2out is the \delta u that is tabulated in the EOS table itself.
 // inputted quant2in is some true internal energy (maybe no neutrinos)
@@ -459,7 +482,7 @@ static int finish_fudgefrac_kazfull(int whichfun, int whichd, FTYPE *EOSextra, F
     }
     else{
       //    frac = (pnu/(ptot-pnu));
-      frac = pnu/ptot; // -> 1 if ptot=pnu.  Suppose photons+electrons+neutrinos equally dominate.  Then cs2 still correct.
+      frac = fabs(pnu)/(fabs(ptot)+SMALL); // -> 1 if ptot=pnu.  Suppose photons+electrons+neutrinos equally dominate.  Then cs2 still correct.
       // choose cs2total if neutrino-dominated, otherwise choose non-neutrino cs2
       *final = faketotal*frac + nonneutrino*(1.0-frac);
     }
@@ -583,6 +606,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   int iffun[MAXEOSPIPELINE];
   int whichtablesubtype;
   int numcols,coli;
+  int firsteos;
 
   int returnfun,returndfunofrho,returndfunofu;
   int failreturn;
@@ -606,6 +630,8 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   //
   // get number of columns possible for this whichtablesubtype
   //
+  // returnfun, returndfunofrho, and returndfunofu are in "whichfun" format, not "coli" format
+  //
   ///////////////
   if(eomtype==EOMGRMHD){
     // whichd==CHIDIFF
@@ -621,6 +647,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
     returndfunofrho = DSSDRHOofRHOCHI;
     returndfunofu = DSSDCHIofRHOCHI;
   }
+  firsteos=firsteosintablesubtype[whichtablesubtype];
   numcols = numcolintablesubtype[whichtablesubtype]; // ok use of numcolintablesubtype
 
   // setup iffun
@@ -646,11 +673,12 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   //
   /////////////////////////////////
   failreturn=get_eos_fromtable(whichtablesubtype, iffun, whichd,EOSextra,quant1,dquant2,nonneutrinos,badlookups);
+
   
 
   if(whichtablesubtype==SUBTYPEPOFCHI){
-    // get p - pnu
-    deltafun = nonneutrinos[returnfun];
+    // get pgas = p - pnu
+    deltafun = nonneutrinos[returnfun-firsteos];
     simplefudge=1;
   }
   else{
@@ -713,6 +741,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
       
       if(failreturn==0){
 	// finish fudgefrac(), which is done per final derivative quantity
+	// this call takes care of if EOS lookup returned badlookups==1
 	finish_fudgefrac_kazfull(whichfun, whichd, EOSextra, quant1, quant2,
 				 utot, ugas, unu,
 				 ptot, pgas, pnu,
@@ -744,6 +773,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
       // finish dffun2fun(), which is done for the non-derivative quantity
       FTYPE dfun=nonneutrinos[coli];
       // below can change dfun, but change not used
+	// this call takes care of if EOS lookup returned badlookups==1
       dfun2fun_inputdquant2_kazfull(whichfun, whichd, EOSextra, quant1, quant2, dquant2, unu, pnu, chinu, snu, badlookups[coli], &dfun, &finals[coli]);
 
       // assign final avlues
@@ -762,6 +792,14 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
     *fun=sqrt(-1); // force failure for now
   }
 
+
+  // BEGIN DEBUG
+  //  dualfprintf(fail_file,"whichd=%d q1=%21.15g q2=%21.15g fun=%21.15g dfunofrho=%21.15g dfunofu=%21.15g\n",whichd,quant1,quant2,*fun,*dfunofrho,*dfunofu);
+  //  dualfprintf(fail_file,"whichtablesubtype=%d :: nonneutrinos0=%21.15g nonneutrinos0=%21.15g nonneutrinos0=%21.15g\n",whichtablesubtype,nonneutrinos[0],nonneutrinos[1],nonneutrinos[2]);
+  //  dualfprintf(fail_file,"finals0=%21.15g finals0=%21.15g finals0=%21.15g\n",finals[0],finals[1],finals[2]);
+  //  dualfprintf(fail_file,"%d %21.15g %21.15g %21.15g : %21.15g : %21.15g %21.15g %21.15g %21.15g %21.15g\n",whichd, EOSextra[0], quant1, quant2, dquant2, unu, pnu, chinu, snu, quant2nu);
+  //  dualfprintf(fail_file,"fakes: %21.15g %21.15g\n",fakeneutrino, faketotal);
+  // END DEBUG
 
   return;
 
@@ -996,39 +1034,136 @@ FTYPE compute_temp_whichd_kazfull(int whichd, FTYPE *EOSextra, FTYPE rho0, FTYPE
 }
 
 
+
+// not pipelined version
 // uses global variable "numextras" that should be set before this function is called
 // f(rho0,du)
 // direct lookup
-void compute_allextras_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras)
+static void compute_allextras_du_kazfull_old(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras)
 {
-  int i;
+  int whichtablesubtype=SUBTYPEEXTRA;
+  int whichd=UTOTDIFF;
+  int whichfun;
+  int coli;
+  int numcols;
 
+
+  *numextrasreturn = numcols = numcolintablesubtype[whichtablesubtype];// ok use of numcolintablesubtype
+  
+  
   if(justnum==0){
-
-    *numextrasreturn=numextras[primarytable]; // by default assume tablulated data exists
-
-
     // assume all tables have same number of extras or else this doesn't make sense in general
-    for(i=0;i<numextras[primarytable];i++){
-      if(getsingle_eos_fromtable(EXTRA1+i,UTOTDIFF,EOSextra,rho0,du,&(extras[i]))){
-	extras[i]=0.0;
+    for(coli=0;coli<numcols;coli++){
+      whichfun=EXTRA1+coli;
+      if(getsingle_eos_fromtable(whichfun,whichd,EOSextra,rho0,du,&(extras[coli]))){
+	extras[coli]=0.0;
 	*numextrasreturn=0; // tells calling function that no tabulated extras
+	if(WHICHDATATYPEGENERAL==4){
+	  extras[whichcolinquantity[EXTRA19]]=extras[whichcolinquantity[EXTRA20]]=BIG;
+	}
+	else{
+	  dualfprintf(fail_file,"Not setup asdfasdfasd\n");
+	  myexit(2093851);
+	}
       }
     }
-    // set rest to 0
-    for(i=numextras[primarytable];i<MAXNUMEXTRAS;i++){
-      extras[i] = 0.0;
+
+    // set rest to 0 for diagnostics to be uniform
+    // These won't be used during calculation
+    for(coli=numcols;coli<MAXNUMEXTRAS;coli++){
+      extras[coli] = 0.0;
     }
-  }
+  }// end if justnum==0
 
 }
 
 
+
+// pipelined version
+static void compute_allextras_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras)
+{
+  int badlookups[MAXEOSPIPELINE];
+  int iffun[MAXEOSPIPELINE];
+  int whichtablesubtype=SUBTYPEEXTRA;
+  int whichd=UTOTDIFF;
+  int numcols,coli;
+  int failreturn;
+
+
+  *numextrasreturn = numcols = numcolintablesubtype[whichtablesubtype];// ok use of numcolintablesubtype
+
+  
+  if(justnum==0){
+
+    // setup iffun
+    // want all extras
+    for(coli=0;coli<numcols;coli++) iffun[coli]=1;
+
+    // do pipelined lookup
+    failreturn=get_eos_fromtable(whichtablesubtype,iffun,whichd,EOSextra,rho0,du,extras,badlookups);
+
+    // deal with bad lookups for extras
+    reduce_extras(whichtablesubtype,iffun,whichd,EOSextra,rho0,du,extras,badlookups);
+
+    int numbad=0;
+    for(coli=0;coli<numcols;coli++) if(iffun[coli] && badlookups[coli]) numbad++;
+    if(numbad==numcols) *numextrasreturn=0; // indicate that no point in doing more complex computations based upon these results -- can reduce to some simpler estimates
+
+
+    // set rest to 0 for diagnostics to be uniform
+    // These won't be used during calculation
+    for(coli=numcols;coli<MAXNUMEXTRAS;coli++){
+      extras[coli] = 0.0;
+    }
+
+    // DEBUG:
+    //    dualfprintf(fail_file,"compute_allextras_du_kazfull: rho0=%21.15g du=%21.15g\n",rho0,du);
+    //    for(coli=0;coli<numcols;coli++) dualfprintf(fail_file,"extras[%d]=%21.15g bad=%d\n",coli,extras[coli],badlookups[coli]);
+
+
+  }// end if justnum==0
+
+}
+
+
+// deal with bad lookups (i.e. reduce to ideal gas effectively for extras, but idealgaseos.c is not aware of meaning of extras and how they should reduce)
+static void reduce_extras(int whichtablesubtype, int *iffun, int whichd, FTYPE *EOSextra,FTYPE rho0, FTYPE du, FTYPE *extras, int *badlookups)
+{
+  int numcols,coli;
+
+  numcols = numcolintablesubtype[whichtablesubtype];// ok use of numcolintablesubtype
+
+
+  for(coli=0;coli<numcols;coli++){
+    if(iffun[coli] && badlookups[coli]){ // only check if iffun==1
+
+      // make zero
+      extras[coli]=0.0;
+
+      // except things that should be made large:
+      if(WHICHDATATYPEGENERAL==4){
+	// then not in table, so revert to estimated non-tabulated values (i.e. optically thin)
+	// extra quantities were assumed set to 0 if not in table, so only need to change non-zero things
+	// optical depths and densities are complicated and if out of table then they aren't determined easily
+	extras[whichcolinquantity[EXTRA19]]=extras[whichcolinquantity[EXTRA20]]=BIG;
+      }
+      else{
+	dualfprintf(fail_file,"Not setup asdfasdfasd\n");
+	myexit(2093852);
+      }
+
+    }// end if badlookup
+  }// end over coli
+
+}
+
+
+
 // uses global variable "numextras" that should be set before this function is called
 // f(rho0,u)
+// global function
 void compute_allextras_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras)
 {
-  void compute_allextras_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras);
   int i;
   FTYPE du;
 
@@ -1041,12 +1176,105 @@ void compute_allextras_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u
 
   compute_allextras_du_kazfull(justnum, EOSextra, rho0, du, numextrasreturn, extras);
 
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"compute_allextras_kazfull: rho0=%21.15g u=%21.15g du=%21.15g\n",rho0,u,du);
+  //  int ei;
+  //  for(ei=0;ei<MAXNUMEXTRAS;ei++) dualfprintf(fail_file,"extras[%d]=%21.15g\n",ei,extras[ei]);
+
+
 }
 
 
 
+// similar to compute_allextras_kazfull()
+static void compute_notallextras1_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras)
+{
+  FTYPE du;
 
 
+  if(whichdatatype[primarytable]==4){
+    du = u - EOSextra[UNUGLOBAL];
+  }
+  else{
+    du = u;
+  }
+
+  compute_notallextras1_du_kazfull(justnum, EOSextra, rho0, du, numextrasreturn, extras);
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"compute_notallextras1_kazfull: rho0=%21.15g u=%21.15g du=%21.15g\n",rho0,u,du);
+  //  int ei;
+  //  for(ei=0;ei<MAXNUMEXTRAS;ei++) dualfprintf(fail_file,"notallextras[%d]=%21.15g\n",ei,extras[ei]);
+
+}
+
+
+
+// similar to compute_allextras_du_kazfull()
+static void compute_notallextras1_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras)
+{
+  int badlookups[MAXEOSPIPELINE];
+  int iffun[MAXEOSPIPELINE];
+  int whichtablesubtype=SUBTYPEEXTRA;
+  int whichd=UTOTDIFF;
+  int numcols,coli;
+  int failreturn;
+
+
+  *numextrasreturn = numcols = numcolintablesubtype[whichtablesubtype];// ok use of numcolintablesubtype
+
+  
+  if(justnum==0){
+
+    // setup iffun
+    // want not all extras
+    for(coli=0;coli<numcols;coli++) iffun[coli]=0;
+    // EXTRA1:  qtautnueohcm
+    // EXTRA2:  qtauanueohcm
+    // EXTRA3:  qtautnuebarohcm
+    // EXTRA4:  qtauanuebarohcm
+    // EXTRA5:  qtautmuohcm
+    // EXTRA6:  qtauamuohcm
+    // EXTRA13:  unue0
+    // EXTRA14:  unuebar0
+    // EXTRA15:  unumu0
+    iffun[whichcolinquantity[EXTRA1]]=1;
+    iffun[whichcolinquantity[EXTRA2]]=1;
+    iffun[whichcolinquantity[EXTRA3]]=1;
+    iffun[whichcolinquantity[EXTRA4]]=1;
+    iffun[whichcolinquantity[EXTRA5]]=1;
+    iffun[whichcolinquantity[EXTRA6]]=1;
+    iffun[whichcolinquantity[EXTRA13]]=1;
+    iffun[whichcolinquantity[EXTRA14]]=1;
+    iffun[whichcolinquantity[EXTRA15]]=1;
+
+    // do pipelined lookup
+    failreturn=get_eos_fromtable(whichtablesubtype,iffun,whichd,EOSextra,rho0,du,extras,badlookups);
+
+    // deal with bad lookups for extras
+    reduce_extras(whichtablesubtype,iffun,whichd,EOSextra,rho0,du,extras,badlookups);
+
+    int numbad=0;
+    for(coli=0;coli<numcols;coli++) if(iffun[coli] && badlookups[coli]) numbad++;
+    if(numbad==numcols) *numextrasreturn=0; // indicate that no point in doing more complex computations based upon these results -- can reduce to some simpler estimates
+
+    // set rest to 0 for diagnostics to be uniform
+    // These won't be used during calculation
+    for(coli=numcols;coli<MAXNUMEXTRAS;coli++){
+      extras[coli] = 0.0;
+    }
+
+
+    // DEBUG:
+    //    dualfprintf(fail_file,"compute_notallextras1_du_kazfull: rho0=%21.15g du=%21.15g\n",rho0,du);
+    //    for(coli=0;coli<numcols;coli++) dualfprintf(fail_file,"notallextras[%d]=%21.15g bad=%d\n",coli,extras[coli],badlookups[coli]);
+
+
+  }// end if justnum==0
+
+
+}
 
 
 
@@ -1065,7 +1293,6 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   // assume all tables have same number of extras or else this doesn't make sense in general
   FTYPE tempk,kbtk,rho0,u,H,ye,ynu;
   int numextrasreturn,ei;
-  void compute_allextras_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE du, int *numextrasreturn, FTYPE *extras);
   FTYPE compute_temp_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
   FTYPE unue0,unuebar0,unumu0,
     qtautnueohcm,qtautnuebarohcm,qtautmuohcm,
@@ -1098,23 +1325,39 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   for(loopit=0;loopit<=numloops;loopit++){
     //if(doall) EOSextra[YNU0GLOBAL]=1E-15 + (1.0-1E-15)/(1000.0)*loopit;
     if(doall){
-      logynu0=-15 + (1.0-(-15))/(1000.0)*loopit;
-      logynu0=-7 + (1.0-(-7))/(1000.0)*loopit;
+      logynu0=-9.0 + (1.0-(-9.0))/(1000.0)*loopit;
       EOSextra[YNU0GLOBAL]=pow(10.0,logynu0);
     }
     else numloops=0;
+
+    // add the below 2 to see *true* functional dependence
+    //    compute_Hglobal(GLOBALPOINT(EOSextraglobal),GLOBALPOINT(pglobal));
+    //    compute_TDYNORYE_YNU_global(GLOBALPOINT(EOSextraglobal),GLOBALPOINT(pglobal));
+
+
 #endif
-
-
-  if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"doall=%d\n",doall);
+  // DEBUG:
+    //  if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"doall=%d\n",doall);
   //  else dualfprintf(fail_file,"ijk: %d %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
   
   
+
+  ////////////////
+  //
+  // checks
+  //
+  ////////////////
   if(whichdatatype[primarytable]!=4){
     dualfprintf(fail_file,"Neutrino calculation not setup for other datatypes=%d primarytable=%d\n",whichdatatype[primarytable],primarytable);
     myexit(2954654);
   }
 
+
+  //////////////////////
+  //
+  // Setup whichd, dquant2, and qarray
+  //
+  //////////////////////
   whichd=UTOTDIFF; // only one allowed for now
   quant1=pr[RHO];
   quant2=pr[UU];
@@ -1134,12 +1377,22 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   }
 
 
+
+
+  ////////////////////////////
+  //
+  // See if can get old version (repeatedeos)
+  //
+  // This is to avoid computations related to summing over directions and computing "processed" quantities, not just looking up "extras"
+  //
+  ////////////////////////////
+
   if(doallextrasold==doall){
     // check if repeated case (doesn't matter if i,j,k same since result only depends on all qarray values)
     repeatedeos=1;
     for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++){ // only need to repeat used independent variables, not all
       repeatedeos*=(fabs(qarray[qi]-qoldarrayextras[qi])<OLDTOLERANCE);
-      if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"qi=%d %21.15g %21.15g\n",qi,qarray[qi],qoldarrayextras[qi]);
+      //      if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"repeatedcheck: qi=%d %21.15g %21.15g ig=%d\n",qi,qarray[qi],qoldarrayextras[qi],(int)EOSextra[IGLOBAL]);
     }
 
   }
@@ -1148,8 +1401,21 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     doallextrasold=doall; // store old version
   }
 
-  if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"repeatedeos=%d doall=%d doallextrasold=%d\n",repeatedeos,doall,doallextrasold);
 
+
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"repeatedeos=%d doall=%d doallextrasold=%d ig=%d\n",repeatedeos,doall,doallextrasold,(int)EOSextra[IGLOBAL]);
+
+
+
+
+
+  ///////////////////////
+  //
+  // If repatedeos, get old values
+  //
+  ///////////////////////
 
   if(repeatedeos){
     if(doall){
@@ -1161,11 +1427,23 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       processed[RHONU]=processedold[RHONU];
       processed[PNU]=processedold[PNU];
       processed[SNU]=processedold[SNU];
-    }    
+    }
   }// end if repeatedeos
-  else{// else if not repeated
+  else{
 
+
+    /////////////////////////////
+    //
+    // else if not repeated
+    //
+    /////////////////////////////
+
+
+    //////////////////////////
+    //
     // set extra parameters
+    //
+    //////////////////////////
     rho0=qarray[1];
     u=qarray[2]; // "u" not used
     ye=qarray[3]; // "ye" not used
@@ -1179,10 +1457,24 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     kbtk=tempk*mbcsq; // in code energy units
 
 
+
+
+
+
+    ///////////////
+    //
+    // Do lookup of "extra" quantities using to generate "processed" quantities later
+    //
+    ///////////////
+
     if(doall){
+
       // get extras (function of rho0,du as tabulated)
+      // this also produces results when out of table
       compute_allextras_du_kazfull(0, EOSextra, quant1, dquant2, &numextrasreturn, extras);
 
+      if(numextrasreturn==0) notintable=1;
+      else notintable=0;
 
 #if(0)
       // DEBUG:
@@ -1214,94 +1506,105 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       //      for(ei=0;ei<MAXNUMEXTRAS;ei++) extras[ei]=testextras[ei];
 #endif
 
+      // MAXNUMEXTRAS entries
+      // not same order as passed to function: computefinal_fromhcm()
+      ei=0;
+      qtautnueohcm=extras[ei]; ei++;
+      qtauanueohcm=extras[ei]; ei++;
+      qtautnuebarohcm=extras[ei]; ei++;
+      qtauanuebarohcm=extras[ei]; ei++;
+      qtautmuohcm=extras[ei]; ei++;
+      qtauamuohcm=extras[ei]; ei++;
 
-      if(numextrasreturn!=0){
-	notintable=0;
-	// MAXNUMEXTRAS entries
-	// not same order as passed to function: computefinal_fromhcm()
-	ei=0;
-	qtautnueohcm=extras[ei]; ei++;
-	qtauanueohcm=extras[ei]; ei++;
-	qtautnuebarohcm=extras[ei]; ei++;
-	qtauanuebarohcm=extras[ei]; ei++;
-	qtautmuohcm=extras[ei]; ei++;
-	qtauamuohcm=extras[ei]; ei++;
+      ntautnueohcm=extras[ei]; ei++;
+      ntauanueohcm=extras[ei]; ei++;
+      ntautnuebarohcm=extras[ei]; ei++;
+      ntauanuebarohcm=extras[ei]; ei++;
+      ntautmuohcm=extras[ei]; ei++;
+      ntauamuohcm=extras[ei]; ei++;
 
-	ntautnueohcm=extras[ei]; ei++;
-	ntauanueohcm=extras[ei]; ei++;
-	ntautnuebarohcm=extras[ei]; ei++;
-	ntauanuebarohcm=extras[ei]; ei++;
-	ntautmuohcm=extras[ei]; ei++;
-	ntauamuohcm=extras[ei]; ei++;
+      unue0=extras[ei]; ei++;
+      unuebar0=extras[ei]; ei++;
+      unumu0=extras[ei]; ei++;
 
-	unue0=extras[ei]; ei++;
-	unuebar0=extras[ei]; ei++;
-	unumu0=extras[ei]; ei++;
+      nnue0=extras[ei]; ei++;
+      nnuebar0=extras[ei]; ei++;
+      nnumu0=extras[ei]; ei++;
 
-	nnue0=extras[ei]; ei++;
-	nnuebar0=extras[ei]; ei++;
-	nnumu0=extras[ei]; ei++;
+      lambdatot=extras[ei]; ei++; // EXTRA19
+      lambdaintot=extras[ei]; ei++; // EXTRA20
 
-	lambdatot=extras[ei]; ei++; // EXTRA19
-	lambdaintot=extras[ei]; ei++; // EXTRA20
+      tauphotonohcm=extras[ei]; ei++;
+      tauphotonabsohcm=extras[ei]; ei++;
 
-	tauphotonohcm=extras[ei]; ei++;
-	tauphotonabsohcm=extras[ei]; ei++;
-
-	nnueth0=extras[ei]; ei++;
-	nnuebarth0=extras[ei]; ei++;
-      }
-      else{
-	notintable=1;
-	// then not in table, so revert to estimated non-tabulated values (i.e. optically thin)
-	// extra quantities were assumed set to 0 if not in table, so only need to change non-zero things
-	// optical depths and densities are complicated and if out of table then they aren't determined easily
-	lambdatot=lambdaintot=BIG; // optically thin
-      }
+      nnueth0=extras[ei]; ei++;
+      nnuebarth0=extras[ei]; ei++;
 
     }// end if doall
     else{// else if not doing all
-      notintable=0;
+
       // get extras (only those needed)
-      if(getsingle_eos_fromtable(EXTRA1,UTOTDIFF,EOSextra,quant1,dquant2,&qtautnueohcm)){
-	qtautnueohcm=0.0; // not in tables, assume optically thin
+      // get extras (function of rho0,du as tabulated)
+      // also produces results when out of table
+      compute_notallextras1_du_kazfull(0, EOSextra, quant1, dquant2, &numextrasreturn, extras);
 
-	qtauanueohcm=0.0;
-	qtautnuebarohcm=0.0;
-	qtauanuebarohcm=0.0;
-	qtautmuohcm=0.0;
-	qtauamuohcm=0.0;
-	unue0=0.0;
-	unuebar0=0.0;
-	unumu0=0.0;
-	notintable=1;
-      }
-      if(!notintable){
-	// assume if one is in table, rest are.
-	// EXTRA1:  qtautnueohcm
-	// EXTRA2:  qtauanueohcm
-	// EXTRA3:  qtautnuebarohcm
-	// EXTRA4:  qtauanuebarohcm
-	// EXTRA5:  qtautmuohcm
-	// EXTRA6:  qtauamuohcm
-	// EXTRA13:  unue0
-	// EXTRA14:  unuebar0
-	// EXTRA15:  unumu0
-	getsingle_eos_fromtable(EXTRA2,UTOTDIFF,EOSextra,quant1,dquant2,&qtauanueohcm);
-	getsingle_eos_fromtable(EXTRA3,UTOTDIFF,EOSextra,quant1,dquant2,&qtautnuebarohcm);
-	getsingle_eos_fromtable(EXTRA4,UTOTDIFF,EOSextra,quant1,dquant2,&qtauanuebarohcm);
-	getsingle_eos_fromtable(EXTRA5,UTOTDIFF,EOSextra,quant1,dquant2,&qtautmuohcm);
-	getsingle_eos_fromtable(EXTRA6,UTOTDIFF,EOSextra,quant1,dquant2,&qtauamuohcm);
-	getsingle_eos_fromtable(EXTRA13,UTOTDIFF,EOSextra,quant1,dquant2,&unue0);
-	getsingle_eos_fromtable(EXTRA14,UTOTDIFF,EOSextra,quant1,dquant2,&unuebar0);
-	getsingle_eos_fromtable(EXTRA15,UTOTDIFF,EOSextra,quant1,dquant2,&unumu0);
-      }
-      else{// not in table, then non-zero quantities need to be set to something else
-	// so far choosing all to be 0.0 is correct for optically thin approximation to off-table quantities
-      }
-    }
+      if(numextrasreturn==0) notintable=1;
+      else notintable=0;
+
+      // EXTRA1:  qtautnueohcm
+      // EXTRA2:  qtauanueohcm
+      // EXTRA3:  qtautnuebarohcm
+      // EXTRA4:  qtauanuebarohcm
+      // EXTRA5:  qtautmuohcm
+      // EXTRA6:  qtauamuohcm
+      // EXTRA13:  unue0
+      // EXTRA14:  unuebar0
+      // EXTRA15:  unumu0
+
+      ei=0;
+      qtautnueohcm=extras[ei]; ei++;
+      qtauanueohcm=extras[ei]; ei++;
+      qtautnuebarohcm=extras[ei]; ei++;
+      qtauanuebarohcm=extras[ei]; ei++;
+      qtautmuohcm=extras[ei]; ei++;
+      qtauamuohcm=extras[ei]; ei++;
+
+      ei++;
+      ei++;
+      ei++;
+      ei++;
+      ei++;
+      ei++;
+
+      unue0=extras[ei]; ei++;
+      unuebar0=extras[ei]; ei++;
+      unumu0=extras[ei]; ei++;
+
+      ei++;
+      ei++;
+      ei++;
+
+      ei++; // EXTRA19
+      ei++; // EXTRA20
+
+      ei++;
+      ei++;
+
+      ei++;
+      ei++;
+    }// end else if not doing all
 
 
+
+
+  
+    //////////////
+    //
+    // Compute "processed" quantities from "extra" quantities
+    //
+    // Comput per direction associated with H
+    //
+    //////////////
 
 
     for(hi=0;hi<NUMHDIRECTIONS;hi++){
@@ -1357,10 +1660,15 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     }
     
 
+
+    /////////////////////////////////
+    //
     // now get appropriate sum
     // if all h's same then get normal result, otherwise optical depth supression occurs per direction
     // hack for real method
     // GODMARK: a heating method might want access to these different directional quantities
+    //
+    //////////////////////////////////
     qphoton=qm=graddotrhouyl=tthermaltot=tdifftot=rho_nu=p_nu=s_nu=ynulocal=Ynuthermal=enu=enue=enuebar=0.0;
     frac=1.0/((FTYPE)NUMHDIRECTIONS);
     for(hi=0;hi<NUMHDIRECTIONS;hi++){
@@ -1384,6 +1692,13 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
     }
 
+
+
+    /////////////
+    //
+    // Store final results into processed[]
+    //
+    /////////////
   
     if(doall){
       // MAXPROCESSEDEXTRAS entries
@@ -1410,10 +1725,13 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     }
 
     //  MAXPROCESSEDEXTRAS entries
-    // below not used right now
 
 
+    ////////////////////////////
+    //
     // setup old values
+    //
+    ////////////////////////////
     for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) qoldarrayextras[qi]=qarray[qi];
     if(doall){
       for(ei=0;ei<MAXNUMEXTRAS;ei++) extrasold[ei]=extras[ei];
@@ -1428,7 +1746,14 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
   }// end if not repeated lookup
 
+
+
+
+
 #if(0)
+  // DEBUG:
+  dualfprintf(fail_file,"repeatedeos=%d doall=%d\n",repeatedeos,doall);
+
   // qarray[YEINDEP+] are always stored in EOSextra
   for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++){
     dualfprintf(fail_file,"qi=%d qarray[qi] =%21.15g\n",qi,qarray[qi]);
@@ -1437,13 +1762,14 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   if(doall) dualfprintf(fail_file,"TOPLOT %21.15g %21.15g\n",EOSextra[YNU0GLOBAL],processed[YNULOCAL]);
   
   if(doall){
-    for(ei=0;ei<MAXNUMEXTRAS;ei++) dualfprintf(fail_file,"extras[%d]=%21.15g %21.15g\n",ei,extras[ei],testextras[ei]);
     for(ei=0;ei<MAXPROCESSEDEXTRAS;ei++) dualfprintf(fail_file,"processed[%d]=%21.15g\n",ei,processed[ei]);
   }
-
-  }// end DEBUG LOOP
-  
+  else{
+    dualfprintf(fail_file,"rhonu=%21.15g pnu=%21.15g snu=%21.15g\n",processed[RHONU],processed[PNU],processed[SNU]);
+  }
+  } // matches loopit loop
   myexit(0);
+
 #endif
 
 
@@ -1455,10 +1781,6 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
 
-static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
-static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
-static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
-static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
 
 
 
@@ -1480,19 +1802,22 @@ static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBA
 
 }
 
+
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
 static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE rho0,u;
   FTYPE rho_nu, p_nu, s_nu;
   int i,j,k;
-
-
+  int numberofiterations=NUMBEROFYNU0ITERATIONS ;
+  int iter;
 
   if(whichdatatype[primarytable]!=4) return; // doesn't need to be done if !=4
 
   COMPFULLLOOP{
-    compute_and_iterate_ynu0_upsnu(UTOTDIFF, MAC(EOSextra,i,j,k), MAC(prim,i,j,k));
+    for(iter=0;iter<numberofiterations;iter++){
+      compute_and_iterate_ynu0_upsnu(UTOTDIFF, MAC(EOSextra,i,j,k), MAC(prim,i,j,k));
+    }
   }
 
 }
@@ -1568,6 +1893,7 @@ static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
 }
 
 
+
 // iterate Ynu0
 // only can be done if doall was used when creating processed[], since otherwise processed[YNULOCAL] has not been recalled or computed
 static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
@@ -1630,7 +1956,8 @@ static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
       // ok that I push it in same sense of Ynu-Ynulocal since just need a push to somewhere else
 
       // odRdYnu0 = 1/ (dR/dYnu0)
-      odRdYnu0=0.1*errR;
+      // can't make guess step too small or else noise in H-integration calculation can trigger bad Ynu[Ynu0]
+      odRdYnu0=-0.5*errR;
     }
     else{
       // standard derivative
@@ -1754,24 +2081,24 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
     enuebar = processed[ENUEBAR]; 
 
     // also store below additional as directly wanted quantities from extras
-    lambdatot = extras[EXTRA19-EXTRA1]; // extras[0] is start
-    lambdaintot = extras[EXTRA20-EXTRA1];
+    lambdatot = extras[whichcolinquantity[EXTRA19]]; // extras[0] is start
+    lambdaintot = extras[whichcolinquantity[EXTRA20]];
   }
   else if(whichdatatype[primarytable]==3){
 
     compute_allextras_kazfull(0, EOSextra, rho, u, &numextrasreturn, extras);
 
-    qphoton = extras[EXTRA1-EXTRA1];
-    qm = extras[EXTRA2-EXTRA1];
-    graddotrhouyl = extras[EXTRA3-EXTRA1];
-    tthermaltot = extras[EXTRA4-EXTRA1];
-    tdifftot = extras[EXTRA5-EXTRA1];
-    lambdatot = extras[EXTRA6-EXTRA1];
-    lambdaintot = extras[EXTRA7-EXTRA1];
-    enu = extras[EXTRA8-EXTRA1];
-    enue = extras[EXTRA9-EXTRA1];
-    enuebar = extras[EXTRA10-EXTRA1];
-    Ynuthermal = extras[EXTRA11-EXTRA1];
+    qphoton = extras[whichcolinquantity[EXTRA1]];
+    qm = extras[whichcolinquantity[EXTRA2]];
+    graddotrhouyl = extras[whichcolinquantity[EXTRA3]];
+    tthermaltot = extras[whichcolinquantity[EXTRA4]];
+    tdifftot = extras[whichcolinquantity[EXTRA5]];
+    lambdatot = extras[whichcolinquantity[EXTRA6]];
+    lambdaintot = extras[whichcolinquantity[EXTRA7]];
+    enu = extras[whichcolinquantity[EXTRA8]];
+    enue = extras[whichcolinquantity[EXTRA9]];
+    enuebar = extras[whichcolinquantity[EXTRA10]];
+    Ynuthermal = extras[whichcolinquantity[EXTRA11]];
   }
 
 
@@ -2016,10 +2343,6 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 }
 
 
-static void compute_IJKglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS]);
-static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
 // compute things beyond simple EOS independent variables
@@ -2031,6 +2354,8 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // set grid indices
   //
   ////////////////////////
+  dualfprintf(fail_file,"before ijk\n");
+
   compute_IJKglobal(EOSextra);
 
   /////////////////////////
@@ -2038,6 +2363,8 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // compute H
   //
   /////////////////////////
+  dualfprintf(fail_file,"before H\n");
+
   compute_Hglobal(EOSextra,prim);
 
   /////////////////////////
@@ -2045,6 +2372,8 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // compute Tdyn or Ye depending upon whichrnpmethod
   //  
   /////////////////////////
+  dualfprintf(fail_file,"before Y\n");
+
   compute_TDYNORYE_YNU_global(EOSextra,prim);
 
   /////////////////////////
@@ -2053,10 +2382,15 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // 2) Compute neutriono u_\nu, p_\nu, and s_\nu
   //  
   /////////////////////////
+  dualfprintf(fail_file,"before ynu0_upsnu\n");
+
   compute_ynu0_upsnu_global(EOSextra,prim);
 
+  dualfprintf(fail_file,"Done parms\n");
 
 }
+
+
 
 // compute things beyond simple EOS independent variables
 // "full" really means at t=0 for now, so do multiple times.

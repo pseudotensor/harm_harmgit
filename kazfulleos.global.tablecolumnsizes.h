@@ -29,7 +29,7 @@
 #define NUMINDEPDIMENSMEM (NUMINDEPDIMENS+1)
 //
 // below fed into procedures as function arguments
-#define NONEINDEP -1000
+#define NONEINDEP (-1000)
 #define RHOINDEP 1
 #define TEMPLIKEINDEP 2
 // below stored in EOSextra[]
@@ -37,7 +37,7 @@
 #define YNUINDEP 4
 #define HINDEP 5
 #define FIRSTINDEPDIMEN RHOINDEP
-#define LASTINDEPDIMENUSED MIN(WHICHEOSDIMEN,HINDEP) // only works if rho,u,ye,ynu,h start at 1
+#define LASTINDEPDIMENUSED (MIN(WHICHEOSDIMEN,HINDEP)) // only works if rho,u,ye,ynu,h start at 1
 #define LASTINDEPDIMEN HINDEP
 
 // what is contained within file (rhob,utotdiff/ptotdiff/chidiff/stotdiff,tdynorye,tdynorynu,hcm)
@@ -90,7 +90,7 @@
 // these are fixed in order and number from read-in file
 // so can access functional degentable of independent variables by whichindep-1
 // below is also mapped to "whichd" variable
-#define NOSUCHDIFF -1
+#define NOSUCHDIFF (-1)
 #define UTOTDIFF (UEOS-1)   // should always resolve to: 0
 #define PTOTDIFF (PEOS-1)   // :1
 #define CHIDIFF  (CHIEOS-1) // :2
@@ -121,17 +121,17 @@
 // labels for inputting degen table (should be NUMEOSDEGENQUANTITIESin of them)
 // must have offset's as first 4 in order in order for set_arrays_eostable(), etc. to be correct
 #define UTOTOFFSETin 0
-#define PTOTOFFSETin UTOTOFFSETin+1
-#define CHIOFFSETin  UTOTOFFSETin+2
-#define STOTOFFSETin UTOTOFFSETin+3
+#define PTOTOFFSETin (UTOTOFFSETin+1)
+#define CHIOFFSETin  (UTOTOFFSETin+2)
+#define STOTOFFSETin (UTOTOFFSETin+3)
 #define UTOTINin NUMEOSDEGENQUANTITIESMEM1
-#define PTOTINin UTOTINin+1
-#define CHIINin  UTOTINin+2
-#define STOTINin UTOTINin+3
+#define PTOTINin (UTOTINin+1)
+#define CHIINin  (UTOTINin+2)
+#define STOTINin (UTOTINin+3)
 #define UTOTOUTin NUMEOSDEGENQUANTITIESMEM1*2
-#define PTOTOUTin UTOTOUTin+1
-#define CHIOUTin  UTOTOUTin+2
-#define STOTOUTin UTOTOUTin+3
+#define PTOTOUTin (UTOTOUTin+1)
+#define CHIOUTin  (UTOTOUTin+2)
+#define STOTOUTin (UTOTOUTin+3)
 
 
 ///////////////////////
@@ -190,30 +190,30 @@
 // so-called "extras" in eos_extract.m: Those things that didn't require extra processing as independent variables or derivatives -- just interpolated from T -> U only
 // extras:
 
-#define EXTRA1in  LASTEOSQUANTITIESBASEin+1
-#define EXTRA2in  EXTRA1in+1
-#define EXTRA3in  EXTRA1in+2
-#define EXTRA4in  EXTRA1in+3
-#define EXTRA5in  EXTRA1in+4
-#define EXTRA6in  EXTRA1in+5
-#define EXTRA7in  EXTRA1in+6
-#define EXTRA8in  EXTRA1in+7
-#define EXTRA9in  EXTRA1in+8
-#define EXTRA10in EXTRA1in+9
-#define EXTRA11in EXTRA1in+10
-#define EXTRA12in EXTRA1in+11
-#define EXTRA13in EXTRA1in+12
-#define EXTRA14in EXTRA1in+13
-#define EXTRA15in EXTRA1in+14
-#define EXTRA16in EXTRA1in+15
-#define EXTRA17in EXTRA1in+16
-#define EXTRA18in EXTRA1in+17
-#define EXTRA19in EXTRA1in+18
-#define EXTRA20in EXTRA1in+19
-#define EXTRA21in EXTRA1in+20
-#define EXTRA22in EXTRA1in+21
-#define EXTRA23in EXTRA1in+22
-#define EXTRA24in EXTRA1in+23
+#define EXTRA1in  (LASTEOSQUANTITIESBASEin+1)
+#define EXTRA2in  (EXTRA1in+1)
+#define EXTRA3in  (EXTRA1in+2)
+#define EXTRA4in  (EXTRA1in+3)
+#define EXTRA5in  (EXTRA1in+4)
+#define EXTRA6in  (EXTRA1in+5)
+#define EXTRA7in  (EXTRA1in+6)
+#define EXTRA8in  (EXTRA1in+7)
+#define EXTRA9in  (EXTRA1in+8)
+#define EXTRA10in (EXTRA1in+9)
+#define EXTRA11in (EXTRA1in+10)
+#define EXTRA12in (EXTRA1in+11)
+#define EXTRA13in (EXTRA1in+12)
+#define EXTRA14in (EXTRA1in+13)
+#define EXTRA15in (EXTRA1in+14)
+#define EXTRA16in (EXTRA1in+15)
+#define EXTRA17in (EXTRA1in+16)
+#define EXTRA18in (EXTRA1in+17)
+#define EXTRA19in (EXTRA1in+18)
+#define EXTRA20in (EXTRA1in+19)
+#define EXTRA21in (EXTRA1in+20)
+#define EXTRA22in (EXTRA1in+21)
+#define EXTRA23in (EXTRA1in+22)
+#define EXTRA24in (EXTRA1in+23)
 
 #define FIRSTEXTRAin EXTRA1in
 #define LASTEXTRAin EXTRA24in
@@ -232,8 +232,8 @@
 #define LASTEOSQUANTITIESBASEinextra TEMPSinextra
 #define NUMEOSQUANTITIESBASEinextra (LASTEOSQUANTITIESBASEinextra-FIRSTEOSQUANTITIESBASEinextra+1)
 
-#define EXTRA1inextra LASTEOSQUANTITIESBASEinextra+1
-#define EXTRA24inextra EXTRA1inextra+23
+#define EXTRA1inextra (LASTEOSQUANTITIESBASEinextra+1)
+#define EXTRA24inextra (EXTRA1inextra+23)
 #define FIRSTEXTRAinextra EXTRA1inextra
 #define LASTEXTRAinextra EXTRA24inextra
 
@@ -279,10 +279,21 @@
 // Setup HARM EOS tables
 //
 ///////////////////
+// number of tables to track for repeated lookup
+#define NUMEXTRATABLETYPES 2
+#define ISNOTEXTRATABLETYPE 0
+#define ISEXTRATABLETYPE 1
 
 // assume degen table is always stored along with corresponding normal table
+#if(ALLOWFULLTABLE&&ALLOWSIMPLETABLE&&ALLOWSIMPLEZOOMTABLE)
 #define NUMTBLS 6
-#define NOTABLE -1 // just used to indicate no table setup, not to be iterated over, so don't include in NUMTBLS
+#elif(ALLOWFULLTABLE)
+#define NUMTBLS 2 // more memory friendly
+#else
+#error "No setup for NUMTBLS"
+#endif
+
+#define NOTABLE (-1) // just used to indicate no table setup, not to be iterated over, so don't include in NUMTBLS
 #define FULLTABLE 0
 #define EXTRAFULLTABLE 1
 #define SIMPLETABLE 2
@@ -389,29 +400,29 @@
 
 // up to 24 extras so far with WHICHDATATYPE==4
 #define EXTRA1  (LASTEOSTEMP+1)
-#define EXTRA2  EXTRA1+1
-#define EXTRA3  EXTRA1+2
-#define EXTRA4  EXTRA1+3
-#define EXTRA5  EXTRA1+4
-#define EXTRA6  EXTRA1+5
-#define EXTRA7  EXTRA1+6
-#define EXTRA8  EXTRA1+7
-#define EXTRA9  EXTRA1+8
-#define EXTRA10 EXTRA1+9
-#define EXTRA11 EXTRA1+10
-#define EXTRA12 EXTRA1+11
-#define EXTRA13 EXTRA1+12
-#define EXTRA14 EXTRA1+13
-#define EXTRA15 EXTRA1+14
-#define EXTRA16 EXTRA1+15
-#define EXTRA17 EXTRA1+16
-#define EXTRA18 EXTRA1+17
-#define EXTRA19 EXTRA1+18
-#define EXTRA20 EXTRA1+19
-#define EXTRA21 EXTRA1+20
-#define EXTRA22 EXTRA1+21
-#define EXTRA23 EXTRA1+22
-#define EXTRA24 EXTRA1+23
+#define EXTRA2  (EXTRA1+1)
+#define EXTRA3  (EXTRA1+2)
+#define EXTRA4  (EXTRA1+3)
+#define EXTRA5  (EXTRA1+4)
+#define EXTRA6  (EXTRA1+5)
+#define EXTRA7  (EXTRA1+6)
+#define EXTRA8  (EXTRA1+7)
+#define EXTRA9  (EXTRA1+8)
+#define EXTRA10 (EXTRA1+9)
+#define EXTRA11 (EXTRA1+10)
+#define EXTRA12 (EXTRA1+11)
+#define EXTRA13 (EXTRA1+12)
+#define EXTRA14 (EXTRA1+13)
+#define EXTRA15 (EXTRA1+14)
+#define EXTRA16 (EXTRA1+15)
+#define EXTRA17 (EXTRA1+16)
+#define EXTRA18 (EXTRA1+17)
+#define EXTRA19 (EXTRA1+18)
+#define EXTRA20 (EXTRA1+19)
+#define EXTRA21 (EXTRA1+20)
+#define EXTRA22 (EXTRA1+21)
+#define EXTRA23 (EXTRA1+22)
+#define EXTRA24 (EXTRA1+23)
 
 #define FIRSTEOSEXTRA EXTRA1
 #define LASTEOSEXTRA EXTRA24
@@ -425,8 +436,8 @@
 
 
 // used to map request to correct EXTRA for given table that uses certain whichdatatype
-#define LAMBDATOT -100
-#define QDOTNU -101
+#define LAMBDATOT (-100)
+#define QDOTNU (-101)
 
 
 // BELOW FOR HARM EOS TABLES, not inputs
@@ -488,7 +499,7 @@
 // EXTRA16:  nnue0 1E57
 // EXTRA17:  nnuebar0 3E-20
 // EXTRA18:  nnumu0 1E31
-// EXTRA19:  lambdatot 3E-34
+// EXTRA19:  lambdatot 3E-34 // coli=18
 // EXTRA20:  lambdaintot 3E-34
 // EXTRA21:  tauphotonohcm 2E9
 // EXTRA22:  tauphotonabsohcm 2E9

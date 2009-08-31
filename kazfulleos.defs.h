@@ -38,6 +38,7 @@ static int varnormalcompare2degentypearray[NUMEOSDEGENINDEPS+1]; // to be used t
 static int numcolintablesubtype[NUMTABLESUBTYPES];
 static int whichdintablesubtype[NUMTABLESUBTYPES];
 static int firsteosintablesubtype[NUMTABLESUBTYPES];
+static int isextraintablesubtype[NUMTABLESUBTYPES];
 
 static int whichtablesubtypeinquantity[NUMEOSQUANTITIESMEM];
 static int whichcolinquantity[NUMEOSQUANTITIESMEM];
@@ -50,6 +51,7 @@ static FTYPEEOS invalidtempcode,invalidlogtempcode;
 static int whichrnpmethod[NUMTBLS], whichynumethod[NUMTBLS], whichhcmmethod[NUMTBLS];
 static int whichdatatype[NUMTBLS],utotdegencut[NUMTBLS],numc[NUMTBLS],numextras[NUMTBLS];
 
+// ensure to not use primarytable for numextras since can change for split tables
 static int primarytable=NOTABLE; // NOTABLE indicates no EOS setup/read-in yet
 
 

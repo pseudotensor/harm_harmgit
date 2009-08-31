@@ -432,19 +432,6 @@ int initeos_eomtype(void)
   ptr_getall_forinversion[whicheos] = &getall_forinversion_kazfull;
 
 
-
-#if(ALLOWKAZEOS)
-  // initialize repeated qarray's
-  int qi,whichd;
-  for(whichd=0;whichd<NUMEOSDEGENQUANTITIESMEM1;whichd++){
-    for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) qoldarray[whichd][qi]=-BIG;
-    kaziiowhichd[whichd]=kazjjowhichd[whichd]=kazkkowhichd[whichd]=kazllowhichd[whichd]=kazmmowhichd[whichd]=INITKAZINDEX;
-  }
-  for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) qoldarrayextras[qi]=-BIG; // all same UEOS independent variable, so no need for [whichd] dependence
-  doallextrasold=-1;
-#endif
-
-
   //////////////////////////////////////////////////////
   whicheos=COLDEOS;
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_coldgrmhd;

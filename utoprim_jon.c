@@ -3854,7 +3854,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 
 
   // DEBUG:
-  //  for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx);
+  //for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx);
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)

@@ -22,7 +22,8 @@ void kazfulleos_set_arrays_perpoint_perline(void)
   // assign global pointer to eostable (static assignment)
   //
   // Take stuff in within WHICHEOS==KAZFULL in kazfulleos.eostablesdefs.h and regexp:   FTYPEEOS BASEEOSMAC(\([a-zA-Z]+\),\([a-zA-Z0-9,]+\));    -> EOSPOINT(\1) = (FTYPEEOS PTREOSMAC(\1,\2)) (&(BASEEOSMAC(\1,0,0,0,0,0,0,0)));
-  // BUT, then must replace "0,0,0,0,0,0,0" with correct offsets.  For example, standard table should have offset at end of -FIRSTEOSSTANDARD so when accessed as standard[FIRSTEOSSTANDARD] it's really base_standard[0]
+  //
+  // Note: arrays accessed using "coli" starting at 0, not "whichfun".  Simplifies code here so don't have to include offsets
   //
   // SUPERNOTE: Below must be consistent with kazfulleos.eostablesdefs.h and kazfulleos.global.?.h and *.c associated with reading and writing to arrays
   //

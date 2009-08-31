@@ -49,3 +49,11 @@ extern void store_EOS_parms(int whicheos, int numparms, FTYPE *EOSextra, FTYPE *
 extern void get_EOS_parms(int whicheos, int*numparms, FTYPE *EOSextra, FTYPE *parlist);
 extern void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr);
 extern void getall_forinversion(int whicheos, int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu);
+
+
+
+
+// SPECIAL KAZ EOS GLOBAL FUNCTIONS:
+extern void initeos_kazfulleos(void);
+extern void read_setup_eostable(void);
+

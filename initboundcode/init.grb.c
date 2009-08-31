@@ -31,7 +31,7 @@
 #define NRADIALMAX 10000
 #define MAXPASSPARMS 10
 
-static FTYPE rho[NRADIALMAX],ie[NRADIALMAX],vr[NRADIALMAX],radius[NRADIALMAX],omega3[NRADIALMAX],yl[NRADIALMAX],ynu[NRADIALMAX],hcm[NRADIALMAX];
+static FTYPE rho[NRADIALMAX],ie[NRADIALMAX],vr[NRADIALMAX],radius[NRADIALMAX],omega3[NRADIALMAX],yl[NRADIALMAX],ynu[NRADIALMAX],ynu0[NRADIALMAX],hcm[NRADIALMAX];
 static int NRADIAL;
 static int INDEXN;
 
@@ -189,7 +189,6 @@ int post_init_specific_init(void)
 int init_consts(void)
 {
   extern void get_stellar_data(void);
-  extern void read_setup_eostable(void);
   FILE *units_file;
 
   ////////////////////////////

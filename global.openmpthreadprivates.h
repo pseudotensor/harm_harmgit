@@ -48,7 +48,8 @@
     kazdiwhichd,kazdjwhichd,kazdkwhichd,kazdlwhichd,kazdmwhichd
 
 // below defined in kazfulleos.c [enabled or disabled below using ALLOWKAZEOS]
-#define OPENMPKAZEOSPRIVATE INDEXPARAMETERSNAMES,indexarray,qoldarray,whichtable,resultold,repeatedfun,qoldarrayextras,extrasold,processedold,doallextrasold
+//#define OPENMPKAZEOSPRIVATE INDEXPARAMETERSNAMES,indexarray,qoldarray,whichtable,resultold,repeatedfun,qoldarrayextras,extrasold,processedold,doallextrasold
+#define OPENMPKAZEOSPRIVATE indexarray,qoldarray,whichtable,resultold,repeatedfun,qoldarrayextras,extrasold,processedold,doallextrasold
 
 
 

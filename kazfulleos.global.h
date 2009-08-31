@@ -108,6 +108,9 @@
 #define REDUCEUSEOFFSET 1
 
 
+// number of Ynu0 iterations per Ynu0 computation
+// need to do at least more than 1 -- 2 minimum -- to avoid derivative guess error
+#define NUMBEROFYNU0ITERATIONS 10
 
 
 

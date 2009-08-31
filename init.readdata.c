@@ -7,7 +7,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   FTYPE X[NDIM],V[NDIM];
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE r,th;
-  void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr,FTYPE *hcmsingle);
+  void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single);
   FTYPE prstellar[NPR];
   FTYPE przamobl[NPR];
   FTYPE przamo[NPR];
@@ -16,7 +16,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   struct of_geom *ptrgeom;
   struct of_geom geombl;
   int pl,pliter;
-  FTYPE hcmsingle;
+  FTYPE hcmsingle,ynu0single;
   FTYPE parlist[MAXPARLIST];
   int numparms;
 
@@ -45,7 +45,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   //////////////////////////////////
   //
   // Interpolate read-in data to computational grid
-  set_stellar_solution(i,j,k,prstellar,&hcmsingle);
+  set_stellar_solution(i,j,k,prstellar,&hcmsingle,&ynu0single);
   // prstellar has 3-velocity in prstellar[U1], need to convert
 
 
@@ -56,6 +56,10 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   /////////////////////////////
   if(!isfinite(hcmsingle)){
     dualfprintf(fail_file,"read-in or interpolated bad hcmsingle: %d %d %d\n",i,j,k);
+  }
+
+  if(!isfinite(ynu0single)){
+    dualfprintf(fail_file,"read-in or interpolated bad ynu0single: %d %d %d\n",i,j,k);
   }
 
 #if(DOYL!=DONOYL)
@@ -82,8 +86,8 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   // why not just call to compute EOSglobal things? (only because of H)
   // only matters for Kaz EOS and should be in correct order and type of quantity
   parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=pr[YL]-pr[YNU]; // Y_e
-  parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // Y_\nu
-  parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // no older yet, so indicate that by using same value
+  //  parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // Y_\nu
+  parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=ynu0single; // Y^0_\nu
   parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // no older yet, so indicate that by using same value
 
 
@@ -458,8 +462,8 @@ void get_stellar_data(void)
     //		print $filename '%d %21.15g %21.15g %21.15g\n' {numlines MBH0 aBH0 QBH0}
     //		#
     //		#
-    //		print + $filename '%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n' \
-      //           {r rho utot vr temp ye Ynu hcm nucleons helium carbon oxygen neon magnesium si iron j omega inertia}
+    //		print + $filename '%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n' \
+      //           {r rho utot vr temp ye Ynu Ynu0 hcm nucleons helium carbon oxygen neon magnesium si iron j omega inertia}
 
     
     // report parameters
@@ -468,15 +472,11 @@ void get_stellar_data(void)
     // 18 values
     // read in 1-D data
     for(i=0;i<NRADIAL;i++){
-      fscanf(indata,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",&(radius[i]),&(rho[i]),&(ie[i]),&(vr[i]),&ftemp1,&ye,&(ynu[i]),&(hcm[i]),&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&(omega3[i]),&ftemp1);
+      fscanf(indata,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",&(radius[i]),&(rho[i]),&(ie[i]),&(vr[i]),&ftemp1,&ye,&(ynu[i]),&(ynu0[i]),&(hcm[i]),&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&ftemp1,&(omega3[i]),&ftemp1);
 
       
       // some assignments
       yl[i] = ye + ynu[i];
-
-
-      // DEBUG:
-      //      dualfprintf(fail_file,"readinye: %21.15g %21.15g %21.15g\n",ye,ynu[i],yl[i]);
 
 
       //////////////////////////////////
@@ -523,6 +523,7 @@ void get_stellar_data(void)
   MPI_Bcast(&(omega3[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(yl[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(ynu[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&(ynu0[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(hcm[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
 #endif
 
@@ -540,7 +541,7 @@ void get_stellar_data(void)
 //
 ///////////////////////////////////////////////////
 // OPENMPMARK: Assume set_stellar_solution() not called by multiple threads, so ok to  have static and firsttime.
-void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle)
+void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single)
 {
   FTYPE X[NDIM],V[NDIM],r;
   struct of_geom geom;
@@ -575,6 +576,7 @@ void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle)
   interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, yl, &myyl);
   interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, ynu, &myynu);
   interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, hcm, hcmsingle);
+  interpfun(QUADRATICTYPE,NRADIAL,i, r, radius, ynu0, ynu0single);
     
   // units already converted
   pr[RHO]=myrho;

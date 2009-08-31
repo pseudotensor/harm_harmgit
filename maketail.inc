@@ -182,8 +182,10 @@ global.defnprs.h : global.realdef.h global.nondepnmemonics.h definit.h init.h ge
 #
 ########################
 
+PREPDEP=makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.grmhd.h defs.general.h mpidefs.h rancdefs.h superdefs.h superdefs.pointers.h supermpidefs.h global.defnprs.h kazfulleos.defsglobalprivate.h  kazfulleos.superdefs.h mpidefs.mpi_grmhd_grray_liaison.h
 
-$(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.grmhd.h defs.general.h mpidefs.h rancdefs.h superdefs.h superdefs.pointers.h supermpidefs.h global.defnprs.h
+
+$(PREP): $(PREPDEP)
  	############################################
 	#below is for GRMHD code
  	############################################
@@ -247,7 +249,7 @@ $(PREP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc make
 ########################
 
  	#
-$(PREPLD): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.grmhd.h mpidefs.h rancdefs.h superdefs.h superdefs.pointers.h supermpidefs.h global.defnprs.h
+$(PREPLD):  $(PREPDEP) maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc
  	############################################
 	# below is for long double code
  	############################################
@@ -289,7 +291,7 @@ $(PREPLD): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc ma
 #
 ########################
 
-$(PREPLIAISON): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.liaison.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.liaison.h mpidefs.h rancdefs.h superdefs.h superdefs.pointers.h supermpidefs.h defs.liaison.h liaison.defs.h global.defnprs.h
+$(PREPLIAISON): $(PREPDEP) maketail.liaison.inc defs.liaison.h defs.liaison.h liaison.defs.h
  	############################################
 	#below is for liaison code
  	############################################
@@ -333,7 +335,7 @@ $(PREPLIAISON): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.l
 ########################
 
 
-$(PREPJONINTERP): makefile makedecs.h.sh makehead.inc maketail.harm.inc maketail.inc maketail.ldouble.deps.inc maketail.ldouble.inc maketailsuperlong.inc defs.jon_interp.h global.jon_interp.h global.defnprs.h
+$(PREPJONINTERP): $(PREPDEP)
  	############################################
 	#below is for jon_interp code
  	############################################
