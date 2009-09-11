@@ -794,6 +794,10 @@ int init_global(void)
 #endif  
   gamideal=4.0/3.0; // ideal gas EOS index to use if off table
 
+  // below assumes tabulated EOS has minimum internal energy of zero, which is approximately correct currently.
+  zerouuperbaryon=-TRUENUCLEAROFFSET; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
+
+
   cooling=0;
   //  cooling=2; // neutrino cooling via tabulated Kaz EOS
 
@@ -987,7 +991,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //SASMARK restart: need to populate panalytic with IC's
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
-    MYFUN(init_primitives(prim,pstag,ucons,vpot,Bhat,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
+    // utemparray only used otherwise in advance.c
+    MYFUN(init_primitives(panalytic,pstaganalytic,GLOBALPOINT(utemparray),vpotanalytic,Bhatanalytic,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
     //to have initial vector potential to be saved in panalytic array
   }
 
@@ -1293,6 +1298,7 @@ int init_uniformdensity(int *whichvel, int*whichcoord, int i, int j, int k, FTYP
 
 // set vector potential
 // assumes normal field in pr
+// SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
 int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, q;

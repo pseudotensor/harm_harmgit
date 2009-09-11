@@ -56,8 +56,14 @@ static void *SwapEndian(void* Addr, const int Nb);
 // note, for HDF, dim0,1,2,3,... means the array element array[dim0][dim1][dim2][dim3], which means dimN where N is the dimensionality of the vector, is most quickly iterated.
 // so a loop like for(k) for(j) for(i) would be used on array[k][j][i]
 // so i is actually dim2, j is dim1, and k is dim0
+
+// ki-rh42:
 #include "hdf/hdf.h"
 #include "hdf/mfhdf.h"
+
+// ki-rh39:
+//#include "hdf.h"
+//#include "mfhdf.h"
 
 #define HDFTYPE DFNT_FLOAT32
 //#define HDFTYPE DFNT_FLOAT64

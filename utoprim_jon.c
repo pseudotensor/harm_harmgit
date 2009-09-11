@@ -1467,9 +1467,10 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of
       dualfprintf(fail_file,
 		  "rho or uu < 0 failure: gamma,utsq = %21.15g %21.15g  \n",  gamma, utsq) ;
     }
-    if((rho0<=0.)&&(u>=0.)) *lpflag=  UTOPRIMFAILRHONEG;
-    if((rho0>0.)&&(u<0.)) *lpflag= UTOPRIMFAILUNEG;
-    if((rho0<=0.)&&(u<0.)) *lpflag= UTOPRIMFAILRHOUNEG;
+    // Below changed to pressure since internal energy can be negative due to arbitrary energy per baryon offset
+    if((rho0<=0.)&&(p>=0.)) *lpflag=  UTOPRIMFAILRHONEG;
+    if((rho0>0.)&&(p<0.)) *lpflag= UTOPRIMFAILUNEG;
+    if((rho0<=0.)&&(p<0.)) *lpflag= UTOPRIMFAILRHOUNEG;
     if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNNOTADJUSTED) return(retval) ; // else let assign -- used to check how bad failure is.
   }
 

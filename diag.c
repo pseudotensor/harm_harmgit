@@ -591,7 +591,7 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   // GRIDDUMPTYPE
   // output grid (probaly want both fullgrid (to make sure ok) and compute grid to compare with data dumps
   // only reasonable to do if 1-D
-  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(DOEVOLVEMETRIC&&(N2==1)&&(N3==1)&&(DOGDUMPDIAG)&&(!GAMMIEDUMP)&&((RESTARTMODE==0)))){
+  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(DOEVOLVEMETRIC&&(N2==1)&&(N3==1)&&(DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(RESTARTMODE==0)&&(localt >= tdumpgen[GRIDDUMPTYPE] || call_code==FINAL_OUT))){
     dodumpgen[GRIDDUMPTYPE]=1;
   }
   else dodumpgen[GRIDDUMPTYPE]=0;

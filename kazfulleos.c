@@ -6,11 +6,8 @@
 
 
 // PIPETODO:
-// 1) eosfunctions.c : create and use pipelined EOS lookup
-// 2) Avoid Y_\nu for non-neutrino table.  Just read-in correctly.  Don't have to change eosnew files.
-// 3) use faster way to get dpofchidrho0, etc. for inversion.  Faster fudge-frac based upon pnu or something.
-// 4) Streamline existing lookup code to use pointer referneces to functions to avoid conditionals.
-// 5) Only go to 1E-10 or something instead of 1E-14 for inversion
+// 1) Streamline existing lookup code to use pointer referneces to functions to avoid conditionals.
+// 2) Only go to 1E-10 or something instead of 1E-14 for inversion
 
 
 
@@ -41,6 +38,8 @@ static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichin
 static int get_whichindep_fromwhichd(int whichd, int *whichindep);
 static void eos_lookup_modify_qarray(int whichdegen, FTYPEEOS *myanswers, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPEEOS *indexarray);
 
+static void lookup_yespecial(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray);
+static void lookup_log(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray);
 
 
 // include C files for simplicity
@@ -625,8 +624,6 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
 // notice that qarray and vartypearraylocal start at 1 not 0
 static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int whichindep, int *vartypearraylocal, FTYPE *qarray, FTYPEEOS *indexarray)
 {
-  FTYPEEOS logq[NUMINDEPDIMENSMEM];
-  FTYPEEOS prelogq[NUMINDEPDIMENSMEM];
   int qi;
 
   // is this expensive?
@@ -641,24 +638,62 @@ static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int w
 
   for(qi=begin;qi<=end;qi++){
     if(qi==skip) continue;
-    
-    prelogq[qi] = MAX(qarray[qi]    -lineartablelimits[whichtable][vartypearraylocal[qi]]  [3],SMALL);
-    logq[qi]    = log10(prelogq[qi])*lineartablelimits[whichtable][vartypearraylocal[qi]][2];
 
-    indexarray[qi] = (logq[qi]   -tablelimits[whichtable][vartypearraylocal[qi]]  [0])*tablelimits[whichtable][vartypearraylocal[qi]]  [3];
-
-    // DEBUG:
-    if(indexarray[qi]<0.0){
-      dualfprintf(fail_file,"qi=%d qarray=%21.15g prelogq=%21.15g logq=%21.15g indexarray=%21.15g\n",qi,qarray[qi],prelogq[qi],logq[qi],indexarray[qi]);
-      dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g\n",lineartablelimits[whichtable][vartypearraylocal[qi]]  [3],lineartablelimits[whichtable][vartypearraylocal[qi]][2],tablelimits[whichtable][vartypearraylocal[qi]]  [0],tablelimits[whichtable][vartypearraylocal[qi]]  [3]);
-
+    if(qi==YEINDEP && whichyelooptype[whichtable]==YELOOPTYPESPECIAL){
+      lookup_yespecial(whichtable,vartypearraylocal[qi],qarray[qi],&indexarray[qi]);
     }
-    // END DEBUG
+    else{
+      lookup_log(whichtable,vartypearraylocal[qi],qarray[qi],&indexarray[qi]);
+    }
 
   }
 
 
 }
+
+
+
+// get i(value)
+static void lookup_log(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray)
+{
+  FTYPEEOS logq;
+  FTYPEEOS prelogq;
+
+
+  prelogq = MAX(qarray    -lineartablelimits[whichtable][vartypearraylocal]  [3],SMALL);
+  logq    = log10(prelogq)*lineartablelimits[whichtable][vartypearraylocal][2];
+  
+  *indexarray = (logq   -tablelimits[whichtable][vartypearraylocal]  [0])*tablelimits[whichtable][vartypearraylocal]  [3];
+
+}
+
+
+// Get i(ye)
+// see yetable.nb
+static void lookup_yespecial(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray)
+{
+  FTYPEEOS num = tablesize[whichtable][YEINDEP];
+  FTYPEEOS yei = lineartablelimits[whichtable][YEINDEP][0];
+  FTYPEEOS yef = lineartablelimits[whichtable][YEINDEP][1];
+  FTYPEEOS yegrid1 = eosyegrid1[whichtable];
+  FTYPEEOS yegrid2 = eosyegrid2[whichtable];
+  FTYPEEOS xgrid1 = eosxgrid1[whichtable];
+  FTYPEEOS xgrid2 = eosxgrid2[whichtable];
+  FTYPEEOS ye=qarray;
+
+  // first range:
+  if(ye<=yegrid1){
+    *indexarray = (num-1.0)*xgrid1*log10(ye/yei)/log10(yegrid1/yei);
+  }
+  else if(ye<=yegrid2){
+    *indexarray = (num-1.0)*(ye*(xgrid1-xgrid2) + xgrid2*yegrid1 - xgrid1*yegrid2)/(yegrid1-yegrid2);
+  }
+  else{
+    *indexarray = (num-1.0)*(ye*(xgrid2-1.0) + yegrid2 - xgrid2*yef)/(yegrid2-yef);
+  }
+
+}
+
 
 
 // for this function, presume qarray[TEMPLIKEINDEP] is in lutotdiff="i/N" form, so simpler conversion to "i" units
@@ -685,9 +720,10 @@ static void eos_lookup_prepost_degen(int whichdegen, int whichtable, int whichin
   int skip;
 
 
-  if(whichdegen==0){// nonsense value to avoid skipping
+  if(whichdegen==ISNOTDEGENTABLE){
     // if normal table after degen table, then only need to get q2 location
-    skip = NONEINDEP;
+    skip = NONEINDEP;// nonsense value to avoid skipping
+
     if(utotdegencut[whichtable]>DEGENCUTLASTOLDVERSION){
       eos_lookup_degen_utotdegencut23(TEMPLIKEINDEP,TEMPLIKEINDEP,skip, whichtable, whichindep, vartypearraylocal, qarray, indexarray);
     }
@@ -774,6 +810,9 @@ static void eos_lookup_modify_qarray(int whichdegen, FTYPEEOS *myanswers, int wh
     qarray[TEMPLIKEINDEP] = MAX(qarray[TEMPLIKEINDEP],lineartablelimits[whichtable][vartypearraylocal[TEMPLIKEINDEP]][0]);
 
     // presume ok to let qarray[TEMPLIKEINDEP] be beyond "i/N" after which ideal gas EOS used
+
+    //    dualfprintf(fail_file,"UTOT0=%21.15g UTOTIN=%21.15g UTOTOUT=%21.15g UTOT=%21.15g qarray[2]=%21.15g\n",UTOT0,UTOTIN,UTOTOUT,UTOT,qarray[TEMPLIKEINDEP]);
+
   }
   
 

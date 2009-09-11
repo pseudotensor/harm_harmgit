@@ -936,7 +936,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
       checkcondition[ISGAMMACHECK]=(MACP0A1(gammacheck,i,j,k,UU)>=2.0);
       checkcondition[ISUUCHECK]=1;
 
-      // use fabs in case gamma<0 or especially if u<0 that can easily happen
+      // use fabs in case gamma<0 or especially if u<zerouuperbaryon*prim[RHO] that can easily happen
       if(checkcondition[ISGAMMACHECK]){
 	percdiff[ISGAMMACHECK][0]=(IFUTOPRIMNOFAILORFIXED(GLOBALMACP0A1(pflag,i,jp1mac(j),k,FLAGUTOPRIMFAIL))) ? fabs(MACP0A1(gammacheck,i,jp1mac(j),k,UU)/MACP0A1(gammacheck,i,j,k,UU)) : -1;
 	percdiff[ISGAMMACHECK][1]=(IFUTOPRIMNOFAILORFIXED(GLOBALMACP0A1(pflag,i,jm1mac(j),k,FLAGUTOPRIMFAIL))) ? fabs(MACP0A1(gammacheck,i,jm1mac(j),k,UU)/MACP0A1(gammacheck,i,j,k,UU)) : -1;
@@ -1040,7 +1040,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 #define DO_CONSERVE_D_INFAILFIXUPS 0 
 
 #define HANDLEUNEG 0
-// seems to keep failing with this, so probably treating u<0 like failure is better idea
+// seems to keep failing with this, so probably treating u<zerouuperbaryon*prim[RHO] like failure is better idea
 // 0: treat as full failure
 // 1: treat as floor issue
 
@@ -1212,7 +1212,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	    endpl=RHO;
 	  }
 	  else{
-	    // then presume inversion failure with no solution or assuming rho<=0 or u<=0 is bad inversion if HANDLE?NEG==0
+	    // then presume inversion failure with no solution or assuming rho<=0 or u<=zerouuperbaryon*prim[RHO] is bad inversion if HANDLE?NEG==0
 	    startpl=RHO;
 	    endpl=U3;
 	  }
@@ -1482,12 +1482,12 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	    MACP0A1(pv,i,j,k,UU)=prguess[UU];
 	    *fixed=1;
 	  }
-	}// end if handling u<0 in special way
+	}// end if handling u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative u or if allowing but not yet final step
       else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
 	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
-    }// end if u<0
+    }// end if u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
 
 
@@ -1554,12 +1554,12 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	    MACP0A1(pv,i,j,k,RHO)=prguess[RHO];
 	    *fixed=1;
 	  }
-	}// end if handling rho<0 and u<0 in special way
+	}// end if handling rho<0 and u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative rho or if allowing but not yet final step
       else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
 	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
-    }// end if rho<0 and u<0
+    }// end if rho<0 and u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
 	
   return(0);
@@ -1570,7 +1570,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 
 // DOCOUNTNEG???? only applies for STEPOVERNEG???==-1
 
-// whether to count any substep u<0 as failure in debug data
+// whether to count any substep u<zerouuperbaryon*prim[RHO] as failure in debug data
 // 2: always counted
 // 1: only counted on final substep
 // 0: never counted
@@ -1579,7 +1579,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 // whether to count any substep rho<0 as failure in debug data
 #define DOCOUNTNEGRHO 1
 
-// whether to count any substep rho<0 && u<0 case as failure in debug data
+// whether to count any substep rho<0 && u<zerouuperbaryon*prim[RHO] case as failure in debug data
 #define DOCOUNTNEGRHOU 1
 
 
@@ -1624,7 +1624,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   }
   else if(mypflag==UTOPRIMFAILRHONEG){
     // whether to count uneg as failure in diagnostic reporting or not
-    // should really have a new diagnostic for substep u<0 's.
+    // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGRHO==-1){
       if(DOCOUNTNEGRHO==1){
 	if(finalstep){
@@ -1656,7 +1656,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   }
   else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
-    // should really have a new diagnostic for substep u<0 's.
+    // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGU==-1){
       if(DOCOUNTNEGU==1){
 	if(finalstep){
@@ -1688,7 +1688,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   }
   else if(mypflag==UTOPRIMFAILRHOUNEG){
     // whether to count uneg as failure in diagnostic reporting or not
-    // should really have a new diagnostic for substep u<0 's.
+    // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGRHOU==-1){
       if(DOCOUNTNEGRHOU==1){
 	if(finalstep){
@@ -2504,7 +2504,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
 	dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
 	return(1);
       }
-      prfloor[UU]=MAX(bsq/BSQOULIMIT,SMALL);
+      prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
     }

@@ -574,7 +574,7 @@ void read_setup_eostable(void)
   int testnumfscanfquantities,testnumfscanfquantitiesdegen;
   int templikeiter;
   long long int numberofdegenerrors[4],totalnumberofdegen; // 0=TABLETOL 1=0.01 2=0.1 3=TABLETOLTRUNCATION
-
+  FTYPEEOS indexcheck;
 
 
 
@@ -742,7 +742,7 @@ void read_setup_eostable(void)
       
       // get number of output colums and check that code and data file agree
       // also get whichmethod using
-      fscanf(inhead,"%d %d %d",&whichrnpmethod[tableiter],&whichynumethod[tableiter],&whichhcmmethod[tableiter]);
+      fscanf(inhead,"%d %d %d %d",&whichrnpmethod[tableiter],&whichynumethod[tableiter],&whichhcmmethod[tableiter],&whichyelooptype[tableiter]);
       fscanf(inhead,"%d %d %d %d",&whichdatatype[tableiter],&utotdegencut[tableiter],&numc[tableiter],&numextras[tableiter]);
 
 
@@ -898,12 +898,13 @@ void read_setup_eostable(void)
       ////////////////////////
       //
       // Also read in lsoffset and fakelsoffset
-      fscanf(inhead,EOSHEADERONEIN,&lsoffset);
-      fscanf(inhead,EOSHEADERONEIN,&fakelsoffset);
+      fscanf(inhead,EOSHEADERONEIN,&lsoffset[tableiter]);
+      fscanf(inhead,EOSHEADERONEIN,&fakelsoffset[tableiter]);
+      fscanf(inhead,EOSHEADERONEIN,&fakeentropylsoffset[tableiter]);
 
       // GODMARK: should really read-in from table, although expected tabular value is 9.14Mev and this gives 7.108 for smooth connection for initial conditions
       // GODMARK: The below is for Shen EOS only
-      FAKE2IDEALNUCLEAROFFSET = (-7.57E-3);
+      FAKE2IDEALNUCLEAROFFSET[tableiter] = (-7.57E-3);
 
       // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
       // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correc tunits.
@@ -913,15 +914,26 @@ void read_setup_eostable(void)
       //  TRUENUCLEAROFFSET /= (1.0); // need to get code version of energy/baryon however used to add to internal energy
       // assume degen offset accounts for offset, that cannot be put into EOS itself!
       // Now read-in unphysical fakelsoffset used to avoid negative energies is required to reoffset internal energy back so only physical "lsoffset" is included
-      TRUENUCLEAROFFSET=fakelsoffset*ergPmev/(mb*C*C);
+      TRUENUCLEAROFFSET[tableiter]=fakelsoffset[tableiter]*ergPmev/(mb*C*C);
 
       // degeneracy global offset:
       // ergPmev=1.60218E-6
       //  DEGENNUCLEAROFFSET=(50.0*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
-      DEGENNUCLEAROFFSET=0.0; // avoid this approach for now -- try putting in offset into original HELM table first
+      DEGENNUCLEAROFFSET[tableiter]=0.0; // avoid this approach for now -- try putting in offset into original HELM table first
 
       //
       ////////////////////////
+
+
+
+
+      ////////////////////////
+      //
+      // Also read in ye grid parameters
+      fscanf(inhead,EOSHEADERONEIN,&eosyegrid1[tableiter]);
+      fscanf(inhead,EOSHEADERONEIN,&eosyegrid2[tableiter]);
+      fscanf(inhead,EOSHEADERONEIN,&eosxgrid1[tableiter]);
+      fscanf(inhead,EOSHEADERONEIN,&eosxgrid2[tableiter]);
 
 
       /////////////////
@@ -1020,7 +1032,7 @@ void read_setup_eostable(void)
 
 	if(m!=iii || n!=jjj || o!=kkk || p!=lll || q!=mmm){
 	  dualfprintf(fail_file,"Read-in table (%d) indicies inconsistent with expected indicies: m=%d iii=%d n=%d jjj=%d o=%d kkk=%d p=%d lll=%d q=%d mmm=%d\n",tableiter,m,iii,n,jjj,o,kkk,p,lll,q,mmm);
-	  dualfprintf(fail_file,"whichrnpmethod=%d whichynumethod=%d whichhcmmethod=%d\n",whichrnpmethod[tableiter],whichynumethod[tableiter],whichhcmmethod[tableiter]);
+	  dualfprintf(fail_file,"whichrnpmethod=%d whichynumethod=%d whichhcmmethod=%d whichyelooptype=%d\n",whichrnpmethod[tableiter],whichynumethod[tableiter],whichhcmmethod[tableiter],whichyelooptype[tableiter]);
 	  dualfprintf(fail_file,"whichdatatype=%d\n",whichdatatype[tableiter]);
 	  for(jj=0;jj<NUMEOSINDEPS;jj++){
 	    dualfprintf(fail_file,"tablesize[%d][%d]=%d\n",tableiter,jj,tablesize[tableiter][jj]);
@@ -1119,51 +1131,66 @@ void read_setup_eostable(void)
 
 	  if(tablesize[tableiter][ii]>1){ // only check actual table and assume degen table consistent
 
-	    // get step (consistent with how step is computed in Kaz's code and in matlab script eos_extract.m)
-	    // really only has to be consistent with eos_extract.m
-	    //	    lstepdep = (-tablelimits[tableiter][ii][0])/((FTYPEEOS)tablesize[tableiter][ii]-1.0);
-	    lstepdep = inputtablelimits[tableiter][ii][2];
-	    // compare step sizes to read-in step sizes
-	    diff = fabs(lstepdep - tablelimits[tableiter][ii][2])/(fabs(lstepdep)+fabs(tablelimits[tableiter][ii][2]));
-	    if(diff > TABLETOL){
-	      dualfprintf(fail_file,"Grid step size is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-value=%21.15g lstepdep=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,tablelimits[tableiter][ii][2],lstepdep);
-	      dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g tablelimits[%d][%d][1]=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],tableiter,ii,tablelimits[tableiter][ii][1]);
-	      myexit(16627);
+
+
+	    if(ii==YEINDEP && whichyelooptype[tableiter]==YELOOPTYPESPECIAL){
+	      // then special gridding
+	      lookup_yespecial(tableiter,vartypearray[YEINDEP],indep[ii],&indexcheck);
+	      diff=fabs(indexcheck-(FTYPEEOS)kkk);
+	      if(diff>TABLETOL){
+		dualfprintf(fail_file,"Special Ye grid position not correct: diff=%21.15g kkk=%d indexcheck=%21.15g\n",diff,kkk,indexcheck);
+		myexit(978351235);
+	      }
 	    }
+	    else{
+	    
+	      // get step (consistent with how step is computed in Kaz's code and in matlab script eos_extract.m)
+	      // really only has to be consistent with eos_extract.m
+	      //	    lstepdep = (-tablelimits[tableiter][ii][0])/((FTYPEEOS)tablesize[tableiter][ii]-1.0);
+	      lstepdep = inputtablelimits[tableiter][ii][2];
+	      // compare step sizes to read-in step sizes
+	      diff = fabs(lstepdep - tablelimits[tableiter][ii][2])/(fabs(lstepdep)+fabs(tablelimits[tableiter][ii][2]));
+	      if(diff > TABLETOL){
+		dualfprintf(fail_file,"Grid step size is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-value=%21.15g lstepdep=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,tablelimits[tableiter][ii][2],lstepdep);
+		dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g tablelimits[%d][%d][1]=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],tableiter,ii,tablelimits[tableiter][ii][1]);
+		myexit(16627);
+	      }
 
 
 	    
-	    if((utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE)){
-	      // grid is just 0..1
-	      // then indep already logified and contains all offsets (i.e. lineartablelimits[tableiter][ii][3]=0 required and lineartablelimits[tableiter][ii][2]=1/log10(10.0)=1 required for now)
-	      lindep = indep[ii];
-	    }
-	    else{
-	      // grid used is:
-	      //
-	      // x = log(r-r_0)/log(base) such that r = r_0 + base^x
-	      //
-	      //
-	      // get read-in value of independent variable
-	      // get x (here x is now such things as rhob, utotoffset, ptotoffset, chioffset, hcm, tdynorye)
-	      lindep=log10(indep[ii]-lineartablelimits[tableiter][ii][3])*lineartablelimits[tableiter][ii][2];
-	    }
-
+	      if((utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE)){
+		// grid is just 0..1
+		// then indep already logified and contains all offsets (i.e. lineartablelimits[tableiter][ii][3]=0 required and lineartablelimits[tableiter][ii][2]=1/log10(10.0)=1 required for now)
+		lindep = indep[ii];
+	      }
+	      else{
+		// grid used is:
+		//
+		// x = log(r-r_0)/log(base) such that r = r_0 + base^x
+		//
+		//
+		// get read-in value of independent variable
+		// get x (here x is now such things as rhob, utotoffset, ptotoffset, chioffset, hcm, tdynorye)
+		lindep=log10(indep[ii]-lineartablelimits[tableiter][ii][3])*lineartablelimits[tableiter][ii][2];
+	      }
+	    
+	      // get computed value of independent variable (used later for lookup, so verifies lookup method)
+	      // get x using lookup from tablular index (didn't need to change)
+	      lindeptry=tablelimits[tableiter][ii][0] + totalindex[ii]*lstepdep;
   
-	    // get computed value of independent variable (used later for lookup, so verifies lookup method)
-	    // get x using lookup from tablular index (didn't need to change)
-	    lindeptry=tablelimits[tableiter][ii][0] + totalindex[ii]*lstepdep;
-	    // compare to be sure same
-	    //	    diff = fabs(lindep-lindeptry)/(fabs(lindep)+fabs(lindeptry));
-	    // normalize below by range of limits instead of local values since otherwise if lindeptry or lindep is near 0 then relative error erroneously is large with old diff above
-	    diff = fabs(lindep-lindeptry)/(tablelimits[tableiter][ii][1]-tablelimits[tableiter][ii][0]);
-	    if(diff>TABLETOL){
-	      dualfprintf(fail_file,"Grid position data is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-lindep=%21.15g lindeptry=%21.15g diff=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,lindep,lindeptry,diff);
-	      dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g totalindex[%d]=%d lstepdep=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],ii,totalindex[ii],lstepdep);
-	      dualfprintf(fail_file,"indep=%21.15g lindep=%21.15g [3]=%21.15g [2]=%21.15g\n",indep[ii],lindep,lineartablelimits[tableiter][ii][3],lineartablelimits[tableiter][ii][2]);
-	      dualfprintf(fail_file,"Trigger: %d\n",(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE));
-	      myexit(16628);
-	    }
+	      // compare to be sure same
+	      //	    diff = fabs(lindep-lindeptry)/(fabs(lindep)+fabs(lindeptry));
+	      // normalize below by range of limits instead of local values since otherwise if lindeptry or lindep is near 0 then relative error erroneously is large with old diff above
+	      diff = fabs(lindep-lindeptry)/(tablelimits[tableiter][ii][1]-tablelimits[tableiter][ii][0]);
+	      if(diff>TABLETOL){
+		dualfprintf(fail_file,"Grid position data is incorrect: mmm=%d lll=%d kkk=%d jjj=%d iii=%d :: ii=%d readin-lindep=%21.15g lindeptry=%21.15g diff=%21.15g\n",mmm,lll,kkk,jjj,iii,ii,lindep,lindeptry,diff);
+		dualfprintf(fail_file,"tablelimits[%d][%d][0]=%21.15g totalindex[%d]=%d lstepdep=%21.15g\n",tableiter,ii,tablelimits[tableiter][ii][0],ii,totalindex[ii],lstepdep);
+		dualfprintf(fail_file,"indep=%21.15g lindep=%21.15g [3]=%21.15g [2]=%21.15g\n",indep[ii],lindep,lineartablelimits[tableiter][ii][3],lineartablelimits[tableiter][ii][2]);
+		dualfprintf(fail_file,"Trigger: %d\n",(utotdegencut[tableiter]>DEGENCUTLASTOLDVERSION)&&(ii>=FIRSTTKLIKE && ii<=LASTTKLIKE));
+		myexit(16628);
+	      }
+
+	    }// end else if not yeindep with special loop type
 	  }
 	}
 
@@ -1890,6 +1917,7 @@ static void bcast_kazeos(void)
   MPI_Bcast(&whichrnpmethod[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&whichynumethod[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&whichhcmmethod[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&whichyelooptype[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&whichdatatype[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&utotdegencut[0],NUMTBLS,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
@@ -1899,12 +1927,19 @@ static void bcast_kazeos(void)
   MPI_Bcast(&primarytable,1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 
 
-  MPI_Bcast(&FAKE2IDEALNUCLEAROFFSET,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&TRUENUCLEAROFFSET,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&DEGENNUCLEAROFFSET,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&FAKE2IDEALNUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&TRUENUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&DEGENNUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 
-  MPI_Bcast(&lsoffset,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcast(&fakelsoffset,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&lsoffset,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&fakelsoffset,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&fakeentropylsoffset,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+
+  MPI_Bcast(&eosyegrid1,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&eosyegrid2,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&eosxgrid1,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&eosxgrid2,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+
 
   MPI_Bcast(&didsetupkazeos,1,MPI_INT,MPIid[0],MPI_COMM_GRMHD);
 

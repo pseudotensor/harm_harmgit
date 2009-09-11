@@ -214,6 +214,8 @@ int CHECKCONT,DOTSTEPDIAG,DOLOGSTEP,DOLOGPERF;
 int NDTCCHECK,NZCCHECK,NDTDOTCCHECK,NGOCHECK,NTIMECHECK,NDTPERFDUMPCHECK;
 SFTYPE PERFWALLTIME,ZCPSESTIMATE;
 
+FTYPE zerouuperbaryon;
+
 long steptofaildump,steptofailmap;
 int ifail,jfail,kfail; // OPENMPNOTE: Ensure those are set as private [noted only for diagnostics outside parallel regions]
 int dofailmap,dofaildump,restartonfail;

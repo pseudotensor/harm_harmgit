@@ -1194,6 +1194,8 @@ int init_defglobal(void)
   // some physics
   gam=4./3.; // ultrarelativistic gas, assumes pgas<prad and radiation
   gamideal=gam;
+  zerouuperbaryon=0.0; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
+
 	     // doesn't escape
   // gam=5/3 for non-relativistic gas, such as neucleons in collapsar model
   cooling=0;

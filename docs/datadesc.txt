@@ -189,6 +189,26 @@ u_\theta[BL] = u_\theta[KS]
 u_\phi[BL] = u_\phi[KS]
 
 
+---------------------------------------------------------------------
+
+I should also point out that in addition to normal complete dumps, I have high time-resolution data that happens to include the data you require.  Both my dipolar and quadrupolar simulations have high time-resolution data for several quantities.  These are the "fieldline" binaries that are dumped on the same time cycle as dumps, which is a period of dt=2M.  These "fieldline" dumps contain:
+
+rho
+u
+-u_t
+-T^r_t/(\rho_0 u^r)
+u^t
+v^r
+v^\theta
+v^\phi
+B^r
+B^\theta
+B^\phi
+
+So if you need higher time-resolution, we can use those.  They are in binary "float" format rather than "double" in order to save space.  The columns of data given above are the fastest index, followed by i, then j, then k is slowest index.
+
+Here both v^i and B^i are the 3-vectors in the KS grid frame, but there is enough information to convert to any coordinate system.
+
 
 ---------------------------------------------------------------------
 

@@ -447,7 +447,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
-// use entropy grmhd if hot grmhd gives u<0 since then entropy is valid
+// use entropy grmhd if hot grmhd gives u<zerouuperbaryon*rho since then entropy is valid
 #define USEENTROPYIFHOTUNEG 1
 // use entropy grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
 #define USEENTROPYIFHOTRHONEG 1
@@ -528,7 +528,7 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree
 
 
 
-// use cold grmhd if hot grmhd gives u<0 since then cold is valid
+// use cold grmhd if hot grmhd gives u<zerouuperbaryon*rho since then cold is valid
 #define USECOLDIFHOTUNEG 1
 // use cold grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
 #define USECOLDIFHOTRHONEG 1
@@ -592,7 +592,7 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *Ugeomfree, F
 	// since cold approximation is very good, then use cold solution and just set internal energy to 0
 	// if internal energy is actually small, then just set it to 0
 	// works for Hubble flow!
-	pr[UU]=0.0;
+	pr[UU]=zerouuperbaryon*pr[RHO];
       }
       else{
 	//////////////
@@ -938,7 +938,7 @@ static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
   //Inversion from the average value succeeded or has a negative density or internal energy
   if(IFUTOPRIMFAILSOFT(*pflag)) {
 
-    if( prim[UU] < 0.0 && (finalstep&&STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP) || STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP) {
+    if( prim[UU] < zerouuperbaryon*prim[RHO] && (finalstep&&STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP) || STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP) {
       *pflag = UTOPRIMFAILU2AVG2;
     }
   }

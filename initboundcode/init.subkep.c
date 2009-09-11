@@ -365,7 +365,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //SASMARK restart: need to populate panalytic with IC's
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
-    MYFUN(init_primitives(prim,pstag,ucons,vpot,Bhat,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
+    MYFUN(init_primitives(panalytic,pstaganalytic,GLOBALPOINT(utemparray),vpotanalytic,Bhatanalytic,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
     //to have initial vector potential to be saved in panalytic array
   }
 

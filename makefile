@@ -491,8 +491,8 @@ endif
 # for for normal installation of v5d and hdf
 BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -lv5d
 # below for ki-rh39 and likeness
-# BIN2TXTLIBS=-I BIN2TXTLIBS=-I ~/include/ -L ~/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
-# must also change #include "hdf" stuff and remove forward hdf/
+# BIN2TXTLIBS=-I ~/include/ -L ~/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
+# must also change #include "hdf" stuff to have the forward hdf/ removed
 
 
 #############################

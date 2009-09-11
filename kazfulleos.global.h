@@ -1,14 +1,8 @@
 
 
 // TODO:
-//
-// 1) choose case where checking if within EOS is not done (assume always there and truncate instead of extend)
-//    TWO if's removed then: if(iswithin_eostable) and in each type of calculation the call: if(get_eos_fromtable()) are removed : might speed things up
-// 2) Is my interpolation best/fastest/correct?  Thompson et al. (2003) use bivariate interpolation that looks alot more complicated
-
-
-// TODO NEW:
-// 1) New H calculation (MAKE MPI)
+// 1) Is my interpolation best/fastest/correct?  Thompson et al. (2003) use bivariate interpolation that looks alot more complicated
+// 2) New H calculation (MAKE MPI)
 // 3) check additional code that's presently in debug mode
 // 4) check MPI stuff here and for gravity
 
@@ -107,10 +101,13 @@
 #define REDUCENOOFFSET 0
 #define REDUCEUSEOFFSET 1
 
+#define YELOOPTYPELOG 0
+#define YELOOPTYPELINEAR 1
+#define YELOOPTYPESPECIAL 2
 
 // number of Ynu0 iterations per Ynu0 computation
-// need to do at least more than 1 -- 2 minimum -- to avoid derivative guess error
-#define NUMBEROFYNU0ITERATIONS 10
+// need to do at least more than 1 -- 2 minimum at t=0 to avoid derivative guess error
+#define NUMBEROFYNU0ITERATIONS 1
 
 
 

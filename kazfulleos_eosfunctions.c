@@ -2,7 +2,6 @@
 // stuff that should never directly access global EOS arrays
 // all uses of lineartablelimits[] should be on non-temperature-like quantities (i.e. only on rho,ye,ynu,h)
 
-// TODO: create and use pipelined EOS lookup!
 
 
 static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
@@ -89,7 +88,7 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
   if(whichd==UTOTDIFF || whichd==CHIDIFF){
     // nuclear offset
     // assumes lsoffset in helm/jon_lsbox.f is offsetting only energy/baryon = u/\rho_0
-    *quant2out = quant2in + TRUENUCLEAROFFSET*quant1;
+    *quant2out = quant2in + TRUENUCLEAROFFSET[primarytable]*quant1;
   }
 
 
@@ -100,7 +99,7 @@ static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2i
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
-  *quant2out = quant2in + DEGENNUCLEAROFFSET*quant1;
+  *quant2out = quant2in + DEGENNUCLEAROFFSET[primarytable]*quant1;
 
   return(0);
 
@@ -109,7 +108,7 @@ static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE 
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
-  *quant2out = quant2in - DEGENNUCLEAROFFSET*quant1;
+  *quant2out = quant2in - DEGENNUCLEAROFFSET[primarytable]*quant1;
 
   return(0);
 
@@ -250,11 +249,11 @@ static int usereduced_eos(int domod, int whichfun, int whichd, FTYPE *EOSextra, 
 
   if(domod==REDUCEUSEOFFSET){
     if(whichd==UTOTDIFF || whichd==CHIDIFF){
-      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
+      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET[primarytable]*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS
     }
     else if(whichd==STOTDIFF){
       // SUPERGODMARK: Need to offset by u/(kb*t)
-      //      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS     
+      //      quant2mod = quant2 + FAKE2IDEALNUCLEAROFFSET[primarytable]*quant1; // set nuclear per baryon offset so can smoothly connect to ideal gas EOS     
     }
   }
   else{
@@ -698,7 +697,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
 
   for(coli=0;coli<numcols;coli++){ // don't need to deal with iffun since want all
 
-    whichfun = coli+firsteosintablesubtype[whichtablesubtype];
+    whichfun = coli+firsteos;
 
     if(whichfun==returndfunofrho || whichfun==returndfunofu){
 
@@ -1339,6 +1338,18 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   // DEBUG:
     //  if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"doall=%d\n",doall);
   //  else dualfprintf(fail_file,"ijk: %d %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+
+
+#if(1)
+    // DEBUG:
+    // try changing density to a point in the table:
+    //    pr[RHO]=3853528593.7105;
+    //    pr[RHO]=3199267137.79737;
+
+    // ensure H is fixed to desired value or comment-out compute_Hglobal() call or assume read-in H is good if only looking at first iteration
+    //    EOSextra[HGLOBAL];
+#endif
+
   
   
 
@@ -1450,13 +1461,13 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     ynu=pr[YNU]; // pr[YNU] = Ynu[orig] = Ynu (i.e. not Ynu0 so that conservation law equation for Y_\nu is correctly using radiative transfer version of Y_\nu, while EOSextra[YNU] is Ynu0 used for table lookup
     H=qarray[5];
 
+   
+
     // not normal temperature(rho0,u), but temp(rho0,d), so direct lookup as tabulated
     // if used temp(rho0,u) then would get densities and this is already being done here, so avoid extra iteration
     // tempk is always stored in dimensionless form of: T[k] k_b/(m_b c^2), so since need kbtk in energy units, then always multiply tempk by m_b c^2 no matter what rho0unittype is
     tempk=compute_temp_whichd_kazfull(whichd, EOSextra, quant1, dquant2);
     kbtk=tempk*mbcsq; // in code energy units
-
-
 
 
 
@@ -1476,34 +1487,168 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       if(numextrasreturn==0) notintable=1;
       else notintable=0;
 
-#if(0)
+#if(1)
       // DEBUG:
+      // 1) Use kazeos.loopparms.testynu.dek and edit tau_calc.f to output DEBUG info.
+      // 2) Run stellar model generation and ensure first output of last iterated DEBUG output (choose tauiter largest for first set of iterations) is same!
+      // 3) Run normal table generation ensure first output of last iterated DEBUG output is same as stellar model.  This confirms stellar model and non-stellar model agree!
+      // 4) Copy last iterated result of tau_calc.f's DEBUG output into below structures with units conversions.  
+      // 5) Ensure that compute_Hglobal() is commented out so H calculation is not tested
+      // 6) Run HARM with this debug enabled and ensure processed outputs are consistent with stellar model generated DEBUG output
+      //
+      // for:
+      // rhob=3698268044.70451d0
+      // tk=8183138022.48367d0
+      // ye=0.428493d0
+      // H=0.38730771092310503125D+00008 (only used if stellar model, but processed quantities outputted for non-stellar model use it if you reset hcm (say) inside kazloopfunctions.f to be hcm = that quantity)
+      // ynu=0.17028260300336636375E-00005 (only used if non-stellar model)
+      // corresponding to:
+      // ynu0=0.22703249033971029114E-00001
+      //
+      //
+      // stellar model:
+      //DEBUGFORHARM           6
+      // extras  3.016208725417535E-009  1.780829277244639E-012  1.528763546663606E-008  1.252471070958565E-012  2.059938688437184E-009  1.314454808328260E-014  2.216369121583122E-009  1.040427344997658E-012  1.119680705812048E-008  7.376261380268049E-013  1.295212495261131E-009  1.099750846149906E-014  2.347702471508822E+026  6.181553876798139E+023  2.968941988288588E+025  5.074545552259924E+031  1.819268265786567E+029  8.338413581438167E+030   447251700.050036        20472315.5009781        3745028921.52609        3110006084.82794       1.117103214733134E+032  4.509919232490958E+028
+      // processed   105624263274.740       1.257885287985835E+025  -2621445.40148080       7.332395341431752E-003  1.291919461573330E-003  3.101466000046774E+022  1.033822000015591E+022  3.660157476625981E+028  1.702826030033664E-006 3.759437713997883E-006  7.900220549935097E-006  7.918298450837450E-006  5.769081621748609E-006
+      //
+      // HELM table at the same H (hacking kazloopfunctions.f so processed are computed with correct H) and choosing now Ynu0
+      //DEBUGFORHARM          23
+      // extras  3.029339808920773E-009  1.602331902357635E-012  1.526768710185669E-008  1.257764285610078E-012  2.070317784546204E-009  1.310244034191246E-014  2.225741157400276E-009  9.353057661507511E-013  1.118029406428476E-008  7.374187614331142E-013  1.301632093683409E-009  1.084654641234010E-014  2.347694110104187E+026  6.181583853271378E+023  2.968941988288588E+025  5.074530210927057E+031  1.819277066697600E+029  8.338413581438167E+030   444961299.277883        20299760.1914007        3704290004.96078        3070417217.24895       1.016747562660904E+032  5.408080673791758E+028
+      // processed   106785894260.181       1.132284286057749E+025  -2355920.25380538       7.394723355957793E-003  1.291919461573330E-003  2.793097681097268E+022  9.310325603657561E+021  3.296240345778634E+028  1.530676100627289E-006  3.076387364051629E-006  7.905717444283695E-006  7.925421990296669E-006  5.795089261262683E-006
+      // so HELM and stellar model agree even though iterated on different quantity (Ynu vs. Ynu0).  Note that more advanced quasi-thermalization version of stellar model would not agree so is not really consistent to use as input to HARM as initial conditions.
+
+
+#if(0)
       ei=-1;
-      ei++;  testextras[ei]=2.313057286241873E-009/(1.0/Lunit);
-      ei++;  testextras[ei]=2.713713102758627E-011/(1.0/Lunit);
-      ei++;  testextras[ei]=1.569556488872701E-008/(1.0/Lunit);
-      ei++;  testextras[ei]=5.342111503769025E-014/(1.0/Lunit);
-      ei++;  testextras[ei]=2.057814079059060E-009/(1.0/Lunit);
-      ei++;  testextras[ei]=1.096473627400667E-014/(1.0/Lunit);
-      ei++;  testextras[ei]=1.481348570684876E-009/(1.0/Lunit);
-      ei++;  testextras[ei]=1.238443974759171E-011/(1.0/Lunit);
-      ei++;  testextras[ei]=1.176101873401969E-008/(1.0/Lunit);
-      ei++;  testextras[ei]=3.017955829870171E-014/(1.0/Lunit);
-      ei++;  testextras[ei]=1.293887908702487E-009/(1.0/Lunit);
-      ei++;  testextras[ei]=5.894535354846674E-015/(1.0/Lunit);
-      ei++;  testextras[ei]=1.484470216153997E+025/(energyunit/pow(Lunit,3.0));
-      ei++;  testextras[ei]=1.484470216153997E+025/(energyunit/pow(Lunit,3.0));
-      ei++;  testextras[ei]=2.968941988288588E+025/(energyunit/pow(Lunit,3.0));
-      ei++;  testextras[ei]=4.169196104458902E+030/(1.0/pow(Lunit,3.0));
-      ei++;  testextras[ei]=4.169196104458902E+030/(1.0/pow(Lunit,3.0));
-      ei++;  testextras[ei]=8.338413581438167E+030/(1.0/pow(Lunit,3.0));
-      ei++;  testextras[ei]=664039105.329363/(Lunit);
-      ei++;  testextras[ei]=4304671623.94283/(Lunit);
-      ei++;  testextras[ei]=3818185478.20807/(1.0/Lunit);
-      ei++;  testextras[ei]=3183162641.50992/(1.0/Lunit);
-      ei++;  testextras[ei]=1.170948788427859E+032/(1.0/pow(Lunit,3.0));
-      ei++;  testextras[ei]=4.111239894021138E+028/(1.0/pow(Lunit,3.0));
-      //      for(ei=0;ei<MAXNUMEXTRAS;ei++) extras[ei]=testextras[ei];
+      ei++;  testextras[ei]=3.029339808920773E-009/(1.0/Lunit); // 0.000760407388930137
+      ei++;  testextras[ei]=1.602331902357635E-012/(1.0/Lunit); // 4.0220810306035e-07
+      ei++;  testextras[ei]=1.526768710185669E-008/(1.0/Lunit); // 0.00383240666825727
+      ei++;  testextras[ei]=1.257764285610078E-012/(1.0/Lunit); // 3.15716729266852e-07
+      ei++;  testextras[ei]=2.070317784546204E-009/(1.0/Lunit); // 0.000519679217289016
+      ei++;  testextras[ei]=1.310244034191246E-014/(1.0/Lunit); // 3.28889892763665e-09
+      ei++;  testextras[ei]=2.225741157400276E-009/(1.0/Lunit); // 0.000558692695005398
+      ei++;  testextras[ei]=9.353057661507511E-013/(1.0/Lunit); // 2.34775053427687e-07
+      ei++;  testextras[ei]=1.118029406428476E-008/(1.0/Lunit); // 0.00280641286654554
+      ei++;  testextras[ei]=7.374187614331142E-013/(1.0/Lunit); // 1.85102600004856e-07
+      ei++;  testextras[ei]=1.301632093683409E-009/(1.0/Lunit); // 0.00032672817317846
+      ei++;  testextras[ei]=1.084654641234010E-014/(1.0/Lunit); // 2.72263745784776e-09
+      ei++;  testextras[ei]=2.347694110104187E+026/(energyunit/pow(Lunit,3.0)); // 261216.198320417
+      ei++;  testextras[ei]=6.181583853271378E+023/(energyunit/pow(Lunit,3.0)); // 687.793962084254
+      ei++;  testextras[ei]=2.968941988288588E+025/(energyunit/pow(Lunit,3.0)); // 33033.9346968924
+      ei++;  testextras[ei]=5.074530210927057E+031/(1.0/pow(Lunit,3.0)); // 8.0258465358673e+47
+      ei++;  testextras[ei]=1.819277066697600E+029/(1.0/pow(Lunit,3.0)); // 2.87735769354505e+45
+      ei++;  testextras[ei]=8.338413581438167E+030/(1.0/pow(Lunit,3.0)); // 1.31879848922977e+47
+      ei++;  testextras[ei]=444961299.277883/(Lunit); // 1772.65370767648
+      ei++;  testextras[ei]=20299760.1914007/(Lunit); // 80.870954904681
+      ei++;  testextras[ei]=3704290004.96078/(1.0/Lunit); // 929829490312520
+      ei++;  testextras[ei]=3070417217.24895/(1.0/Lunit); // 770718402808099
+      ei++;  testextras[ei]=1.016747562660904E+032/(1.0/pow(Lunit,3.0)); // 1.6080818449089e+48
+      ei++;  testextras[ei]=5.408080673791758E+028/(1.0/pow(Lunit,3.0)); // 8.5533879467264e+44
+
+      for(ei=0;ei<MAXNUMEXTRAS;ei++) extras[ei]=testextras[ei];
+#endif
+
+      // Without temperature correction, HARM produces:
+      //repeatedeos=0 doall=1
+      //qi=1 qarray[qi] =     3698369293.17202
+      //qi=2 qarray[qi] =     30394298.6395949
+      //qi=3 qarray[qi] =             0.428493
+      //qi=4 qarray[qi] =    0.022703249033971
+      //ynu= 1.69552232848888e-06
+      //       processed[0]=  1.3478424217287e-15 -> p0*energyunit/Lunit**3/Tunit = 144678132296.455
+      //       processed[1]=    0.105487137974405 -> 1.13230462681693e+25
+      //	processed[2]=    -19.7261783853841 -> p2*energyunit/Lunit**3/Tunit/c**2 = -2355930.23371244
+      //	processed[3]=     652.032446214747 -> p3*Tunit = 0.00545942420395928
+      //	processed[4]=     132.573286667649 -> p4*Tunit = 0.00111002729117781
+      //	processed[5]=     26.3533901908541 -> p5*energyunit/Lunit**3 = 2.36852459113022e+22
+      //	processed[6]=     8.78446339695136 -> 7.89508197043405e+21
+      //	processed[7]= 4.57801947359013e+44 -> p7/Lunit**3 = 2.89456047049061e+28
+      //	processed[8]=  1.3024258110165e-06 (ynulocal = ynu)
+      //	processed[9]= 2.61741093721727e-06 (ynuthermal)
+      //	processed[10]= 5.56170975583112e-43 -> 7.90578019862632e-06
+      //	processed[11]= 5.57557196044043e-43
+      //	processed[12]=  4.0768867847036e-43
+      //
+      // So consistent within expected error of temperature.  Implies Ynu[Ynu0] looks good.  Original HELM good, so error must be in lookup table.
+      // So error could be in either the degeneracy offset correction or in the fact that I use linear interpolation.
+      // Tried 2X more temperature points and did NO better at getting correct Ynu0 even if Newton's method did work and find the correct Ynu with bad Ynu0.
+      // Probably not density since new table is restricted to start at 1E7 instead of 1E5 and made no difference.
+
+      // Below is results using "much" lower density by choosing density point on the 100x100 table
+      //        qi=1 qarray[qi] =     3199267137.79737
+      //	qi=2 qarray[qi] =     30394298.6395949
+      //	qi=3 qarray[qi] =             0.428493
+      //	qi=4 qarray[qi] =    0.022703249033971
+      //	ynu= 1.69552232848888e-06
+      //	TOPLOT     0.022703249033971  1.50561094732914e-06
+      //	processed[0]=  1.3478424217287e-15
+      //	processed[1]=    0.105487137974405
+      //	processed[2]=    -19.7261783853841
+      //	processed[3]=     652.032446214747
+      //	processed[4]=     132.573286667649
+      //	processed[5]=     26.3533901908541
+      //	processed[6]=     8.78446339695136
+      //	processed[7]= 3.33354946920567e+44
+      //	processed[8]= 1.50561094732914e-06
+      //	processed[9]= 3.02574052771397e-06
+      //	processed[10]= 5.56170975583112e-43
+      //	processed[11]= 5.57557196044043e-43
+      //	processed[12]=  4.0768867847036e-43
+      // So Ynu didn't change much with density, implying required change in Ynu0 to match this Ynu wouldn't change things much.
+      // Nothing else apart from kbtk, rho, and extras create processed.  So appears look-up of extras is the issue.  Again, could be degeneracy offset or linear interpolation
+      //
+
+
+      // Below is with no extras preset and using original density, etc.
+
+
+      
+      //qi=1 qarray[qi] =     3698369293.17202
+      //qi=2 qarray[qi] =     30394298.6395949
+      //qi=3 qarray[qi] =             0.428493
+      //qi=4 qarray[qi] =    0.022703249033971
+      //ynu= 1.69552232848888e-06
+      //TOPLOT     0.022703249033971  1.94527528169647e-05
+      //extras[0]=  0.00104478340966707 // 3X the correct answer
+      //extras[1]= 4.92067922628503e-06 // 10X
+      //extras[2]=   0.0036609901318502 // 1X
+      //extras[3]= 3.26397637238692e-07 // 1X
+      //extras[4]=  0.00048233070306588 // 1X
+      //extras[5]= 2.50686585390318e-09 // 1.5X
+      //extras[6]= 0.000735490059278506 // 1.5X
+      //extras[7]= 3.31139995770982e-06 // 10X
+      //extras[8]=  0.00268750225013948 // 1X
+      //extras[9]= 2.06638294070713e-07 // 1/10X
+      //extras[10]= 0.000303372572818126 // 1X
+      //extras[11]= 2.30282715881422e-09 // 1X
+      //extras[12]=     279750.222129814 // 1X
+      //extras[13]=     361.434906375252 // 1/2X
+      //extras[14]=     28636.1055140615 // 1/1.5X
+      //extras[15]= 8.31800467820582e+47 // 1X
+      //extras[16]= 1.56104644759051e+45 // 1/2X
+      //extras[17]= 1.18479626656395e+47 // 1X
+      //extras[18]=     1233.32994603728 // 1/1.5X
+      //extras[19]=     69.0394429060153 // 1/1.5X
+      //extras[20]=      990532959445512 // 1X
+      //extras[21]=      828017286074321 // 1X
+      //extras[22]= 9.84688169261726e+47 // 1/1.5X
+      //extras[23]= 5.82129582930178e+44 // 1/1.5X
+      //processed[0]= 1.09679927385663e-15
+      //processed[1]=     1.37508287270341
+      //processed[2]=      -288.9191413193
+      //processed[3]=     763.773349475091
+      //processed[4]=     132.573286667649
+      //processed[5]=     353.635529001977
+      //processed[6]=     117.878509667326
+      //processed[7]= 6.14323366595259e+45
+      //processed[8]= 1.94527528169647e-05
+      //processed[9]= 2.30304648159613e-05
+      //processed[10]= 4.99481093689521e-43
+      //processed[11]= 4.99543637701315e-43
+      //processed[12]= 3.65705255437989e-43
+
+      // Table lookup shows that values are most dependent upon Y_e, so need better table in Y_e and use higher-order interpolation in Y_e
+
 #endif
 
       // MAXNUMEXTRAS entries
@@ -1614,6 +1759,9 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       if(doall){
 
 	if(!notintable){
+
+
+
 	  // calling f2c generated code, which assumes a certain dimensionless form for inputs
 	  // rhob/mb should be a number density, and mb*rate/cc should be in rhounit*rate
 	  // this means if rho0 in c^2 units, then mb should be too
@@ -1750,7 +1898,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
 
-#if(0)
+#if(1)
   // DEBUG:
   dualfprintf(fail_file,"repeatedeos=%d doall=%d\n",repeatedeos,doall);
 
@@ -1759,15 +1907,20 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     dualfprintf(fail_file,"qi=%d qarray[qi] =%21.15g\n",qi,qarray[qi]);
   }
 
+  dualfprintf(fail_file,"ynu=%21.15g\n",pr[YNU]);
+
   if(doall) dualfprintf(fail_file,"TOPLOT %21.15g %21.15g\n",EOSextra[YNU0GLOBAL],processed[YNULOCAL]);
   
   if(doall){
+    for(ei=0;ei<MAXNUMEXTRAS;ei++) dualfprintf(fail_file,"extras[%d]=%21.15g\n",ei,extras[ei]);
     for(ei=0;ei<MAXPROCESSEDEXTRAS;ei++) dualfprintf(fail_file,"processed[%d]=%21.15g\n",ei,processed[ei]);
   }
   else{
     dualfprintf(fail_file,"rhonu=%21.15g pnu=%21.15g snu=%21.15g\n",processed[RHONU],processed[PNU],processed[SNU]);
   }
-  } // matches loopit loop
+#if(0)
+  //  } // matches loopit loop
+#endif
   myexit(0);
 
 #endif
@@ -1809,8 +1962,21 @@ static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOS
   FTYPE rho0,u;
   FTYPE rho_nu, p_nu, s_nu;
   int i,j,k;
-  int numberofiterations=NUMBEROFYNU0ITERATIONS ;
+  int numberofiterations;
   int iter;
+
+
+
+#define NUMT0YNU0PARMSITER 10
+
+  if(nstep==0){
+    // then get converged solution beyond first step
+    numberofiterations=NUMT0YNU0PARMSITER;
+  }
+  else{
+    numberofiterations=NUMBEROFYNU0ITERATIONS ;
+  }
+
 
   if(whichdatatype[primarytable]!=4) return; // doesn't need to be done if !=4
 
@@ -2354,7 +2520,7 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // set grid indices
   //
   ////////////////////////
-  dualfprintf(fail_file,"before ijk\n");
+  //  dualfprintf(fail_file,"before ijk\n");
 
   compute_IJKglobal(EOSextra);
 
@@ -2363,7 +2529,7 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // compute H
   //
   /////////////////////////
-  dualfprintf(fail_file,"before H\n");
+  //  dualfprintf(fail_file,"before H\n");
 
   compute_Hglobal(EOSextra,prim);
 
@@ -2372,7 +2538,7 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // compute Tdyn or Ye depending upon whichrnpmethod
   //  
   /////////////////////////
-  dualfprintf(fail_file,"before Y\n");
+  //  dualfprintf(fail_file,"before Y\n");
 
   compute_TDYNORYE_YNU_global(EOSextra,prim);
 
@@ -2382,14 +2548,16 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // 2) Compute neutriono u_\nu, p_\nu, and s_\nu
   //  
   /////////////////////////
-  dualfprintf(fail_file,"before ynu0_upsnu\n");
+  //  dualfprintf(fail_file,"before ynu0_upsnu\n");
 
   compute_ynu0_upsnu_global(EOSextra,prim);
-
-  dualfprintf(fail_file,"Done parms\n");
+  
+  //  dualfprintf(fail_file,"Done parms\n");
 
 }
 
+
+#define NUMT0FULLPARMSITER 10
 
 
 // compute things beyond simple EOS independent variables
@@ -2403,7 +2571,7 @@ void compute_EOS_parms_full_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGL
   //
   ////////////////////
   int i;
-  for(i=0;i<10;i++){
+  for(i=0;i<NUMT0FULLPARMSITER;i++){
     compute_EOS_parms_kazfull(EOSextra,prim);
   }
 

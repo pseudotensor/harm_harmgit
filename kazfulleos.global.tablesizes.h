@@ -23,7 +23,7 @@
 // without extras:
 #define EOSFULLN1 200
 #define EOSFULLN2 200
-#define EOSFULLN3 50
+#define EOSFULLN3 100
 #define EOSFULLN4 1
 #define EOSFULLN5 1         // H not tabulated
 
@@ -51,7 +51,7 @@
 // extras table:
 #define EOSEXTRAFULLN1 100
 #define EOSEXTRAFULLN2 50
-#define EOSEXTRAFULLN3 50
+#define EOSEXTRAFULLN3 100
 #define EOSEXTRAFULLN4 10
 #define EOSEXTRAFULLN5 1         // H not tabulated
 
