@@ -1480,6 +1480,27 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
+// used to check inversion, which has consistent pressure used to get things as functions of \chi instead of u in case of using jon's inversion
+int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_thermodynamics_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
+
+
+  get_state_uconucovonly(pr, ptrgeom, q);
+
+  get_state_bconbcovonly(pr, ptrgeom, q);
+
+  bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
+
+  get_state_thermodynamics_forcheckinversion(ptrgeom, pr, q);
+
+  return (0);
+}
+
+
 
 
 /* find ucon, ucov, bcon, bcov from primitive variables */
@@ -1738,13 +1759,28 @@ int get_state_Blower(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 // separate function for getting thermodynamical quantities
 int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
 {
-  int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
 
   // does assume ptrgeom or something related set indices for advanced EOSs
   q->pressure = pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
 
 #if(DOENTROPY!=DONOENTROPY)
   entropy_calc(ptrgeom,pr,&(q->entropy));
+#endif
+
+  return (0);
+
+}
+
+
+// separate function for getting thermodynamical quantities
+int get_state_thermodynamics_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
+{
+
+  // does assume ptrgeom or something related set indices for advanced EOSs
+  q->pressure = pressure_rho0_u_simple_forcheckinversion(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
+
+#if(DOENTROPY!=DONOENTROPY)
+  entropy_calc_forcheckinversion(ptrgeom,pr,&(q->entropy));
 #endif
 
   return (0);
@@ -1783,7 +1819,6 @@ int get_state_geom(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int dir, struct of_state *q, FTYPE *pr)
 {
   VARSTATIC FTYPE entropy;
-  int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr);
 
   // get entropy [entropy can be any value]
   entropy=entropyflux/q->ucon[dir];
@@ -3073,11 +3108,38 @@ int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
   return(0);
 }
 
+// entropy wrapper
+// this function should NOT be called by utoprim_jon.c inversion
+int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
+{
+  
+  *entropy = compute_entropy_simple_forcheckinversion(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
+
+  return(0);
+}
+
+
 // wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
   return(pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+
+}
+
+// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+// used for inversion check
+FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
+{
+
+  if(WHICHEOS==KAZFULL && loc==CENT){
+    // then avoid inconsistency by using stored pressure that was perhaps p(rho0,chi) instead of p(rho0,u)
+    return(GLOBALMACP0A1(EOSextraglobal,i,j,k,PGASGLOBAL));
+  }
+  else{
+    // then didn't store anything
+    return(pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  }
 
 }
 
@@ -3096,9 +3158,36 @@ FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 
   // unlike inversion, require non-NaN entropy, so force rho,u to be positive
   if(rho<SMALL) rho=SMALL;
-  if(u<SMALL) u=SMALL;
 
+#if(WHICHEOS!=KAZFULL)
+  // for Kaz EOS, u<0 is ok
+  if(u<SMALL) u=SMALL;
+#endif
+  
   return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+
+}
+
+// wrapper
+// this function should NOT be called by utoprim_jon.c inversion
+FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
+{
+
+  if(WHICHEOS==KAZFULL && loc==CENT){
+    // then avoid inconsistency by using stored pressure
+    FTYPE chi = u + GLOBALMACP0A1(EOSextraglobal,i,j,k,PGASGLOBAL);
+    return(rho*compute_specificentropy_wmrho0(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,chi));
+  }
+  else{
+    // unlike inversion, require non-NaN entropy, so force rho,u to be positive
+    if(rho<SMALL) rho=SMALL;
+#if(WHICHEOS!=KAZFULL)
+  // for Kaz EOS, u<0 is ok
+  if(u<SMALL) u=SMALL;
+#endif
+    
+    return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  }
 
 }
 

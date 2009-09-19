@@ -1,7 +1,9 @@
 // some useful wrappers for user simplicity:
 extern FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
+extern FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
+extern FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *parlist);
 extern void fix_primitive_eos_scalars_simple(int i, int j, int k, int loc, FTYPE *pr);
 
@@ -15,6 +17,7 @@ extern FTYPE dpdu_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u
 // other wrappers
 extern int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr);
 extern int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
+extern int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
 extern int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int dir, struct of_state *q, FTYPE*pr);
 
 
@@ -35,6 +38,10 @@ extern FTYPE cs2_compute(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE compute_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE compute_dSdrho(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE compute_dSdu(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+extern FTYPE compute_specificentropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
+extern FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+extern FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
+
 extern FTYPE pressure_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 extern FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 extern FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);

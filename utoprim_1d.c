@@ -17,7 +17,7 @@ static PFTYPE * glpflag; // global pflag for local file
 
 ******************************************************************/
 
-int Utoprim_1d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag, FTYPE prim[NPR], struct of_newtonstats *newtonstats)
+int Utoprim_1d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag, FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE U_tmp[NPR], U_tmp2[NPR], prim_tmp[NPR];
@@ -65,14 +65,13 @@ int Utoprim_1d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag, FTYPE pri
 
 
   /* Calculate the transform the PRIMITIVE variables into the new system */
-  for( i = 0; i < B1; i++ ) {
-    prim_tmp[i] = prim[i];
-  }
+  PALLLOOP(i) prim_tmp[i] = prim[i];
+
   for( i = B1; i <= B3; i++ ) {
     prim_tmp[i] = alpha*prim[i];
   }
 
-  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp);
+  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp, pressure);
 
 #if(!OPTIMIZED)
   /* Check conservative variable transformation: */
@@ -138,7 +137,7 @@ prim.
 
 **********************************************************************************/
 
-static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR])
+static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], FTYPE *pressure)
 {
   FTYPE Wtest;
   // extern FTYPE Bsq,QdotBsq,Qtsq,Qdotn,D ;
@@ -223,6 +222,9 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   rho0 = prim[RHO] ;
   u = prim[UU] ;
   p = pressure_rho0_u_1d(rho0,u) ;
+
+  *pressure=p;
+
   w = rho0 + u + p ;
   gammasq = 1. + utsq ;
   W_last = w*gammasq ;

@@ -13,6 +13,11 @@ int numprocs;
 int mycpupos[NDIM];
 int ncpux1;
 
+// SOME GEOMETRIC VARIABLES (see also global.jon_interp.h for PERIODICINPHI)
+int dofull2pi;
+int whichdump,whichdumpversion,numcolumns;
+
+
 int oN1,oN2,oN3,nN1,nN2,nN3 ;
 FTYPE refinefactor;
 int roN1,roN2,roN3;

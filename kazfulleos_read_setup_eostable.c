@@ -92,7 +92,7 @@ static int isextratable(int i)
   int extratype;
 
   if(i==FULLTABLE || i==SIMPLETABLE || i==SIMPLEZOOMTABLE) extratype=0;
-  else if(i==EXTRAFULLTABLE || i==EXTRASIMPLETABLE || i==EXTRASIMPLEZOOMTABLE) extratype=1;
+  else if(i==FULLTABLEEXTRA || i==SIMPLETABLEEXTRA || i==EXTRASIMPLEZOOMTABLE) extratype=1;
 
   return(extratype);
 }
@@ -106,7 +106,7 @@ static void assigntablecolumnnumbers(int i)
   extratype=isextratable(i);
 
 
-  if( ((i==FULLTABLE || i==EXTRAFULLTABLE) && ALLOWFULLTABLE) || ((i==SIMPLETABLE || i==EXTRASIMPLETABLE) && ALLOWSIMPLETABLE) || ((i==SIMPLEZOOMTABLE || i==EXTRASIMPLEZOOMTABLE) && ALLOWSIMPLEZOOMTABLE) ){
+  if( ((i==FULLTABLE || i==FULLTABLEEXTRA) && ALLOWFULLTABLE) || ((i==SIMPLETABLE || i==SIMPLETABLEEXTRA) && ALLOWSIMPLETABLE) || ((i==SIMPLEZOOMTABLE || i==EXTRASIMPLEZOOMTABLE) && ALLOWSIMPLEZOOMTABLE) ){
 
     if(extratype==0 && WHICHDATATYPEGENERAL!=4){
       // THEN FULL SET OF QUANTITIES IN TABLE
@@ -228,89 +228,99 @@ static void settablesizeexpected(int tablesizeexpected[][NUMEOSINDEPS])
   //
   ///////////
 
-  // FULLTABLE
-  i=0;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[FULLTABLE][i]=EOSFULLN2; i++;
-  }
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN3; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN4; i++;
-  tablesizeexpected[FULLTABLE][i]=EOSFULLN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206882);
+  if(ALLOWFULLTABLE){
+    // FULLTABLE
+    i=0;
+    tablesizeexpected[FULLTABLE][i]=EOSFULLN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[FULLTABLE][i]=EOSFULLN2; i++;
+    }
+    tablesizeexpected[FULLTABLE][i]=EOSFULLN3; i++;
+    tablesizeexpected[FULLTABLE][i]=EOSFULLN4; i++;
+    tablesizeexpected[FULLTABLE][i]=EOSFULLN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206882);
+    }
+
+    // FULLTABLEEXTRA
+    i=0;
+    tablesizeexpected[FULLTABLEEXTRA][i]=EOSFULLEXTRAN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[FULLTABLEEXTRA][i]=EOSFULLEXTRAN2; i++;
+    }
+    tablesizeexpected[FULLTABLEEXTRA][i]=EOSFULLEXTRAN3; i++;
+    tablesizeexpected[FULLTABLEEXTRA][i]=EOSFULLEXTRAN4; i++;
+    tablesizeexpected[FULLTABLEEXTRA][i]=EOSFULLEXTRAN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206882);
+    }
   }
 
-  // EXTRAFULLTABLE
-  i=0;
-  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN2; i++;
-  }
-  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN3; i++;
-  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN4; i++;
-  tablesizeexpected[EXTRAFULLTABLE][i]=EOSEXTRAFULLN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(full) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206882);
+
+
+  if(ALLOWSIMPLETABLE){
+    // SIMPLETABLE
+    i=0;
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
+    }
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN3; i++;
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN4; i++;
+    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206883);
+    }
+    // SIMPLETABLEEXTRA
+    i=0;
+    tablesizeexpected[SIMPLETABLEEXTRA][i]=EOSSIMPLEEXTRAN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[SIMPLETABLEEXTRA][i]=EOSSIMPLEEXTRAN2; i++;
+    }
+    tablesizeexpected[SIMPLETABLEEXTRA][i]=EOSSIMPLEEXTRAN3; i++;
+    tablesizeexpected[SIMPLETABLEEXTRA][i]=EOSSIMPLEEXTRAN4; i++;
+    tablesizeexpected[SIMPLETABLEEXTRA][i]=EOSSIMPLEEXTRAN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206883);
+    }
   }
 
-  // SIMPLETABLE
-  i=0;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN2; i++;
-  }
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN3; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN4; i++;
-  tablesizeexpected[SIMPLETABLE][i]=EOSSIMPLEN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206883);
-  }
-  // EXTRASIMPLETABLE
-  i=0;
-  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN2; i++;
-  }
-  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN3; i++;
-  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN4; i++;
-  tablesizeexpected[EXTRASIMPLETABLE][i]=EOSEXTRASIMPLEN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simple) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206883);
-  }
 
-  // SIMPLEZOOMTABLE
-  i=0;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
-  }
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN3; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN4; i++;
-  tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206884);
-  }
+  if(ALLOWSIMPLEZOOMTABLE){
 
-  // EXTRASIMPLEZOOMTABLE
-  i=0;
-  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN1; i++;
-  for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
-    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN2; i++;
-  }
-  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN3; i++;
-  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN4; i++;
-  tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSEXTRASIMPLEZOOMN5; i++;
-  if(i!=NUMEOSINDEPS){
-    dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
-    myexit(3206884);
-  }
+    // SIMPLEZOOMTABLE
+    i=0;
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN2; i++;
+    }
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN3; i++;
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN4; i++;
+    tablesizeexpected[SIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206884);
+    }
 
+    // EXTRASIMPLEZOOMTABLE
+    i=0;
+    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMEXTRAN1; i++;
+    for(templikeiter=FIRSTTKLIKE;templikeiter<=LASTTKLIKE;templikeiter++){
+      tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMEXTRAN2; i++;
+    }
+    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMEXTRAN3; i++;
+    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMEXTRAN4; i++;
+    tablesizeexpected[EXTRASIMPLEZOOMTABLE][i]=EOSSIMPLEZOOMEXTRAN5; i++;
+    if(i!=NUMEOSINDEPS){
+      dualfprintf(fail_file,"tablesizeexpected(simplezoom) not setup for that many indepdimens: i=%d\n",i);
+      myexit(3206884);
+    }
+
+  }
 
 
 
@@ -581,6 +591,11 @@ void read_setup_eostable(void)
   trifprintf("Setting up Kaz EOS table\n");
 
 
+  trifprintf("SUPER TODO: derivatives need to be computed accounting for LS offsets, which has to be done in Matlab.  For now, derivatives used only for Newton's method, and works fine as is.\n");
+  trifprintf("SUPER TODO: Might want to only go to 1E-10 or so for inversion if doing this EOS.\n");
+  trifprintf("SUPER TODO: Make H calculation with MPI.\n");
+  trifprintf("SUPER TODO: Consider larger radial domain to get H calculation to be consistent with stellar model so Ynu0 is computed better.\n");
+  trifprintf("SUPER TODO: Check and turn on source code that's been turned off so far.\n");
 
 
 
@@ -676,35 +691,35 @@ void read_setup_eostable(void)
     //
     ///////////////////////////////////////////////
 
-#if(ALLOWFULLTABLE)
-    strcpy(headername[FULLTABLE],EOSFULLHEADNAME);
-    strcpy(tablename[FULLTABLE],EOSFULLTABLENAME);
-    strcpy(degentablename[FULLTABLE],EOSFULLTABLEDEGENNAME);
+    if(ALLOWFULLTABLE){
+      strcpy(headername[FULLTABLE],EOSFULLHEADNAME);
+      strcpy(tablename[FULLTABLE],EOSFULLTABLENAME);
+      strcpy(degentablename[FULLTABLE],EOSFULLTABLEDEGENNAME);
+      
+      strcpy(headername[FULLTABLEEXTRA],EOSFULLEXTRAHEADNAME);
+      strcpy(tablename[FULLTABLEEXTRA],EOSFULLTABLEEXTRANAME);
+      strcpy(degentablename[FULLTABLEEXTRA],EOSFULLTABLEEXTRADEGENNAME);
+    }
 
-    strcpy(headername[EXTRAFULLTABLE],EOSEXTRAFULLHEADNAME);
-    strcpy(tablename[EXTRAFULLTABLE],EOSEXTRAFULLTABLENAME);
-    strcpy(degentablename[EXTRAFULLTABLE],EOSEXTRAFULLTABLEDEGENNAME);
-#endif
+    if(ALLOWSIMPLETABLE){
+      strcpy(headername[SIMPLETABLE],EOSSIMPLEHEADNAME);
+      strcpy(tablename[SIMPLETABLE],EOSSIMPLETABLENAME);
+      strcpy(degentablename[SIMPLETABLE],EOSSIMPLETABLEDEGENNAME);
+      
+      strcpy(headername[SIMPLETABLEEXTRA],EOSSIMPLEEXTRAHEADNAME);
+      strcpy(tablename[SIMPLETABLEEXTRA],EOSSIMPLETABLEEXTRANAME);
+      strcpy(degentablename[SIMPLETABLEEXTRA],EOSSIMPLETABLEEXTRADEGENNAME);
+    }
 
-#if(ALLOWSIMPLETABLE)
-    strcpy(headername[SIMPLETABLE],EOSSIMPLEHEADNAME);
-    strcpy(tablename[SIMPLETABLE],EOSSIMPLETABLENAME);
-    strcpy(degentablename[SIMPLETABLE],EOSSIMPLETABLEDEGENNAME);
-
-    strcpy(headername[EXTRASIMPLETABLE],EOSEXTRASIMPLEHEADNAME);
-    strcpy(tablename[EXTRASIMPLETABLE],EOSEXTRASIMPLETABLENAME);
-    strcpy(degentablename[EXTRASIMPLETABLE],EOSEXTRASIMPLETABLEDEGENNAME);
-#endif
-
-#if(ALLOWSIMPLEZOOMTABLE)
-    strcpy(headername[SIMPLEZOOMTABLE],EOSSIMPLEZOOMHEADNAME);
-    strcpy(tablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLENAME);
-    strcpy(degentablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLEDEGENNAME);
-
-    strcpy(headername[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMHEADNAME);
-    strcpy(tablename[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMTABLENAME);
-    strcpy(degentablename[EXTRASIMPLEZOOMTABLE],EOSEXTRASIMPLEZOOMTABLEDEGENNAME);
- #endif
+    if(ALLOWSIMPLEZOOMTABLE){
+      strcpy(headername[SIMPLEZOOMTABLE],EOSSIMPLEZOOMHEADNAME);
+      strcpy(tablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLENAME);
+      strcpy(degentablename[SIMPLEZOOMTABLE],EOSSIMPLEZOOMTABLEDEGENNAME);
+      
+      strcpy(headername[EXTRASIMPLEZOOMTABLE],EOSSIMPLEZOOMEXTRAHEADNAME);
+      strcpy(tablename[EXTRASIMPLEZOOMTABLE],EOSSIMPLEZOOMEXTRATABLENAME);
+      strcpy(degentablename[EXTRASIMPLEZOOMTABLE],EOSSIMPLEZOOMEXTRATABLEDEGENNAME);
+    }
 
 
 
@@ -720,9 +735,9 @@ void read_setup_eostable(void)
 
       // avoid tables not needed since should not expect user has copied or created such tables if not using them
       if(tableiter==FULLTABLE && ALLOWFULLTABLE==0) continue;
-      if(tableiter==EXTRAFULLTABLE && (ALLOWFULLTABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
+      if(tableiter==FULLTABLEEXTRA && (ALLOWFULLTABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
       if(tableiter==SIMPLETABLE && ALLOWSIMPLETABLE==0) continue;
-      if(tableiter==EXTRASIMPLETABLE && (ALLOWSIMPLETABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
+      if(tableiter==SIMPLETABLEEXTRA && (ALLOWSIMPLETABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
       if(tableiter==SIMPLEZOOMTABLE && ALLOWSIMPLEZOOMTABLE==0) continue;
       if(tableiter==EXTRASIMPLEZOOMTABLE && (ALLOWSIMPLEZOOMTABLE==0 || WHICHDATATYPEGENERAL!=4) ) continue;
 
@@ -870,6 +885,8 @@ void read_setup_eostable(void)
 	  // i = (log_b (r-r_0) - x_in)/dx
 	  // 1/dx:=
 	  tablelimits[tableiter][ii][3] = 1.0/tablelimits[tableiter][ii][2];
+	  // but avoid nan or inf from division by zero if no such dimension
+	  if(!isfinite(tablelimits[tableiter][ii][3])) tablelimits[tableiter][ii][3]=0.0;
 
 	}
 	
@@ -902,24 +919,68 @@ void read_setup_eostable(void)
       fscanf(inhead,EOSHEADERONEIN,&fakelsoffset[tableiter]);
       fscanf(inhead,EOSHEADERONEIN,&fakeentropylsoffset[tableiter]);
 
+
+
       // GODMARK: should really read-in from table, although expected tabular value is 9.14Mev and this gives 7.108 for smooth connection for initial conditions
       // GODMARK: The below is for Shen EOS only
       FAKE2IDEALNUCLEAROFFSET[tableiter] = (-7.57E-3);
 
+
+
+
+      /////////////
+      //
+      // Convert "LS" quantities from LS format to KAZ to Matlab format
+      //
+      /////////////
+
+
+
       // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
-      // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correc tunits.
+      // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correct units.
       // ergPmev=1.60218E-6
       //  TRUENUCLEAROFFSET=(9.14*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
       // above gives 9.7346E-3
       //  TRUENUCLEAROFFSET /= (1.0); // need to get code version of energy/baryon however used to add to internal energy
       // assume degen offset accounts for offset, that cannot be put into EOS itself!
       // Now read-in unphysical fakelsoffset used to avoid negative energies is required to reoffset internal energy back so only physical "lsoffset" is included
-      TRUENUCLEAROFFSET[tableiter]=fakelsoffset[tableiter]*ergPmev/(mb*C*C);
+      //      TRUENUCLEAROFFSET[tableiter]=fakelsoffset[tableiter]*ergPmev/energyunit;
+     
+      // i.e. (u/(\rho_0 c^2)) = (u/c^2)/(\rho_0) = (u/c^2)/(m_b n_b) = (u/n_b) 1/(mb c^2), so always divide by $m_b c^2$ in cgs units if original in cgs units
+      TRUENUCLEAROFFSET[tableiter]=(fakelsoffset[tableiter]*ergPmev)/(mb*C*C);
+
+      // fakeentropylsoffset is in dimensionless entropy per baryon=Ss where Sden=1/cc
+      // Ssjon = SJden/(rho0 c^2) = Ssdimenless nb/(rho0 c^2) = Ssdimenless/(mb c^2)
+      TRUEENTROPYNUCLEAROFFSET[tableiter]=fakeentropylsoffset[tableiter]/(mb*C*C);
 
       // degeneracy global offset:
       // ergPmev=1.60218E-6
       //  DEGENNUCLEAROFFSET=(50.0*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
       DEGENNUCLEAROFFSET[tableiter]=0.0; // avoid this approach for now -- try putting in offset into original HELM table first
+
+
+
+      /////////////
+      //
+      // Convert to code units
+      //
+      /////////////
+      TRUENUCLEAROFFSET[tableiter]*=1.0; // already dimensionless
+
+      // nearly dimensionless.  Treat like HARM meaning of specific entropy = Ssjon = Sden/(rho0 c^2)
+      // So treat like SSofCHIin
+      // Then will be like SSofCHIin = Sden/(rho0*c^2)
+      TRUEENTROPYNUCLEAROFFSET[tableiter]/=(1.0/energyunit);
+
+
+
+      // Table has Ss = Sden/(rho c^2) always.
+      // if rho0unittype==0, HARM has specific entropy in Sden/(rho c^2) = Ss/(mb c^2), so just divide by (mb c^2)
+      // if rho0unittype==1, HARM has specific entropy in Sden/(rho) = Ss/(mb), so just divide by (mb)
+      // fakeentropylsoffset is in dimensionless entropy per baryon.  Need to convert to HARM Ss
+      // Ss[harm] = Sden/(rho_0 c^2) = Sden/(mb c^2 nb) = Ss[dimenless]/(mb c^2)
+      // Ss[harm] = Sden/rho_0 = Sden/(mb nb) = Ss[dimenless]/mb
+
 
       //
       ////////////////////////
@@ -1133,11 +1194,11 @@ void read_setup_eostable(void)
 
 
 
-	    if(ii==YEINDEP && whichyelooptype[tableiter]==YELOOPTYPESPECIAL){
+	    if(ii==YEEOS && whichyelooptype[tableiter]==YELOOPTYPESPECIAL){
 	      // then special gridding
 	      lookup_yespecial(tableiter,vartypearray[YEINDEP],indep[ii],&indexcheck);
-	      diff=fabs(indexcheck-(FTYPEEOS)kkk);
-	      if(diff>TABLETOL){
+	      diff=(fabs(indexcheck-(FTYPEEOS)kkk))/(fabs(indexcheck)+fabs((FTYPEEOS)kkk));
+	      if(diff>TABLETOLYEINDEX){
 		dualfprintf(fail_file,"Special Ye grid position not correct: diff=%21.15g kkk=%d indexcheck=%21.15g\n",diff,kkk,indexcheck);
 		myexit(978351235);
 	      }
@@ -1374,7 +1435,13 @@ void read_setup_eostable(void)
       // convert quantities to code units
       //
       //////////////////////////////////////////
-    
+   
+
+      if(TBLLINEARITEMS>TBLITEMS){
+	dualfprintf(fail_file,"Conversion code assumes TBLLINEARITEMS=%d <= TBLITEMS=%d\n",TBLLINEARITEMS,TBLITEMS);
+	myexit(19825625);
+      }
+ 
       for(jj=0;jj<TBLLINEARITEMS;jj++){
 	if(jj!=2){ // log of base has no units conversion, but rest do
 	  if(rho0unittype==0) lineartablelimits[tableiter][RHOEOS][jj]/=rhounit;
@@ -1432,8 +1499,9 @@ void read_setup_eostable(void)
       //      tablelimits[tableiter][HEOS][2]=log10(pow(10.0,tablelimits[tableiter][HEOS][2])/Lunit);
       
       // just recompute the below
-      for(ii=0;ii<NUMEOSINDEPS;ii++){
-	tablelimits[tableiter][jj][3] = ((FTYPEEOS)tablesize[tableiter][ii]-1.0)/(tablelimits[tableiter][ii][1] - tablelimits[tableiter][ii][0]);
+      for(jj=0;jj<NUMEOSINDEPS;jj++){
+	tablelimits[tableiter][jj][3] = ((FTYPEEOS)tablesize[tableiter][jj]-1.0)/(tablelimits[tableiter][jj][1] - tablelimits[tableiter][jj][0]);
+	if(!isfinite(tablelimits[tableiter][jj][3])) tablelimits[tableiter][jj][3]=0.0; // if no such dimension, then reduce step to 0 instead of infinity
       }
 
       // assume base stays same [4]
@@ -1816,6 +1884,14 @@ void read_setup_eostable(void)
   
 
 
+
+  ///////////
+  //
+  // Set some global variables used by rest of non-EOS code
+  //
+  ////////////
+  TRUENUCLEAROFFSETPRIMARY=TRUENUCLEAROFFSET[primarytable];
+
   ///////////
   //
   // tell code that did setup Kaz EOS
@@ -1929,6 +2005,8 @@ static void bcast_kazeos(void)
 
   MPI_Bcast(&FAKE2IDEALNUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&TRUENUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&TRUEENTROPYNUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcast(&TRUENUCLEAROFFSETPRIMARY,1,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
   MPI_Bcast(&DEGENNUCLEAROFFSET,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 
   MPI_Bcast(&lsoffset,NUMTBLS,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
@@ -1974,10 +2052,10 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eosfulltabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSFULLN5*EOSFULLN4*EOSFULLN3*EOSFULLN2*EOSFULLN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 
   // different size for extra table
-  MPI_Bcase(&(BASEEOSMAC(eosfulltableextra,0,0,0,0,0,0,0)),1*EOSEXTRAFULLN5*EOSEXTRAFULLN4*EOSEXTRAFULLN3*EOSEXTRAFULLN2*EOSEXTRAFULLN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextra,0,0,0,0,0,0,0)),1*EOSFULLEXTRAN5*EOSFULLEXTRAN4*EOSFULLEXTRAN3*EOSFULLEXTRAN2*EOSFULLEXTRAN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #if(WHICHDATATYPEGENERAL==4)
-  MPI_Bcase(&(BASEEOSMAC(eosfulltableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRAFULLDEGENN5*EOSEXTRAFULLDEGENN4*EOSEXTRAFULLDEGENN3*EOSEXTRAFULLDEGENN2*EOSEXTRAFULLDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eosfulltableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRAFULLTEMPN5*EOSEXTRAFULLTEMPN4*EOSEXTRAFULLTEMPN3*EOSEXTRAFULLTEMPN2*EOSEXTRAFULLTEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSFULLEXTRADEGENN5*EOSFULLEXTRADEGENN4*EOSFULLEXTRADEGENN3*EOSFULLEXTRADEGENN2*EOSFULLEXTRADEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eosfulltableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSFULLEXTRATEMPN5*EOSFULLEXTRATEMPN4*EOSFULLEXTRATEMPN3*EOSFULLEXTRATEMPN2*EOSFULLEXTRATEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #endif
 
   // simple
@@ -1992,10 +2070,10 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eossimpletabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEN5*EOSSIMPLEN4*EOSSIMPLEN3*EOSSIMPLEN2*EOSSIMPLEN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 
   // different size for extra table
-  MPI_Bcase(&(BASEEOSMAC(eossimpletableextra,0,0,0,0,0,0,0)),1*EOSEXTRASIMPLEN5*EOSEXTRASIMPLEN4*EOSEXTRASIMPLEN3*EOSEXTRASIMPLEN2*EOSEXTRASIMPLEN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextra,0,0,0,0,0,0,0)),1*EOSSIMPLEEXTRAN5*EOSSIMPLEEXTRAN4*EOSSIMPLEEXTRAN3*EOSSIMPLEEXTRAN2*EOSSIMPLEEXTRAN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #if(WHICHDATATYPEGENERAL==4)
-  MPI_Bcase(&(BASEEOSMAC(eossimpletableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRASIMPLEDEGENN5*EOSEXTRASIMPLEDEGENN4*EOSEXTRASIMPLEDEGENN3*EOSEXTRASIMPLEDEGENN2*EOSEXTRASIMPLEDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eossimpletableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRASIMPLETEMPN5*EOSEXTRASIMPLETEMPN4*EOSEXTRASIMPLETEMPN3*EOSEXTRASIMPLETEMPN2*EOSEXTRASIMPLETEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSSIMPLEEXTRADEGENN5*EOSSIMPLEEXTRADEGENN4*EOSSIMPLEEXTRADEGENN3*EOSSIMPLEEXTRADEGENN2*EOSSIMPLEEXTRADEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimpletableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEEXTRATEMPN5*EOSSIMPLEEXTRATEMPN4*EOSSIMPLEEXTRATEMPN3*EOSSIMPLEEXTRATEMPN2*EOSSIMPLEEXTRATEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #endif
 
 
@@ -2012,10 +2090,10 @@ static void bcast_kazeos(void)
   MPI_Bcase(&(BASEEOSMAC(eossimplezoomtabletemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEZOOMN5*EOSSIMPLEZOOMN4*EOSSIMPLEZOOMN3*EOSSIMPLEZOOMN2*EOSSIMPLEZOOMN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
  
   // different size for extra table
-  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextra,0,0,0,0,0,0,0)),1*EOSEXTRASIMPLEZOOMN5*EOSEXTRASIMPLEZOOMN4*EOSEXTRASIMPLEZOOMN3*EOSEXTRASIMPLEZOOMN2*EOSEXTRASIMPLEZOOMN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextra,0,0,0,0,0,0,0)),1*EOSSIMPLEZOOMEXTRAN5*EOSSIMPLEZOOMEXTRAN4*EOSSIMPLEZOOMEXTRAN3*EOSSIMPLEZOOMEXTRAN2*EOSSIMPLEZOOMEXTRAN1*NUMEOSEXTRAQUANTITIESMEM,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #if(WHICHDATATYPEGENERAL==4)
-  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSEXTRASIMPLEZOOMDEGENN5*EOSEXTRASIMPLEZOOMDEGENN4*EOSEXTRASIMPLEZOOMDEGENN3*EOSEXTRASIMPLEZOOMDEGENN2*EOSEXTRASIMPLEZOOMDEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
-  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSEXTRASIMPLEZOOMTEMPN5*EOSEXTRASIMPLEZOOMTEMPN4*EOSEXTRASIMPLEZOOMTEMPN3*EOSEXTRASIMPLEZOOMTEMPN2*EOSEXTRASIMPLEZOOMTEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextradegen,0,0,0,0,0,0,0)),NUMEOSDEGENQUANTITIESMEM1*EOSSIMPLEZOOMEXTRADEGENN5*EOSSIMPLEZOOMEXTRADEGENN4*EOSSIMPLEZOOMEXTRADEGENN3*EOSSIMPLEZOOMEXTRADEGENN2*EOSSIMPLEZOOMEXTRADEGENN1*NUMEOSDEGENQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
+  MPI_Bcase(&(BASEEOSMAC(eossimplezoomtableextratemp,0,0,0,0,0,0,0)),NUMEOSTEMPQUANTITIESMEM1*EOSSIMPLEZOOMEXTRATEMPN5*EOSSIMPLEZOOMEXTRATEMPN4*EOSSIMPLEZOOMEXTRATEMPN3*EOSSIMPLEZOOMEXTRATEMPN2*EOSSIMPLEZOOMEXTRATEMPN1*NUMEOSTEMPQUANTITIESMEM2,MPI_FTYPEEOS,MPIid[0],MPI_COMM_GRMHD);
 #endif
 
 #endif // end if(WHICHEOS==KAZFULL)
@@ -2051,7 +2129,7 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   if(WHICHDATATYPEGENERAL==4){
     if(
        ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for all non-extras in normal table
-       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for temperature in extra table
+       ((whichtable==FULLTABLEEXTRA || whichtable==SIMPLETABLEEXTRA || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for temperature in extra table
        (whichdegen==1)
        ){
       // then table not storing mmm or lll, so set to zero
@@ -2066,7 +2144,7 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE || whichtable==EXTRAFULLTABLE){
+  else if(whichtable==FULLTABLE || whichtable==FULLTABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
 
       if(whichtable==FULLTABLE){
@@ -2155,7 +2233,7 @@ static void set_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   }
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE || whichtable==EXTRASIMPLETABLE){
+  else if(whichtable==SIMPLETABLE || whichtable==SIMPLETABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
 
       if(whichtable==SIMPLETABLE){
@@ -2375,7 +2453,7 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   if(WHICHDATATYPEGENERAL==4){
     if(
        ((whichtable==FULLTABLE || whichtable==SIMPLETABLE || whichtable==SIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for all non-extras in normal table
-       ((whichtable==EXTRAFULLTABLE || whichtable==EXTRASIMPLETABLE || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for temperature in extra table
+       ((whichtable==FULLTABLEEXTRA || whichtable==SIMPLETABLEEXTRA || whichtable==EXTRASIMPLEZOOMTABLE) && (incol<FIRSTEXTRAin || incol>LASTEXTRAin)) || // for temperature in extra table
        (whichdegen==1)
        ){
       // then table not storing mmm or lll, so set to zero
@@ -2390,7 +2468,7 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE || whichtable==EXTRAFULLTABLE){
+  else if(whichtable==FULLTABLE || whichtable==FULLTABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
 
       if(whichtable==FULLTABLE){
@@ -2479,7 +2557,7 @@ static void get_arrays_eostable(int whichdegen, int whichtable, int mmm, int lll
   }
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE || whichtable==EXTRASIMPLETABLE){
+  else if(whichtable==SIMPLETABLE || whichtable==SIMPLETABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
 
       if(whichtable==SIMPLETABLE){

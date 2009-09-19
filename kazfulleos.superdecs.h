@@ -10,4 +10,4 @@ extern FTYPE PTRDEFGLOBALMACP0A1(EOSextraglobal,N1M,N2M,N3M,NUMEOSGLOBALS);
 ///////////
 // global! :
 // was in kazfulleos.decs.h, but there is no decs version of that created
-FTYPEEOS TRUENUCLEAROFFSET[NUMTBLS];
+FTYPEEOS TRUENUCLEAROFFSETPRIMARY;

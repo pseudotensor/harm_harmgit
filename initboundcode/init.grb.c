@@ -795,7 +795,7 @@ int init_global(void)
   gamideal=4.0/3.0; // ideal gas EOS index to use if off table
 
   // below assumes tabulated EOS has minimum internal energy of zero, which is approximately correct currently.
-  zerouuperbaryon=-TRUENUCLEAROFFSET; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
+  zerouuperbaryon=-TRUENUCLEAROFFSETPRIMARY; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
 
 
   cooling=0;

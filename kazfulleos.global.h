@@ -15,11 +15,18 @@
 //
 ///////////////////////////////
 
+
+
+// SUPERNOTE: If turn on off ALLOW????TABLE, then probably need to change kazfulleos.c:which_eostable() since particular to types of tables and not general!
+
+// SUPERNOTE: Also should ensure EOS???N? are correct in kazfulleos.global.tablesizes.h
+
+
 // whether to allow use of full table (if 0, then others must be turned on)
 #define ALLOWFULLTABLE 1
 
 // whether to only use full table (0) for allow use of simple tables if can (1)
-#define ALLOWSIMPLETABLE 0
+#define ALLOWSIMPLETABLE 1
 
 // whether to use simplezoom table if can
 // zoom not needed anymore with new degen offset method
@@ -123,6 +130,9 @@
 
 // tolerance for checks on input values of table
 #define TABLETOL (1E-14)
+
+// tolerance for ye index check
+#define TABLETOLYEINDEX (1E-13)
 
 // tolerance for truncation error-level checks
 // beyond 30% accuracy start reporting issues

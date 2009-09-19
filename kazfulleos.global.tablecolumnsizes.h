@@ -96,6 +96,8 @@
 #define CHIDIFF  (CHIEOS-1) // :2
 #define STOTDIFF (SEOS-1)   // :3
 
+#define SSPECTOTDIFF (STOTDIFF+1) // :4 : just label, not used except as label and not used for memory items since nothing is function of SSPECTOTDIFF
+
 // fastest indexed quantities in degen table
 #define NUMEOSDEGENQUANTITIESMEM2 (3)
 // table is accessed via: (like) r= R0 + exp(x1[i]), with r ranging from Rin to Rout, then:
@@ -287,17 +289,19 @@
 // assume degen table is always stored along with corresponding normal table
 #if(ALLOWFULLTABLE&&ALLOWSIMPLETABLE&&ALLOWSIMPLEZOOMTABLE)
 #define NUMTBLS 6
-#elif(ALLOWFULLTABLE)
+#elif(ALLOWFULLTABLE&&ALLOWSIMPLETABLE==0&&ALLOWSIMPLEZOOMTABLE==0)
 #define NUMTBLS 2 // more memory friendly
+#elif(ALLOWFULLTABLE&&ALLOWSIMPLETABLE&&ALLOWSIMPLEZOOMTABLE==0)
+#define NUMTBLS 4 // more memory friendly
 #else
 #error "No setup for NUMTBLS"
 #endif
 
 #define NOTABLE (-1) // just used to indicate no table setup, not to be iterated over, so don't include in NUMTBLS
 #define FULLTABLE 0
-#define EXTRAFULLTABLE 1
+#define FULLTABLEEXTRA 1
 #define SIMPLETABLE 2
-#define EXTRASIMPLETABLE 3
+#define SIMPLETABLEEXTRA 3
 #define SIMPLEZOOMTABLE 4
 #define EXTRASIMPLEZOOMTABLE 5
 

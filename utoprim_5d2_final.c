@@ -59,7 +59,7 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
 
 ******************************************************************/
 
-int Utoprim_5d2_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE prim[NPR], struct of_newtonstats *newtonstats)
+int Utoprim_5d2_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE prim_tmp[NPR], gamma_tmp, qsq_tmp;
@@ -107,6 +107,10 @@ int Utoprim_5d2_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  F
 
   // Solve the 5D linear system with Newton's method:
   ret = general_newton_raphson(prim_tmp, NPRINVERT, USE_LINE_SEARCH, func_5d2, res_sq_5d);
+
+
+  *pressure=pressure_rho0_u(whicheos,EOSextra,prim_tmp[RHO],prim_tmp[UU]);
+
 
 
   if( ret ){

@@ -19,7 +19,7 @@ static int whicheos; // global with file scope
 
 // Declarations: 
 static FTYPE vsq_calc(FTYPE W);
-static int Utoprim_new_body(FTYPE U[], struct of_geom *ptrgeom,  FTYPE prim[]);
+static int Utoprim_new_body(FTYPE U[], struct of_geom *ptrgeom,  FTYPE prim[], FTYPE *pressure);
 static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);
 static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);
 static void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ;
@@ -52,7 +52,7 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
 
 ******************************************************************/
 
-int Utoprim_2d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE prim[NPR], struct of_newtonstats *newtonstats)
+int Utoprim_2d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE U_tmp[NPR], U_tmp2[NPR], prim_tmp[NPR];
@@ -103,14 +103,13 @@ int Utoprim_2d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FT
 
 
   /* Calculate the transform the PRIMITIVE variables into the new system */
-  for( i = 0; i < BCON1; i++ ) {
-    prim_tmp[i] = prim[i];
-  }
+  PALLLOOP(i) prim_tmp[i] = prim[i];
+
   for( i = BCON1; i <= BCON3; i++ ) {
     prim_tmp[i] = alpha*prim[i];
   }
 
-  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp);
+  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp, pressure);
 
   /* Check conservative variable transformation: */
 #if(!OPTIMIZED)
@@ -177,7 +176,7 @@ prim.
 
 **********************************************************************************/
 
-static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR])
+static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], FTYPE *pressure)
 {
   FTYPE Wtest;
 
@@ -272,6 +271,9 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   rho0 = D / gamma ;
   u = prim[UU] ;
   p = pressure_rho0_u(WHICHEOS, EOSextra,rho0,u) ;
+
+  *pressure=p;
+
   w = rho0 + u + p ;
 
   W_last = w*gammasq ;

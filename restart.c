@@ -701,6 +701,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx1,sizeof(int), "%d", 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx2,sizeof(int), "%d", 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx3,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dofull2pi,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&binaryoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sortedoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcon,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);

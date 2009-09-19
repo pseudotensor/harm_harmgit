@@ -163,7 +163,7 @@ static void interp_readcommandlineargs(int argc, char *argv[])
     for(i=0;i<argc;i++){
       fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
     }
-    fprintf(stderr,"args (argc=%d should be 27+ (26+ user args)): DATATYPE,INTERPTYPE,READHEADER,WRITEHEADER,oN1,oN2,oN3,refinefactor,filter,sigma,oldgridtype,newgridtype,nN1,nN2,nN3,startxc,endxc,startyc,endyc,startzc,endzc,Rin,Rout,R0,hslope,defcoord\n",argc) ; 
+    fprintf(stderr,"args (argc=%d should be 27+ (26+ user args)): DATATYPE,INTERPTYPE,READHEADER,WRITEHEADER,oN1,oN2,oN3,refinefactor,filter,sigma,oldgridtype,newgridtype,nN1,nN2,nN3,startxc,endxc,startyc,endyc,startzc,endzc,Rin,Rout,R0,hslope,defcoord,dofull2pi\n",argc) ; 
 
     fprintf(stderr,"DATATYPE:\n"
 	    "0=image (byte binary only, 1 column only)\n"
@@ -203,6 +203,7 @@ static void interp_readcommandlineargs(int argc, char *argv[])
     fprintf(stderr,"R0: Radial inner-grid enhancement factor\n");
     fprintf(stderr,"hslope: theta grid refinement factor\n");
     fprintf(stderr,"defcoord: which coordinate system (see coord.c)\n");
+    fprintf(stderr,"dofull2pi: whether to do full 2pi or not (see coord.c)\n");
     fprintf(stderr,"extrapolate: 0 = no, 1 = yes\n");
     fprintf(stderr,"defaultvaluetype: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
     fprintf(stderr,"gdumpfilepathname : only if vector type\n");
@@ -323,6 +324,7 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   sscanf(argv[i++],SCANARG,&R0) ;
   sscanf(argv[i++],SCANARG,&hslope) ;
   sscanf(argv[i++],"%d",&defcoord) ;
+  sscanf(argv[i++],"%d",&dofull2pi) ;
 
   // conditionally read-in things (all in or out)
   getgdump=0;
@@ -431,7 +433,7 @@ static void setup_zones(void)
   a=spin;
   Rhor=rhor_calc(0);
 
-  fprintf(stderr,"defcoord=%d Rin=%g R0=%g\n",defcoord,Rin,R0);
+  fprintf(stderr,"defcoord=%d Rin=%g R0=%g dofull2pi=%d\n",defcoord,Rin,R0,dofull2pi);
 
   fprintf(stderr,"startx,Xmax,dX: %g %g %g :: %g %g %g :: %g %g %g\n",startx[1],Xmax[1],dX[1],startx[2],Xmax[2],dX[2],startx[3],Xmax[3],dX[3]) ; fflush(stderr);
 
@@ -627,7 +629,7 @@ static void input_header(void)
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
     fscanf(stdin, SCANHEADER,
-	   &t,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke);
+	   &t,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns);
 
 
 
@@ -641,7 +643,7 @@ static void input_header(void)
 
   // print header from file
   fprintf(stderr, PRINTSCANHEADER,
-	  t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+	  t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 
 
 }
@@ -658,8 +660,8 @@ static void output_header(void)
   //
   //////////////////////////
   fprintf(stderr,"header:\n");
-  fprintf(stderr, "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d\n",
-	  t,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+  fprintf(stderr, "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
+	  t,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
   fprintf(stderr, "NEW: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g\n",nN1,nN2,nN3,Xmax[1],Xmax[2],Xmax[3],fakedxc,fakedyc,fakedzc);
   fprintf(stderr, "OTHER: %22.16g %22.16g %22.16g %22.16g\n",fakeRin,dxc,dyc,dzc);
    
@@ -668,8 +670,8 @@ static void output_header(void)
     if(DATATYPE==1){
       // print out a header
       ftemp=0.0;
-      fprintf(stdout, "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d\n",
-	      t, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke);
+      fprintf(stdout, "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
+	      t, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
     }
   }
 

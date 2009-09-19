@@ -390,7 +390,6 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 
 
 
-
   /////////////////////////////
   //
   // Set analytics
@@ -466,6 +465,23 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 #endif
 
   if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+
+
+
+  /////////////////////////////
+  //
+  // Set EOSextras related to keeping table result consistent
+  //
+  /////////////////////////////// 
+
+  if(WHICHEOS==KAZFULL){
+    FULLLOOP{
+      // then store pressure
+      // assume standard inversion at loc=CENT
+      GLOBALMACP0A1(EOSextraglobal,i,j,k,PGASGLOBAL)=pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+    }
+  }
+
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);

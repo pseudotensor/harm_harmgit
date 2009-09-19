@@ -483,13 +483,15 @@ god=deathadflkjasdflkjasdlfkja242424
 
 /* numerical convenience */
 #if(REALTYPE==FLOATTYPE)
-#define VERYBIG (1.e30)
+#define VERYBIG (1.e37)
+#define BIG (1.e+35)
+#define SMALL	(1.e-35)
 #else
 #define VERYBIG (1.e150)
+#define BIG (1.e+300)
+#define SMALL	(1.e-300)
 #endif
 
-#define BIG (1.e+50)
-#define SMALL	(1.e-50)
 
 #define SLEPSILON (1.e-6)
 

@@ -33,3 +33,5 @@
 #define USE_LINE_SEARCH -2
 
 #define MAX_NEWT_RETRIES 0    /*Max. # of retries of N-R procedure, while increasing guess for W by *10 after each time*/
+
+

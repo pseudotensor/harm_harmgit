@@ -38,8 +38,9 @@
 #define UNUGLOBAL (H4GLOBAL+1)       // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define PNUGLOBAL (UNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define SNUGLOBAL (PNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
+#define PGASGLOBAL (SNUGLOBAL+1) // Pgas -- used because want to use consistent lookup of pressure instead of using p(rho0,u) mixed with p(rho0,chi).  Since inversion forces p(rho0,chi), generally stay consistent with chi version by storing it and using it later for phys.tools.c
 // below 3 used to indicate position if EOS coming from grid
-#define IGLOBAL (SNUGLOBAL+1)
+#define IGLOBAL (PGASGLOBAL+1)
 #define JGLOBAL (IGLOBAL+1)
 #define KGLOBAL (JGLOBAL+1)
 
@@ -51,6 +52,5 @@
 
 // NOTE: must be in same order and number as EOS independent vars
 // number of per CPU position-based data for EOS
-//#define NUMEOSGLOBALS (1+3+4+3+3)
 #define NUMEOSGLOBALS (LASTEOSGLOBAL-FIRSTEOSGLOBAL+1)
 #define MAXPARLIST (NUMEOSGLOBALS) // for get_EOS_parms()

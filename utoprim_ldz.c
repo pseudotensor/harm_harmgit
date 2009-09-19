@@ -37,7 +37,7 @@ static PFTYPE *glpflag; // global pflag for local file
 
 
 /* pr *MUST* contain initial guess */
-int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, struct of_newtonstats *newtonstats)
+int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE alpha, beta[NDIM], Tcov[NDIM], Tcon[NDIM];
@@ -184,6 +184,9 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, st
   gamma = 1. / sqrt(1. - vsq);
   pr[RHO] = Dc / gamma;
   pr[UU] = ((1. - vsq) * W - pr[RHO]) / gam;
+
+
+  *pressure = (gam-1.0)*pr[UU]; // ideal gas only allowed
 
   // check densities for positivity
   if((pr[RHO]<0.0)||(pr[UU]<0.0)){

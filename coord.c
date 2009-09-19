@@ -541,7 +541,7 @@ void write_coord_parms(int defcoordlocal)
     else{
 
       // same for all coords (notice no carraige return)
-      fprintf(out,"%21.15g %21.15g %21.15g %21.15g ",R0,Rin,Rout,hslope);
+      fprintf(out,"%21.15g %21.15g %21.15g %21.15g %d ",R0,Rin,Rout,hslope,dofull2pi);
 
       if (defcoordlocal == LOGRSINTH) {
       }
@@ -636,7 +636,7 @@ void read_coord_parms(int defcoordlocal)
     else{
       // don't want to overwrite since restart file sets this
       //      fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
-      fscanf(in,HEADER4IN,&ftemp,&ftemp,&ftemp,&ftemp);
+      fscanf(in,HEADER5IN,&ftemp,&ftemp,&ftemp,&ftemp,&ftemp);
 
       if (defcoordlocal == LOGRSINTH) {
       }
@@ -713,6 +713,7 @@ void read_coord_parms(int defcoordlocal)
   MPI_Bcast(&Rin, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&Rout, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&hslope, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&dofull2pi, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
 
   if (defcoordlocal == LOGRSINTH) {
   }

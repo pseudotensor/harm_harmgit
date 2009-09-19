@@ -77,7 +77,7 @@ static void bcon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE ucon[NDIM],FTYPE ucov[NDIM
 static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM]) ;
 static void ncov_calc(FTYPE g00,FTYPE ncov[NDIM]) ;
 static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM]) ;
-static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR]);
+static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], FTYPE *pressure);
 static void ucon_calc_g(FTYPE prim[MYNPRINVERT],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM]) ;
 
 static FTYPE pressure_rho0_u_1dopt(FTYPE rho0, FTYPE u) ;

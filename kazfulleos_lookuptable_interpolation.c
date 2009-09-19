@@ -1088,7 +1088,8 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
 	if(tdist[coli][genpi]!=0.0){ // only do if found good temperature (and can't be badlookup)
-	  tfptr[coli][genpi] /= tdist[coli][genpi];
+	  //	  tfptr[coli][genpi] /= tdist[coli][genpi];
+	  // already normalized properly (old wrong normalization)
 	}
       } // end iffun==1
     }//end over coli
@@ -1232,14 +1233,16 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
     kazdl[0]=1.0-kazdl[1];
     kazdm[1]=meos-(FTYPEEOS)kazmm;
     kazdm[0]=1.0-kazdm[1];
-
-
+    
   }
 
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
   // only extra table is function of Ynu or H if whichdatatype==4
   if(WHICHDATATYPEGENERAL==4 && (whichtablesubtype!=SUBTYPEEXTRA)){leos=meos=kazll=kazmm=kazdl[1]=kazdm[1]=kazendlll=kazendmmm=0; kazdl[0]=kazdm[0]=1.0;}
   if(whichtablesubtype==SUBTYPEDEGEN){jeos=kazjj=kazdj[1]=kazendjjj=0; kazdj[0]=1.0;}
+
+
+    
 
 
 
@@ -1267,6 +1270,17 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
   LOOPOVERKAZINDEX{
 
 
+
+    //      // DEBUG:
+    //      for(coli=0;coli<numcols;coli++){
+    //	if(iffun[coli]){
+    //      	  if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g meos=%21.15g :: kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d : kazdi[%d]=%21.15g kazdj[%d]=%21.15g kazdk[%d]=%21.15g kazdl[%d]=%21.15g kazdm[%d]=%21.15g\n",coli,ieos,jeos,keos,leos,meos,kazii,kazjj,kazkk,kazll,kazmm,iii,kazdi[iii],jjj,kazdj[jjj],kkk,kazdk[kkk],lll,kazdl[lll],mmm,kazdm[mmm]);
+    //	}
+    //      }
+
+
+
+
 #if(CHECKIFVALIDEOSDATA)
     if(degentable==0){
       // don't use values of table that have no inversion to temperature
@@ -1284,12 +1298,15 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
       // get distance to value
       dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm];
 
-	//      // DEBUG:
-	//      for(coli=0;coli<numcols;coli++){
-	//	if(iffun[coli]){
-	//	  if(whichtablesubtype==SUBTYPEEXTRA && coli==1) dualfprintf(fail_file,"dist=%21.15g : ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g meos=%21.15g :: kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d : kazdi[%d]=%21.15g kazdj[%d]=%21.15g kazdk[%d]=%21.15g kazdl[%d]=%21.15g kazdm[%d]=%21.15g answer=%21.15g\n",dist,ieos,jeos,keos,leos,meos,kazii,kazjj,kazkk,kazll,kazmm,iii,kazdi[iii],jjj,kazdj[jjj],kkk,kazdk[kkk],lll,kazdl[lll],mmm,kazdm[mmm],tempanswers[coli]);
-	//	}
-	//      }
+
+
+      //      // DEBUG:
+      //      for(coli=0;coli<numcols;coli++){
+      //	if(iffun[coli]){
+      //      	  if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: dist=%21.15g : answer=%21.15g tempcheck=%21.15g\n",coli,dist,tempanswers[coli],tempcheck);
+      //    }
+      //      }
+
 
 
       // non-pipelined section:
@@ -1360,7 +1377,9 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
       else{
 
 	// get normalized answer
-	answers[coli] = totalanswers[coli]/totaldist[coli];
+	//	answers[coli] = totalanswers[coli]/totaldist[coli];
+	// true normalization for multid-linear interpolation
+	answers[coli] = totalanswers[coli];
 
 	// invert log interpolation
 	// either prelogify or not, we have to unlogify if should have logified
@@ -1762,7 +1781,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE||whichtable==EXTRAFULLTABLE){
+  else if(whichtable==FULLTABLE||whichtable==FULLTABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==FULLTABLE){
@@ -1780,7 +1799,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// in principle can request degen data directly, so allow this
 	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==EXTRAFULLTABLE){
+      else if(whichtable==FULLTABLEEXTRA){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
 	// in principle can request degen data directly, so allow this
@@ -1793,14 +1812,14 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       if(whichtable==FULLTABLE){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==EXTRAFULLTABLE){
+      else if(whichtable==FULLTABLEEXTRA){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if fulltable
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE||whichtable==EXTRASIMPLETABLE){
+  else if(whichtable==SIMPLETABLE||whichtable==SIMPLETABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==SIMPLETABLE){
@@ -1818,7 +1837,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// in principle can request degen data directly, so allow this
 	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==EXTRASIMPLETABLE){
+      else if(whichtable==SIMPLETABLEEXTRA){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
 	// in principle can request degen data directly, so allow this
@@ -1831,14 +1850,14 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       if(whichtable==SIMPLETABLE){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==EXTRASIMPLETABLE){
+      else if(whichtable==SIMPLETABLEEXTRA){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if simpletable
 #endif
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE||whichtable==EXTRASIMPLEZOOMTABLE){
+  else if(whichtable==SIMPLEZOOMTABLE||whichtable==SIMPLEZOOMEXTRATABLE){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==SIMPLEZOOMTABLE){
@@ -1856,7 +1875,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 	// in principle can request degen data directly, so allow this
 	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==EXTRASIMPLEZOOMTABLE){
+      else if(whichtable==SIMPLEZOOMEXTRATABLE){
 	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
 	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
 	// in principle can request degen data directly, so allow this
@@ -1869,7 +1888,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
       if(whichtable==SIMPLEZOOMTABLE){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==EXTRASIMPLEZOOMTABLE){
+      else if(whichtable==SIMPLEZOOMEXTRATABLE){
 	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
@@ -1910,27 +1929,27 @@ static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, i
   else if(whichtable==FULLTABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if fulltable
-  else if(whichtable==EXTRAFULLTABLE){
+  else if(whichtable==FULLTABLEEXTRA){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
-  }// end if extrafulltable
+  }// end if fulltableextra
 #endif
   // simple table is just copy-paste from full table with fulltable->simpletable
 #if(ALLOWSIMPLETABLE==1)
   else if(whichtable==SIMPLETABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simpletable
-  else if(whichtable==EXTRASIMPLETABLE){
+  else if(whichtable==SIMPLETABLEEXTRA){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
-  }// end if extrasimpletable
+  }// end if simpletableextra
 #endif
   // simplezoom table is just copy-paste from full table with fulltable->simplezoomtable
 #if(ALLOWSIMPLEZOOMTABLE==1)
   else if(whichtable==SIMPLEZOOMTABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simplezoomtable
-  else if(whichtable==EXTRASIMPLEZOOMTABLE){
+  else if(whichtable==SIMPLEZOOMEXTRATABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
-  }// end if extrasimplezoomtable
+  }// end if simplezoomextratable
 #endif
 
 

@@ -19,7 +19,7 @@ static int ifileglobal,jfileglobal,kfileglobal,pfileglobal;
 
 
 // Main function called:
-static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], struct of_newtonstats *newtonstats);
+static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats);
 
 // Metric-related things:
 static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);
@@ -110,7 +110,7 @@ static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, F
 static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, FTYPE *Bsq,FTYPE *QdotB,FTYPE *QdotBsq,FTYPE *Qtsq,FTYPE *Qdotn,FTYPE *Qdotnp,FTYPE *D, FTYPE *Sc, int whicheos, FTYPE *EOSextra);
 static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
@@ -133,7 +133,7 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
 ******************************************************************/
 
 // The ONLY global function:
-int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE *U, struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, struct of_newtonstats *newtonstats)
+int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE *U, struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE U_tmp[NPR], U_tmp2[NPR], prim_tmp[NPR];
@@ -294,16 +294,12 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   // Calculate the transform the PRIMITIVE variables into the new system
   //
   /////////////
-  for( i = 0; i <=U3; i++ ) {
-    prim_tmp[i] = prim[i];
-  }
-  for( i = BCON1; i <= BCON3; i++ ) {
-    prim_tmp[i] = alpha*prim[i];
-  }
-#if(DOENTROPY!=DONOENTROPY)
-  i=ENTROPY;
-  prim_tmp[i] = prim[i] ;
-#endif
+
+  // default is to treat all quantities as scalars
+  // Note that n eed PALLLOOP here since while not setting all quantities, may use all quantities
+  PALLLOOP(i) prim_tmp[i] = prim[i];
+  // field
+  for( i = BCON1; i <= BCON3; i++ ) prim_tmp[i] = alpha*prim[i];
 
 
 
@@ -312,7 +308,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   // Perform the inversion from U -> P
   //
   /////////////
-  ret = Utoprim_new_body(eomtype, lpflag, whicheos,EOSextra, U_tmp, ptrgeom, prim_tmp,newtonstats);
+  ret = Utoprim_new_body(eomtype, lpflag, whicheos,EOSextra, U_tmp, ptrgeom, prim_tmp,pressure,newtonstats);
 
 
 
@@ -332,7 +328,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
     }
     dualfprintf(fail_file,"gdet = %21.15g \n", ptrgeom->g);
     //    primtoU_g(ptrgeom, prim_tmp, gcov, gcon, U_tmp2 ); 
-    //    for( i = 0; i < NPR; i++ ) {
+    //    PALLLOOP(i){
     //      dualfprintf(fail_file, "Utoprim_1d(): Utmp1[%d] = %21.15g , Utmp2[%d] = %21.15g , dUtmp[%d] = %21.15g \n", 
     //	       i, U_tmp[i], i, U_tmp2[i], i, fabs( (U_tmp[i]-U_tmp2[i]) / ( (U_tmp2[i]!=0.) ? U_tmp2[i] : 1. ) )  ); 
     //    }
@@ -347,9 +343,8 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   //
   ///////////
   if( ret == 0 ) {
-    for( i = 0; i <=U3; i++ ) {
-      prim[i] = prim_tmp[i];
-    }
+    // only changed RHO through U3
+    for( i = 0; i <=U3; i++ ) prim[i] = prim_tmp[i];
   }
   else{
     // ensure failure reported if ret!=0
@@ -408,7 +403,7 @@ prim.
 
 **********************************************************************************/
 
-static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], struct of_newtonstats *newtonstats)
+static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
   FTYPE Qconp[NDIM],Qcovp[NDIM];
   FTYPE Qtcon[4],Bcon[4],Bcov[4];
@@ -441,7 +436,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 #if(!OPTIMIZED)
   if( ltrace ) {
-    for(i=0;i<8;i++) dualfprintf(fail_file,"%d %21.15g %21.15g\n",i,prim[i],U[i]) ;
+    for(i=0;i<NPR;i++) dualfprintf(fail_file,"%d %21.15g %21.15g\n",i,prim[i],U[i]) ;
     
   }
 #endif
@@ -700,7 +695,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
     // find solution
-    retval+=Wp2prim(lpflag, eomtype,prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+    retval+=Wp2prim(lpflag, eomtype,prim, pressure, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
     if(retval) return(retval);
   }
 
@@ -940,7 +935,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   //   i.e. you don't get positive values for dP/d(vsq) . 
   rho0 = (D) / gamma ;
   u = prim[UU] ;
-  p = pressure_rho0_u(whicheos,EOSextra,rho0,u) ;
+  p = pressure_rho0_u(whicheos,EOSextra,rho0,u) ; // p(rho0,u) just used for guess, while p(rho0,\chi) used to get solution since assume don't know \chi yet.  Even if had initial \chi, wouldn't be final \chi anyways.
   w = rho0 + u + p ;
 
   // need b^2 to normalize W since error in W limited by b^2
@@ -962,6 +957,14 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   nuabs = fabs(u) + fabs(p) + fabs(bsq);
   etaabs = fabs(rho0) + nuabs; 
   wglobal[2]=GAMMASQCHECKRESID * fabs(rho0);
+
+
+  // DEBUG:
+  //dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
+  //int pl; PALLLOOP(pl) dualfprintf(fail_file,"DEBUG2: prim[%d]=%21.15g\n",pl,prim[pl]);
+  //for(pl=FIRSTEOSGLOBAL;pl<=LASTEOSGLOBAL;pl++) dualfprintf(fail_file,"DEBUG3: EOSextra[%d]=%21.15g\n",pl,EOSextra[pl]);
+
+
   
   //  *wglobal=w+bsq; // used to validate normalized version of W
   
@@ -1306,7 +1309,7 @@ static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, F
 
 
 
-static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE W,vsq;
   FTYPE utsq;
@@ -1448,6 +1451,9 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of
   //  u = w - (rho0 + p) ;
   u = wmrho0-p;
 
+
+  *pressure=p; // return pressure since may be non-trivial to obtain from p(rho0,u) or inconsistent with p(rho0,\chi) if computed otherwise
+
 //  if((nstep==4)&&(ptrgeom->i==0)&&(ptrgeom->j==47)){
 //  dualfprintf(fail_file,"Wp=%g W=%g D=%g vsq=%g gamma=%g wmrho0=%g p=%g u=%g\n",Wp,W,D,vsq,gamma,wmrho0,p,u);
     //    exit(0);
@@ -1457,7 +1463,7 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of
   // GODMARK
   // fix checks for cold case
   if( (rho0 <= 0.) 
-      || ((u < 0.)&&(eomtype!=EOMCOLDGRMHD))
+      || ((p < 0.)&&(eomtype!=EOMCOLDGRMHD))
       ) { 
     if( debugfail>=2 ) {
       tmpdiff = w - rho0;
@@ -3168,7 +3174,12 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     // get Scprime
     //
     /////////////////
-    Scprime = Wp*(-Sc + D*Ssofchi);
+    // old residual
+    Scprime = -Sc + D*Ssofchi;
+
+    // new residual (problem near Wp=0 of course that could diverge to Wp=0 and be wrong solution. Was using this "new" residual to help reach solution faster, but in general doesn't help so much and hurts since sometimes with tabulated EOS reaches Wp=0 and results in bad inversion.)
+    // Also, for tabulated EOS, new residual more complicated and error doesn't drop.  Even though old residual has many iterations like new residual, at least old residual has very small error.  This is probably because derivative is not exactly consistent with function in the tabulated EOS yet both are used in the derivative expression.
+    //////Scprime = Wp*(-Sc + D*Ssofchi);
 
 
     if(Ssofchi!=Ssofchi || Scprime!=Scprime) Scprime=-VERYBIG; // indicates still problem
@@ -3198,10 +3209,10 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     //
     ///////////////////////
     // old result for old residual
-    ////   dScprimedWp = D*dSsdWp;
+    dScprimedWp = D*dSsdWp;
     
     // new result for new residual
-    dScprimedWp = -Sc + D*(dSsdWp*Wp + Ssofchi);
+    ////////dScprimedWp = -Sc + D*(dSsdWp*Wp + Ssofchi);
 
     // check for nan
     if(dvsq!=dvsq || dSsdW!=dSsdW || dSsdvsq!=dSsdvsq || dSsdWp!=dSsdWp || dScprimedWp!=dScprimedWp) dScprimedWp=0.0; // indicates still problem
@@ -3805,7 +3816,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   const int ltrace2 = 1;
   int it;
   int foundnan;
-  int diddamp;
+  int diddamp=0;
   void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
@@ -3842,6 +3853,12 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
     (newtonstats->lntries)++;
 
 
+    if((int)(newtonstats->lntries) > ITERDAMPSTART && diddamp==0){
+      for( id = 0; id < n ; id++) DAMPFACTOR[id]=0.5; // Jon's mod: try to catch bad closed loop cycles that can occur, e.g., when cubic type behavior
+    }
+
+
+
 #if(CRAZYDEBUG&&DEBUGINDEX)
   // DEBUG:
   if(ifileglobal==0 && jfileglobal==63 && nstep==9 && steppart==2){
@@ -3854,8 +3871,9 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   (*funcd) (x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
+
   // DEBUG:
-  //for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx);
+  //  for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g diddamp=%d dampfactor=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it]);
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)

@@ -17,7 +17,7 @@
 
 
 /* pr *MUST* contain initial guess */
-int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, struct of_newtonstats *newtonstats)
+int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
   FTYPE U_target[NPR];
   FTYPE pr0[NPR];
@@ -528,6 +528,10 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 	return (1);
     }
   }
+
+
+
+  *pressure=pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),pr[RHO],pr[UU]);
 
 
 

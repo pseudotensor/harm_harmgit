@@ -17,7 +17,7 @@ static int whicheos; // global with file scope
 
 // Declarations: 
 static FTYPE vsq_calc(FTYPE W);
-static int Utoprim_new_body(FTYPE U[], struct of_geom *ptrgeom,  FTYPE prim[]);
+static int Utoprim_new_body(FTYPE U[], struct of_geom *ptrgeom,  FTYPE prim[], FTYPE *pressure);
 
 static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n);
 
@@ -63,7 +63,7 @@ static FTYPE dvsq_dW(FTYPE W);
 
 ******************************************************************/
 
-int Utoprim_1d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE prim[NPR], struct of_newtonstats *newtonstats)
+int Utoprim_1d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
 
@@ -108,14 +108,13 @@ int Utoprim_1d_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FT
   }
 
   /* transform the PRIMITIVE variables into the new system */
-  for( i = 0; i < BCON1; i++ ) {
-    prim_tmp[i] = prim[i];
-  }
+  PALLLOOP(i) prim_tmp[i] = prim[i];
+
   for( i = BCON1; i <= BCON3; i++ ) {
     prim_tmp[i] = alpha*prim[i];
   }
 
-  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp);
+  ret = Utoprim_new_body(U_tmp, ptrgeom, prim_tmp, pressure);
 
   /* Check conservative variable transformation: */
 #if(!OPTIMIZED)
@@ -182,7 +181,7 @@ prim.
 
 **********************************************************************************/
 
-static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR])
+static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[NPR], FTYPE *pressure)
 {
   FTYPE Wtest;
 
@@ -263,6 +262,10 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   rho0 = D / gamma ;
   u = prim[UU] ;
   p = pressure_rho0_u(WHICHEOS,EOSextra,rho0,u) ;
+
+  *pressure=p;
+
+
   w = rho0 + u + p ;
 
   W_last = w*gammasq ;

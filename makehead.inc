@@ -33,7 +33,7 @@ SMCALCCMD=smcalc
 
 # different target sets
 MPITARGETS=$(DEFTARGET) $(CMD) $(CMD2) $(LIAISONCMD) $(PREP) $(PREPLD) $(PREPLAISON)
-LAPACKTARGETS=$(DEFTARGET) $(CMD) $(CMD2) $(LIAISONCMD) $(PREP) $(PREPLD) $(PREPLAISON) $(PREPJONINTERP)
+LAPACKTARGETS=$(DEFTARGET) $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(PREP) $(PREPLD) $(PREPLAISON) $(PREPJONINTERP)
 BINARYTARGETS=$(CMD) $(CMD2) $(LIAISONCMD)
 
 ########################
@@ -103,9 +103,6 @@ endif
 USEOPENMP=1
 
 
-$(warning USEMPI is $(USEMPI))
-$(warning USEOPENMP is $(USEOPENMP))
-
 
 # turns on -mp and -pc64 for USEICC?????=1
 # Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
@@ -135,6 +132,8 @@ ENFORCEPRECISION=0
 #
 # on ki-rh39 and orange:
 # source /u/ki/jmckinne/intel/mkl/10.0.5.025/tools/environment/mklvarsem64t.sh
+# or:
+# source /u/ki/jmckinne/intel/mkl/10.0.3.020/tools/environment/mklvarsem64t.sh
 #
 # also see:
 # http://www.netlib.org/eispack/
@@ -149,6 +148,15 @@ USELAPACK=0
 endif
 #
 ####################
+
+
+######### report
+
+$(warning USEMPI is $(USEMPI))
+$(warning USEOPENMP is $(USEOPENMP))
+$(warning USELAPACK is $(USELAPACK))
+$(warning ENFORCEPRECISION is $(ENFORCEPRECISION))
+
 
 
 #END

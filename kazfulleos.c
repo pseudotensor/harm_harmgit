@@ -41,6 +41,7 @@ static void eos_lookup_modify_qarray(int whichdegen, FTYPEEOS *myanswers, int wh
 static void lookup_yespecial(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray);
 static void lookup_log(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray);
 
+static void reset_repeatedfun(int isextratype, int whichd, int numcols, int firsteos, int *repeatedfun);
 
 // include C files for simplicity
 #include "kazfulleos_set_arrays.c"
@@ -101,6 +102,14 @@ static int getsingle_eos_fromtable(int whichfun, int whichd, FTYPE *EOSextra, FT
   return(badlookups[whichcol]); // can do this for just 1 quantity
 
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -206,7 +215,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
   // nuclear offset (as consistent with HELM code to obtain correct energy per baryon)
   //
   ///////////////////////////////
-  offsetquant2(whichd, EOSextra, quant1, quant2, &quant2);
+  offsetquant2(+1.0,whichd, EOSextra, quant1, quant2, &quant2);
 
 
 
@@ -245,7 +254,6 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 
 
   repeatedeos=1;
-  //repeatedeos=0; // SUPERFUCKMARK
   for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++){ // only need to repeat used independent variables, not all
     repeatedeos*=(fabs(qarray[qi]-qoldarray[isextratype][whichd][qi])<OLDTOLERANCE);
   }
@@ -357,7 +365,7 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
     /////////////
     for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) qoldarray[isextratype][whichd][qi]=qarray[qi]; // should be qarray *before* any degeneracy subtraction on qarray[TEMPLIKEINDEP]
     // once values of independent variables changes, reset so that none of quantities in subtable are set as repeated, no matter iffun==0 or 1
-    for(coli=0;coli<numcols;coli++) repeatedfun[firsteos+coli]=0;
+    reset_repeatedfun(isextratype,whichd,numcols,firsteos,repeatedfun);
     // if not repeated, then reset whichtable="prior table used" to access the subtabletype
     whichtable[isextratype][whichd][ISNOTDEGENTABLE]=whichtable[isextratype][whichd][ISDEGENTABLE]=NOTABLE;
 
@@ -527,6 +535,27 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 
 
 
+
+
+  ///////////////////////////////
+  //
+  // apply nuclear offset to functions that have been stored in table with offset so that HARM uses *true* function values
+  //
+  // Note that this offset is applied after any repeated function values are stored.  So must be done whether repeated lookup or not repeated lookup.
+  //
+  ///////////////////////////////
+  int whichdfake;
+  for(coli=0;coli<numcols;coli++){
+    if(iffun[coli] && badlookups[coli]==0){
+      if(needspostoffset(whichd,whichtablesubtype,coli,&whichdfake)){
+	offsetquant2(-1.0,whichdfake, EOSextra, quant1, answers[coli], &answers[coli]);
+      }
+    }
+  }
+
+
+
+
   /////////////////
   //
   // Report failure status
@@ -537,6 +566,43 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
 
 }
 
+
+
+
+
+// reset repeatedfun to zero for all tables associated with both same isextratype and whichd
+// use of repeated function depends upon same whichd and isextratype
+static void reset_repeatedfun(int isextratype, int whichd, int numcols, int firsteos, int *repeatedfun)
+{
+  int coli;
+
+
+  if(isextratype){
+
+    // note that one has no access to extra degen table
+
+    if(whichd==UTOTDIFF) for(coli=0;coli<numcols;coli++) repeatedfun[firsteos+coli]=0;
+    else{
+      dualfprintf(fail_file,"No such whichd=%d for isextratype=%d\n",whichd,isextratype);
+      myexit(346262121);
+    }
+  }
+  else{
+    int numcolslocal,firsteoslocal;
+    int subtype;
+    for(subtype=0;subtype<NUMTABLESUBTYPES;subtype++){
+      if(whichd==whichdintablesubtype[subtype]){
+	// then this subtype should be reset
+      
+	numcolslocal = numcolintablesubtype[subtype]; // ok use of numcolintablesubtype
+	firsteoslocal=firsteosintablesubtype[subtype];
+	for(coli=0;coli<numcolslocal;coli++) repeatedfun[firsteoslocal+coli]=0;
+      }
+    }
+  }
+
+
+}
 
 
 
@@ -567,7 +633,7 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
 
 #if(ALLOWFULLTABLE)
   if(whichtablesubtype==SUBTYPEEXTRA && WHICHDATATYPEGENERAL==4){
-    whichtabletry=EXTRAFULLTABLE;
+    whichtabletry=FULLTABLEEXTRA;
   }
   else whichtabletry=FULLTABLE;
     
@@ -581,7 +647,7 @@ static int which_eostable(int whichtablesubtype, int ifdegencheck, int whichinde
 #endif
 #if(ALLOWSIMPLETABLE)
   if(whichtablesubtype==SUBTYPEEXTRA && WHICHDATATYPEGENERAL==4){
-    whichtabletry=EXTRASIMPLETABLE;
+    whichtabletry=SIMPLETABLEEXTRA;
   }
   else whichtabletry=SIMPLETABLE;
     
@@ -646,6 +712,10 @@ static void eos_lookup_degen(int begin, int end, int skip, int whichtable, int w
       lookup_log(whichtable,vartypearraylocal[qi],qarray[qi],&indexarray[qi]);
     }
 
+    // DEBUG:
+    // dualfprintf(fail_file,"whichtable=%d qi=%d var=%d q=%21.15g index=%21.15g\n",whichtable,qi,vartypearraylocal[qi],qarray[qi],indexarray[qi]);
+
+
   }
 
 
@@ -665,6 +735,10 @@ static void lookup_log(int whichtable, int vartypearraylocal, FTYPE qarray, FTYP
   
   *indexarray = (logq   -tablelimits[whichtable][vartypearraylocal]  [0])*tablelimits[whichtable][vartypearraylocal]  [3];
 
+  // DEBUG:
+  //  dualfprintf(fail_file,"prelogq=%21.15g logq=%21.15g\n",prelogq,logq);
+  //  dualfprintf(fail_file,"others: %21.15g %21.15g %21.15g %21.15g\n",lineartablelimits[whichtable][vartypearraylocal]  [3],lineartablelimits[whichtable][vartypearraylocal][2],tablelimits[whichtable][vartypearraylocal]  [0],tablelimits[whichtable][vartypearraylocal]  [3]);
+
 }
 
 
@@ -672,9 +746,9 @@ static void lookup_log(int whichtable, int vartypearraylocal, FTYPE qarray, FTYP
 // see yetable.nb
 static void lookup_yespecial(int whichtable, int vartypearraylocal, FTYPE qarray, FTYPEEOS *indexarray)
 {
-  FTYPEEOS num = tablesize[whichtable][YEINDEP];
-  FTYPEEOS yei = lineartablelimits[whichtable][YEINDEP][0];
-  FTYPEEOS yef = lineartablelimits[whichtable][YEINDEP][1];
+  FTYPEEOS num = tablesize[whichtable][YEEOS];
+  FTYPEEOS yei = lineartablelimits[whichtable][YEEOS][0];
+  FTYPEEOS yef = lineartablelimits[whichtable][YEEOS][1];
   FTYPEEOS yegrid1 = eosyegrid1[whichtable];
   FTYPEEOS yegrid2 = eosyegrid2[whichtable];
   FTYPEEOS xgrid1 = eosxgrid1[whichtable];
@@ -682,14 +756,20 @@ static void lookup_yespecial(int whichtable, int vartypearraylocal, FTYPE qarray
   FTYPEEOS ye=qarray;
 
   // first range:
-  if(ye<=yegrid1){
+  if(ye<=yei){
+    *indexarray=0.0; // truncate
+  }
+  else if(ye<=yegrid1){
     *indexarray = (num-1.0)*xgrid1*log10(ye/yei)/log10(yegrid1/yei);
   }
   else if(ye<=yegrid2){
     *indexarray = (num-1.0)*(ye*(xgrid1-xgrid2) + xgrid2*yegrid1 - xgrid1*yegrid2)/(yegrid1-yegrid2);
   }
-  else{
+  else if(ye<=yef){
     *indexarray = (num-1.0)*(ye*(xgrid2-1.0) + yegrid2 - xgrid2*yef)/(yegrid2-yef);
+  }
+  else{
+    *indexarray=num-1.0; // truncate
   }
 
 }

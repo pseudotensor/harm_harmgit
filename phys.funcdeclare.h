@@ -136,6 +136,7 @@ extern void get_allgeometry(int i, int j, int k, int loc, struct of_allgeom *all
 
 
 extern int get_state(FTYPE *pr, struct of_geom *geom,struct of_state *q);
+extern int get_stateforcheckinversion(FTYPE *pr, struct of_geom *geom,struct of_state *q);
 extern int get_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state **q);
 extern int get_stateforfluxcalc(int dimen, int isleftright, FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr);
 extern int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);

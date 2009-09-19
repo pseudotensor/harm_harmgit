@@ -3,8 +3,8 @@
 // all uses of lineartablelimits[] should be on non-temperature-like quantities (i.e. only on rho,ye,ynu,h)
 
 
-
-static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
+static int needspostoffset(int whichd, int whichtablesubtype, int coli, int *whichdfake);
+static int offsetquant2(FTYPE signature, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 
@@ -77,24 +77,102 @@ static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr
 
 
 
+// report whether need to process with offset and return the effective associated "whichd"
+static int needspostoffset(int whichd, int whichtablesubtype, int coli, int *whichdfake)
+{
+
+  if(whichtablesubtype==SUBTYPEDEGEN){
+    // if here, then called for degen value directly so need to process it
+    // this is unlike internally used degen values that are all table-based with offset and so consistently used
+    *whichdfake=whichd;
+    // call coli are same type of quantity
+    return(1);
+  }
+  else if(whichtablesubtype==SUBTYPESTANDARD){
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPEGUESS){
+    if(coli==0){ *whichdfake=UTOTDIFF; return(1); }
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPEDISS){
+    if(coli==0){ *whichdfake=UTOTDIFF; return(1); }
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPEDP){
+    // derivatives!
+  }
+  else if(whichtablesubtype==SUBTYPESDEN){
+    if(coli==0){ *whichdfake=STOTDIFF; return(1); }
+    // derivatives!
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPESSPEC){
+    // derivatives!
+    if(coli==0){ *whichdfake=SSPECTOTDIFF; return(1); }
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPEPOFCHI){
+    // derivatives!
+    if(coli==0){ return(0);}
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPETEMP){
+    return(0);
+  }
+  else if(whichtablesubtype==SUBTYPEEXTRA){
+    // no neutrino quantities need correcting since correction is only on nuclear term
+    return(0);
+  }
+  else{
+    dualfprintf(fail_file,"No such whichtablesubtype=%d setup in needspostoffset()\n",whichtablesubtype);
+    myexit(34968346);
+  }
+  
+  return(0);
+
+}
+
+
+
 // general offset for energy per baryon to be applied always before accessing table with nuclear EOS
 // quant2out is the \delta u that is tabulated in the EOS table itself.
 // inputted quant2in is some true internal energy (maybe no neutrinos)
 // So we add the offset before looking up the results from the table that has the offset
-static int offsetquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
+// signature : +1 for mapping HARM values to TABLE values
+// signature : -1 for mapping TABLE values to HARM values
+
+// only valid if rest-mass density and other energy densities are in same units w.r.t. speed of light
+// so requires rho0unittype==1 in init.grb.c as much of code requires!
+// Also, note that quant1 is in g/cc if rho0unittype==1
+static int offsetquant2(FTYPE signature, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
 
   if(whichd==UTOTDIFF || whichd==CHIDIFF){
     // nuclear offset
     // assumes lsoffset in helm/jon_lsbox.f is offsetting only energy/baryon = u/\rho_0
-    *quant2out = quant2in + TRUENUCLEAROFFSET[primarytable]*quant1;
+    *quant2out = quant2in + signature*TRUENUCLEAROFFSET[primarytable]*quant1;
+  }
+  else if(whichd==STOTDIFF){// Sden
+    *quant2out = quant2in + signature*TRUEENTROPYNUCLEAROFFSET[primarytable]*quant1;
+
+    // DEBUG:
+    //    dualfprintf(fail_file,"quant2in=%21.15g sig=%21.15g true=%21.15g quant1=%21.15g quant2out=%21.15g\n",quant2in,signature,TRUEENTROPYNUCLEAROFFSET[primarytable],quant1,*quant2out);
+
+
+
+  }
+  else if(whichd==SSPECTOTDIFF){// Ss=SSPEC
+    *quant2out = quant2in + signature*TRUEENTROPYNUCLEAROFFSET[primarytable];
   }
 
 
   return(0);
 
 }
+
+
 
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
@@ -1487,7 +1565,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       if(numextrasreturn==0) notintable=1;
       else notintable=0;
 
-#if(1)
+#if(0)
       // DEBUG:
       // 1) Use kazeos.loopparms.testynu.dek and edit tau_calc.f to output DEBUG info.
       // 2) Run stellar model generation and ensure first output of last iterated DEBUG output (choose tauiter largest for first set of iterations) is same!
@@ -1649,7 +1727,13 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
       // Table lookup shows that values are most dependent upon Y_e, so need better table in Y_e and use higher-order interpolation in Y_e
 
-#endif
+#endif // end debug
+
+
+
+
+
+
 
       // MAXNUMEXTRAS entries
       // not same order as passed to function: computefinal_fromhcm()
@@ -1898,7 +1982,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
 
-#if(1)
+#if(0)
   // DEBUG:
   dualfprintf(fail_file,"repeatedeos=%d doall=%d\n",repeatedeos,doall);
 
