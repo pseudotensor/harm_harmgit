@@ -616,6 +616,8 @@
 // svn update
 //
 //
+// track user contributions:
+// http://www.statsvn.org/
 //
 
 

@@ -481,7 +481,8 @@
 // EXTRA9:  Enueglobal
 // EXTRA10:  Enuebarglobal
 // EXTRA11: Ynuthermal
-#define DATATYPE3_EXTRAFINAL EXTRA11
+//// EXTRA12: Ynuthermal0 // GODMARK: Should be added if doing this!
+#define DATATYPE3_EXTRAFINAL EXTRA11 // should be EXTRA12! GODMARK
 
 // whichdatatype==4
 // GODMARK: if this is going to work, need also the energy density parts as functions of \chi, but for now doesn't seem this method will be useful due to need to iterate within table to find du from u
@@ -515,7 +516,8 @@
 
 
 // names for processed quantities
-#define NUMPROCESSEDEXTRAS 13 // for using get_extrasprocessed().
+// most are based upon optical depth correction, YNUTHERMAL0 is not.
+#define NUMPROCESSEDEXTRAS 14 // for using get_extrasprocessed().
 #define QPHOTON 0
 #define QNEUTRINO 1
 #define GRADDOTRHOUYL 2
@@ -526,12 +528,13 @@
 #define SNU 7
 #define YNULOCAL 8
 #define YNUTHERMAL 9
-#define ENUAVG 10
-#define ENUE 11
-#define ENUEBAR 12
+#define YNUTHERMAL0 10
+#define ENUAVG 11
+#define ENUE 12
+#define ENUEBAR 13
 
 // Below for dumping processed quantities.  Needs to be constant (not changing alot) so consistent dump files
-#define MAXPROCESSEDEXTRAS 13
+#define MAXPROCESSEDEXTRAS (NUMPROCESSEDEXTRAS)
 
 #if(MAXPROCESSEDEXTRAS<NUMPROCESSEDEXTRAS)
 #error "Need to make MAXPROCESSEDEXTRAS larger."

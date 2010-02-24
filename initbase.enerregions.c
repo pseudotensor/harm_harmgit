@@ -78,6 +78,7 @@ int recompute_fluxpositions(int initialcall, int timeorder, int numtimeorders, l
 
 
   // set ACTIVEREGION
+  // should come after other definitions of enerregions in case they are used to define activeregion!
   if(DOGRIDSECTIONING){
     setgridsectioning(compinitialcall,timeorder, numtimeorders, nstep,t);
   }

@@ -201,7 +201,7 @@ int user1_init_global(void)
   ranc(1,0); // no MPI method yet, so just pure randomization
   /* some physics parameters */
   gam = 4. / 3.;
-  cooling=0;
+  cooling=NOCOOLING;
 
 
   BCtype[X1DN]=OUTFLOW;

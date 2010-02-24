@@ -78,10 +78,26 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   indexn=1.0/GAMMAM1;
 
   // Entropy will be wrong when rho0 or pressure are non-positive
-  if(rho0<SMALL) rho0=SMALL;
-  if(pressure<SMALL) pressure=SMALL;
-  
-  entropy=rho0*log(pow(pressure,indexn)/pow(rho0,indexn+1.0));
+  if(rho0<SMALL && pressure<SMALL){
+    rho0=SMALL;
+    pressure=SMALL;
+    entropy = 0.0;
+  }
+  else if(rho0<SMALL){
+    rho0=SMALL;
+    entropy=0.0;
+  }
+  else if(pressure<SMALL){
+    pressure=SMALL;
+    entropy=-BIG; // so not -inf
+  }
+  else{
+    // normal:
+    entropy=rho0*log(pow(pressure,indexn)/pow(rho0,indexn+1.0));
+  }
+
+  // if p>>1 and rho0~0, then argument to log() could be out of range (i.e. inf).
+  //  if(!isfinite(entropy)) entropy=0.0;
 
   // OPTMARK: Note that above and below ideal gas pow() shows up as expensive in pfmon (didn't appear in gprof!)
   // 2nd most expensive function is these two pow() calls after get_state_uconucovonly()
@@ -182,6 +198,9 @@ FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE 
   
   entropy=rho0*log(insideentropy);
 
+  //  if(!isfinite(entropy)) entropy=0.0;
+
+
   return(entropy);
 
 }
@@ -196,6 +215,9 @@ FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE
   insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
   
   specificentropy=log(insideentropy);
+
+  //  if(!isfinite(specificentropy)) specificentropy=0.0;
+
 
   return(specificentropy);
 
@@ -213,6 +235,8 @@ FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE w
   insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
   
   dSdrho=GAMMA/(1.0-GAMMA) + log(insideentropy);
+
+  //  if(!isfinite(dSdrho)) dSdrho=0.0;
 
   // Note that it makes no sense to speak of entropy changes with isothermal (GAMMA=1.0) gas since in the limit GAMMA->1, dSdrho->-\infty
 

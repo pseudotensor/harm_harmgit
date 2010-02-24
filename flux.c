@@ -6,6 +6,34 @@
 
 
 
+
+static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int js, int je, int ks, int ke, int *computewithleft, int *computewithright);
+
+
+
+
+
+// get whether should compute using left/right states
+static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int js, int je, int ks, int ke, int *computewithleft, int *computewithright)
+{
+
+#if(MERGEDC2EA2CMETHOD)
+      // if doing merged method, then expanded "flux" calculation to get state in full (i.e. left,cent,right) in the "-1" and "N" cells
+      if(dir==1 && (i==is) || dir==2 && (j==js) || dir==3 && (k==ks)){ *computewithleft=0; *computewithright=1; }
+      else if(dir==1 && (i==ie) || dir==2 && (j==je) || dir==3 && (k==ke)){ *computewithleft=1; *computewithright=0; }
+      else{ *computewithleft=1; *computewithright=1; }
+#else
+      // normal routine when always get final dissipative flux
+      *computewithleft=1; *computewithright=1;
+#endif
+
+
+}
+
+
+
+
+
 // see fluxcompute.c for non-computer science, real physics calculations of flux
 int fluxcalc(int stage,
 	     FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
@@ -961,6 +989,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
     FTYPE *p2interp_l,*p2interp_r;
     FTYPE dtij;
     FTYPE ctop;
+    int computewithleft,computewithright;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
     
@@ -1025,61 +1054,73 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
 
 
+      // determine whether should compute things using left/right states
+      leftrightcompute(i, j, k, dir, is, ie, js, je, ks, ke, &computewithleft, &computewithright);
+
+
+
       /////////////////////////////////////
       //
       // Compute and Store (globally) the get_state() data for the flux positions to avoid computing later
       //
       /////////////////////////////////////
 #if(STOREFLUXSTATE)
-      compute_and_store_fluxstate(dir, ISLEFT, i, j, k, ptrgeom, p_l);
-      compute_and_store_fluxstate(dir, ISRIGHT, i, j, k, ptrgeom, p_r);
+      if(computewithleft) compute_and_store_fluxstate(dir, ISLEFT, i, j, k, ptrgeom, p_l);
+      if(computewithright) compute_and_store_fluxstate(dir, ISRIGHT, i, j, k, ptrgeom, p_r);
       // now flux_compute() and other flux-position-related things will obtain get_state() data for p_l and p_r from global arrays
 #endif
 
 
 
-      //////////////////////////////////
-      //
-      // actually compute the flux
-      //
-      /////////////////////////////////
+      if(computewithleft&&computewithright){
 
-      if(splitmaem==0){
-	MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-      }
-      else{
-	MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-      }
+	//////////////////////////////////
+	//
+	// actually compute the dissipative flux
+	//
+	/////////////////////////////////
+
+	if(splitmaem==0){
+	  MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+	}
+	else{
+	  MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+	}
 
 
-      /////////////////////////////
-      //
-      // evaluate restriction on timestep
-      //
-      ///////////////////////////////
-      // below is old before new grid sectioning
-      //#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
-      // avoid limiting dt if inside horizon
-      // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
-      //    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
-      //#endif
+	/////////////////////////////
+	//
+	// evaluate restriction on timestep
+	//
+	///////////////////////////////
+	// below is old before new grid sectioning
+	//#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
+	// avoid limiting dt if inside horizon
+	// GODMARK: can only do this if boundary condition does not drive solution's dt behavior
+	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
+	//#endif
 
-      // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-      // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-      if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
-	dtij = cour * dx[dir] / ctop;
+	// only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+	// Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+	if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+	  dtij = cour * dx[dir] / ctop;
 
 #pragma omp critical
-	{
-	  if (dtij < *ndt){
-	    *ndt = dtij;
-	    // below are global so can report when other dt's are reported in advance.c
-	    waveglobaldti[dir]=i;
-	    waveglobaldtj[dir]=j;
-	    waveglobaldtk[dir]=k;
-	  }
-	}// end critical region
-      }// end if within dt-setting section
+	  {
+	    if (dtij < *ndt){
+	      *ndt = dtij;
+	      // below are global so can report when other dt's are reported in advance.c
+	      waveglobaldti[dir]=i;
+	      waveglobaldtj[dir]=j;
+	      waveglobaldtk[dir]=k;
+	    }
+	  }// end critical region
+	}// end if within dt-setting section
+
+
+
+      }// end if doing computing using both left+right states (required also for ctop to exist)
+
 
     }// end 3D loop
   }// end parallel region
@@ -1258,6 +1299,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
     FTYPE ctop;
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
+    int computewithleft,computewithright;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
     
@@ -1269,55 +1311,68 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-      ////////////////////////
-      //
-      // get the geometry for the flux face
-      //
-      ///////////////////////
-      get_geometry(i, j, k, face, ptrgeom); // OPTMARK: Seems should put back together interpolate_prim_cent2face() with flux_compute stuff below so only 1 call to get_geometry @ face....not sure why this way?!
+
+      // determine whether should compute things using left/right states
+      leftrightcompute(i, j, k, dir, is, ie, js, je, ks, ke, &computewithleft, &computewithright);
 
 
-      //////////////////////////////////
-      //
-      // actually compute the flux
-      //
-      /////////////////////////////////
-
-      if(splitmaem==0){
-	MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-      }
-      else{
-	MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-      }
 
 
-      /////////////////////////////
-      //
-      // evaluate restriction on timestep
-      //
-      ///////////////////////////////
-      // below is old before new grid sectioning
-      //#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
-      //    // avoid limiting dt if inside horizon
-      //    // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
-      //    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
-      //#endif
-      // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-      // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-      if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
-	dtij = cour * dx[dir] / ctop;
+      if(computewithleft&&computewithright){
+
+	////////////////////////
+	//
+	// get the geometry for the flux face
+	//
+	///////////////////////
+	get_geometry(i, j, k, face, ptrgeom); // OPTMARK: Seems should put back together interpolate_prim_cent2face() with flux_compute stuff below so only 1 call to get_geometry @ face....not sure why this way?!
+
+
+	//////////////////////////////////
+	//
+	// actually compute the dissipative flux
+	//
+	/////////////////////////////////
+
+	if(splitmaem==0){
+	  MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+	}
+	else{
+	  MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+	}
+
+
+	/////////////////////////////
+	//
+	// evaluate restriction on timestep
+	//
+	///////////////////////////////
+	// below is old before new grid sectioning
+	//#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
+	//    // avoid limiting dt if inside horizon
+	//    // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
+	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
+	//#endif
+	// only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+	// Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+	if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+	  dtij = cour * dx[dir] / ctop;
 
 #pragma omp critical
-	{
-	  if (dtij < *ndt){
-	    *ndt = dtij;
-	    // below are global so can report when other dt's are reported in advance.c
-	    waveglobaldti[dir]=i;
-	    waveglobaldtj[dir]=j;
-	    waveglobaldtk[dir]=k;
-	  }
-	}// end critical region
-      }// end if within dt-setting section
+	  {
+	    if (dtij < *ndt){
+	      *ndt = dtij;
+	      // below are global so can report when other dt's are reported in advance.c
+	      waveglobaldti[dir]=i;
+	      waveglobaldtj[dir]=j;
+	      waveglobaldtk[dir]=k;
+	    }
+	  }// end critical region
+	}// end if within dt-setting section
+
+
+      }// end if doing computing using both left+right states (required also for ctop to exist)
+
 
     }// end FLUX LOOP
   }// end parallel region
@@ -1463,6 +1518,7 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
     int i,j,k;
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
+    int computewithleft,computewithright;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP( realis, realie, realjs, realje, realks, realke );
     
@@ -1511,14 +1567,19 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
       }
 
 
+      // determine whether should compute things using left/right states
+      // note that should only do non-left non-right state stuff (like computing dt) if both left+right states being done
+      leftrightcompute(i, j, k, dir, is, ie, js, je, ks, ke, &computewithleft, &computewithright);
+
+
       /////////////////////////////////////
       //
       // Compute and Store (globally) the get_state() data for the flux positions to avoid computing later
       //
       /////////////////////////////////////
 #if(STOREFLUXSTATE)
-      compute_and_store_fluxstate(dir, ISLEFT, i, j, k, ptrgeom, p_l);
-      compute_and_store_fluxstate(dir, ISRIGHT, i, j, k, ptrgeom, p_r);
+      if(computewithleft) compute_and_store_fluxstate(dir, ISLEFT, i, j, k, ptrgeom, p_l);
+      if(computewithright) compute_and_store_fluxstate(dir, ISRIGHT, i, j, k, ptrgeom, p_r);
       // now flux_compute() and other flux-position-related things will obtain get_state() data for p_l and p_r from global arrays
 #endif
 

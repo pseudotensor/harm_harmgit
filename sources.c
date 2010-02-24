@@ -13,15 +13,15 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
   // currently all are unique so can overlap
 
  // cooling function returns energy density per unit time in coordinate frame, typically computed in comoving frame inside the cooling function
-  if(cooling==1){
+  if(cooling==COOLGAMMIETHINDISK){
     return(coolfunc_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
-  else if(cooling==2){
+  else if(cooling==COOLEOSGENERAL){
     //    return(coolfunc_neutrino(pr, ptrgeom, q,dUcomp));
     // more general use of EOS version of sources
     return(compute_sources_EOS(WHICHEOS,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, ptrgeom, q, Ugeomfree, dUother, dUcomp));
   }
-  else if(cooling==3){
+  else if(cooling==COOLREBECCATHINDISK){
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
 

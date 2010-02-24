@@ -3,6 +3,8 @@
 
 // OPENMPMARK: assume all mytime routines not called by multiple threads
 
+
+
 // global code timing function
 int timecheck(int whichlocation, SFTYPE comptstart)
 {
@@ -39,9 +41,9 @@ int timecheck(int whichlocation, SFTYPE comptstart)
   static time_t diagtimestart,diagtimestop;
   static time_t diaggtimestart,diaggtimestop;
 #elif(TIMEMETHOD==1)
-  static struct timeval timestart,timestop, gtimestart,gtimestop,checktime; struct timezone tz;
+  static struct timeval timestart,timestop, gtimestart,gtimestop,checktime; GETTIMEZONETYPE tz;
 
-  static struct timeval diagtimestart,diagtimestop, diaggtimestart,diaggtimestop; struct timezone diagtz;
+  static struct timeval diagtimestart,diagtimestop, diaggtimestart,diaggtimestop; GETTIMEZONETYPE diagtz;
 #elif((TIMEMETHOD==2)||(TIMEMETHOD==3))
   static clock_t timestart,timestop, gtimestart,gtimestop,checktime;
 
@@ -56,14 +58,20 @@ int timecheck(int whichlocation, SFTYPE comptstart)
   static clock_t diagusertmstimestart,diagusertmstimestop,diagsystmstimestart,diagsystmstimestop;
   static struct timeval diagwttimestart,diagwttimestop;
 #if(TIMEMETHOD!=1)
-  static struct timezone tz;
+  // generic variables for other TIMEMETHOD's in order to avoid #if's below
+  GETTIMEZONETYPE tz;
 
-  static struct timezone diagtz;
+  GETTIMEZONETYPE diagtz;
 #endif
   // END TIMING STUFF
   //
   ////////////////////////
 
+
+#if(GETTIMEOFDAYPROBLEM==1)
+  // gettimeofday() needs NULL pointer for second argument on some systems
+  tz=diagtz=NULL;
+#endif
 
 
   if(myid==0){ // only report time/performance for myid==0

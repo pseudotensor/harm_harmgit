@@ -619,7 +619,9 @@ static void set_grid_metrics(void)
 
 	// get metric terms and anything in struct of_geom
 	gcov_func(ptrgeom,1,MCOORD,X, localgcov,localgcovpert);
-	localgdet[0] = gdet_func_metric(MCOORD,V,localgcov);
+	if(gdet_func_metric(MCOORD,V,localgcov,&(localgdet[0]))!=0){
+	  if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in set_grid.c:set_grid_metrics() i=%d j=%d k=%d\n",i,j,k);
+	}
 	gcon_func(ptrgeom,1,MCOORD,X,localgcov,localgcon);
 #if(WHICHEOM!=WITHGDET)
 	// don't need (want) to recompute gdet that is just where localeomfunc points to if WHICHEOM==WITHGDET
@@ -764,7 +766,9 @@ static void set_grid_metrics_gcov(void)
 
 	// get metric terms and anything in struct of_geom
 	gcov_func(ptrgeom,1,MCOORD,X, localgcov,localgcovpert);
-	localgdet[0] = gdet_func_metric(MCOORD,V,localgcov);
+	if(gdet_func_metric(MCOORD,V,localgcov,&(localgdet[0]))!=0){
+	  if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in set_grid.c:set_grid_metrics_gcov() i=%d j=%d k=%d gcovtt=%21.15g gcovperttt=%21.15g\n",i,j,k,localgcov[GIND(TT,TT)],localgcovpert[TT]);	  
+	}
 
       }// end over location
     }// end 3D LOOP

@@ -1231,7 +1231,7 @@ int init_global(void)
 
   ranc(1,7); // no MPI method yet, so just pure randomization
   /* some physics parameters */
-  cooling=0;
+  cooling=NOCOOLING;
 
   //set up defaults for tests	
 

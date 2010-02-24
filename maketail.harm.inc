@@ -7,7 +7,8 @@ bounds.c bounds.tools.c boundsint.c \
 diag.c dump.c dumpgen.c dump_ener.c image.c \
 fail.c fixup.c \
 mpi_init.c mpi_init_grmhd.c mpi_fileio.c mpi_fprintfs.c boundmpi.c boundmpiint.c mpi_grmhd_grray_liaison.c \
-interppoint.c interppoint.para.c interpline.c interpline.para.c interpline.mono.c interpline.jmono.c interpline.smono.c
+interppoint.c interppoint.para.c interpline.c interpline.para.c interpline.mono.c interpline.jmono.c interpline.smono.c \
+geodesic.c
 #END
 
 OBJSMANYPOINTS=\
@@ -19,6 +20,7 @@ diag.o dump.o dumpgen.o dump_ener.o image.o \
 fail.o fixup.o \
 mpi_init.o mpi_init_grmhd.o  mpi_fileio.o mpi_fprintfs.o boundmpi.o boundmpiint.o mpi_grmhd_grray_liaison.o \
 interppoint.o interppoint.para.o interpline.o interpline.para.o interpline.mono.o interpline.jmono.o interpline.smono.o \
+geodesic.o
 #END
 
 # phys.c does currents across multiple points, but otherwise one pointed

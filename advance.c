@@ -136,6 +136,7 @@ int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][N
 
 // this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
 // this method has updated field staggered method
+// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
 static int advance_standard(
 		     int stage,
 		     FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
@@ -158,8 +159,8 @@ static int advance_standard(
   FTYPE ndt1, ndt2, ndt3;
   FTYPE dUtot;
   FTYPE idx1,idx2;
-  SFTYPE dt4diag,dt4diag_forcomp;
-  static SFTYPE dt4diag_forcomp_willbe=0;
+  SFTYPE dt4diag;
+  static SFTYPE dt4diag_willbe=0;
   int finalstep;
   FTYPE accdt, accdt_ij;
   int accdti,accdtj,accdtk;
@@ -234,26 +235,30 @@ static int advance_standard(
 
   /////////
   //
-  // tells diagnostics functions if should be accounting or not
+  // set finalstep to tell some procedures and diagnostic functions if should be accounting or not
   //
   /////////
   if(timeorder==numtimeorders-1){
-    dt4diag=dt;
     finalstep=1;
   }
   else{
-    dt4diag=-1.0;
     finalstep=0;
   }
 
+
+  /////////
+  //
+  // set dt4diag for source diagnostics
+  //
+  /////////
   if(timeorder==numtimeorders-1 && (nstep%DIAGSOURCECOMPSTEP==0) ){
     // every 4 full steps as well as on final step of full step (otherwise diag_source_comp() too expensive)
-    dt4diag_forcomp=dt4diag_forcomp_willbe;
-    dt4diag_forcomp_willbe=0;
+    dt4diag=dt4diag_willbe;
+    dt4diag_willbe=0;
   }
   else{
-    dt4diag_forcomp_willbe+=dt;
-    dt4diag_forcomp=-1.0;
+    dt4diag_willbe+=dt;
+    dt4diag=-1.0;
   }
 
 
@@ -298,71 +303,74 @@ static int advance_standard(
 
 
 
-  if(1){
-    // NORMAL:
-    ndt1=ndt2=ndt3=BIG;
-    // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-    MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
-  }
+  if(dt!=0.0){ // only do if not just passing through
+
+    if(1){
+      // NORMAL:
+      ndt1=ndt2=ndt3=BIG;
+      // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
+      MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    }
   
 #if(0)// DEBUG:
-  if(1){
-    ndt1donor=ndt2donor=ndt3donor=BIG;
-    MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf[2],fluxdt,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
-  }
-  // DEBUG:
-  if(1){
-    int i,j,k,pl,pliter;
-    FULLLOOP{
-      PLOOP(pliter,pl){
-	if(N1>1) MACP0A1(F1,i,j,k,pl)=GLOBALMACP0A1(F1EM,i,j,k,pl);
-	if(N2>1) MACP0A1(F2,i,j,k,pl)=GLOBALMACP0A1(F2EM,i,j,k,pl);
-	if(N3>1) MACP0A1(F3,i,j,k,pl)=GLOBALMACP0A1(F3EM,i,j,k,pl);
-      }
+    if(1){
+      ndt1donor=ndt2donor=ndt3donor=BIG;
+      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf[2],fluxdt,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
-    ndt1=ndt1donor;
-    ndt2=ndt2donor;
-    ndt3=ndt3donor;
-  }
+    // DEBUG:
+    if(1){
+      int i,j,k,pl,pliter;
+      FULLLOOP{
+	PLOOP(pliter,pl){
+	  if(N1>1) MACP0A1(F1,i,j,k,pl)=GLOBALMACP0A1(F1EM,i,j,k,pl);
+	  if(N2>1) MACP0A1(F2,i,j,k,pl)=GLOBALMACP0A1(F2EM,i,j,k,pl);
+	  if(N3>1) MACP0A1(F3,i,j,k,pl)=GLOBALMACP0A1(F3EM,i,j,k,pl);
+	}
+      }
+      ndt1=ndt1donor;
+      ndt2=ndt2donor;
+      ndt3=ndt3donor;
+    }
 #endif
 
 
 #if(0)// DEBUG:
-  if(1){
-    int i,j,k,pliter,pl;
-    dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
-    dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
-    COMPFULLLOOP{
-      if(i==390 && j==1 && k==0){
-	dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
-	PLOOP(pliter,pl) dualfprintf(fail_file,"          pl=%d F1orig=%21.15g F1new=%21.15g  :: F2orig=%21.15g F2new=%21.15g \n",pl,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
-      }
-    }
-  }
-#endif
-  
-#if(0)// DEBUG:
-  if(1){
-    int i,j,k,pliter,pl;
-    FTYPE diff1,diff2;
-    FTYPE sum1,sum2;
-    dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
-    dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
-    COMPFULLLOOP{
-      PLOOP(pliter,pl){
-	diff1=fabs(MACP0A1(F1,i,j,k,pl)-GLOBALMACP0A1(F1EM,i,j,k,pl));
-	sum1=fabs(MACP0A1(F1,i,j,k,pl))+fabs(GLOBALMACP0A1(F1EM,i,j,k,pl))+SMALL;
-	diff2=fabs(MACP0A1(F2,i,j,k,pl)-GLOBALMACP0A1(F2EM,i,j,k,pl));
-	sum2=fabs(MACP0A1(F2,i,j,k,pl))+fabs(GLOBALMACP0A1(F2EM,i,j,k,pl))+SMALL;
-	if(diff1/sum1>100.0*NUMEPSILON || diff2/sum2>100.0*NUMEPSILON){
+    if(1){
+      int i,j,k,pliter,pl;
+      dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
+      dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
+      COMPFULLLOOP{
+	if(i==390 && j==1 && k==0){
 	  dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
-	  dualfprintf(fail_file,"          pl=%d diff1/sum1=%21.15g F1orig=%21.15g F1new=%21.15g  :: diff2/sum2=%21.15g F2orig=%21.15g F2new=%21.15g \n",pl,diff1/sum1,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),diff2/sum2,MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+	  PLOOP(pliter,pl) dualfprintf(fail_file,"          pl=%d F1orig=%21.15g F1new=%21.15g  :: F2orig=%21.15g F2new=%21.15g \n",pl,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
 	}
       }
     }
-  }
+#endif
+  
+#if(0)// DEBUG:
+    if(1){
+      int i,j,k,pliter,pl;
+      FTYPE diff1,diff2;
+      FTYPE sum1,sum2;
+      dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
+      dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
+      COMPFULLLOOP{
+	PLOOP(pliter,pl){
+	  diff1=fabs(MACP0A1(F1,i,j,k,pl)-GLOBALMACP0A1(F1EM,i,j,k,pl));
+	  sum1=fabs(MACP0A1(F1,i,j,k,pl))+fabs(GLOBALMACP0A1(F1EM,i,j,k,pl))+SMALL;
+	  diff2=fabs(MACP0A1(F2,i,j,k,pl)-GLOBALMACP0A1(F2EM,i,j,k,pl));
+	  sum2=fabs(MACP0A1(F2,i,j,k,pl))+fabs(GLOBALMACP0A1(F2EM,i,j,k,pl))+SMALL;
+	  if(diff1/sum1>100.0*NUMEPSILON || diff2/sum2>100.0*NUMEPSILON){
+	    dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
+	    dualfprintf(fail_file,"          pl=%d diff1/sum1=%21.15g F1orig=%21.15g F1new=%21.15g  :: diff2/sum2=%21.15g F2orig=%21.15g F2new=%21.15g \n",pl,diff1/sum1,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),diff2/sum2,MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+	  }
+	}
+      }
+    }
 #endif
 
+  }// end if not just passing through
 
 
 
@@ -390,12 +398,15 @@ static int advance_standard(
   /////////////////////////////////////////////////////
 
 
-  // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]
-  // copy 0 -> {uf,tempucum}
-  if(timeorder==0) init_3dnpr_2ptrs(is, ie, js, je, ks, ke,0.0, uf,tempucum);
-
 
   if(dt!=0.0){
+
+
+    // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]
+    // copy 0 -> {uf,tempucum}
+    if(timeorder==0) init_3dnpr_2ptrs(is, ie, js, je, ks, ke,0.0, uf,tempucum);
+
+
 
 #if(WHICHEOM==WITHNOGDET && (NOGDETB1==1 || NOGDETB2==1 || NOGDETB3==1) )
     // for FLUXB==FLUXCTSTAG, assume no source term for field
@@ -487,7 +498,7 @@ static int advance_standard(
 	    }
 #else
 	    if(DODIAGS){
-	      diag_source_comp(ptrgeom,dUcomp,dt4diag_forcomp);
+	      diag_source_comp(ptrgeom,dUcomp,dt4diag);
 	      diag_source_all(ptrgeom,dUgeom,dt4diag);
 	    }
 #endif
@@ -557,6 +568,9 @@ static int advance_standard(
     // then nothing to do since nothing changed
     // previously updated dU and got new ucum as fed into metric, but now metric has its own ucummetric so all that is not needed
     // SUPERGODMARK: no, I guess I don't recall what was being done for metric and why when passing through with dt==0.0
+
+    // just need to copy ui -> {uf,tempucum} to duplicate behavior of dUtoU()
+    copy_3dnpr_2ptrs(is,ie,js,je,ks,ke,ui,uf,tempucum);
   }
 
 
@@ -876,8 +890,8 @@ static int advance_finitevolume(int stage,
   FTYPE ndt1, ndt2, ndt3;
   FTYPE dUtot;
   FTYPE idx1,idx2;
-  SFTYPE dt4diag,dt4diag_forcomp;
-  static SFTYPE dt4diag_forcomp_willbe=0;
+  SFTYPE dt4diag;
+  static SFTYPE dt4diag_willbe=0;
   int finalstep;
   FTYPE accdt, accdt_ij;
   int accdti,accdtj,accdtk;
@@ -953,26 +967,29 @@ static int advance_finitevolume(int stage,
 
   /////////
   //
-  // tells diagnostics functions if should be accounting or not
+  // set finalstep to tell some procedures and diagnostic functions if should be accounting or not
   //
   /////////
   if(timeorder==numtimeorders-1){
-    dt4diag=dt;
     finalstep=1;
   }
   else{
-    dt4diag=-1.0;
     finalstep=0;
   }
 
+  /////////
+  //
+  // set dt4diag for source diagnostics
+  //
+  /////////
   if(timeorder==numtimeorders-1 && (nstep%DIAGSOURCECOMPSTEP==0) ){
     // every 4 full steps as well as on final step of full step (otherwise diag_source_comp() too expensive)
-    dt4diag_forcomp=dt4diag_forcomp_willbe;
-    dt4diag_forcomp_willbe=0;
+    dt4diag=dt4diag_willbe;
+    dt4diag_willbe=0;
   }
   else{
-    dt4diag_forcomp_willbe+=dt;
-    dt4diag_forcomp=-1.0;
+    dt4diag_willbe+=dt;
+    dt4diag=-1.0;
   }
 
 
@@ -1105,6 +1122,27 @@ static int advance_finitevolume(int stage,
       }// end COMPZLOOP
 
 
+      // Store diagnostics related to component form of sources. Done here since don't integrate-up compnents of source.  So only point accurate
+#if(SPLITNPR)
+      // don't update metric if only doing B1-B3
+      if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+      {
+#pragma omp critical // since diagnostics store in same global cumulative variables
+	{
+#if(ACCURATESOURCEDIAG)
+	  if(DODIAGS){
+	    diag_source_comp(ptrgeom,dUcomp,fluxdt);
+	  }
+#else
+	  if(DODIAGS){
+	    diag_source_comp(ptrgeom,dUcomp,dt4diag);
+	  }
+#endif
+	}	  
+      }
+      
+
       // volume integrate dUgeom
       // c2a_1 c2a_2 c2a_3
       if(dosource){
@@ -1175,6 +1213,8 @@ static int advance_finitevolume(int stage,
 	// get source term (volume integrated)
 	PLOOP(pliter,pl) dUgeom[pl]=MACP0A1(dUgeomarray,i,j,k,pl);
 
+
+	// store diagnostics related to source.  Totals, so use volume-integrated source.
 #if(SPLITNPR)
 	// don't update metric if only doing B1-B3
 	if(advancepassnumber==-1 || advancepassnumber==1)
@@ -1183,14 +1223,13 @@ static int advance_finitevolume(int stage,
 #pragma omp critical // since diagnostics store in same global cumulative variables
 	    {
 #if(ACCURATESOURCEDIAG)
-	      if(DODIAGS){
-		// do diagnostics for volume integrated source term
-		diag_source_all(ptrgeom,dUgeom,fluxdt);
-	      }
+	    if(DODIAGS){
+	      diag_source_all(ptrgeom,dUgeom,fluxdt);
+	    }
 #else
-	      if(DODIAGS){
-		diag_source_all(ptrgeom,dUgeom,dt4diag);
-	      }
+	    if(DODIAGS){
+	      diag_source_all(ptrgeom,dUgeom,dt4diag);
+	    }
 #endif
 	    }	  
 	  }

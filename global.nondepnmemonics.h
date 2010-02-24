@@ -146,6 +146,7 @@
 
 
 
+
 // defines how one forms the EM stress-energy tensor
 #define GENMAXWELL 0
 #define PRIMMAXWELL 1
@@ -172,6 +173,8 @@
 
 
 
+
+
 // macros for defining which fluxcalc method to use in flux.c
 #define ORIGINALFLUXCALC 0
 #define NEWFLUXCALC 1
@@ -180,9 +183,22 @@
 
 ////////////////////////////
 //
+// Choices for cooling function
+//
+////////////////////////////
+
+#define NOCOOLING 0
+#define COOLGAMMIETHINDISK 1
+#define COOLEOSGENERAL 2
+#define COOLREBECCATHINDISK 3
+
+
+////////////////////////////
+//
 // Choices for EOS
 //
 ////////////////////////////
+
 
 #define NUMEOSS 5 // number of EOS types
 

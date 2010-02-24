@@ -139,9 +139,10 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
 int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
+  int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
+  int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
   int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux);
-  int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
   VARSTATIC FTYPE fluxdiagpress[NPR]; // temp var
   VARSTATIC int pl,pliter;
 
@@ -172,13 +173,13 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)
 #endif
-  advectedscalarflux_calc(pr, dir, q, &flux[YL],YL); // fills YL only
+  ylflux_calc(geom,pr, dir, q, &flux[YL],YL); // fills YL only
 #endif
 #if(DOYNU!=DONOYNU)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YNU && nprlist[nprend]>=YNU)
 #endif
-  advectedscalarflux_calc(pr, dir, q, &flux[YNU],YNU); // fills YNU only
+  ynuflux_calc(geom, pr, dir, q, &flux[YNU],YNU); // fills YNU only
 #endif
 
 
@@ -254,6 +255,55 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux)
 }
 
 
+// flux associated with Y_L variable
+int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
+{
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
+  VARSTATIC FTYPE massflux;
+  FTYPE prforadvect;
+
+  // get mass flux
+  massflux_calc(pr, dir, q, &massflux);
+
+#if(WHICHEOS==KAZFULL)
+  yl2advect_kazfull(GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr[YL],pr[YNU],&prforadvect);
+#else
+  prforadvect = pr[pnum];
+#endif
+
+  // get flux associated with Y_L
+  *advectedscalarflux = prforadvect * massflux;
+
+  return(0);
+}
+
+
+// flux asociated with Ynu variable
+int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
+{
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
+  VARSTATIC FTYPE massflux;
+  FTYPE prforadvect;
+
+
+  // get mass flux
+  massflux_calc(pr, dir, q, &massflux);
+
+#if(WHICHEOS==KAZFULL)
+  ynu2advect_kazfull(GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr[YL],pr[YNU],&prforadvect);
+#else
+  prforadvect = pr[pnum];
+#endif
+
+  // get flux associated with Y_\nu
+  *advectedscalarflux = prforadvect * massflux;
+
+  return(0);
+}
+
+
+
+// flux of scalar
 int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
@@ -273,7 +323,7 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
 
 
 
-
+// flux of specific entropy
 int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 {
   VARSTATIC FTYPE entropy;
@@ -3155,6 +3205,8 @@ FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 // this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
+  FTYPE entropy;
+
 
   // unlike inversion, require non-NaN entropy, so force rho,u to be positive
   if(rho<SMALL) rho=SMALL;
@@ -3164,7 +3216,11 @@ FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
   if(u<SMALL) u=SMALL;
 #endif
   
-  return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
+  entropy=compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u);
+
+  if(!isfinite(entropy)) entropy=-BIG*MAX(rho,SMALL); // very negative corresponding to very little entropy.
+
+  return(entropy);
 
 }
 

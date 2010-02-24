@@ -484,12 +484,14 @@ god=deathadflkjasdflkjasdlfkja242424
 /* numerical convenience */
 #if(REALTYPE==FLOATTYPE)
 #define VERYBIG (1.e37)
-#define BIG (1.e+35)
+#define BIG (1.e+30)
 #define SMALL	(1.e-35)
+#define KINDASMALL (1.e-30)
 #else
 #define VERYBIG (1.e150)
-#define BIG (1.e+300)
+#define BIG (1.e+100)
 #define SMALL	(1.e-300)
+#define KINDASMALL (1.e-100)
 #endif
 
 

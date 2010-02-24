@@ -1543,8 +1543,8 @@ int error_check(int wherefrom)
 
   if (failed > 0) {
     dualfprintf(fail_file,
-	    "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld t: %21.15g wherefrom = %d\n",
-	    myid, failed, nstep, realnstep, t,wherefrom);
+	    "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g wherefrom = %d\n",
+		myid, failed, nstep, realnstep, steppart, t,wherefrom);
   }
 
   if (numprocs > 1) {
@@ -1560,8 +1560,8 @@ int error_check(int wherefrom)
   }
   if (failed > 0) {
     dualfprintf(fail_file,
-	    "Result: Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld t: %21.15g\n",
-	    myid, failed, nstep, realnstep, t);
+	    "Result: Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g\n",
+		myid, failed, nstep, realnstep, steppart, t);
     // control behavior of failure here (i.e. could return(1) and
     // continue or something)
     // if(failed==1) myexit(1);

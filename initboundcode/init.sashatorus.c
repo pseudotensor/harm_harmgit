@@ -319,9 +319,9 @@ int init_global(void)
 
 	//cooling: only for thin disk-jet
 #if(WHICHPROBLEM==THINDISKJET)
-	cooling = 3;
+	cooling=COOLREBECCATHINDISK;
 #else
-	cooling = 0;
+	cooling=NOCOOLING;
 #endif
 
   return(0);

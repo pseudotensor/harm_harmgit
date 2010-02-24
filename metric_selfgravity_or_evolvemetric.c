@@ -1,20 +1,15 @@
 #include "decs.h"
 
-// ISSUESMARK:
-// 1) worry about connection coefficients being accurate enough -- failed to fix dfridr() and apparently eventually broke it.  Compare with prior version
-// 2) redo horizon enerregion to use Sasha method for moving horizon
+// TODO:
+// 1) redo horizon enerregion to use Sasha method for moving horizon
 
 
 // OPENMPMARK: None of these functions should be called by multiple threads.
 
 // static declarations
-static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR]);
 static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar);
 static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR]);
 static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar);
-static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar);
-static int interpX_phi(FTYPE *X, SFTYPE *phivsr_tot, SFTYPE *phi);
-static int interpX_phi(FTYPE *X, SFTYPE *phivsr_tot, SFTYPE *phi);
 static int interpX_phi(FTYPE *X, SFTYPE *phivsr_tot, SFTYPE *phi);
 
 
@@ -72,6 +67,8 @@ void control_metric_update(void)
   //  trifprintf("gravity: old=%d new=%d set=%d\n",oldgravityskipstep,newgravityskipstep,gravityskipstep);
   
 }
+
+
 
 
 
@@ -392,7 +389,7 @@ static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar)
 #define FRACCHANGE (0.01)
 #define ABSJCHANGE (0.1)
 
-// called every full timestep inside main.c
+// called every full timestep inside step_ch.c:step_ch_full()
 // used to determine value of mass, spin, and charge
 int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
@@ -418,10 +415,16 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 
 
 
-
+  ///////////
+  //
   // get new Kerr metric parameters as determined by flux through inner-radial boundary
   // if self-gravity is on, then this is just a way to get parameters to detect whether need to update metric rather than being update itself
+  //
+  ////////////
   get_new_metric_parms(&MBHpar, &apar, &QBHpar);
+
+
+
 
 
   ///////////////////////////////
@@ -429,6 +432,8 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
   // see if metric change is sufficient to actually change the metric
   // dochange will become 1 of either metric on-grid changed due to d/dt part of gravity or just due to metric parameters changing
   // assume no change by default
+  //
+  ///////////////////////////////
   dochange=0;
 
   if(DOEVOLVEMETRIC){
@@ -464,6 +469,15 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 
 
 
+
+
+
+  /////////////
+  //
+  // If BH should change mass or spin, then change it
+  //
+  /////////////
+
   if(dochange){
     lastupdatenstep=nstep;
 
@@ -472,7 +486,8 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
     
     trifprintf("AM Changing metric from MBH=%21.15g to %21.15g and a=%21.15g to %21.15g\n",MBH,MBH0+dE,a,a0+dabh);
 
-    compute_new_metric_and_prims(1,MBHpar,apar,QBHpar,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3, Atemp, uconstemp); // 1 tells us not the initial time
+    // 1 below tells us not the initial time
+    compute_new_metric_and_prims(1,MBHpar,apar,QBHpar,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3, Atemp, uconstemp);
 
   }
   else{
@@ -542,7 +557,7 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 // this can be called for only self-gravity or only evolving metric
 //
 // GODMARK: currently not using input parameters
-// used with EVOLVEMETRICSUBSTEP==0
+// used with EVOLVEMETRICSUBSTEP==0 || ==2
 int compute_new_metric_and_prims(int whichtime, SFTYPE MBHpar, SFTYPE apar, SFTYPE QBHpar, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   SFTYPE dtold;
@@ -551,7 +566,6 @@ int compute_new_metric_and_prims(int whichtime, SFTYPE MBHpar, SFTYPE apar, SFTY
 
   // tells code, if necessary, that doing special non-temporal update
   specialstep=1; // signifies to rest of code below that evolving on long steps
-  // GODMARK: uses globals pglobal
   compute_new_metric_anystep(whichtime, &CUf, &Cunew, prim, ucons);
 
 
@@ -610,6 +624,9 @@ int doingmetricsubstep(void)
 
 
 
+
+
+// compute new metric if doing it on a substep of the hydrodynamical step
 int compute_new_metric_substep(FTYPE *CUf, FTYPE *Cunew, FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   int retvalue;
@@ -628,9 +645,12 @@ int compute_new_metric_substep(FTYPE *CUf, FTYPE *Cunew, FTYPE (*pb)[NSTORE2][NS
 }
 
 
+
+
+
 // like compute_new_metric_and_prims(), but instead is called during substep after conserved quantities are updated and before inversion
 // this then avoids need to recompute primitives as above function that's used only infrequently
-// used with EVOLVEMETRICSUBSTEP==1
+// used with EVOLVEMETRICSUBSTEP==1 || ==2
 
 // CUf and Cunew are for if ever actually evolving metric
 // metric update doesn't directly give dt limit.  dt limit computed in advance.c from how source terms change stress-energy tensor
@@ -645,15 +665,22 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
   
 
 
+
+
   ////////////////////////////////////
   //
   // compute self-gravity contribution to space-time
+  //
+  ////////////////////////////////////
   if(DOSELFGRAVVSR){
     // must be called after MHD solution set
     // determine phi(r) , which will be used by set_grid to determine metric
     while(compute_phi_self_gravity_simple(pb)==-1){
     }
   }
+
+
+
 
 
   // DEBUG
@@ -665,9 +692,13 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
 
 
 
+
+
+
   ///////////////////////////////////////////////
   //
-  // this loop iterates until grid position of horizon doesn't change
+  // Find horizon's grid position
+  // This loop iterates until grid position of horizon doesn't change
   //
   ///////////////////////////////////////////////
   do{
@@ -710,14 +741,17 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
 
 
 
+
+
   ///////////////////////////////////////////
   //
   // NOW: recompute grid (set_grid()?)
   // 1 tells set_grid that beyond first set_grid call
   // 0 would tell set_grid to set Xmetricold[TT]=t so that no old metric used in connection calculation (i.e. stationarity assumed until iterations are underway)
+  // Also do other things that normally need to be done after set_grid()
+  //
+  ///////////////////////////////////////////
   set_grid(whichtime,CUf, Cunew);
-
-
 
   //  specialstep=2; 
 
@@ -740,10 +774,16 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
   post_init_specific_init();  // GODMARK: nothing done so far is a problem, ok and good to be done in case user depends on how grid set
 
 
+
+
+
+
   // DEBUG
   //  if(horizoni>0){
   //  gdump(mbhcount++);
   // }
+
+
 
   return(0);
 
@@ -752,7 +792,7 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
 
 
 
-
+// Things to do when horizon position changes due to accretion.  Then absorb those grid cell's mass, etc.
 // assume Mvsrface1_tot well-defined globally
 // insert desired new horizon due to self-gravity
 int action_ifchange_horizoni(int horizontiold,int horizontinew)
@@ -886,8 +926,6 @@ int action_ifchange_horizoni(int horizontiold,int horizontinew)
 // called through compute_new_metric_and_prims() via post_init after new metric is computed so next time metric is computed the old metric can be used with the new metric to determine the connection coefficients that have dgdt in them.
 // the post_init function is in initbase.c
 // function can be accessed outside this file
-
-
 int store_old_metric(void)
 {
   int i,j,k;
@@ -929,6 +967,8 @@ int store_old_metric(void)
 
 
 
+
+// initialize self-gravity terms
 int init_selfgrav(void)
 	{
 	int ii;
@@ -957,7 +997,7 @@ int init_selfgrav(void)
 
 
 
-
+// compute jacobian used for self-gravity
 void compute_jacvol(int i, int j, int k, FTYPE *jacvol)
 {
   FTYPE dr,dh,dp;
@@ -981,7 +1021,9 @@ void compute_jacvol(int i, int j, int k, FTYPE *jacvol)
 }
 
 
- 
+
+
+// compute volume version of d\phi 
 void compute_dp(int i, int j, int k, FTYPE *dp)
 {
   FTYPE Xkm[NDIM],Vkm[NDIM],Xkp1[NDIM],Vkp1[NDIM];
@@ -1005,6 +1047,7 @@ void compute_dp(int i, int j, int k, FTYPE *dp)
 
 
 
+// compute volume version of d\theta
 void compute_dh(int i, int j, int k, FTYPE *dh)
 {
   FTYPE Xjm[NDIM],Vjm[NDIM],Xjp1[NDIM],Vjp1[NDIM];
@@ -1030,6 +1073,7 @@ void compute_dh(int i, int j, int k, FTYPE *dh)
 
 
 
+// compute volume version of dr
 void compute_dr(int i, int j, int k, FTYPE *dr)
 {
   FTYPE Xim[NDIM],Vim[NDIM],Xip1[NDIM],Vip1[NDIM];
@@ -1052,6 +1096,19 @@ void compute_dr(int i, int j, int k, FTYPE *dr)
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // whether to use unewglobal[] in computing M(r)
@@ -1169,9 +1226,18 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+  ////////////////////////
+  //
+  // If not doing self-gravity, then shouldn't be here, so leave.
+  //
+  ///////////////////////
+
 #if(!DOSELFGRAVVSR)
   return(0);
 #endif
+
+
 
 
 
@@ -1182,6 +1248,18 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   ///////////////////////
   set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
 
+
+
+
+
+
+
+
+  ////////////////////////
+  //
+  // Initialize self-gravity quantities
+  //
+  ///////////////////////
 
   // non-relativistic
   // M(x_1) = \int_0^{x_1} \rho \detg dx1 dx2 dx3
@@ -1236,9 +1314,33 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
   /////////////////////////////////////////////////////////
   //
-  // vrsqvsr
+  // Compute vrsqvsr
   //
   /////////////////////////////////////////////////////////
+
+
+
+  ///////////////////////
+  //
+  // check values
+  //
+  ///////////////////////
+#if(PRODUCTION==0)
+  if(debugfail>=2){
+    enerregion=OUTSIDEHORIZONENERREGION;
+    enerpos=enerposreg[enerregion];
+    
+    ZSLOOP(enerpos[X1DN],enerpos[X1UP],enerpos[X2DN],enerpos[X2UP],enerpos[X3DN],enerpos[X3UP]){
+      PALLLOOP(pl){
+	if(!isfinite(MACP0A1(pb,i,j,k,pl)) || !isfinite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
+	  dualfprintf(fail_file,"pl=%d pb=%21.15g ucumformetric=%21.15g\n",pl,MACP0A1(pb,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
+	}
+      }
+    }
+  }
+#endif
+
+
 
   
   
@@ -1343,6 +1445,12 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
+
+
+
+
   /////////////////////////////////////////////////////////
   //
   // Compute dMvsr, dTrrvsr
@@ -1365,6 +1473,8 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   //COMPZSLOOP(enerpos[X1DN],enerpos[X1UP],enerpos[X2DN],enerpos[X2UP],enerpos[X3DN],enerpos[X3UP]){
   //   // SECTIONMARK: Note that this integrates outside ACTIVEREGION
   loc=CENT;
+
+
 
   ZSLOOP(enerpos[X1DN],enerpos[X1UP],enerpos[X2DN],enerpos[X2UP],enerpos[X3DN],enerpos[X3UP]){
 
@@ -1419,7 +1529,11 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     dJ = GLOBALMACP0A1(unewglobal,i,j,k,U3)*dVF/(alpha*(q.ucov[TT]));
 
 
+
+
 #elif(USEUNEW==0)
+    
+
     get_geometry(i,j,k,loc,ptrgeom);
     coord_ijk(i, j, k, loc, X);
     bl_coord_ijk(i, j, k, loc, V);
@@ -1773,6 +1887,10 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 #endif
 
 
+
+
+
+
     // u.T.P (uses u.T.u from above)
     udotPdotT = 0.0;
     kk=PH;
@@ -1798,6 +1916,15 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 #endif
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1857,9 +1984,20 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
+
+
+
+
+
+
+
   //////////////////////////////////
   //  
   // now cumulate over all CPUs and give result to CPU=0 to do simple integrals
+  //
+  //////////////////////////////////
   enerregion=OUTSIDEHORIZONENERREGION;
   // enerregion not really used for this integration, so assume per-CPU loops used enerregion information
   // diagnostics do not do this integrate() so they may be a substep out of "synch" with other diagnostics that are fully up to date
@@ -1887,9 +2025,18 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
+
+
+
+
+
   //////////////////////////////////////////////////////////////////
   //
   // Now compute Mvsr/r and Phivsr on CPU myid=0
+  //
+  //////////////////////////////////////////////////////////////////
   if(myid==0){
 
 
@@ -1914,6 +2061,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 	dTrrvsr_tot[i]=0.0;
       }
     }
+
 
 
 
@@ -1965,9 +2113,13 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
     //////////////////////
     //
     // determine Mvsr/r since want to interpolate that quantity rather than Mvsr directly
+    //
+    //////////////////////
     GRAVLOOP(ii){
       // the below causes the local mass at ii to be accelerated by itself
       // that's the correct behavior!  Pressure would support it
@@ -1981,8 +2133,11 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
     //////////////////
+    //
     // now set boundary conditions on MOrvsr_tot
     // this is antisymmetric due to division by $r$
+    //
+    //////////////////
     if(BCtype[X1DN]==R0SING){
       startphiiter=0;
       ri=0;
@@ -1999,10 +2154,16 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     }
 
 
+    /////////////////////
+    //
+    // get outer Mvsr
+    //
+    /////////////////////
     if(firsttime){
       trueMouter = Mrealouter_tot;
     }
     origMouter = Mrealouter_tot;
+
 
 
     
@@ -2028,6 +2189,9 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
     }
+
+
+
 
 
 
@@ -2092,6 +2256,10 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       //      Jvsr_tot[ii] += (trueJouter-origJouter);
       //      dualfprintf(fail_file,"Jvsr_tot[%d]=%21.15g dJvsr=%21.15g rho=%21.15g\n",ii,Jvsr_tot[ii],dJvsr_tot[ii],MACP0A1(pb,ii,0,0,RHO));
     }
+
+
+
+
 
 
 
@@ -2213,6 +2381,10 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     }
   
   
+
+
+
+
     // now enforce bondary condition that pseudo-relativistic Scharzschild outside (i.e. no extra mass)
     //ii = ncpux1*N1+N1BND; // causes mass at outer ghost cells to matter for Mvsr(r) everywhere
     //
@@ -2261,7 +2433,13 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 	trifprintf("Gamma(nearly max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
       }
 
-    }
+    }// end if firsttime==1
+
+
+
+
+
+
     origphiouter = phirealouter_tot;
     //    origMouter = Mrealouter_tot;
 
@@ -2278,11 +2456,17 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       // problem: small errors in integration cause mass in inner-radial region to go negative (form BH)
       //      Mvsr_tot[ii] += (trueMouter-origMouter);
       //      dualfprintf(fail_file,"Mvsr_tot[%d]=%21.15g dMvsr=%21.15g rho=%21.15g\n",ii,Mvsr_tot[ii],dMvsr_tot[ii],MACP0A1(pb,ii,0,0,RHO));
-    }
+    }// end GRAVLOOP
  
 
 
   }// end if cpu==0
+
+
+
+
+
+
 
 
 
@@ -2310,6 +2494,10 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 #endif
 
 
+
+
+
+
 #if(0)
   // DEBUG:
   dualfprintf(fail_file,"Jfactor=%21.15g Mfactor=%21.15g\n",Jfactor,Mfactor);
@@ -2322,6 +2510,15 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   }
   myexit(0);
 #endif
+
+
+
+
+
+
+
+
+
 
     
   if(formedblackhole){
@@ -2389,11 +2586,18 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
   ///////////////////////////
   //
   // things to do before exiting function with good status
   // firsttime is used by ALL CPUs
   firsttime=0;
+
+
+
+
+
 
 
   // DEBUG
@@ -2406,9 +2610,13 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
 
 
+
+
   /////////////////////////
   //
   // determine how to exit
+  //
+  /////////////////////////
   if(formedblackhole==0 || didformblackhole)  return(0); // then normal self-gravity
   else if(formedblackhole==1 && didformblackhole==0){
     didformblackhole=1;
@@ -2424,9 +2632,16 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
   }
 
 
+
+
   return(1); // shouldn't get here
 
 }
+
+
+
+
+
 
 
 
@@ -2590,6 +2805,8 @@ int get_rhoref(int i, int j, int k, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE *r
 
 
 
+
+
 // similar to bounds.c R0SING inside-horizon boundary on primitives
 // This sets primitives AND connection inside non-active region in case loops go over non-active region
 // With ACTIVEREGION, shouldn't be as important
@@ -2719,6 +2936,10 @@ int bound_spacetime_inside_horizon(void)
 
 
 
+
+
+
+
 // determine modification to diagonal components of metric from self-gravity
 // assumes original metric is diagonalized and spherical polar coordinates
 // assumes r(x_1) only and not r(x_1,x_2)
@@ -2751,6 +2972,9 @@ int set_gcov_selfspcmetric(FTYPE *X, FTYPE *V, FTYPE *gcovselfpert)
 
   return(0);
 }
+
+
+
 
 
 // TOV in KS form with velocity
@@ -2832,6 +3056,8 @@ int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, 
 
 
 
+
+
 // TOV in BL form with velocity
 // See grmhd-ksksp.nb, grmhd-connectiononly.nb, tov_solution_timedepsol.nb, tov_solution_timeindepsol.nb, ks_from_bl.nb
 int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
@@ -2902,6 +3128,9 @@ int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, 
 
   return(0);
 }
+
+
+
 
 
 

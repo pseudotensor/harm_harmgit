@@ -6,6 +6,11 @@
 #include "f2c.h"
 
 /*     f2c -f -P tau_neededbyharm.f ; cp tau_neededbyharm.c tau_neededbyharm.P ~/latestcode */
+
+/*     Currently, ki-rh42 does not have f2c, so use ki-rh39: */
+/*     f2c -f -P tau_neededbyharm.f */
+/*     scp tau_neededbyharm.c tau_neededbyharm.P jon@ki-rh42:/data/jon/latestcode/harm_harm/ */
+/*     tau_neededbyharm.c from f2c: MUST remove static in front of variables! */
 /*     Duplicates those operations from tau_calc() that involve things dependent upon hcm so that hcm isn't in
 dependent variable in table */
 /* ====================================================================== */
@@ -24,21 +29,24 @@ dependent variable in table */
 	doublereal *qphoton, doublereal *qm, doublereal *graddotrhouye, 
 	doublereal *tthermaltot, doublereal *tdifftot, doublereal *rho_nu__, 
 	doublereal *p_nu__, doublereal *s_nu__, doublereal *ynulocal, 
-	doublereal *ynuthermal, doublereal *enu, doublereal *enue, doublereal 
-	*enuebar)
+	doublereal *ynuthermal, doublereal *ynuthermal0, doublereal *enu, 
+	doublereal *enue, doublereal *enuebar)
 {
     /* System generated locals */
     doublereal d__1;
 
     /* Local variables */
-     doublereal n_nutau0__, u_nutau0__, n_nuebar__, u_nuebar__, 
+    doublereal n_nutau0__, u_nutau0__, n_nuebar__, u_nuebar__, 
 	    n_nuelth__, ntauatau, qtauatau, ntauttau, qtauttau, n_nuebar0__, 
 	    u_nuebar0__, h__, u_photon0__, nm_nuebar__, qm_nuebar__, 
 	    ntaua_nue__, qtaua_nue__, ntaut_nue__, qtaut_nue__, tauphoton, nb,
-	     nm, n_nuebarth__, n_nuebarth0__;
+	     nm, n_nuebarth__;
+    extern doublereal tthermalfromlambda_(doublereal *, doublereal *, 
+	    doublereal *);
+    doublereal n_nuebarth0__;
     extern doublereal rate_2stream__(doublereal *, doublereal *, doublereal *,
 	     doublereal *, doublereal *);
-     doublereal nmel, qmel, nmmu, qmmu, ntaua_nuebar__, qtaua_nuebar__, 
+    doublereal nmel, qmel, nmmu, qmmu, ntaua_nuebar__, qtaua_nuebar__, 
 	    ntauatauohcm, qtaut_nuebar__, qtauatauohcm, ntaut_nuebar__, 
 	    tauphotonabs, ntauttauohcm, qtauttauohcm, n_nue__, small, u_nue__,
 	     nmtau, qmtau, n_nue0__, u_nue0__, n_nuel__, nm_nue__, qm_nue__, 
@@ -46,10 +54,10 @@ dependent variable in table */
 	    n_nutau__;
     extern doublereal density_2stream__(doublereal *, doublereal *, 
 	    doublereal *);
-     doublereal ntauamu, qtauamu;
+    doublereal ntauamu, qtauamu;
     extern doublereal tdifffromlambda_(doublereal *, doublereal *, doublereal 
 	    *);
-     doublereal u_nutau__, ntautmu, qtautmu, n_nueth0__;
+    doublereal u_nutau__, ntautmu, qtautmu, n_nueth0__;
 
 /* ====================================================================== */
 /* outputs */
@@ -61,7 +69,7 @@ dependent variable in table */
 /* more outputs */
 /*     Set some things */
     nb = *rhob / *mb;
-    small = 1e-50;
+    small = 1e-150;
 /*     Set some equivalences */
     h__ = *hcm;
     u_photon0__ = *unumu0;
@@ -77,6 +85,8 @@ dependent variable in table */
     n_nuebarth0__ = *nnuebarth0;
     qtauttauohcm = *qtautmuohcm;
     qtauatauohcm = *qtauamuohcm;
+/*     Non-optical depth version of Ynuthermal: */
+    *ynuthermal0 = (n_nueth0__ - n_nuebarth0__) / nb;
 /*     Set 2-stream approximation solutions */
 /* ccccccccccccccccccccccccccccccccccccccccccccccccc */
 /*     Photon emission energy-volume-rate */
@@ -181,7 +191,7 @@ ith using lambdaintot for Tthermaltot */
 /* here this is just a diagnostic check */
     *ynuthermal = (n_nueth__ - n_nuebarth__) / nb;
     *tdifftot = tdifffromlambda_(clight, &h__, lambdatot);
-    *tthermaltot = tdifffromlambda_(clight, &h__, lambdaintot);
+    *tthermaltot = tthermalfromlambda_(clight, &h__, lambdaintot);
 /*     These are energies of *escaping* neutrinos */
 /*     These energies are used for neutrino annihilation heating rates */
 /* Computing MAX */
@@ -206,13 +216,13 @@ ith using lambdaintot for Tthermaltot */
 	doublereal *qtauamuohcm, doublereal *rho_nu__, doublereal *p_nu__, 
 	doublereal *s_nu__)
 {
-     doublereal u_nutau0__, u_nuebar__, qtauatau, qtauttau, u_nuebar0__,
+    doublereal u_nutau0__, u_nuebar__, qtauatau, qtauttau, u_nuebar0__,
 	     h__, qtaua_nue__, qtaut_nue__, nb, qtaua_nuebar__, 
 	    qtaut_nuebar__, qtauatauohcm, qtauttauohcm, small, u_nue__, 
 	    u_nue0__, u_nuel__, u_numu__, u_numu0__;
     extern doublereal density_2stream__(doublereal *, doublereal *, 
 	    doublereal *);
-     doublereal qtauamu, u_nutau__, qtautmu;
+    doublereal qtauamu, u_nutau__, qtautmu;
 
 /* ====================================================================== */
 /* outputs */
@@ -221,7 +231,7 @@ ith using lambdaintot for Tthermaltot */
 /*     Locals */
 /*     Set some things */
     nb = *rhob / *mb;
-    small = 1e-50;
+    small = 1e-150;
 /*     Set some equivalences */
     h__ = *hcm;
     u_nue0__ = *unue0;
@@ -265,6 +275,30 @@ ith using lambdaintot for Tthermaltot */
     return 0;
 } /* computefinal_justdensities_fromhcm__ */
 
+/*     Compute Ynuthermal0.  No optical depth corrections. */
+/* ====================================================================== */
+/*     ENSURE this list is the same for how used in tau_calc.f */
+/* Subroutine */ int compute_ynuthermal0_fromhcm__(doublereal *clight, 
+	doublereal *mb, doublereal *rhob, doublereal *nnueth0, doublereal *
+	nnuebarth0, doublereal *ynuthermal0)
+{
+    doublereal nb, n_nuebarth0__, small, n_nueth0__;
+
+/* ====================================================================== */
+/* outputs */
+/*     Passed to here */
+/*     Locals */
+/* outputs */
+/*     Set some things */
+    nb = *rhob / *mb;
+    small = 1e-150;
+    n_nueth0__ = *nnueth0;
+    n_nuebarth0__ = *nnuebarth0;
+/*     Thermalized faction Y_\nu */
+    *ynuthermal0 = (n_nueth0__ - n_nuebarth0__) / nb;
+    return 0;
+} /* compute_ynuthermal0_fromhcm__ */
+
 /* ===================================================================== */
 doublereal rate_2stream__(doublereal *clight, doublereal *h__, doublereal *
 	density, doublereal *tautot, doublereal *tauabs)
@@ -273,13 +307,13 @@ doublereal rate_2stream__(doublereal *clight, doublereal *h__, doublereal *
     doublereal ret_val;
 
     /* Local variables */
-     doublereal prefactor, small, osqrt3;
+    doublereal prefactor, small, osqrt3;
 
 /*     2-stream approximation for volume rate */
 /* ===================================================================== */
 /* ===================================================================== */
 /* ===================================================================== */
-    small = 1e-50;
+    small = 1e-150;
 /*      SMALL = 0.0d0 */
 /*     /H means rates are per unit volume */
     prefactor = *clight / 4.f / .75f / (*h__ + small);
@@ -297,7 +331,7 @@ doublereal density_2stream__(doublereal *density, doublereal *tautot,
     doublereal ret_val;
 
     /* Local variables */
-     doublereal twosqrt3, small;
+    doublereal twosqrt3, small;
 
 /*     2-stream approximation for density */
 /*     As tau->0, final density->0 */
@@ -305,7 +339,7 @@ doublereal density_2stream__(doublereal *density, doublereal *tautot,
 /* ===================================================================== */
 /* ===================================================================== */
 /* ===================================================================== */
-    small = 1e-50;
+    small = 1e-150;
 /*      SMALL = 0.0d0 */
 /*      twosqrt3 = 2.0*sqrt(3.0) */
     twosqrt3 = 3.4641016151377545f;
@@ -328,7 +362,7 @@ doublereal tdifffromlambda_(doublereal *clight, doublereal *h__, doublereal *
 /* ===================================================================== */
 /* ===================================================================== */
 /* ===================================================================== */
-    small = 1e-50;
+    small = 1e-150;
 /*      SMALL = 0.0d0 */
 /* Computing MAX */
     d__1 = *h__ * 3.f * *h__ / (small + *clight * 1.f * *lambda), d__2 = *h__ 
@@ -336,4 +370,30 @@ doublereal tdifffromlambda_(doublereal *clight, doublereal *h__, doublereal *
     ret_val = max(d__1,d__2);
     return ret_val;
 } /* tdifffromlambda_ */
+
+/* ===================================================================== */
+doublereal tthermalfromlambda_(doublereal *clight, doublereal *h__, 
+	doublereal *lambda)
+{
+    /* System generated locals */
+    doublereal ret_val;
+
+    /* Local variables */
+    doublereal small;
+
+/*     thermalization time limited by speed of light */
+/* ===================================================================== */
+/* ===================================================================== */
+/* ===================================================================== */
+    small = 1e-150;
+/*      SMALL = 0.0d0 */
+/*     Timescale to undergo a collision that thermalizes the particle.  Assume input lambda only thermalizing 
+(i.e. inelastic) opacities. */
+/*     H doesn't enter */
+    ret_val = *lambda / *clight;
+/*     Assume it takes at least 3 inelastic events -- handled by exponential solution so that complete thermal
+ization takes about 3X the above time! */
+/*      tthermalfromlambda=3.0*lambda/clight */
+    return ret_val;
+} /* tthermalfromlambda_ */
 

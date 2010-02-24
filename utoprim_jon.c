@@ -911,6 +911,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
 
 
   if( (utsq < 0.) && (fabs(utsq) < MAXNEGUTSQ) ) { 
+    if(debugfail>=2) dualfprintf(fail_file,"utsq was %21.15g now 0.0 @ i=%d j=%d k=%d\n",utsq,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     utsq = 0.0;
   }
   if(utsq >= 0. && utsq < UTSQ_TOO_BIG) {
@@ -918,14 +919,18 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   }
   else{
     if( debugfail>=2 ){
-      dualfprintf(fail_file,"Utoprim_new(): utsq < 0 in utoprim_jon attempt, utsq = %21.15g \n", utsq) ;
-      dualfprintf(fail_file,"utsq=%21.15g\n",utsq);
+      dualfprintf(fail_file,"Utoprim_new(): utsq < 0 or utsq>UTSQ_TOO_BIG in utoprim_jon attempt.  Resetting to utsq=0.0 from utsq = %21.15g @ i=%d j=%d k=%d\n", utsq,ptrgeom->i,ptrgeom->j,ptrgeom->k) ;
+      for(i=1;i<4;i++)
+	for(j=1;j<4;j++) dualfprintf(fail_file,"i=%d j=%d :: gcov=%21.15g primi=%21.15g primj=%21.15g\n",i,j,ptrgeom->gcov[GIND(i,j)],prim[UTCON1+i-1],prim[UTCON1+j-1]) ;
     }
+
+    // then set some kind of guess since guess may just be bad and may still be able to find a solution
+    utsq = 0.0;
     
-    *lpflag= UTOPRIMFAILCONVGUESSUTSQ; // guess failure actually
+    //    *lpflag= UTOPRIMFAILCONVGUESSUTSQ; // guess failure actually
     // check on v^2>1 failure
-    check_utsq_fail(-1E30, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-    return(1) ;
+    //check_utsq_fail(-1E30, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+    //return(1) ;
   }
 
   gammasq = 1. + utsq ;
@@ -935,6 +940,9 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   //   i.e. you don't get positive values for dP/d(vsq) . 
   rho0 = (D) / gamma ;
   u = prim[UU] ;
+  if(whicheos==KAZFULL){
+    u = MAX(0.0,u); // near degeneracy, allow somewhat "hot" solution so guess doesn't give immediately bad Wp and utsq(Wp)
+  }
   p = pressure_rho0_u(whicheos,EOSextra,rho0,u) ; // p(rho0,u) just used for guess, while p(rho0,\chi) used to get solution since assume don't know \chi yet.  Even if had initial \chi, wouldn't be final \chi anyways.
   w = rho0 + u + p ;
 
@@ -959,10 +967,6 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   wglobal[2]=GAMMASQCHECKRESID * fabs(rho0);
 
 
-  // DEBUG:
-  //dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
-  //int pl; PALLLOOP(pl) dualfprintf(fail_file,"DEBUG2: prim[%d]=%21.15g\n",pl,prim[pl]);
-  //for(pl=FIRSTEOSGLOBAL;pl<=LASTEOSGLOBAL;pl++) dualfprintf(fail_file,"DEBUG3: EOSextra[%d]=%21.15g\n",pl,EOSextra[pl]);
 
 
   
@@ -1023,13 +1027,17 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
 #endif
 
 
+
+
+     
+
+
 #define MAXNUMGUESSCHANGES (1000)
 
 
   // sometimes above gives invalid guess (Wp=0 or utsq<0) so fix
   numattemptstofixguess=0;
   while(1){
-
     // under all eomtype's, ensure utsq reasonable for guess so Newton's method starts at reasonable value around which to work from
     // check  utsq from this guess for W
     utsq=utsq_calc(*W_last, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // check for precision problems
@@ -1050,9 +1058,22 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
     }
     else{
 #if(PRODUCTION==0)
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,utsq,Ss,D);
+      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma);
 #endif
-      *Wp_last = MAX(*Wp_last*10.0,fabs(D));
+
+
+      PFTYPE coldpflag;
+      FTYPE coldWp;
+      coldgrhd(&coldpflag, Qtsq, D, &coldWp);
+      if(*Wp_last<coldWp) *Wp_last=coldWp;
+
+
+      if(numattemptstofixguess>0){
+	// then cold fix was not enough:
+	*Wp_last = MAX(MAX(fabs(*Wp_last)*10.0,NUMEPSILON*100.0*fabs(D)),KINDASMALL);
+      }
+
+      // set new W
       *W_last = *Wp_last + (D);
     }
 
@@ -1063,8 +1084,21 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
       return(1) ;
     }
 
+
     numattemptstofixguess++;
+
   }
+
+
+
+
+  // DEBUG:
+  //dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
+  //int pl; PALLLOOP(pl) dualfprintf(fail_file,"DEBUG2: prim[%d]=%21.15g\n",pl,prim[pl]);
+  //  int jjm,kkm; DLOOP(jjm,kkm) dualfprintf(fail_file,"DEBUG3: gcov=%21.15g gcon=%21.15g\n",ptrgeom->gcov[GIND(jjm,kkm)],ptrgeom->gcon[GIND(jjm,kkm)]);
+  //for(pl=FIRSTEOSGLOBAL;pl<=LASTEOSGLOBAL;pl++) dualfprintf(fail_file,"DEBUG3: EOSextra[%d]=%21.15g\n",pl,EOSextra[pl]);
+
+
 
 
 
@@ -1472,6 +1506,7 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FT
 		  rho0,w,tmpdiff,p,u) ;
       dualfprintf(fail_file,
 		  "rho or uu < 0 failure: gamma,utsq = %21.15g %21.15g  \n",  gamma, utsq) ;
+      dualfprintf(fail_file,"nstep=%ld steppart=%d :: t=%21.15g :: i=%d j=%d k=%d p=%d\n",nstep,steppart,t,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
     }
     // Below changed to pressure since internal energy can be negative due to arbitrary energy per baryon offset
     if((rho0<=0.)&&(p>=0.)) *lpflag=  UTOPRIMFAILRHONEG;
@@ -1783,22 +1818,23 @@ static FTYPE vsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBs
 // Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE dvsq_dW(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
-	FTYPE W3,X3,Ssq,Wsq,X;
+  FTYPE W3,X3,Ssq,Wsq,X;
 	
-	X = Bsq + W;
-	Wsq = W*W;
-	W3 = Wsq*W ;
-	X3 = X*X*X;
+  X = Bsq + W;
+  Wsq = W*W;
+  W3 = Wsq*W ;
+  X3 = X*X*X;
 
-	//	if(fabs(Bsq)==0.0) Ssq=0.0;
-	//	else Ssq = QdotBsq / Bsq;
+  //	if(fabs(Bsq)==0.0) Ssq=0.0;
+  //	else Ssq = QdotBsq / Bsq;
 
-	//return( -2.*( Ssq * ( 1./W3 - 1./X3 )  +  Qtsq / X3 ) ); 
-	//	return( -2.*( W3*Qtsq + QdotBsq * ( 3*W*X + Bsq*Bsq ) ) / ( W3 * X3 )   );
+  //return( -2.*( Ssq * ( 1./W3 - 1./X3 )  +  Qtsq / X3 ) ); 
+  //	return( -2.*( W3*Qtsq + QdotBsq * ( 3*W*X + Bsq*Bsq ) ) / ( W3 * X3 )   );
 
-	return( -2.*( Qtsq/X3  +  QdotBsq * (3.0*W*X + Bsq*Bsq) / ( W3 * X3 )  )  );
+  return( -2.0/X3 * ( Qtsq  +  QdotBsq * (3.0*W*X + Bsq*Bsq)/W3  )  ); // RIGHT (avoids catastrophic cancellation with W^3 term in numerator)
 
-	//	return( -2.*( Qtsq/X3  +  QdotBsq/Bsq * (1.0/W3 - 1.0/X3)  )  ); // WRONG
+  //	return( -2.*( Qtsq/X3  +  QdotBsq/Bsq * (1.0/W3 - 1.0/X3)  )  ); // RIGHT (said was WRONG!)
+
 
 }
 
@@ -2896,13 +2932,14 @@ static void get_kinetics_part1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FT
 static void get_kinetics_part2(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra,  FTYPE W, FTYPE X, FTYPE X2, FTYPE X3, FTYPE utsq, FTYPE gamma, FTYPE gammasq, FTYPE rho0, FTYPE wmrho0,FTYPE *dvsq,FTYPE *dwmrho0dW,FTYPE *drho0dW,FTYPE *dwmrho0dvsq,FTYPE *drho0dvsq)
 {
 
-  // get dEprimedWp
+  // total derivative dv^2/dW'
   *dvsq = dvsq_dW(W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // no precision problem -- and no EOS calls inside -- purely kinetic
-  *dwmrho0dW = 1.0/gammasq;
+
+  *dwmrho0dW = 1.0/gammasq; // holding utsq fixed
   *drho0dW = 0.0; // because \rho=D/\gamma and holding utsq fixed
 
-  *dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp);
-  *drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma
+  *dwmrho0dvsq = (D*(gamma*0.5-1.0) - Wp); // holding Wp fixed
+  *drho0dvsq = -D*gamma*0.5; // because \rho=D/\gamma and holding Wp fixed
 
 
 }
@@ -2988,8 +3025,9 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     //
     ///////////////////////
     FTYPE dpdW,dpdvsq,dpdWp;
+    // dvsq = dv^2/dW' total derivative
     dpdW   = drho0dW   *dpdrho  +     dwmrho0dW *dpdchi; // dP/dW' holding utsq fixed
-    dpdvsq = drho0dvsq *dpdrho  +   dwmrho0dvsq *dpdchi;
+    dpdvsq = drho0dvsq *dpdrho  +   dwmrho0dvsq *dpdchi; // dP/dvsq holding W' fixed where utsq and vsq are same fixed quantity
     dpdWp = dpdW  + dpdvsq*dvsq; // dp/dW = dp/dWp [total derivative]
 
     ////////////////////////
@@ -3004,6 +3042,10 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     if(dvsq!=dvsq || dpdW!=dpdW || dpdvsq!=dpdvsq || dpdWp!=dpdWp || dEprimedWp!=dEprimedWp) dEprimedWp=0.0; // indicates still problem
 
 
+
+
+
+
     ////////////////////////
     //
     // residual, jacobian, and step
@@ -3014,6 +3056,20 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     dx[0] = -Eprime/dEprimedWp;
     *f = 0.5*(Eprime*Eprime);
     *df = -2. * (*f);
+
+
+    // DEBUG:
+    //    if(x[0]+dx[0]<SMALL){
+    //      dualfprintf(fail_file,"EPRIMEPROBLEM: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g :: %21.15g %21.15g %21.15g :: %21.15g %21.15g %21.15g %21.15g %21.15g :: %21.15g %21.15g %21.15g %21.15g %21.15g :: %21.15g %21.15g\n"
+    //		  ,Wp, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, W, X, X2, X3, utsq, gamma, gammasq, rho0, wmrho0
+    //		  ,pofchi,dpdrho,dpdchi
+    //		  ,dvsq,dwmrho0dW,drho0dW,dwmrho0dvsq,drho0dvsq
+    //		  ,dpdW,dpdvsq,dpdWp,Eprime,dEprimedWp
+    //            ,x[0],dx[0]);
+    //      int extraloop;
+    //      for(extraloop=FIRSTEOSGLOBAL;extraloop<=LASTEOSGLOBAL;extraloop++) dualfprintf(fail_file,"EPRIMEPROBELMEXTRA: %21.15g\n",EOSextra[extraloop]);
+    //    }
+
 
   }
 
@@ -4067,7 +4123,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 	      x[id]=x_older[id]; // since current W is what gave bad residual and already saved it into x_old[0]
 	      dx[id]=dx_old[id]; // new dx is probably messed up (didn't yet save dx[0], so use dx_old[0]
 #if(PRODUCTION==0)
-	      if(debugfail>=2) dualfprintf(fail_file,"resetW: id=%d :: %21.15g %21.15g DAMPFACTOR=%21.15g\n",id,x[id],dx[id],DAMPFACTOR[id]);
+	      if(debugfail>=2) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx);
 #endif
 	      // SUPERGODMARK: Noticed that if Mathematica solution can be found but gives utsq<0 then this damping leads to nearly circular loop till max iterations.
 	      diddamp=1;

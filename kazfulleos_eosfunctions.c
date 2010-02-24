@@ -8,7 +8,9 @@ static int offsetquant2(FTYPE signature, int whichd, FTYPE *EOSextra, FTYPE quan
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out);
 
-static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void constrain_H(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static void constrain_TDYNORYE_YNU(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+
 static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatotptr);
 static FTYPE pressure_dp_rho0_u_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *dp);
 static FTYPE pressure_dp_wmrho0_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0, FTYPE *dp);
@@ -65,7 +67,6 @@ static void compute_notallextras1_du_kazfull(int justnum, FTYPE *EOSextra, FTYPE
 
 static void compute_IJKglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS]);
 static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
@@ -74,6 +75,7 @@ static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
 static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra);
 static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
 static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr);
+static int get_extrasprocessed_manyiterations(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
 
 
 
@@ -100,20 +102,20 @@ static int needspostoffset(int whichd, int whichtablesubtype, int coli, int *whi
     return(0);
   }
   else if(whichtablesubtype==SUBTYPEDP){
-    // derivatives!
+    // GODMARK: derivatives!
   }
   else if(whichtablesubtype==SUBTYPESDEN){
     if(coli==0){ *whichdfake=STOTDIFF; return(1); }
-    // derivatives!
+    // GODMARK: derivatives!
     return(0);
   }
   else if(whichtablesubtype==SUBTYPESSPEC){
-    // derivatives!
+    // GODMARK: derivatives!
     if(coli==0){ *whichdfake=SSPECTOTDIFF; return(1); }
     return(0);
   }
   else if(whichtablesubtype==SUBTYPEPOFCHI){
-    // derivatives!
+    // GODMARK: derivatives!
     if(coli==0){ return(0);}
     return(0);
   }
@@ -174,6 +176,7 @@ static int offsetquant2(FTYPE signature, int whichd, FTYPE *EOSextra, FTYPE quan
 
 
 
+// currently unused extra degen offset.  Was used when degens were negative due to small table size
 static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
@@ -183,6 +186,7 @@ static int offsetquant2_general(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE 
 
 }
 
+// currently unused extra degen offset.  Was used when degens were negative due to small table size
 static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in, FTYPE *quant2out)
 {
 
@@ -191,6 +195,8 @@ static int offsetquant2_general_inverse(int whichd, FTYPE quant1, FTYPE quant2in
   return(0);
 
 }
+
+
 
 
 // get dquant2 = quant2 - quant2nu, the difference between full temperature-like quantity and neutrino version
@@ -234,6 +240,8 @@ static int get_dquant2(int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, 
   return(0);
 
 }
+
+
 
 
 
@@ -384,7 +392,7 @@ static int usereduced_eos(int domod, int whichfun, int whichd, FTYPE *EOSextra, 
 
 
 // setup for fudgefrac()
-// GODMARK: introduces another lookup, so kinda expensive for something like the derivative that probably does not often have dominant neutrino contribution
+// Introduces another lookup, so kinda expensive for something like the derivative that probably does not often have dominant neutrino contribution, so use prepare_fudgefrac_input_dpofwhichd_kazfull() if can.
 static int prepare_fudgefrac_kazfull(
 				     int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, // inputs
 				     FTYPE unu, FTYPE pnu, FTYPE chinu, FTYPE snu, // inputs
@@ -1225,7 +1233,7 @@ static void reduce_extras(int whichtablesubtype, int *iffun, int whichd, FTYPE *
 	extras[whichcolinquantity[EXTRA19]]=extras[whichcolinquantity[EXTRA20]]=BIG;
       }
       else{
-	dualfprintf(fail_file,"Not setup asdfasdfasd\n");
+	dualfprintf(fail_file,"Not setup for other data types in reduce_extras()\n");
 	myexit(2093852);
       }
 
@@ -1380,8 +1388,8 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     lambdatot,lambdaintot,
     tauphotonohcm,tauphotonabsohcm,
     nnueth0,nnuebarth0;
-  FTYPE qphoton,qm,graddotrhouyl,tthermaltot,tdifftot,rho_nu,p_nu,s_nu,ynulocal,Ynuthermal,enu,enue,enuebar;
-  FTYPE qphoton_a[NUMHDIRECTIONS],qm_a[NUMHDIRECTIONS],graddotrhouyl_a[NUMHDIRECTIONS],tthermaltot_a[NUMHDIRECTIONS],tdifftot_a[NUMHDIRECTIONS],rho_nu_a[NUMHDIRECTIONS],p_nu_a[NUMHDIRECTIONS],s_nu_a[NUMHDIRECTIONS],ynulocal_a[NUMHDIRECTIONS],Ynuthermal_a[NUMHDIRECTIONS],enu_a[NUMHDIRECTIONS],enue_a[NUMHDIRECTIONS],enuebar_a[NUMHDIRECTIONS];
+  FTYPE qphoton,qm,graddotrhouyl,tthermaltot,tdifftot,rho_nu,p_nu,s_nu,ynulocal,Ynuthermal,Ynuthermal0,enu,enue,enuebar;
+  FTYPE qphoton_a[NUMHDIRECTIONS],qm_a[NUMHDIRECTIONS],graddotrhouyl_a[NUMHDIRECTIONS],tthermaltot_a[NUMHDIRECTIONS],tdifftot_a[NUMHDIRECTIONS],rho_nu_a[NUMHDIRECTIONS],p_nu_a[NUMHDIRECTIONS],s_nu_a[NUMHDIRECTIONS],ynulocal_a[NUMHDIRECTIONS],Ynuthermal_a[NUMHDIRECTIONS],Ynuthermal0_a,enu_a[NUMHDIRECTIONS],enue_a[NUMHDIRECTIONS],enuebar_a[NUMHDIRECTIONS];
   FTYPE dquant2;
   FTYPE qarray[NUMINDEPDIMENSMEM];
   int repeatedeos;
@@ -1407,9 +1415,8 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     }
     else numloops=0;
 
-    // add the below 2 to see *true* functional dependence
-    //    compute_Hglobal(GLOBALPOINT(EOSextraglobal),GLOBALPOINT(pglobal));
-    //    compute_TDYNORYE_YNU_global(GLOBALPOINT(EOSextraglobal),GLOBALPOINT(pglobal));
+    // add the below to see *true* functional dependence
+    // compute_Hglobal(GLOBALPOINT(EOSextraglobal),GLOBALPOINT(pglobal));
 
 
 #endif
@@ -1530,14 +1537,22 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
     //////////////////////////
     //
-    // set extra parameters
+    // set extra parameters used for lookup table
     //
     //////////////////////////
-    rho0=qarray[1];
-    u=qarray[2]; // "u" not used
-    ye=qarray[3]; // "ye" not used
-    ynu=pr[YNU]; // pr[YNU] = Ynu[orig] = Ynu (i.e. not Ynu0 so that conservation law equation for Y_\nu is correctly using radiative transfer version of Y_\nu, while EOSextra[YNU] is Ynu0 used for table lookup
-    H=qarray[5];
+    rho0=qarray[RHOINDEP]; // "rho0" IS used
+    u=qarray[TEMPLIKEINDEP]; // "u" is NOT used
+    ye=qarray[YEINDEP]; // "ye" is NOT used
+    if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+      ynu=pr[YNU]; // "ynu" is NOT used
+    }
+    else{
+      // ynu is really Ynu0 that is from table lookup EOSextra[]
+      ynu=qarray[YNUINDEP];
+    }
+    H=qarray[HINDEP]; // "H" IS used
+
+
 
    
 
@@ -1643,9 +1658,10 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       //	processed[7]= 4.57801947359013e+44 -> p7/Lunit**3 = 2.89456047049061e+28
       //	processed[8]=  1.3024258110165e-06 (ynulocal = ynu)
       //	processed[9]= 2.61741093721727e-06 (ynuthermal)
-      //	processed[10]= 5.56170975583112e-43 -> 7.90578019862632e-06
-      //	processed[11]= 5.57557196044043e-43
-      //	processed[12]=  4.0768867847036e-43
+      //	processed[10]= 0.022703249033971   (ynuthermal0)
+      //	processed[11]= 5.56170975583112e-43 -> 7.90578019862632e-06
+      //	processed[12]= 5.57557196044043e-43
+      //	processed[13]=  4.0768867847036e-43
       //
       // So consistent within expected error of temperature.  Implies Ynu[Ynu0] looks good.  Original HELM good, so error must be in lookup table.
       // So error could be in either the degeneracy offset correction or in the fact that I use linear interpolation.
@@ -1671,7 +1687,8 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       //	processed[9]= 3.02574052771397e-06
       //	processed[10]= 5.56170975583112e-43
       //	processed[11]= 5.57557196044043e-43
-      //	processed[12]=  4.0768867847036e-43
+      //        ....
+      //	processed[13]=  4.0768867847036e-43
       // So Ynu didn't change much with density, implying required change in Ynu0 to match this Ynu wouldn't change things much.
       // Nothing else apart from kbtk, rho, and extras create processed.  So appears look-up of extras is the issue.  Again, could be degeneracy offset or linear interpolation
       //
@@ -1723,7 +1740,8 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       //processed[9]= 2.30304648159613e-05
       //processed[10]= 4.99481093689521e-43
       //processed[11]= 4.99543637701315e-43
-      //processed[12]= 3.65705255437989e-43
+      //  ....
+      //processed[13]= 3.65705255437989e-43
 
       // Table lookup shows that values are most dependent upon Y_e, so need better table in Y_e and use higher-order interpolation in Y_e
 
@@ -1849,6 +1867,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 	  // calling f2c generated code, which assumes a certain dimensionless form for inputs
 	  // rhob/mb should be a number density, and mb*rate/cc should be in rhounit*rate
 	  // this means if rho0 in c^2 units, then mb should be too
+	  // Note that Ynuthermal0 is not based upon optical depth, so below just repeats its calculation.
 	  computefinal_fromhcm__(&Ccode,&mbwithrhounit,&rho0,&kbtk,&H,
 				 &unue0,&unuebar0,&unumu0,
 				 &qtautnueohcm,&qtautnuebarohcm,&qtautmuohcm,
@@ -1860,11 +1879,11 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 				 &tauphotonohcm,&tauphotonabsohcm,
 				 &nnueth0,&nnuebarth0,
 				 // outputs below
-				 &qphoton_a[hi],&qm_a[hi],&graddotrhouyl_a[hi],&tthermaltot_a[hi],&tdifftot_a[hi],&rho_nu_a[hi],&p_nu_a[hi],&s_nu_a[hi],&ynulocal_a[hi],&Ynuthermal_a[hi],&enu_a[hi],&enue_a[hi],&enuebar_a[hi]);
+				 &qphoton_a[hi],&qm_a[hi],&graddotrhouyl_a[hi],&tthermaltot_a[hi],&tdifftot_a[hi],&rho_nu_a[hi],&p_nu_a[hi],&s_nu_a[hi],&ynulocal_a[hi],&Ynuthermal_a[hi],&Ynuthermal0_a,&enu_a[hi],&enue_a[hi],&enuebar_a[hi]);
 	}
 	else{
 	  // then set to approximate optically thin values (i.e. ~0)
-	  qphoton_a[hi]=qm_a[hi]=graddotrhouyl_a[hi]=rho_nu_a[hi]=p_nu_a[hi]=s_nu_a[hi]=ynulocal_a[hi]=Ynuthermal_a[hi]=enu_a[hi]=enue_a[hi]=enuebar_a[hi]=0.0;
+	  qphoton_a[hi]=qm_a[hi]=graddotrhouyl_a[hi]=rho_nu_a[hi]=p_nu_a[hi]=s_nu_a[hi]=ynulocal_a[hi]=Ynuthermal_a[hi]=Ynuthermal0_a=enu_a[hi]=enue_a[hi]=enuebar_a[hi]=0.0;
 	  tthermaltot_a[hi]=tdifftot_a[hi]=BIG; // force non-evolution of Ynu
 	}
       }// end if doall
@@ -1901,7 +1920,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     // GODMARK: a heating method might want access to these different directional quantities
     //
     //////////////////////////////////
-    qphoton=qm=graddotrhouyl=tthermaltot=tdifftot=rho_nu=p_nu=s_nu=ynulocal=Ynuthermal=enu=enue=enuebar=0.0;
+    qphoton=qm=graddotrhouyl=tthermaltot=tdifftot=rho_nu=p_nu=s_nu=ynulocal=Ynuthermal=Ynuthermal0=enu=enue=enuebar=0.0;
     frac=1.0/((FTYPE)NUMHDIRECTIONS);
     for(hi=0;hi<NUMHDIRECTIONS;hi++){
 
@@ -1913,6 +1932,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 	tdifftot += tdifftot_a[hi]*frac;
 	ynulocal += ynulocal_a[hi]*frac;
 	Ynuthermal += Ynuthermal_a[hi]*frac;
+	Ynuthermal0 = Ynuthermal0_a; // not based upon optical depth
 	enu += enu_a[hi]*frac;
 	enue += enue_a[hi]*frac;
 	enuebar += enuebar_a[hi]*frac;
@@ -1945,6 +1965,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       ei++; processed[ei]=s_nu;
       ei++; processed[ei]=ynulocal;
       ei++; processed[ei]=Ynuthermal;
+      ei++; processed[ei]=Ynuthermal0;
       // below are energies of *escaping* neutrinos
       ei++; processed[ei]=enu;
       ei++; processed[ei]=enue;
@@ -1991,7 +2012,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     dualfprintf(fail_file,"qi=%d qarray[qi] =%21.15g\n",qi,qarray[qi]);
   }
 
-  dualfprintf(fail_file,"ynu=%21.15g\n",pr[YNU]);
+  dualfprintf(fail_file,"primitive ynu=%21.15g\n",pr[YNU]);
 
   if(doall) dualfprintf(fail_file,"TOPLOT %21.15g %21.15g\n",EOSextra[YNU0GLOBAL],processed[YNULOCAL]);
   
@@ -2040,6 +2061,52 @@ static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBA
 }
 
 
+// whichd = UTOTDIFF,PTOTDIFF,CHIDIFF
+// get neutrino rho_nu, p_nu, s_nu
+// function is (rho0,u/p/chi)
+// for now assume only needed as function of quant2=u.  Assumes this function called infrequently outside iterative routines
+// Point is that anyways we are doing an approximation, and save memory and gain simplicity by avoiding tabulating other f(rho0,chi) quantities
+static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr)
+{
+  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
+  int toreturn;
+  FTYPE extras[MAXNUMEXTRAS];
+  FTYPE processed[MAXPROCESSEDEXTRAS];
+
+
+  // assume WHICHD==UTOTDIFF only
+  toreturn=get_extrasprocessed_kazfull(0, EOSextra, pr, extras, processed);
+
+  // iterate u_nu, p_nu, and s_nu
+  iterateupsnu(processed,pr,EOSextra);
+
+  return(toreturn);
+}
+
+
+
+
+// iterate u_nu, p_nu, and s_nu
+static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
+{
+
+  /////////////////
+  //
+  // Iterate rho_nu, p_nu, and s_nu for table lookup
+  //
+  // assume DO WANT to update EOSextraglobal[UNUGLOBAL,PNUGLOBAL,SNUGLOBAL][i][j][k] since input is actual value on grid
+  EOSextra[UNUGLOBAL] = processed[RHONU];
+  EOSextra[PNUGLOBAL] = processed[PNU];
+  EOSextra[SNUGLOBAL] = processed[SNU];
+
+  return(0);
+
+}
+
+
+
+
+
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
 static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
@@ -2048,7 +2115,6 @@ static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOS
   int i,j,k;
   int numberofiterations;
   int iter;
-
 
 
 #define NUMT0YNU0PARMSITER 10
@@ -2076,29 +2142,6 @@ static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOS
 
 
 
-// whichd = UTOTDIFF,PTOTDIFF,CHIDIFF
-// get neutrino rho_nu, p_nu, s_nu
-// function is (rho0,u/p/chi)
-// for now assume only needed as function of quant2=u.  Assumes this function called infrequently outside iterative routines
-// Point is that anyways we are doing an approximation, and save memory and gain simplicity by avoiding tabulating other f(rho0,chi) quantities
-static int compute_and_iterate_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr)
-{
-  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
-  int toreturn;
-  FTYPE extras[MAXNUMEXTRAS];
-  FTYPE processed[MAXPROCESSEDEXTRAS];
-
-
-  // assume WHICHD==UTOTDIFF only
-  toreturn=get_extrasprocessed_kazfull(0, EOSextra, pr, extras, processed);
-
-  // iterate u_nu, p_nu, and s_nu
-  iterateupsnu(processed,pr,EOSextra);
-
-  return(toreturn);
-}
-
-
 // call this if not calling sources so can iterate Ynu0
 static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr)
 {
@@ -2108,42 +2151,60 @@ static int compute_and_iterate_ynu0_upsnu(int whichd, FTYPE *EOSextra, FTYPE *pr
   FTYPE extras[MAXNUMEXTRAS];
   FTYPE processed[MAXPROCESSEDEXTRAS];
 
+
+
   // assume WHICHD==UTOTDIFF only
   // 1 below means doall extras and processed
-  toreturn=get_extrasprocessed_kazfull(1, EOSextra, pr, extras, processed);
+  int doall=1;
+  toreturn=get_extrasprocessed_kazfull(doall, EOSextra, pr, extras, processed);
 
   // iterate u_nu, p_nu, and s_nu
   iterateupsnu(processed,pr,EOSextra);
 
-  // iterate Ynu0
-  iterateynu0(processed,pr,EOSextra);
+  // iterate Ynu0[Ynu]
+  // only called when old Ynu evolution method
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD) iterateynu0(processed,pr,EOSextra);
+  else EOSextra[YNUOLDGLOBAL]=processed[YNULOCAL]; // then not really old Ynu, really latest Ynu[Ynu0]
+
 
   return(toreturn);
 
 }
 
 
-
-
-// iterate u_nu, p_nu, and s_nu
-static int iterateupsnu(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
+// update unu,pnu,snu,Ynu0 (or Ynu) over many iterations (used by sources)
+static int get_extrasprocessed_manyiterations(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed)
 {
+  int toreturn;
+  int iter;
 
-  /////////////////
-  //
-  // Iterate rho_nu, p_nu, and s_nu for table lookup
-  //
-  // assume DO WANT to update EOSextraglobal[UNUGLOBAL,PNUGLOBAL,SNUGLOBAL][i][j][k] since input is actual value on grid
-  EOSextra[UNUGLOBAL] = processed[RHONU];
-  EOSextra[PNUGLOBAL] = processed[PNU];
-  EOSextra[SNUGLOBAL] = processed[SNU];
 
-  return(0);
+  for(iter=0;iter<NUMBEROFYNU0ITERATIONS;iter++){// iterate like when would otherwise call compute_ynu0_upsnu_global() that isn't called when cooling==COOLEOSGENERAL
+    
+    // get neutrino and photon quantities
+    toreturn=get_extrasprocessed_kazfull(doall, EOSextra, pr, extras, processed); // (rho0,u)
+    
+    // if here (with cooling==COOLEOSGENERAL), then not doing iteration of upsnu or ynu0 otherwise, so do here
+    // iterate u_nu, p_nu, and s_nu
+    iterateupsnu(processed,pr,EOSextra);
+    
+    // iterate Ynu0[Ynu]
+    // only called when old Ynu evolution method
+    if(WHICHEVOLVEYNU==EVOLVEYNURAD) iterateynu0(processed,pr,EOSextra);
+    else EOSextra[YNUOLDGLOBAL]=processed[YNULOCAL]; // then not really old Ynu, really latest Ynu[Ynu0]
+  }
 
+
+  // only care about last call to get_extrasprocessed_kazfull()
+  return(toreturn);
 }
 
 
 
+
+
+
+// find Ynu0[Ynu]
 // iterate Ynu0
 // only can be done if doall was used when creating processed[], since otherwise processed[YNULOCAL] has not been recalled or computed
 static int iterateynu0(FTYPE *processed,FTYPE *pr,FTYPE *EOSextra)
@@ -2249,17 +2310,16 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   int j;
   FTYPE X[NDIM],V[NDIM],r,th,R;
   FTYPE du;
-  FTYPE rho,u,yl,ynu;
+  FTYPE rho,u,ye,yl,ynu;
   FTYPE cofactor;
   FTYPE dUdtau;
   FTYPE rph,photoncapture;
   FTYPE extras[MAXNUMEXTRAS];
   void compute_allextras_kazfull(int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras);
-  int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed);
   FTYPE processed[MAXPROCESSEDEXTRAS];
   int ei;
   FTYPE qphoton,qm,graddotrhouyl,tthermaltot,tdifftot,rho_nu,p_nu,s_nu,ynulocal,enu,enue,enuebar;
-  FTYPE Ynuthermal,lambdatot,lambdaintot;
+  FTYPE Ynuthermal,Ynuthermal0,lambdatot,lambdaintot;
   FTYPE graddotrhouynu;
   FTYPE dtau,dtlimit;
   FTYPE gradUU[NDIM];
@@ -2268,10 +2328,16 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   FTYPE Urhoupdate;
   FTYPE graddotrhouynulimit;
   int numextrasreturn;
+  FTYPE Ynuthermaltouse;
 
 
 
 
+  ///////////////////
+  //
+  // Get coordinate information
+  //
+  ///////////////////
   ii=geom->i;
   jj=geom->j;
   kk=geom->k;
@@ -2283,18 +2349,35 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   r=V[1];
   th=V[2];
   R = r*sin(th) ;
+
+
+
+  ///////////////////
+  //
+  // Assign primitives
+  //
+  ///////////////////
   rho = pr[RHO];
   u = pr[UU];
-#if(DOYNU!=DONOYNU)
-  ynu = pr[YNU];
-#else
-  ynu = 0.0;
-#endif
+
 #if(DOYL!=DONOYL)
-  yl = pr[YL];
+  //  yl = pr[YL];
+  ye = pr[YE]; // now Ye used as primitive and YL as conserved
+  // get true yl
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD) yl=ye + pr[YNU];
+  else yl = ye + EOSextra[YNUOLDGLOBAL];
 #else
   yl = 0.0;
 #endif
+
+#if(DOYNU!=DONOYNU)
+  ynu = pr[YNU];    // if WHICHEVOLVEYNU==EVOLVEYNUNOTRAD, then pr[YNU] really Ynu0, not Ynu, and accounted for below when used.
+#else
+  ynu = 0.0;
+#endif
+
+
+
 
 
   // approximately account for photon capture by black hole
@@ -2305,13 +2388,19 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   // For now, treat capture process as suppression of cooling/heating rates or any changes in fluid
   // In this way, capture by BH is treated as assuming fluid advected them in since assume if trapping photons then trapping fluid for sure.
   // In reality have to follow those photons/neutrinos to check if this is true, but good assumption.
-  rph = 2.0*MBH*(1.0 + cos(2.0/3.0*(acos(-a/MBH))));
+  // a/MBH could be zero, so resolve so rph is not NaN when no BH so that photoncapture=1
+  rph = 2.0*MBH*(1.0 + cos(2.0/3.0*(acos(-a/(fabs(MBH)+SMALL)))));
   photoncapture = (r>rph) ? 1.0 : 0.0;
 
 
+
+
+
+
   if(whichdatatype[primarytable]==4){
-    // get neutrino and photon quantities
-    get_extrasprocessed_kazfull(1, EOSextra, pr, extras, processed); // (rho0,u)
+
+    // get extras and processed over potentially many iterations to obtain convergence
+    get_extrasprocessed_manyiterations(1,EOSextra, pr, extras, processed);
 
 
     // MAXPROCESSEDEXTRAS entries
@@ -2323,8 +2412,9 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
     rho_nu = processed[RHONU]; 
     p_nu = processed[PNU]; 
     s_nu = processed[SNU]; 
-    ynulocal = processed[YNULOCAL];  // don't actually need this
+    ynulocal = processed[YNULOCAL];  // don't actually need this if WHICHEVOLVEYNU==EVOLVEYNURAD
     Ynuthermal = processed[YNUTHERMAL];
+    Ynuthermal0 = processed[YNUTHERMAL0];
     // below are energies of *escaping* neutrinos
     enu = processed[ENUAVG]; 
     enue = processed[ENUE]; 
@@ -2333,6 +2423,15 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
     // also store below additional as directly wanted quantities from extras
     lambdatot = extras[whichcolinquantity[EXTRA19]]; // extras[0] is start
     lambdaintot = extras[whichcolinquantity[EXTRA20]];
+
+
+#if(DOYL!=DONOYL)
+    // get corresponding update to yl since get_extrasprocessed_manyiterations() updated EOSextra[YNUOLDGLOBAL] and ynulocal
+    ye = pr[YE]; // now Ye used as primitive and YL as conserved
+    if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD) yl = ye + ynulocal;
+#endif
+
+
   }
   else if(whichdatatype[primarytable]==3){
 
@@ -2349,11 +2448,38 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
     enue = extras[whichcolinquantity[EXTRA9]];
     enuebar = extras[whichcolinquantity[EXTRA10]];
     Ynuthermal = extras[whichcolinquantity[EXTRA11]];
+    //    Ynuthermal0 = extras[whichcolinquantity[EXTRA12]]; // GODMARK: Should add if used.
+  }
+
+
+
+  ////////////////////////////////
+  //
+  // pick which Ynu evolution scheme to use
+  //
+  // note that pr[YNU] changes meaning
+  //
+  ////////////////////////////////
+  if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD){
+    // new scheme
+    // here pr[YNU] is Ynu0
+    Ynuthermaltouse=Ynuthermal0;
+  }
+  else{
+    //  if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+    // old scheme
+    // here pr[YNU] is Ynu
+    Ynuthermaltouse=Ynuthermal;
   }
 
 
   // compute some other things
   //  dtau = dt/(q->ucon[TT]);
+
+
+
+
+
 
   /////////////
   //
@@ -2361,30 +2487,34 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   // Neutrino thermalization source term (due to neutrinos thermalizing fluid)
   //
   /////////////
-  // regardless of the proper Lorentz transformation, this is the right dtau to use to limit ynu to Ynuthermal in the fluid frame
+  // regardless of the proper Lorentz transformation, this is the right dtau to use to limit ynu to Ynuthermaltouse in the fluid frame
   // well, not really quite true due to advection terms
   // since U[RHO] will get updated, no point in trying to strictly limit using present U[RHO] due to advection terms
-  // limit graddotrhouynu so that ynu can't go beyond Ynuthermal (haven't yet accounted for flux, so is not quite right constraint)
+  // limit graddotrhouynu so that ynu can't go beyond Ynuthermaltouse (haven't yet accounted for flux, so is not quite right constraint)
   // GODMARK: could add constraints later once flux known -- new function
-  //  graddotrhouynu=rho*(Ynuthermal-ynu)/MAX(dtau,tthermaltot);
-  //  if(rho*ucon[TT]*ynu+graddotrhouynu*dt>rho*ucon[TT]*Ynuthermal){
-  //    graddotrhouynu = rho*(Ynuthermal - ynu)/dtau;
+  //  graddotrhouynu=rho*(Ynuthermaltouse-ynu)/MAX(dtau,tthermaltot);
+  //  if(rho*ucon[TT]*ynu+graddotrhouynu*dt>rho*ucon[TT]*Ynuthermaltouse){
+  //    graddotrhouynu = rho*(Ynuthermaltouse - ynu)/dtau;
   //  }
 
-  // equation is \nablda_\mu (\rho u^\mu Y_\nu) = \rho dY_\nu/d\tau = \rho (Y_{\nu,thermal} - Y_\nu)/\tau_{thermal} = -graddotrhouynu
-  //  graddotrhouynu=-rho*(Ynuthermal-ynu)/MAX(dtau,tthermaltot);
-
+  // equation is \nablda_\mu (\rho u^\mu Y_\nu) = \rho dY_\nu/d\tau = \rho (Y_{\nu,thermal} - Y_\nu)/\tau_{thermal} = graddotrhouynu
+  //  graddotrhouynu=rho*(Ynuthermaltouse-ynu)/MAX(dtau,tthermaltot);
   Urhoupdate = Ui[RHO] + (dUother[RHO])*dt; // assumes no physics source here for RHO (should add it if there is)
+
   // then based upon this criterion that doesn't necessarily imply exact dtau, strictly limit
   // Y_nu[new] = Unew[Ynu]/Unew[RHO] = (Ui[Ynu] + dUother[Ynu]*dt + dUsource[Ynu]*dt)/Unew[RHO] and solved for dUsource[Ynu]
-  // this guarantees that post-advection an overshoot is truncated and leads to Ynu=Ynuthermal
-  graddotrhouynulimit = (Ynuthermal*Urhoupdate - Ui[YNU])/dt - dUother[YNU];
+  // this guarantees that post-advection an overshoot is truncated and leads to Ynu=Ynuthermaltouse
+  graddotrhouynulimit = (Ynuthermaltouse*Urhoupdate - Ui[YNU])/dt - dUother[YNU];
   
   // dtlimit is chosen so the expression for graddotrhouynu is consistent
   // that is graddotrhoynu(original) = graddotrhouynulimit and solve for dtlimit
-  dtlimit = -rho*(Ynuthermal-ynu)/graddotrhouynulimit;
+  dtlimit = rho*(Ynuthermaltouse-ynu)*sign(graddotrhouynulimit)/(fabs(graddotrhouynulimit)+SMALL);
+
   // GODMARK: should compare dtlimit with estimate of dtau -- for example can dtlimit<0?
-  graddotrhouynu = -rho*(Ynuthermal-ynu)/MAX(dtlimit,tthermaltot);
+  graddotrhouynu = rho*(Ynuthermaltouse-ynu)/MAX(dtlimit,tthermaltot);
+
+
+
 
 
   /////////////
@@ -2394,13 +2524,16 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   //
   // equation is:
   //
-  // \nablda_\mu (\rho u^\mu Y_l) = \rho dY_l/d\tau = graddotrhouyl
+  // \nabla_\mu (\rho u^\mu Y_l) = \rho dY_l/d\tau = graddotrhouyl = m_b (Ndot_{nuebar} - Ndot_{nue})
+  // where Ndot>0 means *loss* of that neutrino type.
+  // So if Ndot_{nue}>0, then Y_e should decrease.
   //
   // Equation is Unew = Ui + dUother*dt + gradU*dt
   //
   /////////////
   // predicted update
   Uylupdate = Ui[YL] + (dUother[YL] + graddotrhouyl)*dt;
+
   // limit update so Uylupdate<=0
   // limit Y_l update (Am I sure Y_l can't go negative? GODMARK)
   // here limit is perfect since any change in U[RHO] doesn't matter since U[YL]=0 -> Y_l=0 for all U[RHO]
@@ -2410,14 +2543,16 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
 
 
 
+
   /////////////
   //
   // Lepton+Photon Cooling
+  // Note that qm>0 or qphoton>0 means loss of energy, so gradUU = +(qphoton+qm)u_\mu since for energy (j=0) gives overall loss of energy
   //
   /////////////
   // No obvious limit on gradUU since energy can be negative in ergosphere? and momentum and be + or - . GODMARK
   DLOOPA(j){
-    gradUU[j]=-(qphoton+qm)*(q->ucov[j]);
+    gradUU[j]=(qphoton+qm)*(q->ucov[j]);
   }
 
 
@@ -2428,41 +2563,28 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
   //
   // now apply source terms
   //
+  // GODMARK: need a way to track photons that reach infinity vs. black hole
+  //*photoncapture
+  //
+  // Previously had conditional: if(t>0){}else{} around dUcomp's.  Not sure why.
+  //
   ////////////////////////////
   DLOOPA(j){
     // provide energy density per second cooled
     // source term has: \detg dU/d\tau u_\mu
-    // dUcomp[][j+1] because j=0 implies UU as required (i.e. dUcomp in NPR form, not NDIM form)
-    if(t > 0.){
-      dUcomp[RADSOURCE][j+1]=photoncapture*gradUU[j]; // photons+neutrino energy lost in fluid frame.  Some may be captured by black hole, rest reaches infinity
-    }
-    else{
-      dUcomp[RADSOURCE][j+1]=0.0;
-    }
+    // dUcomp[][j+UU] because j=0 implies UU as required (i.e. dUcomp in NPR form, not NDIM form)
+    dUcomp[RADSOURCE][j+UU]=photoncapture*gradUU[j]; // photons+neutrino energy lost in fluid frame.  Some may be captured by black hole, rest reaches infinity
   }
-
-  // GODMARK: need a way to track photons that reach infinity vs. black hole
-  //*photoncapture
 
 
 #if(DOYL!=DONOYL)
   j=YL; // accessing NPR-type quantity, so acces dUcomp[][j]
-  if(t > 0.){
-    dUcomp[RADSOURCE][j]=photoncapture*graddotrhouyl; // GODMARK: check sign of graddotrhouyl
-  }
-  else{
-    dUcomp[RADSOURCE][j]=0;
-  }
+  dUcomp[RADSOURCE][j]=photoncapture*graddotrhouyl;
 #endif
 
 #if(DOYNU!=DONOYNU)
   j=YNU; // accessing NPR-type quantity, so acces dUcomp[][j]
-  if(t > 0.){
-    dUcomp[RADSOURCE][j]=photoncapture*graddotrhouynu; // GODMARK: check sign
-  }
-  else{
-    dUcomp[RADSOURCE][j]=0;
-  }
+  dUcomp[RADSOURCE][j]=photoncapture*graddotrhouynu;
 #endif
   
 
@@ -2487,7 +2609,7 @@ int compute_sources_EOS_kazfull(FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom
 
 
 
-
+// store parlist into EOSextra
 void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   FTYPE TDYNORYEtouse;
@@ -2497,10 +2619,19 @@ void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
   int hi;
 
 
+
+
   if(numparms!=NUMEOSGLOBALS){
     dualfprintf(fail_file,"numparms=%d NUMEOSGLOBALS=%d\n",numparms,NUMEOSGLOBALS);
     myexit(917692);
   }
+
+
+  //////////////
+  //
+  // Constraint EOSextra-related quantities
+  //
+  //////////////
 
   // must be right order when this function is used
 
@@ -2534,10 +2665,20 @@ void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
     }
   }
 
+
+
+
+  //////////////
+  //
+  // Set EOSextra
+  //
+  //////////////
+
+
   // YE set  
   EOSextra[TDYNORYEGLOBAL] = TDYNORYEtouse;
 
-  if((int)EOSextra[IGLOBAL]==-100){
+  if((int)EOSextra[IGLOBAL]==-100 && WHICHEVOLVEYNU==EVOLVEYNURAD){
     // then not yet iterating on Ynu0, so start iteration
 
     // YNU0 set
@@ -2546,6 +2687,17 @@ void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
     // YNUold set/assign
     EOSextra[YNUOLDGLOBAL]  = parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]; // no particular limit on this quantity
   }
+
+  if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD){
+    // YNU0 globals still used for lookup
+    EOSextra[YNU0GLOBAL] = YNUtouse;
+
+    EOSextra[YNU0OLDGLOBAL] = YNUOLDtouse; // not used, but assign anyways
+
+    // YNUold set/assign, which is really normal Ynu[Ynu0]
+    EOSextra[YNUOLDGLOBAL]  = parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]; // no particular limit on this quantity
+  }
+
 
   // H set
   for(hi=0;hi<NUMHDIRECTIONS;hi++){
@@ -2557,14 +2709,19 @@ void store_EOS_parms_kazfull(int numparms, FTYPE *EOSextra, FTYPE *parlist)
   EOSextra[PNUGLOBAL]=parlist[PNUGLOBAL-FIRSTEOSGLOBAL];
   EOSextra[SNUGLOBAL]=parlist[SNUGLOBAL-FIRSTEOSGLOBAL];
 
+  EOSextra[PGASGLOBAL]=parlist[PGASGLOBAL-FIRSTEOSGLOBAL];  // doesn't have to be set always since only used after inversion to check inversion with consistent p(\chi) instead of p(u)
+
   // IJKGLOBAL assign/set
   EOSextra[IGLOBAL]=parlist[IGLOBAL-FIRSTEOSGLOBAL];
   EOSextra[JGLOBAL]=parlist[JGLOBAL-FIRSTEOSGLOBAL];
   EOSextra[KGLOBAL]=parlist[KGLOBAL-FIRSTEOSGLOBAL];
 
 
+
 }
 
+
+// Put EOSextra into parlist
 void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   int hi;
@@ -2574,15 +2731,21 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
   parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=EOSextra[TDYNORYEGLOBAL];
 
   parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=EOSextra[YNU0GLOBAL];
+
+  // YNU0OLDGLOBAL not used if WHICHEVOLVEYNU==EVOLVEYNUNOTRAD, but still assign for consistency
   parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=EOSextra[YNU0OLDGLOBAL];
+
   parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]=EOSextra[YNUOLDGLOBAL];
 
   for(hi=0;hi<NUMHDIRECTIONS;hi++){
     parlist[HGLOBAL-FIRSTEOSGLOBAL+hi]=EOSextra[vartypeheightarray[hi+1]];
   }
+
   parlist[UNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[UNUGLOBAL];
   parlist[PNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[PNUGLOBAL];
   parlist[SNUGLOBAL-FIRSTEOSGLOBAL]=EOSextra[SNUGLOBAL];
+
+  parlist[PGASGLOBAL-FIRSTEOSGLOBAL]=EOSextra[PGASGLOBAL]; // probably defined, but not necessarily always.  Just used for p(chi) inversion check
 
   parlist[IGLOBAL-FIRSTEOSGLOBAL]=EOSextra[IGLOBAL];
   parlist[JGLOBAL-FIRSTEOSGLOBAL]=EOSextra[JGLOBAL];
@@ -2598,13 +2761,13 @@ void get_EOS_parms_kazfull(int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 // compute things beyond simple EOS independent variables
 void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
+  static int firsttime=1; // should be ok to have static here since not inside OpenMP parallel region
 
   ////////////////////////
   //
   // set grid indices
   //
   ////////////////////////
-  //  dualfprintf(fail_file,"before ijk\n");
 
   compute_IJKglobal(EOSextra);
 
@@ -2613,30 +2776,35 @@ void compute_EOS_parms_kazfull(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS
   // compute H
   //
   /////////////////////////
-  //  dualfprintf(fail_file,"before H\n");
 
   compute_Hglobal(EOSextra,prim);
 
-  /////////////////////////
-  //  
-  // compute Tdyn or Ye depending upon whichrnpmethod
-  //  
-  /////////////////////////
-  //  dualfprintf(fail_file,"before Y\n");
 
-  compute_TDYNORYE_YNU_global(EOSextra,prim);
+  /////////////////////////
+  //  
+  // constrain Tdyn or Ye depending upon whichrnpmethod
+  // Also constrain Ynu0
+  // GODMARK: Now redundant, so comment out
+  // Now Ye and Ynu0 are constrained where computed
+  //  
+  /////////////////////////
+
+  ////  constrain_TDYNORYE_YNU_global(EOSextra,prim);
 
   /////////////////////////
   //  
   // 1) Iterate Ynu0 if whichdatatype==4
   // 2) Compute neutriono u_\nu, p_\nu, and s_\nu
+  // only do this if no source term.  Otherwise, source term calls processed quantities so use this.
+  // This also constrains resulting Ynu0
   //  
   /////////////////////////
-  //  dualfprintf(fail_file,"before ynu0_upsnu\n");
 
-  compute_ynu0_upsnu_global(EOSextra,prim);
+  if(cooling!=2 || firsttime) compute_ynu0_upsnu_global(EOSextra,prim);
   
-  //  dualfprintf(fail_file,"Done parms\n");
+
+  // indicate no longer firstime here
+  firsttime=0;
 
 }
 
@@ -2693,6 +2861,7 @@ static void compute_Hglobal_new(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBAL
 
 
 
+// SUPERTODO: Need to integrate up all flavors and absorption/scattering with different summations to get different H's.  Then need to feed these different H's into 2-stream.  Maybe that will help 20X error in Y_e evolution?
 // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
 // EOSextra is not input here -- rather part of output.
 static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
@@ -2741,14 +2910,16 @@ static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], 
 
     // get lambdatot
     get_lambdatot(MAC(EOSextra,i,j,k),rho0,u,&lambdatot);
+    lambdatot=fabs(lambdatot)+SMALL; // ensure positive definite
+    
 
 
     // get d\tau/dL
     GLOBALMACP0A1(ptemparray,i,j,k,0) = lambdatot;
-    GLOBALMACP0A1(ptemparray,i,j,k,1) = dr/(lambdatot+SMALL); // dtau for radial integral
-    GLOBALMACP0A1(ptemparray,i,j,k,2) = rdth/(lambdatot+SMALL); // dtau for angular integral
+    GLOBALMACP0A1(ptemparray,i,j,k,1) = dr/lambdatot; // dtau for radial integral
+    GLOBALMACP0A1(ptemparray,i,j,k,2) = rdth/lambdatot; // dtau for angular integral
 #if(0)
-    GLOBALMACP0A1(ptemparray,i,j,k,3) = rsinthddphi/(lambdatot+SMALL); // dtau for radial integral
+    GLOBALMACP0A1(ptemparray,i,j,k,3) = rsinthddphi/lambdatot; // dtau for radial integral
 #endif
 
     
@@ -2800,9 +2971,9 @@ static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], 
     }
     // This is scale-height used by Kaz's EOS
     // add angular part to hack photon trajectory for +-z for disk near BH or NS
-    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + Htest3)*GLOBALMACP0A1(ptemparray,i,j,k,0);;
+    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest1 + Htest3)*GLOBALMACP0A1(ptemparray,i,j,k,0);
 
-    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest1 + Htest4)*GLOBALMACP0A1(ptemparray,i,j,k,0);;
+    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest1 + Htest4)*GLOBALMACP0A1(ptemparray,i,j,k,0);
 
     //    MACP0A1(EOSextra,i,j,k,H3GLOBAL) = (Htest3 + SHIFT2*MACP0A1(EOSextra,i,SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
     //    MACP0A1(EOSextra,i,j,k,H4GLOBAL) = (Htest4 + SHIFT2*MACP0A1(EOSextra,i,N2-1-SHIFT2,k,HGLOBAL)/(GLOBALMACP0A1(ptemparray,i,N2-1-SHIFT2,k,0)+SMALL))*GLOBALMACP0A1(ptemparray,i,j,k,0);
@@ -2841,7 +3012,7 @@ static void compute_Hglobal(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], 
   // constrain resulting H
   //
   ///////////////
-  constrainH(EOSextra,prim);
+  constrain_H(EOSextra,prim);
 
 
 
@@ -2886,17 +3057,18 @@ static void get_lambdatot(FTYPE *EOSextra, FTYPE rho0, FTYPE u, FTYPE *lambdatot
   }
 
 
-
   if(getsingle_eos_fromtable(whichfun,whichd,EOSextra,rho0,du,lambdatotptr)){ // uses utotdiff=du
     *lambdatotptr=BIG; // then assume optically thin (worry if outside when rho>>the limit in the table?) GODMARK
   }
+
+
 
 }
 
 
 
 
-static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+static void constrain_H(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int hi;
   int i,j,k;
@@ -2928,14 +3100,11 @@ static void constrainH(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE
 
 
 
-// assumes this is computed every timestep (or substep) before anything else computed
-static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+// constrain Y_e,Ynu
+// GODMARK: no longer used since Ye and Ynu0 are constrained where computed
+static void constrain_TDYNORYE_YNU(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
-  //  int jj;
-  //  int pl,pliter;
-  //  FTYPE r,th;
-  //  FTYPE X[NDIM],V[NDIM],dxdxp[NDIM][NDIM];
   FTYPE TDYNORYEtouse, YNUtouse;
 
 
@@ -2946,26 +3115,19 @@ static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUME
 
   COMPFULLLOOP{
     
-    //    coord_ijk(i,j,k,CENT,X); // doesn't matter if CENT or anyother thing is used since just an estimate
-    //    bl_coord_ijk(i,j,k,CENT,V);
-    //    dxdxprim_ijk(i,j,k,CENT,dxdxp);
-    //    r=V[1];
-
-    
 #if(! (DOYL==DONOYL && DOYNU==DONOYNU) )
-    TDYNORYEtouse = MACP0A1(prim,i,j,k,YL) - MACP0A1(prim,i,j,k,YNU);
+    TDYNORYEtouse = MACP0A1(EOSextra,i,j,k,TDYNORYEGLOBAL);
 
     if(whichdatatype[primarytable]==4){
       // Below really YNU0
       YNUtouse = MACP0A1(EOSextra,i,j,k,YNU0GLOBAL);
     }
     else{
+      dualfprintf(fail_file,"whichdatatype==3 method not supported currently.  Not dealing with YNU and constraining YNU correctly yet.\n");
+      myexit(9247221);
       YNUtouse = MACP0A1(prim,i,j,k,YNU);
     }
 #endif  
-
-    //    dualfprintf(fail_file,"COMPUTEYE: %21.15g %21.15g %21.15g\n",MACP0A1(prim,i,j,k,YL),MACP0A1(prim,i,j,k,YNU),TDYNORYEtouse);
-
 
     // since there exists no information beyond bounds of table, limit TDYNORYE to table values so return value is consistent
     // This is also needed since TDYNORYE is used with other EOS table values and needs to be consistent
@@ -2979,7 +3141,7 @@ static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUME
 
     // make final assignment
     MACP0A1(EOSextra,i,j,k,TDYNORYEGLOBAL)=TDYNORYEtouse;
-    MACP0A1(EOSextra,i,j,k,YNU0GLOBAL)=YNUtouse;        // Below really YNU0 if whichdatatype==4
+    MACP0A1(EOSextra,i,j,k,YNU0GLOBAL)=YNUtouse;        // Really YNU0 if whichdatatype==4
 
   }
 
@@ -2993,56 +3155,242 @@ static void compute_TDYNORYE_YNU_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUME
 
 // Change the primitives to be limited by constraints on Y_e
 // Do this so if out of bounds, Y_e can still recover eventually if fluid goes out of region where Y_\nu is large
+// assumes this is computed every timestep (or substep) before anything else computed
+// actual computation of Y_e[Y_L,Y_\nu]
 void fix_primitive_eos_scalars_kazfull(FTYPE *EOSextra, FTYPE *pr)
 {
   FTYPE yemin,yemax;
-  FTYPE ynumin,ynumax;
+  FTYPE ynu0min,ynu0max;
   FTYPE ylmin,ylmax;
   FTYPE ye;
+  FTYPE trueynu,trueyl;
+
+
 
 
   yemin=1.001*lineartablelimits[primarytable][YEEOS][0];
   yemax=0.999*lineartablelimits[primarytable][YEEOS][1];
-  ynumin=1.001*lineartablelimits[primarytable][YNUEOS][0];
-  ynumax=0.999*lineartablelimits[primarytable][YNUEOS][1];
-  ylmin=yemin+ynumin;
-  ylmax=yemax+ynumax;
+  ynu0min=1.001*lineartablelimits[primarytable][YNUEOS][0];
+  ynu0max=0.999*lineartablelimits[primarytable][YNUEOS][1];
+  // No, yl is not sum of ye and ynu0.  So don't limit yl or ynu
+  //  ylmin=yemin+ynumin;
+  //  ylmax=yemax+ynumax;
 
 
-  ye = pr[YL] - pr[YNU];
+  /////////////
+  //
+  // update ye from new primitives
+  //
+  /////////////
 
-  // have pr[YL] and pr[YNU] share the blame
+  if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD){
+    // use latest calculated Ynu[Ynu0] from directly evolve Ynu0
+    trueynu=EOSextra[YNUOLDGLOBAL];
+  }
+  else{
+    // then pr[YNU] is really Ynu[Ynu0] already that is Ynu directly evolved
+    trueynu=pr[YNU];
+  }
+
+
+  /////////////
+  //
+  // update Y_e using true Y_l and true Y_\nu
+  // Note that Y_e = Y_l - Y_\nu such that Y_e>0 and Y_e<1 as handled in EOS
+  // set Y_L
+  //
+  /////////////
+  ye = pr[YE]; // not Y_e is primitive and Y_L is conserved. ///pr[YL] - trueynu;
+  trueyl = ye + trueynu;
+
+
+
+
+  ////////////
+  //
+  // constrain Y_e to table values
+  //
+  ////////////
+
+  // have trueyl and trueynu share the blame
   if(ye<yemin){
-    pr[YL]  += -0.5*ye;
-    pr[YNU] += +0.5*ye;
+    trueyl  += -0.5*(ye-yemin);
+    trueynu += +0.5*(ye-yemin);
     // now effective ye is yemin
     ye=yemin;
+    EOSextra[TDYNORYEGLOBAL] = pr[YE] = yemin;
   }
-
-  if(ye>yemax){
-    pr[YL]  += -0.5*ye+0.5;
-    pr[YNU] += +0.5*ye-0.5;
+  else if(ye>yemax){
+    trueyl  += -0.5*(ye-yemax);
+    trueynu += +0.5*(ye-yemax);
     // Now effective ye is yemax
-    ye=yemax;
-  }
-
-  if(pr[YL]<ylmin){
-    pr[YL]  = ylmin;
-    pr[YNU] = ynumin;
-    // Now effective ye is ~0.0=1.001*lineartablelimits[primarytable][YEEOS][0]
-    ye=yemin;
-    
-  }
-
-  // check result:
-  if(pr[YNU]<ynumin){
-    pr[YL]  = ye; // Y_l = Y_e in this case
-    pr[YNU] = ynumin;
+    EOSextra[TDYNORYEGLOBAL] = pr[YE] = yemax;
   }
 
 
+  ////////////
+  //
+  // need to limit Ye to table in case changed (really already limited correctly, but let's make sure!)
+  //
+  ////////////
+  if(EOSextra[TDYNORYEGLOBAL]>0.999*lineartablelimits[primarytable][YEEOS][1]) EOSextra[TDYNORYEGLOBAL] = 0.999*lineartablelimits[primarytable][YEEOS][1];
+  if(EOSextra[TDYNORYEGLOBAL]<1.001*lineartablelimits[primarytable][YEEOS][0]) EOSextra[TDYNORYEGLOBAL] = 1.001*lineartablelimits[primarytable][YEEOS][0];
+
+
+
+  //////////////////
+  //
+  // update Y_nu
+  //
+  //////////////////
+  if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD){
+    // pr[YNU] is Ynu0, so must use generated Ynu[Ynu0] from processed quantities that was stored in EOSextra
+    // SUPERTODO: If above constraints changed things, then should obtain new Ynu0[Ynu] so consistent Ynu and Ynu0 used!  Otherwise only Ye has memory of constraint and trueynu value will become lost information relative to Ynu0
+    EOSextra[YNU0GLOBAL] = pr[YNU];
+  }
+  else{
+    // pr[YNU] is latest Ynu, so correct update to Y_e from Y_L
+    pr[YNU] = trueynu;
+    //    EOSextra[YNU0GLOBAL] obtained only after iteration from Ynu0[Ynu]
+  }
+
+
+  // need to limit Ynu0 to table in case changed
+  if(EOSextra[YNU0GLOBAL]>0.999*lineartablelimits[primarytable][YNUEOS][1]) EOSextra[YNU0GLOBAL] = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+  if(EOSextra[YNU0GLOBAL]<1.001*lineartablelimits[primarytable][YNUEOS][0]) EOSextra[YNU0GLOBAL] = 1.001*lineartablelimits[primarytable][YNUEOS][0];
   
 
 }
 
+
+
+// get quantity that will be prefactor for mass flux in flux associated with Y_L conservation
+void yl2advect_kazfull(FTYPE *EOSextra, FTYPE pryl, FTYPE prynu, FTYPE *prforadvect)
+{
+  FTYPE ye,trueynu,trueyl;
+
+
+
+  // pr[YL] is really Y_e now
+  // U[YL] is Y_L itself
+
+  // get true ye
+  EOSextra[TDYNORYEGLOBAL]=ye=pryl; // pryl=pr[YL]=pr[YE] is really Y_e
+
+  // need to limit Ye to table in case changed due to interpolation or evolution
+  if(EOSextra[TDYNORYEGLOBAL]>0.999*lineartablelimits[primarytable][YEEOS][1]) EOSextra[TDYNORYEGLOBAL] = 0.999*lineartablelimits[primarytable][YEEOS][1];
+  if(EOSextra[TDYNORYEGLOBAL]<1.001*lineartablelimits[primarytable][YEEOS][0]) EOSextra[TDYNORYEGLOBAL] = 1.001*lineartablelimits[primarytable][YEEOS][0];
+
+
+
+  // get true ynu
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+    trueynu = prynu;
+  }
+  else{
+    // not really old Ynu, actually latest Ynu for this method
+    trueynu = EOSextra[YNUOLDGLOBAL];
+  }
+
+
+  // get true Y_L
+  trueyl = ye+trueynu;
+
+
+  // setup Y_L quantity to advect
+  *prforadvect=trueyl;
+  
+
+}
+
+
+// get primitive associated with conserved quantities
+void advect2yl_kazfull(FTYPE *EOSextra, FTYPE ylforadvect, FTYPE ynuforadvect, FTYPE *ye)
+{
+  FTYPE trueynu,trueyl;
+
+
+  trueyl=ylforadvect;
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+    trueynu=ynuforadvect;
+  }
+  else{
+    // GODMARK: could update Ynu[Ynu0] here, but not necessary?
+    trueynu=EOSextra[YNUOLDGLOBAL];
+  }
+
+  // pr[YL] is really Y_e now
+  // U[YL] is Y_L itself
+
+  // get true ye
+  EOSextra[TDYNORYEGLOBAL]= *ye =trueyl-trueynu;
+
+  // need to limit Ye to table in case changed
+  if(EOSextra[TDYNORYEGLOBAL]>0.999*lineartablelimits[primarytable][YEEOS][1]) EOSextra[TDYNORYEGLOBAL] = 0.999*lineartablelimits[primarytable][YEEOS][1];
+  if(EOSextra[TDYNORYEGLOBAL]<1.001*lineartablelimits[primarytable][YEEOS][0]) EOSextra[TDYNORYEGLOBAL] = 1.001*lineartablelimits[primarytable][YEEOS][0];
+
+
+
+}
+
+
+
+// get prefactor of massflux for conserved quantity associated with Y_\nu conservation
+void ynu2advect_kazfull(FTYPE *EOSextra, FTYPE pryl, FTYPE prynu, FTYPE *prforadvect)
+{
+  FTYPE trueynuevolve;
+
+
+
+  // get true ynu that we are evolving
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+    // Evolving prynu=pr[YNU] is Ynu
+    trueynuevolve = prynu;
+  }
+  else{
+    // evolving Ynu0 is prynu=pr[YNU]
+    trueynuevolve = EOSextra[YNU0GLOBAL] =  prynu;
+
+    // need to limit Ynu0 to table in case changed
+    if(EOSextra[YNU0GLOBAL]>0.999*lineartablelimits[primarytable][YNUEOS][1]) EOSextra[YNU0GLOBAL] = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+    if(EOSextra[YNU0GLOBAL]<1.001*lineartablelimits[primarytable][YNUEOS][0]) EOSextra[YNU0GLOBAL] = 1.001*lineartablelimits[primarytable][YNUEOS][0];
+
+  }
+
+  // setup quantity to advect
+  *prforadvect=trueynuevolve;
+
+
+}
+
+
+
+
+// get primitive associated with conserved Y_\nu
+void advect2ynu_kazfull(FTYPE *EOSextra, FTYPE ylforadvect, FTYPE ynuforadvect, FTYPE *prynu)
+{
+  FTYPE trueynuevolve;
+
+
+  // in either case, advected quantity is primitive quantity
+  if(WHICHEVOLVEYNU==EVOLVEYNURAD){
+    // prynu is Ynu
+    *prynu = ynuforadvect;
+    // GODMARK: could update Ynu0[Ynu]
+  }
+  else{
+    // prynu is Ynu0
+    *prynu = ynuforadvect;
+
+    EOSextra[YNU0GLOBAL]=*prynu;
+
+    // need to limit Ynu0 to table in case changed
+    if(EOSextra[YNU0GLOBAL]>0.999*lineartablelimits[primarytable][YNUEOS][1]) EOSextra[YNU0GLOBAL] = 0.999*lineartablelimits[primarytable][YNUEOS][1];
+    if(EOSextra[YNU0GLOBAL]<1.001*lineartablelimits[primarytable][YNUEOS][0]) EOSextra[YNU0GLOBAL] = 1.001*lineartablelimits[primarytable][YNUEOS][0];
+    
+  }
+
+
+
+}
 

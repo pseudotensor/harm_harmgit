@@ -687,6 +687,24 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
 
 
 
+
+
+
+  // DEBUG:
+  //  if(t>2.45E4 || realnstep>28000){
+  //     dodumpgen[ENERDUMPTYPE]=1;
+  //     dodumpgen[EOSDUMPTYPE]=1;
+  //     dodumpgen[DISSDUMPTYPE]=1;
+  //     dodumpgen[MAINDUMPTYPE]=1;
+  //     dodumpgen[GRIDDUMPTYPE]=1;
+  //     dodumpgen[FAILFLOORDUDUMPTYPE]=1;
+  //     dodumpgen[DEBUGDUMPTYPE]=1;
+  //   }
+
+
+
+
+
   return(0);
 }
 
@@ -1960,10 +1978,6 @@ void diag_source_all(struct of_geom *ptrgeom, FTYPE *dU,SFTYPE Dt)
 	// now assign diagnostic form of source
 	PDIAGLOOP(pl){
 	  localsourceadd[pl]+=ftempdiag[pl];
-#if(DOLUMVSR)
-	  // GODMARK: only correct for diagonal coordinate Jacobian in which each i is same radius for all j
-	  if(pl==UU) if(enerregion==0) lumvsr[startpos[1]+ptrgeom->i]+=ftempdiag[pl];
-#endif
 	} // end PDIAGLOOP on diag
       }
     }
@@ -2004,6 +2018,13 @@ void diag_source_comp(struct of_geom *ptrgeom, FTYPE (*dUcomp)[NPR],SFTYPE Dt)
 	  // now assign diagnostic form of source
 	  PDIAGLOOP(pl){
 	    localsourceaddterms[sc][pl]+=ftempdiag[pl];
+#if(DOLUMVSR)
+	    // GODMARK: only correct for diagonal coordinate Jacobian in which each i is same radius for all j
+	    // Do NOT account for geometry changes in energy -- only account for non-geometrical changes in U[UU]
+	    // Only for enerregion==0
+	    if(pl==UU && sc!=GEOMSOURCE && enerregion==0) lumvsr[startpos[1]+ptrgeom->i]+=ftempdiag[pl];
+#endif
+
 	  } // end PDIAGLOOP on diag
 	} // end SCLOOP
       }

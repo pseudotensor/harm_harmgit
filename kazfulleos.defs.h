@@ -63,7 +63,7 @@ static FTYPEEOS DEGENNUCLEAROFFSET[NUMTBLS];
 static FTYPEEOS lsoffset[NUMTBLS], fakelsoffset[NUMTBLS], fakeentropylsoffset[NUMTBLS];
 static FTYPEEOS eosyegrid1[NUMTBLS],eosyegrid2[NUMTBLS],eosxgrid1[NUMTBLS],eosxgrid2[NUMTBLS];
 
-
+static FTYPEEOS rhoupperlimit;
 
 static int didsetupkazeos; // OPENMPMARK: changes once, but master thread only calls setup
 

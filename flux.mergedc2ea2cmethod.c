@@ -59,9 +59,9 @@
 
 
 // local declarations
-static int deconvolve_flux(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
-static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
-static int deconvolve_flux_em(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
+static int deconvolve_flux(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
+static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
+static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
 
 static int onetermdeconvolution(
 				FTYPE rhol, FTYPE rhoc, FTYPE rhor
@@ -583,14 +583,15 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 	// |                      |                                   |
 	// |                      |Fleft                        Fright|
 	// |                      |fluxvec                            |
-        //
+        // |                      |              EOSextra             |
 	//
+	// Assume EOSextra can be DONOR accurate
 	// And note that F_l=fluxstate[ISLEFT] and F_r=fluxstate[ISRIGHT]
 	// so single cell needs Fleft=state[ISRIGHT][i] and Fright=state[ISLEFT][i+1]
 	// And note that fluxvec is single-valued at face and so naturally identified by [i] for cell [i]
 	// So Fleft modifies fluxvec[i] and Fright modifies fluxvec[i+1]
 	//
-	deconvolve_flux(dimen, odimen1, odimen2, &GLOBALMACP1A1(fluxstate,dimen,ileft,jleft,kleft,ISRIGHT), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,iright,jright,kright,ISLEFT), Fleft, Fright);
+	deconvolve_flux(dimen, odimen1, odimen2, GLOBALMAC(EOSextraglobal,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,ileft,jleft,kleft,ISRIGHT), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,iright,jright,kright,ISLEFT), Fleft, Fright);
 
 	// Now realize that at faces each correction is applied ultimately as average of 2 fluxes for non-EMF terms
 	// ultimately if smooth, then is actually full correction since both sides of face will contribute same correction
@@ -616,7 +617,7 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 
 
 
-  // GODMARK: Not done --
+  // TODO: GODMARK: Not done --
   if(MERGEDC2EA2CMETHODEM&&(FLUXB==FLUXCTSTAG)){ // STAG has information at corners, while FLUXCTTOTH and FLUXCTHLL methods don't
     // Don't apply EMF correct if doing Toth method since inconsistent with Toth averaging
 
@@ -671,17 +672,17 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 
 // should operate on a single dimension
 // can turn on/off MA or EM terms separately
-static int deconvolve_flux(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
+static int deconvolve_flux(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
 {
 
 #if(MERGEDC2EA2CMETHODMA)
   // do matter parts first
-  deconvolve_flux_ma(dir, odir1, odir2, stateleft, statecent, stateright, Fleft, Fright);
+  deconvolve_flux_ma(dir, odir1, odir2, EOSextra, stateleft, statecent, stateright, Fleft, Fright);
 #endif
 
 #if(MERGEDC2EA2CMETHODEM)
   // then do EM parts
-  deconvolve_flux_em(dir, odir1, odir2, stateleft, statecent, stateright, Fleft, Fright);
+  deconvolve_flux_em(dir, odir1, odir2, EOSextra, stateleft, statecent, stateright, Fleft, Fright);
 #endif
 
 
@@ -690,7 +691,7 @@ static int deconvolve_flux(int dir, int odir1, int odir2, struct of_state *state
 
 
 // should operate on a single dimension
-static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
+static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
 {
   FTYPE gdetl,gdetc,gdetr;
   FTYPE rhol,rhoc,rhor;
@@ -897,12 +898,25 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
 
 
 
+  //////////
+  //
+  // setup Y_L and Y_\nu terms
+  //
+  //////////
 
-  ///////////////////
-  //
-  // Flux of Y_l : \detg \rho_0 Y_l u^i
-  //
-  ///////////////////
+#if(MERGEDC2EA2CMETHOD)
+#if(DOYNU!=DONOYNU)
+
+  FTYPE YNUl,YNUc,YNUr;
+
+  // Y_\nu:
+  YNUl=stateleft->prim[YNU];
+  YNUc=statecent->prim[YNU];
+  YNUr=stateright->prim[YNU];
+#endif
+#endif
+
+
 
 #if(MERGEDC2EA2CMETHOD)
 #if(DOYL!=DONOYL)
@@ -913,16 +927,42 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
   YLl=stateleft->prim[YL];
   YLc=statecent->prim[YL];
   YLr=stateright->prim[YL];
+#endif
+#endif
+
+
+
+  ///////////////////
+  //
+  // Flux of Y_l : \detg \rho_0 Y_l u^i
+  //
+  ///////////////////
+
+#if(MERGEDC2EA2CMETHOD)
+#if(DOYL!=DONOYL)
+
+  FTYPE yl2advectl,yl2advectc,yl2advectr;
+
+#if(WHICHEOS==KAZFULL)
+  yl2advect_kazfull(EOSextra,YLl,YNUl,&yl2advectl);
+  yl2advect_kazfull(EOSextra,YLc,YNUc,&yl2advectc);
+  yl2advect_kazfull(EOSextra,YLr,YNUr,&yl2advectr);
+#else
+  yl2advectl=YLl;
+  yl2advectc=YLc;
+  yl2advectr=YLr;
+#endif
+  
 
 #if(MCOORD==CARTMINKMETRIC)
-  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  YLl, YLc, YLr   ,&Fleft[YL], &Fright[YL]);
+  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  yl2advectl, yl2advectc, yl2advectr   ,&Fleft[YL], &Fright[YL]);
 
   // Apply constant \detg factor
   Fleft[YL]*=gdetc;
   Fright[YL]*=gdetc;
 
 #else
-  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  YLl, YLc, YLr   ,&Fleft[YL], &Fright[YL]);
+  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  yl2advectl, yl2advectc, yl2advectr   ,&Fleft[YL], &Fright[YL]);
 #endif
 
 #endif // end if doing YL
@@ -939,26 +979,33 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
 #if(MERGEDC2EA2CMETHOD)
 #if(DOYNU!=DONOYNU)
 
-  FTYPE YNUl,YNUc,YNUr;
+  FTYPE ynu2advectl,ynu2advectc,ynu2advectr;
 
-  // Y_\nu:
-  YNUl=stateleft->prim[YNU];
-  YNUc=statecent->prim[YNU];
-  YNUr=stateright->prim[YNU];
+#if(WHICHEOS==KAZFULL)
+  ynu2advect_kazfull(EOSextra,YLl,YNUl,&ynu2advectl);
+  ynu2advect_kazfull(EOSextra,YLc,YNUc,&ynu2advectc);
+  ynu2advect_kazfull(EOSextra,YLr,YNUr,&ynu2advectr);
+#else
+  ynu2advectl=YNUl;
+  ynu2advectc=YNUc;
+  ynu2advectr=YNUr;
+#endif
 
 #if(MCOORD==CARTMINKMETRIC)
-  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  YNUl, YNUc, YNUr   ,&Fleft[YNU], &Fright[YNU]);
+  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  ynu2advectl, ynu2advectc, ynu2advectr   ,&Fleft[YNU], &Fright[YNU]);
 
   // Apply constant \detg factor
   Fleft[YNU]*=gdetc;
   Fright[YNU]*=gdetc;
 
 #else
-  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  YNUl, YNUc, YNUr   ,&Fleft[YNU], &Fright[YNU]);
+  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  ynu2advectl, ynu2advectc, ynu2advectr   ,&Fleft[YNU], &Fright[YNU]);
 #endif
 
 #endif // end if doing YNU
 #endif
+
+
   
 
   
@@ -997,7 +1044,7 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, struct of_state *st
 
 
 // should operate on a single dimension
-static int deconvolve_flux_em(int dir, int odir1, int odir2, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
+static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright)
 {
   FTYPE gdetl,gdetc,gdetr;
   //  FTYPE uu0l,uu0c,uu0r;

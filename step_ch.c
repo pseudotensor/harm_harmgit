@@ -1,7 +1,7 @@
 
 //////////////////////////
 //
-// Code takes full step
+// Code to take full step
 //
 //////////////////////////
 
@@ -42,18 +42,27 @@ int step_ch_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][N
 
 
   // things to do before taking full step
-  pre_stepch(dumpingnext,prim);
+  if(dt!=0.0) pre_stepch(dumpingnext,prim);
 
   // take full step
   step_ch(dumpingnext, &fullndt,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3,Atemp,uconstemp);
 
   // things to do after taking full step
-  post_stepch(dumpingnext, fullndt, prim);
+  if(dt!=0.0) post_stepch(dumpingnext, fullndt, prim);
 
 
-  // add up contributions to flux through horizon (really inner boundary)
-  if(DOEVOLVEMETRIC && (EVOLVEMETRICSUBSTEP==0 || EVOLVEMETRICSUBSTEP==2) ){
-    compute_new_metric_longsteps(prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3,Atemp,uconstemp);
+  if(dt!=0.0){ // don't do if just passing through -- otherwise would end up looping endlessly!
+    // add up contributions to flux through horizon (really inner boundary)
+    if(DOEVOLVEMETRIC && (EVOLVEMETRICSUBSTEP==0 || EVOLVEMETRICSUBSTEP==2) ){
+      compute_new_metric_longsteps(prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3,Atemp,uconstemp);
+    }
+    
+    // below must come after longstep update so that don't change before metric step taken!
+    control_metric_update();
+    
+    postdt(); // here one can alter variables and try to restart, or implement any post step operations
+
+
   }
   
   
@@ -63,12 +72,7 @@ int step_ch_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][N
   // eventually all cpus come here, either in failure mode or not, and cleanly tell others if failed/exit/dump/etc.
 
 
-  // below must come after longstep update so that don't change before metric step taken!
-  control_metric_update();
   
-  
-  
-  postdt(); // here one can alter variables and try to restart, or implement any post step operations
   
   
   return(0);
@@ -98,6 +102,7 @@ int step_ch(int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 // things to do before taking a full timestep
+// assume not called when dt==0.0
 int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   
@@ -117,23 +122,19 @@ int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 
-  
-  if(dt!=0.0){ // don't do if just "passing through"
-
-    if(dumpingnext[0] || dumpingnext[1]){
+    
+  if(dumpingnext[0] || dumpingnext[1]){
 #if(CALCFARADAYANDCURRENTS)
-      if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2)){
-	// for this method, all J components are located back in time
-	current_doprecalc(CURTYPEX,prim);
-	current_doprecalc(CURTYPEY,prim);
-	current_doprecalc(CURTYPEZ,prim);
-	// get faraday in case used for time averaging or dumping it
-	current_doprecalc(CURTYPEFARADAY,prim);
-      }
-#endif
+    if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2)){
+      // for this method, all J components are located back in time
+      current_doprecalc(CURTYPEX,prim);
+      current_doprecalc(CURTYPEY,prim);
+      current_doprecalc(CURTYPEZ,prim);
+      // get faraday in case used for time averaging or dumping it
+      current_doprecalc(CURTYPEFARADAY,prim);
     }
-
-  } // end if dt!=0.0
+#endif
+  }
 
 
   return(0);
@@ -145,46 +146,43 @@ int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 // things to do after taking a full timestep
+// assume not called when dt==0.0
 int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
 
 
 
-  if(dt!=0.0){ // don't do if just passing through
-
-    if(dumpingnext[0]){
+  if(dumpingnext[0]){
 #if(CALCFARADAYANDCURRENTS)
-      // compute final faradays
-      if(WHICHCURRENTCALC==CURRENTCALC1){
-	// compute faraday components needed for time centering of J
-	current_doprecalc(CURTYPET,prim);
-	// J is located at this time
-	current_doprecalc(CURTYPEX,prim);
-	current_doprecalc(CURTYPEY,prim);
-	current_doprecalc(CURTYPEZ,prim);
-	current_doprecalc(CURTYPEFARADAY,prim); // for diagnostics
-      }
-      // compute current
-      current_calc(GLOBALPOINT(cfaraday));
-#endif
+    // compute final faradays
+    if(WHICHCURRENTCALC==CURRENTCALC1){
+      // compute faraday components needed for time centering of J
+      current_doprecalc(CURTYPET,prim);
+      // J is located at this time
+      current_doprecalc(CURTYPEX,prim);
+      current_doprecalc(CURTYPEY,prim);
+      current_doprecalc(CURTYPEZ,prim);
+      current_doprecalc(CURTYPEFARADAY,prim); // for diagnostics
     }
-  }// end if dt!=0.0
+    // compute current
+    current_calc(GLOBALPOINT(cfaraday));
+#endif
+  }
 
 
-  if(dt!=0.0){ // don't do if just passing through
 #if(ACCURATEDIAG==0)
-    // compute flux diagnostics
-    // this doesn't exactly make conservation work -- should have in middle step point using full step.  But if PARA, no middle point that's exact.
-    // think about where to put this
-    // GODMARK : use of globals
-    diag_flux(prim,F1, F2, F3, dt); // should use REAL dt, not within a timeorderd RK integration step
-    //    horizon_flux(F1,dt); // subsumed
+  // compute flux diagnostics
+  // this doesn't exactly make conservation work -- should have in middle step point using full step.  But if PARA, no middle point that's exact.
+  // think about where to put this
+  // GODMARK : use of globals
+  diag_flux(prim,F1, F2, F3, dt); // should use REAL dt, not within a timeorderd RK integration step
+  //    horizon_flux(F1,dt); // subsumed
 #endif
 
-    // general flux only done on full steps since no requirement for accuracy and code can be expensive computationally
-    diag_flux_general(prim,dt);// Should be full dt, not substep dt.
-  }
+  // general flux only done on full steps since no requirement for accuracy and code can be expensive computationally
+  diag_flux_general(prim,dt);// Should be full dt, not substep dt.
+
 
 
 
@@ -192,67 +190,61 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   trifprintf( "[d]");
 #endif
 
-  /* check timestep
-     if (dt < 1.e-9) {
-     trifprintf( "timestep too small\n");
-     myexit(11);
-     }
-  */
 
-  if(dt!=0.0){ // don't do if just passing through
 
-    //////////////////////////
-    //
-    // increment time
-    //
-    //////////////////////////
-    t += dt;
-    tstepparti = tsteppartf = t;
+  //////////////////////////
+  //
+  // increment time
+  //
+  //////////////////////////
+  t += dt;
+  tstepparti = tsteppartf = t;
     
-    realnstep++;
+  realnstep++;
     
-    ////////////////////////////
-    //
-    // set next timestep
-    //
-    ////////////////////////////
-    // find global minimum value of ndt over all cpus
-    mpifmin(&fullndt);
-    // note that this assignment to fullndt doesn't get returned outside function
-    if (fullndt > SAFE * dt)    fullndt = SAFE * dt;
-    dt = fullndt;
+  ////////////////////////////
+  //
+  // set next timestep
+  //
+  ////////////////////////////
+  // find global minimum value of ndt over all cpus
+  mpifmin(&fullndt);
+  // note that this assignment to fullndt doesn't get returned outside function
+  if (fullndt > SAFE * dt)    fullndt = SAFE * dt;
+  dt = fullndt;
 
-    ///////////////////////////////////
-    //
-    // don't step beyond end of run
-    //
-    ////////////////////////////////////
-    if(onemorestep){
-      // check if previous step was onemorestep==1
+  ///////////////////////////////////
+  //
+  // don't step beyond end of run
+  //
+  ////////////////////////////////////
+  if(onemorestep){
+    // check if previous step was onemorestep==1
+    reallaststep=1;
+    dt=SMALL;
+  }
+  else{
+    if (t + dt > tf){
+      dt = tf - t;
+      onemorestep=1;
+    }
+    else if (t + dt == tf){
+      reallaststep=1;
+    }
+    // make sure don't get pathological case of dt=0 on last step
+    if(dt<SMALL){
       reallaststep=1;
       dt=SMALL;
     }
-    else{
-      if (t + dt > tf){
-	dt = tf - t;
-	onemorestep=1;
-      }
-      else if (t + dt == tf){
-	reallaststep=1;
-      }
-      // make sure don't get pathological case of dt=0 on last step
-      if(dt<SMALL){
-	reallaststep=1;
-	dt=SMALL;
-      }
-    }
-
   }
-  else{
-    if (t>=tf){
-      // somehow got here, then finish
-      reallaststep=1;
-    }
+
+
+
+
+  if(dt==0.0 && t>=tf){
+    // somehow got here, then finish
+    dualfprintf(fail_file,"SOMEHOW GOT HERE\n");
+    reallaststep=1;
   }
 
 
@@ -1265,7 +1257,7 @@ void setup_rktimestep(int *numtimeorders,
 
 #endif
   }
-  else if(TIMEORDER==1 ||  dt==0.0){
+  else if(TIMEORDER==1 ||  dt==0.0){ // dt==0.0 case is case when just passing through
     // Euler method
     *numtimeorders=1;
 

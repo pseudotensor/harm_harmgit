@@ -2,6 +2,13 @@
 #include "decs.h"
 
 
+// self-gravity TODO:
+// http://www.fftw.org/
+// COSMOS++ uses: https://computation.llnl.gov/casc/hypre/software.html
+// http://ciera.northwestern.edu/StarCrash/manual/html/node3.html
+// http://ccfd-jacob.blogspot.com
+// http://farside.ph.utexas.edu/teaching/329/lectures/node60.html
+
 ///////////////////
 //
 //  SUPERNOTE: Set DOMIXTHETAPHI to 0 or 1 in metric.h!!
@@ -623,7 +630,9 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
   if(WHICHEOM==WITHGDET){
     gcov_func(ptrgeom, getprim, whichcoord,X,gcovmcoord,gcovpertcoord); // actually returns primcoords version of whichcoord
     bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
-    ftemp=gdet_func_metric(whichcoord,V,gcovmcoord);
+    if(gdet_func_metric(whichcoord,V,gcovmcoord,&ftemp)!=0){
+      if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in eomfunc_func()\n");
+    }
     PLOOP(pliter,pl) EOMFUNCASSIGN(pl)=ftemp;
   }
   else if(WHICHEOM==WITHNOGDET){
@@ -1703,7 +1712,10 @@ void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
     gcov_func(geom, 1,CYLMINKMETRIC,X, gcovmid,gcovpertmid);
 
     bl_coord( X, V );  //actually, dxdxprim() does not use V or X since metric is uniform
-    gdetmid=gdet_func_metric(MCOORD,V,gcovmid);
+    if(gdet_func_metric(MCOORD,V,gcovmid,&gdetmid)!=0){
+      if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in set_conn_cylminkmetric()\n");
+    }
+
 
 
     // see transforms.c and mettometp() and see gcov2gcovprim()  //atch

@@ -762,40 +762,43 @@ void set_rvsr(void)
 
 
 // determinant not simply transformed from analytic function -- so no analytic form possible yet
-FTYPE gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov)
+int gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov, FTYPE *gdet)
 {
   int jj,kk;
   FTYPE generalmatrixlower[NDIM][NDIM];
+  int toreturn;
 
   // copy to full 2D space for NR functions
   DLOOP(jj,kk) generalmatrixlower[jj][kk] = gcov[GIND(jj,kk)];
 
-  return(gdet_func_singcheck(whichcoord, V,generalmatrixlower));
+  toreturn=gdet_func_singcheck(whichcoord, V,generalmatrixlower,gdet);
+
+
+  return(toreturn);
 
 
 
 }
 
 // determinant not simply transformed from analytic function -- so no analytic form possible yet
-FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[NDIM])
+int gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[NDIM], FTYPE *gdet)
 {
-  FTYPE gdet_func_orig(int whichcoord,FTYPE (*generalmatrixlower)[NDIM]);
-  FTYPE gdet;
+  int gdet_func_orig(int whichcoord,FTYPE (*generalmatrixlower)[NDIM], FTYPE *gdet);
+  int toreturn;
 
 
-
-  gdet=gdet_func_orig(whichcoord, generalmatrixlower);
+  toreturn=gdet_func_orig(whichcoord, generalmatrixlower,gdet);
 
 
 #if(FLIPGDETAXIS)
   if(ISSPCMCOORD(whichcoord)){
-    if(V[2]<0.0) gdet*=-1.0;
-    if(V[2]>M_PI) gdet*=-1.0;
+    if(V[2]<0.0) *gdet*=-1.0;
+    if(V[2]>M_PI) *gdet*=-1.0;
   }
 #endif
 
 
-  return(gdet);
+  return(toreturn);
 
 }
 
@@ -803,7 +806,7 @@ FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[N
 /* assumes gcov has been set first; returns determinant */
 
 // determinant not simply transformed from analytic function -- so no analytic form possible yet
-FTYPE gdet_func_orig(int whichcoord, FTYPE (*generalmatrixlower)[NDIM])
+int gdet_func_orig(int whichcoord, FTYPE (*generalmatrixlower)[NDIM], FTYPE *gdet)
 {
   FTYPE d;
   int j, k, indx[NDIM];
@@ -888,7 +891,11 @@ FTYPE gdet_func_orig(int whichcoord, FTYPE (*generalmatrixlower)[NDIM])
 #endif
 
 
-  return(finalvalue);
+
+  *gdet=finalvalue;
+
+  if(singfix) return(-1); // indicates some problem, may want to report a bit
+  else return(0);
 }
 
 
@@ -1328,7 +1335,10 @@ void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, stru
     coord_ijk(i, j, k, loc, X);
     bl_coord_ijk(i, j, k, loc, V);
     gcov_func(ptrgeom,getprim,whichcoord,X,gcovptr,gcovpertptr);
-    ptrgeom->gdet=gdet_func_metric(whichcoord,V,gcovptr); // must come after gcov_func() above
+    // must come after gcov_func() above
+    if(gdet_func_metric(whichcoord,V,gcovptr,&(ptrgeom->gdet))!=0){
+      if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in gset_genloc()\n");
+    }
     gcon_func(ptrgeom,getprim,whichcoord,X,gcovptr,gconptr); // must come after gcov_func() above
     alphalapse_func(ptrgeom,getprim,whichcoord,X,gcovptr,gconptr,&(ptrgeom->alphalapse));
     betasqoalphasq_func(ptrgeom,getprim,whichcoord,X,gcovptr,gconptr,&(ptrgeom->betasqoalphasq));
@@ -2233,16 +2243,19 @@ FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
   FTYPE toreturn;
   FTYPE eomfunc[NPR]; // don't change this as related to WHICHEOM==WITHGDET
   FTYPE *eomfuncptr=eomfunc; // don't change this as related to WHICHEOM==WITHGDET
-  FTYPE gdet;
   FTYPE V[NDIM];
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
+  FTYPE gdet;
 
   gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
   eomfunc_func(ptrgeom,1,MCOORD,X,EOMFUNCPTR);
 
   bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
   // GODMARK: assumes all RHO, etc. use same eomfunc if using 2nd connection
-  toreturn=log(EOMFUNCMAC(RHO)/gdet_func_metric(MCOORD,V,gcovmcoord));
+  if(gdet_func_metric(MCOORD,V,gcovmcoord,&gdet)!=0){
+    if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() issue in lngdet_func_mcoord()\n");
+  }
+  toreturn=log(EOMFUNCMAC(RHO)/gdet);
 
   return(toreturn);
 }
@@ -2255,13 +2268,16 @@ FTYPE gdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
   FTYPE toreturn;
   FTYPE V[NDIM];
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
+  FTYPE gdet;
 
   gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
 
   bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
-  toreturn=gdet_func_metric(MCOORD,V,gcovmcoord);
+  if(gdet_func_metric(MCOORD,V,gcovmcoord,&gdet)!=0){
+    if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() issue in gdet_func_mcoord()\n");
+  }
 
-  return(toreturn);
+  return(gdet);
 }
 
 // returns MCOORD  value for gdet using gcovmcoord as input to avoid repeated computations of gcovmcoord.  Doesn't use i,j (these are not grid locations)
@@ -2272,13 +2288,16 @@ FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE
   FTYPE toreturn;
   FTYPE V[NDIM];
   //void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
+  FTYPE gdet;
 
   //  gcov_func(ptrgeom,1,MCOORD,X,gcovmcoord,gcovpertcoord);
 
   bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
-  toreturn=gdet_func_metric(MCOORD,V,gcovmcoord);
-
-  return(toreturn);
+  if(gdet_func_metric(MCOORD,V,gcovmcoord,&gdet)!=0){
+    if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() issue in gdet_func_mcoord_usegcov()\n");
+  }
+  
+  return(gdet);
 }
 
 

@@ -1198,7 +1198,7 @@ int init_defglobal(void)
 
 	     // doesn't escape
   // gam=5/3 for non-relativistic gas, such as neucleons in collapsar model
-  cooling=0;
+  cooling=NOCOOLING;
   // cooling: 0: no cooling 1: adhoc thin disk cooling 2: neutrino cooling for collapsar model
 
   // boundary conditions (default is for 3D spherical polar grid -- full r,pi,2pi)
@@ -1811,6 +1811,12 @@ void check_bnd_num(void)
   //  }
 #endif
 
+#if(MERGEDC2EA2CMETHOD==1 && STOREFLUXSTATE==0)
+  dualfprintf(fail_file,"Must store flux state (STOREFLUXSTATE 1) if doing merged method\n");
+  myexit(9842511);
+#endif
+
+
 
   if(PRODUCTION==1){
     if(DOENOFLUX != NOENOFLUX && FLUXB==FLUXCTSTAG){
@@ -1972,7 +1978,7 @@ void check_bnd_num(void)
     myexit(34897562);
   }
 
-  if(DOENTROPY==DONOENTROPY && HOT2ENTROPY){
+  if(DOENTROPY==DONOENTROPY && HOT2ENTROPY && EOMTYPE!=EOMCOLDGRMHD){
     dualfprintf(fail_file,"ERROR: Must have DOENTROPY enabled to use HOT2ENTROPY\n");
     myexit(13892345);
   }
@@ -1981,6 +1987,17 @@ void check_bnd_num(void)
   if(UTOPRIMVERSION == UTOPRIM5D1 && EOMTYPE==EOMENTROPYGRMHD){
     dualfprintf(fail_file,"SUPERWARNING: Old 5D method often fails to find solution where solution to inversion does exist.  This can readily lead to completely wrong solutions due to failure fixups.\n");
     myexit(3987634);
+  }
+
+
+  if(WHICHEOS==KAZFULL && EOMTYPE==EOMCOLDGRMHD){
+    dualfprintf(fail_file,"For COLD GRMHD, turn off Kaz EOS\n");
+    myexit(9782362);
+  }
+
+  if(EOMTYPE==EOMCOLDGRMHD && DOENTROPY == DOEVOLVEENTROPY && WHICHEOS!=COLDEOS){
+    dualfprintf(fail_file,"For COLD GRMHD with fake entropy tracking, ensure WHICHEOS==COLDEOS\n");
+    myexit(872762211);
   }
 
 

@@ -252,7 +252,7 @@ int init_global(void)
   ranc(1,7); // no MPI method yet, so just pure randomization
   /* some physics parameters */
   gam = 4. / 3.;
-  cooling=1.;
+  cooling=COOLGAMMIETHINDISK;
 
 
 #if(WHICHPROBLEM==NORMALTORUS)

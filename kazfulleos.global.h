@@ -36,6 +36,15 @@
 // how many dimensions to consider.  Other dimensions' values will be consider as the dimension's lowest value
 #define WHICHEOSDIMEN 4
 
+// define which Ynu to evolve and keep as primitive (i.e. pr[YNU])
+ // OLD COMMENT: pr[YNU] = Ynu[orig] = Ynu (i.e. not Ynu0 so that conservation law equation for Y_\nu is correctly using radiative transfer version of Y_\nu, while EOSextra[YNU] is Ynu0 used for table lookup
+    // note that if ynu changes meaning from Ynu to Ynu0 depending upon WHICHEVOLVEYNU==EVOLVEYNUNOTRAD or WHICHEVOLVEYNU==EVOLVEYNURAD
+#define EVOLVEYNUNOTRAD 0
+#define EVOLVEYNURAD 1
+#define WHICHEVOLVEYNU EVOLVEYNUNOTRAD
+
+
+
 
 // whether to use degen offset (otherwise assume degen offset from file is 0 even if read-in differently)
 #define ALLOWDEGENOFFSET 1
@@ -46,6 +55,15 @@
 // if some invalid, then don't use those data points.  If all surrounding points are invalid, then use them as if they were valid
 #define CHECKIFVALIDEOSDATA 1
 
+
+// whether to truncate \rho_0 and u,p,\chi independent variables in table lookup when they are beyond the table.
+// Note that we always truncate in Ye and Ynu0
+#define TRUNCATEHIGHRHOU 1
+
+
+// SUPERTODO: need extrapolation for pipelined lookup!
+// whether to extrapolate at rho or u,p,chi,s beyond table (overrides truncation)
+#define EXTRAPOLATEHIGHRHOU 1
 
 // using log interpolation results in much smoother results, and consistent with eos_extract.m for interpolation
 // That is, using integer position is log-interp since all independents are log on the grid

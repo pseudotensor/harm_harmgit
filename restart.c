@@ -207,6 +207,8 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 }
 
 
+// Note that in initbase.c that many required things are computed during restart setup
+// For example, post_init() calls compute_EOS_parms_full() that fills EOSextraglobal[] if doing WHICHEOS==KAZFULL, so don't have to store that in restart file.
 int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -279,7 +281,8 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
 
 
-
+// write metric restart file
+// This is done to keep track of older time's metric so can take temporal difference to get connection.  Otherwise, restart would be missing the temporal change in metric contribution to the connection.
 int restartmetric_write(long dump_cnt)
 {
   MPI_Datatype datatype;

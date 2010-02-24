@@ -1,30 +1,61 @@
 #ifndef _MYTIME_H
 #define _MYTIME_H
 
+// whether to force gettimeofday(tp,tzp) to have NULL pionter for tzp as required on some systems, e.g. queenbee/loni
+#define GETTIMEOFDAYPROBLEM 0
+
 #include <signal.h>
 #include <time.h>
 
-#ifndef WIN32
+#ifndef WIN32  // if not windows
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #include <sys/times.h>
+
+
+#if(GETTIMEOFDAYPROBLEM==0)
+#define GETTIMEZONETYPE static struct timezone
 #else
+#define GETTIMEZONETYPE static void *
+#endif
+
+
+
+#else // else if windows
+
 #include <Winsock2.h>
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
 #else
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
 #endif
+
+
+
+
+#if(GETTIMEOFDAYPROBLEM==0) // no gettimeofday() problem
 struct timezone
 {
   int  tz_minuteswest; /* minutes W of Greenwich */
   int  tz_dsttime;     /* type of dst correction */
 };
-
 extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 
-#endif
+#else // gettimeofday() problem
+
+static void *tz;
+tz=NULL;
+extern int gettimeofday(struct timeval *tv, void *tz);
+
+#endif // end if gettimeofday() problem
+
+
+
+#endif // end if windows
+
+
+
 
 void mycpuclock(clock_t *time);
 void myustimes(clock_t *time);
@@ -55,7 +86,13 @@ void myustimes2(clock_t *usertime,clock_t *systime);
 
 
 #define SEC2HOUR (2.77777777777777E-4)
+
+#if(GETTIMEOFDAYPROBLEM==0)
 #define microtime(time) gettimeofday(time,&tz)
+#else
+#define microtime(time) gettimeofday(time,tz) // tz is NULL pointer
+#endif
+
 #define diffmicrotime(timestop,timestart) ((SFTYPE)(timestop.tv_sec-timestart.tv_sec)+(SFTYPE)(timestop.tv_usec-timestart.tv_usec)*1E-6)
 // can use clock() if time is < 71.5827882667 minutes for 32-bit systems.
 // *time is used since sending pointer in general

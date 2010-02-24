@@ -29,12 +29,19 @@
 #define UGLOBAL (-1) // dummy reference
 #define TDYNORYEGLOBAL (0)        // Tdyn or Y_e depending upon whichrnpmethod
 #define YNU0GLOBAL     (TDYNORYEGLOBAL+1) // Tdyn or Y_\nu depending upon whichynumethod
+
 #define YNU0OLDGLOBAL  (YNU0GLOBAL+1)     // Tdyn or Y_\nu depending upon whichynumethod
-#define YNUOLDGLOBAL   (YNU0OLDGLOBAL+1)  // Tdyn or Y_\nu depending upon whichynumethod
-#define HGLOBAL        (YNUOLDGLOBAL+1)   // scale-height (for method that uses this for EOS, some averaged version of H
-#define H2GLOBAL (HGLOBAL+1)         // 2,3,4 are other directions for axisymmetric emission
+#define YNUOLDGLOBAL   (YNU0OLDGLOBAL+1)  // Tdyn or Y_\nu depending upon whichynumethod (is actually Ynu latest for WHICHEVOLVEYNU==EVOLVEYNUNOTRAD)
+
+// scale-height (for method that uses this for EOS, some averaged version of H)
+// 2,3,4 are other directions for axisymmetric emission
+#define HGLOBAL  (YNUOLDGLOBAL+1)
+#define H2GLOBAL (HGLOBAL+1)
 #define H3GLOBAL (H2GLOBAL+1) 
-#define H4GLOBAL (H3GLOBAL+1) 
+#define H4GLOBAL (H3GLOBAL+1)
+
+// SUPERTODO: Need 4 more H's for inelastic scattering terms.
+
 #define UNUGLOBAL (H4GLOBAL+1)       // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define PNUGLOBAL (UNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4
 #define SNUGLOBAL (PNUGLOBAL+1)      // extra non-standard variable used to speed up iterative process when doing whichdatatype==4

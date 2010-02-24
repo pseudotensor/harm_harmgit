@@ -490,6 +490,12 @@ int init_consts(void)
 
 
 
+  if(READINITIALDATA==GRBDATA1){
+
+    if(DOEVOLVERHO==0||DOEVOLVEUU==0||DOEVOLVEYL==0||DOEVOLVEYNU==0){
+      dualfprintf(fail_file,"WARNING: Should be GRMHD model, normally with evolution of Y_l and Y_\\nu.\n");
+    }
+  }
 
 
 
@@ -530,7 +536,7 @@ int init_consts(void)
   //
   ///////////////////////////////////////////////
 
-#if(WHICHEOS==KAZFULL)
+#if(WHICHEOS==KAZFULL && EOMTYPE!=EOMCOLDGRMHD)
   read_setup_eostable();
 #endif
 
@@ -798,8 +804,11 @@ int init_global(void)
   zerouuperbaryon=-TRUENUCLEAROFFSETPRIMARY; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
 
 
-  cooling=0;
-  //  cooling=2; // neutrino cooling via tabulated Kaz EOS
+  //  cooling=NOCOOLING;
+  cooling=COOLEOSGENERAL; // neutrino cooling via tabulated Kaz EOS
+
+  trifprintf("Cooling is set to: %d\n",cooling);
+  if(cooling!=2) dualfprintf(fail_file,"SUPERWARNING: Neutrino cooling not enabled.\n");
 
 
 
@@ -909,7 +918,8 @@ int init_global(void)
   // DEBUG:
   //  tf = 6483.63983628599; // dump~766
   //  tf = 4450.31668938777; // dump=100
-  tf = 4403.48368138165;
+  //tf = 4403.48368138165;
+  tf = 1E5;
 
 
   /* dumping frequency, in units of M */
@@ -1049,7 +1059,6 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 }
-
 
 
 
@@ -1755,11 +1764,23 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   // 1) With ACTIVEREGION used, need to include Mvsr(r), etc. within grid but not inside black hole.  How to grow black hole then?  Don't, but need to add to Mvsr(r) at least.  See SECTIONMARK in metric_selfgravity_or_evolvemetric.c
   // 2) get_new_metric_parms() accretion to BH only, need to accrete to normal non-BH mass if inner radius is far beyond horizon radius
 
+  // if(Rin>rhor) then grow Mvsr[Rin] to model growth beyond domain.  if(Rin<rhor) then grow MBH.
+  // But Mvsr integral can only be including r>rhor, not just i>=iactiveregion. Or ignore Rin vs. Rhor difference for accretion rate?  What did before, just do again.
 
+  // apparently can use enerregiondef[POINTDOWN][1] for A=OUTSIDEHORIZONENERREGION and B=ACTIVEREGION.  If A>B, then add mass to MBH, else add mass to Mvsr(r<
 
   // GODMARK: Should also follow check like in Sasha's version of enerregiondef[][]
 
 #if(1)
+  // move active region with black hole horizon (but inside by some number of cells: MAXBND for now)
+  enerregiondef[POINTDOWN][1]=MAX(horizoni+horizoncpupos1*N1-MAXBND,0);
+  enerregiondef[POINTUP][1]=totalsize[1]-1;
+  enerregiondef[POINTDOWN][2]=0;
+  enerregiondef[POINTUP][2]=totalsize[2]-1;
+  enerregiondef[POINTDOWN][3]=0;
+  enerregiondef[POINTUP][3]=totalsize[3]-1;
+#else
+  // no limiting of loops to be beyond black hole
   enerregiondef[POINTDOWN][1]=0;
   enerregiondef[POINTUP][1]=totalsize[1]-1;
   enerregiondef[POINTDOWN][2]=0;

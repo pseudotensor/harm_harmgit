@@ -9,9 +9,9 @@ extern FTYPE rmso_calc(int which) ;
 extern FTYPE uphi_isco_calc(int which,FTYPE r);
 // metric_tools.c:
 
-extern FTYPE gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov);
-extern FTYPE gdet_func(int whichcoord, FTYPE *gcov);
-extern FTYPE gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[NDIM]);
+extern int gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov, FTYPE *gdet);
+extern int gdet_func(int whichcoord, FTYPE *gcov, FTYPE *gdet);
+extern int gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[NDIM], FTYPE *gdet);
 extern void metric_sing_check(int whichcoord, FTYPE (*genmatrixlower)[NDIM], int *anglesing, int*centersing, int *truedim);
 extern void gdetvol_func(struct of_geom *ptrgeom, FTYPE *gdet, FTYPE *eomfunc, FTYPE *gdetvol);
 extern void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *EOMFUNCNAME);

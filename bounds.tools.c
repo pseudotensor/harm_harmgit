@@ -1593,9 +1593,9 @@ int extrapfunc(int boundary, int j,int k,
   //////////////////////////
   PBOUNDLOOP(pliter,pl){
     // determine MINM slope for extrapolation
-    Dqp=log(fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(fabs(MACP0A1(prim,ri2,rj,rk,pl)));
-    Dqm=log(fabs(MACP0A1(prim,ri2,rj,rk,pl)))-log(fabs(MACP0A1(prim,ri,rj,rk,pl)));
-    Dqc=log(fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(fabs(MACP0A1(prim,ri,rj,rk,pl)));
+    Dqp=log(SMALL+fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri2,rj,rk,pl)));
+    Dqm=log(SMALL+fabs(MACP0A1(prim,ri2,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl)));
+    Dqc=log(SMALL+fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl)));
     dqlogdensity[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
@@ -1746,7 +1746,7 @@ int extrapfunc(int boundary, int j,int k,
 
 	  // log extrap (very speculative and can cause problems if used alone when (say) density is super low on ri+1 and relatively high on ri, then i will be super huge
 	  // should use this when values that go into slope are much different, or equally when dqlogdensity is large
-	  MACP0A1(prim,i,j,k,pl) = exp(log(fabs(MACP0A1(prim,ri,rj,rk,pl))) + mydqlog*(i-ri));
+	  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + mydqlog*(i-ri));
 
 	  // DEBUG:
 	  //	  dualfprintf(fail_file,"i=%d j=%d pl=%d ftemp=%21.15g linearvalue=%21.15g expvalue=%21.15g final=%21.15g\n",i,j,pl,ftemp,linearvalue,expvalue,MACP0A1(prim,i,j,k,pl));
@@ -1763,8 +1763,8 @@ int extrapfunc(int boundary, int j,int k,
     pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
 #else
     // log extrap
-    pl=RHO; MACP0A1(prim,i,j,k,pl) = exp(log(fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
-    pl=UU;  MACP0A1(prim,i,j,k,pl) = exp(log(fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+    pl=RHO; MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+    pl=UU;  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
 #endif
 
 #endif

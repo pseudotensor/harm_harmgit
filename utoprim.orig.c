@@ -135,6 +135,8 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   PLOOP(pliter,pl) pr0[pl]=priter[pl]=pr[pl];
 
 
+  entropyversion=0;
+
 #if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
   PLOOP(pliter,pl) U_target[pl] = U[pl];
 

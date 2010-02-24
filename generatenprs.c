@@ -220,6 +220,7 @@ int main(void)
 
   // define name of extra variables
   fprintf(defout,"#define YL %d\n",yl);
+  fprintf(defout,"#define YE %d\n",yl); // treating YE as primitive for YL conservation
   fprintf(defout,"#define YNU %d\n",ynu);
   fprintf(defout,"#define ENTROPY %d\n",entropy);
   fprintf(defout,"#define VSQ %d\n",vsq);

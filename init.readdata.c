@@ -7,7 +7,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   FTYPE X[NDIM],V[NDIM];
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE r,th;
-  void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single);
+  void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single, FTYPE *ynusingle);
   FTYPE prstellar[NPR];
   FTYPE przamobl[NPR];
   FTYPE przamo[NPR];
@@ -16,7 +16,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   struct of_geom *ptrgeom;
   struct of_geom geombl;
   int pl,pliter;
-  FTYPE hcmsingle,ynu0single;
+  FTYPE hcmsingle,ynu0single,ynusingle;
   FTYPE parlist[MAXPARLIST];
   int numparms;
 
@@ -24,9 +24,6 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
 
 
 
-  if(DOEVOLVERHO==0||DOEVOLVEUU==0||DOEVOLVEYL==0||DOEVOLVEYNU==0){
-    dualfprintf(fail_file,"WARNING: Should be GRMHD model, normally with evolution of Y_l and Y_\\nu.\n");
-  }
 
 
 
@@ -45,7 +42,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   //////////////////////////////////
   //
   // Interpolate read-in data to computational grid
-  set_stellar_solution(i,j,k,prstellar,&hcmsingle,&ynu0single);
+  set_stellar_solution(i,j,k,prstellar,&hcmsingle,&ynu0single,&ynusingle);
   // prstellar has 3-velocity in prstellar[U1], need to convert
 
 
@@ -62,6 +59,10 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
     dualfprintf(fail_file,"read-in or interpolated bad ynu0single: %d %d %d\n",i,j,k);
   }
 
+  if(!isfinite(ynusingle)){
+    dualfprintf(fail_file,"read-in or interpolated bad ynusingle: %d %d %d\n",i,j,k);
+  }
+
 #if(DOYL!=DONOYL)
   pr[YL] = prstellar[YL];
   if(!isfinite(pr[YL])){
@@ -69,6 +70,7 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   }
 #endif
 #if(DOYNU!=DONOYNU)
+  // already accounted for WHICHEVOLVEYNU
   pr[YNU] = prstellar[YNU];
   if(!isfinite(pr[YNU])){
     dualfprintf(fail_file,"read-in or interpolated bad YNU: %d %d %d\n",i,j,k);
@@ -85,10 +87,9 @@ int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   //
   // why not just call to compute EOSglobal things? (only because of H)
   // only matters for Kaz EOS and should be in correct order and type of quantity
-  parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=pr[YL]-pr[YNU]; // Y_e
-  //  parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // Y_\nu
+  parlist[TDYNORYEGLOBAL-FIRSTEOSGLOBAL]=pr[YE]; // now using YE as primitive and YL as conserved   ///pr[YL]-ynusingle; // Y_e for any WHICHEVOLVEYNU
   parlist[YNU0OLDGLOBAL-FIRSTEOSGLOBAL]=parlist[YNU0GLOBAL-FIRSTEOSGLOBAL]=ynu0single; // Y^0_\nu
-  parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]=pr[YNU]; // no older yet, so indicate that by using same value
+  parlist[YNUOLDGLOBAL-FIRSTEOSGLOBAL]=ynusingle; // for WHICHEVOLVEYNU, no older yet, so indicate that by using same value
 
 
   int hi;
@@ -476,6 +477,7 @@ void get_stellar_data(void)
 
       
       // some assignments
+      // generally true for any WHICHEVOLVEYNU
       yl[i] = ye + ynu[i];
 
 
@@ -541,7 +543,7 @@ void get_stellar_data(void)
 //
 ///////////////////////////////////////////////////
 // OPENMPMARK: Assume set_stellar_solution() not called by multiple threads, so ok to  have static and firsttime.
-void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single)
+void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FTYPE *ynu0single, FTYPE *ynusingle)
 {
   FTYPE X[NDIM],V[NDIM],r;
   struct of_geom geom;
@@ -588,10 +590,21 @@ void set_stellar_solution(int ii, int jj, int kk,FTYPE *pr, FTYPE *hcmsingle, FT
   pr[B2]=0.0;
   pr[B3]=0.0;
 #if(DOYL!=DONOYL)
-  pr[YL]=myyl;
+  //  pr[YL]=myyl;
+  // now using YE as primitive and YL as conserved
+  pr[YE]=myyl-myynu;
 #endif
 #if(DOYNU!=DONOYNU)
-  pr[YNU]=myynu;
+  *ynusingle=myynu;
+
+  if(WHICHEVOLVEYNU==EVOLVEYNUNOTRAD){
+    // evolving Ynu0, which should be primitive
+    pr[YNU]=*ynu0single;
+  }
+  else{
+    // evolving Ynu, which should be primitive
+    pr[YNU]=myynu;
+  }
 #endif
 }
 
