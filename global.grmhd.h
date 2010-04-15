@@ -619,7 +619,8 @@
 // track user contributions:
 // http://www.statsvn.org/
 //
-
+// diff without white space (kinda words?) 
+// svn diff --diff-cmd diff -x -uw /path/to/file
 
 
 

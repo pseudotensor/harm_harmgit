@@ -50,8 +50,8 @@
 // variable mapping
 #define MAP1 MAP(0,1)
 #define MAPDER(pl) MAP(pl,3) // 3 dimensions
-#define MAPJ(pl) MAP(pl,4)
-#define MAPF(pl) MAP(pl,6)
+#define MAPJ(pl) MAP(pl,4) // 4 current components
+#define MAPF(pl) MAP(pl,6) // 6 faraday components
 #define MAPG(pl) MAP(pl,numgenvars)
 #define MAPFICALC(pl) MAP(pl,3) // 3 dimensions
 
@@ -276,7 +276,7 @@ int main(
       }
     }
     else{
-      if((DUMPTYPE==SINGLECOLUMN)&&(numcol!=6)){
+      if((DUMPTYPE==SINGLECOLUMN)&&(numcol!=7)){
 	fprintf(stderr,"numcol=%d for singlecolumn/dofline, should be 6\n",numcol);
 	//      exit(1);
       }

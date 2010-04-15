@@ -645,12 +645,12 @@ int user1_getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, 
 
 
 
-// get maximum b^2 and p_g
+// get maximum b^2 and p_g and minimum of beta
 // OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
-int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max)
+int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
 {
   int i,j,k;
-  FTYPE bsq_ij,pg_ij;
+  FTYPE bsq_ij,pg_ij,beta_ij;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   FTYPE X[NDIM],V[NDIM];
@@ -666,8 +666,9 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   rin=parms[0];
 
 
-  pg_max[0]= 0.;
   bsq_max[0] = SMALL;
+  pg_max[0]= 0.;
+  beta_min[0]=VERYBIG;
   gotnormal=0; // to check if ever was in location where wanted to normalize
   loc=CENT;
 
@@ -686,6 +687,11 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 	pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
 	if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+	beta_ij=pg_ij/(bsq_ij*0.5);
+
+	if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
       }
     }
     else{
@@ -695,6 +701,10 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
       pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
       if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+      beta_ij=pg_ij/(bsq_ij*0.5);
+      
+      if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
 
     }
   }
@@ -719,6 +729,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
   mpimax(bsq_max);
   mpimax(pg_max);
+  mpimin(beta_min);
 
 
   return(0);
@@ -726,21 +737,31 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 }
 
 
+// 0: maxes method
+// 1: betamin
+#define FIELDBETANORMMETHOD 1
+
 // assumes normal field definition
 int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE bsq_max, norm, beta_act;
   FTYPE mypgmax;
-  int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *mypgmax);
+  FTYPE betamin;
+  int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *mypgmax, FTYPE *beta_min);
 
 
   // get initial maximum
-  get_maxes(prim, &bsq_max, &mypgmax);
-  trifprintf("initial bsq_max: %21.15g pgmax: %21.15g\n", bsq_max,mypgmax);
+  get_maxes(prim, &bsq_max, &mypgmax, &betamin);
+  trifprintf("initial bsq_max: %21.15g pgmax: %21.15g betamin=%21.15g\n", bsq_max,mypgmax,betamin);
 
+#if(FIELDBETANORMMETHOD==0)
   // get normalization parameter
   beta_act = mypgmax / (0.5 * bsq_max);
   norm = sqrt(beta_act / beta);
+#elif(FIELDBETANORMMETHOD==1)
+  beta_act = betamin;
+  norm = sqrt(beta_act / beta);
+#endif
   trifprintf("initial beta: %21.15g (should be %21.15g) norm=%21.15g\n", beta_act,beta,norm);
 
   
@@ -748,16 +769,21 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
   normalize_field_withnorm(norm, prim, pstag, ucons, vpot, Bhat);
 
   // get new maxes to check if beta is correct
-  get_maxes(prim, &bsq_max, &mypgmax);
-  trifprintf("new initial bsq_max: %21.15g\n", bsq_max);
+  get_maxes(prim, &bsq_max, &mypgmax, &betamin);
+  trifprintf("new initial bsq_max: %21.15g pgmax: %21.15g betamin=%21.15g\n", bsq_max,mypgmax,betamin);
 
+#if(FIELDBETANORMMETHOD==0)
   beta_act = mypgmax / (0.5 * bsq_max);
-  trifprintf("new bsq_max: %21.15g\n", bsq_max);
+#elif(FIELDBETANORMMETHOD==1)
+  beta_act = betamin;
+#endif
   trifprintf("final beta: %21.15g (should be %21.15g)\n", beta_act,beta);
 
 
   return(0);
 }
+
+
 
 
 // UUMIN/RHOMIN used for atmosphere

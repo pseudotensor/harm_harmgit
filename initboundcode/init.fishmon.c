@@ -801,7 +801,7 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 
 
 // get maximum b^2 and p_g
-int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max)
+int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
 {
   int funreturn;
   int eqslice;
@@ -816,7 +816,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 
   parms[0]=rin;
 
-  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max);
+  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
   if(funreturn!=0) return(funreturn);
  
   return(0);
