@@ -59,7 +59,7 @@ static FTYPE jetnu;
 
 
 // for defcoord=JET6COORDS
-static FTYPE ntheta,htheta,rsjet2,r0jet2;
+static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
 
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
@@ -264,10 +264,25 @@ void set_coord_parms_nodeps(int defcoordlocal)
     else if(1){
       r1jet=2.8;
       njet=0.3;
-      r0jet=20.0;
-      rsjet=80.0;
+      r0jet=15.0;
+      rsjet=40.0;
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
     }
+
+    // for switches
+    rs=10.0;
+    r0=20.0;
+ 
+    // for theta1
+    //    hslope=0.3 ; // resolve inner-radial region near equator
+    // below 2 not used right now
+    r0jet3=10.0; // divisor
+    rsjet3=0.0; // subtractor
+
+    // for theta2
+    h0=hslope; // inner-radial "hslope" for theta2
+    njet=1.0; // power \theta_j \propto r^{-njet}
+
 
     // see fix_3dpoledtissue.nb
     ntheta=21.0;
@@ -573,7 +588,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0mono,r0disk,jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2);
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -669,7 +684,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0mono,&r0disk,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
-	fscanf(in,HEADER10IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2);
+	fscanf(in,HEADER14IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -794,6 +809,10 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&htheta, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0jet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rsjet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0jet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1079,11 +1098,41 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[1] = R0+exp(pow(X[1],npow)) ;
 
 
+
     FTYPE theta1,theta2,arctan2;
 
+
+#if(0)
     // JET3COORDS-based:
     myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
     theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+#else
+    // RAMESH BASED
+    myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+
+    // determine theta2
+    if(X[2]>1.0) myx2=2.0-X[2];
+    else if(X[2]<0.0) myx2=-X[2];
+    else myx2=X[2];
+
+    th2 = 0.5*M_PI*(1.0 + atan(myhslope*(myx2-0.5))/atan(myhslope*0.5));
+
+    if(X[2]>1.0) th2=2.0*M_PI-th2;
+    else if(X[2]<0.0) th2=-th2;
+
+    // determine theta0
+    // JET3COORDS-based:
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+
+    // determine switches (only function of radius and not x2 or theta)
+    switch0 = 0.5+1.0/M_PI*atan((V[1]-rs)/r0); // switch in .nb file
+    switch2 = 0.5-1.0/M_PI*atan((V[1]-rs)/r0); // switchi in .nb file
+
+    // this works because all functions are monotonic, so final result is monotonic.  Also, th(x2=1)=Pi and th(x2=0)=0 as required
+    theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
+
+#endif
     
     // fix_3dpoledtissue.nb based:
     theta2 = M_PI*0.5*(htheta*(2.0*X[2]-1.0)+(1.0-htheta)*pow(2.0*X[2]-1.0,ntheta)+1.0);
@@ -1193,6 +1242,9 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
   }
   else if (defcoord == JET4COORDS) {
+
+
+#if(0)
     // combines RAMESHCOORDS with original simple SINTH grid
 
     if(BCtype[X1DN]==R0SING){
@@ -1209,6 +1261,10 @@ void bl_coord(FTYPE *X, FTYPE *V)
       V[1] = R0+exp(X[1]) ;
       // if V[1]=r<0 here, the presume only where interpolation boundaries are, not evolved quantities, and not extending so far negative radius that reach beyond, e.g. light cylinder so that velocities will be undefined with simple extrapolation
     }
+#else
+    // JET3COORDS-like radial grid
+    V[1] = R0+exp(pow(X[1],npow)) ;
+#endif
 
 
 
@@ -1238,8 +1294,22 @@ void bl_coord(FTYPE *X, FTYPE *V)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-rs)/r0); // switch in .nb file
     switch2 = 0.5-1.0/M_PI*atan((V[1]-rs)/r0); // switchi in .nb file
 
+    FTYPE theta1,theta2,arctan2;
+
     // this works because all functions are monotonic, so final result is monotonic.  Also, th(x2=1)=Pi and th(x2=0)=0 as required
-    V[2] = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
+    theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
+
+    // fix_3dpoledtissue.nb based:
+    theta2 = M_PI*0.5*(htheta*(2.0*X[2]-1.0)+(1.0-htheta)*pow(2.0*X[2]-1.0,ntheta)+1.0);
+
+    // generate interpolation factor
+    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-rsjet2)/r0jet2) );
+
+    // now interpolate between them
+    V[2] = theta2 + arctan2*(theta1-theta2);
+
+
+
 
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
