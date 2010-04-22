@@ -42,7 +42,7 @@
 
 
 // jon's version of NR's dfridr modified to accept more general, needed, function
-FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk)
+int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk, FTYPE *finalanswer)
 {
   int i,j,k;
   FTYPE errt,fac,hh,**a,ans;
@@ -331,12 +331,14 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
 	  // then must fail
 	  dualfprintf(fail_file,"iter>MAXITER: never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",OKTOL,err,ii,jj,kk);
 	  dualfprintf(fail_file,"gi=%d gj=%d gk=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+	  dualfprintf(fail_file,"ti=%d tj=%d tk=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k);
 	  dualfprintf(fail_file,"miniter=%d errlist[miniter]=%21.15g hhlist[miniter]=%21.15g\n",miniter,errlist[miniter],hhlist[miniter]);
 	  dualfprintf(fail_file,"minerror=%21.15g minans=%21.15g\n",minerror,minans);
 	  for(iterdebug=0;iterdebug<iter;iterdebug++){
 	    dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
 	  }
-	  if(err>=FAILTOL) myexit(67);
+	  //	  if(err>=FAILTOL) myexit(67);
+	  if(err>=FAILTOL) return(1); // indicate failure
 	}
       }      
     }
@@ -358,7 +360,9 @@ FTYPE dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *pt
     if(debugfail>=2) dualfprintf(fail_file,"Bad NUMREC error at i=%d j=%d k=%d ii=%d jj=%d kk=%d error=%21.15g ans=%21.15g :: iter=%d lasti=%d minerrorhstart=%21.15g firsthstart=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ii,jj,kk,err,ans,iter,lasti,minerrorhstart,firsthstart);
   }
 
-  return ans;
+
+  *finalanswer=ans;
+  return(0); // indicate no failure
 
        
 
@@ -1791,7 +1795,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   FTYPE gcovperthgen[NDIM][NDIM],gcovpertlgen[NDIM][NDIM];
   //  FTYPE *gcovperth,*gcovpertl;
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
-  FTYPE dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *geom, FTYPE *X,int ii, int jj, int kk);
+  int dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *geom, FTYPE *X,int ii, int jj, int kk, FTYPE *ans);
   FTYPE gcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
   FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
   //
@@ -1813,7 +1817,8 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 				     ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
 				     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
 				     );
-
+  FTYPE failreturn;
+  int conndertypelocal;
 
 
 
@@ -1828,13 +1833,6 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   localptrgeoml=&localgeoml;
   localptrgeomh=&localgeomh;
 
-  ///////////////////////////
-  //
-  // Setup delta
-  //
-  ///////////////////////////
-  // 0 indicates connection type
-  setup_delta(0,CONNDERTYPE,DELTA,geom,localptrgeoml,localptrgeomh,truedelta);
 
 
 
@@ -1852,7 +1850,19 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   // gammie derivative (attempt to get analytical value) or finite difference (true finite difference with given cell size)
   //
   ////////////////////////////////
-  if(CONNDERTYPE==DIFFGAMMIE || CONNDERTYPE==DIFFFINITE){
+  if(CONNDERTYPE==DIFFGAMMIE || CONNDERTYPE==DIFFFINITE      || CONNDERTYPE==DIFFNUMREC){ // get default value even for DIFFNUMREC
+
+    if(CONNDERTYPE==DIFFNUMREC) conndertypelocal=DIFFGAMMIE; // assume ok to use gammie diff as default
+    else conndertypelocal=CONNDERTYPE; // normal
+
+
+    ///////////////////////////
+    //
+    // Setup delta
+    //
+    ///////////////////////////
+    // 0 indicates connection type
+    setup_delta(0,conndertypelocal,DELTA,geom,localptrgeoml,localptrgeomh,truedelta);
 
 
     // setup Xl and Xh and signdX
@@ -1907,7 +1917,21 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
 
   }
-  else if(CONNDERTYPE==DIFFNUMREC){
+
+
+  // DIFFNUMREC version has DIFFGAMMIE as default value
+  if(CONNDERTYPE==DIFFNUMREC){
+
+
+    ///////////////////////////
+    //
+    // Setup delta
+    //
+    ///////////////////////////
+    // 0 indicates connection type
+    setup_delta(0,CONNDERTYPE,DELTA,geom,localptrgeoml,localptrgeomh,truedelta);
+
+
     // use local copy so don't overwrite original, which could be pointing to global storage
     localptrgeom->i=geom->i;
     localptrgeom->j=geom->j;
@@ -1915,23 +1939,33 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     localptrgeom->p=NOWHERE; // informs rest of calls that X will generally be arbitrary
 
     //    dualfprintf(fail_file,"DIFFNUMREC: doing i=%d j=%d\n",geom->i,geom->j);
+    FTYPE value;
     for (k = 0; k < NDIM; k++) {
 
+      
       if(WHICHEOM!=WITHGDET){
-	conn2[k]= dfridr(lngdet_func_mcoord,localptrgeom,X,0,0,k); // 0,0 not used
+	failreturn = dfridr(lngdet_func_mcoord,localptrgeom,X,0,0,k,&value); // 0,0 not used
+	if(failreturn==0) conn2[k]=value; // else leave as default
       }
       else conn2[k]=0.0; // then no 2nd connection
 
       // answer is symmetric on i,j since uses g_{ij}, so only do part of work
       for (i = 0; i < NDIM; i++){
 	for (j = 0; j <=i; j++){
-	  conn[i][j][k] = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k);
+	  failreturn = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k,&value);
+	  if(failreturn==0) conn[i][j][k]=value; // else leave as default
 	}
       }
 
     }// end over k
 
   }// end if CONNDERTYPE==DIFFNUMREC
+
+
+
+
+
+
 
 
   ////////////////////////////////////////////////////

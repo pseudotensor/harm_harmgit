@@ -269,26 +269,32 @@ void set_coord_parms_nodeps(int defcoordlocal)
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
     }
 
-    // for switches
-    rs=10.0;
-    r0=20.0;
+    // for switches from normal theta to ramesh theta
+    rs=40.0; // shift
+    r0=20.0; // divisor
  
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
-    // below 2 not used right now
-    r0jet3=10.0; // divisor
+    r0jet3=20.0; // divisor
     rsjet3=0.0; // subtractor
 
     // for theta2
-    h0=hslope; // inner-radial "hslope" for theta2
+    h0=0.3; // inner-radial "hslope" for theta2
     njet=1.0; // power \theta_j \propto r^{-njet}
 
 
     // see fix_3dpoledtissue.nb
+#if(0)
     ntheta=21.0;
     htheta=0.15;
     rsjet2=5.0;
     r0jet2=2.0;
+#else
+    ntheta=5.0;
+    htheta=0.15;
+    rsjet2=5.0;
+    r0jet2=2.0;
+#endif
 
   }
   else if (defcoordlocal == JET5COORDS) {
@@ -1870,12 +1876,13 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
   FTYPE Xh[NDIM], Xl[NDIM];
   FTYPE Vh[NDIM],Vl[NDIM];
   FTYPE blcoordsimple(struct of_geom *ptrgeom, FTYPE*X, int i, int j);
-  extern FTYPE dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk);
+  extern int dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk, FTYPE *ans);
   void donothing(FTYPE *temp);
   FTYPE temp;
   FTYPE dxmachine[NDIM];
   struct of_geom geom;
   struct of_geom *ptrgeom;
+  FTYPE failreturn;
 
 
   // setup dummy grid location since dxdxp doesn't need to know if on grid since don't store dxdxp (needed for dfridr())
@@ -1886,65 +1893,61 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
   ptrgeom->p=NOWHERE;
 
 
-  if(DXDERTYPE==DIFFGAMMIE){
+  //  for(k=0;k<NDIM;k++) for(j=0;j<NDIM;j++){
+  DLOOP(j,k){
+    failreturn=0;
+    if(DXDERTYPE==DIFFNUMREC){
+      failreturn=dfridr(blcoordsimple,ptrgeom,X,0,j,k,&(dxdxp[j][k]));
+    }
+    if(DXDERTYPE==DIFFGAMMIE || failreturn==1){
 
-    for(k=0;k<NDIM;k++){
-      for(j=0;j<NDIM;j++){
 
-	// I setup X and V relationship for time and phi to be correct now
-	// Was usind dxdxp[3][3]=1 when V[3]=2.0*M_PI*X[3], so that was incorrect -- a bug
-	/*
+      // I setup X and V relationship for time and phi to be correct now
+      // Was usind dxdxp[3][3]=1 when V[3]=2.0*M_PI*X[3], so that was incorrect -- a bug
+      /*
 	if((j==TT)||(k==TT)){
-	  // assume no transformation of time coordinate and no mixing of t-coordinate with other coordinates (except what already in metric)
-	  if(j!=k) dxdxp[j][k]=0.0;
-	  else dxdxp[j][k]=1.0;
+	// assume no transformation of time coordinate and no mixing of t-coordinate with other coordinates (except what already in metric)
+	if(j!=k) dxdxp[j][k]=0.0;
+	else dxdxp[j][k]=1.0;
 	}
 	else if((j==PH)||(k==PH)){
-	  // assume no transformation of phi coordinate and no mixing of phi coordinate with other coordinates (at least no additional to existing metric)
-	  if(j!=k) dxdxp[j][k]=0.0;
-	  else dxdxp[j][k]=1.0;
+	// assume no transformation of phi coordinate and no mixing of phi coordinate with other coordinates (at least no additional to existing metric)
+	if(j!=k) dxdxp[j][k]=0.0;
+	else dxdxp[j][k]=1.0;
 	}
 	else{
-	*/
-	  for(l=0;l<NDIM;l++){
-	    Xl[l]=Xh[l]=X[l]; // location of derivative
-	    temp = X[l]-GENDXDELTA(l);
-	    donothing(&temp);
-	    X[l] = temp+GENDXDELTA(l);
-	    temp = X[l]+GENDXDELTA(l);
-	    donothing(&temp);
-	    dxmachine[l] = temp-X[l];
-	  }
-	  
-	  //	  Xh[k]+=dxmachine[k]; // shift up
-	  //	  Xl[k]-=dxmachine[k]; // shift down
-
-	  Xh[k]+=GENDXDELTA(k); // shift up
-	  Xl[k]-=GENDXDELTA(k); // shift down
-
-	  //	  dualfprintf(fail_file,"k=%d del=%g\n",k,GENDXDELTA(k));
-
-	  // below 2 lines redundant because gets both coordinates, but ok
-	  bl_coord(Xh, Vh);
-	  bl_coord(Xl, Vl);
-	  dxdxp[j][k] = (Vh[j] - Vl[j]) / (Xh[k] - Xl[k]);
-
-	  // GODMARK: unless N is a power of 2, X causes V to not be machine representable
-	  // GODMARK: Also, not only Xh-Xl, but each Xl and Xh must be machine representable
-
-	  // So even for a uniform grid dxdxp can vary near machine level
-	  //  dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
-	  //	}
+      */
+      for(l=0;l<NDIM;l++){
+	Xl[l]=Xh[l]=X[l]; // location of derivative
+	temp = X[l]-GENDXDELTA(l);
+	donothing(&temp);
+	X[l] = temp+GENDXDELTA(l);
+	temp = X[l]+GENDXDELTA(l);
+	donothing(&temp);
+	dxmachine[l] = temp-X[l];
       }
+	  
+      //	  Xh[k]+=dxmachine[k]; // shift up
+      //	  Xl[k]-=dxmachine[k]; // shift down
+
+      Xh[k]+=GENDXDELTA(k); // shift up
+      Xl[k]-=GENDXDELTA(k); // shift down
+
+      //	  dualfprintf(fail_file,"k=%d del=%g\n",k,GENDXDELTA(k));
+
+      // below 2 lines redundant because gets both coordinates, but ok
+      bl_coord(Xh, Vh);
+      bl_coord(Xl, Vl);
+      dxdxp[j][k] = (Vh[j] - Vl[j]) / (Xh[k] - Xl[k]);
+
+      // GODMARK: unless N is a power of 2, X causes V to not be machine representable
+      // GODMARK: Also, not only Xh-Xl, but each Xl and Xh must be machine representable
+
+      // So even for a uniform grid dxdxp can vary near machine level
+      //  dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
+      //	}
+
     }
-
-  }
-  else if(DXDERTYPE==DIFFNUMREC){
-
-    for(k=0;k<NDIM;k++) for(j=0;j<NDIM;j++){
-      dxdxp[j][k]=dfridr(blcoordsimple,ptrgeom,X,0,j,k);
-    }
-
   }
 }
 

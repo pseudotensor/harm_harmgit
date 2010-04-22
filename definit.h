@@ -801,3 +801,9 @@
 // polar region likes 6.5E-8 (min of error for specific case)
 #endif
 // GODMARK: Should really choose CONNDELTA as (totalsize[jj]*dx[jj]*MY1EM5)
+
+
+// problem-dependent code activation
+#define USERESETREGION 0
+
+

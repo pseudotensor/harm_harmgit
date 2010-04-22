@@ -2291,6 +2291,7 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
   int pl,pliter;
   FTYPE prguess[NPR];
   FTYPE (*ptoavgwhennogood)[NSTORE2][NSTORE3][NPR];
+  int ti,tj,tk,resetregion;
 
 
 
@@ -2307,19 +2308,35 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
   }
 
 
+  ti=startpos[1]+i;
+  tj=startpos[2]+j;
+  tk=startpos[3]+k;
+
+
   /////////////
   //
   // no good values.  Choices: STATIC, RESET to something, and AVERAGE failed (t-dt surrounding) values.
   //
   /////////////
-  if(TODONOGOOD==NOGOODAVERAGE){// if no solution, revert to normal observer and averaged densities
-    // average out densities+velocity
-    for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl));
-  }
-  else if(TODONOGOOD==NOGOODSTATIC){// if no solution, revert to normal observer and averaged densities
-    // don't change -- stay at previous timestep value (or whatever utoprim() left it as).
-  }
-  else if(TODONOGOOD==NOGOODRESET){// if no solution, revert to normal observer and averaged densities
+
+
+  /////////////////////////////////////////////////
+  //
+  /////// BELOW STUFF IS MODEL DEPENDENT
+  //
+  /////////////////////////////////////////////////
+
+#if(USERESETREGION==1)
+  // tj = 0,1,totalsize[2]-2,totalsize[2]-1 are reset region
+  // ti<10 near BH is reset region
+  resetregion=(tj>=-2 && tj<=1 || tj>=totalsize[2]-2 && tj<=totalsize[2]+1) || (ti<10);
+#elif(USERESETREGION==0)
+  resetregion=0;
+#endif
+
+
+
+  if(resetregion || TODONOGOOD==NOGOODRESET){// if no solution, revert to normal observer and averaged densities
 
     // model-dependent: assumes failures occur mostly in jet region near where matter is mostly freefalling near black hole where b^2/rho_0>>1
 
@@ -2339,7 +2356,21 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
     // make velocity the normal observer
     set_atmosphere(0,WHICHVEL,ptrgeom,prguess);
     for(pl=U1;pl<=U3;pl++) MACP0A1(pv,i,j,k,pl)=prguess[pl];
+    // average out things above field "pl"
+    for(pl=B3+1;pl<NPR;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl));
 
+  }
+  /////////////////////////////////////////////////
+  //
+  /////// BELOW STUFF IS NOT MODEL DEPENDENT
+  //
+  /////////////////////////////////////////////////
+  else if(TODONOGOOD==NOGOODAVERAGE){// if no solution, revert to normal observer and averaged densities
+    // average out densities+velocity
+    for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl));
+  }
+  else if(TODONOGOOD==NOGOODSTATIC){// if no solution, revert to normal observer and averaged densities
+    // don't change -- stay at previous timestep value (or whatever utoprim() left it as).
   }
   else{
     dualfprintf(fail_file,"No condition for failure in fixup_nogood()\n");

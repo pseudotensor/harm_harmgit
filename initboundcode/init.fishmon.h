@@ -349,3 +349,8 @@
 struct Ccoordparams {
     double timescalefactor;
 }  coordparams;
+
+
+// problem-dependent code activation
+#define USERESETREGION 1
+
