@@ -350,6 +350,8 @@ int main(
       j=jj-sj;
       k=kk-sk;
 
+      //      kk=k=0; // forced
+
       if((i<0)||(j<0)||(k<0)||(i>=nx)||(j>=ny)||(k>=nz)){
 	fprintf(stderr,"data requested larger than said size: i=%d j=%d k=%d\n",i,j,k); fflush(stderr);
 	exit(1);
@@ -541,14 +543,17 @@ int main(
     
     for(kkk=0;kkk<nz;kkk++){ // same procedure for each kkk out of nz
 
+      //      int fakekkk=0; // forced
+      int fakekkk=kkk;
+
       indexi=0;
       // generate x-direction integral since 1-D
       for(jnow=0;jnow<ny;jnow++){
-	result1[jnow]=-db[kkk*nx*ny+0]*0.5;
+	result1[jnow]=-db[fakekkk*nx*ny+0]*0.5;
 	// jjj here is index in i.  We are doing integral over dx1
 	for(indexj=0;indexj<=jnow;indexj++){
-	  if(indexj==jnow) result1[jnow]+=db[kkk*nx*ny+nx*indexj+indexi]*0.5;
-	  else result1[jnow]+=db[kkk*nx*ny+nx*indexj+indexi];
+	  if(indexj==jnow) result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi]*0.5;
+	  else result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi];
 	}
       }
       // now find i,j'th aphi
@@ -558,13 +563,13 @@ int main(
 	k=indexk=(int)(iii/(nx*ny));
       
 	// here jjj is over dx2
-	result2=-da[kkk*nx*ny+indexj*nx+0]*0.5;
+	result2=-da[fakekkk*nx*ny+indexj*nx+0]*0.5;
 	for(inow=0;inow<=indexi;inow++){
-	  if(inow==indexi) result2+=da[kkk*nx*ny+indexj*nx+inow]*0.5;
-	  else result2+=da[kkk*nx*ny+indexj*nx+inow];
+	  if(inow==indexi) result2+=da[fakekkk*nx*ny+indexj*nx+inow]*0.5;
+	  else result2+=da[fakekkk*nx*ny+indexj*nx+inow];
 	}
       
-	aphi[kkk*nx*ny+indexj*nx+indexi]=result1[indexj]+result2;
+	aphi[fakekkk*nx*ny+indexj*nx+indexi]=result1[indexj]+result2;
       }
     }// end over kkk out of nz
 
