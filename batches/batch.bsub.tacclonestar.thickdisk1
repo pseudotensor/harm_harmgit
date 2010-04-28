@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# login:
+# ssh tg802609@lonestar.tacc.utexas.edu
+
+# Docs:
+# http://www.tacc.utexas.edu/services/userguides/lonestar/
+
+# modules (allow default for some)
+#module load Linux
+#module load intel/10.1
+#module load binutils/2.17
+#module load mvapich/1.0.1
+#module load cluster
+#module load TACC
+# non-default:
+module load sinc/1.3
+module load mkl
+
+# to use sinc:
+# sinc -z -i runlocaldipole3dfiducial -o runlocaldipole3dfiducial.1.tar.gz
+# rls -la runlocaldipole3dfiducial.1.tar.gz
+
+# if sinc not working can use tar/ssh
+# tar cvf - <dirname> | ssh ${ARCHIVER} "cat > ${ARCHIVE}/<tarfile.tar>"
+
+
+# run using: bsub < bsub.batch
+# to check jobs: showq -u or bjobs
+
+#BSUB -o output.log
+# queues are: serial,normal,high,hero,development
+#BSUB -q normal
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -B
+#BSUB -N
+#BSUB -u jmckinne@stanford.edu     #email
+#BSUB -P TG-AST080025N
+#BSUB -x                           #exclusive use of node
+
+#BSUB -J thickdisk1                # JOB name
+#BSUB -W 48:00                      # Wall time
+#BSUB -n 512                         # number of cores
+#BSUB -R 'span[ptile=4]'           # number of cores/node
+
+date
+
+# command line:
+# bsub -I -n 4 -W 0:05 -q development ibrun ./a.out 
+
+# cd $LS_SUBCWD                     #cd to directory of submission
+
+# job name echo'ed
+echo %J
+
+
+#################
+NCPUX1=4
+echo $NCPUX1
+NCPUX2=4
+echo $NCPUX2
+NCPUX3=32
+echo $NCPUX3
+#NTOT=$(($NCPUX1 * $NCPUX2 * $NCPUX3))
+NTOT=512
+echo $NTOT
+FILENAME="thickdisk1"
+echo $FILENAME
+DIRFILE="/home/01014/tg802609/thickdisk"
+echo $DIRFILE
+RUNDIR=$WORK/thickdisk1/
+echo $RUNDIR
+
+# must set total number of threads for openmpi
+#export OMP_NUM_THREADS=$NTOT
+
+
+
+
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+
+# COMMENT OUT FOR RESTART
+#mkdir -p dumps
+#mkdir -p images
+#cp $DIRFILE/$FILENAME .
+#chmod u+x $FILENAME
+
+
+#wait
+
+
+################
+# OpenMPI does not use mpirun:
+#
+#./$FILENAME 1 $NCPUX1 $NCPUX2 $NCPUX3 1 0 > $FILENAME.so
+#ibrun ./$FILENAME 1 $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+#ibrun ./$FILENAME 1 $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+#ibrun ./$FILENAME 1 $NCPUX1 $NCPUX2 $NCPUX3 1 0 > $FILENAME.so
+# serialrun ./a.out
+
+# NO OPENMP COMPILED:
+#ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 > $FILENAME.so
+ibrun ./$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 1 0 > $FILENAME.so
+
+
+wait
+date
+

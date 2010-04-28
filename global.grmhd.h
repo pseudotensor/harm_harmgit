@@ -154,11 +154,31 @@
 // http://www.linuxdevices.com/files/misc/intel_5100.jpg
 // http://www.hardwarezone.com/img/data/articles/2006/2002/Bensley-block-diagram-2.jpg
 //
-// Teragrid Abe:
+// Lonestar + Ranger -> Ranch for data storage:
+// http://services.tacc.utexas.edu/index.php/ranch-user-guide/
+// tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
+//
+// Teragrid LONI QueenBee (Queen Bee):
+// http://www.loni.org/systems/
+// http://www.loni.org/teragrid/users_guide.php
+// 1) Connect to (e.g.) abe: ssh jmckinne@abe.ncsa.uiuc.edu
+// 2) Setup proxy: myproxy-logon -l jmckinne  -s myproxy.teragrid.org
+// 3) Use NCSA Portal Password
+// 4) Connect to QB: gsissh login1-qb.loni-lsu.teragrid.org
+
+// QUEENBEE: Must set GETTIMEOFDAYPROBLEM 1
+
+//
+//
+// Teragrid NCSA Abe:
 // http://www.teragrid.org/userinfo/hardware/resources.php?select=single&id=50&PHPSESSID=0
 // http://www.dell.com/content/products/productdetails.aspx/pedge_1955?c=us&l=en&s=corp
 // 5300 quad-core Xeon 5000 series
 // 2*4MB L2 cache (shared like ki-rh42).
+//
+// tgusage -u jmckinne
+// tgusage -a TG-AST080026N
+// tgusage -a TG-AST080025N
 //
 //
 // Intel Core2 has same(?) as Barcelona but no L3 cache.

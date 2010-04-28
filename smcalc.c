@@ -277,7 +277,7 @@ int main(
     }
     else{
       if((DUMPTYPE==SINGLECOLUMN)&&(numcol!=7)){
-	fprintf(stderr,"numcol=%d for singlecolumn/dofline, should be 6\n",numcol);
+	fprintf(stderr,"numcol=%d for singlecolumn/dofline, should be 7\n",numcol);
 	//      exit(1);
       }
     }
