@@ -519,8 +519,9 @@ int main(
       }
       // now find i,j'th aphi
       for(iii=0;iii<nx*ny;iii++){
-	indexi=(int)(iii%nx);
-	indexj=(int)(iii/nx);
+	i=indexi=(int)(iii%nx);
+	j=indexj=(int)((iii%(nx*ny))/nx);
+	k=indexk=(int)(iii/(nx*ny));
       
 	// here jjj is over dx2
 	result2=-db[kkk*nx*ny+0*nx+indexi]*0.5;
@@ -552,8 +553,9 @@ int main(
       }
       // now find i,j'th aphi
       for(iii=0;iii<nx*ny;iii++){
-	indexi=(int)(iii%nx);
-	indexj=(int)(iii/nx);
+	i=indexi=(int)(iii%nx);
+	j=indexj=(int)((iii%(nx*ny))/nx);
+	k=indexk=(int)(iii/(nx*ny));
       
 	// here jjj is over dx2
 	result2=-da[kkk*nx*ny+indexj*nx+0]*0.5;
