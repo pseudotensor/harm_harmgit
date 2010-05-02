@@ -2326,11 +2326,11 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
   //
   /////////////////////////////////////////////////
 
-#if(USERESETREGION==1)
+#if(USERRESETREGION==1)
   // tj = 0,1,totalsize[2]-2,totalsize[2]-1 are reset region
   // ti<10 near BH is reset region
   resetregion=(tj>=-2 && tj<=1 || tj>=totalsize[2]-2 && tj<=totalsize[2]+1) || (ti<10);
-#elif(USERESETREGION==0)
+#elif(USERRESETREGION==0)
   resetregion=0;
 #endif
 

@@ -352,5 +352,6 @@ struct Ccoordparams {
 
 
 // problem-dependent code activation
-#define USERESETREGION 1
+#undef USERRESETREGION
+#define USERRESETREGION 1
 

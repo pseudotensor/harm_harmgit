@@ -514,6 +514,9 @@ long *restartsteps, int *whichrestart, long long int *restartc, long localrealns
     
     restartsteps[*whichrestart] = localrealnstep;
     *whichrestart = !(*whichrestart);
+
+    // set "counter"
+    dumpcntgen[whichDT]=(long int)(*whichrestart);
     
     *restartc = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nrestart))/((FTYPE)DTr)));
     *nrestart = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTr)) + (*restartc)) * DTr;

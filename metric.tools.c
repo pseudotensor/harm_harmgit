@@ -1817,7 +1817,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 				     ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
 				     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
 				     );
-  FTYPE failreturn;
+  int failreturn;
   int conndertypelocal;
 
 

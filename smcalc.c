@@ -350,8 +350,6 @@ int main(
       j=jj-sj;
       k=kk-sk;
 
-      //      kk=k=0; // forced
-
       if((i<0)||(j<0)||(k<0)||(i>=nx)||(j>=ny)||(k>=nz)){
 	fprintf(stderr,"data requested larger than said size: i=%d j=%d k=%d\n",i,j,k); fflush(stderr);
 	exit(1);
@@ -542,7 +540,7 @@ int main(
     for(iii=0;iii<nx*ny*nz;iii++)    aphi[iii]=0.0;
     
     for(kkk=0;kkk<nz;kkk++){ // same procedure for each kkk out of nz
-
+     
       //      int fakekkk=0; // forced
       int fakekkk=kkk;
 

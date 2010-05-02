@@ -59,6 +59,8 @@
 # remove extra ## from the line below if you want to name your own file
 #PBS -e thickdisk2a.err
 #
+#PBS -m be
+#
 # End of embedded QSUB options
 #
 # set echo               # echo commands before execution; use for debugging

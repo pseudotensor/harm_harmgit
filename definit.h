@@ -804,6 +804,6 @@
 
 
 // problem-dependent code activation
-#define USERESETREGION 0
+#define USERERSETREGION 0
 
 

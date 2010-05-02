@@ -1882,7 +1882,7 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
   FTYPE dxmachine[NDIM];
   struct of_geom geom;
   struct of_geom *ptrgeom;
-  FTYPE failreturn;
+  int failreturn;
 
 
   // setup dummy grid location since dxdxp doesn't need to know if on grid since don't store dxdxp (needed for dfridr())
