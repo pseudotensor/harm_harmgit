@@ -667,17 +667,26 @@ int main(
 	if(i>=NUMBC && j>=NUMBC && k>=NUMBC && i<=nx-1-NUMBC && j<=ny-1-NUMBC && k<=nz-1-NUMBC){
 	  // create V,P,Y
 	  for(ismall=-NUMBC;ismall<=+NUMBC;ismall++){
-	    V[ismall] = p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , U1+dimen-1)];
+
+	    // get V = gdet*rho0*u^i
+	    V[ismall]  = p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , U1+dimen-1)]; // u^i
+	    V[ismall] *= p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , RHO)]; // rho0
+	    V[ismall] *= gdet[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // gdet
+
 	    //	    P[ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2) , k + ismall*(dimen==3) , UU)]; // assumes ideal gas and only taking ratios of pressures
 	    P[ismall] = Ptot[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // true Ptot
-	    PLOOP(pl) Ypl[pl][ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2)  , k + ismall*(dimen==3) , pl)];
+
+
+	    //	    PLOOP(pl) Ypl[pl][ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2)  , k + ismall*(dimen==3) , pl)];
 
 	    //	    fprintf(stderr,"i=%d j=%d k=%d ismall=%d V=%21.15g P=%21.15g\n",i,j,k,ismall,V[ismall],P[ismall]);
 	  }
 
 	  // now compute Ficalc for all pl
 	  //	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P, Ypl);
+
 	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P);
+
 	  //	  fprintf(stderr,"dimen=%d ficalc=%21.15g\n",dimen,ficalc[MAPFICALC(dimen-1)]);
 	}
 	else{

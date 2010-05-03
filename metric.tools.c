@@ -1819,6 +1819,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 				     );
   int failreturn;
   int conndertypelocal;
+  FTYPE value;
 
 
 
@@ -1939,7 +1940,6 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     localptrgeom->p=NOWHERE; // informs rest of calls that X will generally be arbitrary
 
     //    dualfprintf(fail_file,"DIFFNUMREC: doing i=%d j=%d\n",geom->i,geom->j);
-    FTYPE value;
     for (k = 0; k < NDIM; k++) {
 
       

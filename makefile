@@ -17,6 +17,7 @@ endif
 #####################
 # WATCH OUT FOR SPACES, etc. AFTER ASSIGNMENTS!!!!
 USEBG=0
+#QUEENBEE (avoids making directories or forking in general)
 USEQB=0
 USEUB=0
 # USEABE -> USEICCGENERIC is used
@@ -51,6 +52,7 @@ USEMCCSWITCHFORGCC=1
 ifeq ($(USEQB),1)
 USEICCGENERIC=1
 AVOIDMKDIR=1
+#AVOIDFORK=1
 endif
 
 ifeq ($(USEBG),1)
