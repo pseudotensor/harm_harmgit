@@ -97,6 +97,9 @@ static FTYPE Ficalc(int dimen, FTYPE *V, FTYPE *P);
 static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs);
 
 
+FTYPE SP0user;
+
+
 int main(
         int argc,
         char *argv[],
@@ -142,6 +145,9 @@ int main(
 
 
 
+
+
+
   // shift sufficiently
   Ypl=(FTYPE (*) [20]) (&(a_Ypl[0][10]));
   V=&a_V[10];
@@ -150,18 +156,24 @@ int main(
 
   numargs=1+8;
   if(argc<numargs){
-    fprintf(stderr,"./smcalc DUMPTYPE CALCTYPE DERTYPE nx ny nz inname outname <startdump> <enddump>\n");
+    fprintf(stderr,"./smcalc DUMPTYPE CALCTYPE DERTYPE <Sp0> nx ny nz inname outname <startdump> <enddump>\n");
     fprintf(stderr,"DUMPTYPE: 0=realdump 1=single column >=2 any number of columns specified\n");
     fprintf(stderr,"CALCTYPE: 0=faraday 1=fline 2=derivatives 3=average 4=ficalc1,2,3\n");
     fprintf(stderr,"DERTYPE=0->centered when possible 1->numerical backward if possible 2=forward if possible 10+ of 0 11=+ of 1 12=+ of 2\n");
+    fprintf(stderr,"Sp0=Shock strength. (e.g. 0.75 for flash)\n");
     exit(1);
   }
 
 
   argi=0;
+  // always needed:
   argi++; DUMPTYPE=atoi(argv[argi]);
   argi++; CALCTYPE=atoi(argv[argi]);
   argi++; DERTYPE=atoi(argv[argi]);
+  // optionals:
+  if(CALCTYPE==4) argi++; SP0user=(FTYPE)atof(argv[argi]);
+
+  // always needed:
   argi++; nx=atoi(argv[argi]);
   argi++; ny=atoi(argv[argi]);
   argi++; nz=atoi(argv[argi]);
@@ -798,7 +810,7 @@ int main(
 
 
 
-
+// SP0->SP0user so smcalc can choose shock strength to get
 
 // PPM FLATTENER parameter
 static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs)
@@ -821,7 +833,7 @@ static FTYPE ftilde( int dimen, int shift, FTYPE *Vabs, FTYPE *Pabs)
 
 
   // FLASH Equation 45
-  Ftilde = max( 0, min( 1.0, 10.0 * (Sp - SP0) ) );
+  Ftilde = max( 0, min( 1.0, 10.0 * (Sp - SP0user) ) );
 
   //  Ftilde*=Ftilde*Ftilde*Ftilde;
 
