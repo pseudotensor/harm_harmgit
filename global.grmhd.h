@@ -158,6 +158,12 @@
 // http://services.tacc.utexas.edu/index.php/ranch-user-guide/
 // tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
 //
+// bbcp much faster:
+// http://www.slac.stanford.edu/~abh/bbcp/
+// http://pcbunn.cithep.caltech.edu/bbcp/using_bbcp.htm
+// bbcp -P 5 -k -a ....
+//
+//
 // Teragrid LONI QueenBee (Queen Bee):
 // http://www.loni.org/systems/
 // http://www.loni.org/teragrid/users_guide.php

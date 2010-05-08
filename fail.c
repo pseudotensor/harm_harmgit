@@ -47,7 +47,10 @@ int fail(int i, int j, int k, int loc, int fail_type)
 
 
   dualfprintf(fail_file, "failed\n");
-  if(area_map(1,FINALTDUMPAREAMAP, 3, i, j, k,GLOBALPOINT(pdump))>=1){}
+  //  if(area_map(1,FINALTDUMPAREAMAP, 3, i, j, k,GLOBALPOINT(pdump))>=1){}
+  if(area_map(1,FINALTDUMPAREAMAP, NBIGBND, i, j, k,GLOBALPOINT(pdump))>=1){}
+
+
   // do nothing since never will fail since if failed=1, doesn't do fail-related function calls
 
   // do not respond here since not in synch with other CPUs.  Use postdt().

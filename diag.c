@@ -853,6 +853,7 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
   FTYPE U[NPR];
   int lowersizex1,uppersizex1;
   int lowersizex2,uppersizex2;
+  int lowersizex3,uppersizex3;
 
   static FILE* fileptr;
   static int firsttime=1;
@@ -876,6 +877,11 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
   else lowersizex2=size/2;
   if((N2-1+N2BND)-j<size/2) uppersizex2=(N2-1+N2BND)-j;
   else uppersizex2=size/2;
+
+  if(k-(-N3BND)<size/2) lowersizex3=k-(-N3BND);
+  else lowersizex3=size/2;
+  if((N3-1+N3BND)-k<size/2) uppersizex3=(N3-1+N3BND)-k;
+  else uppersizex3=size/2;
 
 
   if(firsttime){
@@ -904,7 +910,8 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
     PDIAGLOOP(pl) {// all vars
       
       dualfprintf(fail_file, "variable %d \n", pl);
-      
+
+      // ONLY 2D map for now      
       dualfprintf(fail_file, "i = \t ");
       for(l=i-lowersizex1;l<=i+uppersizex1;l++){
 	ll=l+startpos[1];
@@ -914,7 +921,7 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
       for(m=j-lowersizex2;m<=j+uppersizex2;m++){
 	mm=m+startpos[2];
 	dualfprintf(fail_file, "j = %d \t ",mm);
-	for(l=i-lowersizex1;l<=i+lowersizex1;l++){
+	for(l=i-lowersizex1;l<=i+uppersizex1;l++){
 	  ll=l+startpos[1];
 	  dualfprintf(fail_file, "%21.15g ",MACP0A1(prim,l,m,k,pl));
 	}

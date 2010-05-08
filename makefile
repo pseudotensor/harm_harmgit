@@ -121,6 +121,55 @@ endif
 endif    
 #################### DONE IF USEMPI
 
+
+#################### IF NOT USEMPI
+
+ifeq ($(USEMPI),0)
+
+ifeq ($(USEQB),1)
+USEICCGENERIC=1
+endif
+
+ifeq ($(USEBG),1)
+CCGENERATE=gcc
+USESPECIAL4GENERATE=1
+endif
+
+ifeq ($(USETACCLONESTAR),1)
+endif
+
+ifeq ($(USENERSC),1)
+endif
+
+ifeq ($(USEICCGENERIC),1)
+endif
+
+ifeq ($(USEICCINTEL),1)
+endif
+
+ifeq ($(USETACCRANGER),1)
+endif
+
+ifeq ($(USEORANGE),1)
+endif
+
+ifeq ($(USEGCC),1)
+endif
+
+ifeq ($(USEPGCC),1)
+endif    
+
+ifeq ($(USEUB),1)
+USEGCC=1
+ECHOSWITCH=
+USELAPACK=0
+endif
+
+endif    
+#################### DONE IF USEMPI
+
+
+# USEMPI OR NOT:
 ifeq ($(USEUB),1)
 USEGCC=1
 ECHOSWITCH=
