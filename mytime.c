@@ -82,7 +82,31 @@ int timecheck(int whichlocation, SFTYPE comptstart)
     }
 
 
-    if(whichlocation==STARTTIME){
+    if(whichlocation==INITSTARTTIME){
+      // SETUP TIME TRACKING for INIT -> COMP
+      // cannot print to ???_file files yet since not yet open
+      GETTIME(&timestart);
+      GETTIME(&gtimestart);
+      microtime(&wttimestart);
+      myustimes2(&usertmstimestart,&systmstimestart);
+    }
+    else if(whichlocation==INITSTOPTIME){
+      // get final time
+      GETTIME(&timestop);
+      microtime(&wttimestop);
+      myustimes2(&usertmstimestop,&systmstimestop);
+
+      // running average zonecycle rate
+      walltime=(SFTYPE) DELTATIME(timestop,timestart);
+      if(walltime<1E-5) walltime=1E-5;
+  
+      fprintf(logfull_file,"#INIT WTIME: %10.2g\n",walltime*SEC2HOUR);
+#ifndef WIN32
+      fprintf(logfull_file,"#(sec) INIT walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
+#endif
+
+    }
+    else if(whichlocation==STARTTIME){
       // SETUP TIME TRACKING
       GETTIME(&timestart);
       GETTIME(&gtimestart);

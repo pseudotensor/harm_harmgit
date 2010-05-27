@@ -163,6 +163,9 @@
 // http://pcbunn.cithep.caltech.edu/bbcp/using_bbcp.htm
 // bbcp -P 5 -k -a ....
 //
+// On jdexter@@luigi : getting files from ki-rh42:
+// ~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
+//
 //
 // Teragrid LONI QueenBee (Queen Bee):
 // http://www.loni.org/systems/
@@ -650,7 +653,7 @@
 
 
 
-// Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu):
+// Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu to portal through ki-rh42):
 // On orange do:
 // 1) ssh -N -f -L 2134:portal.astro.washington.edu:22 jon@ki-rh42.slac.stanford.edu  
 // then still on orange do to ssh to jdexter@portal.astro.washington.edu through ki-rh42:
@@ -660,4 +663,31 @@
 // In either case you'll need to enter the jdexter password on portal.astro.washington.edu.
 
 
+
+// Couldn't get this to work:
+//
+// Setting up ssh tunnel (e.g. to get data from queenbee to ranch through lonestar)
+// On queenbee do (lonestar password):
+// 1) ssh -N -f -L 2134:ranch.tacc.utexas.edu:22 tg802609@lonestar.tacc.utexas.edu
+// then still on queenbee do to ssh to tg802609@ranch.tacc.utexas.edu through lonestar:
+// 2) ssh -p 2134 tg802609@localhost
+// OR to scp
+// 3) scp -P 2134 dump???? tg802609@localhost:
+// OR to bbcp
+// 4) bbcp -k -a -r -P 5 -S 'ssh -p 2134 -x -a %I -l %U %H bbcp' dump???? tg802609@localhost:
+
+// OR to bbcp w/ tarification
+// 5) ??????????tar cvf - thickdisk3 | bbcp -P 5 -k -a -T 'ssh -x -a %I -l %U %H bbcp' tg802609@localhost:
+// In latter cases you'll need to enter the tg802609 password on ranch
+
+
+// This works:
+//
+// or directly:
+// bbcp -r -k -a -P 5 thickdisk3_qb.tgz tg802609@ranch.tacc.utexas.edu:
+
+
+// Scratch:
+// tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
+// ~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
 

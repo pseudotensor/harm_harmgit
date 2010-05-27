@@ -17,6 +17,10 @@ int main(int argc, char *argv[])
   crapdebug=0; // CHANGINGMARK: to debug stuff
 
 
+  // start timing for init -> computation start
+  timecheck(INITSTARTTIME,0);
+
+
 
   //////////////////////////
   //
@@ -43,6 +47,12 @@ int main(int argc, char *argv[])
     }
   }
 
+
+
+
+
+  // end timing for init -> computation start
+  timecheck(INITSTOPTIME,0);
 
   /////////////////////////
   //
