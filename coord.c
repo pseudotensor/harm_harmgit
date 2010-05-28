@@ -255,7 +255,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //    npow2=4.0; //power exponent
     npow2=10.0; //power exponent
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-    rbr = 1E3;  //radius at which hyperexponentiation kicks in
+    //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
+    rbr = 5E2;  //radius at which hyperexponentiation kicks in
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
 
