@@ -246,6 +246,20 @@ void set_coord_parms_nodeps(int defcoordlocal)
     // see jet3coords_checknew.nb
     npow=1.0;
 
+    /////////////////////
+    // RADIAL GRID SETUP
+    /////////////////////
+    npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+
+    //radial hyperexponential grid
+    //    npow2=4.0; //power exponent
+    npow2=10.0; //power exponent
+    cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = 1E3;  //radius at which hyperexponentiation kicks in
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
+
+
+
     // must be same as in dxdxp()
     if(0){ // first attempt
       r1jet=2.8;
@@ -594,7 +608,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0mono,r0disk,jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0);
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -690,7 +704,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0mono,&r0disk,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
-	fscanf(in,HEADER14IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0);
+	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -819,6 +833,10 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&r0jet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1100,8 +1118,24 @@ void bl_coord(FTYPE *X, FTYPE *V)
   }
   else if (defcoord == JET6COORDS) {
 
+#if(0) // no change in exponentiation
     // JET3COORDS-like radial grid
     V[1] = R0+exp(pow(X[1],npow)) ;
+#else
+
+    theexp = npow*X[1];
+    if( X[1] > x1br ) {
+      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    }
+    V[1] = R0+exp(theexp);
+
+
+    //    FTYPE npowtrue,npowlarger=10.0;
+    //    FTYPE npowrs=1E3;
+    //    FTYPE npowr0=2E2;
+    //    npowtrue = npow + (npowlarger-npow)*(0.5+1.0/M_PI*atan((V[1]-npowrs)/npowr0));
+    //    V[1] = R0+exp(pow(X[1],npowtrue)) ;
+#endif
 
 
 
@@ -1990,7 +2024,7 @@ void set_points()
   int jj;
 
   //for SJETCOORDS
-  FTYPE x1max0, x1max;
+  FTYPE x1max0, x1max,dxmax;
   int iter;
   const FTYPE RELACC = 1e-14;
   const int ITERMAX = 50;
@@ -2111,7 +2145,11 @@ void set_points()
           break;
         }
         x1max0 = x1max;
-        x1max = pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br;
+	dxmax= (pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br) - x1max0;
+
+	// need a slight damping factor
+	FTYPE dampingfactor=0.5;
+        x1max = x1max0 + dampingfactor*dxmax;
       }
 
       if( iter == ITERMAX ) {
@@ -2137,6 +2175,50 @@ void set_points()
     dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
     dx[2] = 1. / totalsize[2];
     dx[3] = 1.0/totalsize[3];
+
+#if(1)
+    startx[1] = log(Rin-R0)/npow;
+
+    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,npow,cpow2,npow2,x1br,rbr);
+
+    if( Rout < rbr ) {
+      x1max = log(Rout-R0)/npow;
+    }
+    else {
+      x1max0 = 1;
+      x1max = 2;
+
+      //find the root via iterations
+      for( iter = 0; iter < ITERMAX; iter++ ) {
+
+	//	trifprintf( "iter=%d x1max=%21.15g x2max0=%21.15g\n",iter,x1max0,x1max);
+
+        if( fabs((x1max - x1max0)/x1max) < RELACC ) {
+          break;
+        }
+        x1max0 = x1max;
+	dxmax= (pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br) - x1max0;
+
+	// need a slight damping factor
+	FTYPE dampingfactor=0.5;
+        x1max = x1max0 + dampingfactor*dxmax;
+
+      }
+
+      if( iter == ITERMAX ) {
+        trifprintf( "Error: iteration procedure for finding x1max has not converged: x1max = %g, dx1max/x1max = %g, iter = %d\n",
+                    x1max, (x1max-x1max0)/x1max, iter );
+        exit(1);
+      }
+      else {
+        trifprintf( "x1max = %g (dx1max/x1max = %g, itno = %d)\n", x1max, (x1max-x1max0)/x1max, iter );
+      }
+    }
+
+    dx[1] = ( x1max - startx[1] ) /totalsize[1];
+#endif
+
+
   } 
   else if (defcoord == JET5COORDS) {
     startx[1] = 0.0;
@@ -2340,6 +2422,9 @@ FTYPE setRin(int ihor)
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
       return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    }
+    else if(npow2>0){
+      return(1.2);
     }
     else{
       dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
