@@ -9,6 +9,7 @@
 int timecheck(int whichlocation, SFTYPE comptstart)
 {
   static SFTYPE tlasttime;
+  static long long int nsteplasttime;
   static long long int startnstep;
   long long int diffnstep;
   FTYPE ftemp;
@@ -282,9 +283,19 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 	      // Then compare that to time taken by diagnostics: diagwalltimelocal
 	      // Then divide by internal of checks and interval of corresponding diagnostics to see if overall will be a problem
 	      // So compute: walltime(to do step without diagnostics)/dt << walltime(to do dump)/Dt
-	      if((walltimelocal-diagwalltimelocal)/(t-tlasttime) < DIAGFACTOR*diagwalltimelocal/DTdumpgen[ii]){
-		// output to perf file if that log is impacting performance
-		myfprintf(fileit,"#LOGDIAG!: %d\n",ii);
+	      if(ii!=FAKEDUMPTYPE){ // ignore fake dump
+		if(ii!=RESTARTDUMPTYPE && ii!=RESTARTMETRICDUMPTYPE){// then time-based
+		  if((walltimelocal-diagwalltimelocal)/(t-tlasttime) < DIAGFACTOR*diagwalltimelocal/DTdumpgen[ii]){
+		    // output to perf file if that log is impacting performance
+		    myfprintf(fileit,"#LOGDIAG(DTbased)!: %d : %21.15g\n",ii,diagwalltimelocal*(t-tlasttime)/(DTdumpgen[ii])/(walltimelocal-diagwalltimelocal));
+		  }
+		}
+		else{// then step based
+		  if((walltimelocal-diagwalltimelocal)/((FTYPE)(nstep-nsteplasttime)) < DIAGFACTOR*diagwalltimelocal/DTr){
+		    // output to perf file if that log is impacting performance
+		    myfprintf(fileit,"#LOGDIAG(nstepbased)!: %d : %21.15g\n",ii,diagwalltimelocal*((FTYPE)(nstep-nsteplasttime))/((FTYPE)DTr)/(walltimelocal-diagwalltimelocal));
+		  }
+		}
 	      }
 	    }
 	    // Below checks if instantaneous impact on performance (which can be ok integrated over long times as estimated by above)
@@ -298,9 +309,10 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 
 	  }
 	}
-	GETTIME(&gtimestart);
+	GETTIME(&gtimestart); // this restarts walltimelocal count
 	localdiagwalltimecumulative=0.0; // resets local cumulative wall time for diagnostics
 	tlasttime=t;
+	nsteplasttime=nstep;
       }// end if output speed
   
 

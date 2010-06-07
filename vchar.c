@@ -253,7 +253,9 @@ int boundary_smoother(struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, int *ignor
 }
 
 
-#define USESASHAREWRITE 1
+
+
+#define USESASHAREWRITE 1 // whether to use WHAM form that avoids catastrophic cancellation in non-rel and ultra-rel regimes.
 
 int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax)
 {
@@ -271,6 +273,13 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
   loc=geom->p;
 
 
+  ////////////////
+  //
+  // Setup vectors for wave speed calculation
+  //
+  ////////////////
+
+
   DLOOPA(j) Acov[j] = 0.;
   Acov[dir] = 1.;
   raise_vec(Acov, geom, Acon);
@@ -279,8 +288,13 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
   Bcov[TT] = 1.;
   raise_vec(Bcov, geom, Bcon);
 
-  /* now require that speed of wave measured by observer q->ucon is
-     cms2 */
+
+
+  //////////
+  //
+  // now require that speed of wave measured by observer q->ucon is cms2
+  //
+  ///////////
   Asq = dot(Acon, Acov);
   Bsq = dot(Bcon, Bcov);
   Au = dot(Acov, q->ucon);
@@ -290,22 +304,23 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
   Bu2 = Bu * Bu;
   AuBu = Au * Bu;
 
-  //OBSOLETE -- START
+
   // JCM: grouped cms2 with 1.0 so good in ultrarelativistic regime.
   // was getting A=B=0 and giving vm=vp=inf, when really wasn't A=B=0!  That is, code was failing when cms=1 and A=B=0
-  A = Bu2 * (1.0 - cms2) - Bsq * cms2;
-  //  A = Bu2 - (Bsq + Bu2) * cms2;
   B = 2. * (AuBu * (1.0-cms2)  - AB*cms2);
   //B = 2. * (AuBu - (AB + AuBu) * cms2);
+  A = Bu2 * (1.0 - cms2) - Bsq * cms2;
+  //  A = Bu2 - (Bsq + Bu2) * cms2;
+
+
+#if(USESASHAREWRITE==0)
   C = Au2*(1.0-cms2) - Asq * cms2;
   //  C = Au2 - (Asq + Au2) * cms2;
 
-#if(USESASHAREWRITE==0)
   // order unity normalized already
-  discr = B * B - 4 * A * C;
-  //OBSOLETE -- END
+  discr = B * B - 4.0 * A * C;
 #else
-  //REWRITTEN without catastrophic cancellation
+  //REWRITTEN without catastrophic cancellation for both non-rel and ultrarel regimes.
   discr = 4.0 * cms2 *
     ( 
      (AB * AB - Asq * Bsq) * cms2
@@ -313,12 +328,15 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
      );
 #endif
 
-  // DEBUG
-  //  if(A<=0.0){// isfinite
-  // dualfprintf(fail_file,"A=%21.15g B=%21.15g C=%21.15g discr=%21.15g\n",A,B,C,discr);
-  // }
 
 
+
+
+  /////////////////////
+  //
+  // Check if bad discr and report/fail if so
+  //
+  /////////////////////
 
   if((discr<0.0)&&(discr> -1E-10)) discr=0.0;  //atch: negative but not too much -- allow fractional error of 1e-10
   else if(discr<0.0){  //if discriminant is too negative
@@ -333,7 +351,11 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
       dualfprintf(fail_file,"geom->gcon[%d][%d]=%21.15g\n",j,k,geom->gcon[GIND(j,k)]);
     }
     
+#if(USESASHAREWRITE==0)
     dualfprintf(fail_file, "\n\t %21.15g %21.15g %21.15g %21.15g %21.15g\n", A, B, C, discr, cms2);
+#else
+    dualfprintf(fail_file, "\n\t %21.15g %21.15g %21.15g\n", A, discr, cms2);
+#endif
     dualfprintf(fail_file, "\n\t q->ucon: %21.15g %21.15g %21.15g %21.15g\n", q->ucon[0],
 	    q->ucon[1], q->ucon[2], q->ucon[3]);
     dualfprintf(fail_file, "\n\t q->bcon: %21.15g %21.15g %21.15g %21.15g\n", q->bcon[0],
@@ -346,16 +368,41 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     discr = 0.;
   }
 
+
+
+  /////////////////
+  //
+  // Compute actual discr
+  //
+  /////////////////
+
+
   discr = sqrt(discr);
 
+
+  /////////////////////
+  //
+  // Compute left- and right-going wavespeeds
+  //
   // order not obvious
+  //
+  /////////////////////
   vm = -(-B + discr) / (2. * A);
   vp = -(-B - discr) / (2. * A);
 
 
+
+  /////////////////////
+  //
   // isfinite check -- non-debug check
+  //
+  /////////////////////
   if( (!isfinite(vm)) || (!isfinite(vp)) ){
+#if(USESASHAREWRITE==0)
     dualfprintf(fail_file,"vm=%21.15g vp=%21.15g discr=%21.15g A=%21.15g B=%21.15g C=%21.15g\n",vm,vp,discr,A,B,C);
+#else
+    dualfprintf(fail_file,"vm=%21.15g vp=%21.15g discr=%21.15g A=%21.15g B=%21.15g\n",vm,vp,discr,A,B);
+#endif
     dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",geom->i,geom->j,geom->k,geom->p);
     dualfprintf(fail_file,"cms2=%21.15g\n",cms2);
     dualfprintf(fail_file,"dir=%d g=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",dir,geom->gdet,q->ucon[TT],q->ucon[RR],q->ucon[TH],q->ucon[PH]);
@@ -364,7 +411,14 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     return(1); // yes, hard failure, but need trace information
   }
 
-  // order
+
+
+  /////////////////////
+  //
+  // re-order so left is really left and right really right
+  //
+  /////////////////////
+
   if (vp < vm) {
     *vmax = vm;
     *vmin = vp;
@@ -373,6 +427,9 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     *vmax = vp;
     *vmin = vm;
   }
+
+
+  // done
   return(0);
 }
 

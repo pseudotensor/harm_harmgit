@@ -158,6 +158,20 @@
 // http://services.tacc.utexas.edu/index.php/ranch-user-guide/
 // tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
 //
+// With ssh (according to TACC):
+// cat myfile.tar | ssh target_machine "cd /target_dir/; tar xvf - "
+//or, for transfers between TACC systems, you could use the version of
+//gsissh that we have installed, which allows you to do the handshake
+//encrypted but send the data unencrypted:
+// cat myfile.tar | gsissh -oNoneEnabled=yes -oNoneSwitch=yes target_machine "cd target_dir; tar xvf - "
+//The overall consensus here is that the fastest way to do what you want
+//is to expand the files to $SCRATCH in Ranger and then bbcp them down
+//to your machine. This should be faster than using the ssh/cat/tar that
+//you are using now.
+//
+// other options:
+// http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+//
 // bbcp much faster:
 // http://www.slac.stanford.edu/~abh/bbcp/
 // http://pcbunn.cithep.caltech.edu/bbcp/using_bbcp.htm
@@ -443,6 +457,28 @@
 
 // Note that both gprof and pfmon or any performance timer will slow down code.  Remove -pg from makefile to avoid slowdown as well.
 
+//
+//
+//If not using the SIMD (single instruction, multiple data), or SSE type operations (which automatically are tried if using most compilers with optimizations), then roughly:
+//
+//1 addition, subtraction, comparison
+//2 fabs
+//3 abs
+//4 multiplication
+//10 division, modulus
+//20 sqrt
+//50 exp
+//60 sin, cos, tan
+//80 asin, acos, atan
+//100 pow
+//
+//Also, note that there are more than just math operations to worry about.  Another rule of thumb is that:
+//
+//page fault >>>>>> cache miss >> branch mistaken >> dependency chain >> non-sse-sqrt, division, and modulus > sse-sqrt etc. > everything else
+//
+//with ">>" being much greater than (as in 3-20 times).
+//
+//
 ////////////////////
 //
 // To get size of code's array elements:

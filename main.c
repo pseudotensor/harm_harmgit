@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
   //
   /////////////////////////
 
+  // GODMARK: Should store timestart and initial "t" time so running-average can properly be computed when restart simulation.
   //  comptstart=t; // not right
   comptstart=0; // assumes normal simulation started t=0 at nstep=0
   // start timing
