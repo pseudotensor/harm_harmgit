@@ -58,8 +58,10 @@ extern int timecheck(int whichlocation, SFTYPE comptstart);
 extern int gocheck(int whichlocation);
 extern int output_steptimedt_info(SFTYPE comptstart);
 
-
+#if(PRODUCTION<=1)
 extern int error_check(int wherefrom);
+#endif
+
 extern int find_horizon(int fromwhere);
 
 // initialize DUMP stuff
