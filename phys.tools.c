@@ -1758,7 +1758,13 @@ int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
   lower_vec(q->ucon, ptrgeom, q->ucov);
 
 #if(REMOVERESTMASSFROMUU==1 || REMOVERESTMASSFROMUU==2)
+
+#if(UD0PLUS1FIX==0)
+  q->ifremoverestplus1ud0elseud0=1.0+(q->ucov[TT]);
+#else
   compute_1plusud0(pr,ptrgeom,q,&(q->ifremoverestplus1ud0elseud0)); // plus1ud0=(1+q->ucov[TT])
+#endif
+
 #else
   q->ifremoverestplus1ud0elseud0=q->ucov[TT];
 #endif

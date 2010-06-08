@@ -73,8 +73,9 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
   for(stage=stagei;stage<=stagef;stage++){
 
 
+
     // first bound failure flag
-    // could optimize bound of pflag since often failures don't occur (just ask if any failures first), although probably negligible performance hit
+    // OPTMARK: could optimize bound of pflag since often failures don't occur (just ask if any failures first), although probably negligible performance hit
     if(stage<STAGE2){
       bound_pflag(boundstage, boundtime, GLOBALPOINT(pflag), finalstep);
       if(stage!=STAGEM1) boundstage++;
@@ -1617,7 +1618,8 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 	  (mypflag==UTOPRIMFAILNANGUESS)||
 	  (mypflag==UTOPRIMFAILNANRESULT)||
 	  (mypflag==UTOPRIMFAILCONVBADINVERTCOMPARE)||
-	  (mypflag==UTOPRIMFAILCONVUTSQ)
+	  (mypflag==UTOPRIMFAILCONVUTSQ)||
+	  (mypflag==UTOPRIMFAILFAKEVALUE) // fake value for avoiding MPI boundary call and so MPI boundary values for fixup
 	  ){
     utoprimfailtype=COUNTUTOPRIMFAILCONV;
     docorrectucons=1;

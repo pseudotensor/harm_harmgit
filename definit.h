@@ -233,9 +233,12 @@
 // GENMAXWELL is perfectly fine for relativistic problems that are not near machine error for highly relativistic flows that usually is only for tests
 //#define MAXWELL GENMAXWELL
 // prim version avoids catastrophic cancellation in non-rel limit
+// OPTMARK: MAXWELL GENMAXWELL faster if don't care about cancellation issues (i.e. not in ultra rel or non-rel regimes)
 #define MAXWELL PRIMMAXWELL
 
 
+// whether to avoid catastrophic cancellations for non-rel and ultra-rel speed and gravity regimes with u_t+1
+#define UD0PLUS1FIX 1
 
 
 #define DO_VORTICITY_IMAGE 0
@@ -244,6 +247,7 @@
 #define PRODUCTION 0
 // 0: full images, dumps, etc., few more key failure stderr/fail_file messages
 // 1: only log density image since too many images (takes alot of time), no utoprim failure messages -- assume debug.out and debug???? will have info if needed
+// 2: #1 but also avoid error_check()
 
 
 // 0: normal computational zones outputted on diagnostics
@@ -495,6 +499,8 @@
 
 //#define UTOPRIMADJUST UTOPRIMSTATIC
 #define UTOPRIMADJUST UTOPRIMAVG
+
+#define UTOPRIMFIXMPICONSISTENT 1
 
 // 0: return non-updated quantities
 // 1: if u<0 or rho<0, then return updated quantities, else return non-updated quantities

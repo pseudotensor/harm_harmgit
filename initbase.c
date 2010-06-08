@@ -1015,7 +1015,7 @@ int init_defglobal(void)
   int pl,pliter;
   int dtloop;
 
-#if(!PRODUCTION)
+#if(PRODUCTION==0)
   debugfail=2; // CHANGINGMARK
 #else
   debugfail=0; // no messages in production -- assumes all utoprim-like failures need not be debugged
@@ -1818,9 +1818,9 @@ void check_bnd_num(void)
 
 
 
-  if(PRODUCTION==1){
+  if(PRODUCTION>0){
     if(DOENOFLUX != NOENOFLUX && FLUXB==FLUXCTSTAG){
-      dualfprintf(fail_file,"NOTE: With PRODUCTION==1, higher-order staggered field method won't compute ener file value of divB correctly because turned off diagnostic bounding to avoid excessive MPI calls to bound unew.  dump file will still be correct for MPI boundaries but not for real boundaries since unew not defined to be bounded by user\n");
+      dualfprintf(fail_file,"NOTE: With PRODUCTION>0, higher-order staggered field method won't compute ener file value of divB correctly because turned off diagnostic bounding to avoid excessive MPI calls to bound unew.  dump file will still be correct for MPI boundaries but not for real boundaries since unew not defined to be bounded by user\n");
     }
   }
 

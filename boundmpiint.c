@@ -143,3 +143,86 @@ void unpack_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMP
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// fake MPI bound call so fills same locations with fakevalue
+// no actual MPI calls are made -- just uses the same structures for simplicity
+int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
+{
+  int dir;
+
+
+  // only need to "unpack"
+  for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundvartype][dir][DIRIF]) unpack_int_fakeutoprimmpiinconsisent(dir,boundvartype,workbc_int,prim,fakevalue);
+  for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundvartype][dir][DIRIF]) unpack_int_fakeutoprimmpiinconsisent(dir,boundvartype,workbc_int,prim,fakevalue);
+  for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundvartype][dir][DIRIF]) unpack_int_fakeutoprimmpiinconsisent(dir,boundvartype,workbc_int,prim,fakevalue);
+  
+  return(0);
+
+}	
+
+
+// fake unpack routine that just fills-in MPI boundary cells with fakevalue
+void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
+{
+  // dir is direction receiving from
+  int i,j,k;
+  int pl,pliter;
+  int bci;
+
+  bci=0;
+  PACKLOOP_INT(i,j,k
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART1]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP1]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART2]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP2]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART3]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP3]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR1]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR2]
+	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR3]
+	       ){
+    MACP0A1(prim,i,j,k,pl)=fakevalue;
+  }
+}
+

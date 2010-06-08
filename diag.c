@@ -198,9 +198,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   if(
      // if doing simulbccalc type loop in step_ch.c then need to bound when doing diagnostics since not done yet
      (SIMULBCCALC>=1 && (dodumpgen[MAINDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE]||dodumpgen[ENERDUMPTYPE]))
-     // assume if PRODUCTION==1 then user knows divB won't be computed at MPI boundaries and that's ok.  Don't want to compute so avoid bounding that slows things down.  Assume ok to still compute dump file version, just not ener version that may be too often
+     // assume if PRODUCTION>0 then user knows divB won't be computed at MPI boundaries and that's ok.  Don't want to compute so avoid bounding that slows things down.  Assume ok to still compute dump file version, just not ener version that may be too often
      || (PRODUCTION==0 && (dodumpgen[MAINDUMPTYPE]||dodumpgen[ENERDUMPTYPE]))
-     || (PRODUCTION==1 && (dodumpgen[MAINDUMPTYPE]))
+     || (PRODUCTION>0 && (dodumpgen[MAINDUMPTYPE]))
      ){
 
     // for dump, rdump, and divb in ener
@@ -1170,7 +1170,7 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
 	  // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
 	  UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
 	  PDIAGLOOP(pl){
-#if(PRODUCTION==1)
+#if(PRODUCTION>0)
 	    // assume if nan that just box is beyond where flux defined
 	    if(!isfinite(Ftempdiag[pl])){
 	      Ftempdiag[pl]=0.0;

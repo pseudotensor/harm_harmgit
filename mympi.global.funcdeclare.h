@@ -60,6 +60,11 @@ extern void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FT
 extern void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern void pack_int(int dir, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM]);
 extern void unpack_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
+
+extern int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
+extern void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
+
+
 #if(USEMPI)
 extern void sendrecv(int dir,int boundtype,FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
 extern void sendrecv_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],MPI_Request *requests);

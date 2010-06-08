@@ -304,12 +304,20 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   //
   /////////////////////////////////////
 
-  // force-free and cold GRMHD don't use post_fixup (now do use it)
-  //#if( (EOMTYPE!=EOMFFDE) && (1 == CHECKSOLUTION || UTOPRIMADJUST == UTOPRIMAVG) )
 #if( (1 == CHECKSOLUTION || UTOPRIMADJUST == UTOPRIMAVG) )
   // if CHECKSOLUTION==1, then need values to be bounded right now, since use them to check whether even good solutions are really good.
   // post_fixup() will use previous time step pff boundary values to fixup_utoprim() if this is not called.
   // bound advanced values before post_fixup() so fixup_utoprim() has updated boundary values to base fixup on.
+
+
+
+  ////////////
+  //
+  // bounding 1 layer so fixups have that layer available for fixing up inversion failures
+  // not done if don't care about perfect MPI consistency with failures -- then fixups don't use values across MPI boundaries.  Will be less robust in general, but still consistent behavior across MPI boundaries.
+  //
+  ////////////
+#if(UTOPRIMFIXMPICONSISTENT==1)
 
 #if(PRODUCTION==0)
   trifprintf("[b1");
@@ -322,15 +330,25 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 #endif
 
 
+#endif
+
+
+
+
+
 #if(PRODUCTION==0)
   trifprintf("[x");
 #endif
 
-  // done when all timeorders are completed, so stencil used doesn't matter
 
+  /////////////
+  // done when all timeorders are completed, so stencil used doesn't matter
+  //
   // postfixup
   // post_fixup: If this modifies values and then uses the modified values for other modified values, then must bound_prim() after this
   // if one doesn't care about MPI being same as non-MPI, then can move bound_prim() above to below error_check() and then remove prc<-pv in fixup_utoprim()
+  //
+  /////////////
   MYFUN(post_fixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup()", 1);
 
 #if(PRODUCTION==0)
@@ -338,10 +356,16 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 #endif
 
 
+
+
 #else
 
+  ////////////
+  //
   // just report problems, don't fix them
   // Then no need for boundary calls
+  //
+  ////////////
   MYFUN(post_fixup_nofixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup_nofixup()", 1);
 
 #endif
@@ -360,6 +384,8 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   // bound final values (comes after post_fixup() since changes made by post_fixup)
   //#if(MPIEQUALNONMPI)
 
+
+
 #if(ASYMDIAGCHECK)
   dualfprintf(fail_file,"1before bound\n");
   asym_compute_2(pf);
@@ -373,6 +399,8 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
   trifprintf("[rf");
 #endif
 
+
+
   if( DOGRIDSECTIONING){
     // this must come before last bound() call so boundary conditions set consistently with new section so next step has all values needed in ghost cells
     // redo all such enerregions since may be time-dependent
@@ -382,6 +410,9 @@ int post_advance(int *dumpingnext, int timeorder, int numtimeorders, int finalst
 #if(PRODUCTION==0)
   trifprintf("]");
 #endif
+
+
+
 
 
 #if(PRODUCTION==0)
@@ -1636,7 +1667,14 @@ int bound_pflag(int boundstage, SFTYPE boundtime, PFTYPE (*prim)[NSTORE2][NSTORE
 
   if(USEMPI){
 
-    MYFUN(bound_mpi_int(boundstage, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+    if(UTOPRIMFIXMPICONSISTENT==1){
+      MYFUN(bound_mpi_int(boundstage, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+    }
+    else{
+      // need to fill boundary cells with failure
+      // otherwise, would have to go deeper into fixups and dependency chain for the UTOPRIMFIXMPICONSISTENT chocie would become too deep
+      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+    }
 
   }
 

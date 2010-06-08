@@ -1533,6 +1533,10 @@ int myexit(int call_code)
   return (0);
 }
 
+
+
+#if(PRODUCTION<=1)
+
 // note, this may be called in different locations of the code by
 // different CPUs
 int error_check(int wherefrom)
@@ -1573,6 +1577,7 @@ int error_check(int wherefrom)
   return (0);
 }
 
+#endif
 
 
 

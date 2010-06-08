@@ -42,6 +42,12 @@
 #if(JONCHECKS2 && PRODUCTION==0 && (USEOPENMP==0))
 #define MYFUN(fun,one,two,three) if(fun>=1){ FAILSTATEMENT(one,two,three);}
 #else
-// if PRODUCTION==1 then avoid if statement
+// if PRODUCTION>0 then avoid if statement
 #define MYFUN(fun,one,two,three) {fun;}
+#endif
+
+
+#if(PRODUCTION>1)
+// blank-out the function call since error_check() slows things down in MPI
+#define error_check(wherefrom)
 #endif
