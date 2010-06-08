@@ -261,7 +261,7 @@ int init(int *argc, char **argv[])
 #endif
 
       
-      if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1) >= 1)
+      if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
 	FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
 
 
@@ -361,7 +361,7 @@ int init(int *argc, char **argv[])
     if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
       FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
-    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1) >= 1)
+    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
       FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
       
     if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)

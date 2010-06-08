@@ -242,7 +242,7 @@ int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIF
 
     if(FLUXB==FLUXCTSTAG && extrazones4emf==0 && DOENOFLUX == ENOFLUXRECON){
       // DEBUG:
-      //      bound_pstag(STAGEM1,t,pfield, pstag, ucons, 1);
+      //      bound_pstag(STAGEM1,t,pfield, pstag, ucons, 1, USEMPI);
 
       // then need to obtian Bhat so can compute divb
       // In this case unew is inputted point conserved field
@@ -278,7 +278,7 @@ int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIF
 
   // Since above procedures changed pfield that is probably pcent that is p, we need to rebound p since pfield was reset to undefined values in ghost cells since A_i isn't determined everywhere
   // alternatively for evolve_withvpot() could have inputted not the true p or some copy of it so wouldn't have to bound (except up to machine error difference when recomputed field using A_i)
-  bound_prim(STAGEM1,t,pfield,pstag,ucons, 1); // GODMARK: 1 here?
+  bound_prim(STAGEM1,t,pfield,pstag,ucons, 1, USEMPI); // GODMARK: 1 here?
 
 
 

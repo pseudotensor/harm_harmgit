@@ -1260,7 +1260,7 @@ int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nve
     // ghost cells only need *additional* flux for FLUXRECON integration along direction itself
     // otherwise fluxes exist (for example) to update volume average quantities in ghost+active region
     // so this is not a good function to use to diagnose boundary issues if within ghost+active layer
-    bound_flux(STAGEM1,t,BOUNDFLUXTYPE,fluxvec[1],fluxvec[2],fluxvec[3], 0);
+    bound_flux(STAGEM1,t,BOUNDFLUXTYPE,fluxvec[1],fluxvec[2],fluxvec[3], 0, USEMPI);
     
 #if(0)
     // trying to diagnose ghost+active issue with test=1102 and EVOLVEVPOT

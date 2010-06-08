@@ -204,7 +204,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
      ){
 
     // for dump, rdump, and divb in ener
-    bound_allprim(STAGEM1,localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), 1);
+    bound_allprim(STAGEM1,localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), 1, USEMPI);
     if(DOENOFLUX != NOENOFLUX){
       // bound GLOBALPOINT(udump) (unew) so divb can be computed at MPI boundaries (still real boundaries won't be computed correctly for OUTFLOW types)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
@@ -225,7 +225,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // don't need ustag in boundary cells, but do this to check divb on boundary when testing
 
   // not generally a good idea
-  //  bound_uavg(STAGEM1,localt,GLOBALPOINT(udump), 1);
+  //  bound_uavg(STAGEM1,localt,GLOBALPOINT(udump), 1, USEMPI);
 #endif
 
 

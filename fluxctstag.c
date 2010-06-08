@@ -764,7 +764,7 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
   // That is, we always update field as required for divb=0
   // bound_pstag() takes care of which quantities to bound (only bounding B1,B2,B3)
 
-  bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep);
+  bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep, USEMPI);
 
   // note that ustag isn't bounded, but is used for divb calculation, which is thus only valid at active CENT cells -- but that's all that's in normal dumps unless FULLOUTPUT is used
 
@@ -2144,7 +2144,7 @@ int interpolate_ustag2fieldcent_donor
 
   // bound new pstag
   if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
-  bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep);
+  bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep, USEMPI);
 
 
   //  COMPFULLLOOP{

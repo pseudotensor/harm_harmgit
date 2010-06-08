@@ -416,7 +416,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
+  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
@@ -464,7 +464,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
 
 
 

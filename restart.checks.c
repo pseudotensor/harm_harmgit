@@ -109,7 +109,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   // BOUND during restart
   //
   /////////////////////
-  if (bound_allprim(STAGEM1,t,prim,pstag,ucons, 1) >= 1) {
+  if (bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI) >= 1) {
     fprintf(fail_file, "restart_init:bound_allprim: failure\n");
     fflush(fail_file);
     return (1);

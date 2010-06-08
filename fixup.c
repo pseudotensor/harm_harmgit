@@ -77,7 +77,7 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
     // first bound failure flag
     // OPTMARK: could optimize bound of pflag since often failures don't occur (just ask if any failures first), although probably negligible performance hit
     if(stage<STAGE2){
-      bound_pflag(boundstage, boundtime, GLOBALPOINT(pflag), finalstep);
+      bound_pflag(boundstage, boundtime, GLOBALPOINT(pflag), finalstep, USEMPI);
       if(stage!=STAGEM1) boundstage++;
     }
 
@@ -88,7 +88,7 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
 
     // check solution changed pflag, so have to bound again
     if(stage<STAGE2){
-      bound_pflag(boundstage, boundtime, pflag);
+      bound_pflag(boundstage, boundtime, pflag, USEMPI);
       if(stage!=STAGEM1) boundstage++;
     }
 
@@ -103,7 +103,7 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
     // GODMARK: I don't see why need to bound pflag since already done with using pflag
     if(stage<STAGE2){
       if(stage!=STAGEM1){
-	bound_pflag(boundstage, boundtime, pflag);
+	bound_pflag(boundstage, boundtime, pflag, USEMPI);
 	boundstage++;
       }
     }
