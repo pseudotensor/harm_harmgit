@@ -460,17 +460,24 @@
 //
 //
 //If not using the SIMD (single instruction, multiple data), or SSE type operations (which automatically are tried if using most compilers with optimizations), then roughly:
-//
-//1 addition, subtraction, comparison
-//2 fabs
-//3 abs
-//4 multiplication
-//10 division, modulus
-//20 sqrt
-//50 exp
-//60 sin, cos, tan
-//80 asin, acos, atan
-//100 pow
+//  CPU
+//  cycles | operation or procedure
+//---------------------------------------------
+//1          addition, subtraction, comparison
+//2          fabs
+//3          abs
+//4          multiplication
+//10         division, modulus
+//20         sqrt
+//50         exp
+//60         sin, cos, tan
+//80         asin, acos, atan
+//100        pow
+//10         Miss L1 cache
+//50         Miss L2 cache if L3 cache present
+//150        Branch misprediction
+//200        Miss L3 cache or miss L2 cache if no L3 cache present
+//200-1000+  Page fault
 //
 //Also, note that there are more than just math operations to worry about.  Another rule of thumb is that:
 //
