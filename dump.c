@@ -518,14 +518,14 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //static
   if(!GAMMIEDUMP){
     ftemp=(FTYPE)(i+startpos[1]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf);  //ti
     ftemp=(FTYPE)(j+startpos[2]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf);  //tj
     ftemp=(FTYPE)(k+startpos[3]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf);  //tk
   }
-  myset(datatype,X,1,3,writebuf);
-  myset(datatype,V,1,3,writebuf);
+  myset(datatype,X,1,3,writebuf);  //x1, x2, x3
+  myset(datatype,V,1,3,writebuf);  //r, h, ph
   // 9
 
   ////////////////////////
@@ -534,7 +534,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // primitives
   // must use PDUMPLOOP() since may be any order unlike NPR loop
-  PDUMPLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(pdump,i,j,k,pl)),0,1,writebuf); // NPRDUMP
+  PDUMPLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(pdump,i,j,k,pl)),0,1,writebuf); // NPRDUMP  //rho u v1 v2 v3 B1 B2 B3 ??
 
   ////////////
   //
@@ -547,28 +547,28 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   cs2 = cs2_compute_simple(i,j,k,loc,rho,u);
   Sden = compute_entropy_simple(i,j,k,loc,rho,u);
   
-  myset(datatype,&pressure,0,1,writebuf); // 1
-  myset(datatype,&cs2,0,1,writebuf); // 1
-  myset(datatype,&Sden,0,1,writebuf); // 1
+  myset(datatype,&pressure,0,1,writebuf); // 1 //p
+  myset(datatype,&cs2,0,1,writebuf); // 1 //cs2
+  myset(datatype,&Sden,0,1,writebuf); // 1 //Sden
 
   //////////////////////
   //
   // output the conserved quantities since not easily inverted and at higher order aren't invertable from point primitives
   // PLOOP() used since conserved quantities always fill full PLOOP, while PDUMPLOOP is for primitives that may be duplicate among conserved quantities
-  PLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(udump,i,j,k,pl)),0,1,writebuf); // NPR
-  myset(datatype,&divb,0,1,writebuf); // 1
+  PLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(udump,i,j,k,pl)),0,1,writebuf); // NPR //U0 U1 U2 U3 U4 U5 U6 U7 ??
+  myset(datatype,&divb,0,1,writebuf); // 1 //divb
 
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(qptr->ucon[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->ucon[pl]),0,1,writebuf); //uu0 uu1 uu2 uu3 
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(qptr->ucov[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->ucov[pl]),0,1,writebuf); //ud0 ud1 ud2 ud3
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(qptr->bcon[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->bcon[pl]),0,1,writebuf); //bu0 bu1 bu2 bu3 
   for (pl = 0; pl < NDIM; pl++)
-    myset(datatype,&(qptr->bcov[pl]),0,1,writebuf);
+    myset(datatype,&(qptr->bcov[pl]),0,1,writebuf); //bd0 bd1 bd2 bd3 
   // 4*4
     
-  myset(datatype,&vmin[1],0,1,writebuf);
+  myset(datatype,&vmin[1],0,1,writebuf);  //v1m v1p v2m v2p v3m v3p
   myset(datatype,&vmax[1],0,1,writebuf);
   myset(datatype,&vmin[2],0,1,writebuf);
   myset(datatype,&vmax[2],0,1,writebuf);
@@ -577,7 +577,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   // 6
 
   // one static term
-  myset(datatype,&(ptrgeom->gdet),0,1,writebuf); // 1
+  myset(datatype,&(ptrgeom->gdet),0,1,writebuf); // 1 //gdet  //end of default read
 
 
 #if(CALCFARADAYANDCURRENTS) // NIM*2+6*2 = 8+12=20
