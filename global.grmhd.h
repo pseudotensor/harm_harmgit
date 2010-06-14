@@ -403,6 +403,34 @@
 //
 // On Ranger: 4x4x4 per CPU with PARALINE+STAG+DISS+LUM (but R0=0 and Rout=10) on 2048 processors and 16x16x8 for ncpux?: late-time with 54K ZCPS with average of 10% fractional diagnostics
 //
+//
+//FULLSTAG=UNFUDDLE,STAG, RK2, DODISS, currents, entropy evolution, etc.etc.
+//HALFSTAG=UNFUDDLE,STAG,RK2, no features
+//HALFTOTH=UNFUDDLE,Toth,RK2, no features
+//ORIG=Original very lean (and crashy-unstable) 2D HARM, which is on unfuddle as "origcode"
+//
+//system   tile_size   cores   zcps   efff         CODE-MODE
+//----------------------------------------------------------------------
+//3D:
+//lonestar  34x32x8    1        13K       1            FULLSTAG
+//lonestar  34x32x8    1        14K       1            HALFSTAG
+//lonestar  34x32x8    1        28K       1            HALFTOTH
+//lonestar  34x32x8    1024     9.5M      71%          FULLSTAG
+//lonestar  34x8x8     1        ?         1            FULLSTAG
+//lonestar  34x8x8     512      3.3M      >50%?        FULLSTAG
+//
+//ki-rh42    32x16x8    1         14K      1           FULLSTAG
+//ki-rh42    32x16x8    1         15K      1           HALFSTAG
+//ki-rh42    32x16x8    1         28K      1           HALFTOTH
+//ki-rh42    16x32x32   1         30K      1           HALFTOTH (Noble setup, who got 36K)
+//2D:
+//ki-rh42    64x64      1         57K       1          HALFTOTH
+//ki-rh42    256x256    1         61K       1          HALFTOTH
+//ki-rh42    64x64      1         80K       1          ORIG
+//ki-rh42    256x256    1         84K       1          ORIG
+//
+//
+//
 ///////////////////////////////////////////////////////
 //
 //

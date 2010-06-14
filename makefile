@@ -1,8 +1,32 @@
+##################
+#
+# Makefile for various systems
+# makehead.inc is where most user chocies are made
+# maketail.inc is where work for compiling is mostly done
+#
+# Only should change things here if adding/fixing a system
+#
+##################
+
 
 ############################
 # header
 include makehead.inc
 
+
+
+
+
+
+
+# default
+USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
+AVOIDFORK=0
+AVOIDMKDIR=0
+USESPECIAL4GENERATE=0
+CCGENERATE=gcc
+ECHOSWITCH=-e
 
 
 
@@ -14,30 +38,6 @@ ifeq ($(ENFORCEPRECISION),0)
 PRECISE=
 endif
 
-#####################
-# WATCH OUT FOR SPACES, etc. AFTER ASSIGNMENTS!!!!
-USEBG=0
-#QUEENBEE (avoids making directories or forking in general)
-USEQB=0
-USEUB=0
-# USEABE -> USEICCGENERIC is used
-USEICCGENERIC=0
-USEICCINTEL=1
-USEGCC=0
-USECCC=0
-USEORANGE=0
-USENERSC=0
-USETACCLONESTAR=0
-USETACCRANGER=0
-
-# default
-USEMCCSWITCH=0
-USEMCCSWITCHFORGCC=0
-AVOIDFORK=0
-AVOIDMKDIR=0
-USESPECIAL4GENERATE=0
-CCGENERATE=gcc
-ECHOSWITCH=-e
 
 
 
