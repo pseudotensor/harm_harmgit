@@ -114,7 +114,9 @@ void newt(int useanalyticjac
 		  FREERETURN
 		    }
 	}
-	nrerror("MAXITS exceeded in newt");
+	//nrerror("MAXITS exceeded in newt");
+	fprintf( stderr, "MAXITS exceeded in newt");
+	FREERETURN;
 }
 #undef MAXITS
 #undef TOLF
