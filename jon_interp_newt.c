@@ -11,15 +11,33 @@
 #define STPMX 100.0
 
 
-/*
+
 // for debugging
-#define FREERETURN {free_vector(fvec,1,n);free_vector(xold,1,n);\
-	free_vector(p,1,n);free_vector(g,1,n);free_matrix(fjac,1,n,1,n);\
-	free_ivector(indx,1,n);fprintf(stderr,"its=%d test=%g\n",its,test);return;}
+/*
+#define FREERETURN {fprintf(stderr,"1addr=%d\n",fvec);free_vector(fvec,1,n);fprintf(stderr,"1 n=%d\n",n); \
+    fprintf(stderr,"2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n); \
+    fprintf(stderr,"3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);			\
+    fprintf(stderr,"4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);			\
+    fprintf(stderr,"5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);		\
+    fprintf(stderr,"6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
+return;}
 */
+	
 #define FREERETURN {free_vector(fvec,1,n);free_vector(xold,1,n);\
 	free_vector(p,1,n);free_vector(g,1,n);free_matrix(fjac,1,n,1,n);\
-	free_ivector(indx,1,n);return;}
+	free_ivector(indx,1,n);\
+        return;}
+
+
+/*
+#define TESTDEATH {fprintf(stderr,"1addr=%d\n",fvec);free_vector(fvec,1,n);fprintf(stderr,"1 n=%d\n",n); \
+	fprintf(stderr,"2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n);\
+	fprintf(stderr,"3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);\
+	fprintf(stderr,"4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);\
+	fprintf(stderr,"5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);\
+	fprintf(stderr,"6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
+	exit(0);}
+*/
 
 void newt(int useanalyticjac
 	  ,FTYPE parms[]
@@ -30,12 +48,13 @@ void newt(int useanalyticjac
 {
   //  void fdjac(int n, FTYPE parms[], FTYPE x[], FTYPE fvec[], FTYPE **df,
   //	     void (*vecfunc)(int n, FTYPE parms[], FTYPE v[], FTYPE f[]));
-//	void lubksb(FTYPE **a, int n, int *indx, FTYPE b[]);
-	//int ludcmp(FTYPE **a, int n, int *indx, FTYPE *d);
-	int i,its,j,*indx;
-	FTYPE d,den,f,fold,stpmax,sum,temp,test,**fjac,*g,*p,*xold;
-	// DEBUG VARS
-	int qq,pp;
+  //	void lubksb(FTYPE **a, int n, int *indx, FTYPE b[]);
+  //int ludcmp(FTYPE **a, int n, int *indx, FTYPE *d);
+  int i,j,its,*indx;
+  FTYPE d,den,f,fold,stpmax,sum,temp,test,**fjac,*g,*p,*xold;
+  // DEBUG VARS
+  int qq,pp;
+
 
 
 
@@ -48,6 +67,7 @@ void newt(int useanalyticjac
 	nn=n;
 	nrfuncv=vecfunc;
 	f=nrfmin(parms,x);
+
 	test=0.0;
 	for (i=1;i<=n;i++)
 		if (fabs(fvec[i]) > test) test=fabs(fvec[i]);
@@ -58,6 +78,8 @@ void newt(int useanalyticjac
 	}
 	for (sum=0.0,i=1;i<=n;i++) sum += SQR(x[i]);
 	stpmax=STPMX*FMAX(sqrt(sum),(FTYPE)n);
+
+
 	for (its=1;its<=MAXITS;its++) {
 	  if(useanalyticjac){
 	    (*usrfun)(n,parms,x,fvec,fjac);
@@ -65,6 +87,11 @@ void newt(int useanalyticjac
 	  else{
 	    fdjac(n,parms,x,fvec,fjac,vecfunc);
 	  }
+
+
+	  //	  for (i=1;i<=n;i++)for (j=1;j<=n;j++)fprintf(stderr,"fjac[%d][%d]=%21.15g\n",i,j,fjac[i][j]);
+	
+
 		///////////////////////////DEBUG
 	  /*
 		for(qq=1;qq<n+1;qq++) for(pp=1;pp<n+1;pp++){
@@ -83,8 +110,22 @@ void newt(int useanalyticjac
 		for (i=1;i<=n;i++) p[i] = -fvec[i];
 		ludcmp(fjac,n,indx,&d);
 		//		if(its==5) exit(0);
+
+		//		for (i=1;i<=n;i++)fprintf(stderr,"indx[%d]=%d\n",i,indx[i]);
+
+		for (i=1;i<=n;i++){
+		  if(indx[i]<1 || indx[i]>n){
+		    fprintf(stderr,"Bad indx[%d]=%d\n",i,indx[i]);
+		    exit(1);
+		  }
+		}
+
+
 		lubksb(fjac,n,indx,p);
 		lnsrch(n,parms,xold,fold,g,p,x,&f,stpmax,check,nrfmin);
+
+
+
 		test=0.0;
 		for (i=1;i<=n;i++)
 			if (fabs(fvec[i]) > test) test=fabs(fvec[i]);

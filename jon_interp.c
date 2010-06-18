@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   // not doing interpolation if input and output resolutions same with no gridtype change
   // doesn't matter if refining
-  doinginterpolation=!(oN1==nN1 && oN2==nN2 && oN3==nN3 && (newgridtype==GRIDTYPENOCHANGE || oldgridtype==newgridtype));
+  doinginterpolation=!(oN0==nN0 && oN1==nN1 && oN2==nN2 && oN3==nN3 && (newgridtype==GRIDTYPENOCHANGE || oldgridtype==newgridtype));
 
   input_header();
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
   ///////////////////
   if(doinginterpolation==0){
     // avoid interpolation if not necessary
-    fprintf(stderr,"No spatial interpolation necessary since oN1=nN1=%d  oN2=nN2=%d  oN3=nN3=%d\n",oN1,oN2,oN3);
+    fprintf(stderr,"No spatial interpolation necessary since oN0=nN0=%d oN1=nN1=%d  oN2=nN2=%d  oN3=nN3=%d\n",oN0,oN1,oN2,oN3);
     copy_old2new();
   }
   else{
@@ -159,37 +159,44 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   //
   // get arguments
   //
-  if(argc < 27) {
+  if(argc < 27+4) {
     for(i=0;i<argc;i++){
       fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
     }
-    fprintf(stderr,"args (argc=%d should be 27+ (26+ user args)): DATATYPE,INTERPTYPE,READHEADER,WRITEHEADER,oN1,oN2,oN3,refinefactor,filter,sigma,oldgridtype,newgridtype,nN1,nN2,nN3,startxc,endxc,startyc,endyc,startzc,endzc,Rin,Rout,R0,hslope,defcoord,dofull2pi\n",argc) ; 
+    fprintf(stderr,"args (argc=%d should be 31+ (30+ user args)): DATATYPE,INTERPTYPE,READHEADER,WRITEHEADER,oN0,oN1,oN2,oN3,refinefactor,filter,sigma,oldgridtype,newgridtype,nN0,nN1,nN2,nN3,starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc,Rin,Rout,R0,hslope,defcoord,dofull2pi\n",argc);
 
     fprintf(stderr,"DATATYPE:\n"
-	    "0=image (byte binary only, 1 column only)\n"
-	    "1=data (text only, 1=scalar 1 column)\n"
-	    "2,3,4,5=correspond to orthonormal vectors v^0,v^1,v^2,v^3 (inputting 4 columns of data u^0 u^1 u^2 u^3)\n"
-	    "11=corresponds to \\detg T^x1_t[EM]/sin(\\theta) (inputting 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
-	    "12=get lower component (inputting 4 columns of data: u^i)\n"
+	    "0=image (input&output: byte binary only, 1 column only)\n"
+	    "1=data (input&output: text only, 1=scalar 1 column)\n"
+	    "2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
+	    "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
+	    "12=output lower component (inputting all 4 columns of data: u^i)\n"
 	    "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
 	    );
     fprintf(stderr,"INTERPTYPE: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
     fprintf(stderr,"READHEADER: 0=false 1=true\n");
     fprintf(stderr,"WRITEHEADER: 0=false 1=true\n");
+
+    fprintf(stderr,"oN0: old N0 grid size\n");
     fprintf(stderr,"oN1: old N1 grid size\n");
     fprintf(stderr,"oN2: old N2 grid size\n");
     fprintf(stderr,"oN3: old N3 grid size\n");
+
     fprintf(stderr,"refinefactor: 1.0=no refinement, otherwise refines image before interpolation with this factor increase in size: standard is bicubic refinement\n");
     fprintf(stderr,"filter: 0=no filter #=filter image with surrounding # pixels per pixel with sigma width\n");
     fprintf(stderr,"sigma: only used if filter!=0, then sigma of gaussian filter, usually ~ filter value\n");
-    fprintf(stderr,"oldgridtype (V in GRMHD code): 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R), 4=x'=sin\theta log(r) z'=cos\theta log(r)\n");
+
+    fprintf(stderr,"oldgridtype (V in GRMHD code): 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R), 4=x'=sin\\theta log(r) z'=cos\\theta log(r) 5=Cartesian w/ light travel time accounting\n");
     fprintf(stderr,"newgridtype (output coord system): -1=no change (and rest same as above)\n");
     fprintf(stderr,"Note: Assume if oN3>1 and oldgridtype==1, then periodic in \\phi since otherwise extrapolate values and poor at low resolution.\n");
     
+    fprintf(stderr,"nN0: new N0 grid size\n");
     fprintf(stderr,"nN1: new N1 grid size\n");
     fprintf(stderr,"nN2: new N2 grid size\n");
     fprintf(stderr,"nN3: new N3 grid size\n");
 
+    fprintf(stderr,"starttc: inner interp t(t-Cart,t-Cyl t=time)\n");
+    fprintf(stderr,"endtc: outer t\n");
     fprintf(stderr,"startxc: inner interp x(x-Cart,R-Cyl)\n");
     fprintf(stderr,"endxc: outer x\n");
     fprintf(stderr,"startyc: inner interp y(z-Cart,z-Cyl)\n");
@@ -218,6 +225,8 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   }
 
 
+  
+  tnrdegrees=10.0; // hard core for now GODMARK
   
 
 
@@ -284,18 +293,21 @@ static void interp_readcommandlineargs(int argc, char *argv[])
 
   sscanf(argv[i++],"%d",&READHEADER) ; // 0 or 1
   sscanf(argv[i++],"%d",&WRITEHEADER) ; // 0 or 1
+
+  sscanf(argv[i++],"%d",&oN0) ;
   sscanf(argv[i++],"%d",&oN1) ;
   sscanf(argv[i++],"%d",&oN2) ;
   sscanf(argv[i++],"%d",&oN3) ;
 
   // set sizes
+  totalsize[0]=oN0;
   totalsize[1]=oN1;
   totalsize[2]=oN2;
   totalsize[3]=oN3;
-  totalzones=totalsize[1]*totalsize[2]*totalsize[3];
+  totalzones=totalsize[0]*totalsize[1]*totalsize[2]*totalsize[3];
 
   // set number of bc's per dimension
-  numbc[0]=0;
+  numbc[0]=totalbc*(oN0>1);
   numbc[1]=totalbc*(oN1>1);
   numbc[2]=totalbc*(oN2>1);
   numbc[3]=totalbc*(oN3>1);
@@ -304,13 +316,18 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   sscanf(argv[i++],SCANARG,&refinefactor) ;// 1.0 then no refinement, just normal old image used
   sscanf(argv[i++],"%d",&filter) ;// 0=no filter #=filter given image within surrounding # pixels per pixel with sigma
   sscanf(argv[i++],SCANARG,&sigma) ;// only used if filter!=0, then sigma of gaussian filter, usually ~ filter value
-  sscanf(argv[i++],"%d",&oldgridtype) ; // 0, 1, 2, 3, and 4 currently
+
+  sscanf(argv[i++],"%d",&oldgridtype) ; // 0, 1, 2, 3, 4, and 5 currently
   sscanf(argv[i++],"%d",&newgridtype) ; // -1, and above 0+ versions
+
+  sscanf(argv[i++],"%d",&nN0) ; // arbitrary
   sscanf(argv[i++],"%d",&nN1) ; // arbitrary
   sscanf(argv[i++],"%d",&nN2) ; // arbitrary
   sscanf(argv[i++],"%d",&nN3) ; // arbitrary
 
-  //(x=R-cyl, y=Z-cyl, z=Y-cyl)
+  //(t=time, x=R-cyl, y=Z-cyl, z=Y-cyl)
+  sscanf(argv[i++],SCANARG,&starttc) ; // arbitrary
+  sscanf(argv[i++],SCANARG,&endtc) ; // arbitrary
   sscanf(argv[i++],SCANARG,&startxc) ; // arbitrary
   sscanf(argv[i++],SCANARG,&endxc) ; // arbitrary
   sscanf(argv[i++],SCANARG,&startyc) ; // arbitrary
@@ -357,19 +374,19 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   fprintf(stderr,"done reading %d arguments\n",i-1); fflush(stderr);
 
 
-  if(filter && oN3!=1){
+  if(filter && (oN3!=1 || oN0!=1)){
     filter=0;
-    fprintf(stderr,"Turned off filter since oN3=%d\n",oN3); fflush(stderr);
+    fprintf(stderr,"Turned off filter since oN3=%d or  oN0=%d\n",oN3,oN0); fflush(stderr);
   }
 
 
-  if(fabs(refinefactor-1.0)>0.1 && oN3!=1){
+  if(fabs(refinefactor-1.0)>0.1 && (oN3!=1 || oN0!=1) ){
     refinefactor=1.0;
-    fprintf(stderr,"Turned off refinement since oN3=%d\n",oN3); fflush(stderr);
+    fprintf(stderr,"Turned off refinement since oN3=%d or oN0=%d\n",oN3,oN0); fflush(stderr);
   }
 
-  if( (oN3>1) && (INTERPTYPE==3 || INTERPTYPE==2) ){
-    fprintf(stderr,"PLANAR and BICUBIC interpolation not setup for oN3=%d>1 -- uses nearest for k",oN3);
+  if( (oN3>1 || oN0>1) && (INTERPTYPE==3 || INTERPTYPE==2) ){
+    fprintf(stderr,"PLANAR and BICUBIC interpolation not setup for oN3=%d>1 or oN0=%d>1 -- uses nearest for k,h",oN3,oN0);
   }
 
 
@@ -383,6 +400,7 @@ static void interp_readcommandlineargs(int argc, char *argv[])
     // force this even if user messed up
     newgridtype=GRIDTYPENOCHANGE;
     // force output grid size to be same as input
+    nN0=oN0;
     nN1=oN1;
     nN2=oN2;
     nN3=oN3;
@@ -405,6 +423,7 @@ static void setup_zones(void)
   ///////////////////////////
     
   if(immediateoutput==0){
+    totalsize[0]=oN0;
     totalsize[1]=oN1;
     totalsize[2]=oN2;// in case changed, setup for set_points
     totalsize[3]=oN3;
@@ -413,18 +432,33 @@ static void setup_zones(void)
     // then get totalsize from header and oN? from command line since can be different if only converting part of original dataset
   }
 
-  fprintf(stderr,"ts1=%d ts2=%d ts3=%d :: oN1=%d oN2=%d oN3=%d\n",totalsize[1],totalsize[2],totalsize[3],oN1,oN2,oN3);
-  fprintf(stderr,"sx1=%g sx2=%g sx3=%g\n",startx[1],startx[2],startx[3]);
+  fprintf(stderr,"ts0=%d ts1=%d ts2=%d ts3=%d :: oN0=%d oN1=%d oN2=%d oN3=%d\n",totalsize[0],totalsize[1],totalsize[2],totalsize[3],oN0,oN1,oN2,oN3);
+  fprintf(stderr,"sx0=%g sx1=%g sx2=%g sx3=%g\n",startx[0],startx[1],startx[2],startx[3]);
 
+
+  // set things not set by header or user that will be used (e.g. by set_points(), which sets dx[0])
+  // dt crucial when using multiple time data.
+  // with this choice, and startx[0]=0 in set_points() already, the time-included super dumps will index each dump as t=0.5,1.5,2.5, etc. based upon an assumed CENT grid
+  // when oN0==1, this just keeps X[0] sane, but otherwise it's not used
+  dt=1.0;
 
   //  fprintf(stderr,"defcoord=%d\n",defcoord);
   set_points();
 
-  fprintf(stderr,"after set_points(): sx1=%g sx2=%g sx3=%g\n",startx[1],startx[2],startx[3]);
+  // check if user did something funny
+  DLOOPA(j){
+    if(fabs(Diffx[j])<SMALL){
+      fprintf(stderr,"User: You have startx and endx the same.  Did you interp after already reading an interp file and forget to load the original dump?\n");
+      exit(1);
+    }
+  }
 
-  SLOOPA(j) dX[j]=dx[j];// just convert from coord.c code result
+  fprintf(stderr,"after set_points(): sx0=%g sx1=%g sx2=%g sx3=%g\n",startx[0],startx[1],startx[2],startx[3]);
 
-  startpos[1]=startpos[2]=startpos[3]=0;
+  DLOOPA(j) dX[j]=dx[j];// just convert from coord.c code result
+
+  startpos[0]=startpos[1]=startpos[2]=startpos[3]=0;
+  Xmax[0] = startx[0]+dX[0]*(FTYPE)oN0;
   Xmax[1] = startx[1]+dX[1]*(FTYPE)oN1;
   Xmax[2] = startx[2]+dX[2]*(FTYPE)oN2;
   Xmax[3] = startx[3]+dX[3]*(FTYPE)oN3;
@@ -435,7 +469,7 @@ static void setup_zones(void)
 
   fprintf(stderr,"defcoord=%d Rin=%g R0=%g dofull2pi=%d\n",defcoord,Rin,R0,dofull2pi);
 
-  fprintf(stderr,"startx,Xmax,dX: %g %g %g :: %g %g %g :: %g %g %g\n",startx[1],Xmax[1],dX[1],startx[2],Xmax[2],dX[2],startx[3],Xmax[3],dX[3]) ; fflush(stderr);
+  fprintf(stderr,"startx,Xmax,dX: %g %g %g :: %g %g %g :: %g %g %g :: %g %g %g\n",startx[0],Xmax[0],dX[0],startx[1],Xmax[1],dX[1],startx[2],Xmax[2],dX[2],startx[3],Xmax[3],dX[3]) ; fflush(stderr);
 
 }
 
@@ -444,7 +478,7 @@ static void setup_zones(void)
 
 static void readdata_preprocessdata(void)
 {
-  int i,j,k;
+  int h,i,j,k;
   unsigned char tempuc;
 
 
@@ -471,12 +505,12 @@ static void readdata_preprocessdata(void)
 
     /* make arrays for images */
     if(!DOUBLEWORK){
-      oldimage0 = c3matrix(-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
-      newimage  = c3matrix(-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+      oldimage0 = c4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
+      newimage  = c4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
     }
     else{
-      olddata0 = f3matrix(-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[i][j][k]
-      newdata  = f3matrix(-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[i][j][k]
+      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
+      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
     }
     /* read in old image */
     if(jonheader){
@@ -484,23 +518,26 @@ static void readdata_preprocessdata(void)
       for(i=1;i<=4;i++) while(fgetc(stdin)!='\n');
     }
     fprintf(stderr,"reading image\n"); fflush(stderr);
+
     
     // read order and write order same, so good image output
     totalmin=BIG;
     totalmax=-BIG;
-    for(k=0;k<oN3;k++){
-      for(j=0;j<oN2;j++){
-	for(i=0;i<oN1;i++){
-	  if(DOUBLEWORK){
-	    fread(&tempuc, sizeof(unsigned char), 1, stdin) ;
-	    olddata0[i][j][k]=(FTYPE)tempuc;
-	    if(olddata0[i][j][k]>totalmax) totalmax=olddata0[i][j][k];
-	    if(olddata0[i][j][k]<totalmin) totalmin=olddata0[i][j][k];
-	  }
-	  else{
-	    fread(&oldimage0[i][j][k], sizeof(unsigned char), 1, stdin) ;
-	    if(oldimage0[i][j][k]>totalmax) totalmax=oldimage0[i][j][k];
-	    if(oldimage0[i][j][k]<totalmin) totalmin=oldimage0[i][j][k];
+    for(h=0;h<oN0;h++){ // for files (reading-writing), time is slowest index
+      for(k=0;k<oN3;k++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(DOUBLEWORK){
+	      fread(&tempuc, sizeof(unsigned char), 1, stdin) ;
+	      olddata0[h][i][j][k]=(FTYPE)tempuc;
+	      if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
+	      if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
+	    }
+	    else{
+	      fread(&oldimage0[h][i][j][k], sizeof(unsigned char), 1, stdin) ;
+	      if(oldimage0[h][i][j][k]>totalmax) totalmax=oldimage0[h][i][j][k];
+	      if(oldimage0[h][i][j][k]<totalmin) totalmin=oldimage0[h][i][j][k];
+	    }
 	  }
 	}
       }
@@ -510,65 +547,69 @@ static void readdata_preprocessdata(void)
     if(filter){
       // filter not setup for periodic bc
       fprintf(stderr,"filter\n");
-      gaussian_filter(filter,sigma,oN1,oN2,oN3,oldimage0,olddata0);      
+      gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);      
     }
 
     if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
       // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-      for(j=0;j<oN2;j++){
-	for(i=0;i<oN1;i++){
-	  if(DOUBLEWORK){
-	    for(k=-numbc[3];k<0;k++) olddata0[i][j][k]=olddata0[i][j][k+oN3];
-	    for(k=oN3;k<oN3+numbc[3];k++) olddata0[i][j][k]=olddata0[i][j][k-oN3];
-	  }
-	  else{
-	    for(k=-numbc[3];k<0;k++) oldimage0[i][j][k]=oldimage0[i][j][k+oN3];
-	    for(k=oN3;k<oN3+numbc[3];k++) oldimage0[i][j][k]=oldimage0[i][j][k-oN3];
+      for(h=0;h<oN0;h++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(DOUBLEWORK){
+	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
+	    }
+	    else{
+	      for(k=-numbc[3];k<0;k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbc[3];k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k-oN3];
+	    }
 	  }
 	}
       }
     }// end if periodic
-
-
+    
   }
   else if(DATATYPE==1){
     imagedata=1; // says treat as data
 
     if(immediateoutput==0){
-      olddata0 = f3matrix(-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[i][j][k]
-      newdata  = f3matrix(-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[i][j][k]
+      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
+      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
     }
 
 
     if(immediateoutput==0){
       totalmin=BIG;
       totalmax=-BIG;
-      // read it (Note the loop order!)
+      // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
       LOOPOLDDATA{
 
 	if(outputvartype==0){
-	  fscanf(stdin,SCANARG,&olddata0[i][j][k]) ;
+	  fscanf(stdin,SCANARG,&olddata0[h][i][j][k]) ;
 	}
 	else{
-	  compute_preprocess(gdumpin, &olddata0[i][j][k]);
+	  compute_preprocess(gdumpin, &olddata0[h][i][j][k]);
 	}
-	if(olddata0[i][j][k]>totalmax) totalmax=olddata0[i][j][k];
-	if(olddata0[i][j][k]<totalmin) totalmin=olddata0[i][j][k];
-      
+	if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
+	if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
+	
       }// end LOOPOLDDATA
+      
 
       if(filter){
 	// filter not setup for periodic bc
 	fprintf(stderr,"filter\n");
-	gaussian_filter(filter,sigma,oN1,oN2,oN3,oldimage0,olddata0);
+	gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);
       }
 
       if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
 	// then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    for(k=-numbc[3];k<0;k++) olddata0[i][j][k]=olddata0[i][j][k+oN3];
-	    for(k=oN3;k<oN3+numbc[3];k++) olddata0[i][j][k]=olddata0[i][j][k-oN3];
+	for(h=0;h<oN0;h++){
+	  for(j=0;j<oN2;j++){
+	    for(i=0;i<oN1;i++){
+	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
+	    }
 	  }
 	}
       }// end if PERIODIC
@@ -617,7 +658,8 @@ static void readdata_preprocessdata(void)
 
 
 
-
+// input header from dump file
+// does not consider time component dimension
 static void input_header(void)
 {
   FTYPE ftemp;
@@ -629,7 +671,7 @@ static void input_header(void)
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
     fscanf(stdin, SCANHEADER,
-	   &t,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns);
+	   &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns);
 
 
 
@@ -643,12 +685,21 @@ static void input_header(void)
 
   // print header from file
   fprintf(stderr, PRINTSCANHEADER,
-	  t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+
+
+  // set other things not set by header, but not really used right now
+  totalsize[0]=1;
+  dX[0]=1.0;
+  startx[0]=0.0;
 
 
 }
 
 
+
+// output dump header
+// does not consider time component dimension
 static void output_header(void)
 {
   FTYPE ftemp;
@@ -661,7 +712,7 @@ static void output_header(void)
   //////////////////////////
   fprintf(stderr,"header:\n");
   fprintf(stderr, "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	  t,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+	  tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
   fprintf(stderr, "NEW: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g\n",nN1,nN2,nN3,Xmax[1],Xmax[2],Xmax[3],fakedxc,fakedyc,fakedzc);
   fprintf(stderr, "OTHER: %22.16g %22.16g %22.16g %22.16g\n",fakeRin,dxc,dyc,dzc);
    
@@ -671,7 +722,7 @@ static void output_header(void)
       // print out a header
       ftemp=0.0;
       fprintf(stdout, "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	      t, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+	      tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
     }
   }
 
@@ -687,23 +738,26 @@ static void output_header(void)
 
 static void output2file_postinterpolation(void)
 {
-  int i,j,k;
+  int h,i,j,k;
   unsigned char uctemp;
   FTYPE ftemp;
+
 
   // OUTPUT TO FILE
   fprintf(stderr,"Output to file\n"); fflush(stderr);
 
+
+
   // in principle could output in different order if wanted
   if(DATATYPE==0){
-    for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-      fwrite(&newimage[i][j][k], sizeof(unsigned char), 1, stdout) ;
+    for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
+      fwrite(&newimage[h][i][j][k], sizeof(unsigned char), 1, stdout) ;
     }
   }
   else if(DATATYPE==1){
     if(imagedata==0){
-      for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	ftemp=newdata[i][j][k];
+      for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
+	ftemp=newdata[h][i][j][k];
 	//	if(ftemp<0.0) ftemp=0.0;
 	//if(ftemp>255.0) ftemp=255.0;
 	//uctemp=(unsigned char)ftemp;
@@ -713,14 +767,14 @@ static void output2file_postinterpolation(void)
     }
     else{
       if(sizeof(FTYPE)==sizeof(double)){
-	for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  //fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[i][j][k]); fflush(stderr);
-	  fprintf(stdout,"%22.16g\n",newdata[i][j][k]) ;
+	for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
+	  //fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[h][i][j][k]); fflush(stderr);
+	  fprintf(stdout,"%22.16g\n",newdata[h][i][j][k]) ;
 	}
       }
       else if(sizeof(FTYPE)==sizeof(float)){
-	for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  fprintf(stdout,"%15.7g\n",newdata[i][j][k]) ;
+	for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
+	  fprintf(stdout,"%15.7g\n",newdata[h][i][j][k]) ;
 	}
       }
     }
@@ -736,21 +790,23 @@ static void output2file_postinterpolation(void)
 //
 ////////////////////////////////////////
 
-void writeimage(char * name, unsigned char *** image,int nx, int ny, int nz)
+void writeimage(char * name, unsigned char ****image, int nt, int nx, int ny, int nz)
 {
   FILE * out;
-  int i,j,k;
+  int h,i,j,k;
 
   if((out=fopen(name,"wb"))==NULL){
     fprintf(stderr,"Cannot open %s\n",name);
     exit(1);
   }
 
-  for(k=0;k<nz;k++){
-    for(j=0;j<ny;j++){
-      for(i=0;i<nx;i++){
-	fwrite(&image[i][j][k], sizeof(unsigned char), 1, out) ;
-	//      fprintf(out, "%c",(unsigned char)((int)image[i][j][k]));
+  for(h=0;h<nt;h++){
+    for(k=0;k<nz;k++){
+      for(j=0;j<ny;j++){
+	for(i=0;i<nx;i++){
+	  fwrite(&image[h][i][j][k], sizeof(unsigned char), 1, out) ;
+	  //      fprintf(out, "%c",(unsigned char)((int)image[h][i][j][k]));
+	}
       }
     }
   }
@@ -775,6 +831,7 @@ void get_geometry(int ii, int jj, int kk, int pp, struct of_geom *geom)
 {
   // filler function so can use metric_tools.c
 
+  // assume time coordinate (related to oN0 and nN0) do not affect anything in metric calculations (i.e. only coordinates are affected)
   geom->i=ii;
   geom->j=jj;
   geom->k=kk;

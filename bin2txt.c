@@ -126,6 +126,8 @@ int main(
   int group[MAXTERMS];
 
   int N1,N2,N3,TS;
+  int inputlist,outputlist,input4dblock;
+
   int nextbuf;
   FILE * input;
   FILE * output;
@@ -201,23 +203,48 @@ int main(
     fprintf(stderr," INPUTNAME/OUTPUTNAME: input and output file names (not used if TS>1)\n");
     fprintf(stderr," <format> type is (for 1-4) b=byte i=integer, f=float, d=double, where you give <type1> #of1 <type2> #of2 ...\n");
     fprintf(stderr,"\ne.g. bin2txt 1 2 0 3 32 32 32 1 data32-3.txt data32-3.bin i 3 f 9\n\n");
+
+    fprintf(stderr,"\n");
+
+    fprintf(stderr,"x=0,1,2 && y=0,1,2 w/ TS>1 then also include:\n");
+    fprintf(stderr,"Usage (dest=0,1,2 w/ TS=+|TS|): bin2txt SOURCE DEST BLE HEADERLINESTOSKIP NDIM N1 N2 N3 TS INPUTLIST OUTPUTNAME <format>\n");
+    fprintf(stderr,"Usage (source=0,1,2 w/ TS=-|TS|): bin2txt SOURCE DEST BLE HEADERLINESTOSKIP NDIM N1 N2 N3 TS INPUTNAME OUTPUTLIST <format>\n");
+    fprintf(stderr,"INTPUTLIST contains: sequence of return delimited input file names for each timeslice\n");
+    fprintf(stderr,"OUTPUTLIST contains: sequence of return delimited output file names for each timeslice\n");
+    fprintf(stderr,"e.g., to input list and output single 4D file: bin2txtn x y 0 -1 3 256 128 32 +67 dumplist.txt dump.??? d 6\n");
+    fprintf(stderr,"e.g., to input 4D file and output many files: bin2txtn x y 0 -1 3 256 128 32 -67 dump4d.??? dumplist.txt d 6\n");
+
+    fprintf(stderr,"\n");
+
     fprintf(stderr,"Vis5D with TS=1:\n");
     fprintf(stderr,"Usage (dest=5): bin2txt SOURCE DEST BLE HEADERLINESTOSKIP NDIM N1 N2 N3 TS HEADFILE INPUTNAME OUTPUTNAME <format>\n");
     fprintf(stderr,"HEADFILE contains return delimited list of names for all variables and their min and max values (min/max only used if source=0) (names MUST BE <=9 characters!!!)\n");
     fprintf(stderr,"Last line must have:\nx_start x_finish y_start y_finish z_start z_finish\n");
     fprintf(stderr,"e.g. for one variable:\n\ndensity 1E-4 1\n");
     fprintf(stderr,"0 1 0 1 0 1\n");
+    fprintf(stderr,"vis5d e.g.: ./bin2txt 0 5 0 3 64 64 64 1 vis5d.image.head imx0-0-0-s1-0000.dat.r8.gz imx0-0-0-s1-0000.dat.v5d b 1\n");
+
+    fprintf(stderr,"\n");
+
     fprintf(stderr,"V5D w/ TS>1 then also include:\n");
     fprintf(stderr,"Usage (dest=5): bin2txt SOURCE DEST BLE HEADERLINESTOSKIP NDIM N1 N2 N3 TS HEADFILE INPUTLIST OUTPUTNAME <format>\n");
     fprintf(stderr,"Usage (source=5): bin2txt SOURCE DEST BLE HEADERLINESTOSKIP NDIM N1 N2 N3 TS HEADFILE INPUTNAME OUTPUTLIST <format>\n");
     fprintf(stderr,"INTPUTLIST contains: sequence of return delimited input file names for each timeslice\n");
     fprintf(stderr,"OUTPUTLIST contains: sequence of return delimited output file names for each timeslice\n");
-    fprintf(stderr,"vis5d e.g.: ./bin2txt 0 5 0 3 64 64 64 1 vis5d.image.head imx0-0-0-s1-0000.dat.r8.gz imx0-0-0-s1-0000.dat.v5d b 1\n");
     fprintf(stderr,"vis5d: bin2txtn 2 5 0 7 3 32 32 32 101 vis5d.dump.head dumplist.txt dump.v5d d 9\n");
-    fprintf(stderr,"bin2txtn 2 5 0 0 3 32 32 32 101 vis5d.force.head forcelist.txt forcex.v5d d 8\n");
+    fprintf(stderr,"vis5d: bin2txtn 2 5 0 0 3 32 32 32 101 vis5d.force.head forcelist.txt forcex.v5d d 8\n");
 
     exit(1);
   }
+
+
+
+  //////////////////
+  //
+  // BEGIN Read-in arguments
+  //
+  //////////////////
+
 
   // argv[0] is filename of program
   argstep=1;
@@ -255,8 +282,17 @@ int main(
   N3=atoi(argv[argstep++]);
   TS=atoi(argv[argstep++]);
   if(TS==0){
-    fprintf(stderr,"Assumed by TS=0 you meant TS=1 really\n");
     TS=1;
+    fprintf(stderr,"Assumed by TS=0 you meant TS=%d really\n",TS);
+  }
+  if(TS<0){
+    TS=-TS;
+    fprintf(stderr,"Assumed by TS<0 you meant TS=%d but inputting 4D data block\n",TS);
+    input4dblock=1;
+  }
+  else{
+    input4dblock=0;
+    fprintf(stderr,"outputting 4D data block\n");
   }
   fprintf(stderr,"source: %d dest: %d numheader: %d NDIM: %d N1: %d N2: %d N3: %d TS: %d\n",source,dest,numheader,NDIM,N1,N2,N3,TS);
   // modify N1,N2,N3 for various dimension
@@ -266,10 +302,21 @@ int main(
   else if(NDIM==1){
     N2=N3=1; // force
   }
+  else if(NDIM==4){
+    fprintf(stderr,"Not yet setup for direct 4D input\n");
+    exit(1);
+  }
 
+  // set number of rows
   numrows=N1*N2*N3;
 
+
+
+  ////////////////////////
+  //
   // get input-output file (or list)
+  //
+  ////////////////////////
   if((TS>1)&&(dest==5)){
     strcpy(V5DHEAD_NAME,argv[argstep++]); // for vis5d this is the header
     strcpy(INPUTLIST_NAME,argv[argstep++]); // for TS>1 this is list of files
@@ -288,6 +335,16 @@ int main(
     strcpy(OUTPUT_NAME,argv[argstep++]); // single output name
     fprintf(stderr,"V5DHEAD_NAME: %s INPUT_NAME: %s OUTPUT_NAME: %s \n",V5DHEAD_NAME,INPUT_NAME,OUTPUT_NAME); fflush(stderr);
   }
+  else if((TS>1 && input4dblock==0)&&(dest==0 || dest==1 || dest==2)){
+    strcpy(INPUTLIST_NAME,argv[argstep++]); // for TS>1 this is list of files
+    strcpy(OUTPUT_NAME,argv[argstep++]); // single output name
+    fprintf(stderr,"INPUTLIST_NAME: %s  OUTPUT_NAME: %s\n",INPUTLIST_NAME,OUTPUT_NAME); fflush(stderr);
+  }
+  else if((TS>1 && input4dblock==1)&&(source==0 || source==1 || source==2)){
+    strcpy(INPUT_NAME,argv[argstep++]); // just single input name
+    strcpy(OUTPUTLIST_NAME,argv[argstep++]); // for TS>1 this is list of files
+    fprintf(stderr,"INPUT_NAME: %s OUTPUTLIST: %s \n",INPUT_NAME,OUTPUTLIST_NAME); fflush(stderr);
+  }
   else{ // then don't need v5d header and don't need multi-file list
     strcpy(INPUT_NAME,argv[argstep++]); // just single input name
     strcpy(OUTPUT_NAME,argv[argstep++]); // single output name
@@ -295,6 +352,12 @@ int main(
   }
 
 
+
+  //////////////////
+  //
+  // Setup format specifier from command line
+  //
+  //////////////////
   j=0;
   numcolumns=0;
   while(argstep<argc){  
@@ -311,17 +374,26 @@ int main(
   numterms=j;
 
 
+  //////////////////
+  //
+  // END Read-in arguments
+  //
+  //////////////////
+
+
+
 
   fprintf(stderr,"numrows: %d numcolumns: %d numterms: %d\n",numrows,numcolumns,numterms); fflush(stderr);
 
 
 
-#if(V5D)
+
   /////////////////////////////
   //
   // vis5d stuff
   //
-  //
+  /////////////////////////////
+#if(V5D)
   if(dest==5){
     NumTimes=TS;
     NumVars=numcolumns;
@@ -389,29 +461,54 @@ int main(
     fclose(vis5dheader); // no longer needed
   }
 
+#endif
+
+
+
+  /////////////////
+  //
   // see if TS>1 and get filename list
+  //
+  // after done, input and output names will be formed from these lists if inputlist or outputlist are non-zero
+  ////////////////
   if(TS>1){
     // then ignore argument file input/output names and get from list
     // order is ALL input names in 1 file, ALL output names in another file
-    if(source!=5){ // otherwise 1 file
+    if((dest==5 && source!=5) || (input4dblock==0)&&(dest==0 || dest==1 || dest==2 || dest==3 || dest==4)){ // otherwise 1 file
       fprintf(stderr,"Opening %s\n",INPUTLIST_NAME);
       if( (inputfilenamelist=fopen(INPUTLIST_NAME,"rt"))==NULL){
 	fprintf(stderr,"can't open input filenamelist header file %s\n",INPUTLIST_NAME);
 	exit(1);
       }
+      inputlist=1;
+      outputlist=0;
     }
-    if(dest!=5){ // otherwise 1 file
+    else if((dest!=5 && source==5) || (input4dblock==1)&&(source==0 || source==1 || source==2)){ // otherwise 1 file (can't source 4D from HDF yet)
       fprintf(stderr,"Opening %s\n",OUTPUTLIST_NAME);
       if( (outputfilenamelist=fopen(OUTPUTLIST_NAME,"rt"))==NULL){
 	fprintf(stderr,"can't open output filenamelist header file %s\n",OUTPUTLIST_NAME);
 	exit(1);
       }
+      inputlist=0;
+      outputlist=1;
     }
-    // from now on input and output names will be formed from these lists
+    else{
+      fprintf(stderr,"Not setup to process TS=%d>1 with source=%d and dest=%d\n",TS,source,dest);
+      exit(1);
+    }
+
   }
-#endif
 
 
+
+
+
+
+  /////////////////////
+  //
+  // HDF stuff
+  //
+  /////////////////////
 #if(HDF)
   if((source==3)||(dest==3)||(source==4)||(dest==4)){ // use maximal holder array (doubles)
     if(HDFTYPE==DFNT_UINT8){
@@ -478,6 +575,14 @@ int main(
   }
 #endif
 
+
+
+
+  /////////////////////////////
+  //
+  // vis5d stuff
+  //
+  /////////////////////////////
 #if(V5D)
   if((source==5)||(dest==5)){
     fprintf(stderr,"Allocated memory for source=%d dest=%d\n",source,dest);
@@ -492,6 +597,11 @@ int main(
 #endif
 
 
+
+
+
+
+
   ///////////
   //
   //
@@ -503,47 +613,20 @@ int main(
 
 
     if(TS>1){ // otherwise already set
-      if(source!=5) fscanf(inputfilenamelist,"%s",INPUT_NAME); // otherwise 1 file
-      if(dest!=5) fscanf(outputfilenamelist,"%s",OUTPUT_NAME); // otherwise 1 file
+      if(inputlist) fscanf(inputfilenamelist,"%s",INPUT_NAME); // otherwise 1 file
+      if(outputlist) fscanf(outputfilenamelist,"%s",OUTPUT_NAME); // otherwise 1 file
       fprintf(stderr,"At TS=%d of %d using input file %s and output file %s\n",it,TS,INPUT_NAME,OUTPUT_NAME);
     }
 
     fprintf(stderr,"Open source=%d\n",source);
-    
-    // open source file
-    if(source==1){
-      if( (input=fopen(INPUT_NAME,"rb"))==NULL){
-	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
-	exit(1);
-      }
-    }
-    if(source==2){
-      if( (input=fopen(INPUT_NAME,"rt"))==NULL){
-	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
-	exit(1);
-      }
-    }
-#if(HDF)
-    if(source==3){
-      // open HDF file
-      sd_id=SDstart(INPUT_NAME,DFACC_READ);
-      if (sd_id != FAIL)      printf ("Reading HDF file with READ access\n");
-      
-      sd_index = 0;
-      sds_id = SDselect (sd_id, sd_index);
-      
-      istat = SDreaddata (sds_id, start, NULL, edges, (VOIDP) array);
-    }
-    if(source==4){
-      // not yet
-    }
-#endif
-#if(V5D)
-    if((source==5)&&(it==0)){ // assume all input vis5d are multi-timed
-      // not yet
-    }
-#endif
 
+
+
+    //////////////////////
+    //    
+    // open source file
+    //
+    //////////////////////
     if(source==0){
       
       // length of the entire unmodified input file name
@@ -572,22 +655,69 @@ int main(
       // assume header info provided and # lines of header provided (unlike in r8toras.c and block2tile.c)
       
     }
+    else if(source==1){
+      if( (input=fopen(INPUT_NAME,"rb"))==NULL){
+	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
+	exit(1);
+      }
+    }
+    else if(source==2){
+      if( (input=fopen(INPUT_NAME,"rt"))==NULL){
+	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
+	exit(1);
+      }
+    }
+#if(HDF)
+    else if(source==3){
+      // open HDF file
+      sd_id=SDstart(INPUT_NAME,DFACC_READ);
+      if (sd_id != FAIL)      printf ("Reading HDF file with READ access\n");
+      
+      sd_index = 0;
+      sds_id = SDselect (sd_id, sd_index);
+      
+      istat = SDreaddata (sds_id, start, NULL, edges, (VOIDP) array);
+    }
+    else if(source==4){
+      // not yet
+      fprintf(stderr,"NOT YET\n"); exit(1);
+    }
+#endif
+#if(V5D)
+    else if((source==5)&&(it==0)){ // assume all input vis5d are multi-timed
+      // not yet
+      fprintf(stderr,"NOT YET\n"); exit(1);
+    }
+#endif
+
 
     //    fprintf(stderr,"Deal with header: pipeheader=%d\n",pipeheader);
 
 
-    if( !(output=fopen(OUTPUT_NAME,"wt"))){
-      fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
-      exit(1);
+
+    //////////////////////
+    //    
+    // trial open dest file
+    //
+    //////////////////////
+    if(it==0 && outputlist==0 && inputlist==1){
+      if( !(output=fopen(OUTPUT_NAME,"wt"))){
+	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
+	exit(1);
       }
-    fclose(output);
+      fclose(output);
+    }
+
+
+
+
 
 
     /////////////////////////
     //  
-    // deal with header
+    // deal with header (when doing inputlist, note that this only pipes first input file into any output file)
     //
-    if(pipeheader){
+    if(pipeheader && it==0 && outputlist==0 && inputlist==1){
       if( !(output=fopen(OUTPUT_NAME,"wt"))){
 	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
 	exit(1);
@@ -603,15 +733,26 @@ int main(
     }
 
     // close header part if opened
-    if(pipeheader){
+    if(pipeheader && it==0 && outputlist==0 && inputlist==1){
       fprintf(output,"\n");
       fclose(output);
     }
 
 
-    fprintf(stderr,"Open dest=%d\n",dest);
+
+
+
+    ///////////////////////////
+    //
     // open destination file
-    if(dest==0){
+    //
+    ///////////////////////////
+
+
+
+    if(dest==0 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+      fprintf(stderr,"Open dest=%d\n",dest);
+
       lname=strlen(OUTPUT_NAME);
       if( (OUTPUT_NAME[lname-1]=='z')&&(OUTPUT_NAME[lname-2]=='g')&&(OUTPUT_NAME[lname-3]=='.') ){
 	outputtype=1;
@@ -636,20 +777,24 @@ int main(
 	}
       }
     }
-    if(dest==1){
+    else if(dest==1 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+      fprintf(stderr,"Open dest=%d\n",dest);
+
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
 	fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
 	exit(1);
       }
     }
-    if(dest==2){
+    else if(dest==2 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
 	fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
 	exit(1);
       }
     }
 #if(HDF)
-    if(dest==3){
+    else if(dest==3 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+      fprintf(stderr,"Open dest=%d\n",dest);
+
       // open HDF file
       sd_id = SDstart (OUTPUT_NAME, DFACC_CREATE);
       
@@ -658,12 +803,17 @@ int main(
       sds_id = SDcreate (sd_id, SDS_NAME, HDFTYPE, rank, dim_sizes);
       start[0]=start[1]=start[2]=start[3]=0;
     }
-    if(dest==4){
+    else if(dest==4 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+      fprintf(stderr,"Open dest=%d\n",dest);
+
       // not yet
+      fprintf(stderr,"NOT YET\n"); exit(1);
     }
 #endif
 #if(V5D)
-    if((dest==5)&&(it==0)){ // assume all output vis5d are multi-timed, so only open 1 file for all timeslices
+    else if((dest==5)&&(it==0)){ // assume all output vis5d are multi-timed, so only open 1 file for all timeslices
+      fprintf(stderr,"Open dest=%d\n",dest);
+
       fprintf(stderr,"Opening vis5d file: %s %d %d %d %d %d %s\n",OUTPUT_NAME,NumTimes,NumVars,Nr,Nc,Nl[0],VarName[0]); fflush(stderr);
 
 
@@ -684,202 +834,244 @@ int main(
 #endif
 
     
+      
     
-    
-    
-    
+    ////////////////////////////////////
+    //
+    // Process file
+    //
+    ////////////////////////////////////    
 
 
-  fprintf(stderr,"reading file and putting into other format...\n"); fflush(stderr);
+    fprintf(stderr,"reading file and putting into other format...\n"); fflush(stderr);
 
-  BUFFERINIT;// use to fill/read array if HDF involved
-  for(i=0;i<numrows;i++){
+    BUFFERINIT;// use to fill/read array if HDF involved
+    for(i=0;i<numrows;i++){
 #if(DEBUG)
-    fprintf(stderr,"rownumber: %d of %d\n",i,numrows-1); fflush(stderr);
+      fprintf(stderr,"rownumber: %d of %d\n",i,numrows-1); fflush(stderr);
 #endif
     
-    for(j=0;j<numterms;j++){ // over rows and each group
+      for(j=0;j<numterms;j++){ // over rows and each group
 #if(DEBUG)
-    fprintf(stderr,"termnumber: %d of %d\n",j,numterms-1); fflush(stderr);
+	fprintf(stderr,"termnumber: %d of %d\n",j,numterms-1); fflush(stderr);
 #endif
       
-      for(k=0;k<group[j];k++){ // over a group of same kind
+	for(k=0;k<group[j];k++){ // over a group of same kind
 #if(DEBUG)
-    fprintf(stderr,"groupelements: %d of %d : precision: %c s: %d d: %d\n",k,group[j]-1,precision[j],source,dest); fflush(stderr);
+	  fprintf(stderr,"groupelements: %d of %d : precision: %c s: %d d: %d\n",k,group[j]-1,precision[j],source,dest); fflush(stderr);
 #endif
-	switch(source){	 
-	case 0:
-	  fread(&dumb,bytesize,1,input); precision[j]='b'; //forced
-	  break;
-	case 1:
-	  if(precision[j]=='b')	            fread(&dumb,bytesize,1,input);
-	  if(precision[j]=='i')	            fread(&dumi,intsize,1,input);
-	  if(precision[j]=='f')             fread(&dumf,floatsize,1,input);
-	  if(precision[j]=='d')             fread(&dumlf,doublesize,1,input);
-	  break;
-	case 2:
-	  if(precision[j]=='b'){
-	    fscanf(input,"%hu",&shortfordumb);
-	    dumb=shortfordumb; // convert short to byte
-	  }
+
+
+	  //////////////
+	  // SOURCE
+	  //////////////
+	  switch(source){	 
+	  case 0:
+	    fread(&dumb,bytesize,1,input); precision[j]='b'; //forced
+	    break;
+	  case 1:
+	    if(precision[j]=='b')	            fread(&dumb,bytesize,1,input);
+	    if(precision[j]=='i')	            fread(&dumi,intsize,1,input);
+	    if(precision[j]=='f')             fread(&dumf,floatsize,1,input);
+	    if(precision[j]=='d')             fread(&dumlf,doublesize,1,input);
+	    break;
+	  case 2:
+	    if(precision[j]=='b'){
+	      fscanf(input,"%hu",&shortfordumb);
+	      dumb=shortfordumb; // convert short to byte
+	    }
 	  
-	  if(precision[j]=='i')	            fscanf(input,"%d",&dumi);
-	  if(precision[j]=='f')             fscanf(input,"%f",&dumf);
-	  if(precision[j]=='d')             fscanf(input,"%lf",&dumlf);
-	  break;
+	    if(precision[j]=='i')	            fscanf(input,"%d",&dumi);
+	    if(precision[j]=='f')             fscanf(input,"%f",&dumf);
+	    if(precision[j]=='d')             fscanf(input,"%lf",&dumlf);
+	    break;
 #if(HDF)
-	case 3:
-	case 4:
-	  if(precision[j]=='b') dumb=arrayb[nextbuf++];
-	  if(precision[j]=='i') dumi=arrayi[nextbuf++];
-	  if(precision[j]=='f') dumf=arrayf[nextbuf++];
-	  if(precision[j]=='d') dumlf=arrayd[nextbuf++];
-	  break;
+	  case 3:
+	  case 4:
+	    if(precision[j]=='b') dumb=arrayb[nextbuf++];
+	    if(precision[j]=='i') dumi=arrayi[nextbuf++];
+	    if(precision[j]=='f') dumf=arrayf[nextbuf++];
+	    if(precision[j]=='d') dumlf=arrayd[nextbuf++];
+	    break;
 #endif
 #if(V5D)
-	case 5:
-	  // source is always float
-	  dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
-	  break;
+	  case 5:
+	    // source is always float
+	    dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
+	    break;
 #endif
-	default:
-	  break;
-	}
-	switch(dest){
-	case 0:
-	  // always byte size output
-	  if(precision[j]=='b'){dumb=dumb;  fwrite(&dumb,bytesize,1,output);}
-	  if(precision[j]=='i'){dumb=dumi;  fwrite(&dumb,bytesize,1,output);}
-	  if(precision[j]=='f'){dumb=dumf;  fwrite(&dumb,bytesize,1,output);}
-	  if(precision[j]=='d'){dumb=dumlf; fwrite(&dumb,bytesize,1,output);}
-	  break;
-	case 1:
-	  if(precision[j]=='b')		  fwrite(&dumb,bytesize,1,output);
-	  if(precision[j]=='i'){if(ble){ SWAP_LONG(dumi);}     fwrite(&dumi,intsize,1,output);}
-	  if(precision[j]=='f'){if(ble){ SWAP_FLOAT(dumf);}   fwrite(&dumf,floatsize,1,output);}
-	  if(precision[j]=='d'){if(ble){ SWAP_DOUBLE(dumlf);} fwrite(&dumlf,doublesize,1,output);}
-	  break;
-	case 2:
-	  if(precision[j]=='b'){
-	    if(source==0 || source==1) fprintf(output,"%d ",dumb);
-	    else fprintf(output,"%c ",dumb);
+	  default:
+	    break;
 	  }
-	  if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     fprintf(output,"%d ",dumi);}
-	  if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   fprintf(output,"%17.10g ",dumf);}
-	  if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} fprintf(output,"%26.20g ",dumlf);}
-	  break;
+
+	  //////////////
+	  // DEST
+	  //////////////
+	  switch(dest){
+	  case 0:
+	    // always byte size output
+	    if(precision[j]=='b'){dumb=dumb;  fwrite(&dumb,bytesize,1,output);}
+	    if(precision[j]=='i'){dumb=dumi;  fwrite(&dumb,bytesize,1,output);}
+	    if(precision[j]=='f'){dumb=dumf;  fwrite(&dumb,bytesize,1,output);}
+	    if(precision[j]=='d'){dumb=dumlf; fwrite(&dumb,bytesize,1,output);}
+	    break;
+	  case 1:
+	    if(precision[j]=='b')		  fwrite(&dumb,bytesize,1,output);
+	    if(precision[j]=='i'){if(ble){ SWAP_LONG(dumi);}     fwrite(&dumi,intsize,1,output);}
+	    if(precision[j]=='f'){if(ble){ SWAP_FLOAT(dumf);}   fwrite(&dumf,floatsize,1,output);}
+	    if(precision[j]=='d'){if(ble){ SWAP_DOUBLE(dumlf);} fwrite(&dumlf,doublesize,1,output);}
+	    break;
+	  case 2:
+	    if(precision[j]=='b'){
+	      if(source==0 || source==1) fprintf(output,"%d ",dumb);
+	      else fprintf(output,"%c ",dumb);
+	    }
+	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     fprintf(output,"%d ",dumi);}
+	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   fprintf(output,"%17.10g ",dumf);}
+	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} fprintf(output,"%26.20g ",dumlf);}
+	    break;
 #if(HDF)
-	case 3:
-	case 4:
-	  if(precision[j]=='b') arrayb[nextbuf++]=dumb;
-	  if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     arrayi[nextbuf++]=dumi;}
-	  if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   arrayf[nextbuf++]=dumf;}
-	  if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} arrayd[nextbuf++]=dumlf;}
-	  break;
+	  case 3:
+	  case 4:
+	    if(precision[j]=='b') arrayb[nextbuf++]=dumb;
+	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     arrayi[nextbuf++]=dumi;}
+	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   arrayf[nextbuf++]=dumf;}
+	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} arrayd[nextbuf++]=dumlf;}
+	    break;
 #endif
 #if(V5D)
-	case 5:
-	  // same array, must be float
-	  if(precision[j]=='b') arrayvisf[nextbuf++]=dumb;
-	  if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}      arrayvisf[nextbuf++]=dumi;}
-	  if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}    arrayvisf[nextbuf++]=dumf;}
-	  if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);}  arrayvisf[nextbuf++]=dumlf;}
-	  break;
+	  case 5:
+	    // same array, must be float
+	    if(precision[j]=='b') arrayvisf[nextbuf++]=dumb;
+	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}      arrayvisf[nextbuf++]=dumi;}
+	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}    arrayvisf[nextbuf++]=dumf;}
+	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);}  arrayvisf[nextbuf++]=dumlf;}
+	    break;
 #endif
-	default:
-	  break;
+	  default:
+	    break;
+	  }
+	}
+      }
+      // skip terms till carraige return (allows parsing out certain extra columns on end)
+      if(source==2){ while(fgetc(input)!='\n'); }
+      // output carraige return
+      if(dest==2) fprintf(output,"\n");
+    }
+
+#if(HDF)
+    if(dest==3){
+      fprintf(stderr,"Writing HDF file ...\n"); fflush(stderr);
+      status = SDwritedata (sds_id, start, NULL, edges, (VOIDP)array); 
+      status = SDendaccess (sds_id);
+      status = SDend (sd_id);
+    }
+#endif
+    //#if(V5D&&0) // DEBUG GODMARK
+#if(V5D)
+    if(dest==5){
+      fprintf(stderr,"Writing vis5d file ...\n"); fflush(stderr);
+
+      for(iv=0;iv<NumVars;iv++){
+
+	/**
+	 ** Read your 3-D grid data for timestep it and variable
+	 ** iv into the array g here.
+	 ** To help with 3-D array indexing we've defined a macro G.
+	 ** G(0,0,0) is the north-west-bottom corner, G(Nr-1,Nc-1,Nl-1) is
+	 ** the south-east-top corner.  If you want a value to be considered
+	 ** missing, assign it equal to the constant MISSING.  For example:
+	 ** G(ir,ic,il) = MISSING;
+	 **/
+	//#define G(ROW, COLUMN, LEVEL)   g[ (ROW) + ((COLUMN) + (LEVEL) * Nc) * Nr ]
+      
+      
+	if(source==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
+	  // also assumes linear legend!
+	  a=minmax[0][iv];
+	  b=minmax[1][iv];
+	}
+	else{ // to cancel change
+	  a=0.0;
+	  b=255.0;
+	}
+	// convert my format to vis5d format
+	for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
+	      ijkjon=(i+(j+k*N2)*N1)*NumVars+iv;
+	      ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
+	      arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
+
+	      // DEBUG:
+	      //	fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
+	    }
+      
+	/* Write data to v5d file. */
+	if (!v5dWrite( it+1, iv+1, arrayvisoutput )) {
+	  printf("Error while writing grid.  Disk full?\n");
+	  exit(1);
 	}
       }
     }
-    // skip terms till carraige return (allows parsing out certain extra columns on end)
-    if(source==2){ while(fgetc(input)!='\n'); }
-    // output carraige return
-    if(dest==2) fprintf(output,"\n");
-  }
-
-#if(HDF)
-  if(dest==3){
-    fprintf(stderr,"Writing HDF file ...\n"); fflush(stderr);
-    status = SDwritedata (sds_id, start, NULL, edges, (VOIDP)array); 
-    status = SDendaccess (sds_id);
-    status = SDend (sd_id);
-  }
 #endif
-  //#if(V5D&&0) // DEBUG GODMARK
-#if(V5D)
-  if(dest==5){
-    fprintf(stderr,"Writing vis5d file ...\n"); fflush(stderr);
 
-    for(iv=0;iv<NumVars;iv++){
+  
 
-      /**
-       ** Read your 3-D grid data for timestep it and variable
-       ** iv into the array g here.
-       ** To help with 3-D array indexing we've defined a macro G.
-       ** G(0,0,0) is the north-west-bottom corner, G(Nr-1,Nc-1,Nl-1) is
-       ** the south-east-top corner.  If you want a value to be considered
-       ** missing, assign it equal to the constant MISSING.  For example:
-       ** G(ir,ic,il) = MISSING;
-       **/
-      //#define G(ROW, COLUMN, LEVEL)   g[ (ROW) + ((COLUMN) + (LEVEL) * Nc) * Nr ]
-      
-      
-      if(source==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
-	// also assumes linear legend!
-	a=minmax[0][iv];
-	b=minmax[1][iv];
-      }
-      else{ // to cancel change
-	a=0.0;
-	b=255.0;
-      }
-      // convert my format to vis5d format
-      for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
-	ijkjon=(i+(j+k*N2)*N1)*NumVars+iv;
-	ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
-	arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
-
-	// DEBUG:
-	//	fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
-      }
-      
-      /* Write data to v5d file. */
-      if (!v5dWrite( it+1, iv+1, arrayvisoutput )) {
-	printf("Error while writing grid.  Disk full?\n");
-	exit(1);
+    /////////////////////
+    //
+    // close output file
+    //
+    /////////////////////
+    if(it==TS-1 && outputlist==0 && inputlist==1 || outputlist==1){
+      if((dest==1)||(dest==2)) fclose(output);
+      else if(dest==0){
+	if(outputtype==0) fclose(output);
+	else if(outputtype==1) pclose(output);
       }
     }
-  }
-#endif
-  if((dest==1)||(dest==2)) fclose(output);
-  else if(dest==0){
-    if(outputtype==0) fclose(output);
-    else if(outputtype==1) pclose(output);
-  }
+
 
 #if(HDF)
-  if(source==3){
-    /* Terminate access to the array. */
-    istat = SDendaccess(sds_id);
+    if(source==3){
+      /* Terminate access to the array. */
+      istat = SDendaccess(sds_id);
     
-    /* Terminate access to the SD interface and close the file. */
-    istat = SDend(sd_id);
-    if (istat != FAIL) printf("... file closed\n\n");
-  }
-  else if(source==4){
-    // not yet
-  }
+      /* Terminate access to the SD interface and close the file. */
+      istat = SDend(sd_id);
+      if (istat != FAIL) printf("... file closed\n\n");
+    }
+    else if(source==4){
+      // not yet
+      fprintf(stderr,"NOT YET\n"); exit(1);
+    }
 #endif
-  if((source==1)||(source==2)) fclose(input);
-  else if(source==0){
-    if(inputtype==0) fclose(input);
-    else if(inputtype==1) pclose(input);
-  }
-
-  // END BIG LOOP
-  } // over all timesteps
 
 
+    /////////////////////
+    //
+    // close input file
+    //
+    /////////////////////
+    if(it==TS-1 && outputlist==1 && inputlist==0 || inputlist==1){
+      if((source==1)||(source==2)) fclose(input);
+      else if(source==0){
+	if(inputtype==0) fclose(input);
+	else if(inputtype==1) pclose(input);
+      }
+    }
+
+
+
+  } // END BIG LOOP over all timesteps
+
+
+
+
+
+  /////////////////
+  //
+  // vis5d stuff
+  //
+  /////////////////
 #if(V5D)
   // close v5d file which has entire time series in it
   if(dest==5){
@@ -887,13 +1079,16 @@ int main(
   }
   if(source==5){ // close entire time series v5d
     // not yet
+    fprintf(stderr,"NOT YET\n"); exit(1);
   }
 #endif
+
+
   if(TS>1){
-    if(source!=5){ // otherwise 1 file
+    if(inputlist){ // otherwise 1 file
       fclose(inputfilenamelist);
     }
-    if(dest!=5){ // otherwise 1 file
+    if(outputlist){ // otherwise 1 file
       fclose(outputfilenamelist);
     }
   }
@@ -904,6 +1099,14 @@ int main(
   return(0);
   //  exit(0); // not reachable
 }
+
+
+
+
+
+
+
+
 
 
 // apparently doesn't work:
@@ -940,6 +1143,8 @@ void swap(BYTE *x, BYTE size)
 }
 
 
+
+
 int machineEndianness(void)
 {
    int i = 1;
@@ -963,11 +1168,17 @@ int machineEndianness(void)
 
 
 
+
+
 static long _TestEndian=1;
 
 int IsLittleEndian(void) {
 	return *(char*)&_TestEndian;
 }
+
+
+
+
 
 /******************************************************************************
   FUNCTION: SwapEndian

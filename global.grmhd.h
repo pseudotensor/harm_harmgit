@@ -180,6 +180,18 @@
 // On jdexter@@luigi : getting files from ki-rh42:
 // ~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
 //
+// On QB to ranch (problem with -a into ranch -- have to manually  make directories used for recovering -- stupid):
+// ~/bin/bbcp -r -P 5 thickdisk5fghij tg802609@ranch.tacc.utexas.edu:
+//
+// If copy failed for whatever reason (QB went down), then have to copy per directory since -a -k don't work properly with -r.  So one has to complete:
+//~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/
+// cd dumps/
+//~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/dumps/
+// cd ../images/
+//~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/images/
+// If get message of append couldn't be completed, delete that file on ranch
+// If get message that not enough space to copy files, then contact TACC.
+//
 //
 // Teragrid LONI QueenBee (Queen Bee):
 // http://www.loni.org/systems/

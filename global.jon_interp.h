@@ -8,10 +8,11 @@
 // 0: shift points so still interpolate
 #define BILINEARREDUCE2NEARESTATBOUNDARY 0
 
-#define LOOPOLDDATA for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)    for(i=0;i<oN1;i++)
-#define LOOPINTERP for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)    for(i=0;i<nN1;i++)
+// Note: Due to how generally create data as multiple time dumps, easier to read and write time as slowest index even if by N? it's before i
+#define LOOPOLDDATA for(h=0;h<oN0;h++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)    for(i=0;i<oN1;i++)
+#define LOOPINTERP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)    for(i=0;i<nN1;i++)
 
-// oldgridtype: 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R)// V in GRMHD code
+// oldgridtype: 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R)// V in GRMHD code 4 = log for radius (used in Sashas monopole paper) 5=Cartesian, but time is mixed with space to approximate light travel time effects [only makes sense if doing 4D input with oN0>1]
 // newgridtype: -1=nochange (else like oldgridtype) // output coordinate system
 #define GRIDTYPENOCHANGE -1
 #define GRIDTYPECART 0
@@ -19,6 +20,7 @@
 #define GRIDTYPECYL 2
 #define GRIDTYPELOGLOGCYL 3
 #define GRIDTYPELOGSPC 4
+#define GRIDTYPECARTLIGHT 5
 
 #define FLOAT2IMAGE1(x) ( (x<0.0) ? 0.0 : (x>255.0 ? 255.0 : x) )
 
@@ -62,9 +64,11 @@
 #undef DOGRIDSECTIONING
 #define DOGRIDSECTIONING 0
 
+#undef N0
 #undef N1
 #undef N2
 #undef N3
+#define N0 2
 #define N1 2
 #define N2 2
 #define N3 2
@@ -72,7 +76,7 @@
 #define ROUND2INT(x) ((int)((x)>0.0 ? (x)+0.5 : (x)-0.5))
 
 // number of dimensions for code (2d or 3d code)
-#define COMPDIM 3
+#define COMPDIM 3 // not important for time (oN0 and nN0>1) stuff
 
 #define COORDSINGFIXCYL 0
 
@@ -239,9 +243,10 @@ extern void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME);
 extern void copy_old2new(void);
 extern int compute_spatial_interpolation(void);
 
-extern void gaussian_filter(int filter,FTYPE sigma,int nx, int ny, int nz, unsigned char***oldimage,FTYPE***olddata);
+extern void gaussian_filter(int filter,FTYPE sigma, int nt, int nx, int ny, int nz, unsigned char****oldimage,FTYPE****olddata);
 
-extern void writeimage(char * name, unsigned char ***image,int nx, int ny, int nz);
+
+extern void writeimage(char * name, unsigned char ****image,int nt, int nx, int ny, int nz);
 
 extern void refine_data(void);
 

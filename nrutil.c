@@ -148,16 +148,19 @@ FTYPE **dsubmatrix(FTYPE **a, long oldrl, long oldrh, long oldcl,
 void free_vector(FTYPE *v, long nl, long nh)
 {
   free((char *) (v + nl));
+  //  free(&v[nl]);
 }
 
 void free_ivector(int *v, long nl, long nh)
 {
   free((char *) (v + nl));
+  //  free(&v[nl]);
 }
 
 void free_dvector(FTYPE *v, long nl, long nh)
 {
   free((char *) (v + nl));
+  //  free(&v[nl]);
 }
 
 

@@ -70,6 +70,38 @@ int nrl,nrh,ncl,nch,nzl,nzh;
 
         return m;
 }
+FTYPE ****f4matrix(nql,nqh,nzl,nzh,nrl,nrh,ncl,nch)
+int nrl,nrh,ncl,nch,nzl,nzh,nql,nqh;
+{
+        FTYPE ****m;
+	int k,i,j ;
+
+        m=(FTYPE ****)malloc((unsigned) (nqh-nql+1)*sizeof(FTYPE ***));
+        if (!m) exit(20) ;
+        m -= nql;
+
+	for(k=nql;k<=nqh;k++){
+
+	  m[k]=(FTYPE ***)malloc((unsigned) (nzh-nzl+1)*sizeof(FTYPE **));
+	  if (!m[k]) exit(20) ;
+	  m[k] -= nzl;
+	  
+	  for(i=nzl;i<=nzh;i++){
+	    m[k][i]=(FTYPE **)malloc((unsigned) (nrh-nrl+1)*sizeof(FTYPE *));
+	    if (!m[k][i]) exit(20) ;
+	    m[k][i] -= nrl;
+	    
+	    for(j=nrl;j<=nrh;j++) {
+	      m[k][i][j]=(FTYPE *)malloc((unsigned) (nch-ncl+1)*sizeof(FTYPE));
+	      if (!m[k][i][j]) exit(20) ;
+	      m[k][i][j] -= ncl;
+	    }
+	    // m[h][i][j][k]=m[q][z][r][c]
+	  }
+	  
+	}
+        return m;
+}
 
 unsigned char ***c3matrix(nzl,nzh,nrl,nrh,ncl,nch)
 int nrl,nrh,ncl,nch,nzl,nzh;
@@ -97,6 +129,40 @@ int nrl,nrh,ncl,nch,nzl,nzh;
 
         return m;
 }
+unsigned char ****c4matrix(nql,nqh,nzl,nzh,nrl,nrh,ncl,nch)
+int nrl,nrh,ncl,nch,nzl,nzh,nql,nqh;
+{
+        unsigned char ****m;
+	int i,j,k ;
+
+
+        m=(unsigned char ****)malloc((unsigned) (nqh-nql+1)*sizeof(unsigned char ***));
+        if (!m) exit(20) ;
+        m -= nql;
+	
+	for(k=nql;k<=nqh;k++){
+	  
+	  m[k]=(unsigned char ***)malloc((unsigned) (nzh-nzl+1)*sizeof(unsigned char **));
+	  if (!m[k]) exit(20) ;
+	  m[k] -= nzl;
+	  
+	  for(i=nzl;i<=nzh;i++){
+	    m[k][i]=(unsigned char **)malloc((unsigned) (nrh-nrl+1)*sizeof(unsigned char *));
+	    if (!m[k][i]) exit(20) ;
+	    m[k][i] -= nrl;
+	    
+	    for(j=nrl;j<=nrh;j++) {
+	      m[k][i][j]=(unsigned char *)malloc((unsigned) (nch-ncl+1)*sizeof(unsigned char));
+	      if (!m[k][i][j]) exit(20) ;
+	      m[k][i][j] -= ncl;
+	    }
+	    // m[h][i][j][k]=m[q][z][r][c]
+
+	  }
+	}
+	
+        return m;
+}
 
 
 void free_cmatrix(unsigned char **m, long nrl, long nrh, long ncl, long nch)
@@ -117,17 +183,66 @@ void free_fmatrix(FTYPE **m, long nrl, long nrh, long ncl, long nch)
   free((FTYPE *) (m + nrl));
 }
 
+void free_c3matrix(unsigned char ***m, long nzl, long nzh, long nrl, long nrh, long ncl, long nch)
+{
+  long i,j;
+
+  for(i=nzh;i>=nzl;i--){
+    for (j = nrh; j >= nrl; j--){
+      free((unsigned char *) (m[i][j] + ncl));
+    }
+    free((unsigned char *) (m[i] + nrl));
+  }
+  free((unsigned char *) (m + nzl));
+}
+
 void free_f3matrix(FTYPE ***m, long nzl, long nzh, long nrl, long nrh, long ncl, long nch)
 {
   long i,j;
 
   for(i=nzh;i>=nzl;i--){
     for (j = nrh; j >= nrl; j--){
-      free((FTYPE *) (m[j][i] + ncl));
+      free((FTYPE *) (m[i][j] + ncl));
     }
     free((FTYPE *) (m[i] + nrl));
   }
   free((FTYPE *) (m + nzl));
 }
+
+void free_c4matrix(unsigned char ****m, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch)
+{
+  long i,j,k;
+
+  for(k=nqh;k>=nql;k--){
+    for(i=nzh;i>=nzl;i--){
+      for (j = nrh; j >= nrl; j--){
+	free((unsigned char *) (m[k][i][j] + ncl));
+      }
+      free((unsigned char *) (m[k][i] + nrl));
+    }
+    free((unsigned char *) (m[k] + nzl));
+  }
+  free((unsigned char *) (m + nql));
+}
+
+void free_f4matrix(FTYPE ****m, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch)
+{
+  long i,j,k;
+
+  for(k=nqh;k>=nql;k--){
+    for(i=nzh;i>=nzl;i--){
+      for (j = nrh; j >= nrl; j--){
+	free((FTYPE *) (m[k][i][j] + ncl));
+      }
+      free((FTYPE *) (m[k][i] + nrl));
+    }
+    free((FTYPE *) (m[k] + nzl));
+  }
+  free((FTYPE *) (m + nql));
+}
+
+
+
+
 
 

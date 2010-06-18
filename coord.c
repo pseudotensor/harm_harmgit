@@ -1979,7 +1979,8 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       // GODMARK: Also, not only Xh-Xl, but each Xl and Xh must be machine representable
 
       // So even for a uniform grid dxdxp can vary near machine level
-      //  dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
+      //      dualfprintf(fail_file,"Vh=%21.15g Vl=%21.15g Xh=%2.15g Xl=%21.15g DX=%21.15g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
+      //      dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
       //	}
 
     }
@@ -2313,6 +2314,8 @@ void set_points()
   // total endx-startx
   // fabs() used since only ever used as absolute value
   DLOOPA(jj) Diffx[jj] = fabs(endx[jj] - startx[jj]);
+
+  //  DLOOPA(jj) fprintf(stderr,"jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
 
 
 }

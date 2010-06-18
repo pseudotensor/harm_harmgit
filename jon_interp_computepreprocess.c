@@ -269,7 +269,7 @@ static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*co
 
 
 
-
+// generates transformation matrix from old to new grid type for simple coordinates
 static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTYPE (*lambdacoord)[NDIM])
 {
   FTYPE r,th,ph;

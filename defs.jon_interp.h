@@ -18,12 +18,12 @@ int dofull2pi;
 int whichdump,whichdumpversion,numcolumns;
 
 
-int oN1,oN2,oN3,nN1,nN2,nN3 ;
+int oN0,oN1,oN2,oN3,nN0,nN1,nN2,nN3 ;
 FTYPE refinefactor;
-int roN1,roN2,roN3;
-FTYPE dX[NDIM],Rin,fakeRin,dxc,dyc,dzc,fakedxc,fakedyc,fakedzc;
+int roN0,roN1,roN2,roN3;
+FTYPE dX[NDIM],Rin,fakeRin,dtc,dxc,dyc,dzc,fakedtc,fakedxc,fakedyc,fakedzc;
 FTYPE Zin,Zout,Zeqin;
-FTYPE startxc, startyc, startzc, endxc, endyc, endzc;
+FTYPE starttc, startxc, startyc, startzc, endtc, endxc, endyc, endzc;
 int newgridtype,oldgridtype;
 FTYPE gridAAglobal,gridr0global;
 
@@ -31,7 +31,7 @@ FTYPE X[NDIM];
 FTYPE Xmetricnew[NDIM],Xmetricold[NDIM]; // used to store time of latest and oldest metric
 
 
-FTYPE t,gam,spin,QBH,MBH;
+FTYPE tdump,gam,spin,QBH,MBH; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
 int startpos[NDIM];
 int totalsize[NDIM];
 long realnstep,nstep;
@@ -91,16 +91,19 @@ FTYPE Rhor,Rout,dx[NDIM],startx[NDIM],endx[NDIM],R0,Diffx[NDIM];
 FTYPE dxdxp[NDIM][NDIM];
 int myid;
 int debugfail;
+FTYPE dtdump;
 FTYPE dt;
 
-FTYPE spc_target[NDIM];
+FTYPE spc_target[1+NDIM]; // newt quantity, so starts at index 1, not 0
 
 FTYPE Lunit,dV,dVF;
 //int N1,N2,N3;
 //int N1BND, N2BND, N3BND;
 
-int BCtype[COMPDIM*2];
+int BCtype[COMPDIM*2]; // not important for oN0>1 or nN1>1
 
+
+FTYPE tnrdegrees;
 
 
 FTYPE a;
@@ -121,6 +124,7 @@ FTYPE Rchop;
 // Don't need to worry about shifting them
 // Ok to convert N?M->NSTORE?, but not required since never access these
 // Ok to also convert SHIFT? -> and N?BND ->
+// If time component exists, assume gdump time dimension has no time-dependent values (e.g. no time-dependent metric for anything needing gdump stuff, like vectors -- scalars are always fine without gdump info).
 FTYPE (*GLOBALPOINT(pglobal))[NSTORE2][NSTORE3][NPR];
 int didstorepositiondata;
 FTYPE (*GLOBALPOINT(dxdxpstore))[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM][NDIM];
@@ -130,11 +134,11 @@ FTYPE (*GLOBALPOINT(Xstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTOR
 FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTORE3+SHIFTSTORE3*3][NDIM];
 
 // Note these below memory things are not affected by global.storage.h since created instead of as global arrays
-// So this code presumes [i][j][k] format always and is not optimized for arbitrary storage mapping
-// That is, matrix() is always (1,2,3) and access is always [i][j][k] associated with r(i), theta(j), phi(k)
-unsigned char ***oldimage,***oldimage0,***newimage;
-FTYPE ***olddata,***olddata0;
-FTYPE ***newdata;
+// So this code presumes [h][i][j][k] format always and is not optimized for arbitrary storage mapping
+// That is, matrix() is always (0,1,2,3) and access is always [h][i][j][k] associated with t(h), r(i), theta(j), phi(k)
+unsigned char ****oldimage,****oldimage0,****newimage;
+FTYPE ****olddata,****olddata0;
+FTYPE ****newdata;
 
 
 
