@@ -5,6 +5,9 @@
 // 1: Fill in boundary zones and don't shift stencil (safest)
 #define BOUNDARYEXTRAP 1
 
+// whether to also rotate z-axis towards observer
+#define ROTATECARTLIGHT 1
+
 
 // whether to reduce to nearest neighbor at boundaries
 // 1: do

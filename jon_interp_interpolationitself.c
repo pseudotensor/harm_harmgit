@@ -279,10 +279,9 @@ int compute_spatial_interpolation(void)
       //	fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
       //      }
 
-      // FUCK
-      if(newdata[h][i][j][k]<=0.0){
-      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
-      }
+      //      if(newdata[h][i][j][k]<=0.0){
+      //      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
+      //      }
 
 
       if(DEBUGINTERP){
@@ -722,6 +721,26 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
   }
   else if(newgridtype==GRIDTYPECART || newgridtype==GRIDTYPECARTLIGHT){// Cart output (i.e. tc,xc,yc,zc are Cartesian labels for new grid)
 
+
+    if(newgridtype==GRIDTYPECARTLIGHT && ROTATECARTLIGHT==1){
+      // Rotate x,y,z before assigning spherical polar value
+      // As here, xc,yc,zc are really new coordinates, so already have rotation.
+      // Our job here is to get back the true Cartesian coordinates so the below can be computed as normal
+      // recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
+      
+      // Keep things simple at first.
+      // Since xc,yc,zc "already" rotated, then rotate back to get Cartesian
+      // Back rotation means rotate -tnrdegrees degrees around (e.g.) x or y axis.  Let's stick to y-axis, so y-axis is unchanged.  This means zc is unchanged.
+      xc = +xc*cos(-tnrdegrees*M_PI/180.0) + +yc*sin(-tnrdegrees*M_PI/180.0);
+      yc = -xc*sin(-tnrdegrees*M_PI/180.0) + +yc*cos(-tnrdegrees*M_PI/180.0);
+      zc  = zc;
+
+      // now we have the back-rotation around the y-axis (i.e. zc)
+      
+      // now below use of xc,yc,zc will be correctly using true (unrotated) Cartesian coordinates.  This ends up so that new grid (rotated Cart) will show the rotation of the old grid data.
+      
+    }
+
     if(oldgridtype==GRIDTYPECART){ // Cart input
       *r=xc;
       *th=yc;
@@ -784,9 +803,17 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
 
     }
     else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input
-      *r=xc;
-      *th=yc;
-      *ph=zc;
+
+      if(ROTATECARTLIGHT==0){
+	*r=xc;
+	*th=yc;
+	*ph=zc;
+      }
+      else{
+	// recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
+	fprintf(stderr,"NOT YET 295638667 oldgridtype=%d\n",oldgridtype);
+	exit(1);
+      }
       
       // get rspc
       rspc=sqrt(xc*xc+yc*yc+zc*zc);
@@ -796,13 +823,15 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
       myexit(249646);
     }
 
+
+
     // adjust time coordinate for the 2 different Cartesian newgrid types
     if(newgridtype==GRIDTYPECARTLIGHT){
       // then modify time coordinate (assume all other [old] coordinates use normal time)
       // t0 = t - nvec . rvec  = t - r*cos(theta between nhat and rhat)
       // tc : new grid label = t0
       // t : original time = t
-      // assumes rspc computed above
+      // assumes rspc computed above (note rspc doesn't change under the rotation if ROTATECARTLIGHT==1)
       *t = tc + rspc*cos(tnrdegrees*M_PI/180.0); // Note sign is + since this equation is for t = t0 + ... That is, *t is the original time coordinate, which is one of the oldgridtype's above, and so normal time
     }
     else if(oldgridtype==GRIDTYPECARTLIGHT){
@@ -845,9 +874,23 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
     *zc = ph;
   }
   else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input 2 Cart
-    *xc = r;
-    *yc = th;
-    *zc = ph;
+
+    if(ROTATECARTLIGHT==0){
+      *xc = r;
+      *yc = th;
+      *zc = ph;
+    }
+    else{
+      // Assumes ROTATECARTLIGHT==1 when grid was created
+      // won't change distance, but still do it
+      // rotate newgrid back to Cart
+      // xc: x
+      // yc: z
+      // zc: y
+      *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
+      *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+      *zc  = ph;
+    }
 
     // get rspc
     rspc=sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
@@ -895,6 +938,9 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
       if(newgridtype==GRIDTYPECARTLIGHT){ // override default tc
 	// r is really spherical polar "r", so good to use directly
 	*tc = t + r*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)
+
+	// Note that if(ROTATECARTLIGHT==1), then we don't rotate or back rotate since we really want SPC -> True Cart here for distances!
+
       }
 
     }
@@ -906,9 +952,18 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
     *yc = th;
   }
   else if(oldgridtype==GRIDTYPECARTLIGHT){ // Cart input with light travel time t 2 Cart
-    *xc = r;
-    *yc = th;
-    *zc = ph;
+
+    if(ROTATECARTLIGHT==0){
+      *xc = r;
+      *yc = th;
+      *zc = ph;
+    }
+    else{
+      *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
+      *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+      *zc  = ph;
+    }
+
     rspc = sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
     *tc = t + rspc*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)
   }
