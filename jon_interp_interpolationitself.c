@@ -279,6 +279,12 @@ int compute_spatial_interpolation(void)
       //	fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
       //      }
 
+      // FUCK
+      if(newdata[h][i][j][k]<=0.0){
+      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
+      }
+
+
       if(DEBUGINTERP){
 	if(r>40){
 	  fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d : %g\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold, ftemp);
@@ -336,7 +342,7 @@ void setup_newgrid(void)
     dyc=dX[2]*totalsize[2]/nN2;
     dzc=dX[3]*totalsize[3]/nN3;
 
-    starttc=startx[0];
+    starttc=(startx[0]+starttdata); // starttdata added because set_points() forces startx[0]=0
     startxc=startx[1];
     startyc=startx[2];
     startzc=startx[3]; // was 0
@@ -513,13 +519,13 @@ static void new_xycoord(int h, int i, int j, int k, FTYPE *tc, FTYPE *xc, FTYPE 
   if(newgridtype==GRIDTYPENOCHANGE){
     // GODMARK: Assumes input data at CENT
 
-    X[0] = startxc+(i+0.5)*dtc;
+    X[0] = starttc+(i+0.5)*dtc;
     X[1] = startxc+(i+0.5)*dxc;
     X[2] = startyc+(j+0.5)*dyc ;
     X[3] = startzc+(k+0.5)*dzc ;
     
     // use bl_coord()
-    bl_coord(X,V);
+    interp_bl_coord(X, V);
 
     *tc = V[0];
     *xc = V[1];
@@ -716,7 +722,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
   }
   else if(newgridtype==GRIDTYPECART || newgridtype==GRIDTYPECARTLIGHT){// Cart output (i.e. tc,xc,yc,zc are Cartesian labels for new grid)
 
-    if(oldgridtype==GRIDTYPECART){ // Cart output
+    if(oldgridtype==GRIDTYPECART){ // Cart input
       *r=xc;
       *th=yc;
       *ph=zc;
@@ -777,6 +783,14 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
 
 
     }
+    else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input
+      *r=xc;
+      *th=yc;
+      *ph=zc;
+      
+      // get rspc
+      rspc=sqrt(xc*xc+yc*yc+zc*zc);
+    }
     else{
       dualfprintf(fail_file,"No such combination of newgridtype=%d and oldgridtype=%d\n",newgridtype,oldgridtype);
       myexit(249646);
@@ -784,12 +798,16 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
 
     // adjust time coordinate for the 2 different Cartesian newgrid types
     if(newgridtype==GRIDTYPECARTLIGHT){
-      // then modify time coordinate
+      // then modify time coordinate (assume all other [old] coordinates use normal time)
       // t0 = t - nvec . rvec  = t - r*cos(theta between nhat and rhat)
       // tc : new grid label = t0
       // t : original time = t
       // assumes rspc computed above
       *t = tc + rspc*cos(tnrdegrees*M_PI/180.0); // Note sign is + since this equation is for t = t0 + ... That is, *t is the original time coordinate, which is one of the oldgridtype's above, and so normal time
+    }
+    else if(oldgridtype==GRIDTYPECARTLIGHT){
+      // assume all other grid use normal time, so specify tobs as *t such that tc is normal time
+      *t = tc - rspc*cos(tnrdegrees*M_PI/180.0);
     }
     else{
       // standard time coordinate
@@ -826,6 +844,16 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
     *yc = th;
     *zc = ph;
   }
+  else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input 2 Cart
+    *xc = r;
+    *yc = th;
+    *zc = ph;
+
+    // get rspc
+    rspc=sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
+
+    *tc = t + rspc*cos(tnrdegrees*M_PI/180.0);
+  }
   else if(oldgridtype==GRIDTYPESPC){ // spc input 2 Cart
     //  if(defcoord!=666){
 
@@ -849,12 +877,13 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
 	*yc = log(r+1.0)*cos(th); // my z
 	*zc = log(r+1.0)*sin(th)*sin(ph); // my y
       }
-      else if(newgridtype==GRIDTYPECART && oN3==1){
-	*tc = t;
-	*xc = 0; // not really equivalent to code before because before *xc was just unset, but unsure why that was or why doing this new version GODMARK
-	*yc = r*cos(th); // my z
-	*zc = r*sin(th)*sin(ph); // my y
-      }
+      // below seems unnecessary and was even wrong before
+      //      else if(newgridtype==GRIDTYPECART && oN3==1){
+      //	*tc = t;
+      //	*xc = 0; // not really equivalent to code before because before *xc was just unset, but unsure why that was or why doing this new version GODMARK
+      //	*yc = r*cos(th); // my z
+      //	*zc = r*sin(th)*sin(ph); // my y
+      //      }
       else{// normal SPC 2 Cart
 	*tc = t;
 	*xc = fabs(r*sin(th)*cos(ph)); // my x
@@ -934,7 +963,7 @@ static void old_x1232rthphcoord(FTYPE *X,  FTYPE *t, FTYPE *r, FTYPE *th, FTYPE 
 {
   FTYPE V[NDIM];
 
-  bl_coord(X,V);
+  interp_bl_coord(X, V);
 
   *t=V[0];
   *r=V[1];
@@ -944,21 +973,36 @@ static void old_x1232rthphcoord(FTYPE *X,  FTYPE *t, FTYPE *r, FTYPE *th, FTYPE 
 }
 
 
-// get X0, X1, X2, X3 from h,i,j,k for old uniform X-grid 
+// local version of bl_coord()
+void interp_bl_coord(FTYPE *X, FTYPE *V)
+{
+
+  // this is only place normally need bl_coord() for all interpolation.  This gets old grid's V using new grid's determination of X so that iterative procedure can continue making errors smaller between input r,t,th,ph and V.
+
+  // for time, V[0]=X[0] is set in bl_coord(), but set_points() forces startx[0]=0.  In order to avoid changing bl_coord() or set_points(), we change how X[0] is assinged in the interp code (see below old_ijk2x123(), etc.)
+  // Then X[0] = told = datastartt + (hold + 0.5) datadt; where datadt = (dataendt-datastartt)/oN0;
+  bl_coord(X,V);
+
+  V[0] += starttdata;  // starttdata was added because set_points() assumes startx[0]=0 and bl_coord() assumes X[0]=V[0]
+  // Note: since this is a constant offset, this doesn't affect derivatives part of root finding procedure.  Only affects what is meant by the solution in terms of an offset in time.
+
+}
+
+// get X0, X1, X2, X3 from h,i,j,k for old uniform X-grid
 static void old_ijk2x123(int hold, int iold, int jold, int kold, FTYPE*X)
 {
   coord(iold,jold,kold,CENT,X);
 
-  X[0] = startx[0] + (hold + startpos[0] + 0.5) * dx[0];
+  X[0] = (startx[0]+ starttdata) + (hold + startpos[0] + 0.5) * dx[0] ; // starttdata was added because set_points() assumes startx[0]=0 and bl_coord() assumes X[0]=V[0] and can't adjust.  So X[0] must return back origgrid time.
   
 }
 
-// get X0, X1, X2, X3 from h,i,j,k for old uniform X-grid 
+// get X0, X1, X2, X3 from h,i,j,k for old uniform X-grid
 static void oldf_ijk2x123(FTYPE hold, FTYPE iold, FTYPE jold, FTYPE kold, FTYPE*X)
 {
   coordf(iold,jold,kold,CENT,X);
 
-  X[0] = startx[0] + (hold + startpos[0] + 0.5) * dx[0];
+  X[0] = (startx[0]+ starttdata) + (hold + startpos[0] + 0.5) * dx[0] ; // starttdata was added because set_points() assumes startx[0]=0 and bl_coord() assumes X[0]=V[0] and can't adjust.  So X[0] must return back origgrid time.
 
 }
 
@@ -1303,7 +1347,11 @@ static int usrfun_joninterp2(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff
   // DEBUG:
   //  for(i=0;i<4;i++) fprintf(stderr,"V[%d]=%21.15g\n",i,V[i]);
 
-
+  // Using dxdxprim() (which may or may not have analytical dxdxp[][]'s)
+  // This requires X be defined as in HARM (and so only uniform coordinate that maps to V)
+  // And requires V to be as in HARM (and so oldgridtype, often spherical polar coordinates)
+  // These requirements are generally satisfied when using HARM-produced data.
+  // This code has nothing directly to do with newgridtype, which was only used to produce an X that we are now trying to get a V from to know what input data to use to interpolate to the new grid.
   dxdxprim(X,V,dxdxp);
   // assign to alpha (didn't use alpha directly since rank of alpha is smaller than dxdxp)
   for (j = 0; j < n; j++){
@@ -1460,10 +1508,13 @@ static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hol
   }
 
 
-  // only case that has to be corrected here
-  if(holdp>=oN0){ holdp=oN0-1; hold=holdp-1;}
-  if(ioldp>=oN1){ ioldp=oN1-1; iold=ioldp-1;}
-  if(joldp>=oN2){ joldp=oN2-1; jold=joldp-1;}
+  if(BOUNDARYEXTRAP==0){
+    // only case that has to be corrected here
+    if(holdp>=oN0){ holdp=oN0-1; hold=holdp-1;}
+    if(ioldp>=oN1){ ioldp=oN1-1; iold=ioldp-1;}
+    if(joldp>=oN2){ joldp=oN2-1; jold=joldp-1;}
+  }
+
   if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
     // koldp can be up to =oN3
     if(koldp>=oN3+1){
@@ -1473,7 +1524,9 @@ static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hol
 
   }
   else{
-    if(koldp>=oN3){ koldp=oN3-1; kold=koldp-1;}
+    if(BOUNDARYEXTRAP==0){
+      if(koldp>=oN3){ koldp=oN3-1; kold=koldp-1;}
+    }
   }
 
 
@@ -1634,7 +1687,7 @@ static FTYPE plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int 
 
 
 // simple bi-linear interpolation wrapper
-static FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char****oldimage,FTYPE****olddata)
+FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char****oldimage,FTYPE****olddata)
 {
   FTYPE ftemp;
   int atboundary[NDIM],nearboundary[NDIM];
@@ -1658,7 +1711,7 @@ static FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYP
     // don't need to shift up since already shifted inside atboundary
     if(nearboundary[0]==1) hold=hold -1*(oN0>1);
     if(nearboundary[1]==1) iold=iold -1*(oN1>1);
-    if(nearboundary[2]==1) jold=jold -1*(oN3>1);
+    if(nearboundary[2]==1) jold=jold -1*(oN2>1);
     if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
       // then no need to fix since boundary condtion data is at upper k
     }
@@ -1691,6 +1744,7 @@ int is_atboundary(int *holdvar, int *ioldvar, int *joldvar, int *koldvar, int *a
   int jj;
 
 
+
   hold=*holdvar;
   iold=*ioldvar;
   jold=*joldvar;
@@ -1701,51 +1755,56 @@ int is_atboundary(int *holdvar, int *ioldvar, int *joldvar, int *koldvar, int *a
     nearboundary[jj]=0;
     atboundary[jj]=0;
   }
-  // if refining, then oN1 is really old image size, not refined, which is correct
-  /* take care of boundary effects */
-  if(hold>=oN0){ hold=oN0-1; atboundary[0]=1;}
-  if(hold>=oN0-1){ hold=oN0-1; nearboundary[0]=1;}
-  if(hold<0){ hold=0; atboundary[0]=-1;}
 
-  if(iold>=oN1){ iold=oN1-1; atboundary[1]=1;}
-  if(iold>=oN1-1){ iold=oN1-1; nearboundary[1]=1;}
-  if(iold<0){ iold=0; atboundary[1]=-1;}
 
-  if(jold>=oN2){ jold=oN2-1; atboundary[2]=1;}
-  if(jold>=oN2-1){ jold=oN2-1; nearboundary[2]=1;}
-  if(jold<0){ jold=0; atboundary[2]=-1;}
+  if(BOUNDARYEXTRAP==1){
+    // don't modify old grid positions even if near boundary
+    // Only modify to ensure not completely off
+    // h,i,j,k vary from 0 to oN-1 but for bilinear can go from -1 to oN
+    if(hold<-1) hold=-1;
+    if(hold>oN0) hold=oN0;
 
-  if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-    // then ok for kold to be oN3-1 since oN3 data exists
-    if(kold>=oN3){ kold=kold-oN3;}
-    if(kold<0){ kold=kold+oN3;}
+    if(iold<-1) iold=-1;
+    if(iold>oN1) iold=oN1;
+
+    if(jold<-1) jold=-1;
+    if(jold>oN2) jold=oN2;
+
+    if(kold<-1) kold=-1;
+    if(kold>oN3) kold=oN3;
+
   }
   else{
-    if(kold>=oN3-1){ kold=oN3-1; nearboundary[3]=1;}
-    if(kold>=oN3){ kold=oN3-1; atboundary[3]=1;}
-    if(kold<0){ kold=0; atboundary[3]=-1;}
+    // ensure bi-linear doesn't use bad values by shifting stencil effectively.  Can lead to poor interpolation (since really extrapolation)
+    // if refining, then oN1 is really old image size, not refined, which is correct
+    // take care of boundary effects
+    if(hold>=oN0){ hold=oN0-1; atboundary[0]=1;}
+    if(hold>=oN0-1){ hold=oN0-1; nearboundary[0]=1;}
+    if(hold<0){ hold=0; atboundary[0]=-1;}
+
+    if(iold>=oN1){ iold=oN1-1; atboundary[1]=1;}
+    if(iold>=oN1-1){ iold=oN1-1; nearboundary[1]=1;}
+    if(iold<0){ iold=0; atboundary[1]=-1;}
+
+    if(jold>=oN2){ jold=oN2-1; atboundary[2]=1;}
+    if(jold>=oN2-1){ jold=oN2-1; nearboundary[2]=1;}
+    if(jold<0){ jold=0; atboundary[2]=-1;}
+
+    if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
+      // then ok for kold to be oN3-1 since oN3 data exists
+      if(kold>=oN3){ kold=kold-oN3;}
+      if(kold<0){ kold=kold+oN3;}
+    }
+    else{
+      if(kold>=oN3-1){ kold=oN3-1; nearboundary[3]=1;}
+      if(kold>=oN3){ kold=oN3-1; atboundary[3]=1;}
+      if(kold<0){ kold=0; atboundary[3]=-1;}
+    }
+
   }
 
 
-#if(0)
-  // this shouldn't be necessary  
-  holdp = hold+1 ;
-  ioldp = iold+1 ;
-  joldp = jold+1 ;
-  koldp = kold+1 ;
-  
-  if(holdp>=oN0){ holdp=oN0-1;atboundary[0]=1;}
-  if(holdp<0){ holdp=0;atboundary[0]=1;}
 
-  if(ioldp>=oN1){ ioldp=oN1-1;atboundary[1]=1;}
-  if(ioldp<0){ ioldp=0;atboundary[1]=1;}
-
-  if(joldp>=oN2){ joldp=oN2-1;atboundary[2]=1;}
-  if(joldp<0){ joldp=0;    atboundary[2]=1;}
-
-  if(koldp>=oN3){ koldp=oN3-1;atboundary[3]=1;}
-  if(koldp<0){ koldp=0;    atboundary[3]=1;}
-#endif
 
 
   // assign final values
@@ -1881,30 +1940,34 @@ static FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned ch
   int atboundary;
 
 
-  atboundary=0;
-  // if refining, then oN1 is really old image size, not refined, which is correct
-  /* take care of boundary effects */
-  if(hold>=oN0){ hold=oN0-1;atboundary=1;}
-  if(hold<0){ hold=0;atboundary=1;}
+  if(BOUNDARYEXTRAP==0){
+    atboundary=0;
+    // if refining, then oN1 is really old image size, not refined, which is correct
+    /* take care of boundary effects */
+    if(hold>=oN0){ hold=oN0-1;atboundary=1;}
+    if(hold<0){ hold=0;atboundary=1;}
 
-  if(iold>=oN1){ iold=oN1-1;atboundary=1;}
-  if(iold<0){ iold=0;atboundary=1;}
+    if(iold>=oN1){ iold=oN1-1;atboundary=1;}
+    if(iold<0){ iold=0;atboundary=1;}
 
-  if(jold>=oN2){ jold=oN2-1;atboundary=1;}
-  if(jold<0){ jold=0;atboundary=1;}
+    if(jold>=oN2){ jold=oN2-1;atboundary=1;}
+    if(jold<0){ jold=0;atboundary=1;}
+  }
 
   if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
     if(kold<0){ kold=kold+oN3;}
     if(kold>=oN3){ kold=kold-oN3;}
   }
   else{
-    if(kold<0){ kold=0;atboundary=1;}
-    if(kold>=oN3){ kold=oN3-1;atboundary=1;}
+    if(BOUNDARYEXTRAP==0){
+      if(kold<0){ kold=0;atboundary=1;}
+      if(kold>=oN3){ kold=oN3-1;atboundary=1;}
+    }
   }
 
-#if(DEBUGINTERP)
-  fprintf(stderr,"Problem?: hold=%d iold=%d jold=%d kold=%d   oN0=%d oN1=%d oN2=%d oN3=%d :: %21.15g\n",hold,iold,jold,kold,oN0,oN1,oN2,oN3,olddata[hold][iold][jold][kold]);
-#endif
+  if(DEBUGINTERP){
+    fprintf(stderr,"Problem?: hold=%d iold=%d jold=%d kold=%d   oN0=%d oN1=%d oN2=%d oN3=%d :: %21.15g\n",hold,iold,jold,kold,oN0,oN1,oN2,oN3,olddata[hold][iold][jold][kold]);
+  }
 
 
   if(DATATYPE==0)			newvalue=(FTYPE)oldimage[hold][iold][jold][kold] ;

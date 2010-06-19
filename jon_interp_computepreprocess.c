@@ -316,6 +316,31 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
     lambdacoord[3][TH] = -r*sin(th);
     lambdacoord[3][PH] = 0.0;
   }
+  else if(oldgridtype==GRIDTYPESPC && newgridtype==GRIDTYPECARTLIGHT){
+    // similar to above, but time mixes with space
+
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    lambdacoord[TT][TT]=1.0;
+    SLOOPA(jj) lambdacoord[TT][jj] = 0.0;
+    lambdacoord[TT][RR] = -cos(tnrdegrees*M_PI/180.0); // dtobs/dr
+    SLOOPA(jj) lambdacoord[jj][TT] = 0.0;
+
+    // rest come from definitions of {x,y,z}(r,\theta,\phi)
+    lambdacoord[1][RR] = sin(th)*cos(ph);
+    lambdacoord[1][TH] = r*cos(th)*cos(ph);
+    lambdacoord[1][PH] = -r*sin(th)*sin(ph);
+
+    lambdacoord[2][RR] = sin(th)*sin(ph);
+    lambdacoord[2][TH] = r*cos(th)*sin(ph);
+    lambdacoord[2][PH] = r*sin(th)*cos(ph);
+
+    lambdacoord[3][RR] = cos(th);
+    lambdacoord[3][TH] = -r*sin(th);
+    lambdacoord[3][PH] = 0.0;
+  }
   else{
     dualfprintf(fail_file,"No transformation setup for oldgridtype=%d newgridtype=%d\n",oldgridtype,newgridtype);
     myexit(246347);

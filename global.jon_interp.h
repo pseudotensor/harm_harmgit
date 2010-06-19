@@ -1,7 +1,10 @@
-#define DEBUGINTERP 0 // debug messages
+#define VERSION "1.0"
 
-// normal failure to interpolate message
-#define SIMPLEDEBUGINTERP 0
+
+// 0: Use shifted stencil for higher-order interpolations (This can lead to extrapolating positive quantity into a negative one)
+// 1: Fill in boundary zones and don't shift stencil (safest)
+#define BOUNDARYEXTRAP 1
+
 
 // whether to reduce to nearest neighbor at boundaries
 // 1: do
@@ -41,6 +44,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <time.h>
+#include <string.h>
 
 #include "global.realdef.h"
 
@@ -215,7 +219,6 @@ extern void fdjac(int n, FTYPE parms[], FTYPE x[], FTYPE fvec[], FTYPE **df,
 
 
 
-
 extern void dxdxp_func(FTYPE *X, FTYPE (*dxdxp)[NDIM]);
 
 extern int setihor(void);
@@ -256,6 +259,7 @@ extern void compute_preprocess(FILE *gdumpin, FTYPE *finaloutput);
 extern void setup_newgrid(void);
 
 
+extern void interp_bl_coord(FTYPE *X, FTYPE *V);
 
 
 

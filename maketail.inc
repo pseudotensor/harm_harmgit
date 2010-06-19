@@ -335,7 +335,7 @@ $(PREPLIAISON): $(PREPDEP) maketail.liaison.inc defs.liaison.h defs.liaison.h li
 ########################
 
 
-$(PREPJONINTERP): $(PREPDEP)
+$(PREPJONINTERP): $(PREPDEP) defs.jon_interp.h global.jon_interp.h
  	############################################
 	#below is for jon_interp code
  	############################################

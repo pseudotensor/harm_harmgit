@@ -17,6 +17,13 @@ int ncpux1;
 int dofull2pi;
 int whichdump,whichdumpversion,numcolumns;
 
+int DEBUGINTERP; // detailed (somewhat arbitrary) debug messages
+
+// normal failure to interpolate message
+int SIMPLEDEBUGINTERP;
+
+int VERBOSITY;
+
 
 int oN0,oN1,oN2,oN3,nN0,nN1,nN2,nN3 ;
 FTYPE refinefactor;
@@ -29,6 +36,7 @@ FTYPE gridAAglobal,gridr0global;
 
 FTYPE X[NDIM];
 FTYPE Xmetricnew[NDIM],Xmetricold[NDIM]; // used to store time of latest and oldest metric
+FTYPE endtdata,starttdata; // for 4D dump inputs
 
 
 FTYPE tdump,gam,spin,QBH,MBH; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
