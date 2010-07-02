@@ -14,10 +14,10 @@
 USEBG=0
 #QUEENBEE (avoids making directories or forking in general)
 USEQB=0
-USEUB=0
+USEUB=1
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
-USEICCINTEL=1
+USEICCINTEL=0
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -34,7 +34,7 @@ USETACCRANGER=0
 # default should be 0 since has large performance hit.
 USEGPROF=0
 
-
+ 
 ########################
 #
 # Debug information in binary
@@ -140,7 +140,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=1
+USEOPENMP=0
 
 
 
