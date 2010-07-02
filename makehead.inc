@@ -140,7 +140,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=1
+USEOPENMP=0
 
 
 
@@ -155,7 +155,7 @@ ENFORCEPRECISION=0
 
 
 ###################
-# LAPACK
+# LAPACKB
 # can easily see if MKL already setup by doing:
 # echo ${MKLROOT}
 # in bash and see if defined
@@ -189,6 +189,7 @@ endif
 #
 ####################
 
+USELAPACK=0
 
 
 

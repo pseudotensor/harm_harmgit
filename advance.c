@@ -2180,19 +2180,33 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
   enerregion=OUTSIDEHORIZONENERREGION; // consistent with flux update (except when doing WHAM)
   sourceenerpos=enerposreg[enerregion];
-
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt1\n" );
+#endif
   COMPFULLLOOP{ // want to use boundary cells as well to limit dt (otherwise boundary-induced changes not treated)
 
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt11 before geometry, %d, %d, %d\n", i, j, k );
+#endif
     // includes "ghost" zones in case boundary drives solution
     get_geometry(i, j, k, CENT, ptrgeom);
     
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt11; %d,%d,%d\n", i, j, k );
+#endif
     // need full state for vchar()
     MYFUN(get_state(MAC(prim,i,j,k), ptrgeom, &state),"advance.c:set_dt()", "get_state()", 1);
     
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt12\n" );
+#endif
     
 #if(N1>1)
     dir=1;
     MYFUN(vchar(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax1, &cmin1,&ignorecourant),"advance.c:set_dt()", "vchar() dir=1", 1);
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt13\n" );
+#endif
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax1),fabs(cmin1));
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
@@ -2204,7 +2218,13 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     
 #if(N2>1)
     dir=2;
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt14\n" );
+#endif
     MYFUN(vchar(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax2, &cmin2,&ignorecourant),"advance.c:set_dt()", "vchar() dir=2", 1);
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt15\n" );
+#endif
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax2),fabs(cmin2));
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
@@ -2216,7 +2236,13 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 #if(N3>1)
     dir=3;
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt16\n" );
+#endif
     MYFUN(vchar(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax3, &cmin3,&ignorecourant),"restart.c:set_dt()", "vchar() dir=3", 1);
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt17, %d, %d, %d\n", i, j, k );
+#endif
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax3),fabs(cmin3));
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
@@ -2226,24 +2252,42 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     }
 #endif
 
-
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt17 before enerregion, %d, %d, %d\n", i, j, k );
+#endif
 
     if(WITHINENERREGION(sourceenerpos,i,j,k)){
 
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt17 inside enerregion, %d, %d, %d\n", i, j, k );
+#endif
 
 #if(LIMITDTWITHSOURCETERM)
 
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt18\n" );
+#endif
       // conserved quantity without geometry
       MYFUN(primtoU(UEVOLVE, MAC(prim,i,j,k), &state, ptrgeom, U),"step_ch.c:advance()", "primtoU()", 1);
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt19\n" );
+#endif
       PLOOP(pliter,pl) Ugeomfree[pl] = U[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl));
-
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt20\n" );
+#endif
       // get source term
       // GODMARK: here dUriemann=0, although in reality this setting of dt is related to the constraint trying to make
       PLOOP(pliter,pl) dUriemann[pl]=0.0;
       MYFUN(source(MAC(prim,i,j,k), ptrgeom, &state, U, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
-
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt21\n" );
+#endif
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt22\n" );
+#endif
       if(accdt>tempaccdt){
 	accdt=tempaccdt;
 	accdti=i;
@@ -2256,6 +2300,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 	gravitydtj=j;
 	gravitydtk=k;
       }
+#if(DO_ODY_PRINTOUT)
+      trifprintf( "set_dt23\n" );
+#endif
 
 #if(0)// DEBUG
       if(i==-1 || i==0){
@@ -2284,20 +2331,47 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
     } // end if within source enerregion
 
+#if(DO_ODY_PRINTOUT)
+    trifprintf( "set_dt17 outside enerregion, %d, %d, %d\n", i, j, k );
+#endif
   } // end of loop
 
-
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt2\n" );
+#endif
   // GODMARK: note that in normal advance, wavendt[i] is over each CPU region and wavedt computed for each CPU and then minimized over all CPUs -- so not perfectly consistent with MPI
   // here we preserve perfect MPI domain decomposition
+
   mpifmin(&wavendt[1]);
+
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt3\n" );
+#endif
   mpifmin(&wavendt[2]);
+
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt4\n" );
+#endif
   mpifmin(&wavendt[3]);
+
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt5\n" );
+#endif
   // single all-CPU wavedt
   wavedt = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); // wavendt[i] is over entire region for each i
 
   // single all-CPU accdt and gravitydt
   mpifmin(&accdt);
+
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt6\n" );
+#endif
+
   mpifmin(&gravitydt);
+
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt7\n" );
+#endif
 
   wavedtglobal=wavedt;
   sourcedtglobal=accdt;
@@ -2318,6 +2392,10 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   // don't step beyond end of run
   if (t + *dt > tf) *dt = tf - t;
   
+#if(DO_ODY_PRINTOUT)
+  trifprintf( "set_dt8n" );
+#endif
+
   return(0);
 }
 

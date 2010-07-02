@@ -171,7 +171,7 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
       	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
 
 	//	trifprintf("rphoton=%lf\n", rpho);
-	if(r>rpho){
+	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
 	  photoncapture=1.0 ;
 	  //  trifprintf("r=%lf, photoncapture=%lf, rph=%lf \ n", r, photoncapture, rpho); 
 	}
@@ -182,7 +182,9 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 
         R = r*sin(th) ;
 	enk=u*(gam-1.)/(pow(rho, gam));
-		enk0=0.00016;
+	//enk0 = 1.e-3; //same as kappa in init.fishmon.c -- somehow wrong, is it because of wrong gam?!
+	enk0 = 0.0043; //as read from ic's for thick torus
+	//enk0=0.00016; //Rebecca's version
 		//	enk0=0.00161;
 	//	rin = (1. + h_over_r)*Risco;
 	rincool=10.;

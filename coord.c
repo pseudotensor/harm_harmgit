@@ -227,7 +227,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
       fracphi = 1.;
     }
     else {
-      fracphi = 0.25;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+      fracphi = 0.5;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
     }
 
 
@@ -913,7 +913,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE X0;
   // for defcoord=JET5COORDS
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
-  //for SJETCOORDS
+  //for SJETCOO5BRDS
   FTYPE theexp;
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );

@@ -31,7 +31,7 @@ static void defaultoptions(void);
 int main(int argc, char *argv[])
 {
   int doinginterpolation;
-
+  dofull2pi = 1;
   // Initialize interpolation
   interp_init();
 

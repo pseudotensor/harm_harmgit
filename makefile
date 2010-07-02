@@ -50,9 +50,11 @@ USEMCCSWITCH=1
 USEMCCSWITCHFORGCC=1
 
 ifeq ($(USEQB),1)
+USEICCINTEL=1
+#USEGCC=1
 USEICCGENERIC=1
 AVOIDMKDIR=1
-#AVOIDFORK=1
+USELAPACK=0
 endif
 
 ifeq ($(USEBG),1)
@@ -87,6 +89,7 @@ ifeq ($(USEICCINTEL),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
 MCC=mpicc
+COMP=icc
 endif
 
 ifeq ($(USETACCRANGER),1)
