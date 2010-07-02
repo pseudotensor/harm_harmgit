@@ -147,7 +147,7 @@ FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTOR
 unsigned char ****oldimage,****oldimage0,****newimage;
 FTYPE ****olddata,****olddata0;
 FTYPE ****newdata;
-int dofull2pi;
+
 
 
 
