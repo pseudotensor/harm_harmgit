@@ -98,6 +98,10 @@ initbase.enerregions.c
 initbase.funcdeclare.h
 initbase.gridsectioning.c
 initbase.tools.c
+initboundcode
+initboundcode/bounds.sashatorus.c
+initboundcode/init.sashatorus.c
+initboundcode/init.sashatorus.h
 interpline.c
 interpline.jmono.c
 interpline.mono.c
