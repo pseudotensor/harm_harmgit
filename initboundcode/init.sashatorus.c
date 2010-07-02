@@ -19,6 +19,8 @@
 #define KEPDISK 2
 #define THINDISKFROMMATHEMATICA 3
 #define THINTORUS 4
+#define THICKDISKFROMMATHEMATICA 5
+
 
 // For blandford problem also need to set:
 // 0) WHICHPROBLEM 2
@@ -39,7 +41,8 @@
 // 14) setup batch
 
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
-#define WHICHPROBLEM THINTORUS // choice
+//#define WHICHPROBLEM THICKDISKFROMMATHEMATICA // choice
+#define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
 
 static FTYPE lfunc( FTYPE lin, FTYPE *parms );
@@ -78,6 +81,8 @@ int pre_init_specific_init(void)
   h_over_r=0.1;
 #elif( WHICHPROBLEM == THINTORUS )
   h_over_r=0.1;
+#elif( WHICHPROBLEM == THICKDISKFROMMATHEMATICA )
+  h_over_r=0.3;
 #else
   h_over_r=0.3;
 #endif
@@ -203,7 +208,7 @@ int init_defcoord(void)
   // define coordinate type
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   defcoord = SJETCOORDS;
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==THINTORUS)
   defcoord = REBECCAGRID ;
@@ -223,9 +228,11 @@ int init_grid(void)
 
 
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
-  a = 0.95;
+  a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
   a = 0.95;
+#elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
+  a = 0.;
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
@@ -247,6 +254,11 @@ int init_grid(void)
   Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
   Rout = 50.;
+#elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
+  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  Rin = 0.9 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.3;
+  Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
@@ -292,8 +304,7 @@ int init_global(void)
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA \
-  || WHICHPROBLEM == THINTORUS)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -339,9 +350,9 @@ int init_global(void)
   /* restart file period in steps */
   DTr = 2000;
 
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   /* output choices */
-  tf = 2000.;
+  tf = 20000.;
 
   /* dumping frequency, in units of M */
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
@@ -357,7 +368,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 2000;
+  DTr = 20000;
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
@@ -406,7 +417,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
   rin = 20. ;
@@ -420,7 +431,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   
 
 
-#if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA )
+#if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA && WHICHPROBLEM != THICKDISKFROMMATHEMATICA )
   //SASMARK restart: need to populate panalytic with IC's; DO NOT do this 
   //when reading the ICs in from a file since then need to carry the file around
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
@@ -447,7 +458,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA ) 
   //read initial conditions from input file for the Mathematica-generated thin-disk ICs
 #if(ANALYTICMEMORY==0)
 #error Cannot do THINDISKFROMMATHEMATICA problem with ANALYTICMEMORY==0.  Please set ANALYTICMEMORY = 1.
@@ -624,7 +635,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   return(init_dsandvels_thindiskfrommathematica(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==THINTORUS)
   return(init_dsandvels_thintorus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
@@ -1184,7 +1195,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   FTYPE r,th;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
   FTYPE fieldhor;
 #endif
 
@@ -1219,6 +1230,9 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
+      fieldhor=0.065;
+#elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
+#define STARTFIELD (1.1*rin)
       fieldhor=0.28;
 #endif
       // average of density that lives on CORN3
@@ -1241,14 +1255,15 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 	u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
       if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
       trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
-       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
+	//       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
+       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor) ;
       }
 #else
       q = rho_av / rhomax - 0.2;
@@ -1399,8 +1414,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK 
-     || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){
