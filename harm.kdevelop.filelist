@@ -87,8 +87,6 @@ grbpwf99eos.c
 higherorder_pointavg.c
 idealgaseos.c
 image.c
-init.c
-init.h
 init.readdata.c
 init.tools.c
 initbase.boundloop.c
