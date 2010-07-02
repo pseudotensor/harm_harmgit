@@ -913,7 +913,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE X0;
   // for defcoord=JET5COORDS
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
-  //for SJETCOO5BRDS
+  //for SJETCOORDS
   FTYPE theexp;
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );

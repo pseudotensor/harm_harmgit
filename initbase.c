@@ -615,7 +615,7 @@ int prepre_init(void)
   periodicx1=0;
   periodicx2=0;
   periodicx3=0;// GODMARK: periodic in \phi for 3D spherical polar
-  dofull2pi=0;
+  dofull2pi=1;
 
   if(USEMPI&&USEROMIO){
     binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
