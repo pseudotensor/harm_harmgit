@@ -22,7 +22,7 @@ static FTYPE rhodisk;
 
 static FTYPE nz_func(FTYPE R) ;
 
-static int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
+static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 
 int prepre_init_specific_init(void)
 {
@@ -432,7 +432,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
   //read initial conditions from input file for the Mathematica-generated thin-disk ICs
-  read_data(&whichvel,&whichcoord,prim,pstag);
+  read_data(panalytic);
 #endif
 
   funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
@@ -444,8 +444,8 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 }
 
 
-
-int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
+//reads in ICs from a file and stores them in panalytic array for future use in init_dsandvels
+int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
 {
   int i,j, k;
   SFTYPE tabr,tabo;
@@ -495,16 +495,16 @@ int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	    //BOBMARK: converted to new, macrofy-d format
 	    //	    p[i][j][k][RHO] = tabr;
 	    //	    p[i][j][k][U3] = tabo;
-	    MACP0A1(prim,i,j,k,RHO) = tabr;
-	    MACP0A1(prim,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
+	    MACP0A1(panalytic,i,j,k,RHO) = tabr;
+	    MACP0A1(panalytic,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
 
-	    MACP0A1(prim,i,j,k,U1) = 0.0;
-	    MACP0A1(prim,i,j,k,U2) = 0.0;
-	    MACP0A1(prim,i,j,k,U3) = tabo;
+	    MACP0A1(panalytic,i,j,k,U1) = 0.0;
+	    MACP0A1(panalytic,i,j,k,U2) = 0.0;
+	    MACP0A1(panalytic,i,j,k,U3) = tabo;
 	    
-	    MACP0A1(prim,i,j,k,B1) = 0.0;
-	    MACP0A1(prim,i,j,k,B2) = 0.0;
-	    MACP0A1(prim,i,j,k,B3) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B1) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B2) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B3) = 0.0;
 
 
 	    trifprintf(" k = %d , i=%d, j=%d, rho=%lg\n", k, i, j, tabr);
@@ -555,16 +555,16 @@ int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	    //BOBMARK: converted to new, macrofy-d format
 	    //	    p[i][j][k][RHO] = tabr;
 	    //	    p[i][j][k][U3] = tabo;
-	    MACP0A1(prim,i,j,k,RHO) = tabr;
-	    MACP0A1(prim,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
+	    MACP0A1(panalytic,i,j,k,RHO) = tabr;
+	    MACP0A1(panalytic,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
 
-	    MACP0A1(prim,i,j,k,U1) = 0.0;
-	    MACP0A1(prim,i,j,k,U2) = 0.0;
-	    MACP0A1(prim,i,j,k,U3) = tabo;
+	    MACP0A1(panalytic,i,j,k,U1) = 0.0;
+	    MACP0A1(panalytic,i,j,k,U2) = 0.0;
+	    MACP0A1(panalytic,i,j,k,U3) = tabo;
 	    
-	    MACP0A1(prim,i,j,k,B1) = 0.0;
-	    MACP0A1(prim,i,j,k,B2) = 0.0;
-	    MACP0A1(prim,i,j,k,B3) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B1) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B2) = 0.0;
+	    MACP0A1(panalytic,i,j,k,B3) = 0.0;
 	    
 	    
 	    //      printf("tabom %lf  ", tabom[i][j]);
@@ -583,16 +583,6 @@ int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
     fclose(fpr);
 
   }
-
-  //BOBMARK: borrowed from init_dsandvels_torus and reformatted
-    if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-      PLOOPBONLY(pl) MACP0A1(prim,i,j,k,pl) = 0.0;
-      PLOOPBONLY(pl) MACP0A1(pstag,i,j,k,pl) = 0.0;
-    }
-
-    *whichvel=VEL4;
-    *whichcoord=BLCOORDS;
   return(0);
 }
 
@@ -607,14 +597,14 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+  int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
-  //read in initial conditions from a file rather than generate in place
-  return(0);
+  return(init_dsandvels_thindiskfrommathematica(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
 
 }
@@ -821,6 +811,22 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 }
 
 
+// unnormalized density
+int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+{
+  int pl;
+
+    PALLLOOP(pl) pr[pl] = MACP0A1(GLOBALPOINT(panalytic),i,j,k,pl);
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    *whichvel=VEL4;
+    *whichcoord=BLCOORDS;
+    return(0);
+}
 
 
 
@@ -932,6 +938,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     /* field-in-disk version */
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
+
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
@@ -941,30 +948,34 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
 	rho_av = MACP0A1(prim,i,j,k,RHO);
+        u_av = MACP0A1(prim,i,j,k,UU);
       }
       else if(i==-N1BND){
 	rho_av = AVGN_2(prim,i,j,k,RHO);
+        u_av = AVGN_2(prim,i,j,k,UU);
       }
       else if(j==-N2BND){
 	rho_av = AVGN_1(prim,i,j,k,RHO);
+        u_av = AVGN_1(prim,i,j,k,UU);
       }
       else{ // normal cells
 	rho_av = AVGN_for3(prim,i,j,k,RHO);
 	u_av=AVGN_for3(prim,i,j,k,UU);
       }
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
       if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
       trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
-       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0) - 0.5))  ;
+       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
+      }
 #else
       q = rho_av / rhomax - 0.2;
       if (q > 0.)      vpot += q;
 #endif
-
+    
     }
   }
 
@@ -1034,7 +1045,7 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 
 
 // get maximum b^2 and p_g
-int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max)
+int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
 {
   int funreturn;
   int eqslice;
@@ -1049,7 +1060,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 
   parms[0]=rin;
 
-  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max);
+  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
   if(funreturn!=0) return(funreturn);
  
   return(0);
@@ -1141,7 +1152,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 
 
 
-static FTYPE nz_func(FTYPE R)
+FTYPE nz_func(FTYPE R)
 {
   return(
 	 sqrt(
