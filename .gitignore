@@ -1,0 +1,9 @@
+*.o
+*.orig
+*BASE*
+*LOCAL*
+*REMOTE*
+*~
+init.h
+init.c
+bounds.c
