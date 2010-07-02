@@ -224,3 +224,31 @@ void free_convert_matrix(FTYPE **b, long nrl, long nrh, long ncl,
 {
   free((char *) (b + nrl));
 }
+
+#define JMAX 100
+
+FTYPE rtbis(FTYPE (*func)(FTYPE,FTYPE*), FTYPE *parms, FTYPE x1, FTYPE x2, FTYPE xacc)
+    //Using bisection, find the root of a function func known to lie between x1 and x2. The root,
+    //returned as rtbis, will be refined until its accuracy is \pm xacc.
+    //taken from http://gpiserver.dcom.upv.es/Numerical_Recipes/bookcpdf/c9-1.pdf
+{
+  int j;
+  FTYPE dx,f,fmid,xmid,rtb;
+  f=(*func)(x1, parms);
+  fmid=(*func)(x2, parms);
+  if (f*fmid >= 0.0) {
+    nrerror("Root must be bracketed for bisection in rtbis");
+  }
+  rtb = (f < 0.0) ? (dx=x2-x1,x1) : (dx=x1-x2,x2); //Orient the search so that f>0 lies at x+dx.
+  for (j=1;j<=JMAX;j++) { 
+    fmid=(*func)(xmid=rtb+(dx *= 0.5),parms); //Bisection loop.
+    if (fmid <= 0.0) {
+      rtb=xmid;
+    }
+    if (fabs(dx) < xacc || fmid == 0.0) {
+      return rtb;
+    }
+  }
+  nrerror("Too many bisections in rtbis");
+  return 0.0; //Never get here.
+}

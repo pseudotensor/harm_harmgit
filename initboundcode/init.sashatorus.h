@@ -31,6 +31,7 @@
 #undef LIMIT_FLUXC2A_PRIM_CHANGE
 #undef COMPDIM
 #undef SPLITNPR
+#undef ANALYTICMEMORY
 #undef FIELDSTAGMEM
 #undef HIGHERORDERMEM
 #undef MAXBND
@@ -167,6 +168,7 @@
 #define MCOORD KSCOORDS
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
+#define ANALYTICMEMORY 1
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method

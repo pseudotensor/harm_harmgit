@@ -89,3 +89,5 @@ extern void bcucof(FTYPE y[], FTYPE y1[], FTYPE y2[], FTYPE y12[], FTYPE d1, FTY
 extern void bcuint(FTYPE y[], FTYPE y1[], FTYPE y2[], FTYPE y12[], FTYPE x1l,
         FTYPE x1u, FTYPE x2l, FTYPE x2u, FTYPE x1, FTYPE x2, FTYPE *ansy,
 	    FTYPE *ansy1, FTYPE *ansy2);
+
+extern FTYPE rtbis(FTYPE (*func)(FTYPE,FTYPE*), FTYPE *parms, FTYPE x1, FTYPE x2, FTYPE xacc);

@@ -18,6 +18,7 @@
 #define GRBJET 1
 #define KEPDISK 2
 #define THINDISKFROMMATHEMATICA 3
+#define THINTORUS 4
 
 // For blandford problem also need to set:
 // 0) WHICHPROBLEM 2
@@ -37,9 +38,15 @@
 // 13) USE<systemtype>=1
 // 14) setup batch
 
-#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
-//#define WHICHPROBLEM NORMALTORUS // choice
+//#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
+#define WHICHPROBLEM THINTORUS // choice
 
+static FTYPE lfunc( FTYPE lin, FTYPE *parms );
+static void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gupp );
+static FTYPE compute_udt( FTYPE r, FTYPE th, FTYPE a, FTYPE l );
+static FTYPE compute_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE l );
+static FTYPE compute_l_from_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE omega );
+static FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al );
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
@@ -67,6 +74,8 @@ int pre_init_specific_init(void)
 {
   // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
 #if( WHICHPROBLEM == THINDISKFROMMATHEMATICA )
+  h_over_r=0.1;
+#elif( WHICHPROBLEM == THINTORUS )
   h_over_r=0.1;
 #else
   h_over_r=0.3;
@@ -195,6 +204,8 @@ int init_defcoord(void)
   defcoord = SJETCOORDS;
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   defcoord = REBECCAGRID ;
+#elif(WHICHPROBLEM==THINTORUS)
+  defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -211,6 +222,8 @@ int init_grid(void)
 
 
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  a = 0.;
+#elif(WHICHPROBLEM==THINTORUS)
   a = 0.;
 #else
   a = 0.95;   //so that Risco ~ 2
@@ -229,6 +242,11 @@ int init_grid(void)
   R0 = 0.3 * Rin;
   Rout = 1.e4;
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.3;
+  Rout = 50.;
+#elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
@@ -264,6 +282,8 @@ int init_global(void)
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
+#elif( WHICHPROBLEM==THINTORUS )
+  cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
 #else
   cooling = NOCOOLING; //no cooling
 #endif
@@ -271,7 +291,8 @@ int init_global(void)
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA \
+  || WHICHPROBLEM == THINTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -317,7 +338,7 @@ int init_global(void)
   /* restart file period in steps */
   DTr = 2000;
 
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   /* output choices */
   tf = 2000.;
 
@@ -348,14 +369,6 @@ int init_global(void)
   DTdebug = 250.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
   DTr = 100;                  /* restart file period in steps */
-#endif
-
-
-	//cooling: only for thin disk-jet
-#if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
-	cooling=COOLREBECCATHINDISK;
-#else
-	cooling=NOCOOLING;
 #endif
 
   return(0);
@@ -394,6 +407,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rin = 6. ;
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   rin = 20. ;
+#elif(WHICHPROBLEM==THINTORUS)
+  rin = 20. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -404,14 +419,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   
 
 
-
-  //SASMARK restart: need to populate panalytic with IC's
+#if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA )
+  //SASMARK restart: need to populate panalytic with IC's; DO NOT do this 
+  //when reading the ICs in from a file since then need to carry the file around
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
     MYFUN(init_primitives(panalytic,pstaganalytic,GLOBALPOINT(utemparray),vpotanalytic,Bhatanalytic,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
     //to have initial vector potential to be saved in panalytic array
   }
-
+#endif
   // check rmin
   check_rmin();
 
@@ -432,6 +448,9 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
   //read initial conditions from input file for the Mathematica-generated thin-disk ICs
+#if(ANALYTICMEMORY==0)
+#error Cannot do THINDISKFROMMATHEMATICA problem with ANALYTICMEMORY==0.  Please set ANALYTICMEMORY = 1.
+#endif
   read_data(panalytic);
 #endif
 
@@ -455,7 +474,6 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
   int procno;
   int nscanned1;
   long lineno, numused;
-  int pl;
 
   //BOBMARK: should be the value of KK in mathematica file
   kappa = 0.01 ;
@@ -824,12 +842,227 @@ int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i,
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-    *whichvel=VEL4;
+    *whichvel=VEL3;
     *whichcoord=BLCOORDS;
     return(0);
 }
 
 
+FTYPE lfunc( FTYPE lin, FTYPE *parms )
+{    
+   FTYPE gutt, gutp, gupp, al, k;
+   FTYPE ans;
+   
+   gutt = parms[0];
+   gutp = parms[1];
+   gupp = parms[2];
+   al = parms[3]; 
+   k = parms[4];
+   
+   ans = (gutp - lin * gupp)/( gutt - lin * gutp) - k *pow(lin,al);
+   
+   return(ans);
+}
+    
+void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gupp )
+{
+  //metric (expressions taken from eqtorus_c.nb):
+  *gutt = -1 - 4*r*(pow(a,2) + pow(r,2))*
+      pow((-2 + r)*r + pow(a,2),-1)*
+      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+      
+  *gutp = -4*a*r*pow((-2 + r)*r + pow(a,2),-1)*
+      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+    
+  *gupp = 2*((-2 + r)*r + pow(a,2)*pow(cos(th),2))*
+      pow(sin(th),-2)*pow((-2 + r)*r + pow(a,2),-1)*
+      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+}  
+  
+FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al )
+{
+  FTYPE gutt, gutp, gupp;
+  FTYPE parms[5];
+  FTYPE l;
+  
+  compute_gu( r, th, a, &gutt, &gutp, &gupp );
+  
+  //store params in an array before function call
+  parms[0] = gutt;
+  parms[1] = gutp;
+  parms[2] = gupp;
+  parms[3] = al; 
+  parms[4] = k;
+  
+  //solve for lin using bisection, specify large enough root search range, (1e-3, 1e3) 
+  //demand accuracy 5x machine prec.
+  //in non-rel limit l_K = sqrt(r), use 10x that as the upper limit:
+  l = rtbis( lfunc, parms, 1e-7, 10.*sqrt(Rout), 5.*DBL_EPSILON );
+  
+  return( l );
+}
+
+FTYPE compute_udt( FTYPE r, FTYPE th, FTYPE a, FTYPE l )
+{
+  FTYPE gutt, gutp, gupp;
+  FTYPE udt;
+   
+  compute_gu( r, th, a, &gutt, &gutp, &gupp );
+  
+  udt = -sqrt(- 1/(gutt - 2 * l * gutp + l * l * gupp));
+  
+  return( udt );
+}
+    
+    
+FTYPE compute_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE l )
+{
+  FTYPE gutt, gutp, gupp;
+  FTYPE omega;
+   
+  compute_gu( r, th, a, &gutt, &gutp, &gupp );
+  
+  omega = (gutp - gupp*l)*pow(gutt - gutp*l,-1);
+  
+  return( omega );
+}
+    
+FTYPE compute_l_from_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE omega )
+{
+  FTYPE gutt, gutp, gupp;
+  FTYPE l;
+   
+  compute_gu( r, th, a, &gutt, &gutp, &gupp );
+  
+  l = (gutp - omega * gutt)/(gupp - omega * gutp);
+  
+  return( l );
+}
+    
+int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag)
+{
+  FTYPE kappa, n, rmax; //kappa <-> KK in mathematica file
+  FTYPE r, th, omk, lk, c;
+  FTYPE k, al;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE lin, l;
+  FTYPE utin, flin;
+  FTYPE udt, hh, f, eps;
+  FTYPE rho, u, om, ur, uh, up;
+  int pl;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+
+  coord(ti, tj, tk, CENT, X);
+  bl_coord(X, V);
+  r=V[1];
+  th=V[2];
+  
+  /* region outside disk? */
+  R = r*sin(th) ;
+
+  //avoid computations way outside the torus: fill the region with atmosphere
+  if( R < rin ) {
+
+    get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+
+  ///
+  /// Parameters
+  ///
+ 
+  kappa = 0.01;
+  n = 2. - 1.65; 
+  rmax = 15.;
+
+  
+  ///
+  /// Computations at pressure max
+  ///
+  
+  r = rmax;
+  th = M_PI_2l;
+  omk = 1./(pow(rmax,1.5) + a);
+  lk = compute_l_from_omega( r, th, a, omk );
+  //log(omk) == (2/n) log(c) + (1 - 2./n) log(lk) <-- solve for c:
+  c = pow( lk, 1 - n/2. ) * pow( omk, n/2. );
+  
+  k = pow(c, 2./n);
+  al = (n - 2.)/n;
+  
+  
+  ///
+  /// Computations at torus inner edge
+  ///
+  
+  //l = lin at inner edge, r = rin
+  r = rin;
+  th = M_PI_2l;
+  lin = thintorus_findl( r, th, a, k, al );
+      
+  //finding DHK03 lin, utin, f (lin)
+  utin = compute_udt( r, th, a, lin );
+  flin = pow(fabs(1 - k*pow(lin,1 + al)),pow(1 + al,-1));
+  
+
+  ///
+  /// Computations at current point: r, th
+  ///
+  
+  coord(ti, tj, tk, CENT, X);
+  bl_coord(X, V);
+  r=V[1];
+  th=V[2];
+  
+  //l at current r, th
+  l = thintorus_findl( r, th, a, k, al );
+  
+  
+  udt = compute_udt( r, th, a, l );
+  f = pow(fabs(1 - k*pow(l,1 + al)),pow(1 + al,-1));
+  hh = flin*utin*pow(f,-1)*pow(udt,-1);
+  eps = (-1 + hh)*pow(gam,-1);
+  
+  //avoid computations outside the torus: fill the region with atmosphere
+  if( eps < 0 ) {
+    get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+   
+  rho = pow((-1 + gam)*eps*pow(kappa,-1),pow(-1 + gam,-1));
+  u = kappa * pow(rho, gam) / (gam - 1.);
+  om = compute_omega( r, th, a, l );
+  
+  ur = 0.;
+  uh = 0.;
+  up = om; // = u^phi/u^t
+ 
+  
+  pr[RHO] = rho ;
+  pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5) );
+
+  pr[U1] = ur ;
+  pr[U2] = uh ;    
+  pr[U3] = up;
+
+  if(FLUXB==FLUXCTSTAG){
+    PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
+  }
+
+  *whichvel=VEL3;
+  *whichcoord=BLCOORDS;
+  return(0);
+
+}
 
 
 
@@ -907,7 +1140,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   FTYPE r,th;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
   FTYPE fieldhor;
 #endif
 
@@ -940,7 +1173,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
 #endif
@@ -964,7 +1197,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 	u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+      //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
       if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
       trifprintf("rhoav=%g q=%g\n", rho_av, q);
