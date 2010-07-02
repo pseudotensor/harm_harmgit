@@ -40,6 +40,7 @@
 
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 #define WHICHPROBLEM THINTORUS // choice
+//#define WHICHPROBLEM NORMALTORUS
 
 static FTYPE lfunc( FTYPE lin, FTYPE *parms );
 static void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gupp );
@@ -222,9 +223,9 @@ int init_grid(void)
 
 
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
-  a = 0.;
+  a = 0.95;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = 0.;
+  a = 0.95;
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
@@ -617,6 +618,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+  int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
@@ -624,6 +626,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   return(init_dsandvels_thindiskfrommathematica(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==THINTORUS)
+  return(init_dsandvels_thintorus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
 
 }
@@ -833,9 +837,45 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 // unnormalized density
 int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
+  FTYPE r, th, R, rho, u;
+  FTYPE X[NDIM], V[NDIM];
   int pl;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
 
-    PALLLOOP(pl) pr[pl] = MACP0A1(GLOBALPOINT(panalytic),i,j,k,pl);
+  
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+  
+    /* region outside disk? */
+    R = r*sin(th) ;
+
+    //get atmospheric values
+    get_geometry(i, j, k, CENT, ptrgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+  
+    //pull out analytic density
+    rho = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
+    u = MACP0A1(GLOBALPOINT(panalytic),i,j,k,UU);
+
+    //avoid computations way outside the torus: fill the region with atmosphere
+    if( R < rin || rho < pr[RHO] ) {
+      *whichvel=WHICHVEL;
+      *whichcoord=PRIMECOORDS;
+      return(0);
+    }
+    
+    
+    PALLLOOP(pl) {
+      if( pl == UU && u < pr[UU] ) {
+        //leave u at floor value if u wants to be lower than floor value
+        continue;
+      }
+      pr[pl] = MACP0A1(GLOBALPOINT(panalytic),i,j,k,pl);
+    }
+
 
     if(FLUXB==FLUXCTSTAG){
       // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
@@ -897,7 +937,7 @@ FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al )
   //solve for lin using bisection, specify large enough root search range, (1e-3, 1e3) 
   //demand accuracy 5x machine prec.
   //in non-rel limit l_K = sqrt(r), use 10x that as the upper limit:
-  l = rtbis( lfunc, parms, 1e-7, 10.*sqrt(Rout), 5.*DBL_EPSILON );
+  l = rtbis( &lfunc, parms, 1e-7, 10.*sqrt(Rout), 5.*DBL_EPSILON );
   
   return( l );
 }
@@ -953,6 +993,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
 
+    
   coord(ti, tj, tk, CENT, X);
   bl_coord(X, V);
   r=V[1];
@@ -963,7 +1004,6 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
 
   //avoid computations way outside the torus: fill the region with atmosphere
   if( R < rin ) {
-
     get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
     set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
 
@@ -978,7 +1018,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
  
   kappa = 0.01;
   n = 2. - 1.65; 
-  rmax = 15.;
+  rmax = 35.;
 
   
   ///
@@ -1027,18 +1067,20 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   f = pow(fabs(1 - k*pow(l,1 + al)),pow(1 + al,-1));
   hh = flin*utin*pow(f,-1)*pow(udt,-1);
   eps = (-1 + hh)*pow(gam,-1);
+  rho = pow((-1 + gam)*eps*pow(kappa,-1),pow(-1 + gam,-1));
   
-  //avoid computations outside the torus: fill the region with atmosphere
-  if( eps < 0 ) {
-    get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
-    set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
-
+  //compute atmospheric values
+  get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
+  set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+  
+  //avoid computations outside the torus (either imaginary or negative density): fill the region with atmosphere
+  if( eps < 0 || rho < pr[RHO] ) {
+    //then use atmospheric values 
     *whichvel=WHICHVEL;
     *whichcoord=PRIMECOORDS;
     return(0);
   }
    
-  rho = pow((-1 + gam)*eps*pow(kappa,-1),pow(-1 + gam,-1));
   u = kappa * pow(rho, gam) / (gam - 1.);
   om = compute_omega( r, th, a, l );
   
@@ -1048,7 +1090,9 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
  
   
   pr[RHO] = rho ;
-  pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5) );
+  if( u > pr[UU] ) {
+    pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5) );
+  }
 
   pr[U1] = ur ;
   pr[U2] = uh ;    
@@ -1355,7 +1399,8 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK 
+     || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){
