@@ -3324,3 +3324,31 @@ FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 )
   FTYPE Fangle( FTYPE x );
   return( y0 + dx * Fangle((x-x0)/dx) );
 }
+
+FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df )
+{
+  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+  return( limlin(f1, f2, df, f2) );
+}
+
+FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df )
+{
+  FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
+  return( -mins(-f1, -f2, df) );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
