@@ -11,9 +11,9 @@
 #undef N3
 #endif
 
-#define N1 32
-#define N2 32
-#define N3 1
+#define N1 16
+#define N2 16
+#define N3 4
 
 // atch adjusts
 #undef MAXWELL
