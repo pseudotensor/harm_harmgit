@@ -14,6 +14,31 @@
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
+#define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
+#define GRBJET 1
+#define KEPDISK 2
+#define THINDISKFROMMATHEMATICA 3
+
+// For blandford problem also need to set:
+// 0) WHICHPROBLEM 2
+// 1) a=0.92
+// 2) Rout=1E3
+// 3) hslope=0.3
+// 4) BSQORHOLIMIT=1E2;
+// 5) BSQOULIMIT=1E3;
+// 6) UORHOLIMIT=1E3;
+// 7) tf=1E4; // and maybe DTd's
+// 8) randfact = .2;
+// 8.5) Choose fieldtype: FIELDTYPE BLANDFORDQUAD or DISKFIELD (SS dipole)
+// 9) lim=PARALINE; FLUXB=FLUXCTSTAG; TIMEORDER=4;
+// 10) N1,N2,N3 in init.h
+// 11) MAXBND 4
+// 12) PRODUCTION 1
+// 13) USE<systemtype>=1
+// 14) setup batch
+
+#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
+//#define WHICHPROBLEM NORMALTORUS // choice
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
@@ -112,29 +137,6 @@ int init_consts(void)
 }
 
 
-#define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
-#define GRBJET 1
-#define KEPDISK 2
-#define THINDISKFROMMATHEMATICA 3
-
-// For blandford problem also need to set:
-// 0) WHICHPROBLEM 2
-// 1) a=0.92
-// 2) Rout=1E3
-// 3) hslope=0.3
-// 4) BSQORHOLIMIT=1E2;
-// 5) BSQOULIMIT=1E3;
-// 6) UORHOLIMIT=1E3;
-// 7) tf=1E4; // and maybe DTd's
-// 8) randfact = .2;
-// 8.5) Choose fieldtype: FIELDTYPE BLANDFORDQUAD or DISKFIELD (SS dipole)
-// 9) lim=PARALINE; FLUXB=FLUXCTSTAG; TIMEORDER=4;
-// 10) N1,N2,N3 in init.h
-// 11) MAXBND 4
-// 12) PRODUCTION 1
-// 13) USE<systemtype>=1
-// 14) setup batch
-
 /*
 
 Models to run:
@@ -184,8 +186,6 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
-
 
 int init_defcoord(void)
 {
@@ -231,7 +231,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.3 * Rin;
+  R0 = 0.3;
   Rout = 50.;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
@@ -392,13 +392,13 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
-#eif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   rin = 20. ;
-
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
 #elif(WHICHPROBLEM==GRBJET)
+  rin = Risco;
 #endif
 
   
@@ -459,6 +459,7 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
 
   //BOBMARK: should be the value of KK in mathematica file
   kappa = 0.01 ;
+
 
 #if( USEMPI )
   for( procno = 0; procno < numprocs; procno++ ) {
