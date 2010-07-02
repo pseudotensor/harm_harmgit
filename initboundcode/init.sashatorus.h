@@ -174,7 +174,7 @@
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 
-#define MAILWHENDONE 1
+#define MAILWHENDONE 0
 #define MAILFROMREMOTE 0
 #define REMOTEHOST "relativity.cfa.harvard.edu"
 #define EMAILADDRESS "jmckinney@cfa.harvard.edu"
@@ -184,11 +184,11 @@
 #define DOJETDIAG 0
 #define DOAVG2 0
 //BOBMARK
-#define DODEBUG 1
+#define DODEBUG 0
 #define DO_WENO_DEBUG 0
 #define DOENODEBUG 0
 #define DOEVOLVEMETRIC 0
-#define EVOLVEMETRICSUBSTEP 1 // evolve metric every substep
+#define EVOLVEMETRICSUBSTEP 0 // evolve metric every substep
 #define LIMITSOURCES 1
 #define LIMITDTWITHSOURCETERM 1
 #define USEGRAVITYDTINDTLIMIT 0
@@ -197,7 +197,7 @@
 #define DOLUMVSR 0
 #define DODISSVSR 0
 #define DOSELFGRAVVSR 0
-#define DOFIELDLINE 0
+#define DOFIELDLINE 1
 #define ROEAVERAGEDWAVESPEED 0
 #define ATHENAROE 0
 
