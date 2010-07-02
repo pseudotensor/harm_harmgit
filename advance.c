@@ -1,6 +1,6 @@
 #include "decs.h"
 
-
+#define DO_ODY_PRINTOUT 0
 
 // static declarations
 static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state, FTYPE *U, FTYPE *pr, FTYPE *dUevolve, FTYPE *dUgeomevolveUU, FTYPE *dtij, FTYPE *gravitydt);
