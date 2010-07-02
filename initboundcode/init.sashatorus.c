@@ -22,12 +22,14 @@ static FTYPE rhodisk;
 
 static FTYPE nz_func(FTYPE R) ;
 
-
+static int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
 
 int prepre_init_specific_init(void)
 {
   int funreturn;
   
+  dofull2pi = 0;
+
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -39,7 +41,11 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
   // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
+#if( WHICHPROBLEM == THINDISKFROMMATHEMATICA )
+  h_over_r=0.1;
+#else
   h_over_r=0.3;
+#endif
   // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
   h_over_r_jet=2.0*h_over_r;
 
@@ -109,6 +115,7 @@ int init_consts(void)
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define GRBJET 1
 #define KEPDISK 2
+#define THINDISKFROMMATHEMATICA 3
 
 // For blandford problem also need to set:
 // 0) WHICHPROBLEM 2
@@ -177,16 +184,17 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM NORMALTORUS // choice
+#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 
 
 int init_defcoord(void)
 {
   
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // define coordinate type
-  //defcoord = 9;
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   defcoord = SJETCOORDS;
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -200,29 +208,35 @@ int init_grid(void)
 {
   
   // metric stuff first
-  a = 0.95 ; //so that Risco ~ 2
-  
+
+
+#if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  a = 0.;
+#else
+  a = 0.95;   //so that Risco ~ 2
+#endif
 
  
   Rhor=rhor_calc(0);
 
-  hslope = 0.3;  //sas: use a constant slope as Jon suggests in the comments
+  hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
 
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-	Rin = 0.8 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-	R0 = 0.3 * Rin;
+  Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.3 * Rin;
   Rout = 1.e4;
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.3 * Rin;
+  Rout = 50.;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
   Rout = 1E5;
-#elif(WHICHPROBLEM==THINDISKJET)
-	Rin = 0.92 * Rhor; //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-	R0 = 0.3;
-	Rout = 50;
 #endif
 
 
@@ -248,13 +262,16 @@ int init_global(void)
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
-  //cooling = 3; //do Rebecca-type cooling; make sure enk0 is set to the same value as kappa in this file
-  cooling = 0; //no cooling
+#if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
+  cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
+#else
+  cooling = NOCOOLING; //no cooling
+#endif
 
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -300,6 +317,26 @@ int init_global(void)
   /* restart file period in steps */
   DTr = 2000;
 
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  /* output choices */
+  tf = 2000.;
+
+  /* dumping frequency, in units of M */
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
+  // ener period
+  DTdumpgen[ENERDUMPTYPE] = 10.0;
+  /* image file frequ., in units of M */
+  DTdumpgen[IMAGEDUMPTYPE] = 10.0;
+  // fieldline locked to images so can overlay
+  DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+
+  /* debug file */  
+  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  // DTr = .1 ; /* restart file frequ., in units of M */
+  /* restart file period in steps */
+  DTr = 2000;
+
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
   tf = 5E5;
@@ -315,7 +352,7 @@ int init_global(void)
 
 
 	//cooling: only for thin disk-jet
-#if(WHICHPROBLEM==THINDISKJET)
+#if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
 	cooling=COOLREBECCATHINDISK;
 #else
 	cooling=NOCOOLING;
@@ -355,6 +392,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
+#eif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  rin = 20. ;
+
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -390,6 +430,11 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+  //read initial conditions from input file for the Mathematica-generated thin-disk ICs
+  read_data(&whichvel,&whichcoord,prim,pstag);
+#endif
+
   funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
@@ -397,6 +442,164 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 }
+
+
+
+int read_data(int *whichvel, int*whichcoord, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j, k;
+  SFTYPE tabr,tabo;
+  SFTYPE kappa;
+  FILE * fpr;
+  int ti, tj , tk;
+  int procno;
+  int nscanned1;
+  long lineno, numused;
+  int pl;
+
+  //BOBMARK: should be the value of KK in mathematica file
+  kappa = 0.01 ;
+
+#if( USEMPI )
+  for( procno = 0; procno < numprocs; procno++ ) {
+    if( myid == procno ){
+#endif
+      //////
+      //
+      //  Open file for reading
+      trifprintf("myid is %d\n",myid);
+      fpr=fopen("./mytest", "r");
+      
+
+      if( NULL != fpr ) {
+        lineno = 0;
+        numused = 0;
+
+	while( (nscanned1 = fscanf(fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo )) == 5 ) {
+
+          ///////
+          //
+          //  Check if within range and if within, save it to the array
+          //  i, j - local grid indices for this processor, ti, tj - global
+
+          // trifprintf("startpos1=%d, startpos2=%d \n", startpos[1], startpos[2]);
+
+          i = ti - 1 - startpos[1];
+          j = tj - 1 - startpos[2];
+          k = tk - 1 - startpos[3];
+
+          if( i >= INFULL1 && i <= OUTFULL1 &&
+              j >= INFULL2 && j <= OUTFULL2 && k>=INFULL3 && k<=OUTFULL3 ) {
+
+
+	    //BOBMARK: converted to new, macrofy-d format
+	    //	    p[i][j][k][RHO] = tabr;
+	    //	    p[i][j][k][U3] = tabo;
+	    MACP0A1(prim,i,j,k,RHO) = tabr;
+	    MACP0A1(prim,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
+
+	    MACP0A1(prim,i,j,k,U1) = 0.0;
+	    MACP0A1(prim,i,j,k,U2) = 0.0;
+	    MACP0A1(prim,i,j,k,U3) = tabo;
+	    
+	    MACP0A1(prim,i,j,k,B1) = 0.0;
+	    MACP0A1(prim,i,j,k,B2) = 0.0;
+	    MACP0A1(prim,i,j,k,B3) = 0.0;
+
+
+	    trifprintf(" k = %d , i=%d, j=%d, rho=%lg\n", k, i, j, tabr);
+
+	    numused++;
+          }
+          lineno++;
+        }
+	// Close file
+        fclose( fpr );
+        //
+        ///////
+      }
+      else{
+	// if null report and fail!
+	dualfprintf(fail_file,"No Rebecca file 1\n");
+	myexit(246346);
+      }
+#if(USEMPI)
+    }
+    MPI_Barrier(MPI_COMM_GRMHD);
+  }
+#endif
+
+
+
+
+  if(numprocs==1) {
+    
+    
+    fpr=fopen("./mytest", "r");
+    
+
+    if(fpr!=NULL){
+    
+      for(j=0; j<N2; j++){
+	
+	for(i=0; i<N1; i++){
+	  
+	  for(k=0; k<N3; k++){
+	    
+	    
+	    //      dualfprintf(fail_file,"i=%d j=%d\n",i,j);
+	    
+	    fscanf(fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo );
+
+	    
+	    //BOBMARK: converted to new, macrofy-d format
+	    //	    p[i][j][k][RHO] = tabr;
+	    //	    p[i][j][k][U3] = tabo;
+	    MACP0A1(prim,i,j,k,RHO) = tabr;
+	    MACP0A1(prim,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
+
+	    MACP0A1(prim,i,j,k,U1) = 0.0;
+	    MACP0A1(prim,i,j,k,U2) = 0.0;
+	    MACP0A1(prim,i,j,k,U3) = tabo;
+	    
+	    MACP0A1(prim,i,j,k,B1) = 0.0;
+	    MACP0A1(prim,i,j,k,B2) = 0.0;
+	    MACP0A1(prim,i,j,k,B3) = 0.0;
+	    
+	    
+	    //      printf("tabom %lf  ", tabom[i][j]);
+	    //      dualfprintf(fail_file,"i=%d j=%d tabr=%21.15g\n",i,j,tabr);
+	  }
+	}
+      }
+    }
+    else{
+      // if null report and fail!
+      dualfprintf(fail_file,"No Rebecca file 2\n");
+      myexit(246346);
+    }
+    //}
+    printf("files read");
+    fclose(fpr);
+
+  }
+
+  //BOBMARK: borrowed from init_dsandvels_torus and reformatted
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) MACP0A1(prim,i,j,k,pl) = 0.0;
+      PLOOPBONLY(pl) MACP0A1(pstag,i,j,k,pl) = 0.0;
+    }
+
+    *whichvel=VEL4;
+    *whichcoord=BLCOORDS;
+  return(0);
+}
+
+
+
+
+
 
 
 
@@ -409,6 +612,9 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
+  //read in initial conditions from a file rather than generate in place
+  return(0);
 #endif
 
 }
@@ -690,11 +896,13 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 // assumes normal field in pr
 int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
-  SFTYPE rho_av, q;
+  SFTYPE rho_av, u_av, q;
   FTYPE r,th;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
-
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+  FTYPE fieldhor;
+#endif
 
 
 
@@ -724,9 +932,11 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     /* field-in-disk version */
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
+#define STARTFIELD (1.1*rin)
+      fieldhor=0.28;
+#endif
       // average of density that lives on CORN3
-
-
       // since init_vpot() is called for all i,j,k, can't use
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
@@ -740,11 +950,21 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       }
       else{ // normal cells
 	rho_av = AVGN_for3(prim,i,j,k,RHO);
+	u_av=AVGN_for3(prim,i,j,k,UU);
       }
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA ) 
 
+      if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
+      else q = 0. ;
+      trifprintf("rhoav=%g q=%g\n", rho_av, q);
+
+      if(q > 0.){
+       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0) - 0.5))  ;
+#else
       q = rho_av / rhomax - 0.2;
-
       if (q > 0.)      vpot += q;
+#endif
+
     }
   }
 
@@ -889,7 +1109,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){

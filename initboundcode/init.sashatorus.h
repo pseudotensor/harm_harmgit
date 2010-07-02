@@ -11,8 +11,8 @@
 #undef N3
 #endif
 
-#define N1 64
-#define N2 32
+#define N1 16
+#define N2 16
 #define N3 16
 
 // atch adjusts
@@ -181,8 +181,9 @@
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
 #define DOAVG 0
-#define DOJETDIAG 1
+#define DOJETDIAG 0
 #define DOAVG2 0
+//BOBMARK
 #define DODEBUG 1
 #define DO_WENO_DEBUG 0
 #define DOENODEBUG 0
@@ -196,7 +197,7 @@
 #define DOLUMVSR 0
 #define DODISSVSR 0
 #define DOSELFGRAVVSR 0
-#define DOFIELDLINE 1
+#define DOFIELDLINE 0
 #define ROEAVERAGEDWAVESPEED 0
 #define ATHENAROE 0
 

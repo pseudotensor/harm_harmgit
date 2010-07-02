@@ -976,7 +976,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // }
     V[2]=(hslope*((X[2]-0.5)/0.5) + (1-hslope)*pow((X[2]-0.5)/0.5, 7.0)+1.)*M_PI/2.;
     // default is uniform \phi grid
-    V[3]=0.25*M_PI*X[3];
+    V[3]=0.5*M_PI*X[3];
 
   }
   else if (defcoord == COMPLEX0TH) {
@@ -1534,7 +1534,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     // else{
     //  dxdxp[2][2] = M_PI + (1. - hslope) * M_PI * mycos(2. * M_PI * (1.0-X[2]) );
     //  }
-    dxdxp[3][3] = 0.25*M_PI;
+    dxdxp[3][3] = 0.5*M_PI;
   }
   else if (defcoord == COMPLEX0TH) {
     dxdxp[1][1] = (V[1]-R0) * log(Rout / Rin);

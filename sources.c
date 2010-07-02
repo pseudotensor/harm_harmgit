@@ -217,7 +217,7 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 
 	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 
-	  dUcool*=COOLTAPER1(th);
+	  //	  dUcool*=COOLTAPER1(th);
 	  //  dUcool*=taper_func(R,Rhor);
 
 	  // shape function to avoid problems near pole
