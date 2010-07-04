@@ -734,6 +734,9 @@
 // diff without white space (kinda words?) 
 // svn diff --diff-cmd diff -x -uw /path/to/file
 
+// To revert a single file:
+// svn merge -r <last revision>:<wanted revision> <filename>
+// check: svn diff -r <wanted revision> <filename>
 
 
 // Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu to portal through ki-rh42):
