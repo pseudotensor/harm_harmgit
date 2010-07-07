@@ -1,0 +1,74 @@
+Here are a few policy issues regarding coauthorship:
+
+1) HARM's State:
+
+I consider the HARM code to be a closed code.  I worked for many years to get it to work for extreme problem setups that no other code can handle.  Even the HARM code used by Scott Noble is much inferior for jets or high spins.  I've also worked hard to make it easy to use and to make HARM work well on super computers.
+
+As I describe below, any developer of HARM should be able to reap the benefits of their labor based upon the use of their significant contribution.
+
+
+2) Member Classes:
+
+There are about four classes of access to the code:  users (U), collaborators (C), developers (D), and architects (A).
+
+
+Collaborators: Someone who uses the data or (perhaps) code bits.  Otherwise has no code access.
+
+Users: Someone who uses the code and may perform basic code modifications for a particular model setup.  Someone who collaborators consult.  A user is automatically also a collaborator.
+
+Developers: Someone who significantly contributes a new method and adds this to the shared code base.  Someone who users consult.  If their significant contribution in the code is used for a paper, then they should be invited as a coauthor for the first (or more) paper(s) for each new group of collaborators.
+
+Architect: Someone who can do any project they want with any people.  They can share code with whomever they want.  They also decide who is a user, collaborator, or developer.  They must be a coauthor on a paper by any user, collaborator, or developer.  Only one architect is required on a paper.  It's best for multiple architects to consult each other when giving a member architect status.
+
+
+After thinking some, I feel that architects at least should communicate the HARM-based projects they are doing to other architects so that architects can develop a research program without surprise competitions.  No one should have their research program damaged by other architects.  I think that potentially damaging someone's research program is even worse than causing a conflict of interest, for example.
+
+This means that there will be no deep secrecy among collaborators of architects, but I prefer a lack of secrecy to surprises that hurt the group at large.  I think architects can decide whether to share who their users, collaborators, and developers are.  Of course, a developer's contribution to the main code base may grant architect status, so sharing may be good at some point.
+
+So, the only information that really needs to be shared by architects to other architects are HARM-based project abstracts.  So, I'll email Sasha and Ramesh my current research program involving HARM.
+
+
+3) Current Member Status:
+
+
+Ramesh: architect.  He gave life to the projects involving myself, Sasha, and Bob.
+
+Sasha: architect, developer, user.  Architect after major code contributions and many collaborations on papers.  As developer, at a minimum contributed to WHAM and to problem setups (init.h, init.c, and bounds.c).
+
+Bob's status is ultimately up to Ramesh.  But, in my view, I think that architect status must be earned after either a significant development contribution (i.e. a new method) or significant collaborations (co-authorship on papers with relevant developers).  Using the code does not grant the ability to share the code with non-architects or to make use of the code for a paper without an architect.
+
+Others: ?? [I'll tell Ramesh and Sasha about other's I'm working with.]
+
+------------
+
+For example, Roman et al. 2010:
+
+Roman, so you know that I am working with others on SgrA* (Dexter et al. 2010). That project is continuing forward with new simulations like the ones you have described.  So we should tread carefully in order avoid confusions among others and to (at a minimum) have architects be aware of how other architects are using the code.
+
+
+In your case, here is my best judgment about my co-authorship status given the above statements:
+
+A) If Ramesh instigated the project and was key to the project, then his architect status allows him to have used the code with you guys as students without me.  A co-authorship invitation based upon my developer status would be nice for the first paper of its kind, but that should ultimately be up to Ramesh.  (Of course, he can suggest asking a developer what they think -- as he did.)  In this case, perhaps co-authorship for the first paper with Roman as the primary collaborator is reasonable.  I'll review the paper to estimate my effective contribution.
+
+
+B) If primarily Roman and Bob instigated the project and completed the project, then co-authorship is very reasonable.  The rationale is that the no-cooling thick disk data Bob created would not be possible using the freely available 2D HARM code.  The 3D simulations might have gone smoothly for Bob, but that's only because of many years of my handy work.
+
+----
+
+An example where I would think Sasha should be invited as a coauthor is if his significant contributions were used.  This includes WHAM.  For example, I developed a new method for doing WHAM-like stuff that hopefully will eventually be published.  If WHAM is used for that paper as part of testing, then I will invite Sasha to be a coauthor even several years after WHAM was coded.
+
+This means that the work put into the code by any developer reaps rewards rather than being used irrespective of that developer.  It hopefully inspires contributions since future use of that contribution entitles a likely invitation for co-authorship.  At least a single paper of co-authorship using the developer's contribution is very reasonable.  The more vast a developer's contribution, the more papers they should be a coauthor on.
+
+So probably co-authorship on the first such paper with Roman is reasonable.  If very similar calculations are done for future papers, the paper can be independent of me.  If very different calculations using other aspects of the code are used (WHAM, etc.) then those respective developers should be invited.  In general, keep in touch with developers to ask for their input on these issues.
+
+--
+
+In general, Roman and Bob (or any user/collaborator/developer) should tell Ramesh what projects HARM will be used for during instigation (not completion).  I then request Ramesh communicate the basic HARM-based project abstracts to Sasha and I.
+
+Note that if the code becomes open, all the above comments will become mostly irrelevant.  The opening of the code should be discussed among architects.
+
+Of course, given Ramesh's scientific seniority, he can trump any of my judgments!
+
+
+Thanks!
+Jon
