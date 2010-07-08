@@ -1,0 +1,15 @@
+#----------------------------------------------------------------------
+#
+#  .logout - run commands at logout.
+#
+#  Put commands here to be run when you logout.
+#
+# $Id: .logout,v 1.1 1992/10/02 17:24:51 dan Exp $
+# $Source: /common/src/etc/start-up/RCS/.logout,v $
+#
+# $Log: .logout,v $
+# Revision 1.1  1992/10/02  17:24:51  dan
+# Initial revision
+#
+
+#clear
