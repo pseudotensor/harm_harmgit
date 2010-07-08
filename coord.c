@@ -75,6 +75,10 @@ static FTYPE Rstar,Afactor;
 static FTYPE AAAA,AAA,BBB,DDD,CCCC,Rj;
 static FTYPE ii0;
 
+// for defcoord=SJETCOORDS
+static void vofx_sjetcoords( FTYPE *X, FTYPE *V );  //original coordinates
+static void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout ); //coordinate "cylindrifier"
+
 
 // can call when no dependencies
 void set_coord_parms(int defcoordlocal)
@@ -915,10 +919,6 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
   //for SJETCOORDS
   FTYPE theexp;
-  FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
-  FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
-  FTYPE  fac, faker, ror0nu;
 
 
 
@@ -1080,42 +1080,15 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[3]=2.0*M_PI*X[3];
   }
   else if (defcoord == SJETCOORDS) {
-    theexp = npow*X[1];
-
-    if( X[1] > x1br ) {
-      theexp += cpow2 * pow(X[1]-x1br,npow2);
-    }
-    V[1] = R0+exp(theexp);
-
-#if(0) //JON's method
-    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
-
-    if(X[2]<0.5){
-      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
-    }
-    else{
-      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
-    }
-#elif(1) //SASHA's
-    fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
-
-    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0mono,0.5*r0mono,r0mono)*minlin(V[1],r0disk,0.5*r0disk,r0mono)/r0mono - rsjet*Rin;
-    
-    ror0nu = pow( faker/r0jet, jetnu/2 );
-
-    if( X[2] < -0.5 ) {
-      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
-    }
-    else if( X[2] >  0.5 ) {
-      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
-    }
-    else {
-      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
-    }
+#if(0)
+    //use original coordinates
+    vofx_sjetcoords( X, V );
+#else
+    //apply cylindrification to original coordinates
+    //[this internally calls vofx_sjetcoords()] 
+    vofx_cylindrified( X, vofx_sjetcoords, V );
 #endif
-
-    // default is uniform \phi grid
-    V[3]=2.0*M_PI*X[3];
+    
   }
   else if (defcoord == JET6COORDS) {
 
@@ -1456,8 +1429,52 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 }
 
+void vofx_sjetcoords( FTYPE *X, FTYPE *V )
+{
+    //for SJETCOORDS
+    FTYPE theexp;
+    FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
+    FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+    FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+    FTYPE  fac, faker, ror0nu;
+    
+    theexp = npow*X[1];
 
+    if( X[1] > x1br ) {
+      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    }
+    V[1] = R0+exp(theexp);
 
+#if(0) //JON's method
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+
+    if(X[2]<0.5){
+      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
+    }
+    else{
+      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+    }
+#elif(1) //SASHA's
+    fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
+
+    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0mono,0.5*r0mono,r0mono)*minlin(V[1],r0disk,0.5*r0disk,r0mono)/r0mono - rsjet*Rin;
+    
+    ror0nu = pow( faker/r0jet, jetnu/2 );
+
+    if( X[2] < -0.5 ) {
+      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
+    }
+    else if( X[2] >  0.5 ) {
+      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
+    }
+    else {
+      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
+    }
+#endif
+
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+}
 
 // Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
 // i.e. Just take d(bl-coord)/d(ksp uniform coord)
@@ -3336,6 +3353,255 @@ FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df )
   FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
   return( -mins(-f1, -f2, df) );
 }
+
+//=mins if dir < 0
+//=maxs if dir >= 0
+FTYPE minmaxs( FTYPE f1, FTYPE f2, FTYPE df, FTYPE dir )
+{
+  FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
+  FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df );
+  if( dir>=0 ) {
+    return( maxs(f1, f2, df) );
+  }
+  
+  return( mins(f1, f2, df) );
+}
+
+static FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored );
+static FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
+
+//Converts copies Xin to Xout and converts
+//but sets Xout[2] to lie in the 1st quadrant, i.e. Xout[2] \in [-1,0])
+//if the point had to be mirrored
+void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
+{
+  FTYPE ntimes;
+  int dim;
+  
+  DLOOPA(dim) Xout[dim] = Xin[dim];
+  
+  //bring the angle variables to -2..2 (for X) and -2pi..2pi (for V)
+  ntimes = floor( (Xin[2]+2.0)/4.0 );
+  //this forces -2 < Xout[2] < 2
+  Xout[2] -= 4 * ntimes;
+  
+  ismirrored = 0;
+  
+  //now force -1 < Xout[2] < 0
+  if( Xout[2] < -1. ) {
+    Xout[2] = -2. - Xout[2];
+    *ismirrored = 1;
+  }
+  else if( Xout[2] > 1. ) {
+    Xout[2] -= 2.;
+    *ismirrored = 1;
+  }
+  else if( Xout[2] > 0. ) {
+    Xout[2] = -Xout[2];
+    *ismirrored = 1;
+  }    
+}
+
+FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V0[NDIM];
+  FTYPE Vc0[NDIM];
+  FTYPE Xc0[NDIM];
+  int dim;
+  
+  //X1 = {0, X[1], X0[1], 0}
+  DLOOPA(dim) Xc0[dim] = X[dim];
+  Xc0[2] = X0[2];
+  
+  vofx( Xc0, Vc0 );
+  vofx( X0, V0 );
+  
+  
+  return( V0[1] * sin(V0[2]) / Vc0[1] );
+}
+
+FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE V0[NDIM];
+  FTYPE V0c[NDIM];
+  FTYPE X0c[NDIM];
+  int dim;
+  
+  //X1 = {0, X[1], X0[1], 0}
+  DLOOPA(dim) X0c[dim] = X0[dim];
+  X0c[2] = X[2];
+  
+  vofx( X, V );
+  vofx( X0c, V0c );
+  vofx( X0, V0 );
+  
+  return( V0[1] * sin(V0c[2]) / V[1] );
+}
+
+
+FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE V0[NDIM];
+  FTYPE Vc0[NDIM];
+  FTYPE Xc0[NDIM];
+  FTYPE Xcmid[NDIM];
+  FTYPE Vcmid[NDIM];
+  int dim;
+  FTYPE res;
+  FTYPE th0;
+  
+  DLOOPA(dim) Xc0[dim] = X[dim];
+  Xc0[2] = X0[2];
+  vofx( Xc0, Vc0 ); 
+  
+  DLOOPA(dim) Xcmid[dim] = X[dim];
+  Xcmid[2] = 0;
+  vofx( Xcmid, Vcmid ); 
+
+  vofx( X0, V0 ); 
+  vofx( X, V ); 
+  
+  th0 = asin( sinth0(X0, X, vofx) );
+  
+  res = (V[2] - Vc0[2])/(Vcmid[2] - Vc0[2]) * (Vcmid[2]-th0) + th0;
+  
+  return( res );
+}
+
+//Adjusts V[2]=theta so that a few innermost cells around the pole
+//become cylindrical
+//ASSUMES: poles are at 
+//            X[2] = -1 and +1, which correspond to
+//            V[2] = 0 and pi
+void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
+{
+  FTYPE x10 = 2.5;
+  FTYPE x20 = -0.95;
+  FTYPE npiovertwos;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE Vin[NDIM];
+  FTYPE X0[NDIM], V0[NDIM];
+  FTYPE Xtr[NDIM], Vtr[NDIM];
+  FTYPE f1, f2, dftr;
+  FTYPE sinth, th;
+  int dim, ismirrored;
+  
+  vofx( Xin, Vin );
+  
+  // BRING INPUT TO 1ST QUADRANT:  X[2] \in [-1 and 0]
+  to1stquadrant( Xin, X, &ismirrored );  
+  vofx( X, V );
+  
+  //initialize X0: cylindrify region
+  //X[1] < X0[1] && X[2] < X0[2] (value of X0[3] not used)
+  X0[0] = 0;
+  X0[1] = x10;
+  X0[2] = x20;
+  X0[3] = 0;
+  vofx( X0, V0 );
+  
+  //{0, roughly midpoint between grid origin and x10, -1, 0}
+  DLOOPA(dim) Xtr[dim] = X[dim];
+  Xtr[1] = log( 0.5*( exp(X0[1])+exp(startx[1]) ) );   //always bound to be between startx[1] and X0[1]
+  vofx( Xtr, Vtr );
+  
+  f1 = func1( X0, X, vofx );
+  f2 = func2( X0, X, vofx );
+  dftr = func2( X0, Xtr, vofx ) - func1( X0, Xtr, vofx );
+      
+  // Compute new theta
+  sinth = maxs( V[1]*f1, V[1]*f2, Vtr[1]*fabs(dftr)+SMALL ) / V[1];
+  
+  th = asin( sinth ); 
+  
+  //initialize Vout with the original values
+  DLOOPA(dim) Vout[dim] = Vin[dim];
+    
+  //apply change in theta in the original quadrant
+  if( 0 == ismirrored ) {
+    Vout[2] = Vin[2] + (th - V[2]);
+  }
+  else {
+    //if mirrrored, flip the sign 
+    Vout[2] = Vin[2] - (th - V[2]);
+  }
+}
+
+FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  
+  vofx( X, V );
+  
+  return( sin(V[2]) ); 
+}
+
+FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE Xca[NDIM];
+  FTYPE func2;
+  int dim;
+  FTYPE sth1in, sth2in, sth1inaxis, sth2inaxis;
+  
+  //{0, X[1], -1, 0}
+  DLOOPA(dim) Xca[dim] = X[dim];
+  Xca[2] = -1;
+  
+  vofx( X, V );
+  
+  sth1in = sinth1in( X0, X, vofx );
+  sth2in = sin( th2in(X0, X, vofx) );
+  
+  sth1inaxis = sinth1in( X0, Xca, vofx );
+  sth2inaxis = sin( th2in(X0, Xca, vofx) );
+  
+  func2 = minmaxs( sth1in, sth2in, fabs(sth2inaxis-sth1inaxis)+SMALL, X[1] - X0[1] );
+  
+  return( func2 ); 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
