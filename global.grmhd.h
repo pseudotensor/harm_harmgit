@@ -192,6 +192,34 @@
 // If get message of append couldn't be completed, delete that file on ranch
 // If get message that not enough space to copy files, then contact TACC.
 //
+// bbcp -a will not copy if prior copy failed in some way that bbcp thinks the file is changed.  The file will be skipped!
+// Can create a file list:
+//
+// ls > filelist.txt OR to ignore some files: ls --ignore=dumps --ignore=images > filelist.txt
+//
+//
+// and copy and check err.txt file for such messages "append not poosible":
+// ~/bin/bbcp -a -k -P 5 -I filelist.txt -l err.txt tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+//
+// OR to avoid time-out issues with large file lists:
+// ensure -b value is at least twice -s value
+// can make s up to (say) 32 or 64 on LAN, but keep to order 4-10 on WAN
+//
+//////// ~/bin/bbcp -s 4 -b 8 -w 2m -a -k -P 5 -I filelist.txt -l err.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+//
+// ~/bin/bbcp -s 4 -b 8 -w 2m -a -k -P 5 -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+//
+// Best not use bbcp's -r for recursive since won't recover properly after using -a -k when copy failed.
+//
+//
+// Edited the bbcp code in bbcp_FileSpec.C to overwrite file if append not (sic) poosible, but on ranch can't compile.
+//
+// Note that if use -l err.txt, then may not tell you if completed successfully or not!  Just stops.  While NOT using -l err.txt means don't know if had any "poosible" problems.
+//
+//
+//
+//
+//
 //
 // Teragrid LONI QueenBee (Queen Bee):
 // http://www.loni.org/systems/

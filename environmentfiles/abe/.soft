@@ -1,0 +1,20 @@
+# Common TeraGrid Software Stack Version 3 (CTSSv3)
+#
+# Please consult TeraGrid user documentation at
+#    http://www.teragrid.org/userinfo/software/softenv.php
+# for information on customizing this file.
+#
+# TeraGrid wide basic software suite
+@teragrid-basic
+
+# TeraGrid wide Globus 4 and Grid software suite
+@globus-4.0
+
+# Platform recommended development software suite
+@teragrid-dev
+
+#add Intel's MKL
++intel-mkl
+
+
+
