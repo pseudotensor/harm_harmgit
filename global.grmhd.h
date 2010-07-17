@@ -216,7 +216,45 @@
 //
 // Note that if use -l err.txt, then may not tell you if completed successfully or not!  Just stops.  While NOT using -l err.txt means don't know if had any "poosible" problems.
 //
+// In the end, this worked:
+// 1) use bbcp as below.  Note that bbcp is the only program I've found that resumes.  For example, for one directory do:
 //
+// ls --ignore=err.txt --ignore=filelist.txt grmhd > filelist.txt
+// [grmhd included above because otherwise might have * in name and bbcp doesn't like that]
+//
+// ~/bin/bbcp -a -k -P 5 -V -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr3.abcdefgh/dumps/ &> err.txt
+//
+// 2) Copy each directory (the root data, dumps, images).  Can be done at the same time in different shells.  Don't use recursive copy in bbcp since won't resume correctly.
+//
+// 3) Once copy "done", need to check if really copied and if all files copied and if correctly copied.
+//
+// 4) Repeat copy and ensure stderr (stored in err.txt) never outputs "poosible" or stops copying certain files.  This checks that append and all things are making sense to bbcp.  bbcp can append incorrectly and make files too short and even too long!
+//
+// 5) Repeat copy and output stderr to file so can:
+//    grep "already been copied" crap.txt | wc
+//    This checks number of actual files copied.  bbcp can skip files in the list provided, or even if looping on shell, or if using shell expansion.  So unreliable.
+//
+// 6) Check result on remote machine per directory:
+//
+// ls --ignore=dumps --ignore=images |wc
+//
+// 7) If numbers match, then likely have copied everything properly.  Should be correct size too, but can check manually that files have uniform looking sizes.  du -s doesn't help much since on ranger sizes are measured oddly.
+// 
+//
+// Tried uberftp and globus-url-copy, but problems
+//
+//uberftp -binary -cksum on -keepalive 60 -parallel 10 -resume thickdiskr2 ranch.tacc.utexas.edu
+//then enter and do:
+// resume thickdiskr2
+// put -r thickdiskr2
+// for recursive copy.  Not sure how failure resume works if at all.
+//
+// Problem is that certificate expires very soon and kills copy, so useless to copy large files.
+//
+// Also tried:
+// globus-url-copy -b -r -restart -p 5 file://thickdiskr2  gsiftp://ranch.tacc.utexas.edu:
+//
+// But failed to figure out how to get it's special certificate using that other program with a similar name.
 //
 //
 //
@@ -765,6 +803,16 @@
 // To revert a single file:
 // svn merge -r <last revision>:<wanted revision> <filename>
 // check: svn diff -r <wanted revision> <filename>
+
+
+
+// git comments:
+//
+
+// Got git with:
+// git@harm.unfuddle.com:harm/harmgit.git
+
+
 
 
 // Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu to portal through ki-rh42):
