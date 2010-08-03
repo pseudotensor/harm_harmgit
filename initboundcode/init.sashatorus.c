@@ -211,7 +211,8 @@ int init_defcoord(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==THINTORUS)
-  defcoord = REBECCAGRID ;
+  defcoord = SJETCOORDS;
+  //defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -296,7 +297,8 @@ int init_global(void)
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
 #elif( WHICHPROBLEM==THINTORUS )
-  cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
+  //cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
+  cooling = NOCOOLING; //no cooling
 #else
   cooling = NOCOOLING; //no cooling
 #endif
@@ -1259,7 +1261,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
       if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
-      trifprintf("rhoav=%g q=%g\n", rho_av, q);
+      //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
 	//       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;

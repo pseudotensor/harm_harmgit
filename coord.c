@@ -1438,6 +1438,8 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
     FTYPE  fac, faker, ror0nu;
     
+    V[0] = X[0];
+
     theexp = npow*X[1];
 
     if( X[1] > x1br ) {
@@ -3389,7 +3391,7 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   //this forces -2 < Xout[2] < 2
   Xout[2] -= 4 * ntimes;
   
-  ismirrored = 0;
+  *ismirrored = 0;
   
   //now force -1 < Xout[2] < 0
   if( Xout[2] < -1. ) {
@@ -3493,14 +3495,14 @@ void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
   int dim, ismirrored;
   
   vofx( Xin, Vin );
-  
+
   // BRING INPUT TO 1ST QUADRANT:  X[2] \in [-1 and 0]
   to1stquadrant( Xin, X, &ismirrored );  
   vofx( X, V );
-  
+
   //initialize X0: cylindrify region
   //X[1] < X0[1] && X[2] < X0[2] (value of X0[3] not used)
-  X0[0] = 0;
+  X0[0] = Xin[0];
   X0[1] = x10;
   X0[2] = x20;
   X0[3] = 0;
@@ -3510,7 +3512,7 @@ void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
   DLOOPA(dim) Xtr[dim] = X[dim];
   Xtr[1] = log( 0.5*( exp(X0[1])+exp(startx[1]) ) );   //always bound to be between startx[1] and X0[1]
   vofx( Xtr, Vtr );
-  
+
   f1 = func1( X0, X, vofx );
   f2 = func2( X0, X, vofx );
   dftr = func2( X0, Xtr, vofx ) - func1( X0, Xtr, vofx );
@@ -3522,7 +3524,7 @@ void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
   
   //initialize Vout with the original values
   DLOOPA(dim) Vout[dim] = Vin[dim];
-    
+
   //apply change in theta in the original quadrant
   if( 0 == ismirrored ) {
     Vout[2] = Vin[2] + (th - V[2]);
