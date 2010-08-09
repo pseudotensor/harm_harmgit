@@ -18,7 +18,7 @@
 #endif
 
 #if(1) // original version (gets pretty damn low for many, but not all, derivatives -- some 1E-6 rather than 1E-13)
-#define MAXITER 5
+#define MAXITER 15  //Increased by Sasha up from 5 to avoid non-convergence errors (>1e-5)
 #define NRANSI
 #define CON 1.3
 #define CON2 (CON*CON)
