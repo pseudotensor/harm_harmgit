@@ -3310,7 +3310,7 @@ FTYPE Fangle( FTYPE x )
 {
   FTYPE res;
 
-  if( x <= 0 ) {
+  if( x <= -1 ) {
     res = 0;
   }
   else if( x >= 1 ) {
