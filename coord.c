@@ -53,8 +53,8 @@ static FTYPE fracdisk;
 static FTYPE fracjet;
 static FTYPE rsjet;
 static FTYPE r0jet;
-static FTYPE r0mono;
 static FTYPE r0disk;
+static FTYPE rdiskend;
 static FTYPE jetnu;
 
 
@@ -216,13 +216,13 @@ void set_coord_parms_nodeps(int defcoordlocal)
     r0jet = 4;    
 
     //distance at which disk part of the grid becomes monopolar
-    //the smaller r0mono, the smaller the thickness of the disk 
+    //the larger r0disk, the larger the thickness of the disk 
     //to resolve
-    r0mono = 6;
+    r0disk = 8;
 
     //distance after which the disk grid collimates to merge with the jet grid
     //should be roughly outer edge of the disk
-    r0disk = 40;
+    rdiskend = 80;
 
     /////////////////////
     //PHI GRID SETUP
@@ -610,7 +610,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0mono,r0disk,jetnu);
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -706,7 +706,7 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == SJETCOORDS) {
 	fscanf(in,HEADER7IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&fracphi);
-	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0mono,&r0disk,&jetnu);
+	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
@@ -819,8 +819,8 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&fracdisk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&fracjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
-    MPI_Bcast(&r0mono, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rdiskend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET6COORDS) {
@@ -1459,7 +1459,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 #elif(1) //SASHA's
     fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
 
-    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0mono,0.5*r0mono,r0mono)*minlin(V[1],r0disk,0.5*r0disk,r0mono)/r0mono - rsjet*Rin;
+    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
     
     ror0nu = pow( faker/r0jet, jetnu/2 );
 
