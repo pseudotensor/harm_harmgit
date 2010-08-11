@@ -236,16 +236,6 @@ void set_coord_parms_nodeps(int defcoordlocal)
       fracphi = 0.5;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
     }
 
-
-
-#if(0)
-    // must be same as in dxdxp() -- atch: don't worry for now since use numerical dxdxp
-    r1jet=2.8;
-    njet=0.3;
-    r0jet=20.0;
-    rsjet=80.0;
-    Qjet=1.3; // chosen to help keep jet resolved even within disk region
-#endif
   }
   else if (defcoordlocal == JET6COORDS) {
 
