@@ -13,7 +13,7 @@
 
 #define N1 16
 #define N2 16
-#define N3 4
+#define N3 16
 
 // atch adjusts
 #undef MAXWELL
