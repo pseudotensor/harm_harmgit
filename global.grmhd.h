@@ -195,7 +195,9 @@
 // bbcp -a will not copy if prior copy failed in some way that bbcp thinks the file is changed.  The file will be skipped!
 // Can create a file list:
 //
-// ls > filelist.txt OR to ignore some files: ls --ignore=dumps --ignore=images > filelist.txt
+// ls > filelist.txt
+// OR to ignore some files:
+// ls --ignore=dumps --ignore=images --ignore=thickdiskr3 --ignore=filelist.txt --ignore=err.txt > filelist.txt
 //
 //
 // and copy and check err.txt file for such messages "append not poosible":
@@ -209,7 +211,9 @@
 //
 // ~/bin/bbcp -s 4 -b 8 -w 2m -a -k -P 5 -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
 //
-// Best not use bbcp's -r for recursive since won't recover properly after using -a -k when copy failed.
+// OLD: Best not use bbcp's -r for recursive since won't recover properly after using -a -k when copy failed.
+//
+//
 //
 //
 // Edited the bbcp code in bbcp_FileSpec.C to overwrite file if append not (sic) poosible, but on ranch can't compile.
@@ -221,8 +225,16 @@
 //
 // ls --ignore=err.txt --ignore=filelist.txt grmhd > filelist.txt
 // [grmhd included above because otherwise might have * in name and bbcp doesn't like that]
+// -b + 100 helps avoid stalls with ranch and tape processing on ranch side.
 //
-// ~/bin/bbcp -a -k -P 5 -V -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr3.abcdefgh/dumps/ &> err.txt
+// ~/bin/bbcp -a -k -f -b +100 -P 5 -V -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr3.abcdefgh/dumps/ &> err.txt
+//
+// Can also try without -I filelist.txt and use recursive copy in new version:
+// Add: -r  and give path name(s) just before destination
+// E.g.:
+//
+// ~/bin/bbcp -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' thickdisk14.ab thickdiskrr2.ab tg802609@ranch.tacc.utexas.edu: &> crapnew4.txt
+//
 //
 // 2) Copy each directory (the root data, dumps, images).  Can be done at the same time in different shells.  Don't use recursive copy in bbcp since won't resume correctly.
 //
@@ -231,12 +243,21 @@
 // 4) Repeat copy and ensure stderr (stored in err.txt) never outputs "poosible" or stops copying certain files.  This checks that append and all things are making sense to bbcp.  bbcp can append incorrectly and make files too short and even too long!
 //
 // 5) Repeat copy and output stderr to file so can:
-//    grep "already been copied" crap.txt | wc
+//    grep "already been copied" err.txt | wc
 //    This checks number of actual files copied.  bbcp can skip files in the list provided, or even if looping on shell, or if using shell expansion.  So unreliable.
 //
 // 6) Check result on remote machine per directory:
 //
-// ls --ignore=dumps --ignore=images |wc
+// ls --ignore=dumps --ignore=images --ignore=filelist.txt --ignore=err.txt |wc
+//
+// 6.5) Check filelist.txt to ensure actually copied all files:
+//
+// wc filelist.txt
+// OR for recursive folders:
+// find <list of space separated folders> > filelist.txt | wc
+// E.g.:
+// find thickdiskrr2.ab thickdisk14.ab > postfilelist.txt
+//
 //
 // 7) If numbers match, then likely have copied everything properly.  Should be correct size too, but can check manually that files have uniform looking sizes.  du -s doesn't help much since on ranger sizes are measured oddly.
 // 

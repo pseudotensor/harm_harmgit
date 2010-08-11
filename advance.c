@@ -10,6 +10,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
 
 
 static int prepare_globaldt(
+			    int truestep, 
 		     FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
 		     FTYPE accdt,int accdti,int accdtj,int accdtk,
 		     FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
@@ -34,14 +35,14 @@ static void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE
 static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
 
 
-static int advance_standard(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+static int advance_standard(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
 			    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
 			    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 			    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 			    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			    FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
 			    FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int stagenow, int numstages, FTYPE *ndt);
-static int advance_finitevolume(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+static int advance_finitevolume(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
 				FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
 				FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 				FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
@@ -82,7 +83,7 @@ void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 // 3) pf is modified using Utoprim at each zone using pb for sources (to correspond to fluxes which used pb)
 //
 // So in the end only pf is modified at each zone, so the loop changing p at previous (i,j) location doesn't affect the any new location in (i,j)
-int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
 	    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
 	    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 	    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
@@ -107,11 +108,11 @@ int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][N
   //
   ////////////////
   if(DOENOFLUX==ENOFINITEVOLUME){
-    MYFUN(advance_finitevolume(stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_finitevolume()", 1);
+    MYFUN(advance_finitevolume(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_finitevolume()", 1);
   }
   else if((DOENOFLUX==NOENOFLUX)||(DOENOFLUX==ENOFLUXRECON)||(DOENOFLUX==ENOFLUXSPLIT)){
     // new standard preserves conserved quantities even when metric changes
-    MYFUN(advance_standard(stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
+    MYFUN(advance_standard(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
   }
   else{
     dualfprintf(fail_file,"No such DOENOFLUX=%d\n",DOENOFLUX);
@@ -138,6 +139,7 @@ int advance(int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][N
 // this method has updated field staggered method
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
 static int advance_standard(
+			    int truestep,
 		     int stage,
 		     FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
 		     FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
@@ -303,7 +305,7 @@ static int advance_standard(
 
 
 
-  if(dt!=0.0){ // only do if not just passing through
+  if(truestep){ // only do if not just passing through
 
     if(1){
       // NORMAL:
@@ -399,7 +401,7 @@ static int advance_standard(
 
 
 
-  if(dt!=0.0){
+  if(truestep){
 
 
     // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]
@@ -563,7 +565,7 @@ static int advance_standard(
 
       } // end COMPZLOOP :: end looping to obtain dUriemann and full unew update
     }// end parallel block
-  } // end if dt!=0.0
+  } // end if truestep
   else{
     // then nothing to do since nothing changed
     // previously updated dU and got new ucum as fed into metric, but now metric has its own ucummetric so all that is not needed
@@ -594,7 +596,7 @@ static int advance_standard(
   //
   // uses unew that's NOT updated yet
   /////////////////////////////////////////////
-  if(dt!=0.0){
+  if(truestep){
     if(doingmetricsubstep()){
 #if(SPLITNPR)
       // don't update metric if only doing B1-B3
@@ -614,7 +616,7 @@ static int advance_standard(
   // compute flux diagnostics (accurately using all substeps)
   //
   ///////////////////////////////
-  if(dt!=0.0){
+  if(truestep){
     // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
     // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
 #if(SPLITNPR)
@@ -849,7 +851,7 @@ static int advance_standard(
   /////////////////////////////////
 
 
-  prepare_globaldt(ndt1,ndt2,ndt3,accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,ndt);
+  prepare_globaldt(truestep,ndt1,ndt2,ndt3,accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,ndt);
 
 
 
@@ -868,7 +870,9 @@ static int advance_standard(
 
 // finite volume method NOT SETUP FOR CONSISTENT METRIC EVOLUTION YET -- EASY, JUST NOT DOING IT YET -- FOLLOW ABOVE AS EXAMPLE OF WHAT TO DO
 // also not setup for staggered field method
-static int advance_finitevolume(int stage,
+static int advance_finitevolume(
+				int truestep,
+				int stage,
 			 FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
 			 FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
 			 FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
@@ -1042,7 +1046,7 @@ static int advance_finitevolume(int stage,
   trifprintf( "#0f");
 #endif
 
-  if(dt!=0.0){
+  if(truestep){
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
     MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
@@ -1072,7 +1076,7 @@ static int advance_finitevolume(int stage,
   //
   ////////////////////////
 
-  if(dt!=0.0){
+  if(truestep){
     // GODMARK: other/more special cases?
 #if(WHICHEOM==WITHNOGDET && (NOGDETB1==1 || NOGDETB2==1 || NOGDETB3==1) )
     // for FLUXB==FLUXCTSTAG, assume no source term for field
@@ -1153,7 +1157,7 @@ static int advance_finitevolume(int stage,
 	avg2cen_interp(locpl,whichpltoavg, ifnotavgthencopy, ENOSOURCETERM, ENOCENT2AVGTYPE, pb, POINT(dUgeomarray), POINT(dUgeomarray));
       }
     }// end parallel region
-  }// end if dt!=0.0
+  }// end if truestep
 
 
 
@@ -1209,7 +1213,7 @@ static int advance_finitevolume(int stage,
 
 
 
-      if(dt!=0.0){
+      if(truestep){
 	// get source term (volume integrated)
 	PLOOP(pliter,pl) dUgeom[pl]=MACP0A1(dUgeomarray,i,j,k,pl);
 
@@ -1314,7 +1318,7 @@ static int advance_finitevolume(int stage,
   //
   // uses unew that's NOT updated yet
   /////////////////////////////////////////////
-  if(dt!=0.0){
+  if(truestep){
 #if(SPLITNPR)
     // don't update metric if only doing B1-B3
     if(advancepassnumber==-1 || advancepassnumber==1)
@@ -1331,7 +1335,7 @@ static int advance_finitevolume(int stage,
   // compute flux diagnostics (accurately using all substeps)
   //
   ///////////////////////////////
-  if(dt!=0.0){
+  if(truestep){
     // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
     // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
 #if(SPLITNPR)
@@ -1540,7 +1544,7 @@ static int advance_finitevolume(int stage,
   //
   /////////////////////////////////
 
-  prepare_globaldt(ndt1,ndt2,ndt3,accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,ndt);
+  prepare_globaldt(truestep,ndt1,ndt2,ndt3,accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,ndt);
  
 
 #if(PRODUCTION==0)
@@ -1556,6 +1560,7 @@ static int advance_finitevolume(int stage,
 
 // some dt calculations done at end of each substep
 static int prepare_globaldt(
+			    int truestep,
 		     FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
 		     FTYPE accdt,int accdti,int accdtj,int accdtk,
 		     FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
@@ -1579,7 +1584,7 @@ static int prepare_globaldt(
   wavedtglobal    = wavedt;
 
 #if(PRODUCTION==0)
-  if(dt!=0.0){
+  if(truestep){
     // report per-CPU time-step limited every 100 time steps
 
     // GODMARK: 1 : do always

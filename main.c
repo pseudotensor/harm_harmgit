@@ -108,7 +108,10 @@ int main(int argc, char *argv[])
     // Then can vary ACTIVEREGION or ACTIVESUBREGION or something on this scale to do AMR and ATR
     // currently ok to have emf as Atemp since both are used as temp variables to get flux or vpot independently
     // ulastglobal used for evolving vpot, which occurs after all steps, so ok to use ulastglobal
-    step_ch_full(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+
+    int truestep=1; // indicates true time step and not fake pass-through (as used by, e.g., metric gravity update)
+
+    step_ch_full(truestep,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 
     // get total number of inversion steps
     mpiisum0(&nstroke,0);

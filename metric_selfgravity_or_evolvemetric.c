@@ -580,7 +580,8 @@ int compute_new_metric_and_prims(int whichtime, SFTYPE MBHpar, SFTYPE apar, SFTY
     // note that finitevolume advance already uses prior ucum for Ui which becomes new ucum and is processed
     dtold=dt;
     dt=0.0;
-    step_ch_full(prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct,F1,F2,F3,Atemp,ucons);
+    int truestep=0;
+    step_ch_full(truestep,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct,F1,F2,F3,Atemp,ucons);
     //    dump(9999);
     dt=dtold;
     //    realnstep--;  // not necessary since don't iterate if dt==0.0
