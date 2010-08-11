@@ -231,7 +231,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = 0.95;
+  a = 0.9;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #else
@@ -262,9 +262,9 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.92 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  Rin = 0.88 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
-  Rout = 50.;
+  Rout = 1.e4;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
@@ -1030,8 +1030,8 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   ///
  
   kappa = 0.01;
-  n = 2. - 1.65; 
-  rmax = 35.;
+  n = 2. - 1.97; 
+  rmax = 65.;
 
   
   ///
@@ -1232,7 +1232,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
-      fieldhor=0.065;
+      fieldhor=0.28;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
