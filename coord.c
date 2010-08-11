@@ -190,8 +190,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     npow2=4.0; //power exponent
-    cpow2=0.05; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-    rbr = 200.;  //radius at which hyperexponentiation kicks in
+    cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = 100.;  //radius at which hyperexponentiation kicks in
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
     /////////////////////
@@ -206,13 +206,15 @@ void set_coord_parms_nodeps(int defcoordlocal)
     jetnu = 0.75;  //the nu-parameter that determines jet shape
 
     //subtractor, controls the size of the last few cells close to axis:
-    //if rsjet = 0, then no modification
+    //if rsjet = 0, then no modification <- *** default for use with grid cylindrification
     //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
     //                which makes the timestep larger
-    rsjet = 0.7; 
+    rsjet = 0.0; 
 
-    //distance at which theta-resolution is exactly uniform in jet;
-    //otherwise, near-uniform near jet axis but less resolution further from it
+    //distance at which theta-resolution is *exactly* uniform in jet;
+    //otherwise, near-uniform near jet axis but less resolution (much) further from it
+    //the larger r0jet, the larger the thickness of the jet 
+    //to resolve
     r0jet = 4;    
 
     //distance at which disk part of the grid becomes monopolar
