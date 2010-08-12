@@ -418,7 +418,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 	    if(j>=N2/2){
 
 	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-j,k,TH);
-	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH);
+	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
 
 	    }// end over upper hemisphere
 	  
@@ -440,7 +440,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 	    if(j>=N2/2){
 
 	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
-	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH);
+              GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
 
 
 	    }// end over upper hemisphere
