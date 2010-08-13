@@ -264,7 +264,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.88 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
-  Rout = 1.e4;
+  Rout = 5.e4;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
@@ -422,7 +422,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
-  rin = 20. ;
+  rin = 10. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -1031,7 +1031,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
  
   kappa = 0.01;
   n = 2. - 1.97; 
-  rmax = 65.;
+  rmax = 20.;
 
   
   ///
