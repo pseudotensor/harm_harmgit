@@ -50,7 +50,7 @@ static void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FT
 static FTYPE compute_udt( FTYPE r, FTYPE th, FTYPE a, FTYPE l );
 static FTYPE compute_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE l );
 static FTYPE compute_l_from_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE omega );
-static FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al );
+static FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE c, FTYPE al );
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
@@ -903,16 +903,16 @@ int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i,
 
 FTYPE lfunc( FTYPE lin, FTYPE *parms )
 {    
-   FTYPE gutt, gutp, gupp, al, k;
+   FTYPE gutt, gutp, gupp, al, c;
    FTYPE ans;
    
    gutt = parms[0];
    gutp = parms[1];
    gupp = parms[2];
    al = parms[3]; 
-   k = parms[4];
+   c = parms[4];
    
-   ans = (gutp - lin * gupp)/( gutt - lin * gutp) - k *pow(lin,al);
+   ans = (gutp - lin * gupp)/( gutt - lin * gutp) - c *pow(lin/c,al); // (lin/c) form avoids catastrophic cancellation due to al = 2/n - 1 >> 1 for 2-n << 1
    
    return(ans);
 }
@@ -932,7 +932,7 @@ void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gu
       pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
 }  
   
-FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al )
+FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE c, FTYPE al )
 {
   FTYPE gutt, gutp, gupp;
   FTYPE parms[5];
@@ -945,12 +945,12 @@ FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE k, FTYPE al )
   parms[1] = gutp;
   parms[2] = gupp;
   parms[3] = al; 
-  parms[4] = k;
+  parms[4] = c;
   
   //solve for lin using bisection, specify large enough root search range, (1e-3, 1e3) 
   //demand accuracy 5x machine prec.
   //in non-rel limit l_K = sqrt(r), use 10x that as the upper limit:
-  l = rtbis( &lfunc, parms, 1e-7, 10.*sqrt(Rout), 5.*DBL_EPSILON );
+  l = rtbis( &lfunc, parms, 1, 10*sqrt(r), 5.*DBL_EPSILON );
   
   return( l );
 }
@@ -1056,7 +1056,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   //l = lin at inner edge, r = rin
   r = rin;
   th = M_PI_2l;
-  lin = thintorus_findl( r, th, a, k, al );
+  lin = thintorus_findl( r, th, a, c, al );
       
   //finding DHK03 lin, utin, f (lin)
   utin = compute_udt( r, th, a, lin );
@@ -1073,7 +1073,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   th=V[2];
   
   //l at current r, th
-  l = thintorus_findl( r, th, a, k, al );
+  l = thintorus_findl( r, th, a, c, al );
   
   
   udt = compute_udt( r, th, a, l );
