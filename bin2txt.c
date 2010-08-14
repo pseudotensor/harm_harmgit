@@ -394,7 +394,11 @@ int main(
   //
   /////////////////////////////
 #if(V5D)
+
+  // for source==5, don't actually use header, so header can be blank but file name should still be added to command line
+
   if(dest==5){
+
     NumTimes=TS;
     NumVars=numcolumns;
     Nr=N3; // (whine) Avery said use N3 instead of N1
@@ -438,7 +442,7 @@ int main(
 
   if((dest==5)||(source==5)){
 
-    if(source==0) CompressMode=1; // 1,2,4 bytes per grid point
+    if(source==0 || dest==0) CompressMode=1; // 1,2,4 bytes per grid point
     else CompressMode=4; // 1,2,4 bytes per grid point (assume want more precision if data)
     // in general, CompressMode==2 can be bad for vector tracing when vectors vary alot away from (say) central BH
     //    CompressMode=1; // override
@@ -458,7 +462,11 @@ int main(
     // see convert/test.c in source code
     
     fprintf(stderr,"Args: %g %g : %g %g:  %g %g\n",ProjArgs[0],ProjArgs[1],ProjArgs[2],ProjArgs[3],VertArgs[0],VertArgs[1]); fflush(stderr);
-    fclose(vis5dheader); // no longer needed
+
+    if(dest==5){
+      fclose(vis5dheader); // no longer needed
+    }
+
   }
 
 #endif
@@ -471,6 +479,9 @@ int main(
   //
   // after done, input and output names will be formed from these lists if inputlist or outputlist are non-zero
   ////////////////
+
+  outputlist=inputlist=0; //default
+
   if(TS>1){
     // then ignore argument file input/output names and get from list
     // order is ALL input names in 1 file, ALL output names in another file
@@ -585,7 +596,7 @@ int main(
   /////////////////////////////
 #if(V5D)
   if((source==5)||(dest==5)){
-    fprintf(stderr,"Allocated memory for source=%d dest=%d\n",source,dest);
+    fprintf(stderr,"Allocated memory for source=%d dest=%d\n",source,dest); fflush(stderr);
     arrayvisf=(float*)malloc(sizeof(float)*numcolumns*N1*N2*N3); // (DIM0->N1, DIM1->N2 where array[DIM0][DIM1])
     arrayvis=arrayvisf;
     if(arrayvis==NULL){
@@ -593,6 +604,10 @@ int main(
       exit(1);
     }
     arrayvisoutput=(float*)malloc(sizeof(float)*N1*N2*N3); // (DIM0->N1, DIM1->N2 where array[DIM0][DIM1])
+    if(arrayvisoutput==NULL){
+      fprintf(stderr,"cannot allocate array vis5d data: arrayvisoutput\n");
+      exit(1);
+    }
   }
 #endif
 
@@ -684,9 +699,147 @@ int main(
     }
 #endif
 #if(V5D)
-    else if((source==5)&&(it==0)){ // assume all input vis5d are multi-timed
+    else if((source==5)&&(it==it)){ // No longer assume: // assume all input vis5d are multi-timed
       // not yet
-      fprintf(stderr,"NOT YET\n"); exit(1);
+      //      fprintf(stderr,"NOT YET\n"); exit(1);
+
+      v5dstruct v;
+      int time,var;
+      float *data;
+      float min, max, sum, sumsum;
+      int missing, good;
+
+      // code pulled from v5dstats.c
+
+      if (!v5dOpenFile( INPUT_NAME, &v )) {
+	printf("Error: couldn't open %s for reading\n", INPUT_NAME );
+	exit(0);
+      }
+
+      if(v.NumTimes>1){
+	fprintf(stderr,"Not quite setup for multi-timed inputs since need to increase size of array to have time dimension\n");
+	fflush(stderr);
+	exit(1);
+      }
+
+      // assume same size for all times and variables
+      int sizeproblem=0;
+      for (time=0; time<v.NumTimes; time++) {
+	for (var=0; var<v.NumVars; var++) {
+	  // v5d data size
+	  int nrncnl;
+	  nrncnl = v.Nr * v.Nc * v.Nl[var];
+	  
+	  if(nrncnl!=N1*N2*N3){
+	    fprintf(stderr,"Memory created was per-time per-variable of size %d while v5d file had %d\n",N1*N2*N3,nrncnl);
+	    fflush(stderr);
+	    sizeproblem++;
+	  }
+	  else{
+	    // debug:
+	    //	    fprintf(stderr,"time=%d var=%d size=%d\n",time,var,nrncnl); fflush(stderr);
+
+	    // read data into array
+	    //	    data = (float *) malloc( nrncnl * sizeof(float) );
+	    data=arrayvisoutput;
+
+	    if (!v5dReadGrid( &v, time, var, data )) {
+	      printf("Error while reading grid (time=%d,var=%s)\n", time+1, v.VarName[var] );
+	      exit(0);
+	    }
+
+	    //	    min = MISSING;
+	    //	    max = -MISSING;
+	    //	    missing = 0;
+	    //	    good = 0;
+	    //	    sum = 0.0;
+	    //	    sumsum = 0.0;
+	    //
+	    //	    for (i=0;i<nrncnl;i++) {
+	    //	      /*
+	    //		if (data[i]!=data[i]) {
+	    //		printf("bad: %g\n", data[i]);
+	    //		}
+	    //	      */
+	    //	      if ( IS_MISSING(data[i]) ) {
+	    //		missing++;
+	    //	      }
+	    //	      else {
+	    //		good++;
+	    //		if (data[i]<min) {
+	    //                  min = data[i];
+	    //		}
+	    //		if (data[i]>max) {
+	    //                  max = data[i];
+	    //		}
+	    //		sum += data[i];
+	    //		sumsum += data[i]*data[i];
+	    //	      }
+	    //	    }
+
+
+	    if(dest==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
+	      // also assumes linear legend!
+	      a=minmax[0][var];
+	      b=minmax[1][var];
+	    }
+	    else{ // to cancel change
+	      a=0.0;
+	      b=255.0;
+	    }
+
+	    // loop over spatial dimensions // 	    for (i=0;i<nrncnl;i++)
+	    for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
+		  ijkjon=(i+(j+k*N2)*N1)*(v.NumVars) + var;  // so var (columns) is fastest
+		  ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
+		  
+		  arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
+		  //		  fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
+
+		}
+
+	    //	    free( data );
+
+	    //	    if (good==0) {
+	    //	      /* all missing */
+	    //	      printf("%4d  %-8s %-5s  all missing values\n",
+	    //		     time+1, v.VarName[var], v.Units[var] );
+	    //	    }
+	    //	    else {
+	    //	      float mean = sum / good;
+	    //	      float tmp = (sumsum - sum*sum/good) / (good-1);
+	    //	      float sd;
+	    //	      if (tmp<0.0) {
+	    //		sd = 0.0;
+	    //	      }
+	    //	      else {
+	    //		sd = sqrt( tmp );
+	    //	      }
+	    //	      printf("%4d  %-8s %-5s %13g%13g%13g%13g  %4d\n",
+	    //		     time+1, v.VarName[var], v.Units[var],
+	    //		     min,  max,  mean, sd,  missing );
+	    //	    }
+
+
+
+	  }// end else if ok to read i,j,k block of data
+	}// end loop over reading variables
+      }// end loop over reading times
+
+
+
+
+      if(sizeproblem!=0){
+	fprintf(stderr,"Size problem: %d\n",sizeproblem);
+	fflush(stderr);
+	exit(1);
+      }
+
+
+      v5dCloseFile( &v );
+      fprintf(stderr,"Closing vis5d+ file. Done reading vis5d+ file into array\n");
+      fflush(stderr);
+
     }
 #endif
 
@@ -697,10 +850,10 @@ int main(
 
     //////////////////////
     //    
-    // trial open dest file
+    // trial open dest file when processing input list out to 1 file
     //
     //////////////////////
-    if(it==0 && outputlist==0 && inputlist==1){
+    if(it==0 && (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0)){
       if( !(output=fopen(OUTPUT_NAME,"wt"))){
 	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
 	exit(1);
@@ -717,7 +870,7 @@ int main(
     //  
     // deal with header (when doing inputlist, note that this only pipes first input file into any output file)
     //
-    if(pipeheader && it==0 && outputlist==0 && inputlist==1){
+    if(pipeheader && (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0)){
       if( !(output=fopen(OUTPUT_NAME,"wt"))){
 	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
 	exit(1);
@@ -733,7 +886,7 @@ int main(
     }
 
     // close header part if opened
-    if(pipeheader && it==0 && outputlist==0 && inputlist==1){
+    if(pipeheader && (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) ){
       fprintf(output,"\n");
       fclose(output);
     }
@@ -750,7 +903,7 @@ int main(
 
 
 
-    if(dest==0 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+    if(dest==0 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       fprintf(stderr,"Open dest=%d\n",dest);
 
       lname=strlen(OUTPUT_NAME);
@@ -777,7 +930,7 @@ int main(
 	}
       }
     }
-    else if(dest==1 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+    else if(dest==1 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       fprintf(stderr,"Open dest=%d\n",dest);
 
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
@@ -785,14 +938,14 @@ int main(
 	exit(1);
       }
     }
-    else if(dest==2 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+    else if(dest==2 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
 	fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
 	exit(1);
       }
     }
 #if(HDF)
-    else if(dest==3 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+    else if(dest==3 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       fprintf(stderr,"Open dest=%d\n",dest);
 
       // open HDF file
@@ -803,7 +956,7 @@ int main(
       sds_id = SDcreate (sd_id, SDS_NAME, HDFTYPE, rank, dim_sizes);
       start[0]=start[1]=start[2]=start[3]=0;
     }
-    else if(dest==4 && (it==0 && outputlist==0 && inputlist==1 || outputlist==1) ){
+    else if(dest==4 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       fprintf(stderr,"Open dest=%d\n",dest);
 
       // not yet
@@ -833,6 +986,8 @@ int main(
     }
 #endif
 
+
+
     
       
     
@@ -844,6 +999,7 @@ int main(
 
 
     fprintf(stderr,"reading file and putting into other format...\n"); fflush(stderr);
+    fprintf(stderr,"newrows=%d numterms=%d group0=%d\n",numrows,numterms,group[0]); fflush(stderr);
 
     BUFFERINIT;// use to fill/read array if HDF involved
     for(i=0;i<numrows;i++){
@@ -897,6 +1053,8 @@ int main(
 #if(V5D)
 	  case 5:
 	    // source is always float
+	    // nextbuf++ just iterates over fastest index, which is columns then i then j then k as normal for HARM
+	    //	    fprintf(stderr,"nextbuf=%d\n",nextbuf); fflush(stderr);
 	    dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
 	    break;
 #endif
@@ -951,13 +1109,16 @@ int main(
 	  default:
 	    break;
 	  }
-	}
-      }
+	}//end over group
+      }// end over terms
       // skip terms till carraige return (allows parsing out certain extra columns on end)
       if(source==2){ while(fgetc(input)!='\n'); }
       // output carraige return
       if(dest==2) fprintf(output,"\n");
-    }
+
+    }// end over rows
+
+
 
 #if(HDF)
     if(dest==3){
@@ -1076,10 +1237,13 @@ int main(
   // close v5d file which has entire time series in it
   if(dest==5){
     v5dClose();
+    free(arrayvisf);
+    free(arrayvisoutput);
   }
   if(source==5){ // close entire time series v5d
     // not yet
-    fprintf(stderr,"NOT YET\n"); exit(1);
+    free(arrayvisf);
+    free(arrayvisoutput);
   }
 #endif
 

@@ -233,7 +233,7 @@
 // Add: -r  and give path name(s) just before destination
 // E.g.:
 //
-// ~/bin/bbcp -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' thickdisk14.ab thickdiskrr2.ab tg802609@ranch.tacc.utexas.edu: &> crapnew4.txt
+// ~/bin/bbcp -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' thickdisk14.ab thickdiskrr2.ab tg802609@ranch.tacc.utexas.edu: &> err.txt
 //
 //
 // 2) Copy each directory (the root data, dumps, images).  Can be done at the same time in different shells.  Don't use recursive copy in bbcp since won't resume correctly.
