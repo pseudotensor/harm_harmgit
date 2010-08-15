@@ -3392,7 +3392,7 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   }
   else if( Xout[2] > 1. ) {
     Xout[2] -= 2.;
-    *ismirrored = 1;
+    *ismirrored = 0;
   }
   else if( Xout[2] > 0. ) {
     Xout[2] = -Xout[2];
