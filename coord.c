@@ -3496,7 +3496,7 @@ FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 //            V[2] = 0 and pi
 void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
 {
-  FTYPE x10 = 2.5;
+  FTYPE x10 = 3.3;
   FTYPE x20 = -0.975;
   FTYPE npiovertwos;
   FTYPE X[NDIM], V[NDIM];
