@@ -52,7 +52,9 @@ static FTYPE x1br;
 static FTYPE fracdisk;
 static FTYPE fracjet;
 static FTYPE rsjet;
+static FTYPE r0grid;
 static FTYPE r0jet;
+static FTYPE rjetend;
 static FTYPE r0disk;
 static FTYPE rdiskend;
 static FTYPE jetnu;
@@ -211,16 +213,24 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //                which makes the timestep larger
     rsjet = 0.0; 
 
-    //distance at which theta-resolution is *exactly* uniform in jet;
+    //distance at which theta-resolution is *exactly* uniform in the jet grid -- want to have this at BH horizon;
     //otherwise, near-uniform near jet axis but less resolution (much) further from it
-    //the larger r0jet, the larger the thickness of the jet 
+    //the larger r0grid, the larger the thickness of the jet 
     //to resolve
-    r0jet = 4;    
+    r0grid = Rin;    
 
+    //distance at which jet part of the grid becomes monopolar
+    //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
+    r0jet = 3;
+    
+    //distance after which the jet grid collimates according to the usual jet formula
+    //the larger this distance, the wider is the jet region of the grid
+    rjetend = 15;
+    
     //distance at which disk part of the grid becomes monopolar
     //the larger r0disk, the larger the thickness of the disk 
     //to resolve
-    r0disk = 8;
+    r0disk = r0jet;
 
     //distance after which the disk grid collimates to merge with the jet grid
     //should be roughly outer edge of the disk
@@ -602,7 +612,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -697,7 +707,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER6IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-	fscanf(in,HEADER7IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&fracphi);
+	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
 	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
@@ -800,7 +810,9 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0grid, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rjetend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     //new params
@@ -1440,7 +1452,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     V[1] = R0+exp(theexp);
 
 #if(0) //JON's method
-    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0grid-rsjet/r0grid)));
 
     if(X[2]<0.5){
       V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
@@ -1453,7 +1465,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 
     faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
     
-    ror0nu = pow( faker/r0jet, jetnu/2 );
+    ror0nu = pow( faker/r0grid, jetnu/2 );
 
     if( X[2] < -0.5 ) {
       V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
