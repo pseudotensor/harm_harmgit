@@ -1440,7 +1440,10 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
     FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
     FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+    FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
+    FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df );
     FTYPE  fac, faker, ror0nu;
+    FTYPE fakerdisk, fakerjet;
     
     V[0] = X[0];
 
@@ -1463,7 +1466,14 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 #elif(1) //SASHA's
     fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
 
-    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
+    //faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
+    
+    fakerdisk = mins( V[1], r0disk, 0.5*r0disk ) 
+        * maxs( 1, 1 + (V[1]-rdiskend)*r0jet/(rjetend*r0disk), 0.5*rdiskend*r0jet/(rjetend*r0disk) );
+    
+    fakerjet = mins( V[1], r0jet, 0.5*r0jet ) * maxs( 1, V[1]/rjetend, 0.5 );
+    
+    faker = fac*fakerjet + (1 - fac)*fakerdisk - rsjet*Rin;
     
     ror0nu = pow( faker/r0grid, jetnu/2 );
 
