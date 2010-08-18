@@ -224,6 +224,9 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   //    B) HERE: to find global minimum over all CPUs
   //    C) HERE: to use safety factor
   //    D) HERE: constrain new dt if near end of calculation
+  //
+  // But, should do #1's MIN over all cells per CPU and #3's global MIN over all CPUs together for perfect MPI consistency.
+  //  Further, should compute "wavedt" per cell since otherwise non-local dt_i can impact minimum dt.  Can lead to dt smaller by as much as 3X (with no correct numerical method effect) !
   // 
   ////////////////////////////
   // find global minimum value of ndt over all cpus
