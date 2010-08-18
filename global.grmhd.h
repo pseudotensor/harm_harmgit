@@ -154,12 +154,22 @@
 // http://www.linuxdevices.com/files/misc/intel_5100.jpg
 // http://www.hardwarezone.com/img/data/articles/2006/2002/Bensley-block-diagram-2.jpg
 //
+//
+/////////////////////////////////////////
+/////////////////////////////////////////
+//
+// File transfer notes:
+//
+//
 // Lonestar + Ranger -> Ranch for data storage:
 // http://services.tacc.utexas.edu/index.php/ranch-user-guide/
 // tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
 //
+//
+//
 // With ssh (according to TACC):
 // cat myfile.tar | ssh target_machine "cd /target_dir/; tar xvf - "
+//
 //or, for transfers between TACC systems, you could use the version of
 //gsissh that we have installed, which allows you to do the handshake
 //encrypted but send the data unencrypted:
@@ -171,6 +181,13 @@
 //
 // other options:
 // http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+//
+//
+/////////////////////////////////////////
+/////////////////////////////////////////
+//
+// Old bbcp notes:
+//
 //
 // bbcp much faster:
 // http://www.slac.stanford.edu/~abh/bbcp/
@@ -220,7 +237,16 @@
 //
 // Note that if use -l err.txt, then may not tell you if completed successfully or not!  Just stops.  While NOT using -l err.txt means don't know if had any "poosible" problems.
 //
-// In the end, this worked:
+//
+//
+/////////////////////////////////////////
+/////////////////////////////////////////
+//
+//
+//
+// In the end, this worked to ensure complete and correct copy:
+//
+//
 // 1) use bbcp as below.  Note that bbcp is the only program I've found that resumes.  For example, for one directory do:
 //
 // ls --ignore=err.txt --ignore=filelist.txt grmhd > filelist.txt
@@ -250,17 +276,38 @@
 //
 // ls --ignore=dumps --ignore=images --ignore=filelist.txt --ignore=err.txt |wc
 //
+// OR (if used recursive bbcp)
+//
+// ls -R | wc
+// (on ranch: and subtract 7=1+2 for 1 . and 2 blank lines and 2*2 directories (or subtract 2 from # of words)  ls -R won't include hidden dirs on some systems depending upon alias definition)
+//
 // 6.5) Check filelist.txt to ensure actually copied all files:
 //
 // wc filelist.txt
-// OR for recursive folders:
+//
+// OR for a single recursive directory:
+//
+// ls -R | wc
+// (should be same as on, e.g., ranch, even though not true # of files)
+//
+// OR for multiple recursive folders:
+//
 // find <list of space separated folders> > filelist.txt | wc
 // E.g.:
 // find thickdiskrr2.ab thickdisk14.ab > postfilelist.txt
+// (and subtract #dirs * (1 + 2) ) = 3,6,9,etc.
 //
 //
-// 7) If numbers match, then likely have copied everything properly.  Should be correct size too, but can check manually that files have uniform looking sizes.  du -s doesn't help much since on ranger sizes are measured oddly.
+// 7) If numbers match, then likely have copied everything properly.  Should be correct size too, but can check manually that files have uniform looking sizes.  du -s doesn't help much since on ranch the sizes are measured oddly.  Rerunning bbcp repeatedly until "already been copied" appears for all files should be a good check on file size and a lack of corruption.
 // 
+//
+// 
+//
+// 
+//
+/////////////////////////////////////////
+/////////////////////////////////////////
+//
 //
 // Tried uberftp and globus-url-copy, but problems
 //

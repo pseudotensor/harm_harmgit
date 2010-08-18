@@ -1571,13 +1571,33 @@ static int prepare_globaldt(
 
 
 
+  ////////////////
+  //
+  // unsplit multidimensional Courant condition
+  //
+  ////////////////
   wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
+
+
+
+  ///////////////
+  //
+  // minimize dt over all "operators"
+  //
+  ///////////////
   *ndt = defcon * MIN(wavedt , accdt);
 
 #if(USEGRAVITYDTINDTLIMIT)
   // use gravitydt (often too small, but sometimes accdt/ndt not small enough)
   *ndt = MIN(*ndt,gravitydt);
 #endif
+
+
+  /////////
+  //
+  // Store some global variables for timestep
+  //
+  /////////
 
   gravitydtglobal = gravitydt;
   sourcedtglobal  = accdt; // accdt includes gravitydtglobal

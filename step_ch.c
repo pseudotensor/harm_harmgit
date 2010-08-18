@@ -206,6 +206,25 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   //
   // set next timestep
   //
+  //
+  // Notes:
+  // 
+  // dt is computed in a few different places for different steps of the calculation:
+  // 1) flux.c (per dimension over all cells):
+  //    A) dtij = cour * dx[dir] / ctop;
+  //    B) if (dtij < *ndt){ *ndt = dtij; }
+  //
+  // 2) advance.c: prepare_globaldt() ("min" over each dimension and operator):
+  //    A) wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
+  //    B) *ndt = defcon * MIN(wavedt , accdt);
+  //    C) etc...
+  // 
+  // 3) step_ch.c:  ("min" over each substep of RK steps):
+  //    A) step_ch_simplempi(): if(ndt<lastndt) lastndt=ndt;
+  //    B) HERE: to find global minimum over all CPUs
+  //    C) HERE: to use safety factor
+  //    D) HERE: constrain new dt if near end of calculation
+  // 
   ////////////////////////////
   // find global minimum value of ndt over all cpus
   mpifmin(&fullndt);
