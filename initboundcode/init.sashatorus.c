@@ -45,6 +45,8 @@
 #define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
 
+#define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
+
 static FTYPE lfunc( FTYPE lin, FTYPE *parms );
 static void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gupp );
 static FTYPE compute_udt( FTYPE r, FTYPE th, FTYPE a, FTYPE l );
@@ -1520,12 +1522,17 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
 // example user-dependent code
 int theproblem_set_myid(void)
 {
+  int group_by_node_set_myid(int n1tile, int n2tile, int n3tile);
   int retval;
  
   // default is to do nothing
   //  retval=jet_set_myid();
+#if(DO_REMAP_MPI_TASKS)
+  retval=group_by_node_set_myid( 2, 2, 2 );  //2x2x2 for Odyssey/QueenBee
+  //retval=group_by_node_set_myid( 3, 2, 2 );  //3x2x2 for Kraken
+#else
   retval=0;
-
+#endif  
   // do other things?
 
   return(retval);
@@ -1533,3 +1540,49 @@ int theproblem_set_myid(void)
 }
 
 
+// specify MPI task rank ordering
+// example user-dependent code
+// groups MPI tasks in n1xn2xn3 "tiles" (n# -- user adjustable)
+// [taken from jet_set_myid()]
+int group_by_node_set_myid(int n1tile, int n2tile, int n3tile)
+{
+  int ranki,rankj,rankk,origid,newid;
+  int ranki0node, rankj0node, rankk0node, id0node;
+  int n1 = n1tile, n2 = n2tile, n3 = n3tile;
+  
+  if(USEMPI==0){
+    return(0); // nothing to do ever
+  }
+
+  // Can choose to rearrange MPI tasks
+
+  // Reorder MPI tasks such that each node contains spatially-close cores in a 2x2x2 configuration
+  
+  //check if ncpux# are each even -- otherwise cannot decompose domain into 2x2x2 configurations
+  if( 0 != (ncpux1 % n1) || 0 != (ncpux2 % n2) || 0 != (ncpux3 % n3) ) {
+    dualfprintf( "queenbee_set_myid(): no changes to MPI mapping: MPI domain size must be multiples of: ncpux1 = %d (%d), ncpux2 = %d (%d), ncpux3 = %d (%d)\n", ncpux1, n1, ncpux2, n2, ncpux3, n3 );
+    return(0);
+  }
+
+  for(rankk=0;rankk<ncpux3;rankk++){
+    for(rankj=0;rankj<ncpux2;rankj++){
+      for(ranki=0;ranki<ncpux1;ranki++){
+        origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
+        ranki0node = ranki/n1;
+        rankj0node = rankj/n2;
+        rankk0node = rankk/n3;
+        id0node=ranki0node + rankj0node*(ncpux1/n1) + rankk0node*(ncpux1/n1)*(ncpux2/n2);
+        newid=(ranki%n1) + (rankj%n2)*n1 + (rankk%n3)*n1*n2;  //id on the node tile (size n1xn2xn3 cores)
+        MPIid[origid]=id0node*n1*n2*n3+newid;
+      }
+    }
+  }// end over rankk
+
+
+  // Note that unlike TACC Ranger, TACC Lonestar has 2 sockets with 2 cores per socket, but sockets *share* main memory.  So no special socket association is required for optimal memory use.
+  // http://services.tacc.utexas.edu/index.php/lonestar-user-guide
+
+ 
+
+  return(0);
+}
