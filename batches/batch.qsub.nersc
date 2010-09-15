@@ -68,9 +68,9 @@
 #PBS -N quad1024sq
 #
 # output files
-#PBS -o job2.out
+#PBS -o job3.out
 #
-#PBS -e job2.err
+#PBS -e job3.err
 # 
 # combine standard output and standard error (optional)
 #PBS -j oe
