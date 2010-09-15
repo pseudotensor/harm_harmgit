@@ -237,6 +237,7 @@ FTYPE rtbis(FTYPE (*func)(FTYPE,FTYPE*), FTYPE *parms, FTYPE x1, FTYPE x2, FTYPE
   f=(*func)(x1, parms);
   fmid=(*func)(x2, parms);
   if (f*fmid >= 0.0) {
+    dualfprintf( fail_file, "f(%g)=%g f(%g)=%g\n", x1, f, x2, fmid );
     nrerror("Root must be bracketed for bisection in rtbis");
   }
   rtb = (f < 0.0) ? (dx=x2-x1,x1) : (dx=x1-x2,x2); //Orient the search so that f>0 lies at x+dx.

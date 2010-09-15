@@ -13,7 +13,7 @@
 
 #define N1 16
 #define N2 16
-#define N3 4
+#define N3 16
 
 // atch adjusts
 #undef MAXWELL
@@ -182,11 +182,11 @@
 #define EMAILADDRESS "jmckinney@cfa.harvard.edu"
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
-#define DOAVG 0
+#define DOAVG 1
 #define DOJETDIAG 0
 #define DOAVG2 0
 //BOBMARK
-#define DODEBUG 0
+#define DODEBUG 1
 #define DO_WENO_DEBUG 0
 #define DOENODEBUG 0
 #define DOEVOLVEMETRIC 0

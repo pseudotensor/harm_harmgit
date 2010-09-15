@@ -18,8 +18,8 @@
     <run>
       <directoryradio>executable</directoryradio>
       <mainprogram>/home/atchekho/Research/code/harm_harm/grmhd</mainprogram>
-      <programargs>1 1 1</programargs>
-      <globaldebugarguments>1 1 1</globaldebugarguments>
+      <programargs></programargs>
+      <globaldebugarguments></globaldebugarguments>
       <globalcwd>/home/atchekho/Research/code/harm_harm/run/</globalcwd>
       <useglobalprogram>false</useglobalprogram>
       <terminal>false</terminal>
@@ -44,7 +44,119 @@
       <filetype>Makefile</filetype>
       <filetype>CMakeLists.txt</filetype>
     </filetypes>
-    <blacklist/>
+    <blacklist>
+      <path>bcucof.c</path>
+      <path>bcuint.c</path>
+      <path>bin2txt.c</path>
+      <path>broydn.c</path>
+      <path>initboundcode/bounds.ff.c</path>
+      <path>initboundcode/bounds.fishmon.c</path>
+      <path>initboundcode/bounds.grb.c</path>
+      <path>initboundcode/bounds.ns.backup2.c</path>
+      <path>initboundcode/bounds.ns.backup.c</path>
+      <path>initboundcode/bounds.ns.c</path>
+      <path>initboundcode/bounds.nsold.c</path>
+      <path>initboundcode/bounds.rebecca.c</path>
+      <path>initboundcode/bounds.sasha.c</path>
+      <path>initboundcode/bounds.subkep.c</path>
+      <path>initboundcode/defs.user.sasha.h</path>
+      <path>initboundcode/global.funcdeclare.user.sasha.h</path>
+      <path>initboundcode/init.ff.c</path>
+      <path>initboundcode/init.ff.h</path>
+      <path>initboundcode/init.fishmon.c</path>
+      <path>initboundcode/init.fishmon.h</path>
+      <path>initboundcode/init.grb.c</path>
+      <path>initboundcode/init.grb.h</path>
+      <path>initboundcode/init.ns.backup2.c</path>
+      <path>initboundcode/init.ns.backup2.h</path>
+      <path>initboundcode/init.ns.backup.c</path>
+      <path>initboundcode/init.ns.backup.h</path>
+      <path>initboundcode/init.ns.c</path>
+      <path>initboundcode/init.ns.h</path>
+      <path>initboundcode/init.rebecca.c</path>
+      <path>initboundcode/init.rebecca.h</path>
+      <path>initboundcode/init.sasha.c</path>
+      <path>initboundcode/init.sasha.h</path>
+      <path>initboundcode/init.sashatorus.c.BASE.3664.c</path>
+      <path>initboundcode/init.sashatorus.c.BASE.5159.c</path>
+      <path>initboundcode/init.sashatorus.c.LOCAL.3664.c</path>
+      <path>initboundcode/init.sashatorus.c.LOCAL.5159.c</path>
+      <path>initboundcode/init.sashatorus.c.REMOTE.3664.c</path>
+      <path>initboundcode/init.sashatorus.c.REMOTE.5159.c</path>
+      <path>initboundcode/init.subkep.c</path>
+      <path>initboundcode/init.subkep.h</path>
+      <path>initboundcode/init.thickdisk.c</path>
+      <path>initboundcode/inprogress</path>
+      <path>initboundcode/inprogress/bounds.bz.c</path>
+      <path>initboundcode/inprogress/bounds.gen.c</path>
+      <path>initboundcode/inprogress/boundsint.gen.c</path>
+      <path>initboundcode/inprogress/bounds.komtests.c</path>
+      <path>initboundcode/inprogress/bounds.ns.c</path>
+      <path>initboundcode/inprogress/bounds.nspolar2.c</path>
+      <path>initboundcode/inprogress/bounds.nspulsar.c</path>
+      <path>initboundcode/inprogress/bounds.nspulsargood.c</path>
+      <path>initboundcode/inprogress/bounds_paradiskfixedB1B2.c</path>
+      <path>initboundcode/inprogress/bounds.rameshdisk.c</path>
+      <path>initboundcode/inprogress/bounds.simpleoutflow.c</path>
+      <path>initboundcode/inprogress/init.bz.c</path>
+      <path>initboundcode/inprogress/init.cylcoords.c</path>
+      <path>initboundcode/inprogress/init.ffdetests.c</path>
+      <path>initboundcode/inprogress/init.komtests.c</path>
+      <path>initboundcode/inprogress/init.ns.c</path>
+      <path>initboundcode/inprogress/init.rameshdisk.c</path>
+      <path>initboundcode/inprogress/init.thindisk.c</path>
+      <path>initboundcode/inprogress/init.wald.c</path>
+      <path>r8toras</path>
+      <path>r8toras/r8toras.c</path>
+      <path>r8toras/r8torasold.c</path>
+      <path>r8toras/rasterfile.h</path>
+      <path>subcodesfromothers</path>
+      <path>subcodesfromothers/gammie</path>
+      <path>subcodesfromothers/gammie/new_flux_ct.c</path>
+      <path>subcodesfromothers/others</path>
+      <path>subcodesfromothers/others/dudp_calc_4vel.old.c</path>
+      <path>subcodesfromothers/others/fixupnew.c</path>
+      <path>subcodesfromothers/others/init.fishmon.old.c</path>
+      <path>subcodesfromothers/others/metric.new.c</path>
+      <path>subcodesfromothers/others/metric.original.c</path>
+      <path>subcodesfromothers/others/mnewt.damporig.c</path>
+      <path>subcodesfromothers/others/mnewt.damporig.fixed.c</path>
+      <path>subcodesfromothers/others/mnewt.latest.c</path>
+      <path>subcodesfromothers/others/mnewt.working.c</path>
+      <path>subcodesfromothers/others/physgood.c</path>
+      <path>subcodesfromothers/others/set_arraycnew.c</path>
+      <path>subcodesfromothers/others/set_arraysnew.c</path>
+      <path>subcodesfromothers/others/utoprim_ldznew.c</path>
+      <path>subcodesfromothers/others/utoprim_ldz.newcrap.c</path>
+      <path>subcodesfromothers/others/utoprim_ldzold.c</path>
+      <path>subcodesfromothers/sasha</path>
+      <path>subcodesfromothers/sasha/reconstructeno.c</path>
+      <path>subcodesfromothers/sasha/reconstructeno.h</path>
+      <path>subcodesfromothers/sasha/step_ch.du.c</path>
+      <path>subcodesfromothers/sasha/step_ch.u.c</path>
+      <path>subcodesfromothers/scn</path>
+      <path>subcodesfromothers/scn/u2p_defs.h</path>
+      <path>subcodesfromothers/scn/u2p_util.c</path>
+      <path>subcodesfromothers/scn/u2p_util.h</path>
+      <path>subcodesfromothers/scn/utoprim_1d.c</path>
+      <path>subcodesfromothers/scn/utoprim_2d.c</path>
+      <path>subcodesfromothers/scn_metric</path>
+      <path>subcodesfromothers/scn_metric/metric.c</path>
+      <path>subcodesfromothers/scn_metric/metric.h</path>
+      <path>subcodesfromothers/xiaoyue</path>
+      <path>subcodesfromothers/xiaoyue/decs.h</path>
+      <path>subcodesfromothers/xiaoyue/para1.c</path>
+      <path>subcodesfromothers/xiaoyue/para4.c</path>
+      <path>subcodesfromothers/xiaoyue/para.c</path>
+      <path>subcodesfromothers/xiaoyue/step_ch.c</path>
+      <path>subcodesfromothers/xiaoyue/step_ch_para2.c</path>
+      <path>subcodesfromothers/xiaoyue/step_ch_para.c</path>
+      <path>utils</path>
+      <path>utils/data2r8.c</path>
+      <path>utils/extractnonfunc.c</path>
+      <path>utils/gprof-helper.c</path>
+      <path>utils/reorder.c</path>
+    </blacklist>
     <build>
       <buildtool>make</buildtool>
       <builddir></builddir>
@@ -220,7 +332,7 @@
     </projectdoc>
   </kdevdocumentation>
   <ctagspart>
-    <customArguments></customArguments>
+    <customArguments/>
     <customTagfilePath>/home/atchekho/Research/code/harm_harm/tags</customTagfilePath>
     <activeTagsFiles/>
   </ctagspart>

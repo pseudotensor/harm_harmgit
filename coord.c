@@ -52,9 +52,11 @@ static FTYPE x1br;
 static FTYPE fracdisk;
 static FTYPE fracjet;
 static FTYPE rsjet;
+static FTYPE r0grid;
 static FTYPE r0jet;
-static FTYPE r0mono;
+static FTYPE rjetend;
 static FTYPE r0disk;
+static FTYPE rdiskend;
 static FTYPE jetnu;
 
 
@@ -74,6 +76,10 @@ static FTYPE Rstar,Afactor;
 // for defcoord=JET5COORDS
 static FTYPE AAAA,AAA,BBB,DDD,CCCC,Rj;
 static FTYPE ii0;
+
+// for defcoord=SJETCOORDS
+static void vofx_sjetcoords( FTYPE *X, FTYPE *V );  //original coordinates
+static void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout ); //coordinate "cylindrifier"
 
 
 // can call when no dependencies
@@ -179,67 +185,6 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
   }
   else if (defcoordlocal == SJETCOORDS) {
-    /////////////////////
-    // RADIAL GRID SETUP
-    /////////////////////
-    npow=1.0;  //don't change it, essentially equivalent to changing cpow2
-
-    //radial hyperexponential grid
-    npow2=4.0; //power exponent
-    cpow2=0.05; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-    rbr = 200.;  //radius at which hyperexponentiation kicks in
-    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
-
-    /////////////////////
-    //ANGULAR GRID SETUP
-    /////////////////////
-
-    //transverse resolution fraction devoted to different components
-    //(sum should be <1)
-    fracdisk = 0.2;
-    fracjet = 0.5;
-
-    jetnu = 0.75;  //the nu-parameter that determines jet shape
-
-    //subtractor, controls the size of the last few cells close to axis:
-    //if rsjet = 0, then no modification
-    //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
-    //                which makes the timestep larger
-    rsjet = 0.7; 
-
-    //distance at which theta-resolution is exactly uniform in jet;
-    //otherwise, near-uniform near jet axis but less resolution further from it
-    r0jet = 4;    
-
-    //distance at which disk part of the grid becomes monopolar
-    //the smaller r0mono, the smaller the thickness of the disk 
-    //to resolve
-    r0mono = 6;
-
-    //distance after which the disk grid collimates to merge with the jet grid
-    //should be roughly outer edge of the disk
-    r0disk = 40;
-
-    /////////////////////
-    //PHI GRID SETUP
-    /////////////////////
-    if( dofull2pi ) {
-      fracphi = 1.;
-    }
-    else {
-      fracphi = 0.5;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
-    }
-
-
-
-#if(0)
-    // must be same as in dxdxp() -- atch: don't worry for now since use numerical dxdxp
-    r1jet=2.8;
-    njet=0.3;
-    r0jet=20.0;
-    rsjet=80.0;
-    Qjet=1.3; // chosen to help keep jet resolved even within disk region
-#endif
   }
   else if (defcoordlocal == JET6COORDS) {
 
@@ -501,6 +446,66 @@ void set_coord_parms_deps(int defcoordlocal)
   else if (defcoordlocal == JET3COORDS) {
   }
   else if (defcoordlocal == SJETCOORDS) {
+    /////////////////////
+    // RADIAL GRID SETUP
+    /////////////////////
+    npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+
+    //radial hyperexponential grid
+    npow2=4.0; //power exponent
+    cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = 100.;  //radius at which hyperexponentiation kicks in
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
+
+    /////////////////////
+    //ANGULAR GRID SETUP
+    /////////////////////
+
+    //transverse resolution fraction devoted to different components
+    //(sum should be <1)
+    fracdisk = 0.2;
+    fracjet = 0.5;
+
+    jetnu = 0.75;  //the nu-parameter that determines jet shape
+
+    //subtractor, controls the size of the last few cells close to axis:
+    //if rsjet = 0, then no modification <- *** default for use with grid cylindrification
+    //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
+    //                which makes the timestep larger
+    rsjet = 0.0; 
+
+    //distance at which theta-resolution is *exactly* uniform in the jet grid -- want to have this at BH horizon;
+    //otherwise, near-uniform near jet axis but less resolution (much) further from it
+    //the larger r0grid, the larger the thickness of the jet 
+    //to resolve
+    r0grid = Rin;    
+
+    //distance at which jet part of the grid becomes monopolar
+    //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
+    r0jet = 3;
+    
+    //distance after which the jet grid collimates according to the usual jet formula
+    //the larger this distance, the wider is the jet region of the grid
+    rjetend = 15;
+    
+    //distance at which disk part of the grid becomes monopolar
+    //the larger r0disk, the larger the thickness of the disk 
+    //to resolve
+    r0disk = r0jet;
+
+    //distance after which the disk grid collimates to merge with the jet grid
+    //should be roughly outer edge of the disk
+    rdiskend = 80;
+
+    /////////////////////
+    //PHI GRID SETUP
+    /////////////////////
+    if( dofull2pi ) {
+      fracphi = 1.;
+    }
+    else {
+      fracphi = 0.5;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+    }   
   }
   else if (defcoordlocal == JET6COORDS) {
   }
@@ -606,7 +611,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0mono,r0disk,jetnu);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -701,8 +706,8 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER6IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-	fscanf(in,HEADER7IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&fracphi);
-	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0mono,&r0disk,&jetnu);
+	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
+	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&jetnu);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
@@ -804,7 +809,9 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&r0grid, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rjetend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     //new params
@@ -815,8 +822,8 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&fracdisk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&fracjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
-    MPI_Bcast(&r0mono, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rdiskend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET6COORDS) {
@@ -915,10 +922,6 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
   //for SJETCOORDS
   FTYPE theexp;
-  FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
-  FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
-  FTYPE  fac, faker, ror0nu;
 
 
 
@@ -1080,42 +1083,15 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[3]=2.0*M_PI*X[3];
   }
   else if (defcoord == SJETCOORDS) {
-    theexp = npow*X[1];
-
-    if( X[1] > x1br ) {
-      theexp += cpow2 * pow(X[1]-x1br,npow2);
-    }
-    V[1] = R0+exp(theexp);
-
-#if(0) //JON's method
-    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
-
-    if(X[2]<0.5){
-      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
-    }
-    else{
-      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
-    }
-#elif(1) //SASHA's
-    fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
-
-    faker = fac*V[1] + (1 - fac)*limlin(V[1],r0mono,0.5*r0mono,r0mono)*minlin(V[1],r0disk,0.5*r0disk,r0mono)/r0mono - rsjet*Rin;
-    
-    ror0nu = pow( faker/r0jet, jetnu/2 );
-
-    if( X[2] < -0.5 ) {
-      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
-    }
-    else if( X[2] >  0.5 ) {
-      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
-    }
-    else {
-      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
-    }
+#if(0)
+    //use original coordinates
+    vofx_sjetcoords( X, V );
+#else
+    //apply cylindrification to original coordinates
+    //[this internally calls vofx_sjetcoords()] 
+    vofx_cylindrified( X, vofx_sjetcoords, V );
 #endif
-
-    // default is uniform \phi grid
-    V[3]=2.0*M_PI*X[3];
+    
   }
   else if (defcoord == JET6COORDS) {
 
@@ -1456,8 +1432,64 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 }
 
+void vofx_sjetcoords( FTYPE *X, FTYPE *V )
+{
+    //for SJETCOORDS
+    FTYPE theexp;
+    FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
+    FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+    FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+    FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
+    FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df );
+    FTYPE  fac, faker, ror0nu;
+    FTYPE fakerdisk, fakerjet;
+    
+    V[0] = X[0];
 
+    theexp = npow*X[1];
 
+    if( X[1] > x1br ) {
+      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    }
+    V[1] = R0+exp(theexp);
+
+#if(0) //JON's method
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0grid-rsjet/r0grid)));
+
+    if(X[2]<0.5){
+      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
+    }
+    else{
+      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+    }
+#elif(1) //SASHA's
+    fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
+
+    //faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
+    
+    fakerdisk = mins( V[1], r0disk, 0.5*r0disk ) 
+        * maxs( 1, 1 + (V[1]-rdiskend)*r0jet/(rjetend*r0disk), 0.5*rdiskend*r0jet/(rjetend*r0disk) );
+    
+    fakerjet = mins( V[1], r0jet, 0.5*r0jet ) * maxs( 1, V[1]/rjetend, 0.5 );
+    
+    faker = fac*fakerjet + (1 - fac)*fakerdisk - rsjet*Rin;
+    
+    ror0nu = pow( faker/r0grid, jetnu/2 );
+
+    if( X[2] < -0.5 ) {
+      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
+    }
+    else if( X[2] >  0.5 ) {
+      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
+    }
+    else {
+      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
+    }
+#endif
+
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+}
 
 // Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
 // i.e. Just take d(bl-coord)/d(ksp uniform coord)
@@ -3299,7 +3331,7 @@ FTYPE Fangle( FTYPE x )
 {
   FTYPE res;
 
-  if( x <= 0 ) {
+  if( x <= -1 ) {
     res = 0;
   }
   else if( x >= 1 ) {
@@ -3336,6 +3368,255 @@ FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df )
   FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
   return( -mins(-f1, -f2, df) );
 }
+
+//=mins if dir < 0
+//=maxs if dir >= 0
+FTYPE minmaxs( FTYPE f1, FTYPE f2, FTYPE df, FTYPE dir )
+{
+  FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
+  FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df );
+  if( dir>=0 ) {
+    return( maxs(f1, f2, df) );
+  }
+  
+  return( mins(f1, f2, df) );
+}
+
+static FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) );
+static void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored );
+static FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
+static FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
+
+//Converts copies Xin to Xout and converts
+//but sets Xout[2] to lie in the 1st quadrant, i.e. Xout[2] \in [-1,0])
+//if the point had to be mirrored
+void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
+{
+  FTYPE ntimes;
+  int dim;
+  
+  DLOOPA(dim) Xout[dim] = Xin[dim];
+  
+  //bring the angle variables to -2..2 (for X) and -2pi..2pi (for V)
+  ntimes = floor( (Xin[2]+2.0)/4.0 );
+  //this forces -2 < Xout[2] < 2
+  Xout[2] -= 4 * ntimes;
+  
+  *ismirrored = 0;
+  
+  //now force -1 < Xout[2] < 0
+  if( Xout[2] < -1. ) {
+    Xout[2] = -2. - Xout[2];
+    *ismirrored = 1;
+  }
+  else if( Xout[2] > 1. ) {
+    Xout[2] -= 2.;
+    *ismirrored = 0;
+  }
+  else if( Xout[2] > 0. ) {
+    Xout[2] = -Xout[2];
+    *ismirrored = 1;
+  }    
+}
+
+FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V0[NDIM];
+  FTYPE Vc0[NDIM];
+  FTYPE Xc0[NDIM];
+  int dim;
+  
+  //X1 = {0, X[1], X0[1], 0}
+  DLOOPA(dim) Xc0[dim] = X[dim];
+  Xc0[2] = X0[2];
+  
+  vofx( Xc0, Vc0 );
+  vofx( X0, V0 );
+  
+  
+  return( V0[1] * sin(V0[2]) / Vc0[1] );
+}
+
+FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE V0[NDIM];
+  FTYPE V0c[NDIM];
+  FTYPE X0c[NDIM];
+  int dim;
+  
+  //X1 = {0, X[1], X0[1], 0}
+  DLOOPA(dim) X0c[dim] = X0[dim];
+  X0c[2] = X[2];
+  
+  vofx( X, V );
+  vofx( X0c, V0c );
+  vofx( X0, V0 );
+  
+  return( V0[1] * sin(V0c[2]) / V[1] );
+}
+
+
+FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE V0[NDIM];
+  FTYPE Vc0[NDIM];
+  FTYPE Xc0[NDIM];
+  FTYPE Xcmid[NDIM];
+  FTYPE Vcmid[NDIM];
+  int dim;
+  FTYPE res;
+  FTYPE th0;
+  
+  DLOOPA(dim) Xc0[dim] = X[dim];
+  Xc0[2] = X0[2];
+  vofx( Xc0, Vc0 ); 
+  
+  DLOOPA(dim) Xcmid[dim] = X[dim];
+  Xcmid[2] = 0;
+  vofx( Xcmid, Vcmid ); 
+
+  vofx( X0, V0 ); 
+  vofx( X, V ); 
+  
+  th0 = asin( sinth0(X0, X, vofx) );
+  
+  res = (V[2] - Vc0[2])/(Vcmid[2] - Vc0[2]) * (Vcmid[2]-th0) + th0;
+  
+  return( res );
+}
+
+//Adjusts V[2]=theta so that a few innermost cells around the pole
+//become cylindrical
+//ASSUMES: poles are at 
+//            X[2] = -1 and +1, which correspond to
+//            V[2] = 0 and pi
+void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
+{
+  FTYPE x10 = 3.3;
+  FTYPE x20 = -0.975;
+  FTYPE npiovertwos;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE Vin[NDIM];
+  FTYPE X0[NDIM], V0[NDIM];
+  FTYPE Xtr[NDIM], Vtr[NDIM];
+  FTYPE f1, f2, dftr;
+  FTYPE sinth, th;
+  int dim, ismirrored;
+  
+  vofx( Xin, Vin );
+
+  // BRING INPUT TO 1ST QUADRANT:  X[2] \in [-1 and 0]
+  to1stquadrant( Xin, X, &ismirrored );  
+  vofx( X, V );
+
+  //initialize X0: cylindrify region
+  //X[1] < X0[1] && X[2] < X0[2] (value of X0[3] not used)
+  X0[0] = Xin[0];
+  X0[1] = x10;
+  X0[2] = x20;
+  X0[3] = 0;
+  vofx( X0, V0 );
+  
+  //{0, roughly midpoint between grid origin and x10, -1, 0}
+  DLOOPA(dim) Xtr[dim] = X[dim];
+  Xtr[1] = log( 0.5*( exp(X0[1])+exp(startx[1]) ) );   //always bound to be between startx[1] and X0[1]
+  vofx( Xtr, Vtr );
+
+  f1 = func1( X0, X, vofx );
+  f2 = func2( X0, X, vofx );
+  dftr = func2( X0, Xtr, vofx ) - func1( X0, Xtr, vofx );
+      
+  // Compute new theta
+  sinth = maxs( V[1]*f1, V[1]*f2, Vtr[1]*fabs(dftr)+SMALL ) / V[1];
+  
+  th = asin( sinth ); 
+  
+  //initialize Vout with the original values
+  DLOOPA(dim) Vout[dim] = Vin[dim];
+
+  //apply change in theta in the original quadrant
+  if( 0 == ismirrored ) {
+    Vout[2] = Vin[2] + (th - V[2]);
+  }
+  else {
+    //if mirrrored, flip the sign 
+    Vout[2] = Vin[2] - (th - V[2]);
+  }
+}
+
+FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  
+  vofx( X, V );
+  
+  return( sin(V[2]) ); 
+}
+
+FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
+{
+  FTYPE V[NDIM];
+  FTYPE Xca[NDIM];
+  FTYPE func2;
+  int dim;
+  FTYPE sth1in, sth2in, sth1inaxis, sth2inaxis;
+  
+  //{0, X[1], -1, 0}
+  DLOOPA(dim) Xca[dim] = X[dim];
+  Xca[2] = -1;
+  
+  vofx( X, V );
+  
+  sth1in = sinth1in( X0, X, vofx );
+  sth2in = sin( th2in(X0, X, vofx) );
+  
+  sth1inaxis = sinth1in( X0, Xca, vofx );
+  sth2inaxis = sin( th2in(X0, Xca, vofx) );
+  
+  func2 = minmaxs( sth1in, sth2in, fabs(sth2inaxis-sth1inaxis)+SMALL, X[1] - X0[1] );
+  
+  return( func2 ); 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
