@@ -989,22 +989,22 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
 // Better version (noted by Sasha and noted as synched with MPI by Jon):  Idea: Keep MPI updates in each dimension and direction in synch with computations
 //  1) See if received THIS core's X1DN data from other X1DN CPU
 //  2) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1DN side
-//  3) Send #1 to X1DN CPU using single X1DN MPI call (already split off like this but just looped over)
+//  3) Send #2 to X1DN CPU using single X1DN MPI call (already split off like this but just looped over)
 //  4) See if received THIS core's X1UP data from other X1UP CPU
 //  5) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1UP side
-//  6) Send #3 to X1UP CPU using single X1UP MPI call ("")
+//  6) Send #5 to X1UP CPU using single X1UP MPI call ("")
 //  7) See if received THIS core's X2DN data from other X2DN CPU
 //  8) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2DN side
-//  9) Send #5 to X2DN CPU using single X2DN MPI call ("") -- which only transfers NBND2 X active x1 X full x3 as exactly required
+//  9) Send #8 to X2DN CPU using single X2DN MPI call ("") -- which only transfers NBND2 X active x1 X full x3 as exactly required
 // 10) See if received THIS core's X2UP data from other X2UP CPU
 // 11) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2UP side
-// 12) Send #7 to X2UP CPU using single X2UP MPI call ("") -- ""
+// 12) Send #11 to X2UP CPU using single X2UP MPI call ("") -- ""
 // 13) See if received THIS core's X3DN data from other X3DN CPU
 // 14) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3DN side
-// 15) Send #9 to X3DN CPU using single X3DN MPI call ("") -- which only transfers NBND3 X active x1 X active x2 as exactly required
+// 15) Send #14 to X3DN CPU using single X3DN MPI call ("") -- which only transfers NBND3 X active x1 X active x2 as exactly required
 // 16) See if received THIS core's X3UP data from other X3UP CPU
 // 17) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3UP side
-// 18) Send #11 to X3UP CPU using single X3UP MPI call ("") -- ""
+// 18) Send #17 to X3UP CPU using single X3UP MPI call ("") -- ""
 // 19) Iterate SA cells -- no need to check since SA cells are independent of MPI computations.
 // 20) Repeat, but reverse UP and DN labels.  This way correctly first waits for first things should have recieved.  May be minor difference.
 
