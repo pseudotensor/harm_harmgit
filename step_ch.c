@@ -543,6 +543,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 // take full step using normal MPI method
+// This method transfers ALL boundary cells AT ONCE after updating ALL active cells
 int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
@@ -972,6 +973,40 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
 
 
 
+
+// take full step using super MPI method
+//
+// Method 1) 
+// This method transfers SOME boundary cells BETWEEN EACH update of active cells
+// Simplest version:
+// 1) Iterate a layer of size NBND? (Dependent Active = DA) cells that are just inside of ghost cells but are still active cells.  These are needed by other CPUs to do next iteration
+// 2) Start transfer of DA cells to other CPUs
+// 3) Iterate region never used by other CPUs identified as (Super Active = SA) cells
+// 4) See if DA cells finished transfer
+// 5) Once finished, go back to #1 above and repeat.
+//
+// Method 2) 
+// Better version (noted by Sasha and noted as synched with MPI by Jon):  Idea: Keep MPI updates in each dimension and direction in synch with computations
+//  1) See if received THIS core's X1DN data from other X1DN CPU
+//  2) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1DN side
+//  3) Send #1 to X1DN CPU using single X1DN MPI call (already split off like this but just looped over)
+//  4) See if received THIS core's X1UP data from other X1UP CPU
+//  5) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1UP side
+//  6) Send #3 to X1UP CPU using single X1UP MPI call ("")
+//  7) See if received THIS core's X2DN data from other X2DN CPU
+//  8) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2DN side
+//  9) Send #5 to X2DN CPU using single X2DN MPI call ("") -- which only transfers NBND2 X active x1 X full x3 as exactly required
+// 10) See if received THIS core's X2UP data from other X2UP CPU
+// 11) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2UP side
+// 12) Send #7 to X2UP CPU using single X2UP MPI call ("") -- ""
+// 13) See if received THIS core's X3DN data from other X3DN CPU
+// 14) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3DN side
+// 15) Send #9 to X3DN CPU using single X3DN MPI call ("") -- which only transfers NBND3 X active x1 X active x2 as exactly required
+// 16) See if received THIS core's X3UP data from other X3UP CPU
+// 17) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3UP side
+// 18) Send #11 to X3UP CPU using single X3UP MPI call ("") -- ""
+// 19) Iterate SA cells -- no need to check since SA cells are independent of MPI computations.
+// 20) Repeat, but reverse UP and DN labels.  This way correctly first waits for first things should have recieved.  May be minor difference.
 
 
 
