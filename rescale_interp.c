@@ -498,6 +498,80 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
 
 
+#elif(VARTOINTERP==PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP)
+
+
+#if(DOEXTRAINTERP==0)
+  dualfprintf(fail_file,"Shouldn't be trying to do VARTOINTERP=%d if DOEXTRAINTERP=%d\n",VARTOINTERP,DOEXTRAINTERP);
+  myexit(1);
+#endif
+
+  //compute jacobian
+  dxdxprim(X, V, dxdxp);
+  
+  if(which==1){ // before interpolation, get quantities to interpolate
+
+    // get relative 4-velocity
+    if(WHICHVEL!=VELREL4){
+      pr2ucon(WHICHVEL,pr, ptrgeom ,ucon);
+      ucon2pr(VELREL4,ucon,ptrgeom,newpr);
+      uconrel[TT]=0.0;
+      SLOOPA(j) uconrel[j]=newpr[UU+j];
+    }
+    else{
+      uconrel[TT]=0.0;
+      SLOOPA(j) uconrel[j]=pr[UU+j];
+    }
+
+    // get Lorentz factor w.r.t. relative 4-velocity
+    gamma_calc_fromuconrel(uconrel,ptrgeom,&gamma,&qsq);
+
+    PINTERPLOOP(pliter,pl) p2interp[pl]=pr[pl];
+
+    // interpolate relative 3-velocity
+    for(pl=U1;pl<=U3;pl++) p2interp[pl]= uconrel[pl-U1+1]/gamma;
+    
+    //Interpolate u^\theta and B^\theta instead of u^2 and B^2:
+    p2interp[U2] *= dxdxp[2][2];
+    p2interp[B2] *= dxdxp[2][2];
+
+    // interpolate \gamma separately
+    p2interp[VSQ]=gamma;
+
+  }
+  else  if(which==-1){ // after interpolation
+
+    // assign over everything, adjust velocity below
+    PINTERPLOOP(pliter,pl) pr[pl]=p2interp[pl];
+
+    // get relative 4-velocity from \gamma and relative 3-velocity
+    uconrel[TT]=0;
+    SLOOPA(j) uconrel[j]=p2interp[UU+j]*p2interp[VSQ];
+
+    //return back to u^2 and B^2 from u^\theta and B^\theta
+    p2interp[U2] /= dxdxp[2][2];
+    p2interp[B2] /= dxdxp[2][2];
+
+    // get WHICHVEL velocity
+    if(WHICHVEL!=VELREL4){
+      pr2ucon(VELREL4,p2interp, ptrgeom ,ucon);
+      ucon2pr(WHICHVEL,ucon,ptrgeom,newpr);
+      SLOOPA(j) pr[UU+j]=newpr[UU+j];
+    }
+    else{
+      SLOOPA(j) pr[UU+j]=uconrel[j];
+    }
+
+    
+
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+
+
+
 #elif(VARTOINTERP==PRIMTOINTERP_RAMESH1)
 
 
