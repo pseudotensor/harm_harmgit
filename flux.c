@@ -922,7 +922,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 #if(RESCALEINTERP)
   if(npr2interpstart<=npr2interpend){
     // assume if DOEXTRAINTERP==1, then must get here
-    p2interp=prc; // it's different
+    p2interp=GLOBALPOINT(prc); // it's different
   }
   rescale_calc_full(dir,pr,p2interp);
 #else
@@ -1455,7 +1455,7 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
   ////////////////////////////
 #if(RESCALEINTERP)
   // assume if DOEXTRAINTERP==1, then must get here
-  p2interp=prc; // it's different
+  p2interp=GLOBALPOINT(prc); // it's different
   rescale_calc_full(dir,pr,p2interp);
 #else
   p2interp=pr; // it's itself
