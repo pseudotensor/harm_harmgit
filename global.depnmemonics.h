@@ -11,6 +11,9 @@
 //equals to unity if the interpolation of gamma is performed and if requested to use prim. reduction
 #define STORE_GAMMA_PRIM_REDUCTION_FRACTION  (WENO_USE_PRIM_REDUCTION && (VARTOINTERP == PRIMTOINTERP_3VEL_GAMMA || VARTOINTERP == PRIMTOINTERP_RHOV_GAMMA || VARTOINTERP == PRIMTOINTERP_3VELREL_GAMMAREL || VARTOINTERP == PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP) )
 
+#if( WENO_USE_PRIM_REDUCTION ) 
+#error WENO_USE_PRIM_REDUCTION is broken.  A variable is not defined -- need to correct. ** BROKEN **
+#endif
 
 
 
