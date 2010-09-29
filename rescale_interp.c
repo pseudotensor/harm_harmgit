@@ -507,7 +507,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 #endif
 
   //compute jacobian
-  dxdxprim(X, V, dxdxp);
+  //dxdxprim(X, V, dxdxp);
+  dxdxprim_ijk( ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, dxdxp );
   
   if(which==1){ // before interpolation, get quantities to interpolate
 
@@ -541,6 +542,10 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   }
   else  if(which==-1){ // after interpolation
 
+    //return back to u^2 and B^2 from u^\theta and B^\theta
+    p2interp[U2] /= dxdxp[2][2];
+    p2interp[B2] /= dxdxp[2][2];
+    
     // assign over everything, adjust velocity below
     PINTERPLOOP(pliter,pl) pr[pl]=p2interp[pl];
 
@@ -548,9 +553,6 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     uconrel[TT]=0;
     SLOOPA(j) uconrel[j]=p2interp[UU+j]*p2interp[VSQ];
 
-    //return back to u^2 and B^2 from u^\theta and B^\theta
-    p2interp[U2] /= dxdxp[2][2];
-    p2interp[B2] /= dxdxp[2][2];
 
     // get WHICHVEL velocity
     if(WHICHVEL!=VELREL4){
