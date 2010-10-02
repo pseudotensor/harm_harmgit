@@ -2,9 +2,14 @@
 
 #ifndef WIN32
 
+#ifndef OSX
 // below for free HD space check in dump.c
 #include <sys/vfs.h>
 //#include <sys/statfs.h>
+#else
+#include <sys/param.h>
+#include <sys/mount.h>
+#endif
 
 // this doesn't compile on some icc versions (8.0 seems fine), works fine in gcc
 int isenoughfreespace(unsigned long long need)
