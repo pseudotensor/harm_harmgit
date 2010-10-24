@@ -716,7 +716,7 @@ int bound_x2dn_polaraxis_full3d(
 
 	// SUPERGODMARK: continue to use for now
 	if(BCtype[X2DN]==POLARAXIS){
-	  if(POLEDEATH||1) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
 
@@ -842,7 +842,7 @@ int bound_x2dn_polaraxis(
 	}// end if polar or asym condition
 
 	if(BCtype[X2DN]==POLARAXIS){
-	  if(POLEDEATH||1) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 	
       }// end if inner CPU wall
@@ -971,7 +971,7 @@ int bound_x2up_polaraxis_full3d(
 
 	// SUPERGODMARK: continue to use for now
 	if(BCtype[X2UP]==POLARAXIS){
-	  if(POLEDEATH||1) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
       }// end if outer CPU wall
@@ -1088,7 +1088,7 @@ int bound_x2up_polaraxis(
 
 
 	if(BCtype[X2UP]==POLARAXIS){
-	  if(POLEDEATH||1) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
       
       }// end if mycpupos[2]==ncpux2-1
