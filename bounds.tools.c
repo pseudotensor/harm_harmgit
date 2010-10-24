@@ -1992,12 +1992,33 @@ int extrapfunc(int boundary, int j,int k,
 
 
 
+#define UTHETAPOLEDEATH ((PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)?(1):(0)) //only interpolate u^\theta instead of u^2 here when doing the same in interp
 
+#if(0 == UTHETAPOLEDEATH)
+#   define MACP0A1mod(prim,ri,rj,rk,pl) MACP0A1(prim,ri,rj,rk,pl)
+#else
+//average u^\theta=u^2*dxdxp22 as opposed to u^2
+FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, int rk, int pl);
 
+FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, int rk, int pl)
+{
+    FTYPE dxdxp[NDIM][NDIM];
+    int dir;
 
-
-
-
+#if(PRODUCTION==0)
+    if ( dir < U2 || dir > B3 ) {
+	dualfprintf( fail_file, "dir cannot be < U2 or > B3 in MACP0A1mod()\n" );
+	exit(3232);
+    }
+#endif
+    
+    dir = 1 + (pl-U1)%3; //direction that corresponds to pl (e.g., 2 for U2 or B2); assumes contiguous ordering of pl: <..>,U1,U2,U3,B1,B2,B3,<..>
+    
+    dxdxprim_ijk(ri, rj, rk, CENT, dxdxp);
+    
+    return( MACP0A1(prim,ri,rj,rk,pl) * dxdxp[dir][dir] );   
+}
+#endif
 
 // interpolate across pole to remove numerical errors there
 // Note that this function is done over all zones
@@ -2052,7 +2073,7 @@ int poledeath(int whichx2,
   struct of_geom *ptrgeom[NPR];
   struct of_geom rgeomdontuse[NPR];
   struct of_geom *ptrrgeom[NPR];
-
+  FTYPE dxdxp[NDIM][NDIM];
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
@@ -2388,15 +2409,15 @@ int poledeath(int whichx2,
 
 	    // choose reference value
 	    // 	ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	    ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
 	    if(whichx2==X2DN && ftemp>0.0){
 	      // then sucking on \theta=0 pole
 	      // try to minimize sucking on pole by finding minimum U2 around
-	      for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1(prim,ri,jj,rk,pl));
+	      for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
 	      if(doavginradius[pl]){
-		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1(prim,rip1,jj,rk,pl));
-		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1(prim,rim1,jj,rk,pl));
+		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
 	      }
 
 	      ftemp=0.0; // try crushing sucking GODMARK
@@ -2406,10 +2427,10 @@ int poledeath(int whichx2,
 	    }
 	    else if(whichx2==X2UP && ftemp<0.0){
 	      // then sucking on \theta=\pi pole
-	      for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1(prim,ri,jj,rk,pl));
+	      for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
 	      if(doavginradius[pl]){
-		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1(prim,rip1,jj,rk,pl));
-		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1(prim,rim1,jj,rk,pl));
+		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
 	      }
 
 	      ftemp=0.0; // try crushing sucking GODMARK
@@ -2419,11 +2440,18 @@ int poledeath(int whichx2,
 	    }
 	    else{
 	      // otherwise enforce natural regular linear behavior on U2
-	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	      else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+	      else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
 	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
 	    }
+
+#if( UTHETAPOLEDEATH )
+	    //if interpolated u^\theta, now convert back to u^2
+	    dxdxprim_ijk(i, j, k, CENT, dxdxp);
+	    MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
+#endif
+
 #endif
 	  }
 	}	
