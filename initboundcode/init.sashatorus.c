@@ -288,6 +288,7 @@ int init_global(void)
   funreturn=user1_init_global();
   if(funreturn!=0) return(funreturn);
 
+  cour = 0.8; //increase courant factor
 
   //////////////////
   // overrides for more detailed problem dependence
