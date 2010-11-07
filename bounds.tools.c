@@ -29,7 +29,11 @@
 // a sort of crushing regularization
 // causes problems with stability at just beyond pole
 // for field line plots, can just set B^\theta=0 along pole
+#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)
+#define POLEDEATH0 (N2BND==0 ? 0 : 2) 
+#else
 #define POLEDEATH0 (N2BND==0 ? 0 : 1) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
+#endif
 //#define MAXPOLEDEATH N2BND // can't be larger than N2BND
 #define MAXPOLEDEATH (N2BND==0 ? 0 : 2) // can't be larger than N2BND
 #define DEATHEXPANDAMOUNT 0
@@ -39,7 +43,11 @@
 // number of zones to enforce Lorentz factor to be small
 // notice that at pole uu1 and uu2 are artificially large and these regions can lead to runaway low densities and so even higher uu1,uu3
 // problem with POLEGAMMADEATH is that at large radius as fluid converges toward pole the fluid stagnates and can fall back at larger angles for no reason -- even for simple torus problem this happens when GAMMAPOLE=1.001
+#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)
+#define POLEGAMMADEATH0 0
+#else
 #define POLEGAMMADEATH0 1
+#endif
 // maximum allowed Lorentz factor near the pole (set to something large that should be allowed by solution -- problem and grid dependent)
 //#define GAMMAPOLE (2.0)
 
