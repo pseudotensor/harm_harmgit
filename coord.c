@@ -3497,7 +3497,11 @@ FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
 {
   FTYPE x10 = 3.3;
-  FTYPE x20 = -0.975;
+  FTYPE x20 = -1. + 1./totalsize[2]; //This restricts grid cylindrification to the one 
+    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
+    //This trick minimizes the resulting pole deresolution and relaxes the time step.
+    //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
+    //by POLEDEATH (see bounds.tools.c).
   FTYPE npiovertwos;
   FTYPE X[NDIM], V[NDIM];
   FTYPE Vin[NDIM];
