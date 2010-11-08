@@ -2,7 +2,7 @@
 
 #ifndef WIN32
 
-#ifndef OSX
+#if( 0 == OSX )
 // below for free HD space check in dump.c
 #include <sys/vfs.h>
 //#include <sys/statfs.h>
