@@ -2456,9 +2456,8 @@ int poledeath(int whichx2,
 
 #if( UTHETAPOLEDEATH )
 	    //if interpolated u^\theta, now convert back to u^2
-	    //dxdxprim_ijk(i, j, k, CENT, dxdxp);
-	    //MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
-	    MACP0A1(prim,i,j,k,pl) = 0.0; //reset to zero for stability
+	    dxdxprim_ijk(i, j, k, CENT, dxdxp);
+	    MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
 #endif
 
 #endif
