@@ -50,6 +50,7 @@ int is,ie,js,je,ks,ke;
 int totalbc,numbc[NDIM];
 
 
+int tiglobal[NDIM]; // for debugging
 
 // NUMREC STUFF
 int nn;

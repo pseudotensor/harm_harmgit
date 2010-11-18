@@ -256,7 +256,7 @@ extern void writeimage(char * name, unsigned char ****image,int nt, int nx, int 
 
 extern void refine_data(void);
 
-extern void compute_preprocess(FILE *gdumpin, FTYPE *finaloutput);
+extern void compute_preprocess(int outputvartype, FILE *gdumpin, FTYPE *finaloutput);
 
 
 extern void setup_newgrid(void);

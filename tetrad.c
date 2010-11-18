@@ -42,6 +42,11 @@ int tetr_func_frommetric(FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrcov)[NDI
     }
   }
 
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d newgcov=%21.15g\n",jj,kk,newgcov[GIND(jj,kk)]);
+  //  }
+
   // get tetrad (feed newgcov rather than gcov since with metric assume best comparison of vectors when have non-twisted metric and likely untwisted when using dxdxp)
   info=tetr_func(METRICTETRAD, newgcov, tetrcov, tetrcon, eigenvalues);
 
@@ -55,6 +60,7 @@ int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_c
 {
   FTYPE generalmatrixlower[NDIM][NDIM];
   FTYPE tmpgeneralmatrix[NDIM][NDIM] ;
+  FTYPE tmpgeneralvec[NDIM] ;
   int j,k,l ;
   int info;
   int jj,kk;
@@ -70,6 +76,18 @@ int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_c
     info=tetlapack_func(generalmatrixlower,tetr_con,eigenvalues);
   }
 
+  // force tetr_con to have correct signature so when applied it gives back vector as if nothing done (i.e. Kronecker Delta) (e.g. Minkowski to Minkowski)
+  DLOOP(j,k) tmpgeneralmatrix[j][k] = tetr_con[j][k];
+  DLOOP(j,k) tetr_con[j][k] = 0. ;
+  DLOOP(j,k) for(l=0;l<NDIM;l++) tetr_con[j][k] += mink(j,l)*tmpgeneralmatrix[l][k] ;
+
+  // also fix eigenvalues to be consistent
+  DLOOPA(j) tmpgeneralvec[j] = eigenvalues[j];
+  DLOOPA(j) eigenvalues[j]=0;
+  DLOOPA(j) for(l=0;l<NDIM;l++) eigenvalues[j] += mink(j,l)*tmpgeneralvec[l] ;
+
+
+  // construct tetr_cov
   DLOOP(j,k) tmpgeneralmatrix[j][k] = 0. ;
   DLOOP(j,k) for(l=0;l<NDIM;l++) tmpgeneralmatrix[j][k] += tetr_con[j][l]*gcov[GIND(l,k)] ;
   DLOOP(j,k) tetr_cov[j][k] = 0. ;
@@ -188,6 +206,9 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
   // ensure signature same as minkowski
   DLOOPA(j){
     if(sign(tetr[j][j])!=sign(mink(j,j))){
+      // no, in simplest case tetr is Kronecker delta, not Minkowski, so that nothing happens to vector if already in Minkowski
+      //    if(sign(tetr[j][j])!=sign(1.0)){
+      // well, maybe still so
       DLOOPA(k) tetr[j][k]*=-1.0;
     }
   }
@@ -319,8 +340,8 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 
 #if(DEBUGLAPACK==2)
   // real debug
-  if(0)
-    {
+  if(1){
+      //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
       dualfprintf(fail_file,"\ninfo=%d\n",info);
       DLOOPA(jj){
 	dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);

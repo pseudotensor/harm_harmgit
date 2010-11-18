@@ -159,7 +159,11 @@ static void interp_init(void)
 static void interp_readcommandlineargs(int argc, char *argv[])
 {
   int i;
-  int basicargcnum=33+1;
+  int basicargcnum=31+1;
+
+
+
+
 
   /////////////////////////////
   //
@@ -563,7 +567,7 @@ static void readdata_preprocessdata(void)
 	  fscanf(stdin,SCANARG,&olddata0[h][i][j][k]) ;
 	}
 	else{
-	  compute_preprocess(gdumpin, &olddata0[h][i][j][k]);
+	  compute_preprocess(outputvartype,gdumpin, &olddata0[h][i][j][k]);
 	}
 	if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
 	if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
@@ -635,7 +639,7 @@ static void readdata_preprocessdata(void)
       }// end if PERIODIC
     }
     else{
-      compute_preprocess(gdumpin, NULL);
+      compute_preprocess(outputvartype,gdumpin, NULL);
     }
 
   }
@@ -650,7 +654,7 @@ static void readdata_preprocessdata(void)
     ///////////////
 
     if(defaultvaluetype==0){
-      if(outputvartype==0) defaultvalue=totalmin;
+      if(outputvartype==0 || outputvartype==1 && vectorcomponent!=0) defaultvalue=totalmin;
       else defaultvalue=0.0; // vector-like things otherwise around 0
     }
     else if(defaultvaluetype==1){
@@ -714,6 +718,7 @@ static void input_header(void)
   }
 
   // print header from file
+  fprintf(stderr,"PRINTSCANHEADER\n");
   fprintf(stderr, PRINTSCANHEADER,
 	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 
@@ -886,12 +891,13 @@ void usage(int argc, int basicargcnum)
 {
 
 
-  fprintf(stderr,"args (argc=%d should be %d+ (%d+ user args)): DATATYPE,INTERPTYPE, READHEADER,WRITEHEADER, oN0,oN1,oN2,oN3, refinefactor,filter,sigma, oldgridtype,newgridtype, nN0,nN1,nN2,nN3, starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc, Rin,Rout,R0,hslope,defcoord,dofull2pi, starttdata,endtdata,tnrdegrees, <extrapolate,defaultvaluetype,gdumpfilepathname>\n",argc,basicargcnum,basicargcnum-1);
+  fprintf(stderr,"args (argc=%d should be %d+ (%d+ user args)): DATATYPE,INTERPTYPE, READHEADER,WRITEHEADER, oN0,oN1,oN2,oN3, refinefactor,filter,sigma, oldgridtype,newgridtype, nN0,nN1,nN2,nN3, starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc, Rin,Rout,R0,hslope,defcoord,dofull2pi, <starttdata,endtdata,tnrdegrees>, <extrapolate,defaultvaluetype,gdumpfilepathname>\n",argc,basicargcnum,basicargcnum-1);
 
   fprintf(stderr,"DATATYPE:\n"
 	  "0=image (input&output: byte binary only, 1 column only)\n"
 	  "1=data (input&output: text only, 1=scalar 1 column)\n"
 	  "2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
+	  "6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
 	  "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "12=output lower component (inputting all 4 columns of data: u^i)\n"
 	  "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
@@ -935,6 +941,7 @@ void usage(int argc, int basicargcnum)
   fprintf(stderr,"defcoord: which coordinate system (see coord.c)\n");
   fprintf(stderr,"dofull2pi: whether to do full 2pi or not (see coord.c)\n");
 
+  // below are only inputted when oN0>1 || nN0>1
   fprintf(stderr,"starttdata: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
   fprintf(stderr,"endtdata: time 4D input dumps end\n");
   fprintf(stderr,"tnrdegrees: angle [in degrees] between observer and z-axis of original grid.  90 degrees gives no transformation.  20degrees may be typical.\n");
@@ -948,6 +955,17 @@ void usage(int argc, int basicargcnum)
   fprintf(stderr,"e.g.\n");
   fprintf(stderr,"~/sm/iinterp 0 0 1 1 456 456 1  1 0 0  1 0 256 512 1  1.321 40 0 40 40 0.3 0 < im0p0s0l0000.r8 > ../iimages/iim0p0s0l0000.r8\n");
   fprintf(stderr,"~/bin/iinterp.rh39 1 1 1 1  12 256 128 32  1 0 0  1 5  32 32 32 32   500 3250  -300 300 -300 300 -950 950   1.1 1000 0 0.3  9 1  500 3250 10   0 1 < dumpalltimes.1.txt > observerdumpalltimes.1.true.txt\n");
+
+  fprintf(stderr,"\nin SM: (see blandford.m and zakamska.m)\n");
+  fprintf(stderr,"$program $DATATYPE $interptype $READHEADERDATA $WRITEHEADERDATA \\ "
+	  "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
+	  "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
+	  "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE < $1 > $2 \n");
+  fprintf(stderr,"$program $1 $interptype $READHEADERDATA $WRITEHEADERDATA \\ \n"
+	  "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
+	  "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
+	  "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE dumps/gdump < $2 > $3 \n");
+  
   exit(0) ;
 
 }
@@ -1081,23 +1099,29 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
       num4vectors=1; // default
       vectorcomponent=DATATYPE-2;
       outputvartype=1; // simple vector conversion to orthonormal basis
-      fprintf(stderr,"Processing vector component %d\n",vectorcomponent);
+      fprintf(stderr,"Processing vector component %d from u^\\mu\n",vectorcomponent);
+    }
+    else if(DATATYPE>=6 && DATATYPE<=9){
+      num4vectors=1; // default
+      vectorcomponent=DATATYPE-6;
+      outputvartype=2; // simple vector conversion to orthonormal basis
+      fprintf(stderr,"Processing vector component %d from u_\\mu\n",vectorcomponent);
     }
     else if(DATATYPE==11){
       num4vectors=1; // default
       vectorcomponent=1;
-      outputvartype=2; // Compute EM Poynting term
+      outputvartype=11; // Compute EM Poynting term
       fprintf(stderr,"Computing poloidal EM Polynting angular flux density\n");
     }
     else if(DATATYPE==12){
       num4vectors=1; // default
       vectorcomponent=3; // B_\\phi
-      outputvartype=3; // Compute B_\\phi [conserved current]
+      outputvartype=12; // Compute B_\\phi [conserved current]
       fprintf(stderr,"Computing B_\\phi\n");
     }
     else if(DATATYPE>=101){
       num4vectors=DATATYPE-100;
-      fprintf(stderr,"Transforming %d 4-vectors to orthonormal basis\n",num4vectors);
+      fprintf(stderr,"Transforming %d contravariant 4-vectors to orthonormal basis\n",num4vectors);
       // force input and output grid types to be the same
       outputvartype=1; // conversion to orthonormal basis
       immediateoutput=1;
@@ -1181,11 +1205,21 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
   sscanf(argv[i++],"%d",&defcoord) ;
   sscanf(argv[i++],"%d",&dofull2pi) ;
 
-  // below 2 for 4D data inputs, specifying start and end times for dumps used
-  sscanf(argv[i++],SCANARG,&starttdata) ;
-  sscanf(argv[i++],SCANARG,&endtdata) ;
-  // angle for CARTLIGHT grid
-  sscanf(argv[i++],SCANARG,&tnrdegrees) ;
+
+  // extend basicargcnum if needed
+  if(nN0>1 || oN0>1){
+    basicargcnum+=3;
+  }
+
+
+
+  if(nN0>1 || oN0>1){
+    // below 2 for 4D data inputs, specifying start and end times for dumps used
+    sscanf(argv[i++],SCANARG,&starttdata) ;
+    sscanf(argv[i++],SCANARG,&endtdata) ;
+    // angle for CARTLIGHT grid
+    sscanf(argv[i++],SCANARG,&tnrdegrees) ;
+  }
 
 
   // conditionally read-in things (all in or out)

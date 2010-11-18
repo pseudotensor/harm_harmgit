@@ -3,7 +3,7 @@
 
 
 // local declarations of local functions
-static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
+static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
 static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
 static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);
 static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM]);
@@ -17,7 +17,7 @@ static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
 
 // process inputted data
-void compute_preprocess(FILE *gdumpfile, FTYPE *finaloutput)
+void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finaloutput)
 {
   FTYPE vec[NDIM],vecv[NDIM],vecB[NDIM];
   FTYPE vecortho[NDIM];
@@ -42,16 +42,25 @@ void compute_preprocess(FILE *gdumpfile, FTYPE *finaloutput)
   //bl_coord(X,V);
 
   // perform local transformation of tensor objects prior to spatial interpolation
-  if(outputvartype==1){
+  if(outputvartypelocal<=10){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
 
+    // for debug:
+    tiglobal[0]=ti[0];
+    tiglobal[1]=ti[1];
+    tiglobal[2]=ti[2];
+    tiglobal[3]=ti[3];
+
+
     for(iter=0;iter<num4vectors;iter++){
       // convert coordinate basis vector compnents to single orthonormal basis component desired
       fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+
       // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
-      vec2vecortho(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
+      vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
+
       if(immediateoutput){
 	// immediately output result
 	if(sizeof(FTYPE)==sizeof(double)){
@@ -64,13 +73,21 @@ void compute_preprocess(FILE *gdumpfile, FTYPE *finaloutput)
       else{
 	finaloutput[iter]=vecortho[vectorcomponent];
       }
+
+
+      // DEBUG
+      //      if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+      //	DLOOPA(jj) dualfprintf(fail_file,"jj=%d vec=%21.15g  vecortho=%21.15g\n",jj,vec[jj],vecortho[jj]);
+      //	dualfprintf(fail_file,"vc=%d result=%21.15g\n",vectorcomponent,vecortho[vectorcomponent]);
+      //      }
+
     }
     if(immediateoutput){
       // output return after entire row is done
       fprintf(stdout,"\n") ;
     }
   }
-  else if(outputvartype==2){
+  else if(outputvartypelocal==11){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
@@ -86,7 +103,7 @@ void compute_preprocess(FILE *gdumpfile, FTYPE *finaloutput)
       vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vecv, vecB, &finaloutput[iter]);
     }
   }
-  else if(outputvartype==3){
+  else if(outputvartypelocal==12){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
@@ -128,7 +145,7 @@ void compute_preprocess(FILE *gdumpfile, FTYPE *finaloutput)
 
 // coordinate transform of vector and get single component of result
 //static void vec2vecortho(FILE *gdumpfile, int oldgridtype, int newgridtype, int i, int j, int k, FTYPE *vec, FTYPE *vecortho)
-static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
+static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
 {
   FTYPE lambdacoord[NDIM][NDIM];
   int jj,kk;
@@ -137,23 +154,67 @@ static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][
   FTYPE finalvec[NDIM];
 
 
+  // vector here is in original X coordinates
   DLOOPA(jj) finalvec[jj]=vec[jj];
 
 
   // get SPC -> Cart transformation
   generate_lambdacoord(oldgridtype, newgridtype, V, lambdacoord);
 
-  // get tetrad
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d lambdacoord=%21.15g\n",jj,kk,lambdacoord[jj][kk]);
+  //  }
+
+
+  // get tetrad (uses dxdxp so that tetrcon and tetrcon and eigenvalues are using V metric not X metric
   tetr_func_frommetric(dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
 
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%21.15g\n",jj,kk,gcov[GIND(jj,kk)]);
+  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d tetrcon=%21.15g\n",jj,kk,tetrcon[jj][kk]);
+  //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d eigenvalues=%21.15g\n",jj,eigenvalues[jj]);
+  //  }
 
-  // transform to orthonormal basis
+
+  // transform from X to V for contravariant vector
   DLOOPA(jj) tempcomp[jj]=0.0;
   DLOOP(jj,kk){
-    tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
+    tempcomp[jj] += dxdxp[jj][kk]*finalvec[kk];
   }
   DLOOPA(jj) finalvec[jj]=tempcomp[jj];
 
+
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d finalvec(dxdxp)=%21.15g\n",jj,finalvec[jj]);
+  //  }
+
+
+  DLOOPA(jj) tempcomp[jj]=0.0;
+
+  if(outputvartypelocal==1){
+    // transform to orthonormal basis for contravariant vector in V coordinates
+    DLOOP(jj,kk){
+      //    tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
+      tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
+    }
+  }
+  else if(outputvartypelocal==2){
+    // transform to orthonormal basis for covariant vector in V coordinates (GODMARK: unsure about tetrcon[kk][jj] vs. tetrcon[jj][kk])
+    DLOOP(jj,kk){
+      tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
+    }
+  }
+  DLOOPA(jj) finalvec[jj]=tempcomp[jj];
+
+
+
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d finalvec(tetrcov)=%21.15g\n",jj,finalvec[jj]);
+  //  }
 
   // transform from spherical polar to Cartesian coordinates (assumes vector is in orthonormal basis)
   DLOOPA(jj) tempcomp[jj]=0.0;
@@ -161,6 +222,11 @@ static void vec2vecortho(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][
     tempcomp[kk] += lambdacoord[kk][jj]*finalvec[jj];
   }
   DLOOPA(jj) finalvec[jj]=tempcomp[jj];
+
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d finalvec(lambdacoord)=%21.15g\n",jj,finalvec[jj]);
+  //  }
   
 
   // final answer:
@@ -304,16 +370,17 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
     SLOOPA(jj) lambdacoord[TT][jj] = lambdacoord[jj][TT] = 0.0;
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
+    // assumes orthonormal to orhonormal!
     lambdacoord[1][RR] = sin(th)*cos(ph);
-    lambdacoord[1][TH] = r*cos(th)*cos(ph);
-    lambdacoord[1][PH] = -r*sin(th)*sin(ph);
+    lambdacoord[1][TH] = cos(th)*cos(ph);
+    lambdacoord[1][PH] = -sin(ph);
 
     lambdacoord[2][RR] = sin(th)*sin(ph);
-    lambdacoord[2][TH] = r*cos(th)*sin(ph);
-    lambdacoord[2][PH] = r*sin(th)*cos(ph);
+    lambdacoord[2][TH] = cos(th)*sin(ph);
+    lambdacoord[2][PH] = cos(ph);
 
     lambdacoord[3][RR] = cos(th);
-    lambdacoord[3][TH] = -r*sin(th);
+    lambdacoord[3][TH] = -sin(th);
     lambdacoord[3][PH] = 0.0;
   }
   else if(oldgridtype==GRIDTYPESPC && newgridtype==GRIDTYPECARTLIGHT){
@@ -329,16 +396,17 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
     SLOOPA(jj) lambdacoord[jj][TT] = 0.0;
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
+    // assumes orthonormal to orhonormal!
     lambdacoord[1][RR] = sin(th)*cos(ph);
-    lambdacoord[1][TH] = r*cos(th)*cos(ph);
-    lambdacoord[1][PH] = -r*sin(th)*sin(ph);
+    lambdacoord[1][TH] = cos(th)*cos(ph);
+    lambdacoord[1][PH] = -sin(ph);
 
     lambdacoord[2][RR] = sin(th)*sin(ph);
-    lambdacoord[2][TH] = r*cos(th)*sin(ph);
-    lambdacoord[2][PH] = r*sin(th)*cos(ph);
+    lambdacoord[2][TH] = cos(th)*sin(ph);
+    lambdacoord[2][PH] = cos(ph);
 
     lambdacoord[3][RR] = cos(th);
-    lambdacoord[3][TH] = -r*sin(th);
+    lambdacoord[3][TH] = -sin(th);
     lambdacoord[3][PH] = 0.0;
   }
   else{
