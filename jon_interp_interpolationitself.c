@@ -722,24 +722,30 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
   else if(newgridtype==GRIDTYPECART || newgridtype==GRIDTYPECARTLIGHT){// Cart output (i.e. tc,xc,yc,zc are Cartesian labels for new grid)
 
 
-    if(newgridtype==GRIDTYPECARTLIGHT && ROTATECARTLIGHT==1){
-      // Rotate x,y,z before assigning spherical polar value
-      // As here, xc,yc,zc are really new coordinates, so already have rotation.
-      // Our job here is to get back the true Cartesian coordinates so the below can be computed as normal
-      // recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
+    //    if(newgridtype==GRIDTYPECARTLIGHT && ROTATECARTLIGHT==1){
+    
+    // now assume always have rotation
+    // Rotate x,y,z before assigning spherical polar value
+    // As here, xc,yc,zc are really new coordinates, so already have rotation.
+    // Our job here is to get back the true Cartesian coordinates so the below can be computed as normal
+    // recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
       
-      // Keep things simple at first.
-      // Since xc,yc,zc "already" rotated, then rotate back to get Cartesian
-      // Back rotation means rotate -tnrdegrees degrees around (e.g.) x or y axis.  Let's stick to y-axis, so y-axis is unchanged.  This means zc is unchanged.
-      xc = +xc*cos(-tnrdegrees*M_PI/180.0) + +yc*sin(-tnrdegrees*M_PI/180.0);
-      yc = -xc*sin(-tnrdegrees*M_PI/180.0) + +yc*cos(-tnrdegrees*M_PI/180.0);
-      zc  = zc;
+    // Keep things simple at first.
+    // Since xc,yc,zc "already" rotated, then rotate back to get Cartesian
+    // Back rotation means rotate -tnrdegrees degrees around (e.g.) x or y axis.  Let's stick to y-axis, so y-axis is unchanged.  This means zc is unchanged.
 
-      // now we have the back-rotation around the y-axis (i.e. zc)
+    // Needs to be consistent with generate_lambdacoord() such that formula between rotated and nonrotated coordinates is same
+    // such that BACK-rotation with tnrdegrees=90deg takes : -xrot -> +znonrot  & +zrot -> +xnonrot  so BACK-rotation is from x-axis towards z-axis.  Or with y-axis pointed at you, the rotation is clockwise.
+
+    xc = +xc*cos(-tnrdegrees*M_PI/180.0) + +yc*sin(-tnrdegrees*M_PI/180.0); // x // then xcCartnonrot = -zcCartrot for tnrdegrees=90deg.
+    yc = -xc*sin(-tnrdegrees*M_PI/180.0) + +yc*cos(-tnrdegrees*M_PI/180.0); // z // then zcCartnonrot = xcCartrot for tnrdegrees=90deg.
+    zc  = zc; // y
+
+    // now we have the back-rotation around the y-axis (i.e. zc)
       
-      // now below use of xc,yc,zc will be correctly using true (unrotated) Cartesian coordinates.  This ends up so that new grid (rotated Cart) will show the rotation of the old grid data.
+    // now below use of xc,yc,zc will be correctly using true (unrotated) Cartesian coordinates.  This ends up so that new grid (rotated Cart) will show the rotation of the old grid data.
       
-    }
+    //    }
 
     if(oldgridtype==GRIDTYPECART){ // Cart input
       *r=xc;
@@ -832,7 +838,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
       // tc : new grid label = t0
       // t : original time = t
       // assumes rspc computed above (note rspc doesn't change under the rotation if ROTATECARTLIGHT==1)
-      *t = tc + rspc*cos(tnrdegrees*M_PI/180.0); // Note sign is + since this equation is for t = t0 + ... That is, *t is the original time coordinate, which is one of the oldgridtype's above, and so normal time
+      *t = tc + rspc*cos(tnrdegrees*M_PI/180.0); // Note sign is + since this equation is for t = t0 + ... That is, *t is the original lab-frame time coordinate, which is one of the oldgridtype's above, and so normal lab-frame time
     }
     else if(oldgridtype==GRIDTYPECARTLIGHT){
       // assume all other grid use normal time, so specify tobs as *t such that tc is normal time
@@ -875,22 +881,27 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
   }
   else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input 2 Cart
 
-    if(ROTATECARTLIGHT==0){
-      *xc = r;
-      *yc = th;
-      *zc = ph;
-    }
-    else{
-      // Assumes ROTATECARTLIGHT==1 when grid was created
-      // won't change distance, but still do it
-      // rotate newgrid back to Cart
-      // xc: x
-      // yc: z
-      // zc: y
-      *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
-      *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
-      *zc  = ph;
-    }
+    //    if(ROTATECARTLIGHT==0){
+    //      *xc = r;
+    //      *yc = th;
+    //      *zc = ph;
+    //    }
+    //    else{
+    ////NO: Assumes ROTATECARTLIGHT==1 when grid was created
+
+    // won't change distance, but still do it
+    // rotate newgrid back to Cart
+    // xc: x
+    // yc: z
+    // zc: y
+    // r : xold rotated
+    // th : zold rotated
+    // ph : yold rotated
+    // should be same transformation as done in new_coord()
+    *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
+    *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+    *zc  = ph;
+    //    }
 
     // get rspc
     rspc=sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
@@ -953,16 +964,19 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
   }
   else if(oldgridtype==GRIDTYPECARTLIGHT){ // Cart input with light travel time t 2 Cart
 
-    if(ROTATECARTLIGHT==0){
-      *xc = r;
-      *yc = th;
-      *zc = ph;
-    }
-    else{
-      *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
-      *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
-      *zc  = ph;
-    }
+    //    if(ROTATECARTLIGHT==0){
+    //      *xc = r;
+    //      *yc = th;
+    //      *zc = ph;
+    //    }
+    //    else{
+
+    // again, should be same transformation as in new_coord()
+    *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
+    *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+    *zc  = ph;
+
+      //    }
 
     rspc = sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
     *tc = t + rspc*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)

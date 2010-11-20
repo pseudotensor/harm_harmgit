@@ -340,12 +340,16 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
 {
   FTYPE r,th,ph;
   int jj,kk;
+  FTYPE lambdatrans[NDIM][NDIM];
+  FTYPE lambdarotate[NDIM][NDIM];
+  FTYPE lambdatemp[NDIM][NDIM];
+
 
 
   if(oldgridtype==newgridtype || newgridtype==GRIDTYPENOCHANGE){
     // no change
-    DLOOP(jj,kk) lambdacoord[jj][kk]=0.0;
-    DLOOPA(jj) lambdacoord[jj][jj]=1.0;
+    DLOOP(jj,kk) lambdatrans[jj][kk]=0.0;
+    DLOOPA(jj) lambdatrans[jj][jj]=1.0;
   }
   else if(oldgridtype==GRIDTYPESPC && newgridtype==GRIDTYPECART){
     // y=0 is \phi=0
@@ -366,22 +370,22 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
     // so for going from SPC to Cart with xnew=Cart and xold=SPC, then (e.g.) need terms like \Lambda^x_r = dx/dr
 
     // assume time doesn't change or mix with space
-    lambdacoord[TT][TT]=1.0;
-    SLOOPA(jj) lambdacoord[TT][jj] = lambdacoord[jj][TT] = 0.0;
+    lambdatrans[TT][TT]=1.0;
+    SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
     // assumes orthonormal to orhonormal!
-    lambdacoord[1][RR] = sin(th)*cos(ph);
-    lambdacoord[1][TH] = cos(th)*cos(ph);
-    lambdacoord[1][PH] = -sin(ph);
+    lambdatrans[1][RR] = sin(th)*cos(ph);
+    lambdatrans[1][TH] = cos(th)*cos(ph);
+    lambdatrans[1][PH] = -sin(ph);
 
-    lambdacoord[2][RR] = sin(th)*sin(ph);
-    lambdacoord[2][TH] = cos(th)*sin(ph);
-    lambdacoord[2][PH] = cos(ph);
+    lambdatrans[2][RR] = sin(th)*sin(ph);
+    lambdatrans[2][TH] = cos(th)*sin(ph);
+    lambdatrans[2][PH] = cos(ph);
 
-    lambdacoord[3][RR] = cos(th);
-    lambdacoord[3][TH] = -sin(th);
-    lambdacoord[3][PH] = 0.0;
+    lambdatrans[3][RR] = cos(th);
+    lambdatrans[3][TH] = -sin(th);
+    lambdatrans[3][PH] = 0.0;
   }
   else if(oldgridtype==GRIDTYPESPC && newgridtype==GRIDTYPECARTLIGHT){
     // similar to above, but time mixes with space
@@ -390,29 +394,64 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
     th=V[2];
     ph=V[3];
 
-    lambdacoord[TT][TT]=1.0;
-    SLOOPA(jj) lambdacoord[TT][jj] = 0.0;
-    lambdacoord[TT][RR] = -cos(tnrdegrees*M_PI/180.0); // dtobs/dr
-    SLOOPA(jj) lambdacoord[jj][TT] = 0.0;
+    lambdatrans[TT][TT]=1.0;
+    SLOOPA(jj) lambdatrans[TT][jj] = 0.0;
+    lambdatrans[TT][RR] = -cos(tnrdegrees*M_PI/180.0); // dtobs/dr
+    SLOOPA(jj) lambdatrans[jj][TT] = 0.0;
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
     // assumes orthonormal to orhonormal!
-    lambdacoord[1][RR] = sin(th)*cos(ph);
-    lambdacoord[1][TH] = cos(th)*cos(ph);
-    lambdacoord[1][PH] = -sin(ph);
+    lambdatrans[1][RR] = sin(th)*cos(ph);
+    lambdatrans[1][TH] = cos(th)*cos(ph);
+    lambdatrans[1][PH] = -sin(ph);
 
-    lambdacoord[2][RR] = sin(th)*sin(ph);
-    lambdacoord[2][TH] = cos(th)*sin(ph);
-    lambdacoord[2][PH] = cos(ph);
+    lambdatrans[2][RR] = sin(th)*sin(ph);
+    lambdatrans[2][TH] = cos(th)*sin(ph);
+    lambdatrans[2][PH] = cos(ph);
 
-    lambdacoord[3][RR] = cos(th);
-    lambdacoord[3][TH] = -sin(th);
-    lambdacoord[3][PH] = 0.0;
+    lambdatrans[3][RR] = cos(th);
+    lambdatrans[3][TH] = -sin(th);
+    lambdatrans[3][PH] = 0.0;
   }
   else{
     dualfprintf(fail_file,"No transformation setup for oldgridtype=%d newgridtype=%d\n",oldgridtype,newgridtype);
     myexit(246347);
   }
+
+
+  // initialize rotation matrix
+  DLOOP(jj,kk) lambdarotate[jj][kk]=0.0;
+  DLOOPA(jj) lambdarotate[jj][jj]=1.0;
+
+  // assume have converted from spc to Cart, now go from Cart to new Cart rotated around y-axis
+  // rotate around y-axis, so y-axis is unchanged
+  // here 1=x 2=y 3=z (unlike in interpolation code that is x z y)
+  // e.g. tnrdegrees=90deg : +znonrot -> +xrot  & +xnonrot -> -zrot  so rotation is from z-axis towards x-axis.  Or with y-axis pointed at you, rotation is counter-clockwise.
+  lambdarotate[1][1] = cos(tnrdegrees*M_PI/180.0);
+  lambdarotate[1][2] = 1.0;
+  lambdarotate[1][3] = sin(tnrdegrees*M_PI/180.0); // e.g. xCartrot = zCartnonrot for tnrdegrees=90deg
+
+  lambdarotate[2][1] = 0.0;
+  lambdarotate[2][2] = 1.0;
+  lambdarotate[2][3] = 0.0;
+
+  lambdarotate[3][1] = -sin(tnrdegrees*M_PI/180.0); // e.g. zCartrot = -xCartnonrot for tnrdegrees=90deg
+  lambdarotate[3][2] = 0.0;
+  lambdarotate[3][3] = cos(tnrdegrees*M_PI/180.0);
+
+  // first transform and then rotate
+  // Lambda^\mu_\nu = \Lambdarotate^\mu_\kappa \Lambdatrans^\kappa_\nu
+  int ll;
+  DLOOP(jj,kk){
+    lambdacoord[jj][kk]=0.0;
+    DLOOPA(ll){
+      lambdacoord[jj][kk] += lambdarotate[jj][ll]*lambdatrans[ll][kk];
+    }
+  }
+
+
+
+
 }
 
 

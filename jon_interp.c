@@ -159,7 +159,7 @@ static void interp_init(void)
 static void interp_readcommandlineargs(int argc, char *argv[])
 {
   int i;
-  int basicargcnum=31+1;
+  int basicargcnum=32+1;
 
 
 
@@ -891,7 +891,7 @@ void usage(int argc, int basicargcnum)
 {
 
 
-  fprintf(stderr,"args (argc=%d should be %d+ (%d+ user args)): DATATYPE,INTERPTYPE, READHEADER,WRITEHEADER, oN0,oN1,oN2,oN3, refinefactor,filter,sigma, oldgridtype,newgridtype, nN0,nN1,nN2,nN3, starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc, Rin,Rout,R0,hslope,defcoord,dofull2pi, <starttdata,endtdata,tnrdegrees>, <extrapolate,defaultvaluetype,gdumpfilepathname>\n",argc,basicargcnum,basicargcnum-1);
+  fprintf(stderr,"args (argc=%d should be %d+ (%d+ user args)): DATATYPE,INTERPTYPE, READHEADER,WRITEHEADER, oN0,oN1,oN2,oN3, refinefactor,filter,sigma, oldgridtype,newgridtype, nN0,nN1,nN2,nN3, starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc, Rin,Rout,R0,hslope,defcoord,dofull2pi, <starttdata,endtdata>,  tnrdegrees, <extrapolate,defaultvaluetype,gdumpfilepathname>\n",argc,basicargcnum,basicargcnum-1);
 
   fprintf(stderr,"DATATYPE:\n"
 	  "0=image (input&output: byte binary only, 1 column only)\n"
@@ -944,7 +944,7 @@ void usage(int argc, int basicargcnum)
   // below are only inputted when oN0>1 || nN0>1
   fprintf(stderr,"starttdata: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
   fprintf(stderr,"endtdata: time 4D input dumps end\n");
-  fprintf(stderr,"tnrdegrees: angle [in degrees] between observer and z-axis of original grid.  90 degrees gives no transformation.  20degrees may be typical.\n");
+  fprintf(stderr,"tnrdegrees: angle [in degrees] between observer and z-axis of original grid.  0 degrees gives no transformation.  20degrees means data rotated 20degrees from z-axis towards x-axis around y-axis.\n");
 
   // below 1 are separately optional
   fprintf(stderr,"extrapolate: 0 = no, 1 = yes\n");
@@ -1206,20 +1206,22 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
   sscanf(argv[i++],"%d",&dofull2pi) ;
 
 
-  // extend basicargcnum if needed
-  if(nN0>1 || oN0>1){
-    basicargcnum+=3;
-  }
+
 
 
 
   if(nN0>1 || oN0>1){
+    // extend basicargcnum if needed
+    basicargcnum+=2;
     // below 2 for 4D data inputs, specifying start and end times for dumps used
     sscanf(argv[i++],SCANARG,&starttdata) ;
     sscanf(argv[i++],SCANARG,&endtdata) ;
-    // angle for CARTLIGHT grid
-    sscanf(argv[i++],SCANARG,&tnrdegrees) ;
   }
+
+
+  // angle for CARTLIGHT or CART grid
+  sscanf(argv[i++],SCANARG,&tnrdegrees) ;
+
 
 
   // conditionally read-in things (all in or out)
