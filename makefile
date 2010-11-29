@@ -88,6 +88,16 @@ AVOIDFORK=1
 MCC=cc
 endif
 
+ifeq ($(USEKRAKENICC),1)
+# override again
+USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
+USELAPACK=0
+AVOIDFORK=1
+MCC=cc
+endif
+
+
 ifeq ($(USEICCGENERIC),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
@@ -161,6 +171,9 @@ ifeq ($(USENERSC),1)
 endif
 
 ifeq ($(USEKRAKEN),1)
+endif
+
+ifeq ($(USEKRAKENICC),1)
 endif
 
 ifeq ($(USEICCGENERIC),1)
@@ -550,7 +563,15 @@ LDFLAGS = -lm  $(LAPACKLDFLAGS)
 endif
 
 
-
+ifeq ($(USEKRAKENICC),1)
+LONGDOUBLECOMMAND=
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+COMP=cc $(DFLAGS)
+CFLAGSPRE = -fast -msse3 $(DFLAGS)
+CFLAGSPRENONPRECISE = $(CFLAGSPRE)
+GCCCFLAGSPRE=  $(CFLAGSPRE)
+LDFLAGS = -lm  $(LAPACKLDFLAGS)
+endif
 
 
 
