@@ -97,6 +97,15 @@ AVOIDFORK=1
 MCC=cc
 endif
 
+ifeq ($(USEPFE),1)
+# override again
+USEMCCSWITCH=1
+AVOIDFORK=1
+MCC=mpicc
+CCGENERATE=mpicc
+USESPECIAL4GENERATE=1
+USELAPACK=0
+endif
 
 ifeq ($(USEICCGENERIC),1)
 # uses -static for secure library usage
@@ -573,6 +582,16 @@ GCCCFLAGSPRE=  $(CFLAGSPRE)
 LDFLAGS = -lm  $(LAPACKLDFLAGS)
 endif
 
+ifeq ($(USEPFE),1)
+LONGDOUBLECOMMAND=-m128bit-long-double
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA)
+COMP=mpicc $(DFLAGS)
+CFLAGSPRE= -O3 -funroll-loops $(DFLAGS)
+CFLAGSPRENONPRECISE= $(CFLAGSPRE)
+GCCCFLAGSPRE= -O3 $(DFLAGS)
+#LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= $(LAPACKLDFLAGS)
+endif
 
 
 

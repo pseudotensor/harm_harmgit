@@ -1191,6 +1191,7 @@ int init_defglobal(void)
   prMAX[B2]=100.0;
   prMAX[B3]=100.0;
 
+  // AKMARK: parameter: gam (adiabatic index)
   // some physics
   gam=4./3.; // ultrarelativistic gas, assumes pgas<prad and radiation
   gamideal=gam;

@@ -40,10 +40,13 @@
 // 13) USE<systemtype>=1
 // 14) setup batch
 
+// AKMARK: which problem
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 //#define WHICHPROBLEM THICKDISKFROMMATHEMATICA // choice
 #define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
+
+#define TORUSHASBREAKS 0   // AKMARK: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
 
 #define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
 
@@ -66,7 +69,7 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
   
-  dofull2pi = 0;
+  dofull2pi = 0;   // AKMARK: do full phi
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -76,6 +79,7 @@ int prepre_init_specific_init(void)
 }
 
 
+// AKMARK: h/r
 int pre_init_specific_init(void)
 {
   // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
@@ -204,6 +208,7 @@ Questions for Roger:
 
 
 
+// AKMARK: grid coordinates
 int init_defcoord(void)
 {
   
@@ -230,6 +235,7 @@ int init_grid(void)
   // metric stuff first
 
 
+// AKMARK: spin
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
@@ -243,10 +249,12 @@ int init_grid(void)
  
   Rhor=rhor_calc(0);
 
+  // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
 
 
+// AKMARK: inner (Rin) and outer (Rout) radii of simulation domain, R0
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
@@ -297,6 +305,8 @@ int init_global(void)
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
+
+// AKMARK: cooling
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
 #elif( WHICHPROBLEM==THINTORUS )
@@ -306,9 +316,11 @@ int init_global(void)
   cooling = NOCOOLING; //no cooling
 #endif
 
+  // AKMARK: Toth vs stag
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
+// AKMARK: floors
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -335,6 +347,7 @@ int init_global(void)
 
 
 
+// AKMARK: dumping frequencies, final time
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
   tf = 1e4;
@@ -416,9 +429,10 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
-  beta = 1.e2 ;
+  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
 
+// AKMARK: torus inner radius
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
@@ -492,6 +506,7 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
   int nscanned1;
   long lineno, numused;
 
+  // AKMARK: entropy constant
   //BOBMARK: should be the value of KK in mathematica file
   kappa = 0.01 ;
 
@@ -636,6 +651,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
 
+// AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
@@ -672,7 +688,7 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
   kappa = 1.e-3 ;
-  rmax = 12. ;
+  rmax = 12. ;   // AKMARK: torus pressure max
   l = lfish_calc(rmax) ;
   
 
@@ -1008,7 +1024,10 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   int pl;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
-
+  #if(TORUSHASBREAKS == 1)
+  FTYPE rbreak1, rbreak2, lbreak1, lbreak2;
+  #endif
+  
     
   coord(ti, tj, tk, CENT, X);
   bl_coord(X, V);
@@ -1032,10 +1051,14 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   /// Parameters
   ///
  
-  kappa = 0.01;
-  n = 2. - 1.97; 
-  rmax = 20.;
-
+  kappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
+  n = 2. - 1.97;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  rmax = 20.;   // AKMARK: torus pressure max
+  #if(TORUSHASBREAKS == 1)   //AKMARK: midplane radii at which break in angular momentum profile occurs
+  rbreak1 = 25.;
+  rbreak2 = 75.;
+  #endif
+  
   
   ///
   /// Computations at pressure max
@@ -1060,7 +1083,11 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   r = rin;
   th = M_PI_2l;
   lin = thintorus_findl( r, th, a, c, al );
-      
+  #if(TORUSHASBREAKS == 1)
+  lbreak1 = thintorus_findl( rbreak1, th, a, c, al);
+  lbreak2 = thintorus_findl( rbreak2, th, a, c, al);
+  #endif
+  
   //finding DHK03 lin, utin, f (lin)
   utin = compute_udt( r, th, a, lin );
   flin = pow(fabs(1 - k*pow(lin,1 + al)),pow(1 + al,-1));
@@ -1077,6 +1104,10 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   
   //l at current r, th
   l = thintorus_findl( r, th, a, c, al );
+  #if(TORUSHASBREAKS == 1)
+  if (l < lbreak1) l = lbreak1;
+  if (l > lbreak2) l = lbreak2;
+  #endif
   
   
   udt = compute_udt( r, th, a, l );
@@ -1233,6 +1264,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
 
+// AKMARK: magnetic loop radial wavelength
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;

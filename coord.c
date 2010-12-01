@@ -445,7 +445,7 @@ void set_coord_parms_deps(int defcoordlocal)
   }
   else if (defcoordlocal == JET3COORDS) {
   }
-  else if (defcoordlocal == SJETCOORDS) {
+  else if (defcoordlocal == SJETCOORDS) {   // AKMARK
     /////////////////////
     // RADIAL GRID SETUP
     /////////////////////
@@ -924,7 +924,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE theexp;
 
 
-
+  // AKMARK: coordinates defined, in particular, phi wedge (e.g., V[3]=2.0*M_PI*X[3])
   // below will give correct dxdxp[1][1], etc.
   V[0]=X[0]; // assume time = X[0] means time now and negative means time in past and positive means future
 
@@ -3496,7 +3496,7 @@ FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 //            V[2] = 0 and pi
 void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
 {
-  FTYPE x10 = 3.3;
+  FTYPE x10 = 3.3;;   // AKMARK
   FTYPE x20 = -1. + 1./totalsize[2]; //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.

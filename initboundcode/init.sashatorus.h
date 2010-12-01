@@ -11,6 +11,7 @@
 #undef N3
 #endif
 
+// AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
 #define N1 16
 #define N2 16
 #define N3 16
@@ -308,9 +309,9 @@
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL //(used in Sasha tests)
-#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP
+#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP   // AKMARK: requires DOEXTRAINTERP
 #define RESCALEINTERP 1
-#define DOEXTRAINTERP 1
+#define DOEXTRAINTERP 1   // AKMARK: 1 produces infinities and NaNs in fieldsvst.dat; check dump format
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
 #define USEPRIMITIVEFROMAVGCONSERVED 0
