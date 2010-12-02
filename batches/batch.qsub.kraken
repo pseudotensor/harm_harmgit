@@ -1,0 +1,21 @@
+#!/bin/bash
+#PBS -A TG-XXXXXXX
+#PBS -l size=288,walltime=24:00:00
+#PBS -q small
+#PBS -N job_name
+
+cd $PBS_O_WORKDIR
+
+
+#Set MPI environment variables; can try using these to improve MPI performance, so far without luck
+#Descriptions for these can be found at http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
+
+#export MPICH_RANK_REORDER_METHOD=3      #=3 tells MPI to use the custom rank placement in the file named MPICH_RANK_ORDER
+#export MPICH_MAX_SHORT_MSG_SIZE=512000 #messages shorted than this size (in bytes) are sent faster; increasing this doesn't seem to speed things up
+#export MPICH_UNEX_BUFFER_SIZE=2M       #buffer size for storing unclaimed (by MPI_irecv()) messages; 2Mb is too short, so leave at default (~60Mb)
+#export MPICH_PTL_UNEX_EVENTS=20        #no. of allowed queued events.  did not play with it.
+#export MPICH_ENV_DISPLAY=1             #prints out env info
+
+#Run the MPI program (uses MPICH_RANK_ORDER file if present)
+aprun -n 288 ./grmhd 18 8 2
+
