@@ -792,10 +792,6 @@
 
 
 
-// dump.c's fieldlinedump()
-// CHANGES alot, make sure # is correct!
-#define NUMFIELDLINEQUANTITIES 11
-// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
 
 // see failfloorcount counter
 #define NUMFAILFLOORFLAGS 12
@@ -1091,5 +1087,4 @@
 
 #define DO_ASSERTS 0
 
-
-
+#define FIELDLINEGDETB 0

@@ -44,6 +44,15 @@
 #define CHECKRHONEGZERORESTART 0
 #endif
 
+// dump.c's fieldlinedump()
+// CHANGES alot, make sure # is correct!
+#if( FIELDLINEGDETB == 1)
+#define NUMFIELDLINEQUANTITIES 14
+// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
+#else
+#define NUMFIELDLINEQUANTITIES 11
+// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
+#endif
 
 
 #if((WHICHCURRENTCALC==0)||(WHICHCURRENTCALC==2))
