@@ -1044,6 +1044,7 @@ static void set_connection(void)
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
     int loc;
+    int dim1, dim2, dim3;
 
 
     //////////    COMPFULLLOOP
@@ -1056,6 +1057,12 @@ static void set_connection(void)
 #if(MCOORD==CARTMINKMETRIC)
       // doesn't depend on position, only store/use 1 value
       if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+
+
+#if( CONNAXISYMM == 1 )
+      //compute connection only for k = 0 (assumes it is axisymmetric)
+      if( k != 0 ) continue;
 #endif
 
       loc=CENT;
@@ -1119,6 +1126,38 @@ static void set_connection(void)
   }// end parallel region
 
 
+#if( CONNAXISYMM == 1 )
+  //assuming connection axisymmetric, copy it from k = 0 cells to the rest of the cells (with k!=0)
+#pragma omp parallel
+  {
+    int i, j, k;
+    FTYPE X[NDIM];
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    int loc;
+    int dim1, dim2, dim3;
+
+
+    //////////    COMPFULLLOOP
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      if( k == 0 ) continue; //already computed connection for k = 0
+      //now, assuming axisymmetry, reuse those values
+      for( dim1 = 0; dim1 < NDIM; dim1++ ) {
+	for( dim2 = 0; dim2 < NDIM; dim2++ ) {
+	  for( dim3 = 0; dim3 < NDIM; dim3++ ) {
+	    GLOBALMETMAC(conn,i,j,k)[dim1][dim2][dim3] = GLOBALMETMAC(conn,i,j,0)[dim1][dim2][dim3];
+	  }
+	}
+      }
+      for( dim1 = 0; dim1 < NDIM; dim1++ ) {
+	GLOBALMETMAC(conn2,i,j,k)[dim1] = GLOBALMETMAC(conn2,i,j,0)[dim1];
+      }
+    }// end 3D LOOP
+  }// end parallel region
+#endif
 
   if(ATTEMPTSYMMETRIZATION) symmetrize_connection();
 
