@@ -29,7 +29,7 @@
 // a sort of crushing regularization
 // causes problems with stability at just beyond pole
 // for field line plots, can just set B^\theta=0 along pole
-#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)
+#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEDEATH0 (N2BND==0 ? 0 : 2) 
 #else
 #define POLEDEATH0 (N2BND==0 ? 0 : 1) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
@@ -43,7 +43,7 @@
 // number of zones to enforce Lorentz factor to be small
 // notice that at pole uu1 and uu2 are artificially large and these regions can lead to runaway low densities and so even higher uu1,uu3
 // problem with POLEGAMMADEATH is that at large radius as fluid converges toward pole the fluid stagnates and can fall back at larger angles for no reason -- even for simple torus problem this happens when GAMMAPOLE=1.001
-#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)
+#if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEGAMMADEATH0 0
 #else
 #define POLEGAMMADEATH0 1
@@ -2000,7 +2000,7 @@ int extrapfunc(int boundary, int j,int k,
 
 
 
-#define UTHETAPOLEDEATH ((PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==1)?(1):(0)) //only interpolate u^\theta instead of u^2 here when doing the same in interp
+#define UTHETAPOLEDEATH ((PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)?(1):(0)) //only interpolate u^\theta instead of u^2 here when doing the same in interp
 
 #if(0 == UTHETAPOLEDEATH)
 #   define MACP0A1mod(prim,ri,rj,rk,pl) MACP0A1(prim,ri,rj,rk,pl)
