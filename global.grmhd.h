@@ -242,6 +242,7 @@
 /////////////////////////////////////////
 /////////////////////////////////////////
 //
+// To compile bbcp on ranch, do: make OPT=-DSUN6 Sungcc  
 //
 //
 // In the end, this worked to ensure complete and correct copy:

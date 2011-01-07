@@ -76,9 +76,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
 
       // DEBUG
-      //      if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
-      //	DLOOPA(jj) dualfprintf(fail_file,"jj=%d vec=%21.15g  vecortho=%21.15g\n",jj,vec[jj],vecortho[jj]);
-      //	dualfprintf(fail_file,"vc=%d result=%21.15g\n",vectorcomponent,vecortho[vectorcomponent]);
+      //      if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==1){
+      //      	DLOOPA(jj) dualfprintf(fail_file,"jj=%d vec=%21.15g  vecortho=%21.15g\n",jj,vec[jj],vecortho[jj]);
+      //      	dualfprintf(fail_file,"vc=%d result=%21.15g\n",vectorcomponent,vecortho[vectorcomponent]);
       //      }
 
     }
@@ -401,17 +401,17 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
     // assumes orthonormal to orhonormal!
-    lambdatrans[1][RR] = sin(th)*cos(ph);
-    lambdatrans[1][TH] = cos(th)*cos(ph);
-    lambdatrans[1][PH] = -sin(ph);
+    lambdatrans[1][RR] = sin(th)*cos(ph);   // dxhat/drhat
+    lambdatrans[1][TH] = cos(th)*cos(ph);   // dxhat/dhhat
+    lambdatrans[1][PH] = -sin(ph);   // dxhat/dphhat
 
-    lambdatrans[2][RR] = sin(th)*sin(ph);
-    lambdatrans[2][TH] = cos(th)*sin(ph);
-    lambdatrans[2][PH] = cos(ph);
+    lambdatrans[2][RR] = sin(th)*sin(ph); // dyhat/drhat
+    lambdatrans[2][TH] = cos(th)*sin(ph); // dyhat/dhhat
+    lambdatrans[2][PH] = cos(ph); // dyhat/dphhat
 
-    lambdatrans[3][RR] = cos(th);
-    lambdatrans[3][TH] = -sin(th);
-    lambdatrans[3][PH] = 0.0;
+    lambdatrans[3][RR] = cos(th); // dzhat/drhat
+    lambdatrans[3][TH] = -sin(th); // dzhat/dhhat
+    lambdatrans[3][PH] = 0.0; // dzhat/dphhat
   }
   else{
     dualfprintf(fail_file,"No transformation setup for oldgridtype=%d newgridtype=%d\n",oldgridtype,newgridtype);
@@ -428,7 +428,7 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
   // here 1=x 2=y 3=z (unlike in interpolation code that is x z y)
   // e.g. tnrdegrees=90deg : +znonrot -> +xrot  & +xnonrot -> -zrot  so rotation is from z-axis towards x-axis.  Or with y-axis pointed at you, rotation is counter-clockwise.
   lambdarotate[1][1] = cos(tnrdegrees*M_PI/180.0);
-  lambdarotate[1][2] = 1.0;
+  lambdarotate[1][2] = 0.0;
   lambdarotate[1][3] = sin(tnrdegrees*M_PI/180.0); // e.g. xCartrot = zCartnonrot for tnrdegrees=90deg
 
   lambdarotate[2][1] = 0.0;

@@ -685,7 +685,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
     //
     // tan(\theta) =  x'/z' = xc/yc
     // r = -1 + 10^{\sqrt{x'^2 + y'^2 + z'^2}}
-    // tan(\phi) = x'/y' = xc/zc
+    // tan(\phi) = y'/x' = zc/xc
     //
     // assume startxc,etc. correspond to outermost radial or x,y,z coordinate in Cart coords
 
@@ -709,7 +709,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
     if(*th>M_PI) *th-=M_PI;
     if(*th>M_PI) *th-=M_PI;
 
-    *ph = atan2(xc,zc) ; // Note that since \hat{i}\times\hat{j} = -\hat{k}, then \hat{k}=-\hat{y} so we flip xc,zc = x',y' to get back normal r,\theta,\phi coordinates (or is this just consistent with how we setup vis5d+ files?)
+    *ph = atan2(zc,xc) ; // OLD: Note that since \hat{i}\times\hat{j} = -\hat{k}, then \hat{k}=-\hat{y} so we flip xc,zc = x',y' to get back normal r,\theta,\phi coordinates (or is this just consistent with how we setup vis5d+ files?)
     if(*ph<0) *ph+=2.0*M_PI;
     if(*ph<0) *ph+=2.0*M_PI;
     if(*ph<0) *ph+=2.0*M_PI;
@@ -762,6 +762,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
       
       Rc=sqrt(xc*xc+zc*zc);
 	
+      // \theta = atan(R/z)
       *th = atan2(Rc,yc) ;	/* deliberately interchanged args */
       if(*th<0) *th+=M_PI;
       if(*th<0) *th+=M_PI;
@@ -771,14 +772,17 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
       if(*th>M_PI) *th-=M_PI;
       //	    *th = atan(Rc/yc) ;
       //dualfprintf(fail_file," got here %d %d\n",newgridtype,oN3);
+
+
+      // NOTE: \phi = atan(x/y) has x>0,y=0 plane as \phi=0, as in Griffiths.
       if(oN3==1){
-	*ph = atan2(fabs(xc),fabs(zc));
+	*ph = atan2(fabs(zc),fabs(xc));
 	if(*ph<0) *ph+=M_PI;
 	if(*ph>M_PI) *ph-=M_PI;
 	//		dualfprintf(fail_file,"newcoord here ph=%g\n",*ph);
       }
       else{
-	*ph = atan2(xc,zc) ;
+	*ph = atan2(zc,xc) ;
 	if(*ph<0) *ph+=2.0*M_PI;
 	if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
       }
@@ -799,7 +803,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
 	    
       *r = Rc; // Cyl radius
       *th = yc; // Cyl height
-      *ph = atan2(xc,zc) ;	// Cyl angle
+      *ph = atan2(zc,xc) ;	// Cyl angle
       if(*ph<0) *ph+=2.0*M_PI;
       if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
 

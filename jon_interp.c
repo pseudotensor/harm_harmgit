@@ -654,7 +654,7 @@ static void readdata_preprocessdata(void)
     ///////////////
 
     if(defaultvaluetype==0){
-      if(outputvartype==0 || outputvartype==1 && vectorcomponent!=0) defaultvalue=totalmin;
+      if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue=totalmin;
       else defaultvalue=0.0; // vector-like things otherwise around 0
     }
     else if(defaultvaluetype==1){
@@ -714,7 +714,7 @@ static void input_header(void)
     if((totalsize[1]!=oN1)||(totalsize[2]!=oN2)||(totalsize[3]!=oN3)){
       fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
     }
-    while(fgetc(stdin)!='\n'); // go past end of line
+    while(fgetc(stdin)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
   }
 
   // print header from file
