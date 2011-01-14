@@ -2,6 +2,11 @@
 
 #include "rancdefs.h"
 
+int oldparse;
+char inFTYPE[4];
+int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
+int binaryinput,binaryoutput;
+
 int calledranc;
 FTYPE NUMEPSILONPOW23;
 FTYPE Xmax[NDIM];

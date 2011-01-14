@@ -19,12 +19,21 @@ static void input_header(void);
 static void output_header(void);
 static void output2file_postinterpolation(void);
 
+static void old_usage(int argc, int basicargcnum);
 static void usage(int argc, int basicargcnum);
 
-static void old_parse_commandline(int basicargcnum, int argc, char *argv[]);
-static void parse_commandline(int basicargcnum, int argc, char *argv[]);
+static void interpret_commandlineresults(void);
+void interpret_commandlineresults_subpart1(void);
+
+static void old_parse_commandline(int argc, char *argv[]);
+static void parse_commandline(int argc, char *argv[]);
 
 static void defaultoptions(void);
+
+static int post_coordsetup(void);
+
+static void readelement(FILE *input, FTYPE *datain);
+
 
 
 
@@ -35,18 +44,17 @@ int main(int argc, char *argv[])
   // Initialize interpolation
   interp_init();
 
-  // Read command line commands
+  // Read and process command line commands
   interp_readcommandlineargs(argc, argv);
-
-  // not doing interpolation if input and output resolutions same with no gridtype change
-  // doesn't matter if refining
-  doinginterpolation=!(oN0==nN0 && oN1==nN1 && oN2==nN2 && oN3==nN3 && (newgridtype==GRIDTYPENOCHANGE || oldgridtype==newgridtype));
 
   input_header();
 
   // read in coordinate parameters (after inputting header that may determine defcoord, etc.)
   set_coord_parms(defcoord); // set to default
   read_coord_parms(defcoord); // read if file has updated values
+
+  // do things once header read-in and coordinates setup
+  doinginterpolation=post_coordsetup();
 
   // setup grid data information (in case header info different from commandline, use header info)
   setup_zones();
@@ -126,7 +134,15 @@ static void interp_init(void)
   //NX2BND=N2BND;
   //NX3BND=N3BND;
 
- NUMEPSILONPOW23=pow(NUMEPSILON,2.0/3.0);
+  NUMEPSILONPOW23=pow(NUMEPSILON,2.0/3.0);
+
+  bytesize=sizeof(unsigned char);
+  intsize=sizeof(int);
+  longintsize=sizeof(long int);
+  longlongintsize=sizeof(long long int);
+  floatsize=sizeof(float);
+  doublesize=sizeof(double);
+  longdoublesize=sizeof(long double);
 
 
   // some dummy assignments to make menwt.c and coord.c work, even if don't use these quantities
@@ -159,25 +175,7 @@ static void interp_init(void)
 static void interp_readcommandlineargs(int argc, char *argv[])
 {
   int i;
-  int basicargcnum=32+1;
 
-
-
-
-
-  /////////////////////////////
-  //
-  // get arguments
-  //
-
-
-  // see if enough arguments to do anything
-  if(argc < basicargcnum){
-    for(i=0;i<argc;i++){
-      fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
-    }
-    usage(argc,basicargcnum); // report how to use program if not enough arguments
-  }
 
 
 
@@ -185,9 +183,12 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   defaultoptions();
 
 
+  /////////////////////////////
+  //
   // parse command-line arguments
-  old_parse_commandline(basicargcnum,argc,argv);
-  //  parse_commandline(basicargcnum,argc, argv); // will be switching to switches
+  //
+  /////////////////////////////
+  parse_commandline(argc, argv); // will be switching to switches
 
 
   if(VERBOSITY>=2){
@@ -198,117 +199,13 @@ static void interp_readcommandlineargs(int argc, char *argv[])
   }
 
 
-
-
-  ///////////
+  /////////////////////////////
   //
-  // set things not set by header or user that will be used (e.g. by set_points(), which sets dx[0])
+  // process results from command-line arguments into normal/expected parameters setup
   //
-  ///////////
+  /////////////////////////////
+  interpret_commandlineresults();
 
-
-  // ensure new coordinate ignorable but no divisions by zero
-  // if too narrow (or vanishing) grid width, then leave a bit resolved so no divisions by zero
-
-  if(nN0==1){
-    dtc=(endtc-starttc)/((FTYPE)nN0);
-    if(fabs(dtc)<SMALL){
-      dtc=NUMEPSILONPOW23;
-      starttc-=dtc*0.5;
-      endtc+=dtc*0.5;
-    }    
-  }
-
-  if(nN1==1){
-    dxc=(endxc-startxc)/((FTYPE)nN1);
-    if(fabs(dxc)<SMALL){
-      dxc=NUMEPSILONPOW23;
-      startxc-=dxc*0.5;
-      endxc+=dxc*0.5;
-    }    
-  }
-
-  if(nN2==1){
-    dyc=(endyc-startyc)/((FTYPE)nN2);
-    if(fabs(dyc)<SMALL){
-      dyc=NUMEPSILONPOW23;
-      startyc-=dyc*0.5;
-      endyc+=dyc*0.5;
-    }    
-  }
-
-  if(nN3==1){
-    dzc=(endzc-startzc)/((FTYPE)nN3);
-    if(fabs(dzc)<SMALL){
-      dzc=NUMEPSILONPOW23;
-      startzc-=dzc*0.5;
-      endzc+=dzc*0.5;
-    }    
-  }
-
-
-  if(oN0>1){
-    // dt crucial when using multiple time data.
-    // Since set_points doesn't explicitly set startx[0] or dx[0] based upon any problem size information, need to set by hand.
-    // set_points() will set startx[0]=0 and dx[0]=dt.
-    // when oN0==1, this just keeps X[0] sane, but otherwise it's not used
-    // assumes data is uniformly spaced in time (i.e. dumps were evenly spaced when merged)
-    // then set_points() will set startx[0] but dx[0]=dt below, such that true lab time: tlab = starttc + dt*(hold+0.5); for hold=0..oN0-1
-    // so note that if want exact correctness in time, need input starttdata and endtdata to be chosen so that data appear on CENT for given FACE versions of starttdata and endtdata
-    dt=(endtdata-starttdata)/((FTYPE)oN0);
-    fprintf(stderr,"Times given assumed user inputs where data sits (i.e. CENT in this code): starttdata=%21.15g endtdata=%21.15g dt=%21.15g\n",starttdata,endtdata,dt);
-    // assume user inputs dump times corresopnding to location of data in time, while iinterp wants these to be FACE values where data located at CENT
-    starttdata-=dt*0.5;// back up to FACE value
-    endtdata+=dt*0.5;// bump up to FACE value
-    dt=(endtdata-starttdata)/((FTYPE)oN0); // FACE type calculation
-    fprintf(stderr,"Adjusted Times so inputted times (assumed colocated with time data) are actually FACE values that give a box with CENT values for the dump times: starttdata=%21.15g endtdata=%21.15g dt=%21.15g\n",starttdata,endtdata,dt);
-    fprintf(stderr,"SUPERNOTE: User will still have to specify new-grid box size in time based upon FACE positions (i.e. not times wanted, but time box with values located at CENT)\n");
-    //  dX[0]=dt; (will be set in set_points()
-    // So X[0] = starttdata + (hold + startpos[0] + 0.5) dx[0]; and dx[0]=dX[0]=dt = (endtdata-starttdata)/oN0;
-  }
-  else{
-    // need to make time coordinate ignorable in case user set the start and end times to be the same
-    // avoids divisions by zero
-    dt=1.0;
-    starttdata=starttc;
-    endtdata=endtc;
-  }
-
-
-
-
-
-  if(filter && (oN3!=1 || oN0!=1)){
-    filter=0;
-    fprintf(stderr,"Turned off filter since oN3=%d or  oN0=%d\n",oN3,oN0); fflush(stderr);
-  }
-
-
-  if(fabs(refinefactor-1.0)>0.1 && (oN3!=1 || oN0!=1) ){
-    refinefactor=1.0;
-    fprintf(stderr,"Turned off refinement since oN3=%d or oN0=%d\n",oN3,oN0); fflush(stderr);
-  }
-
-  if( (oN3>1 || oN0>1) && (INTERPTYPE==3 || INTERPTYPE==2) ){
-    fprintf(stderr,"PLANAR and BICUBIC interpolation not setup for oN3=%d>1 or oN0=%d>1 -- uses nearest for k,h",oN3,oN0);
-  }
-
-
-  if(READHEADER)  jonheader=1;
-  else jonheader=0;
-
-
-
-  // process case where not interpolating and just processing input and output per cell at once
-  if(immediateoutput){
-    // force this even if user messed up
-    newgridtype=GRIDTYPENOCHANGE;
-    // force output grid size to be same as input
-    nN0=oN0;
-    nN1=oN1;
-    nN2=oN2;
-    nN3=oN3;
-  }
 
 }
 
@@ -409,6 +306,14 @@ static void readdata_preprocessdata(void)
   //
   // read data
   //
+
+
+  ///////////////////////////////////
+  //
+  // DATATYPE==0
+  //
+  // only images with 1 column of byte size
+  ///////////////////////////////////
   if(DATATYPE==0){
     imagedata=0; // says treat as image and fit output between 0-255
     if(DOUBLEWORK) DATATYPE=1;
@@ -548,6 +453,11 @@ static void readdata_preprocessdata(void)
     }// end if periodic
     
   }
+  ///////////////////////////////////
+  //
+  // DATATYPE==1
+  //
+  ///////////////////////////////////
   else if(DATATYPE==1){
     imagedata=1; // says treat as data
 
@@ -564,7 +474,7 @@ static void readdata_preprocessdata(void)
       LOOPOLDDATA{
 
 	if(outputvartype==0){
-	  fscanf(stdin,SCANARG,&olddata0[h][i][j][k]) ;
+	  readelement(stdin,&olddata0[h][i][j][k]);
 	}
 	else{
 	  compute_preprocess(outputvartype,gdumpin, &olddata0[h][i][j][k]);
@@ -680,7 +590,27 @@ static void readdata_preprocessdata(void)
 }
 
 
+// read single element from file in text or binary format and any element C type
+void readelement(FILE *input, FTYPE *datain)
+{
+  
+  if     (binaryinput==0 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fscanf(stdin,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinput==0 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fscanf(stdin,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinput==0 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fscanf(stdin,"%ld",&dumli);   *datain=(FTYPE)dumli;      }
+  else if(binaryinput==0 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fscanf(stdin,"%lld",&dumlli); *datain=(FTYPE)dumlli;     }
+  else if(binaryinput==0 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fscanf(stdin,"%f",&dumf) ;    *datain=(FTYPE)dumf;       }
+  else if(binaryinput==0 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fscanf(stdin,"%lf",&dumd);    *datain=(FTYPE)dumd;       }
+  else if(binaryinput==0 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fscanf(stdin,"%Lf",&dumld);   *datain=(FTYPE)dumld;      }
 
+  if     (binaryinput==1 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fread(&dumi,bytesize,1,input);          *datain=(FTYPE)dumi;       }
+  else if(binaryinput==1 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fread(&dumi,intsize,1,input);           *datain=(FTYPE)dumi;       }
+  else if(binaryinput==1 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fread(&dumli,longintsize,1,input);      *datain=(FTYPE)dumli;      }
+  else if(binaryinput==1 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fread(&dumlli,longlongintsize,1,input); *datain=(FTYPE)dumlli;     }
+  else if(binaryinput==1 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fread(&dumf,floatsize,1,input);         *datain=(FTYPE)dumf;       }
+  else if(binaryinput==1 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fread(&dumd,doublesize,1,input);        *datain=(FTYPE)dumd;       }
+  else if(binaryinput==1 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fread(&dumld,longdoublesize,1,input);   *datain=(FTYPE)dumld;      }
+
+}
 
 
 
@@ -711,8 +641,10 @@ static void input_header(void)
 
     realnstep=(long)readnstep;
     nstep=realnstep;
-    if((totalsize[1]!=oN1)||(totalsize[2]!=oN2)||(totalsize[3]!=oN3)){
-      fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
+    if(oldparse){ // only a problem at this point if oldparse==1 and READHEADER==1 since old parse line needs to have correct oN?
+      if((totalsize[1]!=oN1)||(totalsize[2]!=oN2)||(totalsize[3]!=oN3)){
+	fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
+      }
     }
     while(fgetc(stdin)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
   }
@@ -759,7 +691,27 @@ static void output_header(void)
 }
 
 
+// do things once header read-in and coordinates setup
+int post_coordsetup(void)
+{
+  int doinginterpolation;
 
+  if(READHEADER){
+    // if read header, then have some things that user didn't have to set on command line if using new parse mode, so set them up
+    oN1=totalsize[1];
+    oN2=totalsize[2];
+    oN3=totalsize[3];
+    // also set is R0, Rin, Rout, hslope, defcoord, gam, spin, etc. (see input_header() ).
+  }
+
+  // not doing interpolation if input and output resolutions same with no gridtype change
+  // doesn't matter if refining
+  doinginterpolation=!(oN0==nN0 && oN1==nN1 && oN2==nN2 && oN3==nN3 && (newgridtype==GRIDTYPENOCHANGE || oldgridtype==newgridtype));
+
+
+  return(doinginterpolation);
+
+}
 
 
 
@@ -884,10 +836,18 @@ void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME)
 }
 
 
-
-
 // report usage of program to user and exit
-void usage(int argc, int basicargcnum)
+void old_new(int argc, int basicargcnum)
+{
+
+
+}
+
+
+
+
+// old report usage of program to user and exit
+void old_usage(int argc, int basicargcnum)
 {
 
 
@@ -973,106 +933,471 @@ void usage(int argc, int basicargcnum)
 
 
 // Parse command line options as a set of switches (just template so far)
-void parse_commandline(int basicargcnum, int argc, char *argv[])
+void parse_commandline(int argc, char *argv[])
 {
   int i;
-  FTYPE parameter; // temp
-  FTYPE par1,par2,par3; // temp
-  int par4;
-  char stuff[100];
-  char *mypoint;
+  int checktdata=0;
+  int usage=0;
+  int goodarg=0;
+  int argcheckstart=1;
+  int setbinaryinput=0;
 
 
-  // loop over all arguments, looking for space-separated switches.  For each found switch, grab next entry as the parameter
-  for (i=1;i<argc;i++) {
-    if (strcmp(argv[i],"-area")==0 && i+1<argc) {
-      parameter = atoi(argv[i+1]);
-      i++;
+  if(argc>1){
+    i=1;
+    if (strcmp(argv[i],"-oldargs")==0) {
+      // old type of parsing of command line
+      old_parse_commandline(argc-1,argv+1); // add 1 to ignore oldargs as if doing old parsing method without any interior changes
+      oldparse=1;
     }
-    else if (strcmp(argv[i],"-alpha")==0) {
-      parameter = 1;
+  }
+
+
+
+  // new type of parsing of command line
+  if(oldparse==0){
+
+
+    // check if usage should be printed, which means 
+    if(argc==1){
+      usage=1;
     }
-    else if (strcmp(argv[i],"-box")==0 && i+3<argc) {
-      par1 = atof(argv[i+1]);
-      par2 = atof(argv[i+2]);
-      par3 = atof(argv[i+3]);
-      i+=3;
-    }
-    else if (strcmp(argv[i],"-font")==0 && i+2<argc) {
-      mypoint = argv[i+1];
-      par4 = atoi( argv[i+2] );
-      i+=2;
-    }
-    else if (strcmp(argv[i],"-projection")==0 && i+1<argc) {
-      if (strncmp(argv[i+1],"gen",3)==0) {
-	par1=1;
-      }
-      else if (strncmp(argv[i+1],"lin",3)==0) {
-	par1=2;
-      }
-      else if (strncmp(argv[i+1],"lam",3)==0) {
-	par1=3;
-      }
-      else {
-	printf("Bad projection option: %s\n", argv[i+1] );
-      }
-      i++;
-    }
-    else if (strcmp(argv[i],"-trajvars")==0) {
-      if (i+3<argc && argv[i+3][0]!='-') {
-	strcpy( stuff, argv[i+1] );
-	strcpy( stuff, argv[i+2] );
-	strcpy( stuff, argv[i+3] );
-	i += 3;
-      }
-      else {
-	strcpy( stuff, argv[i+1] );
-	strcpy( stuff, argv[i+2] );
-	i += 2;
+    if(argc>1){
+      for(i=1;i<argc;i++){
+	if(strncmp(argv[i],"-usage",6)==0){ // usage check must come first so only 1 arg of -usage or even argc==1 will allow for usage print-out
+	  usage=1;
+	}
       }
     }
-    else if (strncmp(argv[i],"-version",8)==0) {
-      printf("iinterp %s: "
-	     "Jon's interpolation code for HARM post-processing.\n",
-	     VERSION);
-      printf("         Home page: http://harm.unfuddle.com/projects/3 \n"
-	     "Copyright (C) 2002-2010 Jonathan McKinney, et al.  This program is free\n"
-	     "software; you can redistribute it and/or modify it under the terms of\n"
-	     "the GNU General Public License, with some exceptions.\n\n"
-	     "This program is distributed in the hope that it will be useful,\n"
-	     "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-	     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
-	     "For more details, see the file COPYING.\n");
-      exit(0);
-    }  
-    else if (strcmp( argv[i], "-log")==0) {
-      /* This is after "-vert" because it must override */
-      float x, y;
-      if (i+2<argc && (x=atof(argv[i+2])) && (y=atof(argv[i+1]))) {
-	par1 = x;
-	par2 = y;
-	i += 2;
+
+    if(usage){
+      fprintf(stderr,"Usage (argc=%d): \n\n",argc);
+
+      fprintf(stderr,"iinterp <args> < inputfile2stdin > outputfile2stdout\n");
+
+      fprintf(stderr,"E.g. Normal Data Interpolation:\n iinterp -dtype 1 -itype 1 -head 1 1 -oN 1 128 64 128 -grids 1 0 -nN 1 128 128 1 -box 0 0 -40 40 -40 40 0 0 -dofull2pi 1 -defaultvaluetype 0 < infile > outfile \n\n");
+      fprintf(stderr,"E.g. Full Diag:\n iinterp -binaryinput 1 -dtype 1001 -head 1 0 -dofull2pi 1 -gdump gdump < infile > outfile \n\n");
+
+      fprintf(stderr,"<args> is any of the below:\n\n");
+      fprintf(stderr,"-usage (or no args): Gives Usage Information and exit (don't actually do anything with rest of args)\n");
+      if(argc==1) argcheckstart=0; // forces at least one instances in loop below.  "usage ||" will check against argv[0], but doesn't matter since always triggers conditional as true
+    }
+
+
+    // loop over all arguments, looking for space-separated switches.  For each found switch, grab next entry as the parameter
+    for(i=argcheckstart;i<argc;i++){
+      // assume won't find good argument by default
+      goodarg=0;
+
+      // don't use if else if -- just use if's since want "usage" to get triggered (i.e. common triggers and not always specific unique triggers)
+
+
+      // checking for -usage to trigger goodarg==1
+      if(argc>1 && strncmp(argv[i],"-usage",6)==0){
+	goodarg++;
       }
-      else if (i+1<argc && (x=atof(argv[i+1]))) {
-	par1 = x;
-	i++;
+
+      //////////////////
+      //
+      // normal args
+      //
+      // could also use atoi(), atof(), and direct assignment of string pointer.
+      // can also use strcmp() in a sublevel (e.g. if (strncmp(argv[i+1],"gen",3)==0))
+      //
+      /////////////////
+      if(usage || strncmp(argv[i],"-version",8)==0 || strncmp(argv[i],"-ver",4)==0 || strncmp(argv[i],"--version",9)==0 || strncmp(argv[i],"--ver",5)==0 || strncmp(argv[i],"-v",2)==0 || strncmp(argv[i],"--v",3)==0 ){
+	if(usage==0){
+	  goodarg++;
+	  fprintf(stderr,"iinterp %s\n\n"
+		 "Jon's interpolation code for HARM post-processing.\n",
+		 VERSION);
+	  fprintf(stderr,"         Home page: http://harm.unfuddle.com/projects/3 \n"
+		 "Copyright (C) 2002-2010 Jonathan McKinney, et al.  This program is free\n"
+		 "software; you can redistribute it and/or modify it under the terms of\n"
+		 "the GNU General Public License, with some exceptions.\n\n"
+		 "This program is distributed in the hope that it will be useful,\n"
+		 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+		 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+		 "For more details, see the file license.txt in code tree.\n");
+	  exit(0);
+	}
+	else{
+	  fprintf(stderr,"-version -ver --version --ver -v --v : Gives Version Information\n");
+	}
+      }  
+      if(usage || strncmp(argv[i],"-compile",8)==0) {
+	if(usage==0){
+	  goodarg++;
+	  fprintf(stderr,"To compile as part of HARM package, do: \n\n"
+		 "make superclean ; make prepiinterp ; make iinterp \n");
+	  exit(0);
+	}
+	else{
+	  fprintf(stderr,"-compile : Gives Compilation Information\n");
+	}
+      }  
+      if (usage || strcmp(argv[i],"-binaryinput")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryinput) ;
+	  setbinaryinput=1;
+	}
+	else{
+	  fprintf(stderr,"-binaryinput <binaryinput>\n");
+	  fprintf(stderr,"\t<binaryinput>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
+	}
       }
-      par3 = 1;
-    }
-    else if (strcmp(argv[i],"-debug")==0){
-      DEBUGINTERP=1;
-    }
-    else if (strcmp(argv[i],"-debugsimple")==0){
-      SIMPLEDEBUGINTERP=1;
-    }
-    else if (argv[i][0]!='-' ) {
-      //      v5dfile[gopointer] = argv[i];
-      //      gopointer++;
-    }
-    else{
-      printf("unknown option: %s\n", argv[i] );
-    }
-  }// loop over command-line arguments
+      if (usage || strcmp(argv[i],"-binaryoutput")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryoutput) ;
+	}
+	else{
+	  fprintf(stderr,"-binaryoutput <binaryoutput>\n");
+	  fprintf(stderr,"\t<binaryoutput>: 0=text 1=binary\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-inFTYPE")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    i++;
+	    if(strncmp(argv[i],"byte",4)==0){
+	      strcpy(inFTYPE,"b");
+	    }
+	    else if(strncmp(argv[i],"int",3)==0){
+	      strcpy(inFTYPE,"i");
+	    }
+	    else if(strncmp(argv[i],"longint",7)==0){
+	      strcpy(inFTYPE,"li");
+	    }
+	    else if(strncmp(argv[i],"longlongint",11)==0){
+	      strcpy(inFTYPE,"lli");
+	    }
+	    else if(strncmp(argv[i],"float",5)==0){
+	      strcpy(inFTYPE,"f");
+	    }
+	    else if(strncmp(argv[i],"double",6)==0){
+	      strcpy(inFTYPE,"d");
+	    }
+	    else if(strncmp(argv[i],"longdouble",10)==0){
+	      strcpy(inFTYPE,"ld");
+	    }
+	    else{
+	      fprintf(stderr,"Unknown inFTYPE\n");
+	      exit(1);
+	    }
+	  }
+	}
+	else{
+	  fprintf(stderr,"-inFTYPE <inFTYPEstring>\n");
+	  fprintf(stderr,"\t<inFTYPEstring>: byte, int, longint, longlongint, float, double, longdouble\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-dtype")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&DATATYPE) ; // 0,1, etc.
+	  // set specific defaults, but don't override user choice if already set
+	  if(setbinaryinput==0){
+	    if(DATATYPE==0) binaryinput=1;
+	    else binaryinput=0;
+	  }
+	}
+	else{
+	  fprintf(stderr,"-dtype <DATATYPE>\n");
+	  fprintf(stderr,"\t<DATATYPE> as one of:\n"
+	  "\t0=image (input&output: byte binary default, 1 column only)\n"
+	  "\t1=data (input&output: text default, 1=scalar 1 column)\n"
+	  "\t2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
+	  "\t6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
+	  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
+	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
+	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
+	  "\t1001=Full Diag\n"
+	  );
+	}
+      }
+      if (usage || strcmp(argv[i],"-itype")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&INTERPTYPE) ; // 0,1,2,3
+	}
+	else{
+	  fprintf(stderr,"-itype <INTERPTYPE>\n");
+	  fprintf(stderr,"\t<INTERPTYPE>: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-head")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&READHEADER) ; // 0 or 1
+	  if(i+1<argc) sscanf(argv[++i],"%d",&WRITEHEADER) ; // 0 or 1
+	}
+	else{
+	  fprintf(stderr,"-head <DOREADHEADER> <DOWRITEHEADER>\n");
+	  fprintf(stderr,"\t<DOREADHEADER> or <DOWRITEHEADER>: 0 or 1 for each\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-oN")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&oN0) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&oN1) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&oN2) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&oN3) ;
+	}
+	else{
+	  fprintf(stderr,"-oN <oN0> <oN1> <oN2> <oN3>\n");
+	  fprintf(stderr,"\t<oN?> : old grid sizes for (e.g.) t,r,\\theta,\\phi \n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-refine")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&refinefactor) ;// 1.0 then no refinement, just normal old image used
+	}
+	else{
+	  fprintf(stderr,"-refine <refinementfactor>\n");
+	  fprintf(stderr,"\t<refinementfactor>=1.0=no refinement, otherwise refines image before interpolation with this factor increase in size: standard is bicubic refinement\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-filter")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&filter) ;// 0=no filter #=filter given image within surrounding # pixels per pixel with sigma
+	  if(filter!=0 && i+1<argc) sscanf(argv[++i],SCANARG,&sigma) ;// only used if filter!=0, then sigma of gaussian filter, usually ~ filter value
+	}
+	else{
+	  fprintf(stderr,"-filter <filter> <sigma>\n");
+	  fprintf(stderr,"\t<filter>: 0=no filter #=filter image with surrounding # pixels per pixel with sigma width\n");
+	  fprintf(stderr,"\t<sigma>: only used if filter!=0, then sigma of gaussian filter, usually ~ filter value\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-grids")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&oldgridtype) ; // 0, 1, 2, 3, 4, and 5 currently
+	  if(i+1<argc) sscanf(argv[++i],"%d",&newgridtype) ; // -1, and above 0+ versions
+	}
+	else{
+	  fprintf(stderr,"-grids <oldgridtype> <newgridtype>\n");
+	  fprintf(stderr,"\t<oldgridtype>: (V in GRMHD code): 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R), 4=x'=sin\\theta log(r) z'=cos\\theta log(r) 5=Cartesian w/ light travel time accounting\n");
+	  fprintf(stderr,"\t<newgridtype>: (output coord system): -1=no change (and rest same as above)\n");
+	  fprintf(stderr,"\tNote: Assume if oN3>1 and oldgridtype==1, then periodic in \\phi since otherwise extrapolate values and poor at low resolution.\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-nN")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&nN0) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&nN1) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&nN2) ;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&nN3) ;
+	}
+	else{
+	  fprintf(stderr,"-nN <nN0> <nN1> <nN2> <nN3>\n");
+	  fprintf(stderr,"\t<nN?> : new grid sizes for tc,xc,yc,zc (e.g. for Cart as for tprime,xprime,zprime,yprime as potentially rotated by tnrdegrees)  \n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-box")==0) {
+	if(usage==0){
+	  goodarg++;
+	  //(t=time, x=R-cyl, y=Z-cyl, z=Y-cyl)
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&starttc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endtc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startxc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endxc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startyc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endyc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startzc) ; // arbitrary
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endzc) ; // arbitrary
+	}
+	else{
+	  fprintf(stderr,"-box <starttc> <endtc> <startxc> <endxc> <startyc> <endyc> <startzc> <endzc>\n");
+	  fprintf(stderr,"\t<starttc>: inner interp t(t-Cart,t-Cyl t=time)\n");
+	  fprintf(stderr,"\t<endtc>: outer t\n");
+	  fprintf(stderr,"\t<startxc>: inner interp x(x-Cart,R-Cyl)\n");
+	  fprintf(stderr,"\t<endxc>: outer x\n");
+	  fprintf(stderr,"\t<startyc>: inner interp y(z-Cart,z-Cyl)\n");
+	  fprintf(stderr,"\t<endyc>: outer y\n");
+	  fprintf(stderr,"\t<startzc>: inner interp z(y-Cart,y-Cyl)\n");
+	  fprintf(stderr,"\t<endzc>: outer z\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-coord")==0) {
+	if(usage==0){
+	  goodarg++;
+	  // often other coord.c dependent stuff needed
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&Rin) ; // could use setRin()
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&Rout) ;
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&R0) ;
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&hslope) ;
+	}
+	else{
+	  fprintf(stderr,"-coord <Rin> <Rout> <R0> <hslope>\n");
+	  // some basic grid parameters, but sometimes need specific coord.c file with its parameters
+	  fprintf(stderr,"\t<Rin>: Inner radial edge\n");
+	  fprintf(stderr,"\t<Rout>: Outer radial edge\n");
+	  fprintf(stderr,"\t<R0>: Radial inner-grid enhancement factor\n");
+	  fprintf(stderr,"\t<hslope>: theta grid refinement factor\n");
+	  fprintf(stderr,"\tNote: -coord required if not reading header\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-defcoord")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&defcoord) ;
+	}
+	else{
+	  fprintf(stderr,"-defcoord <defcoord>\n");
+	  fprintf(stderr,"\t<defcoord>: which coordinate system (see coord.c)\n");
+	  fprintf(stderr,"\tNote: -defcoord required if not reading header\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-dofull2pi")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&dofull2pi) ;
+	}
+	else{
+	  fprintf(stderr,"-dofull2pi <dofull2pi>\n");
+	  fprintf(stderr,"\t<dofull2pi>: whether to do full 2pi or not (see coord.c)\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-tdata")==0) {
+	if(usage==0){
+	  goodarg++;
+	  // below 2 for 4D data inputs, specifying start and end times for dumps used
+	  if(i+2<argc) checktdata=1;
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&starttdata) ;
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endtdata) ;
+	}
+	else{
+	  fprintf(stderr,"-tdata <starttdata> <endtdata>\n");
+	  // below are only inputted when oN0>1 || nN0>1
+	  fprintf(stderr,"\t<starttdata>: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
+	  fprintf(stderr,"\t<endtdata>: time 4D input dumps end\n");
+	  fprintf(stderr,"\tNote: -tdata required if oN0>1 || nN1>1\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-tnrdeg")==0) {
+	if(usage==0){
+	  goodarg++;
+	  // angle for CARTLIGHT or CART grid
+	  if(i+1<argc) sscanf(argv[++i],SCANARG,&tnrdegrees) ;
+	}
+	else{
+	  fprintf(stderr,"-tnrdeg <tnrdegrees>\n");
+	  fprintf(stderr,"\t<tnrdegrees>: angle [in degrees] between observer and z-axis of original grid.  0 degrees gives no transformation.  20degrees means data rotated 20degrees from z-axis towards x-axis around y-axis.\n");
+	  fprintf(stderr,"\tNote: -tnrdeg recommended if want rotation or using multiple time data (i.e. -tdata with oN0>1 or nN0>1)\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-extrap")==0) {
+	if(usage==0){
+	  goodarg++;
+	  sscanf(argv[++i],"%d",&EXTRAPOLATE);
+	}
+	else{
+	  fprintf(stderr,"-extrap <extrapolate>\n");
+	  // below 1 are separately optional
+	  fprintf(stderr,"\t<extrapolate>: 0 = no, 1 = yes\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-defaultvaluetype")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&defaultvaluetype);
+	}
+	else{
+	  fprintf(stderr,"-defaultvaluetype <defaultvaluetype>\n");
+	  fprintf(stderr,"\t<defaultvaluetype>: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-gdump")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) getgdump=1;
+	  if(i+1<argc) sscanf(argv[++i],"%s",&gdumpfilename[0]);
+	}
+	else{
+	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
+	  // below is optional but requires above 2 to be read-in
+	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,100...\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-verbose")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&VERBOSITY) ;
+	}
+	else{
+	  fprintf(stderr,"-verbose <VERBOSITY>\n");
+	  fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-debug")==0){
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&DEBUGINTERP) ;
+	}
+	else{
+	  fprintf(stderr,"-debug <DEBUGINTERP>\n");
+	  fprintf(stderr,"\t<DEBUGINTERP> : Level of debug for interpolation: 0 or 1 currently\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-simpledebug")==0){
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&SIMPLEDEBUGINTERP) ;
+	}
+	else{
+	  fprintf(stderr,"-simpledebug <SIMPLEDEBUGINTERP>\n");
+	  fprintf(stderr,"\t<SIMPLEDEBUGINTERP> : Level of simpledebug for interpolation: 0 or 1 currently\n");
+	}
+      }
+      if (usage || argv[i][0]!='-' ){
+	if(usage==0){
+	  goodarg++;
+	  //      v5dfile[gopointer] = argv[i];
+	  //      gopointer++;
+	}
+	else{
+	  fprintf(stderr,"\n\nWithout - in front, can code-up special options\n\n");
+	}
+      }
+
+
+      if(argc>1 && goodarg==0){
+	fprintf(stderr,"\n\nUnknown option: %s\n\n", argv[i] );
+      }
+	
+    }// loop over command-line arguments
+      
+
+
+
+  }// end if new type of parsing of command line
+
+
+
+  // exit if giving usage
+  if(usage){
+    exit(0);
+  }
+
+
+  ///////////////////////////
+  //
+  // If reach here, then actually got arguments instead of just showing usage
+  //
+  ///////////////////////////
+
+  // some checks if actually got args
+  if(nN0>1 || oN0>1 && checktdata==0){
+    fprintf(stderr,"Have nN0>1 || oN0>1 but didn't set tdata, using default!\n");
+  }
+
 
 }
 
@@ -1080,78 +1405,30 @@ void parse_commandline(int basicargcnum, int argc, char *argv[])
 
 
 // Parse command line options as a string of input variables
-void old_parse_commandline(int basicargcnum, int argc, char *argv[])
+void old_parse_commandline(int argc, char *argv[])
 {
   int i;
+  int basicargcnum=32+1;
+
+
+
+  // see if enough arguments to do anything
+  if(argc < basicargcnum){
+    for(i=0;i<argc;i++){
+      fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
+    }
+    old_usage(argc,basicargcnum); // report how to use program if not enough arguments
+  }
 
 
 
   // get args
   i=1;
   sscanf(argv[i++],"%d",&DATATYPE) ; // 0,1, etc.
-
-  // set number of columns of data
-  if(DATATYPE>1){
-    immediateoutput=0;// default is not immediate in-out
-
-    // assume always want to transform vectors correctly
-    if(DATATYPE>=2 && DATATYPE<=5){
-      num4vectors=1; // default
-      vectorcomponent=DATATYPE-2;
-      outputvartype=1; // simple vector conversion to orthonormal basis
-      fprintf(stderr,"Processing vector component %d from u^\\mu\n",vectorcomponent);
-    }
-    else if(DATATYPE>=6 && DATATYPE<=9){
-      num4vectors=1; // default
-      vectorcomponent=DATATYPE-6;
-      outputvartype=2; // simple vector conversion to orthonormal basis
-      fprintf(stderr,"Processing vector component %d from u_\\mu\n",vectorcomponent);
-    }
-    else if(DATATYPE==11){
-      num4vectors=1; // default
-      vectorcomponent=1;
-      outputvartype=11; // Compute EM Poynting term
-      fprintf(stderr,"Computing poloidal EM Polynting angular flux density\n");
-    }
-    else if(DATATYPE==12){
-      num4vectors=1; // default
-      vectorcomponent=3; // B_\\phi
-      outputvartype=12; // Compute B_\\phi [conserved current]
-      fprintf(stderr,"Computing B_\\phi\n");
-    }
-    else if(DATATYPE>=101){
-      num4vectors=DATATYPE-100;
-      fprintf(stderr,"Transforming %d contravariant 4-vectors to orthonormal basis\n",num4vectors);
-      // force input and output grid types to be the same
-      outputvartype=1; // conversion to orthonormal basis
-      immediateoutput=1;
-      vectorcomponent=-1; // indicates to output all components
-      // only valid for DATATYPE=1 type of data (i.e. not images)
-    }
-    else{
-      dualfprintf(fail_file,"No such DATATYPE=%d\n",DATATYPE);
-    }
-
-    // finally set to normal data type from now on using vectorcomponent or outputvartype
-    DATATYPE=1;
-  }
-  else{
-    immediateoutput=0;// default is not immediate in-out
-    outputvartype=0; // scalar
-    vectorcomponent=0; // scalar
-    fprintf(stderr,"Processing scalar\n");
-  }
-
-
+  if(DATATYPE==0) binaryinput=1; // assume image is binary
+  else binaryinput=0; // assume text
 
   sscanf(argv[i++],"%d",&INTERPTYPE) ; // 0,1,2,3
-
-  // set totalbc in case required
-  if(INTERPTYPE==0) totalbc=0;
-  else if(INTERPTYPE==1 || INTERPTYPE==2) totalbc=1;
-  else if(INTERPTYPE==3) totalbc=2;
-  else totalbc=MAXBC; // maximum
-
 
   sscanf(argv[i++],"%d",&READHEADER) ; // 0 or 1
   sscanf(argv[i++],"%d",&WRITEHEADER) ; // 0 or 1
@@ -1160,19 +1437,6 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
   sscanf(argv[i++],"%d",&oN1) ;
   sscanf(argv[i++],"%d",&oN2) ;
   sscanf(argv[i++],"%d",&oN3) ;
-
-  // set sizes
-  totalsize[0]=oN0;
-  totalsize[1]=oN1;
-  totalsize[2]=oN2;
-  totalsize[3]=oN3;
-  totalzones=totalsize[0]*totalsize[1]*totalsize[2]*totalsize[3];
-
-  // set number of bc's per dimension
-  numbc[0]=totalbc*(oN0>1);
-  numbc[1]=totalbc*(oN1>1);
-  numbc[2]=totalbc*(oN2>1);
-  numbc[3]=totalbc*(oN3>1);
 
 
   sscanf(argv[i++],SCANARG,&refinefactor) ;// 1.0 then no refinement, just normal old image used
@@ -1207,9 +1471,6 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
 
 
 
-
-
-
   if(nN0>1 || oN0>1){
     // extend basicargcnum if needed
     basicargcnum+=2;
@@ -1222,6 +1483,10 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
   // angle for CARTLIGHT or CART grid
   sscanf(argv[i++],SCANARG,&tnrdegrees) ;
 
+
+
+  // define (at least) outputvartype
+  interpret_commandlineresults_subpart1();
 
 
   // conditionally read-in things (all in or out)
@@ -1258,11 +1523,307 @@ void old_parse_commandline(int basicargcnum, int argc, char *argv[])
 
 
 
+// Parse command line options as a string of input variables
+void interpret_commandlineresults_subpart1(void)
+{
+
+
+  // set number of columns of data
+  if(DATATYPE>1){
+    immediateoutput=0;// default is not immediate in-out
+
+    // assume always want to transform vectors correctly
+    if(DATATYPE>=2 && DATATYPE<=5){
+      num4vectors=1; // default
+      vectorcomponent=DATATYPE-2;
+      outputvartype=1; // simple vector conversion to orthonormal basis
+      fprintf(stderr,"Processing vector component %d from u^\\mu\n",vectorcomponent);
+    }
+    else if(DATATYPE>=6 && DATATYPE<=9){
+      num4vectors=1; // default
+      vectorcomponent=DATATYPE-6;
+      outputvartype=2; // simple vector conversion to orthonormal basis
+      fprintf(stderr,"Processing vector component %d from u_\\mu\n",vectorcomponent);
+    }
+    else if(DATATYPE==11){
+      num4vectors=1; // default
+      vectorcomponent=1;
+      outputvartype=11; // Compute EM Poynting term
+      fprintf(stderr,"Computing poloidal EM Polynting angular flux density\n");
+    }
+    else if(DATATYPE==12){
+      num4vectors=1; // default
+      vectorcomponent=3; // B_\\phi
+      outputvartype=12; // Compute B_\\phi [conserved current]
+      fprintf(stderr,"Computing B_\\phi\n");
+    }
+    else if(DATATYPE>=101 && DATATYPE<1000){
+      num4vectors=DATATYPE-100;
+      fprintf(stderr,"Transforming %d contravariant 4-vectors to orthonormal basis\n",num4vectors);
+      // force input and output grid types to be the same
+      outputvartype=1; // conversion to orthonormal basis
+      immediateoutput=1;
+      vectorcomponent=-1; // indicates to output all components
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else if(DATATYPE>=1001 && DATATYPE<10000){
+      fprintf(stderr,"Full Diagnostics for this data file (all except time derivative stuff)\n");
+      // force input and output grid types to be the same
+      outputvartype=1001; // Full Diag
+      immediateoutput=0; // No interpolation, just process and output, but immediateoutput==0 since not processing per grid point but going over many grid points
+      vectorcomponent=-1; // indicates to output all components
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else{
+      dualfprintf(fail_file,"No such DATATYPE=%d\n",DATATYPE);
+    }
+
+    // finally set to normal data type from now on using vectorcomponent or outputvartype
+    DATATYPE=1;
+  }
+  else{
+    fprintf(stderr,"Processing scalar\n");
+    immediateoutput=0;// default is not immediate in-out
+    outputvartype=0; // scalar
+    vectorcomponent=0; // scalar
+  }
+}
+
+
+
+// Parse command line options as a string of input variables
+void interpret_commandlineresults(void)
+{
+
+  // subpart needed for old parsing method checks of number of args
+  interpret_commandlineresults_subpart1();
+
+  ///////////////
+  //
+  // consistency checks
+  //
+  ///////////////
+
+  // see if doing non-scalar output that needs metric, etc.
+  if(outputvartype>0 && getgdump==0){
+    fprintf(stderr,"Need gdump file with outputvartype>0\n");
+    exit(1);
+  }
+
+  
+
+
+
+
+  // set totalbc in case required
+  if(INTERPTYPE==0) totalbc=0;
+  else if(INTERPTYPE==1 || INTERPTYPE==2) totalbc=1;
+  else if(INTERPTYPE==3) totalbc=2;
+  else totalbc=MAXBC; // maximum
+
+
+  // set sizes
+  totalsize[0]=oN0;
+  totalsize[1]=oN1;
+  totalsize[2]=oN2;
+  totalsize[3]=oN3;
+  totalzones=totalsize[0]*totalsize[1]*totalsize[2]*totalsize[3];
+
+
+  // set number of bc's per dimension
+  numbc[0]=totalbc*(oN0>1);
+  numbc[1]=totalbc*(oN1>1);
+  numbc[2]=totalbc*(oN2>1);
+  numbc[3]=totalbc*(oN3>1);
+
+
+
+
+
+
+  ///////////
+  //
+  // set things not set by header or user that will be used (e.g. by set_points(), which sets dx[0])
+  //
+  ///////////
+
+
+  // ensure new coordinate ignorable but no divisions by zero
+  // if too narrow (or vanishing) grid width, then leave a bit resolved so no divisions by zero
+
+  if(nN0==1){
+    dtc=(endtc-starttc)/((FTYPE)nN0);
+    if(fabs(dtc)<SMALL){
+      dtc=NUMEPSILONPOW23;
+      starttc-=dtc*0.5;
+      endtc+=dtc*0.5;
+    }    
+  }
+
+  if(nN1==1){
+    dxc=(endxc-startxc)/((FTYPE)nN1);
+    if(fabs(dxc)<SMALL){
+      dxc=NUMEPSILONPOW23;
+      startxc-=dxc*0.5;
+      endxc+=dxc*0.5;
+    }    
+  }
+
+  if(nN2==1){
+    dyc=(endyc-startyc)/((FTYPE)nN2);
+    if(fabs(dyc)<SMALL){
+      dyc=NUMEPSILONPOW23;
+      startyc-=dyc*0.5;
+      endyc+=dyc*0.5;
+    }    
+  }
+
+  if(nN3==1){
+    dzc=(endzc-startzc)/((FTYPE)nN3);
+    if(fabs(dzc)<SMALL){
+      dzc=NUMEPSILONPOW23;
+      startzc-=dzc*0.5;
+      endzc+=dzc*0.5;
+    }    
+  }
+
+
+  if(oN0>1){
+    // dt crucial when using multiple time data.
+    // Since set_points doesn't explicitly set startx[0] or dx[0] based upon any problem size information, need to set by hand.
+    // set_points() will set startx[0]=0 and dx[0]=dt.
+    // when oN0==1, this just keeps X[0] sane, but otherwise it's not used
+    // assumes data is uniformly spaced in time (i.e. dumps were evenly spaced when merged)
+    // then set_points() will set startx[0] but dx[0]=dt below, such that true lab time: tlab = starttc + dt*(hold+0.5); for hold=0..oN0-1
+    // so note that if want exact correctness in time, need input starttdata and endtdata to be chosen so that data appear on CENT for given FACE versions of starttdata and endtdata
+    dt=(endtdata-starttdata)/((FTYPE)oN0);
+    fprintf(stderr,"Times given assumed user inputs where data sits (i.e. CENT in this code): starttdata=%21.15g endtdata=%21.15g dt=%21.15g\n",starttdata,endtdata,dt);
+    // assume user inputs dump times corresopnding to location of data in time, while iinterp wants these to be FACE values where data located at CENT
+    starttdata-=dt*0.5;// back up to FACE value
+    endtdata+=dt*0.5;// bump up to FACE value
+    dt=(endtdata-starttdata)/((FTYPE)oN0); // FACE type calculation
+    fprintf(stderr,"Adjusted Times so inputted times (assumed colocated with time data) are actually FACE values that give a box with CENT values for the dump times: starttdata=%21.15g endtdata=%21.15g dt=%21.15g\n",starttdata,endtdata,dt);
+    fprintf(stderr,"SUPERNOTE: User will still have to specify new-grid box size in time based upon FACE positions (i.e. not times wanted, but time box with values located at CENT)\n");
+    //  dX[0]=dt; (will be set in set_points()
+    // So X[0] = starttdata + (hold + startpos[0] + 0.5) dx[0]; and dx[0]=dX[0]=dt = (endtdata-starttdata)/oN0;
+  }
+  else{
+    // need to make time coordinate ignorable in case user set the start and end times to be the same
+    // avoids divisions by zero
+    dt=1.0;
+    starttdata=starttc;
+    endtdata=endtc;
+  }
+
+
+
+
+
+  if(filter && (oN3!=1 || oN0!=1)){
+    filter=0;
+    fprintf(stderr,"Turned off filter since oN3=%d or  oN0=%d\n",oN3,oN0); fflush(stderr);
+  }
+
+
+  if(fabs(refinefactor-1.0)>0.1 && (oN3!=1 || oN0!=1) ){
+    refinefactor=1.0;
+    fprintf(stderr,"Turned off refinement since oN3=%d or oN0=%d\n",oN3,oN0); fflush(stderr);
+  }
+
+  if( (oN3>1 || oN0>1) && (INTERPTYPE==3 || INTERPTYPE==2) ){
+    fprintf(stderr,"PLANAR and BICUBIC interpolation not setup for oN3=%d>1 or oN0=%d>1 -- uses nearest for k,h",oN3,oN0);
+  }
+
+
+  if(READHEADER)  jonheader=1;
+  else jonheader=0;
+
+
+
+  // process case where not interpolating and just processing input and output per cell at once
+  if(immediateoutput){
+    // force this even if user messed up
+    newgridtype=GRIDTYPENOCHANGE;
+    // force output grid size to be same as input
+    nN0=oN0;
+    nN1=oN1;
+    nN2=oN2;
+    nN3=oN3;
+  }
+
+
+
+
+}
+
+
+
 
 // set default options
 void defaultoptions(void)
 {
+
+
+  DATATYPE=1; binaryinput=0;
+
+  INTERPTYPE=1;
+  READHEADER=1;
+  WRITEHEADER=1; binaryoutput=0;
+
+
+  oN0=1;
+  oN1=64;
+  oN2=64;
+  oN3=64;
+
+  refinefactor=1.0;
+  filter=0;
+  sigma=1.0;
+
+  oldgridtype=1;
+  newgridtype=0;
+  
+  nN0=1;
+  nN1=64;
+  nN2=64;
+  nN3=64;
+  
+  starttc=0;
+  endtc=2000;
+  startxc=-40;
+  endxc=40;
+  startyc=-40;
+  endyc=40;
+  startzc=-40;
+  endzc=40;
+
+  Rin=1.1;
+  Rout=40;
+  R0=0;
+  hslope=0.3;
+
+  defcoord=0;
+
+  dofull2pi=1;
+
+  starttdata=0;
+  endtdata=2000;
+
+  tnrdegrees=0;
+
+  getgdump=0;
+  strcpy(&gdumpfilename[0],"NOFILESET");
+
+  EXTRAPOLATE=1; // default to extrapolate
+  defaultvaluetype=0; // assume typical default
+
+  immediateoutput=0;// default is not immediate in-out
+  outputvartype=0; // scalar
+  vectorcomponent=0; // scalar
+
   DEBUGINTERP=0;
   SIMPLEDEBUGINTERP=0;
   VERBOSITY=1; // default to moderate verbosity
+  
+
 }
