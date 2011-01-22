@@ -53,6 +53,9 @@ static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file global
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 
+static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
+static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+static FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 
@@ -438,6 +441,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
+  toruskappa = 1e-3; 
+  torusrmax = 12.; 
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)

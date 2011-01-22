@@ -33,7 +33,7 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
 
   // AKMARK: entropy constant
   //BOBMARK: should be the value of KK in mathematica file
-  kappa = 0.01 ;
+  kappa = toruskappa; //now set at top of init.xxxtorus.c
 
 
 #if( USEMPI )
@@ -185,8 +185,8 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 
-  kappa = 1.e-3 ;
-  rmax = 12. ;   // AKMARK: torus pressure max
+  kappa = toruskappa ;
+  rmax = torusrmax ;   // AKMARK: torus pressure max
   l = lfish_calc(rmax) ;
   
 
@@ -549,9 +549,9 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   /// Parameters
   ///
  
-  kappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  n = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  rmax = 20.;   // AKMARK: torus pressure max
+  kappa = toruskappa;   // AKMARK: entropy constant KK from mathematica file
+  n = torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  rmax = torusrmax;   // AKMARK: torus pressure max
 #if(TORUSHASBREAKS == 1)   //AKMARK: midplane radii at which break in angular momentum profile occurs
   rbreak1 = 25.;
   rbreak2 = 75.;
@@ -784,7 +784,7 @@ int group_by_node_set_myid(int n1tile, int n2tile, int n3tile)
   
   //check if ncpux# are each even -- otherwise cannot decompose domain into 2x2x2 configurations
   if( 0 != (ncpux1 % n1) || 0 != (ncpux2 % n2) || 0 != (ncpux3 % n3) ) {
-    dualfprintf( "queenbee_set_myid(): no changes to MPI mapping: MPI domain size must be multiples of: ncpux1 = %d (%d), ncpux2 = %d (%d), ncpux3 = %d (%d)\n", ncpux1, n1, ncpux2, n2, ncpux3, n3 );
+    dualfprintf( fail_file, "queenbee_set_myid(): no changes to MPI mapping: MPI domain size must be multiples of: ncpux1 = %d (%d), ncpux2 = %d (%d), ncpux3 = %d (%d)\n", ncpux1, n1, ncpux2, n2, ncpux3, n3 );
     return(0);
   }
 
