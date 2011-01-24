@@ -497,7 +497,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
 
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  torusn = 2. - 1.97;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
   torusrmax = 20.;   // AKMARK: torus pressure max
 
   // AKMARK: torus inner radius
@@ -673,7 +673,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
-      if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
+      if(r > STARTFIELD) q = ((rho_av/rhomax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
