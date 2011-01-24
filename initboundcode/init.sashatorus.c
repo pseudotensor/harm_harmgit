@@ -69,9 +69,16 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
   
+  /////////////////////
+  //PHI GRID SETUP
+  /////////////////////
+
   dofull2pi = 0;   // AKMARK: do full phi
-  //binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
   
+  global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  
+  //binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
+   
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -282,6 +289,62 @@ int init_grid(void)
   Rout = 1E5;
 #endif
 
+  /////////////////////
+  // RADIAL GRID SETUP
+  /////////////////////
+  global_npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+
+  //radial hyperexponential grid
+  global_npow2=4.0; //power exponent
+  global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+  global_rbr = 100.;  //radius at which hyperexponentiation kicks in
+  
+  /////////////////////
+  //ANGULAR GRID SETUP
+  /////////////////////
+
+  //transverse resolution fraction devoted to different components
+  //(sum should be <1)
+  global_fracdisk = 0.2;
+  global_fracjet = 0.5;
+
+  global_jetnu = 0.75;  //the nu-parameter that determines jet shape
+
+  //subtractor, controls the size of the last few cells close to axis:
+  //if rsjet = 0, then no modification <- *** default for use with grid cylindrification
+  //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
+  //                which makes the timestep larger
+  global_rsjet = 0.0; 
+
+  //distance at which theta-resolution is *exactly* uniform in the jet grid -- want to have this at BH horizon;
+  //otherwise, near-uniform near jet axis but less resolution (much) further from it
+  //the larger r0grid, the larger the thickness of the jet 
+  //to resolve
+  global_r0grid = Rin;    
+
+  //distance at which jet part of the grid becomes monopolar
+  //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
+  global_r0jet = 3;
+    
+  //distance after which the jet grid collimates according to the usual jet formula
+  //the larger this distance, the wider is the jet region of the grid
+  global_rjetend = 15;
+    
+  //distance at which disk part of the grid becomes monopolar
+  //the larger r0disk, the larger the thickness of the disk 
+  //to resolve
+  global_r0disk = global_r0jet;
+
+  //distance after which the disk grid collimates to merge with the jet grid
+  //should be roughly outer edge of the disk
+  global_rdiskend = 80;
+  
+  global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
+    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
+    //This trick minimizes the resulting pole deresolution and relaxes the time step.
+    //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
+    //by POLEDEATH (see bounds.tools.c).
 
   return(0);
 }
