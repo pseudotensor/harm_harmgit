@@ -673,13 +673,13 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
-      if(r > STARTFIELD) q = ((rho_av/rhomax) - 0.2)*pow(r,0.75) ;
+      if(r > STARTFIELD) q = ((rho_av/rhomax) - 0.2);
       else q = 0. ;
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
 	//       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
-       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor) ;
+	vpot += q*q; //*sin(log(r/STARTFIELD)/fieldhor) ;
       }
 #else
       q = rho_av / rhomax - 0.2;
