@@ -280,8 +280,8 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.88 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.3;
+  Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.;
   Rout = 5.e4;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
@@ -320,7 +320,7 @@ int init_grid(void)
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
   //the larger r0grid, the larger the thickness of the jet 
   //to resolve
-  global_r0grid = Rin;    
+  global_r0grid = 1.5*Rin;    
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
@@ -333,7 +333,7 @@ int init_grid(void)
   //distance at which disk part of the grid becomes monopolar
   //the larger r0disk, the larger the thickness of the disk 
   //to resolve
-  global_r0disk = global_r0jet;
+  global_r0disk = Rin+0*global_r0jet;
 
   //distance after which the disk grid collimates to merge with the jet grid
   //should be roughly outer edge of the disk
@@ -646,7 +646,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 // AKMARK: magnetic loop radial wavelength
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
-      fieldhor=0.28;
+      fieldhor=0.194;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
