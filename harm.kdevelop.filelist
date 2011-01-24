@@ -88,6 +88,7 @@ idealgaseos.c
 image.c
 init.readdata.c
 init.tools.c
+init.torus.h
 initbase.boundloop.c
 initbase.c
 initbase.defaultnprlists.c
