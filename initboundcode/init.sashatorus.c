@@ -77,7 +77,7 @@ int prepre_init_specific_init(void)
   
   global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
-  //binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
+  binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
