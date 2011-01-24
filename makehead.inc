@@ -14,11 +14,11 @@
 USEBG=0
 #QUEENBEE (avoids making directories or forking in general)
 USEQB=0
-USEUB=0
+USEUB=1
 USEOSX=0
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
-USEICCINTEL=1
+USEICCINTEL=0
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -144,7 +144,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=1
+USEOPENMP=0
 
 
 
