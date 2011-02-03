@@ -356,4 +356,4 @@ struct Ccoordparams {
 
 
 #undef FIELDLINEGDETB
-#define FIELDLINEGDETB 0
+#define FIELDLINEGDETB 1
