@@ -1088,3 +1088,4 @@
 #define DO_ASSERTS 0
 
 #define FIELDLINEGDETB 0
+#define CONNAXISYMM 0
