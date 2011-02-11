@@ -599,7 +599,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define DISKBHFIELD 4
 
 //Options for DISKBHFIELD
-#define BHFIELDVAL (1.0)
+#define BHFIELDVAL (10.0)
 #define BHFIELDNU (0.75)
 
 //#define FIELDTYPE BLANDFORDQUAD
@@ -625,8 +625,20 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
   vpot=0.0;
 
+  if(l==-3){// A_\phi for bh field
+    r=V[1];
+    th=V[2];
 
-  if(l==3){// A_\phi
+    if( FIELDTYPE==DISKBHFIELD ) {
+      //normalized vector potential: total vpot through BH equals 1
+      vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
+      if( vpotbh > 1.0 ) vpotbh = 1.0;
+      //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+      vpot += BHFIELDVAL * vpotbh;
+    }
+  }
+  
+  if(l==3){// A_\phi for disk
 
     r=V[1];
     th=V[2];
@@ -643,14 +655,6 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       FTYPE rpow;
       rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
-    }
-
-    if( FIELDTYPE==DISKBHFIELD ) {
-      //normalized vector potential: total vpot through BH equals 1
-      vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
-      if( vpotbh > 1.0 ) vpotbh = 1.0;
-      //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
-      vpot += BHFIELDVAL * vpotbh;
     }
 
     /* field-in-disk version */
@@ -732,6 +736,10 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 			       FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 			       FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   
+  int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+
+  int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  
   int funreturn;
   int fieldfrompotential[NDIM];
   FTYPE rhomax, umax, amax;
@@ -740,7 +748,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
   
-#if(1)
+#if(1) //if optimizing disk flux
   getmax_densities(prim, &rhomax, &umax);
   amax = get_maxval( A, 3 );
   
@@ -755,18 +763,55 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
-			  
+	
   //4) call user1_init_vpot2field_user() again to recompute the fields
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
-  
 #endif
+
+  //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
+  normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
+
+#if(FIELDTYPE==DISKBHFIELD) //if doing bh field
+  //compute vpot again after field was normalized
+  compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
+
+  //add vpot describing BH field 
+  add_vpot_bhfield_user_allgrid( prim, A );
+
+  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  if(funreturn!=0) return(funreturn);
+#endif
+  
   return(0);
 
 
 }
 
+int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i, j, k, loc, userdir, dir, whichcoord;
+  FTYPE vpotuser[NDIM];
+  FTYPE X[NDIM], V[NDIM];
+  
+  //add in bh field vpot -- call:
+  ZSLOOP(0,N1,0,N2-1,0,N3-1) {
+    // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
+    DLOOPA(userdir){
+      loc = FACE1 - 1 + userdir;
+      bl_coord_ijk_2(i, j, k, loc, X, V); 
+      //note minus sign: -userdir; this indicates to only init bh field
+      init_vpot_user(&whichcoord, -userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+    }
+    // convert from user coordinate to PRIMECOORDS
+    ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
+    
+    DLOOPA(dir){
+      MACP1A0(A,dir,i,j,k) += vpotuser[dir];
+    }
+  }
+}
 //compute vector potential for midplane and axial symmetry configuration
 int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
@@ -1142,12 +1187,26 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
- 
-  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  if(funreturn!=0) return(funreturn);
+  //nothing to do here: normalization moved to init_vpot2field_user()
+  
+  //funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  //if(funreturn!=0) return(funreturn);
  
   return(0);
 
+}
+
+// assumes normal field definition
+int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  int funreturn;
+  
+  
+  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  if(funreturn!=0) return(funreturn);
+  
+  return(0);
+  
 }
 
 
