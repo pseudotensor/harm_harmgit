@@ -596,9 +596,14 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define VERTFIELD 1
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
+#define DISKBHFIELD 4
+
+//Options for DISKBHFIELD
+#define BHFIELDVAL (1.0)
+#define BHFIELDNU (0.75)
 
 //#define FIELDTYPE BLANDFORDQUAD
-#define FIELDTYPE DISKFIELD
+#define FIELDTYPE DISKBHFIELD
 
 
 
@@ -612,7 +617,10 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
   FTYPE fieldhor;
 #endif
-
+  FTYPE rh;
+  FTYPE vpotbh;
+  
+  rh = rhor_calc(0);
 
 
   vpot=0.0;
@@ -637,10 +645,17 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
     }
 
+    if( FIELDTYPE==DISKBHFIELD ) {
+      //normalized vector potential: total vpot through BH equals 1
+      vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
+      if( vpotbh > 1.0 ) vpotbh = 1.0;
+      //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+      vpot += BHFIELDVAL * vpotbh;
+    }
 
     /* field-in-disk version */
     
-    if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
+    if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKBHFIELD)||(FIELDTYPE==DISKVERT)){
 
 // AKMARK: magnetic loop radial wavelength
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
