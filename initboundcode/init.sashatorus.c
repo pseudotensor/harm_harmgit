@@ -799,7 +799,7 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
   ZSLOOP(0,N1,0,N2-1,0,N3-1) {
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
     DLOOPA(userdir){
-      loc = FACE1 - 1 + userdir;
+      loc = CORN1 - 1 + userdir; //CORRECT?
       bl_coord_ijk_2(i, j, k, loc, X, V); 
       //note minus sign: -userdir; this indicates to only init bh field
       init_vpot_user(&whichcoord, -userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
