@@ -799,7 +799,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	//integrate vpot along the theta line
 	for (j=N2; j>N2/2; j--) {
 	  dir=1;
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	  get_geometry_gdetonly(i, jm1mac(j), k, FACE1-1+dir, ptrgeomf[dir]);
 	  set_igdetsimple(ptrgeomf[dir]);
 	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	  gdetnosing = 1.0/igdetgnosing[dir];
@@ -831,13 +831,15 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	    NOAVGCORN_1(A[1],i,j,k) = 0;
 	    NOAVGCORN_1(A[2],i,j,k) = 0;
 	  }
+	  //copy A[3] -> B[3] before bounding
+	  MACP0A1(pstag,i,N2-1,k,B3) = NOAVGCORN_1(A[3],i,N2,k);
 	}
 	else {
 	  NOAVGCORN_1(A[3],i,N2,k) = 0.0;
 	  //integrate vpot along the theta line
 	  for (j=N2; j>0; j--) {
 	    dir=1;
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	    get_geometry_gdetonly(i, jm1mac(j), k, FACE1-1+dir, ptrgeomf[dir]);
 	    set_igdetsimple(ptrgeomf[dir]);
 	    igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	    gdetnosing = 1.0/igdetgnosing[dir];
@@ -846,6 +848,20 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	    NOAVGCORN_1(A[1],i,j,k) = 0;
 	    NOAVGCORN_1(A[2],i,j,k) = 0;
 	  }
+	  //copy A[3] -> B[3] before bounding
+	  MACP0A1(pstag,i,0,k,B3) = NOAVGCORN_1(A[3],i,0,k);
+	}
+      }
+    }
+    //just in case, wait until all CPUs get here
+    MPI_Barrier(MPI_COMM_GRMHD);
+    //bound here
+    bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+    //ensure consistency of vpot across the midplane
+    if( mycpupos[2] == ncpux2/2 ) {
+      for (i=0; i<N1+1; i++) {
+	for (k=0; k<N3; k++) {
+	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
     }
