@@ -796,7 +796,7 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
   FTYPE X[NDIM], V[NDIM];
   
   //add in bh field vpot -- call:
-  ZSLOOP(0,N1,0,N2-1,0,N3-1) {
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1+SHIFT2,0,N3-1+SHIFT3) {
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
     DLOOPA(userdir){
       loc = CORN1 - 1 + userdir; //CORRECT?
@@ -807,7 +807,7 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
     // convert from user coordinate to PRIMECOORDS
     ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
     
-    DLOOPA(dir){
+    DIMENLOOP(dir){
       NOAVGCORN_1(A[dir],i,j,k) += vpotuser[dir];
     }
   }
