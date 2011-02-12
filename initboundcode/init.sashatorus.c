@@ -778,7 +778,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
 
   //add vpot describing BH field 
-  add_vpot_bhfield_user_allgrid( prim, A );
+  add_vpot_bhfield_user_allgrid( A, prim );
 
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
@@ -808,10 +808,12 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
     ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
     
     DLOOPA(dir){
-      MACP1A0(A,dir,i,j,k) += vpotuser[dir];
+      NOAVGCORN_1(A[dir],i,j,k) += vpotuser[dir];
     }
   }
+  return(0);
 }
+
 //compute vector potential for midplane and axial symmetry configuration
 int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
