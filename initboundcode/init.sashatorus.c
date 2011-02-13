@@ -599,8 +599,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define DISKBHFIELD 4
 
 //Options for DISKBHFIELD
-#define BHFIELDVAL (10.0)
-#define BHFIELDNU (0.75)
+#define BHFIELDVAL (3.4142135623730950488)
+#define BHFIELDNU (0.0)
 
 //#define FIELDTYPE BLANDFORDQUAD
 #define FIELDTYPE DISKBHFIELD
@@ -632,7 +632,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     if( FIELDTYPE==DISKBHFIELD ) {
       //normalized vector potential: total vpot through BH equals 1
       vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
-      if( vpotbh > 1.0 ) vpotbh = 1.0;
+      if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
       //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
       vpot += BHFIELDVAL * vpotbh;
     }
