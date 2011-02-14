@@ -1031,7 +1031,7 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
   //Now rescale staggered field components (ucons)
   //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
   //ZLOOP{
-  ZSLOOP(0,N1,0,N2-1,0,N3-1) {
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1,0,N3-1) {
     //cell centered ratio in this cell
     ratc_ij   = compute_rat(prim, A, rhomax, amax, targbeta, CENT, i, j, k);
     
