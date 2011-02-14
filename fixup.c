@@ -1609,8 +1609,8 @@ int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (
 {
   FTYPE rho0;
   
+  rho0 = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
   if( rho0 >= 0.1 ) {
-    rho0 = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
     //inside torus body; keep hydro quantities equal to ICs until t = 100
     MACP0A1(pv,i,j,k,RHO)=rho0;
     MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
