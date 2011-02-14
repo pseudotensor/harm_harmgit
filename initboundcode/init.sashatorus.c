@@ -630,10 +630,17 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     th=V[2];
 
     if( FIELDTYPE==DISKBHFIELD ) {
-      //normalized vector potential: total vpot through BH equals 1
-      vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
-      if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
-      //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+      if(BHFIELDNU>=0) {
+	//normalized vector potential: total vpot through BH equals some constant order unity
+	vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
+	if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
+	//rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+      }
+      else if(BHFIELDNU<0) {
+	//roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
+	vpotbh = (r*sin(th)/rin)/sqrt(1+pow(r*cos(th)/rin,2));
+	if( vpotbh > 1 ) vpotbh = 1;
+      }
       vpot += BHFIELDVAL * vpotbh;
     }
   }
