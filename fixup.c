@@ -1060,6 +1060,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // needs fail flag over -1..N, but uses p at 0..N-1
 int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
+  int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
   extern void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke);
   int is,ie,js,je,ks,ke;
@@ -1375,6 +1376,43 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     }// end over COMPZLOOP loop
   }// end over parallel region
 
+#if( DOFREEZETORUS )  
+  if( t < FREEZETORUSTIME ) {
+    /////////  COMPZLOOP
+  #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // accounting requires state stuff
+    {
+      int i,j,k,pl,pliter;
+      FTYPE gamma,alpha,vsq,ucon[NDIM],others[NUMOTHERSTATERESULTS];
+      FTYPE qsq;
+      FTYPE pr0[NPR];
+      PFTYPE mypflag;
+      int fixed;
+      int startpl,endpl;
+      FTYPE ftemp;
+      FTYPE D0;
+      //
+      int limitedgamma;
+      int nogood;
+      struct of_geom geomdontuse;
+      struct of_geom *ptrgeom=&geomdontuse;
+      
+      
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
+  #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+	    
+	//////////////////////////////
+	//
+	// freeze the torus
+	//
+	//////////////////////////////
+	freeze_torus( i, j, k, pv, ptoavg, ucons, finalstep);
+      }  
+    }
+  }  
+#endif
+  
   return(0);
 }
 
@@ -1566,7 +1604,24 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   return(0);
 }
 
-
+// switch off evolution of initial torus until bh field settles to quasi-steady state
+int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+{
+  FTYPE rho0;
+  
+  if( rho0 >= 0.1 ) {
+    rho0 = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
+    //inside torus body; keep hydro quantities equal to ICs until t = 100
+    MACP0A1(pv,i,j,k,RHO)=rho0;
+    MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
+    MACP0A1(pv,i,j,k,U1)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U1);
+    MACP0A1(pv,i,j,k,U2)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U2);
+    MACP0A1(pv,i,j,k,U3)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U3);
+  }
+  
+  return(0);
+}
+  
 
 
 // DOCOUNTNEG???? only applies for STEPOVERNEG???==-1
