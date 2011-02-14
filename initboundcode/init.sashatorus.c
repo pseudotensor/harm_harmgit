@@ -841,8 +841,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
   if( ncpux2 == 1 ) {
     //1-cpu version
-    for (i=0; i<N1+1; i++) {
-      for (k=0; k<N3; k++) {
+    for (i=0; i<N1+SHIFT1; i++) {
+      for (k=0; k<N3+SHIFT3; k++) {
 	//zero out starting element of vpot
 	NOAVGCORN_1(A[3],i,0,k) = 0.0;
 	//integrate vpot along the theta line
@@ -876,8 +876,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   else if( 0&&ncpux2 == 2 ) {
     //dualfprintf( fail_file, "Got into 2-cpu version, mycpupox[2] = %d\n", mycpupos[2] );
     //2-cpu version
-    for (i=0; i<N1+1; i++) {
-      for (k=0; k<N3; k++) {
+    for (i=0; i<N1+SHIFT1; i++) {
+      for (k=0; k<N3+SHIFT3; k++) {
 	if( mycpupos[2] == 0 ) {
 	  //zero out starting element of vpot
 	  NOAVGCORN_1(A[3],i,0,k) = 0.0;
@@ -921,8 +921,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
-      for (i=0; i<N1+1; i++) {
-	for (k=0; k<N3; k++) {
+      for (i=0; i<N1+SHIFT1; i++) {
+	for (k=0; k<N3+SHIFT3; k++) {
 	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
@@ -955,8 +955,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	//then it's the turn of the current row of CPUs to pick up where the previous row has left it off
 	//since pstag is bounded unlike A, use pstag[B3] as temporary space to trasnfer values of A[3] between CPUs
 	//initialize lowest row of A[3]
-	for (i=0; i<N1+1; i++) {
-	  for (k=0; k<N3; k++) {
+	for (i=0; i<N1+SHIFT1; i++) {
+	  for (k=0; k<N3+SHIFT3; k++) {
 	    //zero out or copy starting element of vpot
 	    if( 0 == cj ) {
 	      //if CPU is at physical boundary, initialize (zero out) A[3]
@@ -988,8 +988,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     }
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
-      for (i=0; i<N1+1; i++) {
-	for (k=0; k<N3; k++) {
+      for (i=0; i<N1+SHIFT1; i++) {
+	for (k=0; k<N3+SHIFT1; k++) {
 	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
