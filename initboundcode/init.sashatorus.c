@@ -599,8 +599,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define DISKBHFIELD 4
 
 //Options for DISKBHFIELD
-#define BHFIELDVAL (3.4142135623730950488)
-#define BHFIELDNU (0.0)
+#define BHFIELDVAL (4.0) //(3.4142135623730950488)
+#define BHFIELDNU (-1.0) //negative means hyperbolic field lines
 
 //#define FIELDTYPE BLANDFORDQUAD
 #define FIELDTYPE DISKBHFIELD
