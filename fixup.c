@@ -1608,9 +1608,10 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE rho0;
+  FTYPE ncells = 10;  //avoid polar axis effects temporary fix SASMARK
   
   rho0 = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
-  if( rho0 >= 0.1 ) {
+  if( rho0 >= 0.1 && j+startpos[2] < totalsize[2]-ncells && j+startpos[2] > ncells ) {
     //inside torus body; keep hydro quantities equal to ICs until t = 100
     MACP0A1(pv,i,j,k,RHO)=rho0;
     MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
