@@ -838,6 +838,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
   DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
 
+  //first, bound to ensure consistency of magnetic fields across tiles
+  bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
 
   if( ncpux2 == 1 ) {
     //1-cpu version
