@@ -814,7 +814,8 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
   return(0);
 }
 
-//compute vector potential for midplane and axial symmetry configuration
+//compute vector potential assuming B_\phi = 0 and zero flux at poles
+//(not tested in non-axisymmetric field distribution but in principle should work)
 int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
