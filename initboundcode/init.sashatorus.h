@@ -365,6 +365,6 @@ struct Ccoordparams {
 #define DOFREEZETORUS 1
 
 #undef FREEZETORUSTIME
-#define FREEZETORUSTIME (100.)
+#define FREEZETORUSTIME (200.)
 
 
