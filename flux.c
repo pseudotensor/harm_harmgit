@@ -1277,7 +1277,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 
   //SASMARK: put new OPENMP loop here that resets L/R states to no wall BC's
 
-#if( DOFREEZETORUS )
+#if( 0 && DOFREEZETORUS )
   //only if during initial freezing period and only if doing for r or theta fluxes
   if(t < FREEZETORUSTIME && (dir == 1 || dir == 2)) {
 #if(STOREFLUXSTATE)
@@ -1336,8 +1336,6 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 	if( is_insidec1 + is_insidec2 == 1 ) {
 	  //CONVERT TO VEL4 vels here
 
-	  // pr is in whichcoord coordinates
-	  // get geometry (non-prime coords)
 	  get_geometry(i,j,k,face,ptrgeomf) ;
 	  // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
 	  if (pr2ucon(WHICHVEL, MACP1A0(pl_ct,dir,i,j,k), ptrgeomf, ucon_l) >= 1) {
