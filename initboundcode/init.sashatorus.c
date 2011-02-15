@@ -58,6 +58,7 @@ static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DH
 static FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
+FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
 
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 
@@ -605,11 +606,41 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 //#define FIELDTYPE BLANDFORDQUAD
 #define FIELDTYPE DISKBHFIELD
 
+FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
+{
+  FTYPE rh;
+  FTYPE vpotbh;
+  rh = rhor_calc(0);
+  if(BHFIELDNU>=0) {
+    //normalized vector potential: total vpot through BH equals some constant order unity
+    vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
+    if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
+    //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+  }
+  else if(BHFIELDNU<0) {
+    //roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
+    vpotbh = (r*sin(th)/rin)/sqrt(1+pow(r*cos(th)/rin,2));
+    if( vpotbh > 1 ) vpotbh = 1;
+  }
+  return(vpotbh);
+}
 
+FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
+{
+  FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
+  int is_inside;
+  FTYPE vpotbh;
+  
+  vpotbh = vpotbh_normalized(r,th);
+  is_inside = (vpotbh>1);
+  
+  return(is_inside);
+}
 
 // assumes normal field in pr
 int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
+  FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
   SFTYPE rho_av, u_av, q;
   FTYPE r,th;
   FTYPE vpot;
@@ -628,19 +659,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   if(l==-3){// A_\phi for bh field
     r=V[1];
     th=V[2];
-
     if( FIELDTYPE==DISKBHFIELD ) {
-      if(BHFIELDNU>=0) {
-	//normalized vector potential: total vpot through BH equals some constant order unity
-	vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
-	if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
-	//rescale the flux to amplitude given by BHFLUX and add it up to vector potential
-      }
-      else if(BHFIELDNU<0) {
-	//roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
-	vpotbh = (r*sin(th)/rin)/sqrt(1+pow(r*cos(th)/rin,2));
-	if( vpotbh > 1 ) vpotbh = 1;
-      }
+      vpotbh = vpotbh_normalized(r, th);
       vpot += BHFIELDVAL * vpotbh;
     }
   }

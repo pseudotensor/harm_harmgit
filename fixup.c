@@ -1060,7 +1060,9 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // needs fail flag over -1..N, but uses p at 0..N-1
 int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
-  int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+#if( DOFREEZETORUS )
+  int freeze_torus(int i, int j, int k, int loc, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+#endif
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
   extern void get_advance_startendindices(int *is,int *ie,int *js,int *je,int *ks,int *ke);
   int is,ie,js,je,ks,ke;
@@ -1407,7 +1409,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	// freeze the torus
 	//
 	//////////////////////////////
-	freeze_torus( i, j, k, pv, ptoavg, ucons, finalstep);
+	freeze_torus( i, j, k, CENT, pv, ptoavg, ucons, finalstep);
       }  
     }
   }  
@@ -1604,17 +1606,25 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   return(0);
 }
 
+#if( DOFREEZETORUS )
 // switch off evolution of initial torus until bh field settles to quasi-steady state
-int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+int freeze_torus(int i, int j, int k, int loc, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
-  FTYPE rho0;
-  FTYPE ncells = 10;  //avoid polar axis effects temporary fix SASMARK
+  extern FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
+  FTYPE V[NDIM];
+  FTYPE vpotbh;
+  FTYPE r, th;
+
+  bl_coord_ijk(i,j,k,loc,V);
+
+  r = V[1];
+  th = V[2];
   
-  rho0 = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
-  if( rho0 >= 0.1 && j+startpos[2] < totalsize[2]-ncells && j+startpos[2] > ncells ) {
+  if( is_inside_torus_freeze_region(r, th) ) {
     //inside torus body; keep hydro quantities equal to ICs until t = 100
-    MACP0A1(pv,i,j,k,RHO)=rho0;
+    MACP0A1(pv,i,j,k,RHO)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
     MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
+    //Velocities: MAYBE: convert MKS -> BL -> reset vp = 0 -> convert MKS
     MACP0A1(pv,i,j,k,U1)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U1);
     MACP0A1(pv,i,j,k,U2)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U2);
     MACP0A1(pv,i,j,k,U3)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U3);
@@ -1623,7 +1633,7 @@ int freeze_torus(int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (
   return(0);
 }
   
-
+#endif
 
 // DOCOUNTNEG???? only applies for STEPOVERNEG???==-1
 
