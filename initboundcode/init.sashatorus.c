@@ -619,7 +619,7 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   }
   else if(BHFIELDNU<0) {
     //roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
-    vpotbh = (r*sin(th)/rin)/sqrt(1+pow(r*cos(th)/rin,2));
+    vpotbh = pow(r*sin(th)/rin,2)/(1+pow(r*cos(th)/rin,2));
     if( vpotbh > 1 ) vpotbh = 1;
   }
   return(vpotbh);
