@@ -632,7 +632,7 @@ FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
   FTYPE vpotbh;
   
   vpotbh = vpotbh_normalized(r,th);
-  is_inside = (vpotbh>1);
+  is_inside = (vpotbh>=1);
   
   return(is_inside);
 }

@@ -1623,7 +1623,7 @@ int freeze_torus(int i, int j, int k, int loc, FTYPE (*pv)[NSTORE2][NSTORE3][NPR
   if( is_inside_torus_freeze_region(r, th) ) {
     //inside torus body; keep hydro quantities equal to ICs until t = 100
     MACP0A1(pv,i,j,k,RHO)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
-    MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
+    MACP0A1(pv,i,j,k,UU)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,UU);
     //Velocities: MAYBE: convert MKS -> BL -> reset vp = 0 -> convert MKS
     MACP0A1(pv,i,j,k,U1)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U1);
     MACP0A1(pv,i,j,k,U2)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,U2);
