@@ -1338,7 +1338,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 
 	  // pr is in whichcoord coordinates
 	  // get geometry (non-prime coords)
-	  gset_genloc(0, PRIMECOORDS, i, j, k, face, ptrgeomf);
+	  get_geometry(i,j,k,face,ptrgeomf) ;
 	  // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
 	  if (pr2ucon(WHICHVEL, MACP1A0(pl_ct,dir,i,j,k), ptrgeomf, ucon_l) >= 1) {
 	    FAILSTATEMENT("flux.c:fluxcalc_standard_4fluxctstag()", "pr2ucon()", 1);
