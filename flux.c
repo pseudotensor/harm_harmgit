@@ -1185,7 +1185,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   int realisinterp;
   int dointerpolation;
   void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
-#if( DOFREEZETORUS )
+#if( 0 && DOFREEZETORUS )
   extern FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
 #endif
 
