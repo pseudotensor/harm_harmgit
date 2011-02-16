@@ -84,6 +84,22 @@ FTYPE PTRDEFGLOBALMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);
 int prepre_init_specific_init(void)
 {
   int funreturn;
+#if( DOFREEZETORUS )
+  FTYPE valueinit = 0.0;
+  int i, j, k, pliter, pl;
+#endif
+  
+#if( DOFREEZETORUS )
+  GLOBALPOINT(global_ptorus) = (FTYPE PTRMACP0A1(global_ptorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_ptorus,N1BND,N2BND,N3BND,0)));
+  GLOBALPOINT(global_pstagtorus) = (FTYPE PTRMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_pstagtorus,N1BND,N2BND,N3BND,0)));
+  GLOBALPOINT(global_uconstorus) = (FTYPE PTRMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_uconstorus,N1BND,N2BND,N3BND,0)));
+  
+  FULLLOOP PLOOP(pliter,pl){
+    GLOBALMACP0A1(global_ptorus,i,j,k,pl) = valueinit;
+    GLOBALMACP0A1(global_pstagtorus,i,j,k,pl) = valueinit;
+    GLOBALMACP0A1(global_uconstorus,i,j,k,pl) = valueinit;
+  }
+#endif
   
   /////////////////////
   //PHI GRID SETUP
