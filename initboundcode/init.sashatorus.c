@@ -59,6 +59,21 @@ static FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
+void add_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void add_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void null_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void null_3d_fieldonly_fullloop(FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+
+#if( DOFREEZETORUS )
+void add_torus_magnetic_fields(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+void save_torus_allvars(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+FTYPE BASEMACP0A1(global_ptorus,N1M,N2M,N3M,NPR);       /* space for primitive vars */
+FTYPE BASEMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR);       /* space for primitive vars */
+FTYPE BASEMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);       /* space for conserved vars */
+FTYPE PTRDEFGLOBALMACP0A1(global_ptorus,N1M,N2M,N3M,NPR);
+FTYPE PTRDEFGLOBALMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR);
+FTYPE PTRDEFGLOBALMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);
+#endif
 
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 
@@ -87,6 +102,21 @@ int prepre_init_specific_init(void)
 
 }
 
+#if( DOFREEZETORUS )
+void add_torus_magnetic_fields(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_ptorus),prim);
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_pstagtorus),pstag);
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_uconstorus),ucons);
+}
+
+void save_torus_allvars(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  copy_3dnpr_fullloop(prim,GLOBALPOINT(global_ptorus));
+  copy_3dnpr_fullloop(pstag,GLOBALPOINT(global_pstagtorus));
+  copy_3dnpr_fullloop(ucons,GLOBALPOINT(global_uconstorus));
+}
+#endif
 
 // AKMARK: h/r
 int pre_init_specific_init(void)
@@ -800,6 +830,15 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
   normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
 
+#if( DOFREEZETORUS )
+  //save the torus field: it will be added on later
+  save_torus_allvars(prim, pstag, ucons, A );
+  //null out the field everywhere
+  null_3d_fieldonly_fullloop(prim);
+  null_3d_fieldonly_fullloop(pstag);
+  null_3d_fieldonly_fullloop(ucons);
+#endif
+  
 #if(FIELDTYPE==DISKBHFIELD) //if doing bh field
   //compute vpot again after field was normalized
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
@@ -1366,3 +1405,85 @@ int theproblem_set_myid(void)
 
 }
 
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void add_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  
+  
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOPBONLY(pl) MACP0A1(dest,i,j,k,pl)+=MACP0A1(source,i,j,k,pl);
+      
+    }// end 3D loop
+    
+    
+  }// end parallel region
+  
+}
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void null_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  
+  
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOPBONLY(pl) MACP0A1(dest,i,j,k,pl)=0;
+      
+    }// end 3D loop
+    
+    
+  }// end parallel region
+  
+}
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void add_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND;
+  int js=-N2BND;
+  int je=N2-1+N2BND;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND;
+  
+  
+  add_3d_fieldonly(is, ie, js, je, ks, ke, source, dest);
+  
+  
+}
+
+void null_3d_fieldonly_fullloop(FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND;
+  int js=-N2BND;
+  int je=N2-1+N2BND;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND;
+  
+  
+  null_3d_fieldonly(is, ie, js, je, ks, ke, dest);
+  
+  
+}
