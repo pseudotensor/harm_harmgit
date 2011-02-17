@@ -649,7 +649,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDVAL (4.0) //(3.4142135623730950488)
 #define BHFIELDNU (-1.0) //negative means hyperbolic field lines
 #define BHFIELDALPHA (1.35)
-#define BHFIELDR (1.2*rin)
+#define BHFIELDR (1.2)
 
 //#define FIELDTYPE BLANDFORDQUAD
 #define FIELDTYPE DISKBHFIELD
@@ -667,7 +667,7 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   }
   else if(BHFIELDNU<0) {
     //roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
-    vpotbh = pow(r*sin(th)/BHFIELDR,2)/pow(1+pow(r*cos(th)/BHFIELDR,BHFIELDALPHA),2./BHFIELDALPHA);
+    vpotbh = pow(r*sin(th)/(BHFIELDR*rin),2)/pow(1+pow(fabs(r*cos(th))/(BHFIELDR*rin),BHFIELDALPHA),2./BHFIELDALPHA);
     if( vpotbh > 1 ) vpotbh = 1;
   }
   return(vpotbh);
