@@ -1076,7 +1076,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
       for (i=0; i<N1+SHIFT1; i++) {
-	for (k=0; k<N3+SHIFT1; k++) {
+	for (k=0; k<N3+SHIFT3; k++) {
 	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
