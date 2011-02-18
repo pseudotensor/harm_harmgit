@@ -442,6 +442,11 @@ int init_global(void)
   UORHOLIMIT=0.5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
+#if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
+//scale up to match the usual values after the corresponding density normalization in init_thintorus()
+  RHOMIN *= 70;
+  UUMIN *= 70;
+#endif
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
