@@ -1213,7 +1213,7 @@ FTYPE get_maxval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SH
   FTYPE maxval = -VERYBIG;
   
   ZLOOP {
-    if (A[dir][i][j][k] > maxval)      maxval = A[dir][i][j][k];
+    if (NOAVGCORN_1(A[dir],i,j,k) > maxval)      maxval = NOAVGCORN_1(A[dir],i,j,k);
   }
   
   mpimax(&maxval);
@@ -1230,7 +1230,7 @@ FTYPE get_minval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SH
   FTYPE minval = VERYBIG;
   
   ZLOOP {
-    if (A[dir][i][j][k] < minval)      minval = A[dir][i][j][k];
+    if (NOAVGCORN_1(A[dir],i,j,k) < minval)      minval = NOAVGCORN_1(A[dir],i,j,k);
   }
   
   mpimin(&minval);
