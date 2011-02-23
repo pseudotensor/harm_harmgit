@@ -1008,7 +1008,9 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
       }
     }
     //just in case, wait until all CPUs get here
+#if(USEMPI)
     MPI_Barrier(MPI_COMM_GRMHD);
+#endif
     //bound here
     bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
     //ensure consistency of vpot across the midplane
