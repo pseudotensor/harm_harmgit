@@ -1493,6 +1493,15 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     else {
       V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
     }
+#else
+  //if((1+X[2])/2.<0.5){
+  //  V[2] = M_PI * (1+X[2])/2. + ((1. - hslope) / 2.) * mysin(2. * M_PI * (1+X[2])/2.);
+  //}
+  //else{
+  //  //      V[2] = 0.5*M_PI + M_PI * fabs(X[2]-0.5) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+  //  V[2] = M_PI - (M_PI * (1.0-(1+X[2])/2.)) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-(1+X[2])/2.)));
+  //}
+  V[2] = M_PI_2l * (1.0+ X[2]); 
 #endif
 
     // default is uniform \phi grid
