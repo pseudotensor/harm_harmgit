@@ -3414,19 +3414,16 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   
   *ismirrored = 0;
   
+  if( Xout[2] > 0. ) {
+    Xout[2] = -Xout[2];
+    *ismirrored = 1-*ismirrored;
+  }    
+
   //now force -1 < Xout[2] < 0
   if( Xout[2] < -1. ) {
     Xout[2] = -2. - Xout[2];
-    *ismirrored = 1;
+    *ismirrored = 1-*ismirrored;
   }
-  else if( Xout[2] > 1. ) {
-    Xout[2] -= 2.;
-    *ismirrored = 0;
-  }
-  else if( Xout[2] > 0. ) {
-    Xout[2] = -Xout[2];
-    *ismirrored = 1;
-  }    
 }
 
 FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
