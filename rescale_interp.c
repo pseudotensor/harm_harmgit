@@ -528,6 +528,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     gamma_calc_fromuconrel(uconrel,ptrgeom,&gamma,&qsq);
 
     //Use newpr[] as a temporary array
+    //copies ONLY vars to be interpolated
     PINTERPLOOP(pliter,pl) newpr[pl]=pr[pl];
 
     // interpolate relative 3-velocity
@@ -549,7 +550,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
     // assign over everything, adjust velocity below
     //Use newpr[] as a temporary array
-    PINTERPLOOP(pliter,pl) newpr[pl]=p2interp[pl];
+    for (pl=0; pl<NPR; pl++) newpr[pl]=p2interp[pl];
 
     //return back to u^2 and B^2 from u^\theta and B^\theta
     newpr[U2] /= dxdxp[2][2];
