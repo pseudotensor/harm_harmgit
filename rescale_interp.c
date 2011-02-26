@@ -30,7 +30,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   extern int limit_quasivsq(FTYPE quasivsqnew, struct of_geom *geom, FTYPE *pr);
   FTYPE vcon[NDIM],ucon[NDIM];
   int j;
-  FTYPE newpr[NPR];
+  FTYPE newpr[NPR],newpr1[NPR];
   FTYPE uconrel[NDIM],ucovrel[NDIM];
   FTYPE vconrel[NDIM];
   FTYPE normuconrel,normuconrel_fromui;
@@ -513,58 +513,67 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   if(which==1){ // before interpolation, get quantities to interpolate
 
     // get relative 4-velocity
-    if(WHICHVEL!=VELREL4){
+#if(WHICHVEL!=VELREL4)
+#error Not implemented
       pr2ucon(WHICHVEL,pr, ptrgeom ,ucon);
       ucon2pr(VELREL4,ucon,ptrgeom,newpr);
       uconrel[TT]=0.0;
       SLOOPA(j) uconrel[j]=newpr[UU+j];
-    }
-    else{
+#else
       uconrel[TT]=0.0;
       SLOOPA(j) uconrel[j]=pr[UU+j];
-    }
-
+#endif
+    
     // get Lorentz factor w.r.t. relative 4-velocity
     gamma_calc_fromuconrel(uconrel,ptrgeom,&gamma,&qsq);
 
-    PINTERPLOOP(pliter,pl) p2interp[pl]=pr[pl];
+    //Use newpr[] as a temporary array
+    PINTERPLOOP(pliter,pl) newpr[pl]=pr[pl];
 
     // interpolate relative 3-velocity
-    for(pl=U1;pl<=U3;pl++) p2interp[pl]= uconrel[pl-U1+1]/gamma;
+    for(pl=U1;pl<=U3;pl++) newpr[pl]= uconrel[pl-U1+1]/gamma;
     
     //Interpolate u^\theta and B^\theta instead of u^2 and B^2:
-    p2interp[U2] *= dxdxp[2][2];
-    p2interp[B2] *= dxdxp[2][2];
-
+    newpr[U2] *= dxdxp[2][2];
+    newpr[B2] *= dxdxp[2][2];
+    
     // interpolate \gamma separately
-    p2interp[VSQ]=gamma;
-
+    newpr[VSQ]=gamma;
+    
+    //Finally copy from newpr[] to p2interp[], HOWEVER:
+    //make sure only change only those elements of p2interp
+    //that the PINTERPLOOP loops over, otherwise trouble!
+    PINTERPLOOP(pliter,pl) p2interp[pl]=newpr[pl];
   }
   else  if(which==-1){ // after interpolation
 
-    //return back to u^2 and B^2 from u^\theta and B^\theta
-    p2interp[U2] /= dxdxp[2][2];
-    p2interp[B2] /= dxdxp[2][2];
-    
     // assign over everything, adjust velocity below
-    PINTERPLOOP(pliter,pl) pr[pl]=p2interp[pl];
+    //Use newpr[] as a temporary array
+    PINTERPLOOP(pliter,pl) newpr[pl]=p2interp[pl];
 
+    //return back to u^2 and B^2 from u^\theta and B^\theta
+    newpr[U2] /= dxdxp[2][2];
+    newpr[B2] /= dxdxp[2][2];
+          
     // get relative 4-velocity from \gamma and relative 3-velocity
     uconrel[TT]=0;
-    SLOOPA(j) uconrel[j]=p2interp[UU+j]*p2interp[VSQ];
+    SLOOPA(j) uconrel[j]=newpr[UU+j]*newpr[VSQ];
 
 
     // get WHICHVEL velocity
-    if(WHICHVEL!=VELREL4){
-      pr2ucon(VELREL4,p2interp, ptrgeom ,ucon);
-      ucon2pr(WHICHVEL,ucon,ptrgeom,newpr);
-      SLOOPA(j) pr[UU+j]=newpr[UU+j];
-    }
-    else{
-      SLOOPA(j) pr[UU+j]=uconrel[j];
-    }
-
+#if(WHICHVEL!=VELREL4)
+#error Not implemented
+      pr2ucon(VELREL4,pr, ptrgeom ,ucon);
+      ucon2pr(WHICHVEL,ucon,ptrgeom,newpr1);
+      SLOOPA(j) newpr[UU+j]=newpr1[UU+j];
+#else
+      SLOOPA(j) newpr[UU+j]=uconrel[j];
+#endif
     
+    //Finally copy from newpr[] to p2interp[], HOWEVER:
+    //make sure only change only those elements of p2interp
+    //that the PINTERPLOOP loops over, otherwise trouble!
+    PINTERPLOOP(pliter,pl) pr[pl]=newpr[pl];
 
   }
   else{

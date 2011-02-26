@@ -721,6 +721,7 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
   int finalstep;
   FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP];
   int Nvec[NDIM];
+  int i,j,k;
 
 
 
@@ -1300,7 +1301,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	  rescale(-1,dir,p_l,ptrgeomc,p2interp_l);
 	  rescale(-1,dir,p_r,ptrgeomc,p2interp_r);
 
-	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
+	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p_l[pl]+p_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
 
 #elif(IFNOTRESCALETHENUSEGDET)
 	  get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
