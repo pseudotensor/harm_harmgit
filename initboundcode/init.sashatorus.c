@@ -830,9 +830,8 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   
 #if(1) //if optimizing disk flux
   getmax_densities(prim, &rhomax, &umax);
-  //amax = get_maxval( A, 3 );
-  //trifprintf("amax = %g -- does not work somehow -- won't use it\n", amax);
-  amax = 0;
+  amax = get_maxval( A, 3 );
+  trifprintf("amax = %g\n", amax);
   
   //by now have the fields (centered and stag) computed from vector potential
     
