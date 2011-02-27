@@ -1099,7 +1099,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[3]=2.0*M_PI*X[3];
   }
   else if (defcoord == SJETCOORDS) {
-#if(1)
+#if(0)
     //use original coordinates
     vofx_sjetcoords( X, V );
 #else
