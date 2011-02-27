@@ -330,7 +330,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.;
-  Rout = 5.e4;
+  Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
