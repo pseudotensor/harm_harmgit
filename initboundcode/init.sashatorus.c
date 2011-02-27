@@ -550,7 +550,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 20.;   // AKMARK: torus pressure max
+  torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
 
   // AKMARK: torus inner radius
 #if(WHICHPROBLEM==NORMALTORUS)
