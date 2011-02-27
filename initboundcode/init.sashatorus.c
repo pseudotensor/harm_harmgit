@@ -657,8 +657,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDALPHA (1.35)
 #define BHFIELDR (1.2)
 
-//#define FIELDTYPE BLANDFORDQUAD
-#define FIELDTYPE DISKBHFIELD
+//#define FIELDTYPE DISKBHFIELD
+#define FIELDTYPE DISKFIELD
 
 FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 {

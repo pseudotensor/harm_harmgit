@@ -362,7 +362,7 @@ struct Ccoordparams {
 #define CONNAXISYMM 1
 
 #undef DOFREEZETORUS
-#define DOFREEZETORUS 1
+#define DOFREEZETORUS 0
 
 #undef FREEZETORUSTIME
 #define FREEZETORUSTIME (200.)
