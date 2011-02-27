@@ -49,6 +49,7 @@
 
 #define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
 
+static const FTYPE aphipow = 2.5;
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
@@ -742,8 +743,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKBHFIELD)||(FIELDTYPE==DISKVERT)){
 
 // AKMARK: magnetic loop radial wavelength
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
-#define STARTFIELD (1.1*rin)
+#if( WHICHPROBLEM == THINTORUS ) 
+#define STARTFIELD (1.*rin)
       fieldhor=0.194;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
 #define STARTFIELD (1.1*rin)
@@ -771,7 +772,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
-      if(r > STARTFIELD) q = (r*r*(rho_av/rhomax));
+      if(r > STARTFIELD) q = (pow(r,aphipow)*(rho_av/rhomax));
       else q = 0. ;
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
@@ -819,6 +820,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
 
   int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  FTYPE get_maxprimvalrpow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE rpow, int pl );
   
   int funreturn;
   int fieldfrompotential[NDIM];
@@ -830,7 +832,8 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   
 #if(1) //if optimizing disk flux
   getmax_densities(prim, &rhomax, &umax);
-  amax = get_maxval( A, 3 );
+  //amax = get_maxval( A, 3 );
+  amax = get_maxprimvalrpow( prim, aphipow, RHO );
   trifprintf("amax = %g\n", amax);
   
   //by now have the fields (centered and stag) computed from vector potential
@@ -1196,14 +1199,41 @@ FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFT
   // rat_ij = 0 outside of main body of torus
   // rat_ij ~ rho in between
   //ASSUMING DENSITY HAS ALREADY BEEN NORMALIZED -- SASMARK
-  //profile = ( r*MACP0A1(prim,i,j,k,RHO)/21.703575088105637 - 0.05 ) / 0.1;
-  profile = ( MACP0A1(prim,i,j,k,RHO)/rhomax - 0.05 ) / 0.1;
+  //profile = ( r*r*MACP0A1(prim,i,j,k,RHO)/578.36728604946757 - 0.05 ) / 0.1;
+  //profile = ( pow(r,aphipow)*MACP0A1(prim,i,j,k,RHO)/amax - 0.001 ) / 0.05;
+  profile = ( log10(pow(r,aphipow)*MACP0A1(prim,i,j,k,RHO)/amax+SMALL) + 3 ) / 1.0;
+  //profile = ( MACP0A1(prim,i,j,k,RHO)/rhomax - 0.05 ) / 0.1;
   //profile = ( sqrt(NOAVGCORN_1(A[3],i,j,k)/amax) - 0.05 ) / 0.1;
   if(profile<0) profile = 0;
   if(profile>1) profile = 1;  
   rat_ij *= profile;
   
   return(rat_ij);
+}
+
+FTYPE get_maxprimvalrpow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE rpow, int pl )
+{
+  int i,j,k;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE r;
+  
+  FTYPE val;
+  FTYPE maxval = -VERYBIG;
+  
+  ZLOOP {
+    coord(i,j,k,CENT,X);
+    bl_coord(X,V);
+  
+    r = V[1];
+    val = pow(r,rpow)*MACP0A1(prim,i,j,k,pl);
+    if ( val > maxval)      maxval = val;
+  }
+  
+  mpimax(&maxval);
+  
+  
+  return(maxval);
+  
 }
 
 
