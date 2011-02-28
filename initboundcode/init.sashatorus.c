@@ -651,8 +651,10 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 //Options for DISKBHFIELD
 #define BHFIELDVAL (4.0) //(3.4142135623730950488)
 #define BHFIELDNU (-1.0) //negative means hyperbolic field lines
-#define BHFIELDALPHA (1.35)
-#define BHFIELDR (1.2)
+#define BHFIELDALPHA (1.5)
+#define BHFIELDR (1.)    //field stops at r = BHFIELDR * rin
+#define BHFIELDDZDR (.9) //asymptotic slope of field boundary (=dz/dr)
+#define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
 
 //#define FIELDTYPE DISKBHFIELD
 #define FIELDTYPE DISKFIELD
@@ -670,7 +672,11 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   }
   else if(BHFIELDNU<0) {
     //roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
-    vpotbh = pow(r*sin(th)/(BHFIELDR*rin),2)/pow(1+pow(fabs(r*cos(th))/(BHFIELDR*rin),BHFIELDALPHA),2./BHFIELDALPHA);
+    vpotbh = pow( r*sin(th)/(BHFIELDR*rin),2 ) 
+      / pow( 1+pow(
+		    fabs(r*cos(th))/(BHFIELDR*rin*BHFIELDDZDR*(1+pow(log10(1+r/rin),BHFIELDLOGPOW))),
+	       BHFIELDALPHA),
+	2./BHFIELDALPHA );
     if( vpotbh > 1 ) vpotbh = 1;
   }
   return(vpotbh);
