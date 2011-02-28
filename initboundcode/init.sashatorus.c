@@ -56,7 +56,7 @@ static FTYPE rhodisk;
 
 static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
 static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-static FTYPE torusrmax;   // AKMARK: torus pressure max
+FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
@@ -304,7 +304,32 @@ int init_grid(void)
 
  
   Rhor=rhor_calc(0);
+  Risco=rmso_calc(PROGRADERISCO);
 
+  toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
+  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
+  
+  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
+  randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
+  
+  // AKMARK: torus inner radius
+#if(WHICHPROBLEM==NORMALTORUS)
+  //rin = Risco;
+  rin = 6. ;
+  toruskappa = 1e-3; 
+  torusrmax = 12.; 
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
+  rin = 20. ;
+#elif(WHICHPROBLEM==THINTORUS)
+  rin = 10. ;
+#elif(WHICHPROBLEM==KEPDISK)
+  //rin = (1. + h_over_r)*Risco;
+  rin = Risco;
+#elif(WHICHPROBLEM==GRBJET)
+  rin = Risco;
+#endif
+  
   // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
@@ -542,35 +567,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);
   Risco=rmso_calc(PROGRADERISCO);
-
-
-
-  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
-  randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
-
-  toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
-
-  // AKMARK: torus inner radius
-#if(WHICHPROBLEM==NORMALTORUS)
-  //rin = Risco;
-  rin = 6. ;
-  toruskappa = 1e-3; 
-  torusrmax = 12.; 
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
-  rin = 20. ;
-#elif(WHICHPROBLEM==THINTORUS)
-  rin = 10. ;
-#elif(WHICHPROBLEM==KEPDISK)
-  //rin = (1. + h_over_r)*Risco;
-  rin = Risco;
-#elif(WHICHPROBLEM==GRBJET)
-  rin = Risco;
-#endif
-
   
-
 
 #if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA && WHICHPROBLEM != THICKDISKFROMMATHEMATICA )
   //SASMARK restart: need to populate panalytic with IC's; DO NOT do this 
