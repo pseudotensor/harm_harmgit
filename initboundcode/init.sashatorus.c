@@ -393,15 +393,15 @@ int init_grid(void)
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
   //the larger r0grid, the larger the thickness of the jet 
   //to resolve
-  global_r0grid = 1.5*Rin;    
+  global_r0grid = 5.0*Rin;    
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
-  global_r0jet = 3;
+  global_r0jet = Rin;
     
   //distance after which the jet grid collimates according to the usual jet formula
   //the larger this distance, the wider is the jet region of the grid
-  global_rjetend = 15;
+  global_rjetend = 5;
     
   //distance at which disk part of the grid becomes monopolar
   //the larger r0disk, the larger the thickness of the disk 
@@ -410,7 +410,7 @@ int init_grid(void)
 
   //distance after which the disk grid collimates to merge with the jet grid
   //should be roughly outer edge of the disk
-  global_rdiskend = 80;
+  global_rdiskend = 300.;
   
   global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
