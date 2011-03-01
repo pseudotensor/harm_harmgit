@@ -385,8 +385,8 @@ int init_grid(void)
 
   //transverse resolution fraction devoted to different components
   //(sum should be <1)
-  global_fracdisk = 0.2;
-  global_fracjet = 0.5;
+  global_fracdisk = 0.36;
+  global_fracjet = 0.3;
 
   global_jetnu = 0.75;  //the nu-parameter that determines jet shape
 
