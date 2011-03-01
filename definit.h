@@ -811,5 +811,6 @@
 
 // problem-dependent code activation
 #define USERERSETREGION 0
+#define DOAUTOCOMPUTEENK0 0
 
 

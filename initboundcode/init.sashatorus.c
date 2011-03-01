@@ -306,6 +306,13 @@ int init_grid(void)
   Rhor=rhor_calc(0);
   Risco=rmso_calc(PROGRADERISCO);
 
+#if( DOAUTOCOMPUTEENK0 )
+  //this should be set to the final entropy constant
+  //this is done *automatically* for the case of WHICHPROBLEM == THINTORUS
+  //and THINTORUS_NORMALIZE_DENSITY == 1
+  global_toruskappafinal = 0.01;  
+#endif
+  
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
   torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
