@@ -315,7 +315,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 22.82; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well

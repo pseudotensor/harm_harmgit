@@ -381,3 +381,7 @@ struct Ccoordparams {
 #undef DOIMPROVEJETCOORDS
 #endif
 #define DOIMPROVEJETCOORDS 1
+
+#undef DOAUTOCOMPUTEENK0
+#define DOAUTOCOMPUTEENK0 1
+
