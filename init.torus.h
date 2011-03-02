@@ -615,9 +615,8 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   rho_at_pmax = pow((-1 + gam)*eps*pow(kappa,-1),pow(-1 + gam,-1));
   rho_scale_factor = 1.0/rho_at_pmax;
 #if( DOAUTOCOMPUTEENK0 )
-  if( ti==0 && tj == 0 && tk == 0 ) {
-    global_toruskappafinal = kappa * pow( rho_scale_factor, 1 - gam );
-  }
+  //will be recomputed for every (ti,tj,tk), but is same for all of them, so ok
+  global_toruskappafinal = kappa * pow( rho_scale_factor, 1 - gam );
 #endif
   
 #else
