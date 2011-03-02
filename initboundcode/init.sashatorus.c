@@ -295,7 +295,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = 0.9;
+  a = 0.99;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #else
@@ -315,7 +315,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 22.82; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -419,7 +419,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 2.4;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
