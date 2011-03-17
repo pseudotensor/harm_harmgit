@@ -1177,7 +1177,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   ftemp=(float)(-q.ucov[0]);
   myset(datatype,&ftemp,0,1,writebuf);
 
-  // -T^t_t/(gdet rho u^t)
+  // -T^t_t/(rho u^t)
   //  ftemp=(float)(-U[UU]/(ptrgeom->gdet * GLOBALMACP0A1(pdump,i,j,k,RHO)*q.ucon[TT]));
   //myset(datatype,&ftemp,0,1,writebuf);
 

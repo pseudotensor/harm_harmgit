@@ -432,6 +432,23 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
+  ////////////////
+  //
+  // Use tracked A_i to update magnetic field
+  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
+  //
+  ////////////////
+  if(EVOLVEWITHVPOT && TRACKVPOT){
+    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
+    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
+    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
+    // GODMARK: for now only do at the end of the full timestep to avoid being expensive -- doesn't really matter that didn't do it per substep since only machine differences
+    
+    // EVOLVEWITHVPOT>1 means do it every time step
+    if(finalstep || EVOLVEWITHVPOT>1) evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
+  }
+
+
 
 
 #if(PRODUCTION==0)
@@ -441,7 +458,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   /////////////////////////////////////
   //
-  // normal bondary call
+  // normal bondary call (only bounds p (centered) and pstag (staggered field) and not A_i or F or other things)
   // required in general
   //
   /////////////////////////////////////
@@ -454,19 +471,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
 
-  ////////////////
-  //
-  // Use tracked A_i to update magnetic field
-  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
-  //
-  ////////////////
-  if(EVOLVEWITHVPOT && TRACKVPOT){
-    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
-    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
-    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
-    // GODMARK: for now only do at the end of the full timestep to avoid being expensive -- doesn't really matter that didn't do it per substep since only machine differences
-    if(finalstep) evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
-  }
 
   /////////////////////////////////////
   //

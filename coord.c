@@ -93,7 +93,10 @@ void set_coord_parms(int defcoordlocal)
 }
 
 
+
 // Things to set that only depend upon defcoord and nothing else
+// NOTEMARK: By nothing else, that means things like hslope, R0, Rin, or anything else that user might set in init_grid()
+// Otherwise, even if set hslope here for example and then use hslope to set something else, hslope could change and that other parameter would be wrong and coordinates would be mismatched.
 void set_coord_parms_nodeps(int defcoordlocal)
 {
 
@@ -122,14 +125,6 @@ void set_coord_parms_nodeps(int defcoordlocal)
   }
   else if(defcoordlocal == COMPLEX2TH) {
     x2trans=0.1; // user settable, must be same as below in dxdxp
-    thetatores=2.5*h_over_r;
-
-    // fixed coefficients
-    m2=(3.*(-2.*thetatores + M_PI))/(2.*x2trans) + (4.*thetatores)/(-1. + 2.*x2trans);
-    d2=(2.*thetatores - M_PI + 2.*M_PI*x2trans)/(-2.*pow(x2trans,3.) + 4.*pow(x2trans,4.));
-    c2=(6.*thetatores - 3.*M_PI + 6.*M_PI*x2trans)/(2.*pow(x2trans,2.) - 4.*pow(x2trans, 3.));
-    m3=(2.*thetatores)/(1. - 2.*x2trans);
-    b3=M_PI/2. + thetatores/(-1. + 2.*x2trans);
   }
   else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
   }
@@ -202,7 +197,6 @@ void set_coord_parms_nodeps(int defcoordlocal)
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     rbr = 5E2;  //radius at which hyperexponentiation kicks in
-    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
 
 
@@ -362,28 +356,30 @@ void set_coord_parms_nodeps(int defcoordlocal)
   }
   else if (defcoordlocal == JET4COORDS ) {
     // see net_jet_grid.nb
+    // for small Rout, should use R0~0 (i.e. instead  use R0~-3) or hslope>1
+
 
     // this coordinate system uses:  R0 and npow for radius , hslope for theta1 , rsjet and r0 for switch and switchi , h0, rs, r0, njet for theta2 (as in JET3COORDS)
 
     // npow, R0, rs, r0, hslope, h0, r0jet, rsjet, njet
 
     // for radial grid
-    npow=10.0;
+    npow=1.0;
+    // npow=10.0;
     //npow=3.0;
     R0 = -3.0;
    
     // for switches
-    rs=10.0;
-    r0=20.0;
+    rs=15.0;
+    r0=25.0;
  
     // for theta1
     hslope=0.3 ; // resolve inner-radial region near equator
     // below 2 not used right now
-    r0jet=10.0; // divisor
+    r0jet=15.0; // divisor
     rsjet=0.0; // subtractor
 
     // for theta2
-    h0=hslope; // inner-radial "hslope" for theta2
     njet=0.34; // power \theta_j \propto r^{-njet}
   }
   else if (defcoordlocal == UNI2LOG) {
@@ -406,6 +402,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 }
 
+
+// stuff that depends upon ANYTHING external that might be set by user in init_grid() or by system in init_defgrid(), like R0, Rin, hslope, h_over_r, etc.
 void set_coord_parms_deps(int defcoordlocal)
 {
 
@@ -430,6 +428,14 @@ void set_coord_parms_deps(int defcoordlocal)
   else if(defcoordlocal == COMPLEX1TH) {
   }
   else if(defcoordlocal == COMPLEX2TH) {
+    thetatores=2.5*h_over_r;
+
+    // fixed coefficients
+    m2=(3.*(-2.*thetatores + M_PI))/(2.*x2trans) + (4.*thetatores)/(-1. + 2.*x2trans);
+    d2=(2.*thetatores - M_PI + 2.*M_PI*x2trans)/(-2.*pow(x2trans,3.) + 4.*pow(x2trans,4.));
+    c2=(6.*thetatores - 3.*M_PI + 6.*M_PI*x2trans)/(2.*pow(x2trans,2.) - 4.*pow(x2trans, 3.));
+    m3=(2.*thetatores)/(1. - 2.*x2trans);
+    b3=M_PI/2. + thetatores/(-1. + 2.*x2trans);
   }
   else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
   }
@@ -508,6 +514,7 @@ void set_coord_parms_deps(int defcoordlocal)
     }   
   }
   else if (defcoordlocal == JET6COORDS) {
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == JET5COORDS) {
   }
@@ -531,6 +538,8 @@ void set_coord_parms_deps(int defcoordlocal)
   else if (defcoordlocal == RAMESHCOORDS || defcoordlocal == RAMESHCOORDS_HALFDISK) {
   }
   else if (defcoordlocal == JET4COORDS ) {
+    // for theta2
+    h0=hslope; // inner-radial "hslope" for theta2
   }
   else if (defcoordlocal == UNI2LOG) {
 
@@ -676,8 +685,10 @@ void read_coord_parms(int defcoordlocal)
     }
     else{
       // don't want to overwrite since restart file sets this
-      //      fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
-      fscanf(in,HEADER5IN,&ftemp,&ftemp,&ftemp,&ftemp,&ftemp);
+      //      fscanf(in,HEADER5IN,&ftemp,&ftemp,&ftemp,&ftemp,&ftemp);
+      // NO: jon_interp.c requires read these in, so assume restart file has equal values to coordparms.dat file
+      fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
+      fscanf(in,"%d",&dofull2pi);
 
       if (defcoordlocal == LOGRSINTH) {
       }
@@ -886,6 +897,7 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&h0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);

@@ -1,0 +1,139 @@
+
+////////////////////////////////////
+//
+// MPI Notes
+//
+////////////////////////////////////
+
+// 1) Generally probably need to avoid fork() or system() calls
+// 2) MPI-2 not fully supported on all systems, so ROMIO not fully supported
+
+////////////////////////////////////
+//
+// OpenMP Notes
+//
+////////////////////////////////////
+
+// 1) Ensure all called functions do not use global variables or else shared and data collision is possible.
+//    This includes avoiding statically declared variables outside functions within a file.
+// 2) omp construct can only be used on each part of loop, not on a multi-loop macro.
+// 3) Use Intel(R) Thread Checker ?.? for Linux to check for OpenMP correctness.
+//    NOT perfect: Missed "static FTYPE hslope" in coord.c when outside function
+//
+// a) source /opt/intel/itt/tcheck/bin/32e/tcheckvars.sh
+// b) Compile code [for best results compile with -O -g
+//    and set to run a finite number of steps]
+// c) tcheck_cl ./grmhd
+// Then look are report for data race conditions
+//
+// 4) On SMP systems, use less then total CPUs since basic system processes need some CPU time.  For example, with 1024 CPUs maybe use 1022.
+//    On MPP or clusters, probably ok to use all systems since each system has same basic processes.
+//
+// 5) omp parallel construct should be far outside multi-dimen loops, with (e.g.) omp for construct on inner-most loop.
+//
+// 6) use the guided or dynamic schedule when each thread might take substantially different amounts of time, like when doing inversion.  Some threads might hit failure regions and take a long time.  Drawback is these have higher overheads (about 3X for chunk=10) compared to a static schedule.
+//
+// 7) Unlike in a single thread, across threads avoid cache coherence if updating nearby memory.  This is a problem known as false sharing.  If one thread updates part of memory in cache, that invalidates that cache line forcing other threads to reget the cache line from memory.
+//
+// 8) Note that if use pointer referencing outside parallel region and make that private (e.g. for *p2interp_l or *p2interp_r) inside the parallel region, then any prior pointer assignment is not preserved.  This is necessary since otherwise each thread would point to the same address.  So one must reassign that pointer relationship inside the parallel region.
+//
+// 9) For a 3D LOOP, if one wants to use "nowait", one has to use the "static" schedule so that upon leaving one loop and entering another, the thread is given the same exact seqeuence of iteration numbers.  Also assumes the loops (is,ie,js,je,ks,ke, etc.) from one construct to another are identical!  In either case, otherwise, the data set on a prior loop won't be available for the new loop for any given thread.
+// So can only use nowait if both static and loop structures are identical.  This is rare.  And indeed, if static used across multiple loop blocks, then unlikely to benefit from nowait since static forces uniformity of workload.  So unlikely to be big difference in timing to reach end of prior loops.
+//
+// One can where *can* use nowait is when fully independent accesses.  This occurs, for example, when only 1 3D loop, but exterior loop is a DIMENLOOP/DIRLOOP.  In this case, each entrance to the next loop writes to totally different memory regions that depend upon dir itself (e.g. fluxvec(dir)).
+//
+// Again, for "nowait," must ensure that each loop does not use data written on previous loop.  If everything is independent, then "nowait" is ok.
+
+// 10) Note that "static" variables inside functions are global in scope, so unless constant forever are not thread safe.
+//     Typical "static int firsttime=1;  if(firsttime){ dosomething;firsttime=0;} cannot be used!
+//     See metric_tools.c:matrix_inverse() for example of how deal with this.
+// Can't have static in reconstructeno.c for memories (is then performance hit?)
+// tau_neededbyharm.c from f2c: MUST remove static in front of variables!
+//
+//    Find these by doing: grep "  static" *.c *.h | less
+//
+//     Apart from static variables inside functions, static variables global to a single file can be dangerous if ever written to with multiple threads.  For example, coord.c has many static variables, but these should never be set when many threads are calling the coord.c's functions.
+//
+//    Find these by doing: grep "^static" *.c *.h | grep -v "(" | less
+//
+// Ensure that all uses of static are thread safe.
+//
+// 11) Must also ensure that "global variables" that aren't static (can be floating around inside files like ranc.c had "int called" as global, are either defined part of the global private or avoid global variable completely.
+// Must check each file for such global varaibles.
+// Use codenonfunc.sh and its extractnonfunc.c to help with this.
+//
+// 12) OpenMP Overhead:
+//
+//  Overhead on 64x32 calculation is about 22% with 78%=zcpsopenmp1core/zcps1core=38K/49K (TIMEORDER==2 FLUXB==FLUXCTTOTH).
+// Saw no difference between static and guided schedules.
+// No changes for static chunk size from 10 to 20 to 400.
+// Currently operate at 36% efficiency with 4 cores, while 22% per core overhead would lead to a total of 78% efficiency.
+//  So memory contention probably accounts for the other factor of 2-3X drop in efficiency.
+//
+//  Related to this, if number of things in loop is small, then 1 CPU can be faster than using OpenMP because of the overhead of a parallel region being introduced.  One can use the "if()" after "schedule" to avoid using the pragma if a certain condition is met.
+//
+// E.g. #pragma omp parallel for private(i__3,i__,j) schedule(guided) if(blocksize>100)
+//
+// As above, I noticed 1 core going with OpenMP is 22% slower than no-OpenMP going.  So one could eliminate the for loop pragma using:
+// E.g. #pragma omp parallel for schedule(guided) if(numopenmpthreads>1)
+// But we leave this out so that we can test OpenMP overhead since user is not expected to choose only 1 thread.
+//
+//
+// 13) Volatile variable not allowed in parallel region since not thread safe.
+//
+//
+// 14) private() and firstprivate() have overhead, so better to use scope to contain local variables.
+// See: http://portal.acm.org/citation.cfm?doid=563647.563656
+//      http://www.springerlink.com/content/680171t137073007/
+//
+// 15) copyin() can incur a LARGE fixed/core overhead if copyin() a large amount of data relative to work done.  Hit is 25%/core right now and that's pretty bad.
+
+////////////////////////////////////
+//
+// Some related web resources for above comments
+//
+////////////////////////////////////
+
+
+// http://www.kernel.org/pub/linux/kernel/v2.6/
+// http://perfmon.sourceforge.net/
+// http://sourceforge.net/projects/perfmon/
+// http://perfmon2.sourceforge.net/
+// http://perfmon2.sourceforge.net/
+// http://perfsuite.ncsa.uiuc.edu/
+// https://andrzejn.web.cern.ch/andrzejn/
+// http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
+// http://www.linuxhq.com/patch-howto.html
+// https://andrzejn.web.cern.ch/andrzejn/#software
+// http://www.eventhelix.com/RealtimeMantra/Basics/OptimizingCAndCPPCode.htm
+// http://www.openwatcom.org/index.php/Performance_tuning
+// http://www.netlib.org/eispack/
+// http://icl.cs.utk.edu/lapack-forum/viewtopic.php?f=2&t=178&start=0&st=0&sk=t&sd=a
+// http://docs.hp.com/en/B3906-90006/index.html
+// http://www.kde.org/
+// http://sourceforge.net/projects/perfctr/
+// http://perfmon2.sourceforge.net/pfmon_usersguide.html
+// http://www.linuxjournal.com/article/7468
+// http://brittany.nmsu.edu/~nmcac-intel/vtune/doc/users_guide/mergedProjects/analyzer_ec/mergedProjects/reference_olh/pentium4_hh/advice4_hh/dtlb_page_walk_misses.htm
+// http://brittany.nmsu.edu/~nmcac-intel/vtune/doc/users_guide/mergedProjects/analyzer_ec/mergedProjects/reference_olh/pentium4_hh/advice4_hh/avoiding_dtlb_page_walk_misses.htm
+// http://www.delorie.com/gnu/docs/binutils/gprof_25.html
+// http://www.intel.com/software/products/mkl/data/vml/functions/pow.html
+// http://www.eventhelix.com/RealtimeMantra/Basics/OptimizingCAndCPPCode.htm
+// http://www.devx.com/SpecialReports/Door/40893
+// http://www.ncsa.uiuc.edu/UserInfo/Resources/Software/Tools/PAPI/
+// http://en.wikipedia.org/wiki/FLOPS
+// http://www.maxxpi.net/pages/result-browser/top10---flops.php
+// http://gcc.gnu.org/onlinedocs/cpp/Macros.html
+// http://jamesthornton.com/emacs/node/emacs_97.html
+// http://xahlee.org/emacs/find_replace_inter.html
+// http://www.cs.utah.edu/dept/old/texinfo/emacs18/emacs_20.html
+// http://www.emacswiki.org/emacs/SearchBuffers
+// http://www.gnu.org/software/emacs/emacs-lisp-intro/html_node/emacs.html#Tags
+// http://analyser.oli.tudelft.nl/regex/
+// http://funarg.nfshost.com/r2/notes/sed-return-comma.html
+// http://soft.zoneo.net/Linux/remove_empty_lines.php
+// http://software.intel.com/en-us/articles/non-commercial-software-download/
+// http://publib.boulder.ibm.com/infocenter/lnxpcomp/v7v91/index.jsp?topic=/com.ibm.vacpp7l.doc/language/ref/clrc09numnum.htm
+// http://www.developers.net/intelisnshowcase/view/2180
+// http://software.intel.com/en-us/intel-vtune/
+

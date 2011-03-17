@@ -17,7 +17,7 @@ int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int k
 }
 
 
-// converts whichvel/whichcoord velocity to WHICHVEL/MCOORD
+// converts whichvel/whichcoord velocity to WHICHVEL/(->MCOORD->PRIMECOORDS)
 // converts field too
 int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
@@ -163,7 +163,7 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 }
 
 
-// transform MCOORD prime primitive velocity to whichcoord whichvel velocity
+// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
 int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int k = 0;

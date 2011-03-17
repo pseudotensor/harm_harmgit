@@ -537,6 +537,10 @@
 // does help near the pole to avoid failures
 #define CONNMACHINEBODY 1
 
+// whether connection coefficients are computed as being axisymmetric
+#define CONNAXISYMM 0
+
+
 // if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
 #define WHICHEOM WITHGDET
 //#define WHICHEOM WITHNOGDET
@@ -683,6 +687,7 @@
 
 // whether to flip gdet sign over coordinate singularities
 #define FLIPGDETAXIS 0
+
 
 
 

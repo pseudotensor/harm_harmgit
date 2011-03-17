@@ -2878,6 +2878,41 @@ int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, 
 }
 
 
+
+
+// input \Omega_F, extra 3-vel along the normal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+int OBtopr_general3n(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, FTYPE *normalvec,struct of_geom *geom, FTYPE *pr)
+{
+  int j;
+  FTYPE Bccov[NDIM];
+  FTYPE Bsq_normal;
+  FTYPE absB_normal;
+  FTYPE v0other;
+  FTYPE ftemp,ftemp2;
+  FTYPE vcon[NDIM];
+  FTYPE v0oB;
+
+  FTYPE normalveccov[NDIM];
+
+
+  lower_vec(Bccon,geom,Bccov);
+  lower_vec(normalvec,geom,normalveccov);
+
+  SLOOPA(j) Bsq_normal+=Bccon[j]*normalveccov[j];
+
+  absB_normal=sqrt(Bsq_normal);
+
+  vcon[1] =        v0*Bccon[1]/absB_normal;
+  vcon[2] =        v0*Bccon[2]/absB_normal;
+  vcon[3] = omegaf+v0*Bccon[3]/absB_normal;
+
+  MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:OBtopr_general3p()", "vcon2pr() dir=0", 1);
+
+  return(0);
+
+}
+
+
 void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM])
 {
       int i,j,k ;

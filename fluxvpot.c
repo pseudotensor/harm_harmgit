@@ -368,13 +368,89 @@ int ucons2upointppoint(SFTYPE boundtime, FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],
 
 
 // initialize vector potential given user function
-// assumes normal field in pr (what does this comment mean?)
+// assumes normal non-staggered field in pr
 // Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
 int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
+
+
+#if(TRACKVPOT)
+  A=vpot; // real t=0 value put here and used to track A_i for diagnostics
+#else
+  A=Atemp; // dummy memory space not used till computation so safe.
+#endif
+
+
+
+  // prim -> A using user function init_vpot_user()
+  init_vpot_justAcov(prim, A);
+
+  // A->Flux if required
+  init_vpot_toF(A, F1, F2, F3);
+
+  // assigns value to p and pstagscratch and unew (uses F1/F2/F3 if doing FLUXCTHLL)
+  // often user just uses init_vpot2field() unless not always using vector potential
+  init_vpot2field_user(A,prim,pstag,ucons,Bhat); 
+
+
+
+
+  return(0);
+
+}
+
+
+
+// get A_i in PRIMECOORDS for FLUXB==FLUXCTSTAG at CORNi for each A_i, the natural staggered field locations for A_i (i.e. not all same location for all A_i)
+int get_vpot_fluxctstag_primecoords(int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *vpot)
+{
+  int dir;
+  FTYPE X[NDIM],V[NDIM];
+  int loc;
+  FTYPE vpotuser[NDIM];
+  int ii,jj,kk;
+  int whichcoord;
+  int userdir;
+
+
+  // copied from init_vpot_justAcov()
+  // loop over A_l's
+  DIMENLOOP(dir){
+    
+    if(dir==1) loc=CORN1;
+    else if(dir==2) loc=CORN2;
+    else if(dir==3) loc=CORN3;
+    
+    
+    bl_coord_ijk_2(i, j, k, loc, X, V); // face[odir2] and flux[odir2]
+    //	dxdxprim_ijk(i, j, k, loc, dxdxp);
+    
+    // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
+    DLOOPA(userdir){
+      init_vpot_user(&whichcoord, userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+    }
+    
+    // convert from user coordinate to PRIMECOORDS
+    ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
+    
+    // now copy the only component required
+    vpot[dir]=vpotuser[dir];
+    
+  }// loop over A_i
+
+
+  return(0);
+
+}
+
+
+
+// initialize vector potential given user function
+// assumes normal non-staggered field in pr
+int init_vpot_justAcov(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
   int Nvec[NDIM];
-  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
   int odir1[NDIM],odir2[NDIM];
   int numdirs;
   int locvpot[NDIM][NDIM];
@@ -387,15 +463,7 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
   Nvec[2]=N2;
   Nvec[3]=N3;
 
-  fluxvec[1] = F1;
-  fluxvec[2] = F2;
-  fluxvec[3] = F3;
 
-#if(TRACKVPOT)
-  A=vpot; // real t=0 value put here and used to track A_i for diagnostics
-#else
-  A=Atemp; // dummy memory space not used till computation so safe.
-#endif
 
   // get location of vpot and number of locations to set
   DIMENLOOP(dir){
@@ -407,14 +475,7 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 
   if(numdirs==2){
-    // then fill F1/F2/F3 instead of A[]
-    trifprintf("Initialize field from vector potential (really flux)\n");
-    DIMENLOOP(dir){
-      if(Nvec[dir]>1){
-	init_3dnpr_fullloop(0.0,fluxvec[dir]);
-      }
-    }
-
+    // will be done in another function
   }
   else{
     trifprintf("Initialize field from vector potential (really A)\n");
@@ -493,24 +554,9 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 	  // convert from user coordinate to PRIMECOORDS
 	  ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
 
-	  // normal ordering is A[dir] = fluxvec[fluxdir][plforflux] with fluxdir=odir1 and plforflux from odir2
-	
-	  if(numdirs==2){
-	    // then using F1/F2/F3
-	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
-	    // Notice that both fluxes are assigned a value in some cases, as required
-	    // e.g. F1[B2]=A3 and F2[B1]=-A3
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=vpotuser[dir];
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-vpotuser[dir]; // opposite ordering
+	  // for numdirs=anything (used for input for 2Flux and for 2Flux required if doing TRACKVPOT
+	  MACP1A0(A,dir,i,j,k) = vpotuser[dir];
 
-#if(TRACKVPOT)
-	    MACP1A0(A,dir,i,j,k) = vpotuser[dir]; // for tracking A_i or diagonstics
-#endif
-
-	  }
-	  else{
-	    MACP1A0(A,dir,i,j,k) = vpotuser[dir];
-	  }
 	}// end for loop over otherdirs
       }// end over A_i
 
@@ -521,9 +567,138 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 
 
-  // assigns value to p and pstagscratch and unew (uses F1/F2/F3 if doing FLUXCTHLL)
-  // often user just uses init_vpot2field() unless not always using vector potential
-  init_vpot2field_user(A,prim,pstag,ucons,Bhat); 
+
+
+  return(0);
+
+}
+
+
+
+// initialize vector potential given user function
+// assumes normal non-staggered field in pr
+// Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
+int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+{
+  int Nvec[NDIM];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  int odir1[NDIM],odir2[NDIM];
+  int numdirs;
+  int locvpot[NDIM][NDIM];
+  int dir;
+
+
+
+  Nvec[0]=0;
+  Nvec[1]=N1;
+  Nvec[2]=N2;
+  Nvec[3]=N3;
+
+  fluxvec[1] = F1;
+  fluxvec[2] = F2;
+  fluxvec[3] = F3;
+
+
+  // get location of vpot and number of locations to set
+  DIMENLOOP(dir){
+    set_location_fluxasemforvpot(dir, &numdirs, &odir1[dir], &odir2[dir], locvpot[dir]);
+
+    // these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
+    //    get_fluxpldirs(Nvec, dir, &fluxdirlist[dir], &pldirlist[dir], &plforfluxlist[dir], &signforfluxlist[dir]);
+  }
+
+
+  if(numdirs==2){
+    // then fill F1/F2/F3 instead of A[]
+    trifprintf("Initialize field from vector potential (really flux)\n");
+    DIMENLOOP(dir){
+      if(Nvec[dir]>1){
+	init_3dnpr_fullloop(0.0,fluxvec[dir]);
+      }
+    }
+
+  }
+  else{
+    // then A already initialized
+  }
+    
+
+  trifprintf("Initialize field from vector potential assign\n");
+
+
+
+  // GODMARK: Caution: Possible to use quantity off grid
+  // (e.g. density) to define lower corner value of A, which then
+  // defines B at center for lower cells.
+  // Do have *grid* quantities for everywhre A is.
+  
+  ////////////  COMPFULLLOOPP1{
+#pragma omp parallel private(dir) OPENMPGLOBALPRIVATEFULL // user could do anything
+  {
+    int otherdir;
+    int userdir;
+    int whichcoord;
+    int loc;
+    int i,j,k,pl,pliter;
+    //  int fluxdir,pldir,plforflux;
+    //  int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
+    //  FTYPE signforfluxlist[NDIM];
+    //  FTYPE signforflux;
+
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+    
+      // can't define F1/F2/F3 in outermost part ofCOMPFULLLOOPP1 since don't exist there
+      // can only define as if doing COMPFULLLOOP
+      if(numdirs==2 && (i>OUTFULL1 || j>OUTFULL2 || k>OUTFULL3) ) continue;
+
+      // loop over A_l's
+      DIMENLOOP(dir){
+
+	// these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
+	//      fluxdir=fluxdirlist[dir];
+	//      pldir=pldirlist[dir];
+	//      plforflux=plforfluxlist[dir];
+	//      signforflux=signforfluxlist[dir];
+
+
+	// loop over positions to get vector potential
+	for(otherdir=1;otherdir<=numdirs;otherdir++){
+	
+	  if(otherdir==1){
+	    loc=locvpot[dir][odir1[dir]];
+	  }
+	  else if(otherdir==2){
+	    loc=locvpot[dir][odir2[dir]];
+	  }
+
+
+	  // normal ordering is A[dir] = fluxvec[fluxdir][plforflux] with fluxdir=odir1 and plforflux from odir2
+	
+	  if(numdirs==2){
+	    // then using F1/F2/F3
+	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
+	    // Notice that both fluxes are assigned a value in some cases, as required
+	    // e.g. F1[B2]=A3 and F2[B1]=-A3
+	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=MACP1A0(A,dir,i,j,k);
+	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-MACP1A0(A,dir,i,j,k); // opposite ordering
+
+
+	  }
+	  else{
+	    // then already assigned to A
+	  }
+	}// end for loop over otherdirs
+      }// end over A_i
+
+
+    }// end over i,j,k
+
+  }// end parallel region
+
 
 
 
@@ -653,6 +828,7 @@ int evolve_withvpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2]
     // Note that vpot2field bounds pstag and input prim as required since A_i doesn't exist everywhere
     // GODMARK: use of many globals: ok for now since evolve_withvpot() not used for any other purpose
     vpot2field(vpot,prim, pstag, unew, Bhat,F1,F2,F3,Atemp,uconstemp);
+
 
 
 #if(0)
@@ -1178,7 +1354,7 @@ int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, 
   int dir;
 
 
-  if(FLUXB==FLUXCTSTAG){
+  if(FLUXB==FLUXCTSTAG && pstag!=NULL && p!=NULL){
     // first copy over non-field quantities so treats 4-velocity part without failure even if don't need result
     DIMENLOOP(dir){
       PLOOPNOB1(pl) primface[dir][pl]=MACP0A1(p,i,j,k,pl);

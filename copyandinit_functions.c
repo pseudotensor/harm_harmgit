@@ -194,6 +194,13 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B1
       pl=B1;
+      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
       ie=loop[FIE]+SHIFT1; // always shift - override
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
 
@@ -207,6 +214,13 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B2
       pl=B2;
+      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
       je=loop[FJE]+SHIFT2;
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
 
@@ -221,6 +235,13 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B3
       pl=B3;
+      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
       ke=loop[FKE]+SHIFT3;
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
 

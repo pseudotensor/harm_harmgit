@@ -292,7 +292,7 @@ int user1_init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTY
 
 
 
-int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR],
+int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR],
 			  FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int whichvel, whichcoord;
@@ -301,7 +301,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   FTYPE r,th,X[NDIM],V[NDIM];
   int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int init_dsandvels(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
+  int init_dsandvels(int inittype, int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int init_atmosphere(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *pr);
   int pl,pliter;
 
@@ -333,11 +333,12 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      initreturn=init_dsandvels(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers
+      initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers
       if(initreturn>0){
 	FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
       }
       else MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, pstag),"init.c:init_primitives","transform_primitive_vB()",0);
+
     }
   }// end parallel region
 
@@ -382,11 +383,11 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 	  if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
 	    FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
 	  }
+
 	}
       }// end 3D LOOP
     }// end parallel region
   }
-
 
 
 
@@ -403,6 +404,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
 
+
   /////////////////////////////
   //
   // Fixup and Bound variables since some primitive quantities may have changed
@@ -416,10 +418,15 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
+
   if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
+
+
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
+
+
 
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
@@ -441,12 +448,13 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 
 
 
-
 #if(ANALYTICMEMORY)
   // copy over initial solution as analytic solution
   // NEEDED FOR BOUND in case uses panalytic
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
+
+
 
   /////////////////////////////
   //
@@ -465,6 +473,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 #endif
 
   if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+
 
 
 

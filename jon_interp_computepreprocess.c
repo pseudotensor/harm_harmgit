@@ -6,7 +6,7 @@
 static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
 static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
 static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);
-static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM]);
+static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
 static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTYPE (*lambdacoord)[NDIM]);
 static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
@@ -22,6 +22,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
   FTYPE vec[NDIM],vecv[NDIM],vecB[NDIM];
   FTYPE vecortho[NDIM];
   int jj;
+  int dir;
   int iter;
   // fastest index is most-right element
   int ti[NDIM];
@@ -33,7 +34,17 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
   FTYPE gdet;
   FTYPE ck[NDIM];
   FTYPE dxdxp[NDIM][NDIM];
-  //
+  struct of_geom geom;
+  FTYPE s_fvar;
+  FTYPE *fvar=&s_fvar;
+  extern int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM]); // in phys.tools.c
+  extern void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
+
+
+
+  // if good memory space in finaloutput, then use it
+  if(finaloutput!=NULL) fvar=finaloutput;
+  
 
   // no need to recompute X,V if reading in gdump
   // assumes input data at CENT
@@ -41,80 +52,280 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
   // use bl_coord()
   //bl_coord(X,V);
 
+
+
+
   // perform local transformation of tensor objects prior to spatial interpolation
   if(outputvartypelocal<=10){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
-    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
-
-    // for debug:
-    tiglobal[0]=ti[0];
-    tiglobal[1]=ti[1];
-    tiglobal[2]=ti[2];
-    tiglobal[3]=ti[3];
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
 
-    for(iter=0;iter<num4vectors;iter++){
-      // convert coordinate basis vector compnents to single orthonormal basis component desired
-      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
 
-      // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
-      vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
-
-      if(immediateoutput){
-	// immediately output result
-	if(sizeof(FTYPE)==sizeof(double)){
-	  DLOOPA(jj) fprintf(stdout,"%22.16g ",vecortho[jj]);
-	}
-	else if(sizeof(FTYPE)==sizeof(float)){
-	  DLOOPA(jj) fprintf(stdout,"%15.7g ",vecortho[jj]);
-	}
-      }
-      else{
-	finaloutput[iter]=vecortho[vectorcomponent];
-      }
-
-
-      // DEBUG
-      //      if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==1){
-      //      	DLOOPA(jj) dualfprintf(fail_file,"jj=%d vec=%21.15g  vecortho=%21.15g\n",jj,vec[jj],vecortho[jj]);
-      //      	dualfprintf(fail_file,"vc=%d result=%21.15g\n",vectorcomponent,vecortho[vectorcomponent]);
-      //      }
-
+    // convert coordinate basis vector compnents to single orthonormal basis component desired
+    fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+    
+    // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
+    vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
+    
+    if(immediateoutput==1){ // then immediately write to output
+      DLOOPA(jj) writeelement(stdout,vecortho[jj]);
     }
-    if(immediateoutput){
-      // output return after entire row is done
-      fprintf(stdout,"\n") ;
+    else{ // else store (can only store 1 of them)
+      fvar[0]=vecortho[vectorcomponent];
     }
+
   }
   else if(outputvartypelocal==11){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
-    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
-    for(iter=0;iter<num4vectors;iter++){
-      // input uu0 vu1 vu2 vu3
-      fscanf(stdin,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
-      SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
-      // input B^1 B^2 B^3
-      vecB[0]=0.0;
-      fscanf(stdin,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
-      // compute
-      vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vecv, vecB, &finaloutput[iter]);
+    // input uu0 vu1 vu2 vu3
+    fscanf(stdin,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
+    SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
+    // input B^1 B^2 B^3
+    vecB[0]=0.0;
+    fscanf(stdin,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
+    // compute
+    vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vecv, vecB, &fvar[0]);
+    
+    if(immediateoutput==1){ // then immediately write to output
+      DLOOPA(jj) writeelement(stdout,fvar[0]);
     }
+    // already stored in fvar[0]
+
   }
   else if(outputvartypelocal==12){
 
     // first get gdump data (only once per call to compute_preprocess() !!)
-    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp);
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
-    for(iter=0;iter<num4vectors;iter++){
-      // input
-      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
-      // compute
-      vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vec, &finaloutput[iter]);
+    // input
+    fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+    // compute
+    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vec, &fvar[0]);
+    
+    if(immediateoutput==1){ // then immediately write to output
+      DLOOPA(jj) writeelement(stdout,fvar[0]);
     }
+    // already stored in fvar[0]
+
   }
+  else if(outputvartypelocal==13){
+
+    if(immediateoutput!=1){
+      dualfprintf(fail_file,"outputvartype==%d should have immediateoutput==1\n",outputvartypelocal);
+      exit(1);
+    }
+
+    // assumes input is field line file format of:
+    // rho0, u, -u_t, -T^r_t/(rho0 u^r), u^t, v^r, v^\theta, v^\phi, B^r, B^\theta, B^\phi
+
+    // compute Full Diag
+
+    // assume always immediateoutput==1 since many quantities and faster/cleaner to first generate all quantities (per grid point) and then do interpolation, integration, or averaging later since then don't have to process gdump or compute many orthonormal conversions.
+
+
+    FTYPE pr[NPR],vcon[NDIM],negud0,muconst,uu0;
+    FTYPE dFuu[NDIM][NDIM];
+    FTYPE Tud[NDIM][NDIM];
+    FTYPE TudMA[NDIM][NDIM];
+    FTYPE TudEM[NDIM][NDIM];
+    FTYPE uortho[NDIM], bortho[NDIM], Bortho[NDIM];
+    int concovtype;
+    struct of_state q;
+    //    struct of_geom geom;
+    FTYPE ucov[NDIM],ucon[NDIM];
+    FTYPE bcon[NDIM],bcov[NDIM],bsq;
+    FTYPE Bcon[NDIM],Bcov[NDIM];
+    FTYPE Tit[NDIM];
+    FTYPE Titsq,dPdw;
+    int kk;
+    FTYPE flux[NDIM];
+    FTYPE fluxdiagpress[NDIM];
+
+
+
+    // first get gdump data (only once per call to compute_preprocess() !!)
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+  
+
+    // scan-in FIELDLINE content
+    fscanf(stdin,SCANFIELDLINE,&pr[RHO],&pr[UU],&negud0,&muconst,&uu0,&pr[U1],&pr[U2],&pr[U3],&pr[B1],&pr[B2],&pr[B3]);
+
+
+    ////////////////////
+    //
+    //  Assignments
+    //
+    ////////////////////
+
+    // fix u^i to be lab-frame 4-velocity
+    vcon[TT]=1.0;
+    vcon[RR]=pr[U1];
+    vcon[TH]=pr[U2];
+    vcon[PH]=pr[U3];
+
+    ucon[TT]=vcon[TT]*uu0;
+    ucon[RR]=vcon[RR]*uu0;
+    ucon[TH]=vcon[TH]*uu0;
+    ucon[PH]=vcon[PH]*uu0;
+
+    // make primitive u^i
+    pr[U1]=ucon[RR];
+    pr[U2]=ucon[TH];
+    pr[U3]=ucon[PH];
+
+    Bcon[TT]=0;
+    Bcon[RR]=pr[B1];
+    Bcon[TH]=pr[B2];
+    Bcon[PH]=pr[B3];
+
+    ////////////////////
+    //
+    //  PRECOMPUTATIONS
+    //
+    ////////////////////
+
+    // compute lower components
+    DLOOPA(jj) ucov[jj]=0.0;
+    DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[GIND(jj,kk)];
+
+    // compute b^\mu[pr,ucon,ucov]
+    bcon_calc(pr, ucon, ucov, bcon);
+
+    // compute b_\mu
+    DLOOPA(jj) bcov[jj]=0.0;
+    DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[GIND(jj,kk)];
+
+    // compute "fake" B_\mu (i.e. didn't lower upper t in *F^{t\mu} )
+    DLOOPA(jj) Bcov[jj]=0.0;
+    DLOOP(jj,kk) Bcov[jj] += Bcon[kk]*gcov[GIND(jj,kk)];
+
+    // compute b^2
+    bsq = dot(bcon,bcov);
+
+
+    ////////////////////
+    //
+    //  STRUCTURE Assignments (must be consistent with global.structs.h or at least how structures used in phys.tools.c as some functions pulled from there are used below)
+    //
+    ////////////////////
+
+    // assign of_state structure
+    DLOOPA(jj){
+      q.ucon[jj]=ucon[jj];
+      q.ucov[jj]=ucov[jj];
+      q.bcon[jj]=bcon[jj];
+      q.bcov[jj]=bcov[jj];
+    }
+    q.pressure=(gam-1)*pr[UU]; // assumes ideal gas
+    q.bsq=bsq;
+    q.entropy=0; // ignore
+    q.ifremoverestplus1ud0elseud0=1.0+ucov[TT];
+#if(MERGEDC2EA2CMETHOD)
+    // for merged method and stored by compute_and_store_???() functions
+    q.gdet=gdet;
+#if(WHICHEOM!=WITHGDET)
+    for(jj=0;jj<NPR;jj++) eomfunc[jj]=gdet;
+#endif
+    for(jj=0;jj<NPR;jj++) q.prim[jj]=pr[jj];
+    DLOOPA(jj) q.Blower[jj]=Bcov[jj];
+    DLOOPA(jj) q.vcon[jj]=vcon[jj];
+    DLOOPA(jj) q.gdetBcon[jj]=gdet*Bcon[jj];
+    q.overut=1.0/ucon[TT];
+#endif
+
+
+
+    ////////////////////
+    //
+    //  COMPUTATIONS
+    //
+    ////////////////////
+
+
+
+    // T^p_t[EM] = b^2 u^p u_t  - b^p b_t
+    // EM poloidal flux only
+    DLOOPA(jj){
+      if(jj==1 || jj==2){
+	Tit[jj]=bsq*ucon[jj]*ucov[0] - bcon[jj]*bcov[0] + delta(jj,0)*(bsq*0.5);
+      }
+      else Tit[jj]=0.0;
+    }
+    
+    // |T^p_t|
+    Titsq = 0.0;
+    DLOOP(jj,kk) Titsq+=Tit[jj]*Tit[kk]*gcov[GIND(jj,kk)];
+    
+    // dP/d\omega = \detg T^p_t[EM]/sin(\theta)
+    dPdw=sqrt(fabs(Titsq))*fabs(gdet/sin(V[2]));
+
+
+    // TODO  GODMARK: in phys.tools.c, may need to split it or something since too many dependencies
+    // dF^{\mu\nu}
+    //    Mcon_calc(pr,&q,dFuu); // used to get *true Bortho* and Omega_F, etc.
+    //    mhd_calc_ma(pr, TT, &geom, &q, &flux[UU], &fluxdiagpress[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
+
+
+
+    // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
+    concovtype=1; // means inputting u^\mu
+    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, ucon, uortho);
+    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, bcon, bortho);
+    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, Bcon, Bortho);
+
+
+    ////////////////////
+    //
+    //  CONSTRUCT ACTUAL THINGS TO WRITE TO FILE
+    //
+    ////////////////////
+
+    FTYPE dMdot,dEdot,dLdot,TrtMA,TrtEM,TrphiMAa,TrphiEM;
+    FTYPE dPsir, dPsitheta;
+    FTYPE Thatrphi,pg,pb,dAp,dAL;
+    FTYPE dhor;
+    FTYPE omegaf;
+    FTYPE dLum;
+    FTYPE Deltahattheta,Omega,vahat;
+    FTYPE rho0; // and -u_t u^t
+    FTYPE gdetB1,gdetB2; // to compute A_\phi // and B^ihat v^ihat
+    FTYPE Tphinu[NDIM]; // force-related term that eventually is differenced in x3-direction
+    FTYPE term1[NDIM],term2[NDIM],term3[NDIM],term4[NDIM]; // connection-related terms
+    
+      
+    dMdot=gdet*pr[RHO]*pr[U1]*dX[2]*dX[3];
+
+
+
+
+    ////////////////////
+    //
+    //  OUTPUT
+    //
+    ////////////////////
+
+
+    DLOOPA(jj) writeelement(stdout,vecortho[jj]);
+
+
+
+  }
+
+
+
+
+
+
+  if(immediateoutput==1){
+    // output return after entire row is done
+    fprintf(stdout,"\n") ;
+  }
+
 
 }
 
@@ -145,7 +356,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
 // coordinate transform of vector and get single component of result
 //static void vec2vecortho(FILE *gdumpfile, int oldgridtype, int newgridtype, int i, int j, int k, FTYPE *vec, FTYPE *vecortho)
-static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
+// concovtype: 1 = inputting u^\mu   2 = inputting u_\mu
+static void vec2vecortho(int concovtype, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
 {
   FTYPE lambdacoord[NDIM][NDIM];
   int jj,kk;
@@ -194,14 +406,14 @@ static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[
 
   DLOOPA(jj) tempcomp[jj]=0.0;
 
-  if(outputvartypelocal==1){
+  if(concovtype==1){
     // transform to orthonormal basis for contravariant vector in V coordinates
     DLOOP(jj,kk){
       //    tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
       tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
     }
   }
-  else if(outputvartypelocal==2){
+  else if(concovtype==2){
     // transform to orthonormal basis for covariant vector in V coordinates (GODMARK: unsure about tetrcon[kk][jj] vs. tetrcon[jj][kk])
     DLOOP(jj,kk){
       tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
@@ -296,7 +508,7 @@ static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[
 
 
 
-// input coordinate basis v^i and output coordinate basis v_{vectorcomponent}
+// input PRIMECOORD coordinate basis v^i and output MCOORD coordinate basis v_{vectorcomponent}
 // so no transformation to orthonormal basis or even to Cartesian coordaintes
 static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout)
 {
@@ -462,7 +674,7 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
 // assumed to be used in same order as data and gdump file as looped over in this code
 // and of course only can be done once per data point
 // fastest index is most-right element
-static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM])
+static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom)
 {
   int jj,kk,ll,pp;
 
@@ -476,6 +688,45 @@ static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*
   fscanf(in,SCANARG,gdet); // gdet already pointer
   DLOOPA(jj) fscanf(in,SCANARG,&ck[jj]);
   DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&dxdxp[jj][kk]);
+
+
+  // for debug:
+  tiglobal[0]=ti[0];
+  tiglobal[1]=ti[1];
+  tiglobal[2]=ti[2];
+  tiglobal[3]=ti[3];
+
+
+
+#if(0) // INPROGRESS
+
+
+  // assign of_geom structure
+
+  // dummy space for gset() version
+  FTYPE gengcov[SYMMATRIXNDIM];
+  FTYPE gengcovpert[NDIM];
+  FTYPE alphalapse;
+  FTYPE betasqoalphasq;
+  FTYPE beta[NDIM];
+  FTYPE gengcon[SYMMATRIXNDIM];
+
+  // bit faster since not all values always used
+  FTYPE *gcov;
+  FTYPE *gcon;
+  FTYPE *gcovpert;
+
+  FTYPE gdet,igdetnosing;
+#if(GDETVOLDIFF)
+  FTYPE gdetvol;
+#endif
+#if(WHICHEOM!=WITHGDET)
+  FTYPE eomfunc[NPR],ieomfuncnosing[NPR];
+#endif
+  int i,j,k,p;
+
+
+#endif
 
 
 

@@ -1,0 +1,423 @@
+////////////////////////////////////
+//
+// Performance Notes
+//
+////////////////////////////////////
+
+// 0) Consider file writing and other bottlenecks
+//
+// PRODUCTION==0 vs. 1 changes performance by about 20% with debugfail==2 set
+// E.g.: Type of problem can change performance.  For example, same 64x32 model with R0=0 Rout=40 gets 70K ZCPS while R0=-8.3 and Rout=1E10 gets 62K ZCPS.  Both have grid sectioning.  The change in performance here occurs because one has more failures than the other.  Set PRODUCTION 0 allows no file writing of those failures and gets that 62K ZCPS run back to 70K.
+//
+// DODIAGS==0 or 1 can change things alot due to per-substep diagnostics being enabled.
+// E.g.: File writing in general should be stretched in period to avoid slowing down code.  File writing can severely slow things down if too frequent.  Consider ROMIO and Jon's non-blocking file writing.
+// E.g.: Same model described above w.r.t. PRODUCTION=0/1 goes to 80K ZCPS with DODIAGS=0.  Ensure that ENERDUMPTYPE (and image/etc. creation) does not have too small a period.
+//
+//
+//
+//
+// 1) Consider cache use.
+//
+// For example, on 4 core system (Intel Core2), found that 512x32 model runs at 62K ZCPS while otherwise similar 64x32 model runs at 64K ZCPS.  As below states, could fit about 100 zones of data into cache, and having N1=64 (or N1M=72) allows entire line of data to fit into cache.  This reduces cache misses.
+//
+// On the other hand, if doing grid sectioning with large number of radial zones (e.g. 1024), then optimal to have entire N1M line on one node.  This will necessarily cause additional cache misses, but otherwise nodes won't be used and the performance drop is factors of 2X or more instead of 5% as above.
+//
+//
+// 2) Consider each system's cache.
+//
+// e.g. TACC Ranger uses 4 sockets of Barcelona CPU:
+// http://images.anandtech.com/reviews/cpu/amd/phenom2/barcelona-block-diagram.jpg
+//  Each core has 64KB private L1 cache (32K L1I and 32K L1D) (I=insruction D=data)
+//  Each core has *private* 512KB L2 cache.  This is nice compared to the shared L2 cache of my ki-rh42, even if that cache is 2X larger.
+//  Each Socket of 4 cores has *shared* 2MB L3 cache.
+//  Each node has 4 sockets each with 4 cores = 16 cores/node
+//  Node has 16 cores with 32GB/node
+//  The memory bus runs at 533Mhz with 2 channels total for *all* 16 cores!
+// So staying in cache is *critical* since otherwise all 16 cores compete for 2 channels of memory.
+// If using OpenMP, then one avoids otherwise MPI-excessive boundary cells, so good. [So this really makes OpenMP save on memory!!! Very important!]
+// Can't fit entire problem in cache.  In reality, need to know how much memory use over longer periods of time.  Perhaps think per-line.  Then only need to ensure that can do a single line.  Then can do up to about N1=160 total on those 16 cores before cache-misses will occur.
+//
+// TACC Lonestar has 4MB L2 cache with 2.66Ghz Intel Xeon 5150.  TACC page calls it "smart" L2 cache.
+// Appears to have private 2MB per core.
+// http://www-dr.cps.intel.com/products/processor/xeon5000/specifications.htm?iid=products_xeon5000+tab_specs
+// http://services.tacc.utexas.edu/index.php/lonestar-user-guide
+// http://processorfinder.intel.com/List.aspx?ProcFam=528&sSpec=&OrdCode=
+// http://processorfinder.intel.com/details.aspx?sSpec=SL9RU
+// http://www.linuxdevices.com/files/misc/intel_5100.jpg
+// http://www.hardwarezone.com/img/data/articles/2006/2002/Bensley-block-diagram-2.jpg
+//
+//
+//
+//
+//
+// Teragrid LONI QueenBee (Queen Bee):
+// http://www.loni.org/systems/
+// http://www.loni.org/teragrid/users_guide.php
+// 1) Connect to (e.g.) abe: ssh jmckinne@abe.ncsa.uiuc.edu
+// 2) Setup proxy: myproxy-logon -l jmckinne  -s myproxy.teragrid.org
+// 3) Use NCSA Portal Password
+// 4) Connect to QB: gsissh login1-qb.loni-lsu.teragrid.org
+
+// QUEENBEE: Must set GETTIMEOFDAYPROBLEM 1
+
+//
+//
+// Teragrid NCSA Abe:
+// http://www.teragrid.org/userinfo/hardware/resources.php?select=single&id=50&PHPSESSID=0
+// http://www.dell.com/content/products/productdetails.aspx/pedge_1955?c=us&l=en&s=corp
+// 5300 quad-core Xeon 5000 series
+// 2*4MB L2 cache (shared like ki-rh42).
+//
+// tgusage -u jmckinne
+// tgusage -a TG-AST080026N
+// tgusage -a TG-AST080025N
+//
+//
+// Intel Core2 has same(?) as Barcelona but no L3 cache.
+// JCM's system is: Intel(R) Core(TM)2 Extreme CPU Q6800  @ 2.93GHz stepping 0b
+// Appears to have 2x4MB=8MB (shared) L2 cache and 32K/32K D/I L1 caches
+// This 8MB of L2 cache is (however) shared so that 2 cores share 4MB and the other 2 shared 4MB.  So unless tune which core gets which process, each use of a new core slows down the L2 cache bandwidth by roughly 2X.  May be consistent with performance results below.
+// So 2X cache compared to Ranger.
+// http://www.intel.com/design/processor/datashts/316852.htm
+//
+// Intel Core i7:
+// http://en.wikipedia.org/wiki/Intel_Core_3
+// Note it has 32KB L1 D cache per core
+// 256KB L2 cache (I+D) per core
+// 8MB L3 cache (I+D) shared between *all* cores.
+// Tri-channel memory
+//
+//
+//
+///////////////////////////////////////////////////////
+// Testing memory contention and whether sit entirely within L2 cache on JCM's system without dual-channel access currently (so strong test of whether run fits in L2 cache or not):
+//
+// Multiple runs (performance for each core):
+//               #Cores:        1     2     3       4
+// MAXBND==2 DONOR    64x32:   60K                 27K-30K
+// MAXBND==4 PARALINE 64x32:   50K   45K           24K-27K
+// MAXNBD==2 DONOR    4x2:     30K   30K   30K     30K       [so finally fit entirely within L2 cache]
+// MAXNBD==4 PARALINE 4x2:     18K   18K   18K     18K       [so finally fit entirely within L2 cache]
+// MAXBND==4 PARALINE 4x8:     30K   29.5K  29.3K  29K       [so finally fit entirely within L2 cache]
+// MAXBND==4 PARALINE 16x8:    50K   48K    48K    48K       [so kinda hits memory]
+// MAXBND==4 PARALINE 32x16:   56K   55K    36K    31K       [so 32x16*(2cores) is ok in cache, but not more (i.e. not this run with 32*16*3 or 32*16*4)]
+// This suggests an optimal OpenMP choice is N1*N2*N3=32*32 per *node* to avoid memory contention and stay within L2 cache.  For elongated cells this is 512x2 in 2D or 256x2x2 in 3D.  But small cells leads to inefficiency in extra computations near boundary cells.  So probably want 256x4 in 2D and 64x4x4 in 3D.  On Ranger have to take (1/2) of this since L2+L3 is half the size!  So on Ranger use 128x4 in 2D and 32x4x4 in 3D with fit into L2+L3 cache.
+//
+//
+// For above, probably good 4 core performance because staying in *L1* cache mostly, not L2.  This is consistent with below results.
+// Then hit is because ki-rh42's 4 cores feed off 2 L2 cache's so that bandwidth is half when 3-4 cores are running.
+//
+///////////////////////////////////////////////////////
+//
+//
+///////////////////////////////////////////////////////
+// New code with even more optimizations (esp. fluxct and no eomfunc[NPR] data and now also reduction of symmetric matrices):
+//
+// Multiple runs (performance for each core):
+//               #Cores:        1     2     3       4
+// MAXBND==4 PARALINE 16x8:    51K   51K    51K    50K       [4 core perf not helped with symm. matrix reductions]
+// MAXBND==4 PARALINE 32x16:   60K   60K    54K    50K       [so cache misses not as bad with new code. Reducing symmetric matrices increased performance at 4 cores by 25%, so good.]
+// MAXBND==4 PARALINE 64x16:   60K   59K    48K    36K       [sym matrix fix increased perf for 4 cores by 25%]
+//
+//
+// OpenMP (i.e. USEOPENMP==1 in makehead.inc) tests:
+//
+//               #Cores:        1     2     3       4
+// MAXBND==4 PARALINE 16x8:    37K   48K   58K     66K       [horrendous 4 core performance -- 10% improvement with minchunk of 10 or static schedule compared to guided.  Didn't help with 1 core overhead.  Reducing memory overhead didn't help, suggesting it's all OpenMP overhead!]
+// MAXBND==4 PARALINE 64x16:   48K   78K   88K     99K       [Unsure what's memory vs. OpenMP overhead, but big hit compared to above runs!  Reducing memory overhead didn't help at all for 4 cores!  Suggests all OpenMP overhead!  Removed as much of private() [all essentialy] and copyin() [as much as I could] and little change! Even ALLOWKAZEOS is off! -- Must be EOS ptr functions?  Just stupid addresses!]
+// MAXBND==4 PARALINE 32x16:   45K   69K   83K     92K
+//
+// Even with memory contention, 4 cores here should get about 4*40K=160K or 4*30K=120K.  Appears to be 20%-25% overhead per core no matter how many (even 1) cores.
+//
+// Also appears to be extreme overhead no matter what when doing <200 or so iterations.  Requires per node memory be (say) 64x16 or larger.  But L2 cache requires 64*16*2 or smaller.  So seems 64x16 - 64x32 (or 32x32) is sweet spot for minimizing OpenMP overhead and L2 cache misses.
+//
+//
+// To test OpenMP overhead, I commented out all #pragma's but left -openmp during compilation and checked 1 core:
+//
+//               #Cores:        1     2     3       4
+// MAXBND==4 PARALINE 64x16:   61K
+//
+// So not -openmp itself, but #pragma's cause the problem.
+//
+//
+// Now I tried only commenting out inner loop pragmas:
+//
+//               #Cores:        1     2     3       4
+// MAXBND==4 PARALINE 64x16:   46K
+//
+// So not -openmp or #pragma omp for, but #pragma omp parallel is problem.
+//
+//
+// Now I tried commenting out loops and choosing OPENMPGLOBALPRIVATE (etc.) to be nothing (can do this since globals preserved on master):
+// Also commented out #pragma omp threadprivate....
+// And commented out parallel copyin( -> //copyin(
+//
+//               #Cores:        1     2     3       4
+// MAXBND==4 PARALINE 64x16:   61K
+//
+// So problem appears to be copyin() .... with same 64x16 test:
+//
+// TEST1CORE: without copyin(EOS ptr's) reach 52K for 1 core, still overhead?
+// TEST1CORE: without copyin(EOS ptrs' + all loop stuff except ploop): reach 52K : still overhead!
+// TEST1CORE: without copyin(EOS ptrs' + all loop stuff): reach 57K : finally little overhead!
+//
+// NEWCODE1: with all required things as thread private and copyin() [had too many things for loops]: 51K
+// NEWCODE2: with EOS ptrs totally fixed (outside parallel and not thread private anymore): 54K-55K for 1 core [good!] 102K or up to 112K for 4 cores [still bad]
+// NEWCODE3: with no {ijk}curr, whichuconcalc, etc. that required extensive code adjustments for the EOS-related stuff to force modularity: 57K for 1 core and 104K for 4 cores : So quite little OpenMP overhead now for 1 core, but still there for 4 cores.
+//
+// So 1 core overhead is quite small.  Now unsure why 4 core bad since not memory limited since changing cores doesn't change problem size.
+//
+//
+// Installed all memory into ki-rh42 (8GB total) so uses dual-channel memory access:
+// 1) OpenMP 4 cores went from 86K -> 107K for 512x32 testreality problem.
+// 2) MPI 4 cores (no grid sectioning so uses all cores) went from 90K -> 110K
+// So despite all Jon's hard work with OpenMP, MPI still faster?  Can't be large overhead with OpenMP at 512x32.
+// Overall, performance is nearly as expected for simulation that doesn't fit entirely into L2 cache that would be roughly 31K/core * 4 = 120K. 
+//
+//
+//  
+//                   #Cores:        1     2     3       4
+// MPI MAXBND==4 PARALINE 64x16:                       72K (64x16 total with 32x8 per core of 4 cores) -- only runs at 40% of core per process!
+// OMP MAXBND==4 PARALINE 64x16:                       130K (only a bit over 2X expected performance from 57K/core from NEWCODE3.  Not sure what's limiting since should be all in L2 cache!)
+//
+// Clearly for small problem sizes per core, OpenMP is much more efficient than MPI.  For large problem sizes per core (e.g. 256x16 per core for 512x32 total), MPI is just slightly more efficient.  Thus, in general one is benefited by using OpenMP.  Unclear how things scale with many more processores or cores.
+//
+// Still problem is that efficiency from 1 core to 4 cores is 50% for either case, and again not because of L2 cache [Well, ki-rh42's L2 cache is effectively shared, so may explain it.]
+//
+// Suggests that, for Ranger at least, should try to fit into private 512KB L2 cache.  Can't use above tests to conclude what size this is for ki-rh42.  Can only run 2 cores and see when adding 2nd core slows down (assumes each core uses essentially its own nearby cache).  Once 2nd core slows things down significantly, then must have gone to memory.
+//
+// 2CORE ki-rh42 test (latest NEWCOD3) for fitting into L2 cache:
+// Multiple runs (performance for each core, OpenMP disabled):
+//               #Cores:        1     2    3     4
+// MAXBND==4 PARALINE  64x16:   63K   63K
+// MAXBND==4 PARALINE  64x32:   61K   60K
+// MAXBND==4 PARALINE  64x64:   56K   58K
+// MAXBND==4 PARALINE 128x128:  61K   57K             [Starting to hit memory]
+// MAXBND==4 PARALINE 256x256:  60K   56K 50K    40K  [Starting to hit memory]
+//
+//
+// OpenMP:
+//               #Cores:        1     2    3     4
+// MAXBND==4 PARALINE 256x256: 59K   95K  114K  116K  [Consistent with (roughly) 2 cores sharing 4MB of L2 cache, so with 3-4 cores goes much slower per core due to cache contention.]
+// MAXBND==4 PARALINE  64x16:  59K   99K  122K  128K  ["" -- roughly]
+// MAXBND==4 PARALINE  32x16:  59K   90K  115K  119K  [Linux probably doesn't schedule processes based upon L2 cache association with cores, so can flip around and almost as bad as all 4 cores sharing L2 cache.]
+//
+//
+// Perf with STAG+DISS+DISSVSR+LUMVSR    = 30K -- so about 2X slower.
+// Perf with STAG+DISS+DISSVSR+LUMVSR+3D = 11K -- so about 6X slower.
+//
+// TODO:
+// 1) if limiting interpolation (e.g. for stag or rescale in stag), then pass that fact rather than using global npr2interp.  Ensure all interior loops use that passed data rather than globals.
+// 2) For KAZ stuff, probably fine.
+//
+//
+// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTTOTH and DODISS=DODISSVSR=DOLUMVSR=0:
+//
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+//
+// 64x64:      1       1             1        1x1x1       35K  100%
+// 64x64:      1       4             4        2x2x1      403K   72%
+// 64x64:      1       1            16        4x4x1      407K   73%
+// 64x64:      1      16             1        1x1x1       71K   13%
+// 64x64:      1       8             2        2x1x1      215K   39%
+// 64x64:      2       1            32        8x4x1      940K   84%
+// 64x64:      2       4             8        4x2x1      950K   85%
+// 64x64:      2       1            64        8x8x1     1793K   80%
+// 64x64:      2       4            16        4x4x1     1862K   83%
+// 64x64:      2       1           256        16x16x1   7098K   80%   
+// 64x64:      2       4           64         8x8x1     6766K   76%
+
+//
+// 64x16:      1       1             1        1x1x1       35K
+// 64x16:      1       4             4        2x2x1      406K   72%
+// 64x16:      1       1            16        4x4x1      471K   84%
+// 64x16:      1      16             1        1x1x1       55K   10%
+// 64x16:      1       8             2        2x1x1      191K   34%
+// 64x16:      2       1            32        8x4x1      907K   81%
+// 64x16:      2       4             8        4x2x1      777K   70% [repeated run got same result!?]
+// 64x16:      2       1            64        8x8x1     1730K   77%
+// 64x16:      2       4            16        4x4x1     1488K   66%
+//
+// So each Ranger core is almost 2X slower than ki-rh42.  That's AMD vs. Intel for you!
+// So clearly bad to cross on PCI bus with memory as OpenMP has to when more than 4 threads with 1 thread per core.
+// MPI seems to be doing fine at 64^2 on one node.
+// Unclear why OpenMP is actually slower even for 64x16, which worked better on ki-rh42 by 2X!
+//
+//
+//
+// Performance on Ranger (All MAXBND==4 PARALINE) for 1000 steps with DODIAGS=0 and PRODUCTION 1 and TIMEORDER=2 and FLUXB=FLUXCTSTAG and DODISS=DODISSVSR=DOLUMVSR=1:
+// Default: module unload mvapich2 pgi ; module load mvapich2 intel mkl
+//
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+//
+// 64x32x8:    1       1             1        1x1x1        6K
+// 64x32x32:   1       1             1        1x1x1        8.7K        [to be used as reference for efficiency for 64x32x32 per MPI task runs]
+// 64x32x8:    4       4             4        2x2x1       41K   43%
+// 64x32x8:   16       1            16        4x4x1       84K   88%
+// 64x32x8:   64       4            64        8x8x1      617K   40%
+// 64x32x8:   64       4            64        8x8x1      624K   41%  [used purely static schedule, no user chunking]
+// 128x64x8:  64       4            64        8x8x1      713K   46%  [used purely static schedule, no user chunking]
+// 64x32x32:  64       4            64        8x8x1      884K   40%-57%  [used purely static schedule, no user chunking] [smaller % is when using correct reference point]
+// 64x32x32:  64       4            64        8x8x1      896K   40%-58%  [Changed to mvapich/1.0.1 during compile and in batch script]
+// 64x32x32:  64       4            64        8x8x1      888K   39%-58%  [Changed to openmpi/1.3 during compile and in batch script]
+// 64x32x8:  256       1           256        8x8x4     1278K   83%
+//
+//
+// On ki-rh42 with new code:
+// N1xN2    #NODES  #OPENMP/task  #MPItasks  ncpux?      PERF   Eff
+// 64x32x8:    1       1             1        1x1x1       17K
+//
+// From 11K -> 17K -- not that big a difference after a day of pain.
+// 
+//
+// On Ranger: 4x4x4 per CPU with PARALINE+STAG+DISS+LUM (but R0=0 and Rout=10) on 2048 processors and 16x16x8 for ncpux?: late-time with 54K ZCPS with average of 10% fractional diagnostics
+//
+//
+//FULLSTAG=UNFUDDLE,STAG, RK2, DODISS, currents, entropy evolution, etc.etc.
+//HALFSTAG=UNFUDDLE,STAG,RK2, no features
+//HALFTOTH=UNFUDDLE,Toth,RK2, no features
+//ORIG=Original very lean (and crashy-unstable) 2D HARM, which is on unfuddle as "origcode"
+//
+//system   tile_size   cores   zcps   efff         CODE-MODE
+//----------------------------------------------------------------------
+//3D:
+//lonestar  34x32x8    1        13K       1            FULLSTAG
+//lonestar  34x32x8    1        14K       1            HALFSTAG
+//lonestar  34x32x8    1        28K       1            HALFTOTH
+//lonestar  34x32x8    1024     9.5M      71%          FULLSTAG
+//lonestar  34x8x8     1        ?         1            FULLSTAG
+//lonestar  34x8x8     512      3.3M      >50%?        FULLSTAG
+//
+//ki-rh42    32x16x8    1         14K      1           FULLSTAG
+//ki-rh42    32x16x8    1         15K      1           HALFSTAG
+//ki-rh42    32x16x8    1         28K      1           HALFTOTH
+//ki-rh42    16x32x32   1         30K      1           HALFTOTH (Noble setup, who got 36K)
+//2D:
+//ki-rh42    64x64      1         57K       1          HALFTOTH
+//ki-rh42    256x256    1         61K       1          HALFTOTH
+//ki-rh42    64x64      1         80K       1          ORIG
+//ki-rh42    256x256    1         84K       1          ORIG
+//
+//
+//
+///////////////////////////////////////////////////////
+//
+//
+// http://www.intel.com/design/core2XE/documentation.htm
+//
+// 1) Best if arrays are powers of 2 so compiler bit shifts to index array
+// 2) Try to keep all memory local.  Cache-lines are grabbed along fastest memory portions, so avoid loops that skip over indices.  Also best to compact multiple arrays together into a single per-point array or structure if those arrays are accessed together since then avoids cache miss when having to grab other array that will be displaced due to its full size.
+// 3) Try to reduce memory footprint (total arrays, global or not) (and also reduce N1,N2,N3) so code+data fit into L2 cache (~4MB+)
+// 4) Try to ensure code+data at function level can fit into L1 cache (32K)
+// 5) Esp. for multi-core apps, want to fit MUCH of data into L2 cache
+//    This corresponds to (currently) using 25K/cell including BZones
+//    So (e.g.) N1M=N2M=12 (i.e. N1=N2=4) would fit completely into L2 cache of 4MB
+//    In reality, just need to fit code+data along several cache lines to avoid memory being accessed.  Code is currently directed in memory along N3, then N2, then N1.  So optimal for N3>>N2>>N1.
+//    Should allow N1=phi, N2=theta, N3=r in case want many r cells per core
+//    Instead of changing [N1M][N2M][N3M], should change from [i][j][k] -> [k][j][i] for example.  So macrofy this.
+//    Similar, but more involved than what Sasha does with his init's.
+//
+//
+//
+// http://www.eventhelix.com/RealtimeMantra/Basics/OptimizingCAndCPPCode.htm
+//
+// When arrays of structures are involved, the compiler performs a multiply by the structure size to perform the array indexing. If the structure size is a power of 2, an expensive multiply operation will be replaced by an inexpensive shift operation. Thus keeping structure sizes aligned to a power of 2 will improve performance in array indexing.
+//
+//
+//  3) Note that for very small N1,N2,N3, ZCPS will appear to drop even if internal performance is the same.  This is because (e.g.) if N1=32 and N2=2, then in 2-direction it's really like doing N2=4 because of the extra 2 zones cmputed for the surface flux.  In reality not all parts of the code do this, so affected performance is between 1-2X factor.
+//
+// 
+
+// Use pfmon (perfmon2) to look at cache and memory problems.
+// Note that perfmon2 by default only looks at a single thread, but shows OpenMP usage for that thread so still useful.  Also shows pow() and other library calls that gprof does not.
+// Note that perfmon2's HALT cycles may be larger for faster code in a repeated way (not just other procs eating time).  This doesn't mean if time without perfmon that will be slower.  For example, I found OpenMP'ing poledeath() led to more HALT cycles but clearly shorter wall time.
+//
+// See installperfstuff.txt and compilekernel.txt
+
+// Use gprof:
+// 1) Compile with -g -pg
+// 2) Run test code
+// 3) Run: gprof ./grmhd > prof.txt
+// 4) Run: gprof -l ./grmhd > profbyline.txt
+// 5) Look at prof.txt top and bottom portions to get idea of what is bottleneck
+// 6) Use profbyline.txt to see if issue with bottleneck happens to be single lines that can be improved.
+
+// In any case of pfmon or gprof, compile with -fno-inline (remove other inline commands) to see inlined functions expanded so can tell what interior functions take time within a function that was previously inlined.  Use __inline keyword in front of those functions one wants to see not inlined.
+
+// Note that while gprof seems to miss some functions (e.g. pow() in icc library), pfmon catches it as pow.L .  
+
+// One can use gprof-helper.c to have gprof measure multi-thread performance to see overhead.
+// See inside of gprof-helper.c:
+// do:
+// 1) gcc -shared -fPIC gprof-helper.c -o gprof-helper.so -lpthread -ldl
+// 2) (e.g.) LD_PRELOAD=./gprof-helper.so grmhd 4 1 1 1
+
+// Note that both gprof and pfmon or any performance timer will slow down code.  Remove -pg from makefile to avoid slowdown as well.
+
+//
+//
+//If not using the SIMD (single instruction, multiple data), or SSE type operations (which automatically are tried if using most compilers with optimizations), then roughly:
+//  CPU
+//  cycles | operation or procedure
+//---------------------------------------------
+//1          addition, subtraction, comparison
+//2          fabs
+//3          abs
+//4          multiplication
+//10         division, modulus
+//20         sqrt
+//50         exp
+//60         sin, cos, tan
+//80         asin, acos, atan
+//100        pow
+//10         Miss L1 cache
+//50         Miss L2 cache if L3 cache present
+//150        Branch misprediction
+//200        Miss L3 cache or miss L2 cache if no L3 cache present
+//200-1000+  Page fault
+//
+//Also, note that there are more than just math operations to worry about.  Another rule of thumb is that:
+//
+//page fault >>>>>> cache miss >> branch mistaken >> dependency chain >> non-sse-sqrt, division, and modulus > sse-sqrt etc. > everything else
+//
+//with ">>" being much greater than (as in 3-20 times).
+//
+//
+////////////////////
+//
+// To get size of code's array elements:
+//
+// Use program "nm" to list objects and symbols, or use objdump -axfhp
+// Use "nm -S --size-sort" to list by memory size
+
+// To check global symbol sizes use:
+//      nm -S --size-sort grmhd 
+// or:  objdump -axfhp grmhd
+//
+// e.g. to check total size used do:
+// 1) nm -S --size-sort grmhd | awk '{print $2}' > list.grmhd.sizes.txt
+// 2) total=0
+// 3) for fil in `cat list.grmhd.sizes.txt` ; do total=$(($total+0x$fil)) ; done
+// 4) echo $total
+// Now take that number and divide by N1M*N2M*N3M and that's approximate per zone bytes used  (must include boundary cells)
+//
+// Seems to be about 1250 elements/zone
+
+
+
+// Checking FLOPS with papi
+// http://www.cisl.ucar.edu/css/staff/rory/papi/flops.html
+//
+// 
+// with perfmon2 (pfmon):
+// pfmon --show-time -e FP_COMP_OPS_EXE ./grmhd.makedir.testpfmon_simple 1 1 1
+// Note that X87_OPS_RETIRED:any doesn't seem to make sense
+// Then take resulting number and divide by the number of seconds for running the code WITHOUT pfmon!  That's FLOPS.
+// I get about 580MFLOPS  per core \sim 0.6GFLOPS per core
+// Theoretical maximum is about 5.4GFLOPS, so I'm about 10% efficient with FPU
+// This shows that I'm memory limited
+//
+// When using new code with macrofied arrays and TIMEORDER==2 and RK2 but still with PARALINE, I get 0.7GFLOPS since more focused on inversion than memory accesses.
+//
+
+ 

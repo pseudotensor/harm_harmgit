@@ -205,7 +205,20 @@ int fluxcalc(int stage,
     ////////////////
     update_vpot(stage, pr, ptrfluxvec, fluxdt, vpot);
 
-  }
+    
+    //////////////////////////////
+    //
+    // User "boundary conditions" to modify A_i's before used
+    // They will be used in step_ch.c calling evolve_withvpot() that resets B^i using A_i
+    //
+    /////////////////////////////
+    adjust_fluxctstag_vpot(pr, Nvec, vpot);
+
+
+
+
+
+  }// end if staggered method where can update A_i directly
 
   
 
@@ -277,12 +290,22 @@ int fluxcalc(int stage,
 
     MYFUN(flux_ct(stage, pr, GLOBALPOINT(emf), GLOBALPOINT(vconemf), GLOBALPOINT(dq1), GLOBALPOINT(dq2), GLOBALPOINT(dq3), ptrfluxvec[1], ptrfluxvec[2], ptrfluxvec[3]),"step_ch.c:advance()", "flux_ct",1);
 
+
     // Note that user modifications to EMFs done inside flux_ct() before offset Flux computed
+
 
     ////////////////
     // TOTH CT method doesn't cleanly differentiate between point update and average update of A_i, so just stick to TOTH CT EMF itself
     ////////////////
     update_vpot(stage, pr, ptrfluxvec, fluxdt, vpot);
+
+    //////////////////////////////
+    //
+    // User "boundary conditions" to modify A_i's before used
+    // They will be used in step_ch.c calling evolve_withvpot() that resets B^i using A_i
+    //
+    /////////////////////////////
+    adjust_fluxcttoth_vpot(pr, Nvec, vpot);
 
   }
 
@@ -2110,7 +2133,7 @@ int check_plpr(int dir, int i, int j, int k, int idel, int jdel, int kdel, struc
 //
 //////////////////////////////////////
 
-// GODMARK: as Sasha mentions, for shifting stencil shouldn't just extrapolte value from non-local values, but use other slope and most LOCAL value to obtain extrapolation.
+// GODMARK: as Sasha mentions, for shifting stencil shouldn't just extrapolate value from non-local values, but use other slope and most LOCAL value to obtain extrapolation.
 
 void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *p2interp_l, FTYPE *p2interp_r)
 {
@@ -2121,8 +2144,20 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
   int locallim;
   int choose_limiter(int dir, int i, int j, int k, int pl);
 
-  //reshuffle dq's such that reconstruction within active zones does not use the boundary values
+
+  ////////////
+  //
+  // reshuffle dq's such that reconstruction within active zones does not use the boundary values
+  //
+  ////////////
   remapdq( dir, idel, jdel, kdel, i, j, k, p2interp, dq, pleft, pright, p2interp_l, p2interp_r);
+
+
+  ////////////
+  //
+  // Do interpolation
+  //
+  ////////////
   
   if((HORIZONSUPERFAST)&&((lim[dir]<PARA)&&(LIMADJUST==0))&&(dir==1)){
     // since this uses dq's to shift, must always have dq's everywhere.  Hence LIMADJUST==0 and lim<PARA must be true
@@ -2169,8 +2204,18 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
     }
   }
 
-  //for boundaries where grid cells are avoided: set outer interface primitives at the boundary equal to inner interface primitive at that boundary
+
+
+  //////////////
+  //
+  // for boundaries where grid cells are avoided: set outer interface primitives at the boundary equal to inner interface primitive at that boundary
+  // This function is what's used to force primitives on flux surfaces to be chosen as desired by user rather than interpolated by code
+  // This is useful (required) if want to properly and exactly define surface of an object where (e.g.) perfect conductivity and other specifications are desired.
+  //
+  //////////////
   remapplpr( dir, idel, jdel, kdel, i, j, k, p2interp, dq, pleft, pright, p2interp_l, p2interp_r);
+
+
 }
 
 

@@ -2,8 +2,10 @@
 
 #include "rancdefs.h"
 
+int doinginterpolation;
 int oldparse;
 char inFTYPE[4];
+char outFTYPE[4];
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
 
