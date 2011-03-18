@@ -332,6 +332,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // bound advanced values before post_fixup() so fixup_utoprim() has updated boundary values to base fixup on.
 
 
+  if(failed>0) dualfprintf(fail_file,"1failed=%d\n",failed);
 
   ////////////
   //
@@ -352,7 +353,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
-
+  if(failed>0) dualfprintf(fail_file,"2failed=%d\n",failed);
 
 
 #if(PRODUCTION==0)
