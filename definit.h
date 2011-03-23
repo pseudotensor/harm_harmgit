@@ -818,3 +818,5 @@
 #define USERERSETREGION 0
 
 
+// whether poledeath in bounds.tools.c keeps sigma constant in some cases
+#define BCSIGMACONSTATPOLE 0

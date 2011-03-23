@@ -194,14 +194,14 @@ int fluxcalc(int stage,
     // User "boundary conditions" to modify EMFs before used
     //
     /////////////////////////////
-    if(DOGRIDSECTIONING){
-      adjust_fluxctstag_emfs(pr,Nvec,ptrfluxvec);
-    }
+    adjust_fluxctstag_emfs(pr,Nvec,ptrfluxvec);
 
 
     ////////////////
+    //
     // Before higher-order operations on flux, track vector potential update
     // so updating point value of A_i
+    //
     ////////////////
     update_vpot(stage, pr, ptrfluxvec, fluxdt, vpot);
 

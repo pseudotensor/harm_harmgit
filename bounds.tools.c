@@ -2000,6 +2000,7 @@ int extrapfunc(int boundary, int j,int k,
 
 
 
+
 #define UTHETAPOLEDEATH ((PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)?(1):(0)) //only interpolate u^\theta instead of u^2 here when doing the same in interp
 
 #if(0 == UTHETAPOLEDEATH)
@@ -2347,6 +2348,26 @@ int poledeath(int whichx2,
 	      if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
 	      else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	    }
+
+
+	    if(BCSIGMACONSTATPOLE==1){
+	      
+	      pl=RHO;
+	      FTYPE bsqr,sigmar;
+
+	      if (bsq_calc(MAC(prim,ri,rj,rk), ptrrgeom[pl], &bsqr) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 1);
+	      sigmar=bsqr/(2.0*fabs(MACP0A1(prim,ri,rj,rk,pl)));
+
+	      // ensure constant sigma at pole
+	      FTYPE bsq,sigma;
+	      if (bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 2);
+	      sigma=bsq/(2.0*fabs(MACP0A1(prim,i,j,k,pl)));
+
+	      if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
+		MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
+	      }
+	      // do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
+	    }// end if BCSIGMACONSTATPOLE==1
 
 	  }    
 	}
