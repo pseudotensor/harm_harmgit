@@ -1,6 +1,8 @@
 //////////////////////////////////////////////////////
 //
-// COLD EOS or COLD EOMTYPE
+// COLD EOS or COLD EOMTYPE==EOMCOLDGRMHD
+//
+// Also used for EOMTYPE==EOMFFDE
 //
 // then explicitly set pressure/ie to 0 so can keep some parts of code similar
 //

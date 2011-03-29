@@ -188,11 +188,13 @@ int user1_init_global(void)
 
 
     fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
-    FLUXB = FLUXCTTOTH;
-    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    //    FLUXB = FLUXCTTOTH;
+    FLUXB = FLUXCTSTAG;
+    //    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
     // whether/which ENO used to interpolate fluxes
-    DOENOFLUX = ENOFINITEVOLUME;
-    //  DOENOFLUX= NOENOFLUX;
+    //    DOENOFLUX = ENOFINITEVOLUME;
+    DOENOFLUX= NOENOFLUX;
     //DOENOFLUX=ENOFLUXRECON;
   }
 

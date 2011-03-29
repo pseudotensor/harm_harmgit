@@ -2133,6 +2133,82 @@ int get_3velterm(FTYPE *vcon, struct of_geom *geom, FTYPE *velterm)
 }
 
 
+
+
+
+
+// for FFDE, check to make sure 3-velocity is good, otherwise will have to limit it
+// Bcon and vcon are code versions
+// returns code primitives such as WHICHVEL for velocity (although coordinates will still be whatever geom was)
+int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
+{
+  int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM]);
+  void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM]);
+  FTYPE dualf[NDIM][NDIM], T[NDIM][NDIM];
+  int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
+  FTYPE U[NPR];
+
+#if(EOMTYPE!=EOMFFDE)
+  dualfprintf(fail_file,"Only call limit_3vel_ffde() if doing EOMTYPE==EOMFFDE\n");
+  myexit(346983463);
+#endif
+
+
+  ////////////////////////
+  //
+  // get \dF^{\mu\nu}
+  //
+  ////////////////////////
+  dualf_calc(Bcon, vcon, dualf);
+
+  //////////////////////
+  //
+  // get T^\mu_\nu
+  //
+  //////////////////////
+  ffdestresstensor(dualf, geom, T);
+
+
+  ///////////////////
+  //
+  // setup conserved quantities
+  //
+  ///////////////////
+  U[RHO] = 0;
+  U[UU] = T[0][0]; // T^t_t
+  U[U1] = T[0][1]; // T^t_x
+  U[U2] = T[0][2]; // T^t_y
+  U[U3] = T[0][3]; // T^t_z
+  U[B1] = Bcon[1];
+  U[B2] = Bcon[2];
+  U[B3] = Bcon[3];
+
+
+
+  ///////////////////
+  //
+  // filter through inversion so v^i is limited to have Lorentz factor <=GAMMAMAX
+  //
+  ///////////////////
+
+
+  //  Utoprim_ffde(U, geom, pr);
+  struct of_newtonstats newtonstats; // not pointer
+  // initialize counters
+  newtonstats.nstroke=newtonstats.lntries=0;
+  int finalstep=1; // doesn't matter for ffde
+  MYFUN(Utoprimgen(finalstep,EVOLVEUTOPRIM,UNOTHING,U, geom, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+  //  nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+
+
+
+  return(0);
+
+}
+
+
+
+
 /* find contravariant time component of four-velocity from the 4velocity (3 terms)*/
 int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *ucon2, FTYPE *others)
 {

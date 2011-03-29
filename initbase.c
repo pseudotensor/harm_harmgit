@@ -1623,7 +1623,7 @@ void check_bnd_num(void)
   
 
   if(HIGHERORDERMEM==0 && DOENOFLUX != NOENOFLUX){
-    dualfprintf(fail_file,"Need to turn on HIGHERORDERMEM when doing higher order methods (i.e. DOENOFLUX!=NOENOFLUX\n");
+    dualfprintf(fail_file,"Need to turn on HIGHERORDERMEM when doing higher order methods (i.e. DOENOFLUX(=%d)!=NOENOFLUX)\n",DOENOFLUX);
     myexit(ERRORCODEBELOWCLEANFINISH+204);
   }
 

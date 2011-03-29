@@ -255,8 +255,8 @@ int pickeos_eomtype(int whicheosinput, int whicheom, int *whicheosoutput)
 
 
 
-// EOS functions used during inversion and other places
-  if(whicheom==EOMCOLDGRMHD){
+  // EOS functions used during inversion and other places
+  if(whicheom==EOMCOLDGRMHD||whicheom==EOMFFDE){
     *whicheosoutput=COLDEOS;
   }
   else{

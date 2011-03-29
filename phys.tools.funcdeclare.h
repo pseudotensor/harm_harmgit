@@ -13,3 +13,6 @@ extern void raise_vec(FTYPE *v1, struct of_geom *geom, FTYPE *v2);
 
 
 
+extern int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr);
+
+

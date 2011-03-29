@@ -187,7 +187,9 @@ int fluxcalc(int stage,
     myexit(175106);
 #endif
 
+
     MYFUN(fluxcalc_fluxctstag(stage, pr, pstag, pl_ct, pr_ct, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(wspeed), GLOBALPOINT(prc), GLOBALPOINT(pleft), GLOBALPOINT(pright), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), Nvec, dqvec, ptrfluxvec, CUf, cent2faceloop, face2cornloop),"flux.c:fluxcalc()", "fluxcalc_fluxctstag", 0);
+
 
     //////////////////////////////
     //
@@ -204,6 +206,7 @@ int fluxcalc(int stage,
     //
     ////////////////
     update_vpot(stage, pr, ptrfluxvec, fluxdt, vpot);
+
 
     
     //////////////////////////////
