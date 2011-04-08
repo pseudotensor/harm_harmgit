@@ -1,3 +1,18 @@
+// TODO:
+// 1) U7/gdet and B3 don't agree.  Well, they agree outside surface.  But why not inside? A: Because bound B3 but not U7 that just comes from update of fluxes.
+// 2) Check why fluxdump out of synch
+// 3) Why values for dU are different than B3 for first dB3?
+// 4) Check regarding when update_vpot() is called.  Show workflow.
+// 5) dU7/gdet is correct sign -- apparent chunkiness at large angle is just plotting (can plot negative and see more symmetric or use symmetric switch in twod.m and careful with image cursor since flipped -- only color is correct).
+// 6) F17/gdet makes sense to generate B3 sign everywhere.
+// 7) B3 large radius near NS near equator is not right.  Maybe already cancelling wave?  Kinda chunky at 45degs at large radius.
+// **8) B3 small radius is mostly wrong sign and very chunky.
+// **9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR
+// 10) uu2 correct sign everywhere except right around polar axis of NS -- but sign follows switches of B1,B2 for desired rotation.
+// *11) uu1<0 everywhere even at larger radius where should be uu1>0.  Caused by wrong sign for uu3?  Or maybe transient due to field moving near t=0?
+// **12) Figure out why compact for A_3 leads to kinks.  Improve A_{dir} interpolation so better near pole.
+
+// SHIT: uu0 dies on surface with new additions for bound_
 
 /* 
  *
@@ -374,11 +389,11 @@ int init_global(void)
   //#define BASEDT 0.005
   //#define SHORTDT 0.005
 
-  // TEST
-#define BASEDT 0.00001
-#define SHORTDT 0.00001
-  //#define BASEDT 1.0
-  //#define SHORTDT 1.0
+  // GODMARK DEBUG TEST TODO
+  //#define BASEDT 0.00001
+  //#define SHORTDT 0.00001
+#define BASEDT 1.0
+#define SHORTDT 1.0
 
   /* dumping frequency, in units of M */
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = BASEDT;
@@ -411,8 +426,8 @@ int init_global(void)
 
 
 
-
-  DODIAGEVERYSUBSTEP=1;
+  // GODMARK TODO DEBUG TEST
+  DODIAGEVERYSUBSTEP=0;
 
 
   return(0);
@@ -1831,7 +1846,9 @@ int rescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
     
     
     // get B_\phi and use it as thing to interpolate
+#if(1) // GODMARK TODO DEBUG
     rescale_Bcon_to_Bcovphi(prin,ptrgeom, &prout[B3]);
+#endif
     // so prout[B3] has Bd3 in it
   }
   else{ // then A_{dir}
@@ -1863,7 +1880,9 @@ int unrescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
     
     // puts Bconphi into prim[B3]
     // so prin has B^1 and B^2 and prin[B3] contains Bd3
+#if(1) // GODMARK TODO DEBUG
     rescale_Bconp_and_Bcovphi_to_Bconphi(prout, ptrgeom, prin[B3]);
+#endif
     // so prout[B3] will be filled with B^3 as desired
   }
   else{ // then A_{dir}
@@ -1975,6 +1994,9 @@ int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
   }
   else mono=0;
 
+  // GODMARK TODO TEST DEBUG:
+  mono=1;
+
   return(mono);
 
 }
@@ -2010,6 +2032,10 @@ int checkmono3(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3)
   else mono=0;
   
 
+  // GODMARK TODO TEST DEBUG:
+  mono=1;
+
+
   return(mono);
 }
 
@@ -2040,7 +2066,7 @@ int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int
 // special NS boundary code for centerered primitives
 // averages all points within NS using parabolic interpolation
 // TODO GODMARK: Note, could use face or corner analytical values at surface to pass interpolation through --  might be more stable by fixing extrapolation to surface value.  That would be more consistent with how A_i is treated.  Potentially how extrapolate into NS shouldn't matter too much, but apparently does alot (oscillating B_phi and OmegaF with this method vs. fixed wrong omegaf and B_\phi for older bound method)
-// TODO GODMARK: Also, when DUP copy ends up with corner-like active cell to be copied from, then value can be quite off compared to nearer cells leading to lots of pointy behavior near surface.  Do like with A_dir and usecompact==1 so DUP result is more compact and doesn't miss changes near to surface.  That is, pointy behavior doesn't smooth-off and stays there for long time.  E.g. shear in U3 generates B3, but shear of U3 along surface from pointy copy means B3 that's generated preserved shear.
+// When DUP copy ends up with corner-like active cell to be copied from, then value can be quite off compared to nearer cells leading to lots of pointy behavior near surface.  Do like with A_dir and usecompact==1 so DUP result is more compact and doesn't miss changes near to surface.  That is, pointy behavior doesn't smooth-off and stays there for long time.  E.g. shear in U3 generates B3, but shear of U3 along surface from pointy copy means B3 that's generated preserved shear.
 // One would think EMF that fixes U3 to NS surface rate would avoid that problem in long-term sense.
 int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
@@ -2372,10 +2398,16 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 		}// end pl
 		
 	      }
+
+
 	      
 
 
-	      usecompact=1; // default is can do it
+	      // GODMARK TODO TEST DEBUG:
+	      usecompact=0;
+	      //usecompact=1; // default is can do it
+ 
+
 	      PLOOP(pliter,pl) if(usecompactpl[pl]==0) usecompact=0;
 
 
@@ -4081,7 +4113,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 	    usecompact=0; //default
 	    FTYPE compactvalue;
 
-	    // compact value position
+	    // compact value position // GODMARK TODO : expand like bound_ so can do del=2
 	    FTYPE iref,jref,kref;
 	    iref=0.5*(i+ii);
 	    jref=0.5*(j+jj);
@@ -4186,7 +4218,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 
 
 	      // GODMARK DEBUG: OVERRIDE TEST
-	      usecompact=0;
+	      usecompact=0; // for field, for some reason compact leads to kinks -- lowers order to get compactvalue too often?  Why should matter for para along path?
 
 
 	      // transfer over compact interpolated value

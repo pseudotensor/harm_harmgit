@@ -352,7 +352,7 @@
 #define NUMPOTHER 0
 #define DODUMPOTHER 0
 
-#undef FLUXDUMP
+#undef FLUXDUMP // GODMARK TEST DEBUG
 #define FLUXDUMP 0
 
 struct Ccoordparams {
