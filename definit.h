@@ -204,6 +204,9 @@
 // only machine error different from evolution of field itself
 #define EVOLVEWITHVPOT TRACKVPOT // choice
 
+// more often makes sense to modify A_i and not EMF_i, since want A_i to be smooth so Bstag^i is computed properly (and Bcent^i based upon Bstag^i)
+#define MODIFYEMFORVPOT MODIFYVPOT
+
 // whether to specify gdet at end when setting EMF or to have internal to variables before averaging.
 // point is that gdet at end is probably better, esp. at coordinate singularities.
 #define CORNGDETVERSION 1

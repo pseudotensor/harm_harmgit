@@ -14,7 +14,7 @@ extern void remapplpr_nsbh( int dir, int idel, int jdel, int kdel, int i, int j,
 			    FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
 			    FTYPE *p2interp_l, FTYPE *p2interp_r );
 
-extern void set_plpr_nsbh(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r);
+extern void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r);
 
 
 /* bound array containing entire set of primitive variables */
@@ -304,10 +304,10 @@ void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k,
 // Set primitives at interfaces used to compute fluxes
 // Needs BOUNDPLPR==1
 // p_l and p_r are normal set of primitives (not rescaled)
-void set_plpr(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r)
+void set_plpr(int dir, SFTYPE time, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r)
 {
 
-  set_plpr_nsbh(dir, i, j, k, prim, p_l, p_r);
+  set_plpr_nsbh(dir, time, i, j, k, prim, p_l, p_r);
 
 
 }

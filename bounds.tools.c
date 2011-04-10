@@ -2611,7 +2611,7 @@ int poledeath(int whichx2,
 
 // Toth version (different because emf vs. flux, where emf has extra zone -- otherwise same!
 //reset emf's (E_3) at the boundaries in x1-x2 plane to zero
-void user1_adjust_fluxcttoth_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+void user1_adjust_fluxcttoth_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
 {
   int i, j, k;
   int dir;
@@ -2709,7 +2709,7 @@ void user1_adjust_fluxcttoth_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 // STAG version (different because emf vs. flux, where emf has extra zone -- otherwise same!
 //reset emf's (E_3) at the boundaries in x1-x2 plane to zero
-void user1_adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
   int i, j, k;
   int dir;
@@ -2794,7 +2794,7 @@ void user1_adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 
 // adjust final fluxes
 // NOT USED
-void user1_adjust_final_fluxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void user1_adjust_final_fluxes(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
   int i, j, k;
   int dir;

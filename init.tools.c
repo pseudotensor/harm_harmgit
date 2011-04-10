@@ -1,6 +1,8 @@
 #include "decs.h"
 
 
+extern int init_dsandvels(int inittype, int pos, int *whichvel, int *whichcoord, SFTYPE time, int i, int j, int k, FTYPE *p, FTYPE *pstag);
+
 
 int setRin_withchecks(FTYPE *rin)
 {
@@ -303,10 +305,8 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   FTYPE r,th,X[NDIM],V[NDIM];
   int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int init_dsandvels(int inittype, int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int init_atmosphere(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *pr);
   int pl,pliter;
-
 
   ///////////////////////////////////
   //
@@ -335,7 +335,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers
+      initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,t,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers // t is ok here for initialization
       if(initreturn>0){
 	FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
       }

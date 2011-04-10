@@ -384,14 +384,14 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 
   // prim -> A using user function init_vpot_user()
-  init_vpot_justAcov(prim, A);
+  init_vpot_justAcov(t, prim, A);  // t is ok since always t=tstart
 
   // A->Flux if required
   init_vpot_toF(A, F1, F2, F3);
 
   // assigns value to p and pstagscratch and unew (uses F1/F2/F3 if doing FLUXCTHLL)
   // often user just uses init_vpot2field() unless not always using vector potential
-  init_vpot2field_user(A,prim,pstag,ucons,Bhat); 
+  init_vpot2field_user(t, A,prim,pstag,ucons,Bhat);  // t is ok since always t=tstart
 
 
 
@@ -403,7 +403,7 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 
 // get A_i in PRIMECOORDS for FLUXB==FLUXCTSTAG at CORNi for each A_i, the natural staggered field locations for A_i (i.e. not all same location for all A_i)
-int get_vpot_fluxctstag_primecoords(int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *vpot)
+int get_vpot_fluxctstag_primecoords(SFTYPE time, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *vpot)
 {
   int dir;
   FTYPE X[NDIM],V[NDIM];
@@ -428,7 +428,7 @@ int get_vpot_fluxctstag_primecoords(int i, int j, int k, FTYPE (*prim)[NSTORE2][
     
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
     DLOOPA(userdir){
-      init_vpot_user(&whichcoord, userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+      init_vpot_user(&whichcoord, userdir, time, i,j,k, loc, prim, V, &vpotuser[userdir]);
     }
     
     // convert from user coordinate to PRIMECOORDS
@@ -448,7 +448,7 @@ int get_vpot_fluxctstag_primecoords(int i, int j, int k, FTYPE (*prim)[NSTORE2][
 
 // initialize vector potential given user function
 // assumes normal non-staggered field in pr
-int init_vpot_justAcov(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int Nvec[NDIM];
   int odir1[NDIM],odir2[NDIM];
@@ -548,7 +548,7 @@ int init_vpot_justAcov(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+
 
 	  // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
 	  DLOOPA(userdir){
-	    init_vpot_user(&whichcoord, userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+	    init_vpot_user(&whichcoord, userdir, time, i,j,k, loc, prim, V, &vpotuser[userdir]);
 	  }
 
 	  // convert from user coordinate to PRIMECOORDS
@@ -822,6 +822,7 @@ int evolve_withvpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2]
     // **TODO** essentially need a separate function that takes point A_i and fills F if needed rather than all at once as in init_vpot()
 
     // only copies if necessary for how method is setup (e.g. staggered point evolution method)
+    // i.e. F is not really flux here, just place-holder for A_i at different positions as required by some other methods, such as FLUXCTTOTH or FLUXCTSTAG w/ higher-order corrections.
     copy_vpot2flux(vpot,F1,F2,F3);
 
 
@@ -1089,8 +1090,194 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 
 
 
+
+
+////////////////////////
+//
+// Like advance() but for A_i with allowed modifications to either EMF or A_i directly
+//
+// Can evolve with vpot (i.e. could have modified A_i or may want A_i to be machine accurate instead of drifting from B^i)
+// this used to be in post_advance(), but was excessively doing full evolve_withvpot().  But we already adjusted A_i and can now get corrected Fluxes compared to how computed in fluxcalc_fluxctstag.  The flux hasn't yet been used to compute anything, so this correction is in the right location.
+//    if(EVOLVEWITHVPOT){
+// Normally do:
+// a) EMF->A_i
+// b) EMF->F->B in all B's forms (prim,pstag,unew,Bhat).
+// But then if want A_i to be machine error consistent with these B's, need to do A_i->B.  Otherwise, A_i evolution will drift from B's evolution even with same EMFs.
+// In order to avoid repeating A_i->B, can take new and old A_i to create EMF that's used along normal (EMF->F->B) path.  This way one really has (dA_i = A_iold-A_inew)->EMF->F->B.
+// So then don't need to separately adjust EMFs using adjust_fluxctstag_emf(), only have to adjust A_i.  Also solves any inconsistency in how EMF and A_i are modified using adjust_'s.
+// Could decide to only adjust EMFs and not A_i (but then A_i will diverge due to machine error, so haven't solved the original issue -- only solved a redundancy issue).
+// Problem is still there if use dA_i.  B's and A_i will diverge from one another.  Can only have 1 fundamental, or shift fundamental every so often.
+//
+// But if want internal BC solution to be smooth extention (not some fake accurate solution), then need to manipulate A_i directly.  Else staggered B^i interpolation will also be jumpy.
+// So let's shift to A_i every step in post_advance() so A_i controls B^i, but let's reset EMF_i from dA_i so don't have to adjust EMF_i directly and separately from A_i.  Otherwise, unless perfectly  match EMF and A_i, may cause inconsistencies -- for example, in B_CENT computed from B_STAG that's first computed from EMFs, while shifted to A_i only after.  So B_CENT would be inconsistent with new B_STAG from A_i
+//  }
+int evolve_vpotgeneral(int whichmethod, int stage,
+		       int initialstep, int finalstep,
+		       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+		       int *Nvec,
+		       FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+		       FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+		       FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
+		       FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
+		       )
+{
+  int dimen;
+  FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
+  FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
+  FTYPE (*vpotcum)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
+  vpot0   =vpot+1*NDIM;
+  vpotlast=vpot+2*NDIM;
+  vpotcum =vpot+3*NDIM;
+
+
+
+
+  //////////////////
+  //
+  // Can either:
+  // 1) user adjust only EMF
+  // 2) user adjust both EMF and VPOT.  Reason both: EMF reset on surfaces used to set new VPOT.  VPOT adjusted to deal with interior so Bstag^i and Bcent^i are smooth through surfaces.
+  // In case VPOT is adjusted, EMF is fixed-up to agree with VPOT by updating temporary VPOT that is then modified that is then used to back-create the EMF that is used to update to a final VPOT
+  // This ensures consistency between user EMF and user VPOT modifications
+  //
+  //////////////////
+
+
+
+  // user adjust of EMFs
+  if(MODIFYEMFORVPOT==MODIFYEMF || MODIFYEMFORVPOT==MODIFYVPOT) adjust_emfs(fluxtime, whichmethod, pr, Nvec, fluxvec, emf);
+
+
+
+
+
+
+
+  if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0){
+    if(initialstep==1){
+      // For all current TIMEORDERs, Ui is always from pi so always from last ucum or vpotcum
+      for(dimen=0;dimen<NDIM;dimen++){
+	// copy over vpotcum -> vpot0
+	copy_3dvpot_fullloopp1(vpot[dimen],vpot0[dimen]); // really copying vpotcum -> vpot0 since already copied vpotcum->vpot (below in this function, or at t=0 vpot is correct to use)
+	// must first set 0->{vpotlast,vpotcum} if first step (i.e. vpotcum (like ucum) will add vpot0 as required, so starts at 0, not vpot0, here)
+	init_3dvpot_fullloopp1(0.0,vpotlast[dimen]);
+	init_3dvpot_fullloopp1(0.0,vpotcum[dimen]);
+      }
+    }
+    else{
+      // then no change in vpot0 for current TIMEORDER's
+    }
+  }
+
+
+  if(MODIFYEMFORVPOT==MODIFYVPOT){  // overall, get new emf/fluxes
+
+
+    // flux->A_i : get new vpot using fluxes
+    // like getting Uf from fluxes
+    // vpotcum argument is set to NULL since don't want to update ucum-like quantity yet
+    update_vpot(whichmethod, stage, pr, fluxvec, emf, CUf, CUnew, fluxdt, vpot, vpot0, vpotlast, NULL);
+
+
+    //////////////////////////////
+    //
+    // User "boundary conditions" to modify A_i's before used
+    // They will be used in step_ch.c calling evolve_withvpot() that resets B^i using A_i
+    //
+    /////////////////////////////
+
+    // A_i -> Amod_i (-> A_i)
+    adjust_vpot(fluxtime, whichmethod, pr, Nvec, vpot);
+
+
+    // now obtain EMF_i from A_i and Aold_i
+    // this sets EMFs so that one only has to adjust A_i and not also EMF_i
+    // A_i,Aold_i -> EMF_i (in F_i)
+    // like deriving flux from Uf and Ui (NOTE: not derived from Ucum)
+    set_emfflux(whichmethod, stage,pr,fluxvec,emf,CUf, CUnew, fluxdt,vpot,vpot0,vpotlast);
+
+  }
+
+
+  if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0){ // overall, update A_i using emf/fluxes
+
+    ////////////////
+    //
+    // Update A_i from EMF_i (directly computed, and then either modified directly or through A_i)
+    // Before higher-order operations on flux, track vector potential update
+    // so updating point value of A_i
+    //
+    ////////////////
+
+    // EMF_i (in F_i) -> A_i
+    // like regetting Uf and Ucum from fluxes
+    // only cumulate at this "real" update_vpot() call
+    update_vpot(whichmethod, stage, pr, fluxvec, emf, CUf, CUnew, fluxdt, vpot, vpot0, vpotlast, vpotcum);
+
+
+    // update vpotlast
+    for(dimen=0;dimen<NDIM;dimen++) copy_3dvpot_fullloopp1(vpot[dimen],vpotlast[dimen]);
+
+
+    if(finalstep==1){
+      // Doing this for 3 reasons:
+      // 1) Copy to vpot so (at top of this function) the (vpotcum->vpot)->vpot0 sets up vpot0
+      // 2) In post_advance() will use vpot to recompute all B's, so copy over vpotcum -> vpot so vpot ready for that computation (otherwise could reference vpotcum there)
+      // 3) vpotcum will be what's reported in diagnostics with this assignment
+      for(dimen=0;dimen<NDIM;dimen++) copy_3dvpot_fullloopp1(vpotcum[dimen],vpot[dimen]);
+    }
+
+  }
+
+
+
+  return(0);
+}
+
+
+
+
+
+
+// wrapper for adjust_fluxctstag_emfs() and adjust_fluxcttoth_emfs()
+// calls user functions
+void adjust_emfs(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+
+
+  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+    adjust_fluxcttoth_emfs(fluxtime,pr,emf);
+  }
+  else{
+    adjust_fluxctstag_emfs(fluxtime,pr,Nvec,fluxvec);
+  }
+
+
+}
+
+
+
+
+// wrapper for adjust_fluxctstag_vpot() and adjust_fluxcttoth_vpot()
+// calls user functions
+void adjust_vpot(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+ 
+  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+    adjust_fluxcttoth_vpot(fluxtime,pr,Nvec,vpot);
+  }
+  else{
+    adjust_fluxctstag_vpot(fluxtime,pr,Nvec,vpot);
+  }
+
+
+}
+
+
+
+
 // update A_i
-int update_vpot(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotcum)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   extern int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
   int dir;
@@ -1104,7 +1291,6 @@ int update_vpot(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[N
 
 
 
-  if(TRACKVPOT==0) return(0);
 
 
 
@@ -1142,6 +1328,7 @@ int update_vpot(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[N
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
     FTYPE igdetvpot;
+    FTYPE myemf;
 
     OPENMP3DLOOPVARSDEFINE;
 
@@ -1202,7 +1389,23 @@ int update_vpot(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[N
 	  // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
 
 
-	  MACP1A0(vpot,dir,i,j,k) += signforflux*fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+	  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+ 	    // then need to use EMF not fluxes since only EMF is filled -- to update A_i
+	    // loop setup over fluxes so only reach this once (not twice) so only use EMF once as required
+	    //	    MACP1A0(vpot,dir,i,j,k) += fluxdt*MACP1A0(emf,dir,i,j,k);
+	    myemf=MACP1A0(emf,dir,i,j,k);
+	  }
+	  else{
+	    // then use fluxes directly to update A_i
+	    // note that only reach this once (not twice) so only use one flux, not its redundant partner
+	    //	    MACP1A0(vpot,dir,i,j,k) += signforflux*fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+	    myemf=signforflux*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+	  }
+
+	  // update like in advance using flux2dUavg() & dUtoU().  But only 1 flux position rather than difference of fluxes.
+	  if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0); // notice vpotlast[] used here not vpot
+	  if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
+
 
 	  //	if(dir==3){
 	  //	  dualfprintf(fail_file,"i=%d j=%d k=%d fluxdt=%21.15g vpot=%21.15g fluxvec=%21.15g geomvpot=%21.15g\n",i,j,k,fluxdt,MACP1A0(vpot,dir,i,j,k),MACP1A1(fluxvec,fluxdir,i,j,k,plforflux),geomvpot);
@@ -1217,6 +1420,123 @@ int update_vpot(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[N
   }// end over parallel region (and implied barrier)
   
   
+
+  return(0);
+
+}
+
+
+
+
+// fix EMF_i (in Flux space so ready to be used) from A_i and Aold_i
+// pretty similar to update_vpot(), but inverted assignment.  So removed detailed comments/debug from this function.
+int set_emfflux(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  int dir;
+  int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
+  FTYPE signforfluxlist[NDIM];
+  int odir1[NDIM],odir2[NDIM];
+  int locvpot[NDIM][NDIM];
+  int Nvec[NDIM];
+  int numdirs;
+
+
+
+
+
+  Nvec[0]=0;
+  Nvec[1]=N1;
+  Nvec[2]=N2;
+  Nvec[3]=N3;
+  
+
+  DIMENLOOP(dir){
+    // GODMARK: Should synchronize how these functions operate/generate results
+    // initialize directions and variables for cyclic access  
+    get_fluxpldirs(Nvec, dir, &fluxdirlist[dir], &pldirlist[dir], &plforfluxlist[dir], &signforfluxlist[dir]);
+    // get location of vpot and number of locations to set
+    set_location_fluxasemforvpot(dir, &numdirs, &odir1[dir], &odir2[dir], locvpot[dir]);
+  }
+
+
+
+
+
+#pragma omp parallel private(dir) //nothing needed to copyin()
+  {
+    int is,ie,js,je,ks,ke;
+    int i,j,k,pl,pliter;
+    int fluxdir,pldir,plforflux;
+    FTYPE signforflux;
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    FTYPE igdetvpot;
+    FTYPE myemf;
+
+    OPENMP3DLOOPVARSDEFINE;
+
+
+
+    // GODMARK: time-part not updated and assumed to be 0
+    DIMENLOOP(dir){
+
+      //loop over the interfaces where fluxes are computed -- atch, useCOMPZSLOOP( is, ie, js, je, ks, ke ) { ... }
+      // since looping over edges (emfs) and flux loop different than emf loop, then expand loops so consistent with both fluxes corresponding to that emf
+      is=emffluxloop[dir][FIS];
+      ie=emffluxloop[dir][FIE];
+      js=emffluxloop[dir][FJS];
+      je=emffluxloop[dir][FJE];
+      ks=emffluxloop[dir][FKS];
+      ke=emffluxloop[dir][FKE];
+
+      fluxdir=fluxdirlist[dir];
+      pldir=pldirlist[dir];
+      plforflux=plforfluxlist[dir];
+      signforflux=signforfluxlist[dir];
+
+
+      if(Nvec[fluxdir]>1){
+	
+      
+	OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
+	OPENMP3DLOOPBLOCK{
+	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+	  // \partial_t A_i = EMF = -\detg E_i where E_i=flux/\detg
+	  // e.g. from get_fluxpldirs:
+	  // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
+
+
+	  myemf = dUfromUFSET(CUf,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),MACP1A0(vpot,dir,i,j,k));
+	  
+
+	  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+	    // then need to fill EMF since final flux is non-trivial
+	    MACP1A0(emf,dir,i,j,k)=myemf;
+	  }
+	  else{
+	    // So just invert from update_vpot(): roughly: dA =  Anew - Aold = dt F
+	    // below memory flux is always there -- how chosen
+	    MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)=myemf/signforflux;
+	    // below memory is not always there, so must check
+	    if(Nvec[plforflux-B1+1]>1){
+	      MACP1A1(fluxvec,plforflux-B1+1,i,j,k,B1+fluxdir-1)=-MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+	    }
+	    
+	  }
+
+
+	}// end 3D LOOP
+      }// end if fluxdir exists
+    }// end over dirs
+  }// end over parallel region (and implied barrier)
+  
+  
+
+
+
 
   return(0);
 

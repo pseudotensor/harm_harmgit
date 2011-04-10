@@ -8,3 +8,10 @@
   // ultimately ucum is actual solution used to find final pf
 // Cunew[1]*dt*dU + Cunew[2]*CUf[2]*dt*dU + \Sum_allpriorsubsteps CUf[1]*CUF[2 prior]*dt*dU[prior]
 #define UCUMUPDATE(theCunew,thedt,theUi,theUf,thedUriemann,thedUgeom) (theCunew[0]*theUi + theCunew[1]*thedt*(thedUriemann+thedUgeom) + theCunew[2]*theUf)
+
+
+
+// inverse of above (assuming only 1 dU)
+#define dUfromUFSET(theCUf,thedt,theUi,theUf,theUfnew) ( (theUfnew - (theCUf[0]*theUi + theCUf[1]*theUf))/(theCUf[2]*thedt) )
+
+

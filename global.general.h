@@ -124,11 +124,13 @@
 // comment below 3 lines when not wanting to test
 // uncomment when wanting to test, and then look at make.log
 //
-//#if(!defined(doublereal))
-//typedef double doublereal;
-//#endif
-//#include "utoprim_jon.h" // extra defs
-//#include "temptempfinalallc.txt"
+#if(0)
+#if(!defined(doublereal))
+typedef double doublereal;
+#endif
+#include "utoprim_jon.h" // extra defs
+#include "temptempfinalallc.txt"
+#endif
 //
 //
 /////////////////////////////////////////

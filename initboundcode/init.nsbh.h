@@ -152,7 +152,7 @@
 
 
 #define TRACKVPOT 1 // not on by default
-#define EVOLVEWITHVPOT 2 // not on by default
+#define EVOLVEWITHVPOT 1 // not on by default
 
 #define DOGRIDSECTIONING 0 // not on by default
 
@@ -353,7 +353,7 @@
 #define DODUMPOTHER 0
 
 #undef FLUXDUMP // GODMARK TEST DEBUG
-#define FLUXDUMP 0
+#define FLUXDUMP 1
 
 struct Ccoordparams {
     double timescalefactor;

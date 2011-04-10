@@ -21,7 +21,7 @@ static void setup_rktimestep(int truestep, int *numtimeorders,
 static int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int step_ch(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
-static int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
+static int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
 
 
 
@@ -307,8 +307,27 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
 
 
 // things to do after advance()
-int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
+int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
+
+
+
+
+
+  ////////////////
+  //
+  // Use tracked A_i to update magnetic field
+  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
+  //
+  ////////////////
+  if(EVOLVEWITHVPOT && TRACKVPOT && finalstep){
+    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
+    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
+    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
+
+    //  only do this on the final step where A_i has been set as the cumulative Acum  (like ucum) so that not just an arbitrary intermediate step that redefines B's.
+    evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
+  }
 
 
   //////////////////////
@@ -433,22 +452,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
-  ////////////////
-  //
-  // Use tracked A_i to update magnetic field
-  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
-  //
-  ////////////////
-  if(EVOLVEWITHVPOT && TRACKVPOT){
-    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
-    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
-    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
-    // GODMARK: for now only do at the end of the full timestep to avoid being expensive -- doesn't really matter that didn't do it per substep since only machine differences
-    
-    // EVOLVEWITHVPOT>1 means do it every time step
-    if(finalstep || EVOLVEWITHVPOT>1) evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
-  }
-
 
 
 
@@ -557,7 +560,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE *ndt);
+	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   
   int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR]);
   int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -582,8 +585,8 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   int i, j, k;
   int numtimeorders;
   int timeorder;
-  int finalstep;
-  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER];
+  int finalstep,initialstep;
+  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER], fluxtime[MAXTIMEORDER];
 
 
 
@@ -602,7 +605,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, NULL,NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL,NULL);
 
 
   // global debug tracking var
@@ -643,6 +646,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     /////////////////////////////////////
     steppart=timeorder;
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+    if(timeorder==0) initialstep=1; else initialstep=0;
 
 #if(PRODUCTION==0)
     trifprintf("|%ds",timeorder);
@@ -729,7 +733,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       // advance (field only)
       // Only field parts of pff, uff, and ucum updated
       // on final timeorder, ucum used to get final B that will be used as B for final timeorder for non-field quantities
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
       // only need to bound field, so control PLOOPMPI
       nprboundstart=0;
@@ -779,7 +783,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       // advance (non-field quantities)
       // only non-field parts of pff, uff, ucum updated
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
@@ -823,11 +827,15 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       advancepassnumber=-1; // implies do all things, no split
       // advance (all)
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
     } // end else if normal advance()
+
+
+
+
 
 
 
@@ -846,7 +854,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     // POST ADVANCE
     //
     /////////////////////////////////////
-    post_advance(truestep, dumpingnext, timeorder, numtimeorders, finalstep, boundtime[timeorder], pii[timeorder],pbb[timeorder],pff[timeorder],pstag,ucons,vpot,Bhat, F1, F2, F3, Atemp, uconstemp);
+    post_advance(truestep, dumpingnext, timeorder, numtimeorders, finalstep, boundtime[timeorder], fluxtime[timeorder], pii[timeorder],pbb[timeorder],pff[timeorder],pstag,ucons,vpot,Bhat, F1, F2, F3, Atemp, uconstemp);
 
 
 
@@ -870,7 +878,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
 
 // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
-void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTYPE (*Cunew)[4], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
+void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTYPE (*Cunew)[4], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
 {
   int timeorder;
   SFTYPE ufdt[MAXTIMEORDER],ucumdt[MAXTIMEORDER];
@@ -903,6 +911,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
   //////////////////////
   fluxdt[0] = 0.0; // initialize
   boundtime[0] = 0.0; // initialize
+  fluxtime[0] = 0.0; // initialize
   Ui=dUgeom=0.0; // don't care about update from non-flux terms
   dUriemann=1.0; // indicates want dt applied on flux update
 
@@ -933,6 +942,14 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
 
     //  time of pf at end of substep
     boundtime[timeorder] = t + ufdt[timeorder];
+
+    // time of pb when used to compute flux
+    // and time of pb corresponds to time of previous pf (except for first substep where it's just t)
+    //     tstepparti = t + CUf[timeorder][3] * dt;
+    //      tsteppartf = t + CUf[timeorder][2] * dt +  CUf[timeorder][3] * dt;
+    if(timeorder>0) fluxtime[timeorder] =  t + CUf[timeorder-1][2] * dt +  CUf[timeorder-1][3] * dt;
+    else fluxtime[timeorder] =  t;
+
   }
 
 
@@ -964,7 +981,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
   // DEBUG:
   dualfprintf(fail_file,"FLUXDT/BOUNDTIME: nstep=%ld ",nstep);
   for(timeorder=0;timeorder<numtimeorders;timeorder++){
-    dualfprintf(fail_file,"to=%d fluxdt=%21.15g fluxdtperdt=%21.15g boundtime=%21.15g\n",timeorder,fluxdt[timeorder],fluxdt[timeorder]/dt,boundtime[timeorder]);
+    dualfprintf(fail_file,"to=%d fluxdt=%21.15g fluxdtperdt=%21.15g boundtime=%21.15g fluxtime=%21.15g\n",timeorder,fluxdt[timeorder],fluxdt[timeorder]/dt,boundtime[timeorder],fluxtime[timeorder]);
   }
   dualfprintf(fail_file,"\n");
 #endif
@@ -1023,7 +1040,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE *ndt);
+	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   int boundstage;
   SFTYPE mydt;
   int stage, stagei,stagef;
@@ -1045,7 +1062,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   int numtimeorders;
   int finalstep;
   //  extern int horizon_flux(FTYPE (*F1)[NSTORE2][NSTORE3][NPR], SFTYPE Dt);
-  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER];
+  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER], fluxtime[MAXTIMEORDER];
 
 
 
@@ -1064,7 +1081,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, NULL, NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL, NULL);
 
 
 
@@ -1171,7 +1188,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       partialstep=timeorder;      
       // not right for numtimeorders==4 // GODMARK
       // advance
-      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
+      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
       // must check before MPI operation (since asymmetries would desynchronize cpus)
       if(stage<STAGE2){
 	MYFUN(error_check(1),"step_ch.c", "error_check", 1);

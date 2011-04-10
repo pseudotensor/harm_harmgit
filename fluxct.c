@@ -182,8 +182,54 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 
 
+
+
+// compute flux for FLUXCTTOTH method
+int flux_ct(int stage,
+	    int initialstep, int finalstep,
+	    FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int *Nvec, FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime)
+{
+  int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+  int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+  int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+
+
+
+
+
+
+  MYFUN(flux_ct_computeemf(stage, pb, emf, vconemf, dq1, dq2, dq3, F1, F2, F3),"step_ch.c:advance()", "flux_ct",1);
+
+  MYFUN(flux_ct_diffusivecorrections(stage, pb, emf, vconemf, dq1, dq2, dq3, F1, F2, F3),"step_ch.c:advance()", "flux_ct",1);
+
+
+
+  // Evolve A_i
+  // Had to be here where EMFs are at standard CORN1,2,3 positions and before final F assigned
+  // TOTH CT method doesn't cleanly differentiate between point update and average update of A_i, so just stick to TOTH CT EMF itself
+  evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pb, Nvec, NULL, emf, CUf, CUnew, fluxdt, fluxtime, vpot);
+
+
+  //////////////
+  //
+  // must come last for FLUXCTTOTH to produce correct fluxes from point corner EMFs
+  //
+  //////////////
+  MYFUN(flux_ct_emf2flux(stage, pb, emf, vconemf, dq1, dq2, dq3, F1, F2, F3),"step_ch.c:advance()", "flux_ct",1);
+
+
+
+  return(0);
+}
+
+
+
+
+
+
+
 // OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
-int flux_ct(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
 {
   // full-type geometry below
   FTYPE coefemf[NDIM];
@@ -572,6 +618,8 @@ int flux_ct(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+
 
 
 
+  return(0);
+}
 
 
 
@@ -579,17 +627,23 @@ int flux_ct(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+
 
 
 
-  //////////////////////////////
-  //
-  // User "boundary conditions" to modify EMFs before used
-  //
-  /////////////////////////////
-  //reset certain emfs at the boundaries to ensure stationarity
-  // Had to be here where EMFs are at standard CORN1,2,3 positions and before final F assigned
-  adjust_fluxcttoth_emfs(pb, emf );
 
 
 
+
+
+
+
+
+
+
+
+// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
+int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+{
+  // full-type geometry below
+  FTYPE coefemf[NDIM];
+  extern int choose_limiter(int dir, int i, int j, int k, int pl);
 
 
 
@@ -1071,6 +1125,8 @@ int flux_ct(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+
 
 
 
+  return(0);
+}
 
 
 
@@ -1081,6 +1137,20 @@ int flux_ct(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+
 
 
 
+
+
+
+
+
+
+
+
+// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
+int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+{
+  // full-type geometry below
+  FTYPE coefemf[NDIM];
+  extern int choose_limiter(int dir, int i, int j, int k, int pl);
 
 
 

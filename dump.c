@@ -1573,7 +1573,7 @@ int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int jj;
 
-  DLOOPA(jj){
+  for(jj=0;jj<NUMVPOTDUMP;jj++){
     myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
   }
 

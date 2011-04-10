@@ -672,6 +672,42 @@ void init_3dvpot_fullloopp1(FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][
 
 }
 
+
+
+// initialize single pre-component of the vpot type array
+void copy_3dvpot(int is, int ie, int js, int je, int ks, int ke, FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+
+
+#pragma omp parallel
+  {
+    int i,j,k;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
+      MAC(dest,i,j,k)=MAC(source,i,j,k);
+    }// end 3D loop
+  }// end parallel region
+
+}
+
+
+// initialize single pre-component of the vpot type array
+void copy_3dvpot_fullloopp1(FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND+SHIFT1;
+  int js=-N2BND;
+  int je=N2-1+N2BND+SHIFT2;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND+SHIFT3;
+  
+  copy_3dvpot(is,ie,js,je,ks,ke,source,dest);
+
+}
+
 // general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
 // put as function because then wrap-up OpenMP stuff
 void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR])

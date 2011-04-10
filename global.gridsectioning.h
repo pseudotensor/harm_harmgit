@@ -259,9 +259,6 @@ extern int settrueglobalregion_set_enerregiondef(int initialcall, int timeorder,
 extern int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime );
 
 
-extern void adjust_fluxcttoth_emfs(FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
-
-extern void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
 
 extern int compute_numcompzones(int (*sectiondef)[NDIM], long long int *localnumcompzones);
 

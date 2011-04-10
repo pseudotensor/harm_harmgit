@@ -90,9 +90,12 @@ struct of_state BASEMACP0A0(fluxstatecent,N1M,N2M,N3M); // pb-like (not pi-like)
 FTYPE BASEMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1);	/* used for Athena EMFs */
 #endif
 
-#if(TRACKVPOT)
-FTYPE BASEMACP1A0(vpotarrayglobal,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
+#if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
+// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
+FTYPE BASEMACP1A0(vpotarrayglobal,NUMVPOT,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
+#if(ANALYTICMEMORY)
 FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
+#endif
 #endif
 
 

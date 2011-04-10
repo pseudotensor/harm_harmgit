@@ -199,7 +199,9 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 // 1) interpolate FACE 2 CORN
 // 2) loop over dimensions setting field flux dimension-by-dimension using multi-D interpolated CORN quantities
 // At present, original flux as emf is computed like normal flux even if overwritten here, and shouldn't be much more expensive doing that there since primary cost is interpolation whose results are required and used here
-int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+int fluxcalc_fluxctstag(int stage,
+			int initialstep, int finalstep,
+			FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 			//			FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
 			FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3],
@@ -209,7 +211,10 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 			struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
 			struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
 			FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM])
+			int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+			FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM]
+			)
 {
   int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
@@ -292,7 +297,8 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 
 
     // dir corrsponds to *edge,emf* NOT face
-    MYFUN(fluxcalc_fluxctstag_emf_1d(stage, pr, dir, odir1, odir2, is, ie, js, je, ks, ke, fluxvec, CUf, face2cornloop[edgedir],pvbcorn,wspeed),"flux.c:fluxcalc()", "fluxcalc_fluxctstag_1d", dir);
+    // CUf[2] is for flux updates
+    MYFUN(fluxcalc_fluxctstag_emf_1d(stage, pr, dir, odir1, odir2, is, ie, js, je, ks, ke, fluxvec, CUf[2], face2cornloop[edgedir],pvbcorn,wspeed),"flux.c:fluxcalc()", "fluxcalc_fluxctstag_1d", dir);
 
 #if(PRODUCTION==0)
     trifprintf("%d",dir);
@@ -321,6 +327,11 @@ int fluxcalc_fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*p
     //=-MACP1A1(fluxvec,2,N1,j,k,B1)=
   }
 #endif
+
+
+  // Evolve A_i
+  evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pr, Nvec, fluxvec, NULL, CUf, CUnew, fluxdt, fluxtime, vpot);
+
 
 
 

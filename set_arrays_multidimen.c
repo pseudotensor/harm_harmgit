@@ -153,9 +153,9 @@ void set_arrays_multidimen()
   FULLLOOP for(l=U1;l<U1+COMPDIM;l++) GLOBALMACP0A1(vconemf,i,j,k,l) = valueinit;
 #endif
 
-#if(TRACKVPOT)
+#if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
   GLOBALPOINT(vpotarrayglobal) = (FTYPE PTRMACP1A0(vpotarrayglobal,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3)) (&(BASEMACP1A0(vpotarrayglobal,0,N1BND,N2BND,N3BND)));// inner shift still same
-  for(l=0;l<NDIM;l++) FULLLOOP{
+  for(l=0;l<NUMVPOT;l++) FULLLOOP{
       GLOBALMACP1A0(vpotarrayglobal,l,i,j,k) = valueinit;
     }
 

@@ -19,8 +19,8 @@ static int prepare_globaldt(
 
 
 static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
-static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *Cunew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
-static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *Cunew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
+static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
+static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 static int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
@@ -41,14 +41,14 @@ static int advance_standard(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3
 			    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 			    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			    FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-			    FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int stagenow, int numstages, FTYPE *ndt);
+			    FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
 static int advance_finitevolume(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
 				FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
 				FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 				FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 				FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 				FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-				FTYPE *CUf,FTYPE *Cunew, SFTYPE fluxdt, SFTYPE boundtime,  int stagenow, int numstages, FTYPE *ndt);
+				FTYPE *CUf,FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime,  int stagenow, int numstages, FTYPE *ndt);
 
 
 
@@ -89,7 +89,7 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 	    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 	    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 	    FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	    FTYPE *CUf, FTYPE *Cunew, SFTYPE fluxdt, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE *ndt)
+	    FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt)
 {
 
 
@@ -108,11 +108,11 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
   //
   ////////////////
   if(DOENOFLUX==ENOFINITEVOLUME){
-    MYFUN(advance_finitevolume(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_finitevolume()", 1);
+    MYFUN(advance_finitevolume(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,CUnew,fluxdt,boundtime,fluxtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_finitevolume()", 1);
   }
   else if((DOENOFLUX==NOENOFLUX)||(DOENOFLUX==ENOFLUXRECON)||(DOENOFLUX==ENOFLUXSPLIT)){
     // new standard preserves conserved quantities even when metric changes
-    MYFUN(advance_standard(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,Cunew,fluxdt,boundtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
+    MYFUN(advance_standard(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,CUnew,fluxdt,boundtime,fluxtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
   }
   else{
     dualfprintf(fail_file,"No such DOENOFLUX=%d\n",DOENOFLUX);
@@ -140,30 +140,31 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
 static int advance_standard(
 			    int truestep,
-		     int stage,
-		     FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-		     FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		     FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
-		     FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
-		     FTYPE *CUf, 
-		     FTYPE *Cunew, 
-		     SFTYPE fluxdt,
-		     SFTYPE boundtime,
-		     int timeorder, int numtimeorders,
-		     FTYPE *ndt)
+			    int stage,
+			    FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+			    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			    FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
+			    FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
+			    FTYPE *CUf, 
+			    FTYPE *CUnew, 
+			    SFTYPE fluxdt,
+			    SFTYPE boundtime,
+			    SFTYPE fluxtime,
+			    int timeorder, int numtimeorders,
+			    FTYPE *ndt)
 {
   FTYPE ndt1, ndt2, ndt3;
   FTYPE dUtot;
   FTYPE idx1,idx2;
   SFTYPE dt4diag;
   static SFTYPE dt4diag_willbe=0;
-  int finalstep;
+  int finalstep,initialstep;
   FTYPE accdt, accdt_ij;
   int accdti,accdtj,accdtk;
   FTYPE gravitydt, gravitydt_ij;
@@ -237,15 +238,24 @@ static int advance_standard(
 
   /////////
   //
-  // set finalstep to tell some procedures and diagnostic functions if should be accounting or not
+  // set initialstep and finalstep to tell some procedures and diagnostic functions if should be accounting or not
   //
   /////////
+  if(timeorder==0){
+    initialstep=1;
+  }
+  else{
+    initialstep=0;
+  }
+
   if(timeorder==numtimeorders-1){
     finalstep=1;
   }
   else{
     finalstep=0;
   }
+
+
 
 
   /////////
@@ -311,13 +321,13 @@ static int advance_standard(
       // NORMAL:
       ndt1=ndt2=ndt3=BIG;
       // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-      MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+      MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
   
 #if(0)// DEBUG:
     if(1){
       ndt1donor=ndt2donor=ndt3donor=BIG;
-      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf[2],fluxdt,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
+      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf,CUnew,fluxdt,fluxtime,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
     // DEBUG:
     if(1){
@@ -509,7 +519,7 @@ static int advance_standard(
       
 
 	// Get update
-	dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, Cunew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+	dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
       
       
       
@@ -603,7 +613,7 @@ static int advance_standard(
       if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
 	{
-	  compute_new_metric_substep(CUf,Cunew,pb,ucumformetric); // CHANGINGMARK : Not sure if Cunew here is correct
+	  compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
 	}
     }// end if doing metric substepping
   }
@@ -684,6 +694,7 @@ static int advance_standard(
 
 
 
+
   ////////////////////////////
   //
   // split ZLOOP above and below to allow staggered field method
@@ -692,6 +703,7 @@ static int advance_standard(
   ////////////////////////////
   if(FLUXB==FLUXCTSTAG){
     // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
+
 
     // GODMARK: Use of globals
     myupoint=GLOBALPOINT(upointglobal);
@@ -873,22 +885,23 @@ static int advance_standard(
 static int advance_finitevolume(
 				int truestep,
 				int stage,
-			 FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			 FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			 FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
-			 FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
-			 FTYPE *CUf, 
-			 FTYPE *Cunew, 
-			 SFTYPE fluxdt,
-			 SFTYPE boundtime,
-			 int timeorder, int numtimeorders,
-			 FTYPE *ndt)
+				FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+				FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+				FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
+				FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
+				FTYPE *CUf, 
+				FTYPE *CUnew, 
+				SFTYPE fluxdt,
+				SFTYPE boundtime,
+				SFTYPE fluxtime,
+				int timeorder, int numtimeorders,
+				FTYPE *ndt)
 {
   int sc;
   FTYPE ndt1, ndt2, ndt3;
@@ -896,7 +909,7 @@ static int advance_finitevolume(
   FTYPE idx1,idx2;
   SFTYPE dt4diag;
   static SFTYPE dt4diag_willbe=0;
-  int finalstep;
+  int finalstep,initialstep;
   FTYPE accdt, accdt_ij;
   int accdti,accdtj,accdtk;
   FTYPE gravitydt, gravitydt_ij;
@@ -971,9 +984,16 @@ static int advance_finitevolume(
 
   /////////
   //
-  // set finalstep to tell some procedures and diagnostic functions if should be accounting or not
+  // set initialstep and finalstep to tell some procedures and diagnostic functions if should be accounting or not
   //
   /////////
+  if(timeorder==0){
+    initialstep=1;
+  }
+  else{
+    initialstep=0;
+  }
+
   if(timeorder==numtimeorders-1){
     finalstep=1;
   }
@@ -1049,7 +1069,7 @@ static int advance_finitevolume(
   if(truestep){
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-    MYFUN(fluxcalc(stage,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf[2],fluxdt,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
   }
 
 #if(PRODUCTION==0)
@@ -1251,7 +1271,7 @@ static int advance_finitevolume(
       }
 
       // find uf==Uf and additional terms to ucum
-      dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, Cunew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+      dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
 
 
@@ -1324,7 +1344,7 @@ static int advance_finitevolume(
     if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
     {
-      compute_new_metric_substep(CUf,Cunew,pb,ucumformetric); // CHANGINGMARK : Not sure if Cunew here is correct
+      compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
     }
   }
 
@@ -2068,10 +2088,10 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 
 
 // convert point versions of U_i^{n} and dU -> U_i^{n+1} and other versions
-static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *Cunew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
+static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int pl,pliter;
-  void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *Cunew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
+  void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 
 
   // finally assign new Uf and ucum
@@ -2081,13 +2101,13 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
 
   // how much of Ui, dU, and Uf to keep for final solution
   // ultimately ucum is actual solution used to find final pf
-  PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(Cunew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+  PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
 
 
 
 #if(PRODUCTION==0)
   if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
-    PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, Cunew, Ui,  Uf, ucum);
+    PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
   }
 #endif
 
@@ -2097,7 +2117,7 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
 
 
 // Check result of dUtoU()
-static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *Cunew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
+static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int showfluxes;
   void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);

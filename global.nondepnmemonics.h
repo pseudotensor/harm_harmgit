@@ -279,6 +279,9 @@
 #define QUADRATICTYPE 2 // includes limiters to ovoid overshoots and new extremums within 3 point domain
 
 
+// for MODIFYEMFORVPOT
+#define MODIFYEMF 0
+#define MODIFYVPOT 1
 
 ////////////////////////////////////////////////
 //

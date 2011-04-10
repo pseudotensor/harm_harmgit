@@ -2,17 +2,23 @@
 // 1) U7/gdet and B3 don't agree.  Well, they agree outside surface.  But why not inside? A: Because bound B3 but not U7 that just comes from update of fluxes.
 // 2) Check why fluxdump out of synch
 // 3) Why values for dU are different than B3 for first dB3?
-// 4) Check regarding when update_vpot() is called.  Show workflow.
+// ***4) Check regarding when update_vpot() is called.  Show workflow.
 // 5) dU7/gdet is correct sign -- apparent chunkiness at large angle is just plotting (can plot negative and see more symmetric or use symmetric switch in twod.m and careful with image cursor since flipped -- only color is correct).
 // 6) F17/gdet makes sense to generate B3 sign everywhere.
 // 7) B3 large radius near NS near equator is not right.  Maybe already cancelling wave?  Kinda chunky at 45degs at large radius.
 // **8) B3 small radius is mostly wrong sign and very chunky.
-// **9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR
+// ***9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR
 // 10) uu2 correct sign everywhere except right around polar axis of NS -- but sign follows switches of B1,B2 for desired rotation.
 // *11) uu1<0 everywhere even at larger radius where should be uu1>0.  Caused by wrong sign for uu3?  Or maybe transient due to field moving near t=0?
 // **12) Figure out why compact for A_3 leads to kinks.  Improve A_{dir} interpolation so better near pole.
+// **13) Why does F->U3/omegaf get updated before (1 step off) of EMF->B3?
+//       SUBSTEP0: t=0 so nothing happens
+//       SUBSTEP1: t=bit more : EMF/F non-zero on surface of NS, and EMF/F used to update B3stag&B3/U3, so both should be updated
 
-// SHIT: uu0 dies on surface with new additions for bound_
+// ** SHIT: uu0 dies on surface with new additions for bound_ (mono and usecompact)
+// Seems to be usecompact, death in uu0 on surface at checkaphi 2 (normal DT for dumps) even if mono3=mono4=1 are set.
+
+
 
 /* 
  *
@@ -42,16 +48,16 @@ static FTYPE nz_func(FTYPE R) ;
 extern int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
 
 
-static int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+static int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
 
 
 
-static int check_nsdepth(void);
+static int check_nsdepth(SFTYPE time);
 
 
-static int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff);
+static int pos_NS(SFTYPE time, FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff);
 
-static int setNSparms(FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsoft, FTYPE *v0);
+static int setNSparms(SFTYPE time, FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsoft, FTYPE *v0);
 
 static int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside);
 static int is_dir_onactivegrid(int dir, int i, int j, int k);
@@ -61,9 +67,9 @@ static int is_ongrid(int dir, int i, int j, int k);
 static int get_del(int i, int j, int k, int ii, int jj, int kk, int *delorig, int *del);
 
 
-static int rescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout);
-static int unrescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout);
-static FTYPE rescale_A(int dir, int i, int j, int k);
+static int rescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout);
+static int unrescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout);
+static FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k);
 
 
 static int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4);
@@ -427,7 +433,7 @@ int init_global(void)
 
 
   // GODMARK TODO DEBUG TEST
-  DODIAGEVERYSUBSTEP=0;
+  DODIAGEVERYSUBSTEP=1;
 
 
   return(0);
@@ -476,7 +482,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     // check if NS has sufficient grid depth for boundary conditions to be used for interpolations on smoothish functions
     //
     //////////////////
-    check_nsdepth();    
+    check_nsdepth(t); // t is ok here
 
   }
 
@@ -560,19 +566,19 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-int init_dsandvels(int inittype, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+
+int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
-  int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
-  static int firsttime=1;
+
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==NSBH)
-  return(init_dsandvels_nsbh(inittype, CENT, whichvel, whichcoord, i, j, k, pr, pstag));
+  return(init_dsandvels_nsbh(inittype, pos, whichvel, whichcoord, time, i, j, k, pr, pstag));
 #endif
 
   // WHICHPROBLEM==GRBJET doesn't have initial dsandvels to set beyond atmosphere
@@ -832,10 +838,10 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 
 
 // get whether inside NS or not  (used by bounds.nsbh.c as well)
-int get_insideNS(int i, int j, int k, FTYPE *V, FTYPE *Bcon, FTYPE *vcon, FTYPE *inout)
+int get_insideNS(SFTYPE time, int i, int j, int k, FTYPE *V, FTYPE *Bcon, FTYPE *vcon, FTYPE *inout)
 {
   int insideNS;
-  FTYPE t=V[TT],r=V[RR],th=V[TH],ph=V[PH];
+  FTYPE r=V[RR],th=V[TH],ph=V[PH]; // time so more general
   FTYPE R=r*sin(th);
   FTYPE x,y,z;
   FTYPE xns,yns,zns;
@@ -855,11 +861,11 @@ int get_insideNS(int i, int j, int k, FTYPE *V, FTYPE *Bcon, FTYPE *vcon, FTYPE 
   insideNS=0;
 
   // get NS position
-  pos_NS(V, Vns, Vcartns, &absrdiff);
+  pos_NS(time,V, Vns, Vcartns, &absrdiff);
 
   // get NS parameters
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-  setNSparms(&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
+  setNSparms(time,&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
 
   if(absrdiff<=Rns){
     insideNS=1;
@@ -991,10 +997,10 @@ int get_insideNS(int i, int j, int k, FTYPE *V, FTYPE *Bcon, FTYPE *vcon, FTYPE 
 
 
 // get position of NS
-int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
+int pos_NS(SFTYPE time, FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
 {
   int insideNS;
-  FTYPE t=V[TT],r=V[RR],th=V[TH],ph=V[PH];
+  FTYPE r=V[RR],th=V[TH],ph=V[PH]; // time so more general
   FTYPE R=r*sin(th);
   FTYPE x,y,z;
   FTYPE thns,phns;
@@ -1003,7 +1009,7 @@ int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
 
   // get NS parameters
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-  setNSparms(&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
+  setNSparms(time,&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
 
 
   // Cartesian position
@@ -1025,8 +1031,8 @@ int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
 
     thns=0.5*M_PI;
 
-    xns=rns*cos(t*omegak); // and orbits
-    yns=rns*sin(t*omegak); // and orbits
+    xns=rns*cos(time*omegak); // and orbits
+    yns=rns*sin(time*omegak); // and orbits
     zns=0.0; // no change with time
 
     Rns=sqrt(xns*xns+zns*zns);
@@ -1037,7 +1043,7 @@ int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
     else if(yns<0.0) phns=1.5*M_PI;
     
 
-    Vcartns[TT]=t;
+    Vcartns[TT]=time;
     Vcartns[1]=xns;
     Vcartns[2]=yns;
     Vcartns[3]=zns;
@@ -1063,7 +1069,7 @@ int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
     xns=R;
     yns=y; // force as if no difference in \phi
     
-    Vcartns[TT]=t;
+    Vcartns[TT]=time;
     Vcartns[1]=rns; // quasi-position
     Vcartns[2]=yns;
     Vcartns[3]=zns;
@@ -1074,7 +1080,7 @@ int pos_NS(FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absrdiff)
   }
 
 
-  Vns[TT]=t;
+  Vns[TT]=time;
   Vns[1]=rns;
   Vns[2]=thns;
   Vns[3]=phns;
@@ -1246,7 +1252,7 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
 // Need to avoid seeing jumps, which requires 2*N?BND in each dimension.
 // Near edges of NS, can have less than 2*N?BND since (say) interpolation across (not into) NS will not have big jumps.
 // And closer to edge interpolation is, less strong those jumps will be.
-int check_nsdepth(void)
+int check_nsdepth(SFTYPE time)
 {
 
   int i,j,k;
@@ -1302,7 +1308,7 @@ int check_nsdepth(void)
   COMPLOOPN{
 
     bl_coord_ijk(i,j,k,pos,V);
-    isinside=get_insideNS(i, j, k, V, NULL,NULL,NULL);
+    isinside=get_insideNS(time,i, j, k, V, NULL,NULL,NULL);
     if(isinside){
       imaskptr[i]=1;
       jmaskptr[j]=1;
@@ -1316,7 +1322,7 @@ int check_nsdepth(void)
 	  for(ii=i-N1NOT1;ii<=i+N1NOT1;ii++){
 
 	    bl_coord_ijk(ii,jj,kk,pos,VV);
-    	    isinside2=get_insideNS(ii, jj, kk, VV, NULL, NULL, NULL);
+    	    isinside2=get_insideNS(time,ii, jj, kk, VV, NULL, NULL, NULL);
 	    
 
 	    // if original cell inside, but shifting 1 away is not, then that's the shell bounding the inside region!
@@ -1835,7 +1841,7 @@ int rescale_Bconp_and_Bcovphi_to_Bconphi(FTYPE *pr, struct of_geom *ptrgeom, FTY
 
 
 // take prin[pl] -> prout[all same except pl=B3 has Bd3 in it]
-int rescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
+int rescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
 {
   int pliter,pl;
   int rescale_Bcon_to_Bcovphi(FTYPE *pr,struct of_geom *ptrrgeom, FTYPE *Bd3);
@@ -1854,7 +1860,7 @@ int rescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
   else{ // then A_{dir}
     
     FTYPE rescale;
-    rescale=rescale_A(dir,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    rescale=rescale_A(time, dir,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     prout[0]=prin[0]*rescale;
 
   }
@@ -1867,7 +1873,7 @@ int rescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
 
 
 // take prin[all same except pl=B3 has Bd3 in it] -> prout[normal pl list with pl=B3 having B^3 in it]
-int unrescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
+int unrescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
 {
   int pliter,pl;
   int rescale_Bconp_and_Bcovphi_to_Bconphi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE Bd3);
@@ -1888,7 +1894,7 @@ int unrescale_pl(int dir, struct of_geom *ptrgeom, FTYPE *prin, FTYPE *prout)
   else{ // then A_{dir}
     
     FTYPE rescale;
-    rescale=rescale_A(dir,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    rescale=rescale_A(time,dir,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     prout[0]=prin[0]/rescale;
 
   }
@@ -2070,8 +2076,6 @@ int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int
 // One would think EMF that fixes U3 to NS surface rate would avoid that problem in long-term sense.
 int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  //extern int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
-  int init_dsandvels(int inittype, int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int pl,pliter;
   static int firstwhichdir;
   static int firsttime=1;
@@ -2113,7 +2117,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
     // if NS is moving, then must do this every substep and before boundary call since boundary call corresponds to at new time.
     //
     //////////////////
-    //    check_nsdepth();    // GODMARK: TODO: In 3D will need this to be time-dependent, but now that code for getting distances is too slow.
+    //    check_nsdepth(boundtime);    // GODMARK: TODO: In 3D will need this to be time-dependent, but now that code for getting distances is too slow.
   }
 
 
@@ -2347,7 +2351,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 	      for(yyy=yyystart;yyy<=yyyend;yyy++){
 		// rescale
-		rescale_pl(dir,ptrgeom[yyy+1], MAC(prim,ialt[yyy],jalt[yyy],kalt[yyy]),localsingle[yyy+1]);
+		rescale_pl(boundtime,dir,ptrgeom[yyy+1], MAC(prim,ialt[yyy],jalt[yyy],kalt[yyy]),localsingle[yyy+1]);
 		// reference point is between i,j,k and ii,jj,kk
 		xpos[yyy+1]=sqrt((iref-ialt[yyy])*(iref-ialt[yyy]) + (jref-jalt[yyy])*(jref-jalt[yyy]) + (kref-kalt[yyy])*(kref-kalt[yyy]));
 		if(yyy<=1) xpos[yyy+1]*=-1.0; // really negative relative to ijkref
@@ -2405,7 +2409,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 	      // GODMARK TODO TEST DEBUG:
 	      usecompact=0;
-	      //usecompact=1; // default is can do it
+	      //	      usecompact=1; // default is can do it
  
 
 	      PLOOP(pliter,pl) if(usecompactpl[pl]==0) usecompact=0;
@@ -2416,7 +2420,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 		// get ijkref geometry
 		get_geometry(icorn, jcorn, kcorn, poscorn, ptrgeomcorn);
 		// unrescale
-		unrescale_pl(dir,ptrgeomcorn, localsingle[0],compactvalue); // so compactvalue is back to normal prim type (i.e. not rescaled)
+		unrescale_pl(boundtime,dir,ptrgeomcorn, localsingle[0],compactvalue); // so compactvalue is back to normal prim type (i.e. not rescaled)
 	      }
 
 
@@ -2513,10 +2517,10 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 	      
 	      // get rescaled prim to interpolate
-	      rescale_pl(dir,ptrgeom[1], MAC(prim,ii,jj,kk),localsingle[1]);
-	      rescale_pl(dir,ptrgeom[2], MAC(prim,iii,jjj,kkk),localsingle[2]);
-	      if(usecompact==0) rescale_pl(dir,ptrgeom[3], MAC(prim,iiii,jjjj,kkkk),localsingle[3]);
-	      else rescale_pl(dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
+	      rescale_pl(boundtime,dir,ptrgeom[1], MAC(prim,ii,jj,kk),localsingle[1]);
+	      rescale_pl(boundtime,dir,ptrgeom[2], MAC(prim,iii,jjj,kkk),localsingle[2]);
+	      if(usecompact==0) rescale_pl(boundtime,dir,ptrgeom[3], MAC(prim,iiii,jjjj,kkkk),localsingle[3]);
+	      else rescale_pl(boundtime,dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
 
 	      
 	      
@@ -2644,7 +2648,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 	      // unrescale to get final prim
-	      unrescale_pl(dir,ptrgeom[0],localsingle[0], prnew);
+	      unrescale_pl(boundtime,dir,ptrgeom[0],localsingle[0], prnew);
 
 
 	      // GODMARK TEST DEBUG (try simple copy for U3,B3 -- note, this means copying from corner for COUNT=2 DUP cells, which leads to pointiness in copy since corners aren't updated in step with grid-directed cells)
@@ -2693,7 +2697,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 	  if(interpproblem==1){
 	    dualfprintf(fail_file,"CENT: Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
 
-	    initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),NULL);
+	    initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,boundtime,i,j,k,MAC(prim,i,j,k),NULL);
 
 	    if(initreturn>0){
 	      FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
@@ -2725,8 +2729,6 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 //int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  //extern int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
-  int init_dsandvels(int inittype, int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int pl,pliter;
   static int firstwhichdir;
   static int firsttime=1;
@@ -2764,7 +2766,7 @@ int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir
     // if NS is moving, then must do this every substep and before boundary call since boundary call corresponds to at new time.
     //
     //////////////////
-    //    check_nsdepth();    // GODMARK: TODO: In 3D will need this to be time-dependent, but now that code for getting distances is too slow.
+    //    check_nsdepth(boundtime);    // GODMARK: TODO: In 3D will need this to be time-dependent, but now that code for getting distances is too slow.
   }
 
 
@@ -2918,7 +2920,7 @@ int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir
 	    dualfprintf(fail_file,"Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
 	    dualfprintf(fail_file,"maxdist=%d\n",maxdist);
 
-	    initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),NULL);
+	    initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,i,j,k,boundtime,MAC(prim,i,j,k),NULL);
 
 	    if(initreturn>0){
 	      FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
@@ -2954,8 +2956,6 @@ int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir
 // only averages if near surface (so bad to higher order)
 int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  //extern int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
-  int init_dsandvels(int inittype, int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int pl,pliter;
   static int firstwhichdir;
   static int firsttime=1;
@@ -2983,7 +2983,7 @@ int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir
     // if NS is moving, then must do this every substep and before boundary call since boundary call corresponds to at new time.
     //
     //////////////////
-    check_nsdepth();    
+    //check_nsdepth(boundtime);    
   }
 
 
@@ -3099,8 +3099,8 @@ int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir
 	// inputted (to function) prim[] is inputted here since want to change that CENT value of prim
 	// prext is fed as pstag but really contains nearest primitive external to NS
 	// request densities for all computational centers
-	initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),prextptr);
-	//	initreturn=init_dsandvels(inittype, &whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),NULL);
+	initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,boundtime,i,j,k,MAC(prim,i,j,k),prextptr);
+	//	initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,boundtime,i,j,k,MAC(prim,i,j,k),NULL);
 
 	if(initreturn>0){
 	  FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
@@ -3141,7 +3141,7 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
   //    also, otherwise don't know how to modify B^i.  If just refix B^n to desired solution, will mess up divB=0 just outside star!
   //    also, then less sensitive to how treat edges of boundary for NS since divb=0 for sure no mater what I do.
   // So bound full Aperp1 & Aperp2 on surface, but copy Apar (or leave alone and just copy Bperp1 and Bperp2 as above)
-  // Requires EVOLVEWITHVPOT==1
+  // Requires EVOLVEWITHVPOT==1 (NO, not modifying pstag)
   //
   // old way requires setting B^i and A_i
 
@@ -3159,15 +3159,16 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
   // So A_i is dealt with at same time as when fix some components of A_i, rather than here.
 
 
-  if(EVOLVEWITHVPOT==0){
-    dualfprintf(fail_file,"Need EVOLVEWITHVPOT>0\n");
-    myexit(869346311);
-  }
 
-  if(TRACKVPOT==0){
-    dualfprintf(fail_file,"Good to have TRACKVPOT>0 since otherwise derived fieldcalc(smcalc) A_i looks bad even if B^i is good.\n");
-    myexit(869346312);
-  }
+  //  if(EVOLVEWITHVPOT==0){
+  //    dualfprintf(fail_file,"Need EVOLVEWITHVPOT>0\n");
+  //    myexit(869346311);
+  //  }
+
+  //  if(TRACKVPOT==0){
+  //    dualfprintf(fail_file,"Good to have TRACKVPOT>0 since otherwise derived fieldcalc(smcalc) A_i looks bad even if B^i is good.\n");
+  //    myexit(869346312);
+  //  }
 
 
   if(BOUNDPLPR==0){
@@ -3344,7 +3345,7 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
 // Also where A_i is extrapolated (instead of only fixed), which takes care of need to set staggered fields and centered fields.  Both will be correct with evolved and then fixed-up A_i from this function
 // NOTE: vpot[1-3][i][j][k]  not vpot[i][j][k][1-3]
 // NOTE: get_vpot_fluxctstag_primecoords() gets A_i at CORNi, not at same location for staggered field.
-void adjust_fluxctstag_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
   int i,j,k;
@@ -3352,25 +3353,25 @@ void adjust_fluxctstag_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
   int loc;
   FTYPE vpotlocal[NDIM];
   int ii,jj,kk;
-  void adjust_fluxctstag_vpot_dosetfix(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
-  void adjust_fluxctstag_vpot_dosetextrapdirect(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
-  void adjust_fluxctstag_vpot_dosetextrapdirect_deep(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
-  void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
-  void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
-  void adjust_fluxctstag_vpot_dosetextrap(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetfix(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetextrapdirect(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetfinalforce(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetextrap(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
 
 
   if(DOSETFIX){
-    adjust_fluxctstag_vpot_dosetfix(prim,Nvec,vpot);
+    adjust_fluxctstag_vpot_dosetfix(fluxtime,prim,Nvec,vpot);
   }
 
 
   //  if(DOSETEXTRAPDIRECT && t>SWITCHT1){// hard switch in time
   if(DOSETEXTRAPDIRECT){
-    //    adjust_fluxctstag_vpot_dosetextrapdirect(prim,Nvec,vpot);
-    //    adjust_fluxctstag_vpot_dosetextrapdirect_deep(prim,Nvec,vpot);
-    adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(prim,Nvec,vpot);
+    //    adjust_fluxctstag_vpot_dosetextrapdirect(fluxtime,prim,Nvec,vpot);
+    //    adjust_fluxctstag_vpot_dosetextrapdirect_deep(fluxtime,prim,Nvec,vpot);
+    adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(fluxtime,prim,Nvec,vpot);
   }
 
 
@@ -3379,11 +3380,11 @@ void adjust_fluxctstag_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 
   if(DOSETEXTRAP && t>SWITCHT1){// hard switch in time
     //if(DOSETEXTRAP){
-    adjust_fluxctstag_vpot_dosetextrap(prim,Nvec,vpot);
+    adjust_fluxctstag_vpot_dosetextrap(fluxtime,prim,Nvec,vpot);
   }
   if(DOSETFINALFORCE && t>SWITCHT1){// hard switch in time
     //  if(DOSETFINALFORCE){
-    adjust_fluxctstag_vpot_dosetfinalforce(prim,Nvec,vpot);
+    adjust_fluxctstag_vpot_dosetfinalforce(fluxtime,prim,Nvec,vpot);
   }
 
 
@@ -3393,7 +3394,7 @@ void adjust_fluxctstag_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 
 
 // Fix A_i in NS and surface
-void adjust_fluxctstag_vpot_dosetfix(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetfix(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
   int i,j,k;
@@ -3420,7 +3421,7 @@ void adjust_fluxctstag_vpot_dosetfix(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
       // Set A_i in volume (lower CORNi of cell)
       // get_vpot_fluxctstag_primecoords gets A_i in PRIMECOORDS coords as required for vpot[]
-      get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
       MACP1A0(vpot,1,i,j,k)       =vpotlocal[1];
       MACP1A0(vpot,2,i,j,k)       =vpotlocal[2];
       MACP1A0(vpot,3,i,j,k)       =vpotlocal[3];
@@ -3428,31 +3429,31 @@ void adjust_fluxctstag_vpot_dosetfix(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
       // Set A_i on surfaces completely (other CORNi's of cell)
 
       // A_x A_y [up k]
-      get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
       MACP1A0(vpot,1,i,j,k+N3NOT1)       =vpotlocal[1];
       MACP1A0(vpot,2,i,j,k+N3NOT1)       =vpotlocal[2];
 
       // A_x A_z [up j]
-      get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
       MACP1A0(vpot,1,i,j+N2NOT1,k)       =vpotlocal[1];
       MACP1A0(vpot,3,i,j+N2NOT1,k)       =vpotlocal[3];
 
       // A_y A_z [up i]
-      get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
       MACP1A0(vpot,2,i+N1NOT1,j,k)       =vpotlocal[2];
       MACP1A0(vpot,3,i+N1NOT1,j,k)       =vpotlocal[3];
 
 
       // A_x [up j-k]
-      get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
       MACP1A0(vpot,1,i,j+N2NOT1,k+N3NOT1)       =vpotlocal[1];
 
       // A_y [up i-k]
-      get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
       MACP1A0(vpot,2,i+N1NOT1,j,k+N3NOT1)       =vpotlocal[2];
 
       // A_z [up i-j]
-      get_vpot_fluxctstag_primecoords(i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
       MACP1A0(vpot,3,i+N1NOT1,j+N2NOT1,k)       =vpotlocal[3];
 
     }
@@ -3467,7 +3468,7 @@ void adjust_fluxctstag_vpot_dosetfix(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 // copy/extrapolate A_i to inside NS by 1 layer
-void adjust_fluxctstag_vpot_dosetextrapdirect(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetextrapdirect(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
   int i,j,k;
@@ -3652,7 +3653,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect(FTYPE (*prim)[NSTORE2][NSTORE3][NP
 // Not subtracting off original A_i since that would be too speculative since some regions shift alot in angle (e.g. polar region where A_\phi goes through zero)
 //
 // This rescale factor makes difference near "equatorial" plane where otherwise (using linear extrapolation) field flips sign once just inside NS
-FTYPE rescale_A(int dir, int i, int j, int k)
+FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
 {
   int pos;
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
@@ -3660,7 +3661,7 @@ FTYPE rescale_A(int dir, int i, int j, int k)
   FTYPE X2[NDIM],V2[NDIM];
 
   // get NS parameters
-  setNSparms(&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
+  setNSparms(time,&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
 
   // set pos for computing geometry and primitive (not done so far)
@@ -3671,7 +3672,7 @@ FTYPE rescale_A(int dir, int i, int j, int k)
 
   // determine rescale function
   bl_coord_ijk(i,j,k,pos,V);
-  FTYPE t=V[TT],r=V[RR],th=V[TH],ph=V[PH],R=r*sin(th);
+  V[0]=time; FTYPE r=V[RR],th=V[TH],ph=V[PH],R=r*sin(th); // use time instead of V[0] or t since could be used at fluxtime instead of t or V[0]
   FTYPE x,y,z;
 
 
@@ -3685,7 +3686,7 @@ FTYPE rescale_A(int dir, int i, int j, int k)
 
   // get NS position
   FTYPE absrdiff;
-  pos_NS(V, Vns, Vcartns, &absrdiff);
+  pos_NS(time, V, Vns, Vcartns, &absrdiff);
   //	  xns=Vcartns[1];
   //	  yns=Vcartns[2];
   //	  zns=Vcartns[3];
@@ -3721,7 +3722,7 @@ FTYPE rescale_A(int dir, int i, int j, int k)
 // copy/extrapolate A_i to inside NS
 // super loop copied/emulated from boundary condition code for CENT quantitites
 // GODMARK: NOTE: TODO: To do averaging, this uses NS surface values that are fixed (in time), while normal bound code only uses CENT and not fixed FACE values.
-void adjust_fluxctstag_vpot_dosetextrapdirect_deep(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
 
@@ -3797,7 +3798,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(FTYPE (*prim)[NSTORE2][NSTORE
 	  // add copy contribution for differences in i-direction for A_i
 	  // add linear interpolation/extrapolation contribution for other directions
 
-	  FTYPE rescalefunc=rescale_A(dir,i,j,k);
+	  FTYPE rescalefunc=rescale_A(fluxtime,dir,i,j,k);
 
 
 	  // temp things
@@ -3871,7 +3872,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(FTYPE (*prim)[NSTORE2][NSTORE
 		//		get_geometry(ii, jj, kk, CENT, ptrgeomii);
 
 		FTYPE rescalefunciijjkk;
-		rescalefunciijjkk=rescale_A(dir,ii,jj,kk);
+		rescalefunciijjkk=rescale_A(fluxtime,dir,ii,jj,kk);
 	  
 
 		vpotlocalsingle += (MACP1A0(vpot,dir,ii,jj,kk)*rescalefunciijjkk)*weight;
@@ -3892,7 +3893,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(FTYPE (*prim)[NSTORE2][NSTORE
 	  else{
 	    dualfprintf(fail_file,"adjust_fluxctstag_vpot_dosetextrapdirect_deep(): Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
 
-	    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+	    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 	    MACP1A0(vpot,dir,i,j,k)=vpotlocal[dir];
 
 	  }
@@ -4000,7 +4001,7 @@ int is_ongrid(int dir, int i, int j, int k)
 
 
 // similar to adjust_fluxctstag_vpot_dosetextrapdirect_deep(), but instead of super average over many nearby zones, choose nearest neighbor and it's path-like partners for parabolic interpolation along that path
-void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
 
@@ -4172,7 +4173,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 		xpos[0]=0.0;
 
 		for(yyy=0;yyy<=3;yyy++){
-		  rescalefunc[yyy+1]=rescale_A(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
+		  rescalefunc[yyy+1]=rescale_A(fluxtime,dir,ialt[yyy],jalt[yyy],kalt[yyy]);
 		  // get rescaled A_i to interpolate
 		  vpotlocalsingle[yyy+1] = MACP1A0(vpot,dir,ialt[yyy],jalt[yyy],kalt[yyy])*rescalefunc[yyy+1];
 		  // reference point is between i,j,k and ii,jj,kk
@@ -4196,7 +4197,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 		xpos[0]=0.0;
 
 		for(yyy=1;yyy<=2;yyy++){
-		  rescalefunc[yyy+1]=rescale_A(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
+		  rescalefunc[yyy+1]=rescale_A(fluxtime,dir,ialt[yyy],jalt[yyy],kalt[yyy]);
 		  // get rescaled A_i to interpolate
 		  vpotlocalsingle[yyy+1] = MACP1A0(vpot,dir,ialt[yyy],jalt[yyy],kalt[yyy])*rescalefunc[yyy+1];
 		  // reference point is between i,j,k and ii,jj,kk
@@ -4224,7 +4225,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 	      // transfer over compact interpolated value
 	      if(usecompact==1){
 		
-		rescalefuncorig=0.5*(rescale_A(dir,i,j,k)+rescale_A(dir,ii,jj,kk));
+		rescalefuncorig=0.5*(rescale_A(fluxtime,dir,i,j,k)+rescale_A(fluxtime,dir,ii,jj,kk));
 		compactvalue=(vpotlocalsingle[0]/rescalefuncorig);
 	      }
 
@@ -4271,10 +4272,10 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 
 
 	      
-	      rescalefunc[1]=rescale_A(dir,ii,jj,kk);
-	      rescalefunc[2]=rescale_A(dir,iii,jjj,kkk);
-	      if(usecompact==0) rescalefunc[3]=rescale_A(dir,iiii,jjjj,kkkk);
-	      else rescalefunc[3]=0.5*(rescale_A(dir,i,j,k)+rescale_A(dir,ii,jj,kk)); // then just average rescale to compact reference point
+	      rescalefunc[1]=rescale_A(fluxtime,dir,ii,jj,kk);
+	      rescalefunc[2]=rescale_A(fluxtime,dir,iii,jjj,kkk);
+	      if(usecompact==0) rescalefunc[3]=rescale_A(fluxtime,dir,iiii,jjjj,kkkk);
+	      else rescalefunc[3]=0.5*(rescale_A(fluxtime,dir,i,j,k)+rescale_A(fluxtime,dir,ii,jj,kk)); // then just average rescale to compact reference point
 	    
 	      // get rescaled A_i to interpolate
 	      vpotlocalsingle[1] = MACP1A0(vpot,dir,ii,jj,kk)*rescalefunc[1];
@@ -4327,7 +4328,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 	    if(1){
 	    
 	      // obtain i,j,k rescaling so can unrescale    
-	      rescalefuncorig=rescale_A(dir,i,j,k);
+	      rescalefuncorig=rescale_A(fluxtime,dir,i,j,k);
 	      MACP1A0(vpot,dir,i,j,k)=(vpotlocalsingle[0]/rescalefuncorig);
 	    
 	      dualfprintf(fail_file,"PDFPARA: %21.15g %d\n",vpotabsavg[avgdir],signcompare[avgdir]);
@@ -4382,7 +4383,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 
 	    
 
-	    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+	    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 	    MACP1A0(vpot,dir,i,j,k)=vpotlocal[dir];
 	  }
 
@@ -4409,7 +4410,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(FTYPE (*prim)[NSTORE2][NS
 
 
 // generic abusive extrapolation of A_i into NS (no longer overwrites fixed A_i, but not complete copy/extrapolation when multiple cells involved)
-void adjust_fluxctstag_vpot_dosetextrap(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetextrap(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
   int i,j,k;
@@ -4675,7 +4676,7 @@ void adjust_fluxctstag_vpot_dosetextrap(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], in
 
 
 // used with DOSETEXTRAP function so correctly ensures A_i's that should be fixed are fixed
-void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxctstag_vpot_dosetfinalforce(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
   int i,j,k;
@@ -4717,14 +4718,14 @@ void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 		  if(k+N3NOT1==kk){
 		    // so set: A_x @ k+1 && (j || j+1) and  A_y @ k+1 (i || i+1)
 
-		    get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k+N3NOT1)       =vpotlocal[1];
 		    MACP1A0(vpot,2,i,j,k+N3NOT1)       =vpotlocal[2];
 
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k+N3NOT1)=vpotlocal[1];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k+N3NOT1)=vpotlocal[2];
 
 		    // extrapolate/copy A_z @ 
@@ -4733,64 +4734,64 @@ void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 		  else if(k-N3NOT1==kk){
 		    // so set: A_x @ k && (j || j+1) and  A_y @ k (i || i+1)
 
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k)       =vpotlocal[1];
 		    MACP1A0(vpot,2,i,j,k)       =vpotlocal[2];
 
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k)=vpotlocal[1];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k)=vpotlocal[2];
 		  }
 		}// end if j==jj
 		else if(j+N2NOT1==jj){
 		  if(k+N3NOT1==kk){
 		    // so set: A_x @ j+1 k+1
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k+N3NOT1)=vpotlocal[1];
 		  }
 		  else if(k-N3NOT1==kk){
 		    // so set: A_x @ j+1 k
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k)=vpotlocal[1];
 		  }
 		  else if(k==kk){
 		    // so set: A_x @ j+1,k AND j+1,k+1
 		    //    set: A_z @ j+1,i AND j+1,i+1
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k)=vpotlocal[1];
 		    MACP1A0(vpot,3,i,j+N2NOT1,k)=vpotlocal[3];
 
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j+N2NOT1,k+N3NOT1)=vpotlocal[1];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i+N1NOT1,j+N2NOT1,k)=vpotlocal[3];
 		  }
 		}
 		else if(j-N2NOT1==jj){
 		  if(k+N3NOT1==kk){
 		    // so set: A_x @ j k+1
-		    get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k+N3NOT1)=vpotlocal[1];
 		  }
 		  else if(k-N3NOT1==kk){
 		    // so set: A_x @ j k
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k)=vpotlocal[1];
 		  }
 		  else if(k==kk){
 		    // so set: A_x @ j,k AND j,k+1
 		    //    set: A_z @ j,i AND j,i+1
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k)=vpotlocal[1];
 		    MACP1A0(vpot,3,i,j,k)=vpotlocal[3];
 
-		    get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,1,i,j,k+N3NOT1)=vpotlocal[1];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i+N1NOT1,j,k)=vpotlocal[3];
 		  }
 		}
@@ -4799,38 +4800,38 @@ void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 		if(j==jj){ // 3 positions
 		  if(k==kk){
 		    // so set A_y @ k,j AND A_y @ k+1,j AND A_z @ k,j AND A_z @ k,j+1
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,2,i,j,k)       =vpotlocal[2];
 		    MACP1A0(vpot,3,i,j,k)       =vpotlocal[3];
 
-		    get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,2,i,j,k+N3NOT1)       =vpotlocal[2];
 
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i,j+N2NOT1,k)       =vpotlocal[3];
 		  }
 		  else if(k+N3NOT1==kk){
 		    // so set: A_y @ k+1 && j
-		    get_vpot_fluxctstag_primecoords(i,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,2,i,j,k+N3NOT1)=vpotlocal[2];
 		  }
 		  else if(k-N3NOT1==kk){
 		    // so set: A_y @ k && j
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,2,i,j,k)=vpotlocal[2];
 		  }
 		}// end if j==jj
 		else if(j+N2NOT1==jj){
 		  if(k==kk){
 		    // so set: A_z @ j+1
-		    get_vpot_fluxctstag_primecoords(i,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i,j+N2NOT1,k)=vpotlocal[3];
 		  }
 		}
 		else if(j-N2NOT1==jj){
 		  if(k==kk){
 		    // so set: A_z @ j
-		    get_vpot_fluxctstag_primecoords(i,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i,j,k)=vpotlocal[3];
 		  }
 		}
@@ -4840,38 +4841,38 @@ void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 		if(j==jj){ // 3 positions
 		  if(k==kk){
 		    // so set A_y @ k,j AND A_y @ k+1,j AND A_z @ k,j AND A_z @ k,j+1
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k)       =vpotlocal[2];
 		    MACP1A0(vpot,3,i+N1NOT1,j,k)       =vpotlocal[3];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k+N3NOT1)       =vpotlocal[2];
 
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i+N1NOT1,j+N2NOT1,k)       =vpotlocal[3];
 		  }
 		  else if(k+N3NOT1==kk){
 		    // so set: A_y @ k+1 && j
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k+N3NOT1)=vpotlocal[2];
 		  }
 		  else if(k-N3NOT1==kk){
 		    // so set: A_y @ k && j
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,2,i+N1NOT1,j,k)=vpotlocal[2];
 		  }
 		}// end if j==jj
 		else if(j+N2NOT1==jj){
 		  if(k==kk){
 		    // so set: A_z @ j+1
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i+N1NOT1,j+N2NOT1,k)=vpotlocal[3];
 		  }
 		}
 		else if(j-N2NOT1==jj){
 		  if(k==kk){
 		    // so set: A_z @ j
-		    get_vpot_fluxctstag_primecoords(i+N1NOT1,j,k,prim,vpotlocal);
+		    get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
 		    MACP1A0(vpot,3,i+N1NOT1,j,k)=vpotlocal[3];
 		  }
 		}
@@ -4896,14 +4897,14 @@ void adjust_fluxctstag_vpot_dosetfinalforce(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 
 
 
-void adjust_fluxcttoth_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void adjust_fluxcttoth_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
   // not used
 }
 
 
-void adjust_fluxcttoth_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+void adjust_fluxcttoth_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
 {
 
   // do nothing since assume using staggered fields
@@ -4921,7 +4922,7 @@ void adjust_fluxcttoth_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[N
 // special NS boundary code for EMFs for staggered fields
 //void adjust_fluxctstag_emfs_new(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 // GODMARK TODO DEBUG
-void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
   // v1) force EMFperp1=EMFperp2=0 after computed EMF so that B^n stays fixed.
@@ -5153,7 +5154,7 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 	// prim is default field if interpolation-extrapolation to loc=pos fails to be contained entirely within NS
 	// ok that don't fill "pstag" entry with pext[] type quantity, since not setting densities here and don't care about v||B
 	///////////////////////
-	initreturn=init_dsandvels_nsbh(inittype, pos, &whichvel, &whichcoord, i, j, k, pr, NULL);
+	initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, i, j, k, pr, NULL);
 
 	// if successfully got raw primitive, then transform raw primitive to WHICHVEL/PRIMECOORD primitive and compute EMF
 	if(initreturn>0){
@@ -5200,7 +5201,7 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 	    // DEBUG: CHECK that \Omega_F is as expected
 	    // get NS parameters
 	    FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-	    setNSparms(&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
+	    setNSparms(fluxtime, &rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
 
 	    FTYPE dxdxp[NDIM][NDIM];
 	    dxdxprim_ijk(i,j,k,pos,dxdxp);
@@ -5242,7 +5243,7 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 
 
 // special NS boundary code for EMFs for staggered fields
-void adjust_fluxctstag_emfs_old1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void adjust_fluxctstag_emfs_old1(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 // GODMARK TODO DEBUG
 //void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
@@ -5394,7 +5395,7 @@ void adjust_fluxctstag_emfs_old1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec
 		// prim is default field if interpolation-extrapolation to loc=pos fails to be contained entirely within NS
 		// ok that don't fill "pstag" entry with pext[] type quantity, since not setting densities here and don't care about v||B
 		///////////////////////
-		initreturn=init_dsandvels_nsbh(inittype, pos, &whichvel, &whichcoord, ii, jj, kk, pr, NULL);
+		initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, ii, jj, kk, pr, NULL);
 
 		// if successfully got raw primitive, then transform raw primitive to WHICHVEL/PRIMECOORD primitive and compute EMF
 		if(initreturn>0){
@@ -5441,7 +5442,7 @@ void adjust_fluxctstag_emfs_old1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec
 		    // DEBUG: CHECK that \Omega_F is as expected
 		    // get NS parameters
 		    FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-		    setNSparms(&rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
+		    setNSparms(fluxtime, &rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
 
 		    FTYPE dxdxp[NDIM][NDIM];
 		    dxdxprim_ijk(ii,jj,kk,pos,dxdxp);
@@ -5508,7 +5509,7 @@ void remapplpr_nsbh( int dir, int idel, int jdel, int kdel, int i, int j, int k,
 // p_l and p_r are normal set of primitives (not rescaled)
 // as shown in flux.c, the positions are such that:  |   i-1  p_l|p_r  i   |
 // So p_l and p_r are on lower edge always
-void set_plpr_nsbh(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r)
+void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r)
 {
   int initreturn,inittype,pos;
   int whichvel,whichcoord;
@@ -5635,7 +5636,7 @@ void set_plpr_nsbh(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3]
 
       PLOOP(pliter,pl) prother[pl]=pr[pl];
 
-      initreturn=init_dsandvels_nsbh(inittype, pos, &whichvel, &whichcoord, i, j, k, prother, prext); // only time really input prext, to be used as value that is external to NS if required. -- so far not required.
+      initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, i, j, k, prother, prext); // only time really input prext, to be used as value that is external to NS if required. -- so far not required.
 
       if(initreturn>0){
 	FAILSTATEMENT("init.c:set_plpr_nsbh()", "init_dsandvels()", 1);
@@ -5680,7 +5681,7 @@ void set_plpr_nsbh(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3]
     //
     //////////////////
     // only turn this on once sure no shocks or discontinuities formed near NS surface, else leads to instabilities near surface since not enough dissipation for shocks/discontinuities to spread-out
-    FTYPE switchvalue=switcht(t,SWITCHT2,SWITCHT4);
+    FTYPE switchvalue=switcht(fluxtime,SWITCHT2,SWITCHT4);
     //    switchvalue=1.0; // override TEST
     PLOOP(pliter,pl){
 
@@ -5718,7 +5719,7 @@ void set_plpr_nsbh(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3]
 //
 // Both pr and pstag are PRIMECOORDS/WHICHVEL values
 //
-int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   SFTYPE sth, cth;
   SFTYPE ur, uh, up, u, rho;
@@ -5746,6 +5747,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, in
 
   // get coordinate stuff
   bl_coord_ijk(i,j,k,pos,V);
+  V[0]=time; // override with desired time in case later things use V[0]
   dxdxprim_ijk(i,j,k,pos,dxdxp);
   r=V[1];
   th=V[2];
@@ -5787,8 +5789,10 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, in
   else if(insideNS==1 && inittype!=1 || inittype<=-1){ // inside NS (or forced assumed inside NS), so need to set rho,u,v^i as required for stationary B^n, etc.  Also used to evolve these quantities
 
 
+    dualfprintf(fail_file,"INSET: nstep=%ld steppart=%d t=%21.15g dt=%21.15g : time=%21.15g\n",nstep,steppart,t,dt,time);
+
     FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-    setNSparms(&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
+    setNSparms(time,&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
     FTYPE v0touse=v0; // default
 
 
@@ -6205,7 +6209,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, in
     FTYPE sigma;
 
     // 0->1
-    sigmaswitch=switcht(t,SWITCHT0,SWITCHT2);
+    sigmaswitch=switcht(time,SWITCHT0,SWITCHT2);
     // set sigma with (in general) a temporal switch
     sigma=SIGMA0*(sigmaswitch) + SIGMAT0*(1.0-sigmaswitch);
     // GODMARK TODO:
@@ -6420,7 +6424,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, in
 
     // Check signature of vcon[BL] using Bcon[BL]
     FTYPE inout;
-    get_insideNS(i, j, k, V, Bcon, vconparB, &inout);
+    get_insideNS(time, i, j, k, V, Bcon, vconparB, &inout);
 
     // correct signature of vcon along B so fluid flow is always going *out* of NS
     DLOOPA(jj) vcon[jj]=vconparB[jj]*inout + vconperpB[jj];
@@ -6608,7 +6612,7 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 
 
 
-int setNSparms(FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsoft, FTYPE *v0)
+int setNSparms(SFTYPE time, FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsoft, FTYPE *v0)
 {
 
   *rns=RSEP; // orbital separation
@@ -6621,9 +6625,11 @@ int setNSparms(FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsof
   // TEST
   //  *omegak=0;
 
+  //  dualfprintf(fail_file,"INSET: setNSparms: time=%21.15g\n",time);
+
   
   // 0->1 after sigma has increased somewhat
-  FTYPE omegafswitch=switcht(t,SWITCHT4,SWITCHT6);
+  FTYPE omegafswitch=switcht(time,SWITCHT4,SWITCHT6);
   // TEST
   //  omegafswitch=1.0;
   
@@ -6644,11 +6650,12 @@ int setNSparms(FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsof
 
 
 // offset NS dipole
-FTYPE setnsoffset1(int l, FTYPE *V)
+FTYPE setnsoffset1(int l, SFTYPE time, FTYPE *V)
 {
   FTYPE A3sign;
   FTYPE aphi;
-  FTYPE t=V[TT],r=V[RR],th=V[TH],ph=V[PH],R=r*sin(th);
+  V[0]=time; // override
+  FTYPE r=V[RR],th=V[TH],ph=V[PH],R=r*sin(th); // time is for time variable
   FTYPE x,y,z;
   FTYPE xns,yns,zns;
   FTYPE Vns[NDIM],Vcartns[NDIM];
@@ -6665,14 +6672,14 @@ FTYPE setnsoffset1(int l, FTYPE *V)
 
   // get NS position
   FTYPE absrdiff;
-  pos_NS(V, Vns, Vcartns, &absrdiff);
+  pos_NS(time, V, Vns, Vcartns, &absrdiff);
   xns=Vcartns[1];
   yns=Vcartns[2];
   zns=Vcartns[3];
 
   
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-  setNSparms(&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
+  setNSparms(time, &rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
 
 
@@ -6764,7 +6771,7 @@ FTYPE setnsoffset1(int l, FTYPE *V)
 
 // assumes normal field in pr
 // SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, u_av,q;
   FTYPE r,th;
@@ -6882,7 +6889,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
   if(FIELDTYPE==NSFIELDOFFSET1){
-    vpot += setnsoffset1(l,V);
+    vpot += setnsoffset1(l,time,V);
   }
 
 
@@ -6904,11 +6911,11 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
 
-int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
   int fieldfrompotential[NDIM];
-  void adjust_fluxctstag_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   int Nvec[NDIM];
 
 
@@ -6918,7 +6925,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 
   if(FLUXB==FLUXCTSTAG){
     // before ccompute anything, fix-up A_i as done during evolution after A_i is updated
-    adjust_fluxctstag_vpot(prim, Nvec, A);
+    adjust_fluxctstag_vpot(time, prim, Nvec, A);
   }
   else{
     dualfprintf(fail_file,"SUPERWARNING: Should use staggered field for NSBH problem\n");
@@ -7004,8 +7011,8 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
-  int normalize_field_nsbh(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int normalize_densities_postnormalizefield(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  int normalize_field_nsbh(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+  int normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
  
   if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK){
@@ -7013,8 +7020,8 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
     if(funreturn!=0) return(funreturn);
   }
   else if(WHICHPROBLEM==NSBH){
-    funreturn=normalize_field_nsbh(prim, pstag, ucons, vpot, Bhat);
-    if(EOMTYPE!=EOMFFDE) normalize_densities_postnormalizefield(prim);
+    funreturn=normalize_field_nsbh(t, prim, pstag, ucons, vpot, Bhat); // t is ok here
+    if(EOMTYPE!=EOMFFDE) normalize_densities_postnormalizefield(t, prim); // t is ok here
 
     if(funreturn!=0) return(funreturn);    
   }
@@ -7033,15 +7040,15 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 #endif
 
 // assumes normal field definition for NSBH problem
-int normalize_field_nsbh(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int normalize_field_nsbh(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
 
 
   FTYPE sigma_pole, bsq_pole, norm;
-  int get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole);
+  int get_sigmabsq_atpole(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole);
   
   // get initial maximum
-  get_sigmabsq_atpole(prim, &sigma_pole,&bsq_pole);
+  get_sigmabsq_atpole(time, prim, &sigma_pole,&bsq_pole);
   trifprintf("initial sigma_pole: %21.15g bsq_pole: %21.15g\n", sigma_pole,bsq_pole);
 
   if(NORMALIZEFIELDMETHOD==0){
@@ -7061,7 +7068,7 @@ int normalize_field_nsbh(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NS
 
 
   // get new maxes to check if normalization is correct
-  get_sigmabsq_atpole(prim, &sigma_pole,&bsq_pole);
+  get_sigmabsq_atpole(time, prim, &sigma_pole,&bsq_pole);
   trifprintf("new initial sigma_pole: %21.15g bsq_pole: %21.15g\n", sigma_pole,bsq_pole);
 
 
@@ -7085,7 +7092,7 @@ int normalize_field_nsbh(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NS
 
 
 // normalize densities after field has been normalized
-int normalize_densities_postnormalizefield(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
   struct of_geom geomdontuse;
@@ -7103,7 +7110,7 @@ int normalize_densities_postnormalizefield(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FTYPE Vns[NDIM],Vcartns[NDIM],absrdiff,xns,yns,zns;
    
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-  setNSparms(&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
+  setNSparms(time, &rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
   FTYPE R;
   int isinside;
@@ -7122,7 +7129,7 @@ int normalize_densities_postnormalizefield(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     th=V[2];
     R=r*sin(th);
 
-    isinside=get_insideNS(i, j, k, V, NULL,NULL,NULL);
+    isinside=get_insideNS(time, i, j, k, V, NULL,NULL,NULL);
 
     if(!isinside){
 
@@ -7170,7 +7177,7 @@ int normalize_densities_postnormalizefield(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 // get \sigma at pole of NS
-int get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole)
+int get_sigmabsq_atpole(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole)
 {
   int i,j,k;
   FTYPE bsq_ij,sigma_ij;
@@ -7197,7 +7204,7 @@ int get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole,
     
 
   FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-  setNSparms(&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
+  setNSparms(time, &rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
   FTYPE R;
   int isinside;
@@ -7212,12 +7219,12 @@ int get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole,
     th=V[2];
     R=r*sin(th);
 
-    pos_NS(V, Vns, Vcartns, &absrdiff);
+    pos_NS(time, V, Vns, Vcartns, &absrdiff);
     xns=Vcartns[1];
     yns=Vcartns[2];
     zns=Vcartns[3];
 
-    isinside=get_insideNS(i, j, k, V, NULL,NULL,NULL);
+    isinside=get_insideNS(time, i, j, k, V, NULL,NULL,NULL);
 
     //    dualfprintf(fail_file,"Got out: %d %d %d : %21.15g %21.15g %21.15g %21.15g\n",i,j,k, absrdiff,Rns,R,Vcartns[1]);
     
