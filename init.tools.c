@@ -421,7 +421,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #endif
 
 
-  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
+  if (bound_prim(STAGEM1,t,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
 
 
 
@@ -514,7 +514,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
 
 
-int user1_init_vpot2field_user(int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
   int toreturn;
@@ -529,7 +529,7 @@ int user1_init_vpot2field_user(int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFT
 
   // obtain primitive magnetic field from vector potential
   // uses ptemparray as temporary variable.  Uses emf as temporary variable.
-  toreturn=vpot2field(A,GLOBALPOINT(ptemparray),pstag,ucons,Bhat,GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+  toreturn=vpot2field(time, A,GLOBALPOINT(ptemparray),pstag,ucons,Bhat,GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 
 
   // Can override vector potential choice for some field components, like B3 in axisymmetry

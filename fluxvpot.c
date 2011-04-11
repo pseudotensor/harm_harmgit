@@ -152,7 +152,7 @@ int get_numdirs_fluxasemforvpot(int *numdirs, int *fieldloc)
 // pleft used as temp var if FLUXB==FLUXCTSTAG
 // assigns conserved field in UEVOLVE form (i.e. with gdet always)
 // implicitly Flux F1,F2,F3 are inputted into function
-int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pfield)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
+int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pfield)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
   int numdirs, fieldloc[NDIM];
@@ -271,14 +271,14 @@ int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIF
   //
   /////////////////
 
-  ucons2upointppoint(t,pfield,pstag,ucons,uconstemp,pfield);
+  ucons2upointppoint(time,pfield,pstag,ucons,uconstemp,pfield);
 
 
 
 
   // Since above procedures changed pfield that is probably pcent that is p, we need to rebound p since pfield was reset to undefined values in ghost cells since A_i isn't determined everywhere
   // alternatively for evolve_withvpot() could have inputted not the true p or some copy of it so wouldn't have to bound (except up to machine error difference when recomputed field using A_i)
-  bound_prim(STAGEM1,t,pfield,pstag,ucons, 1, USEMPI); // GODMARK: 1 here?
+  bound_prim(STAGEM1,time,pfield,pstag,ucons, 1, USEMPI); // GODMARK: 1 here?
 
 
 
@@ -805,7 +805,7 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
 //          What about B1,B2?  Only needs A_3 since don't need B1=A_2,3 and B2=A_1,3 ?  Can I assume those are zero?
 // In 1D only have 0=A1,1 B3=A2,1 and B2=A3,1, so need to be able to obtain B1 somehow -- or just don't change B1 since must be constant in time
 // Note if FLUXCTHLL or FLUXCTTOTH, then no single A_i is evolved, so can't evolve with A_i in that case since field is determined by 2 different versions of A_i that we don't track (nor should!)
-int evolve_withvpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*unew)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
+int evolve_withvpot(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*unew)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
 
   if(EVOLVEWITHVPOT==0){
@@ -828,7 +828,7 @@ int evolve_withvpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2]
 
     // Note that vpot2field bounds pstag and input prim as required since A_i doesn't exist everywhere
     // GODMARK: use of many globals: ok for now since evolve_withvpot() not used for any other purpose
-    vpot2field(vpot,prim, pstag, unew, Bhat,F1,F2,F3,Atemp,uconstemp);
+    vpot2field(time, vpot,prim, pstag, unew, Bhat,F1,F2,F3,Atemp,uconstemp);
 
 
 
@@ -1111,6 +1111,8 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 // But if want internal BC solution to be smooth extention (not some fake accurate solution), then need to manipulate A_i directly.  Else staggered B^i interpolation will also be jumpy.
 // So let's shift to A_i every step in post_advance() so A_i controls B^i, but let's reset EMF_i from dA_i so don't have to adjust EMF_i directly and separately from A_i.  Otherwise, unless perfectly  match EMF and A_i, may cause inconsistencies -- for example, in B_CENT computed from B_STAG that's first computed from EMFs, while shifted to A_i only after.  So B_CENT would be inconsistent with new B_STAG from A_i
 //  }
+
+// SUPERGODMARK: Note: By relying upon A_i, one eventually cumulates catastrophic cancellation as (e.g.) dA_2+=EMF_2 dt such that after double precision (10^{14} or so) steps the calculation is totally corrupted.  Long before this, machine errors become larger and larger.
 int evolve_vpotgeneral(int whichmethod, int stage,
 		       int initialstep, int finalstep,
 		       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
@@ -1150,6 +1152,21 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
+  // DEBUG:
+  {
+    int i,j,k;
+    i=25;j=40;k=0;
+    if(i==25 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after adjust_emfs in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
+      }
+    }
+  }
+
+
+
+
 
 
 
@@ -1170,6 +1187,19 @@ int evolve_vpotgeneral(int whichmethod, int stage,
   }
 
 
+  // DEBUG:
+  {
+    int i,j,k;
+    i=26;j=40;k=0;
+    if(i==26 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after initvpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
+      }
+    }
+  }
+
+
   if(MODIFYEMFORVPOT==MODIFYVPOT){  // overall, get new emf/fluxes
 
 
@@ -1177,6 +1207,19 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     // like getting Uf from fluxes
     // vpotcum argument is set to NULL since don't want to update ucum-like quantity yet
     update_vpot(whichmethod, stage, pr, fluxvec, emf, CUf, CUnew, fluxdt, vpot, vpot0, vpotlast, NULL);
+
+
+  // DEBUG:
+  {
+    int i,j,k;
+    i=26;j=40;k=0;
+    if(i==26 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after update_vpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
+      }
+    }
+  }
 
 
     //////////////////////////////
@@ -1190,11 +1233,52 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     adjust_vpot(fluxtime, whichmethod, pr, Nvec, vpot);
 
 
+  // DEBUG:
+  {
+    int i,j,k;
+    i=25;j=40;k=0;
+    if(i==25 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after adjust_vpot in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
+      }
+    }
+  }
+
+
+  // DEBUG:
+  {
+    int i,j,k;
+    i=26;j=40;k=0;
+    if(i==26 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after adjustvpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
+      }
+    }
+  }
+
+
     // now obtain EMF_i from A_i and Aold_i
     // this sets EMFs so that one only has to adjust A_i and not also EMF_i
     // A_i,Aold_i -> EMF_i (in F_i)
     // like deriving flux from Uf and Ui (NOTE: not derived from Ucum)
     set_emfflux(whichmethod, stage,pr,fluxvec,emf,CUf, CUnew, fluxdt,vpot,vpot0,vpotlast);
+
+
+  // DEBUG:
+  {
+    int i,j,k;
+    i=25;j=40;k=0;
+    if(i==25 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after set_emfflux in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
+      }
+    }
+  }
+
+
 
   }
 
@@ -1351,6 +1435,9 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
       plforflux=plforfluxlist[dir];
       signforflux=signforfluxlist[dir];
 
+      
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dir=%d fluxdir=%d plforflux=%d locvpot=%d geomeodir=%d pldir=%d signforflux=%21.15g\n",nstep,steppart,dir,fluxdir,plforflux,locvpot[dir][odir2[dir]],B1-1+odir1[dir],pldir,signforflux);
+
 
       if(Nvec[fluxdir]>1){
 	
@@ -1359,7 +1446,6 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 	// GODMARK: vpot exists atCOMPFULLLOOPP1, but fluxvec does not
 
 	//      if(dir==3){
-	//      	dualfprintf(fail_file,"nstep=%ld steppart=%d dir=%d fluxdir=%d plforflux=%d locvpot=%d geomeodir=%d\n",nstep,steppart,dir,fluxdir,plforflux,locvpot[dir][odir2[dir]],B1-1+odir1[dir]);
 	//      }
 
 
@@ -1405,6 +1491,11 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 	  // update like in advance using flux2dUavg() & dUtoU().  But only 1 flux position rather than difference of fluxes.
 	  if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0); // notice vpotlast[] used here not vpot
 	  if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
+
+
+	  if(dir==2 && i==26 && j==40){
+	    dualfprintf(fail_file,"inside update_vpot: %21.15g (%21.15g %21.15g %21.15g) dt=%21.15g vpot0=%21.15g vpotlast=%21.15g myemf=%21.15g\n",MACP1A0(vpot,dir,i,j,k),CUf[0],CUf[1],CUf[2],dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf);
+	  }
 
 
 	  //	if(dir==3){

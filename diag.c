@@ -45,7 +45,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   
 
-
+  dualfprintf(fail_file,"diag: %d %21.15g\n",call_code,localt);
 
 
   if(DODIAGS==0){

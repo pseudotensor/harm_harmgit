@@ -387,6 +387,17 @@ static int advance_standard(
 
 
 
+  // DEBUG:
+  {
+    int i,j,k;
+    i=25;j=40;k=0;
+    if(i==25 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after fluxcalc in advance: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(F1,ip1mac(i),j,k,pl),MACP0A1(F1,i,j,k,pl),MACP0A1(F2,i,jp1mac(j),k,pl),MACP0A1(F2,i,j,k,pl));
+      }
+    }
+  }
 
 
 
@@ -802,6 +813,8 @@ static int advance_standard(
       }
 
 
+
+
       
 #if(SPLITNPR)
       // don't update metric if only doing B1-B3
@@ -825,6 +838,20 @@ static int advance_standard(
 
 
 
+
+
+
+  // DEBUG:
+  {
+    int i,j,k;
+    i=25;j=40;k=0;
+    if(i==25 && j==40){
+      int pliter,pl;
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"after inversion: %21.15g %21.15g\n",MACP0A1(myupoint,i,j,k,B3),MACP0A1(pf,i,j,k,B3));
+      }
+    }
+  }
 
 
 
@@ -2076,6 +2103,17 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     }
 
 
+
+    // DEBUG:
+    if(i==25 && j==40){
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"flux2dUavg: %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g\n",dU1avg[pl],MACP0A1(F1,ip1mac(i),j,k,pl),MACP0A1(F1,i,j,k,pl),idx1,dU2avg[pl],MACP0A1(F2,i,jp1mac(j),k,pl),MACP0A1(F2,i,j,k,pl),idx2);
+      }
+    }
+
+
+
+
   }
 
 
@@ -2103,6 +2141,11 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
   // ultimately ucum is actual solution used to find final pf
   PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
 
+
+  // DEBUG:
+  if(i==25 && j==40 || i==26 && j==40){
+    dualfprintf(fail_file,"dUtoU(%d,%d): pl=7 : %21.15g %21.15g %21.15g %21.15g %21.15g\n",i,j,dUgeom[B3],dUriemann[B3],Ui[B3],Uf[B3],ucum[B3]);
+  }
 
 
 #if(PRODUCTION==0)

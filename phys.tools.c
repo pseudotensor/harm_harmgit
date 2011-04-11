@@ -212,7 +212,6 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
   //  FTYPE dualf[NDIM];
-  int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf);
   //  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
   //  int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
 
@@ -238,6 +237,10 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #endif
   dualfaradayspatial_calc(pr,dir,q,&flux[B1]); // fills B1->B3
 
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INprimetoflux_em: %21.15g %21.15g %21.15g\n",flux[B1],flux[B2],flux[B3]);
+  }
 
   return (0);
 }
@@ -350,7 +353,6 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf)
 {
   VARSTATIC FTYPE dualffull[NDIM];
-  int dualfullfaraday_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf);
 
 
   dualfullfaraday_calc(pr,dir,q,dualffull);
@@ -954,6 +956,13 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 #endif
 
 
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INEM1: ucondir=%21.15g %21.15g\n",q->ucon[dir],mhd[3]);
+  }
+
+
+
 }
 
 
@@ -1120,6 +1129,13 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   mhddiagpress[dir] = ptot;
 #endif
 
+
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INMA: ucondir=%21.15g %21.15g\n",q->ucon[dir],mhd[3]);
+  }
+
+
 }
 
 
@@ -1186,6 +1202,13 @@ void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_s
 
 #endif
 
+
+
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INEM2: ucondir=%21.15g Bcondir=%21.15g (%21.15g %21.15g %21.15g) mhd3=%21.15g\n",q->ucon[dir],Bcon[dir],Bsq,udotB,oneovergammasq,mhd[3]);
+    DLOOPA(mu) dualfprintf(fail_file,"mu=%d ucov[mu]=%21.15g Bcov[mu]=%21.15g\n",mu,q->ucov[mu],Bcov[mu]);
+  }
 
 
 }

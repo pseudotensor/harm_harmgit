@@ -326,8 +326,18 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
     // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
 
     //  only do this on the final step where A_i has been set as the cumulative Acum  (like ucum) so that not just an arbitrary intermediate step that redefines B's.
-    evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
+    // FUCK
+    //    evolve_withvpot(boundtime, pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp); // boundtime since this time is used for a boundary call inside this function
   }
+
+
+  // DEBUG:
+  dualfprintf(fail_file,"afterevolve_withvpot_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
+  dualfprintf(fail_file,"afterevolve_withvpot_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
+  dualfprintf(fail_file,"afterevolve_withvpot_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
+  dualfprintf(fail_file,"afterevolve_withvpot_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
+  dualfprintf(fail_file,"afterevolve_withvpot_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
+  dualfprintf(fail_file,"afterevolve_withvpot_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
   //////////////////////
@@ -370,6 +380,14 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   trifprintf("]");
 #endif
 
+
+  // DEBUG:
+  dualfprintf(fail_file,"after bound_beforeevolveprim_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_beforeevolveprim_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
+  dualfprintf(fail_file,"after bound_beforeevolveprim_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_beforeevolveprim_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
+  dualfprintf(fail_file,"after bound_beforeevolveprim_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_beforeevolveprim_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
   if(failed>0) dualfprintf(fail_file,"2failed=%d\n",failed);
@@ -475,6 +493,16 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
 
+  // DEBUG:
+  dualfprintf(fail_file,"after bound_evolveprim_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_evolveprim_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
+  dualfprintf(fail_file,"after bound_evolveprim_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_evolveprim_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
+  dualfprintf(fail_file,"after bound_evolveprim_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
+  dualfprintf(fail_file,"after bound_evolveprim_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
+
+
+
 
   /////////////////////////////////////
   //
@@ -525,6 +553,15 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   }// end if truestep
 
 
+  // DEBUG:
+  dualfprintf(fail_file,"after currents_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
+  dualfprintf(fail_file,"after currents_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
+  dualfprintf(fail_file,"after currents_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
+  dualfprintf(fail_file,"after currents_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
+  dualfprintf(fail_file,"after currents_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
+  dualfprintf(fail_file,"after currents_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
+
+
   /////////////////////////////////////
   //
   // Diagnostics
@@ -535,7 +572,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
     // no error check since assume if step_ch passed, diag(1) will pass
     if (DODIAGS && DODIAGEVERYSUBSTEP ){ //SASMARK -- moved the diags calls here
       GLOBALPOINT(pdump) = pf;
-      diag(DUMP_OUT,t,nstep,realnstep);
+      diag(DUMP_OUT,boundtime,nstep,realnstep); // boundtime corresponds to pf for this timeorder
 #if(PRODUCTION==0)
       trifprintf( "D");
 #endif
@@ -1389,6 +1426,9 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 // normal full bounding during evolution
 int bound_evolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
 {
+
+  dualfprintf(fail_file,"bound_evolveprim\n");
+
   bound_allprim(boundstage, boundtime, prim,pstag,ucons,finalstep,doboundmpi);
 
   return(0);
@@ -1401,6 +1441,8 @@ int bound_beforeevolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTOR
 {
   int boundvartype=BOUNDPRIMSIMPLETYPE;
 
+  dualfprintf(fail_file,"bound_beforeevolveprim\n");
+
   bound_anyallprim(boundstage, boundtime, boundvartype, prim,pstag,ucons,finalstep,doboundmpi);
 
   return(0);
@@ -1411,6 +1453,8 @@ int bound_beforeevolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTOR
 int bound_prim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
+
+  dualfprintf(fail_file,"bound_prim\n");
 
   bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
 
@@ -1435,6 +1479,8 @@ int bound_allprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTOR
 {
   int boundvartype=BOUNDPRIMTYPE;
 
+  dualfprintf(fail_file,"bound_allprim\n");
+
   bound_anyallprim(boundstage, boundtime, boundvartype, prim, pstag,ucons, finalstep,doboundmpi);
 
   return(0);
@@ -1448,6 +1494,9 @@ int bound_allprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTOR
 int bound_anyallprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep, int doboundmpi)
 {
   int mystagboundvar;
+
+  dualfprintf(fail_file,"bound_anyallprim\n");
+
 
   if(FLUXB==FLUXCTSTAG){
     bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
@@ -1480,6 +1529,9 @@ int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)
 {
   int mystagboundvar;
   FTYPE (*uavg)[NSTORE2][NSTORE3][NPR];
+
+
+  dualfprintf(fail_file,"bound_uavg\n");
 
 
   // assign uavg
@@ -1537,6 +1589,7 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
   int dir;
 
 
+  dualfprintf(fail_file,"bound_anyprim\n");
 
 
   if(DOGRIDSECTIONING){

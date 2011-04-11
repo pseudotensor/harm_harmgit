@@ -45,8 +45,32 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 
 
+
+  // DEBUG:
+  if(ptrgeom->i==26 && ptrgeom->j==40 && dir==1){
+    PLOOP(pliter,pl) {
+      dualfprintf(fail_file,"INflux_compute_general1: %21.15g %21.15g %21.15g %21.15g\n",U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    }
+    PLOOP(pliter,pl) {
+      dualfprintf(fail_file,"INflux_compute_general2: %21.15g %21.15g\n",p_l[pl],p_r[pl]);
+    }
+  }
+
+
+
   // usually "always" need cminmax_l cminmax_r and always need ctop
   get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, ctopptr);
+
+  // DEBUG:
+  if(ptrgeom->i==26 && ptrgeom->j==40 && dir==1){
+    PLOOP(pliter,pl) {
+      dualfprintf(fail_file,"INflux_compute_general1B: %21.15g %21.15g %21.15g %21.15g\n",U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    }
+    PLOOP(pliter,pl) {
+      dualfprintf(fail_file,"INflux_compute_general2B: %21.15g %21.15g\n",p_l[pl],p_r[pl]);
+    }
+  }
+
 
   MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
@@ -97,6 +121,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
   // usually "always" need cminmax_l cminmax_r and always need ctop
   get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, ctopptr);
 
+
   // GODMARK:
   // below assumes flux_compute is linear in FMA and FEM, which it is right now
   // if used Riemann solver, would need to have it output FMA and FEM parts
@@ -122,6 +147,11 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *U)
 {
   MYFUN(get_stateforfluxcalc(dir,isleftright, p, ptrgeom, ptrstate),"flux.c:p2SFUevolve", "get_state()", 1);
+
+  if(ptrgeom->i==26 && ptrgeom->j==40 && dir==1){
+    dualfprintf(fail_file,"NORMAL: INp2SFUevolve: gdet=%21.15g : B1=%21.15g B2=%21.15g B3=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",ptrgeom->gdet,p[B1],p[B2],p[B3],(*ptrstate)->ucon[TT],(*ptrstate)->ucon[1],(*ptrstate)->ucon[2],(*ptrstate)->ucon[3]);
+  }
+
   MYFUN(primtoflux(UEVOLVE,p, *ptrstate, dir, ptrgeom, F),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,p, *ptrstate, TT, ptrgeom, U),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
@@ -242,6 +272,19 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   
   if(fluxmethod==LAXFFLUX){
     PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+
+
+    // DEBUG:
+    if(geom->i==26 && geom->j==40 && dir==1){
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"INflux_compute: %21.15g %21.15g %21.15g %21.15g : %21.15g\n",U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+      }
+      PLOOP(pliter,pl) {
+	dualfprintf(fail_file,"INflux_compute2: %21.15g %21.15g\n",p_l[pl],p_r[pl]);
+      }
+    }
+
+    
   }
   else if(fluxmethod==HLLFLUX){
     //////////////////////////////////

@@ -2,22 +2,38 @@
 // 1) U7/gdet and B3 don't agree.  Well, they agree outside surface.  But why not inside? A: Because bound B3 but not U7 that just comes from update of fluxes.
 // 2) Check why fluxdump out of synch
 // 3) Why values for dU are different than B3 for first dB3?
-// ***4) Check regarding when update_vpot() is called.  Show workflow.
+// 4) Check regarding when update_vpot() is called.  Show workflow.  Done, and fixed some optimizaiton issues with fluxctstag
 // 5) dU7/gdet is correct sign -- apparent chunkiness at large angle is just plotting (can plot negative and see more symmetric or use symmetric switch in twod.m and careful with image cursor since flipped -- only color is correct).
 // 6) F17/gdet makes sense to generate B3 sign everywhere.
-// 7) B3 large radius near NS near equator is not right.  Maybe already cancelling wave?  Kinda chunky at 45degs at large radius.
-// **8) B3 small radius is mostly wrong sign and very chunky.
-// ***9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR
+// 7) B3 large radius near NS near equator is not right. : More correct at small time.  Maybe already cancelling wave?  Kinda chunky at 45degs at large radius.
+// 8) B3 small radius is mostly wrong sign and very chunky.  : More correct at small time.
+// 9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR : Was metric terms at small time.
 // 10) uu2 correct sign everywhere except right around polar axis of NS -- but sign follows switches of B1,B2 for desired rotation.
 // *11) uu1<0 everywhere even at larger radius where should be uu1>0.  Caused by wrong sign for uu3?  Or maybe transient due to field moving near t=0?
 // **12) Figure out why compact for A_3 leads to kinks.  Improve A_{dir} interpolation so better near pole.
-// **13) Why does F->U3/omegaf get updated before (1 step off) of EMF->B3?
+// 13) Why does F->U3/omegaf get updated before (1 step off) of EMF->B3?  : Was metric stuff.
 //       SUBSTEP0: t=0 so nothing happens
 //       SUBSTEP1: t=bit more : EMF/F non-zero on surface of NS, and EMF/F used to update B3stag&B3/U3, so both should be updated
 
-// ** SHIT: uu0 dies on surface with new additions for bound_ (mono and usecompact)
+// **14) uu0 dies on surface with new additions for bound_ (mono and usecompact)
 // Seems to be usecompact, death in uu0 on surface at checkaphi 2 (normal DT for dumps) even if mono3=mono4=1 are set.
 
+// **15) Why is B3 in ghost cells being set to 0?  (see EMF @ i=26 j=40 debug code for i=25 and i=26) : Seems was due to usecompact==0
+//       Also, Why is p[B3] changing sign with equal magnitude right across the NS surface?  Seems A_i not set well since pstag update leads to jumpiness? .. usecompact=1 in vpot doesn't help.  still switches sign!
+
+
+
+/////////////////
+//
+// NOTE the start-up sequence:
+//
+// 1) dump0) t=0, switches->0, so omegaf=0.  Initially have B3=uu3=0
+// 2) dump1) t=completed first substep, fluxtime=0 during substep so switches still off.  boundtime=some dt
+// 3) dump2) t=completed second substep, fluxtime=some dt so switches->on (so omegaf=omegak if hard to full on switch).  boundtime=some next dt.  In BL, uu3>0 on NS surface -> EMF1/2 non-zero -> B3 non-zero.  But also, in KS, uu3>0 means u_1 non-zero even if B3=0 such that u^1=u^2=0 (i.e. stationary condition on  NS surface).  So u.B non-zero, so T^p_\phi non-zero, so uu3 *on grid* becomes non-zero.
+// ...
+//
+//
+/////////////////
 
 
 /* 
@@ -2001,7 +2017,7 @@ int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
   else mono=0;
 
   // GODMARK TODO TEST DEBUG:
-  mono=1;
+  //  mono=1;
 
   return(mono);
 
@@ -2039,7 +2055,7 @@ int checkmono3(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3)
   
 
   // GODMARK TODO TEST DEBUG:
-  mono=1;
+  //  mono=1;
 
 
   return(mono);
@@ -2055,6 +2071,9 @@ int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int
   int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int boundreturn;
+
+
+
 
   boundreturn=0;
   // first get old type BCs
@@ -2087,6 +2106,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 
+  dualfprintf(fail_file,"BOUNDNEW: nstep=%ld steppart=%d boundtime=%21.15g : whichdir=%d\n",nstep,steppart,boundtime,whichdir);
 
   // setup initial array of ptrgeom's
   int ptriter;
@@ -2408,11 +2428,13 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 	      // GODMARK TODO TEST DEBUG:
-	      usecompact=0;
-	      //	      usecompact=1; // default is can do it
- 
 
-	      PLOOP(pliter,pl) if(usecompactpl[pl]==0) usecompact=0;
+	      // choose default
+	      //usecompact=0;
+	      usecompact=1; // default is can do it
+
+
+ 	      PLOOP(pliter,pl) if(usecompactpl[pl]==0) usecompact=0;
 
 
 	      // transfer over compact interpolated value
@@ -3280,8 +3302,6 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
 // 2) Kink in Ad3 near NS on right side is reasonable given gravity pulls flux in and no allowed adjustment of internal field.
 
 
-#if(1)
-
 #define DOSETFIX 1
 #define DOSETEXTRAPDIRECT 1
 #define DOSETEXTRAP 0
@@ -3289,16 +3309,6 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
 #define DONSBOUNDPLPR 2
 #define DOSETFIXEMF 1
 
-#else // TEST
-
-#define DOSETFIX 1
-#define DOSETEXTRAPDIRECT 0
-#define DOSETEXTRAP 0
-#define DOSETFINALFORCE 0
-#define DONSBOUNDPLPR 0
-#define DOSETFIXEMF 1
-
-#endif
 
 // TEST
 //#define DONSBOUNDPLPR 2
@@ -3354,6 +3364,7 @@ void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   FTYPE vpotlocal[NDIM];
   int ii,jj,kk;
   void adjust_fluxctstag_vpot_dosetfix(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  void adjust_fluxctstag_vpot_dosetfix_new(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   void adjust_fluxctstag_vpot_dosetextrapdirect(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
@@ -3362,29 +3373,47 @@ void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 
-  if(DOSETFIX){
-    adjust_fluxctstag_vpot_dosetfix(fluxtime,prim,Nvec,vpot);
+  dualfprintf(fail_file,"adjustvpot: nstep=%ld steppart=%d fluxtime=%21.15g\n",nstep,steppart,fluxtime);
+
+
+  if(1){
+
+
+    if(DOSETFIX){
+      adjust_fluxctstag_vpot_dosetfix_new(fluxtime,prim,Nvec,vpot);
+    }
+
+
+    if(DOSETEXTRAPDIRECT){
+      //      adjust_fluxctstag_vpot_dosetextrapdirect_deep(fluxtime,prim,Nvec,vpot);
+      adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(fluxtime,prim,Nvec,vpot);
+    }
   }
+  else{
+    // NOT REALLY CORRECT since should avoid surface A_i !
+
+    if(DOSETFIX){
+      adjust_fluxctstag_vpot_dosetfix(fluxtime,prim,Nvec,vpot);
+    }
 
 
-  //  if(DOSETEXTRAPDIRECT && t>SWITCHT1){// hard switch in time
-  if(DOSETEXTRAPDIRECT){
-    //    adjust_fluxctstag_vpot_dosetextrapdirect(fluxtime,prim,Nvec,vpot);
-    //    adjust_fluxctstag_vpot_dosetextrapdirect_deep(fluxtime,prim,Nvec,vpot);
-    adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(fluxtime,prim,Nvec,vpot);
-  }
+    //  if(DOSETEXTRAPDIRECT && t>SWITCHT1){// hard switch in time
+    if(DOSETEXTRAPDIRECT){
+      adjust_fluxctstag_vpot_dosetextrapdirect(fluxtime,prim,Nvec,vpot);
+    }
 
 
 
 
 
-  if(DOSETEXTRAP && t>SWITCHT1){// hard switch in time
-    //if(DOSETEXTRAP){
-    adjust_fluxctstag_vpot_dosetextrap(fluxtime,prim,Nvec,vpot);
-  }
-  if(DOSETFINALFORCE && t>SWITCHT1){// hard switch in time
-    //  if(DOSETFINALFORCE){
-    adjust_fluxctstag_vpot_dosetfinalforce(fluxtime,prim,Nvec,vpot);
+    if(DOSETEXTRAP && t>SWITCHT1){// hard switch in time
+      //if(DOSETEXTRAP){
+      adjust_fluxctstag_vpot_dosetextrap(fluxtime,prim,Nvec,vpot);
+    }
+    if(DOSETFINALFORCE && t>SWITCHT1){// hard switch in time
+      //  if(DOSETFINALFORCE){
+      adjust_fluxctstag_vpot_dosetfinalforce(fluxtime,prim,Nvec,vpot);
+    }
   }
 
 
@@ -3393,7 +3422,80 @@ void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 }
 
 
-// Fix A_i in NS and surface
+// For those A_i components that are constrained to be fixed in time, fix A_i to the init_vpot_user() version fo A_i within the NS and on the NS surface
+// GODMARK TODO: Not right for 3D.
+void adjust_fluxctstag_vpot_dosetfix_new(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  int insideNS;
+  int i,j,k;
+  int l;
+  int loc;
+  FTYPE vpotlocal[NDIM];
+  int ii,jj,kk;
+
+
+  //////////////
+  //
+  // First set interior and surface of NS to analytical solution
+  //
+  // Different loops for each A_i
+  //
+  // don't include actual or MPI boundaries in count since they don't form real domain of NS that must be resolved
+  //////////////
+
+
+  COMPFULLLOOP{ // First go over all non-surface + surface cells for simplicity
+
+
+    if(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1){
+
+      // Set A_i in volume (lower CORNi of cell)
+      // get_vpot_fluxctstag_primecoords gets A_i in PRIMECOORDS coords as required for vpot[]
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
+      if(Nvec[1]==1)      MACP1A0(vpot,1,i,j,k)       =vpotlocal[1];
+      if(Nvec[2]==1)      MACP1A0(vpot,2,i,j,k)       =vpotlocal[2];
+      if(Nvec[3]==1)      MACP1A0(vpot,3,i,j,k)       =vpotlocal[3];
+
+      // Set A_i on surfaces completely (other CORNi's of cell)
+
+      // A_x A_y [up k]
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j,k+N3NOT1,prim,vpotlocal);
+      if(Nvec[1]==1)      MACP1A0(vpot,1,i,j,k+N3NOT1)       =vpotlocal[1];
+      if(Nvec[2]==1)      MACP1A0(vpot,2,i,j,k+N3NOT1)       =vpotlocal[2];
+
+      // A_x A_z [up j]
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k,prim,vpotlocal);
+      if(Nvec[1]==1)      MACP1A0(vpot,1,i,j+N2NOT1,k)       =vpotlocal[1];
+      if(Nvec[3]==1)      MACP1A0(vpot,3,i,j+N2NOT1,k)       =vpotlocal[3];
+
+      // A_y A_z [up i]
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k,prim,vpotlocal);
+      if(Nvec[2]==1)      MACP1A0(vpot,2,i+N1NOT1,j,k)       =vpotlocal[2];
+      if(Nvec[3]==1)      MACP1A0(vpot,3,i+N1NOT1,j,k)       =vpotlocal[3];
+
+
+      // A_x [up j-k]
+      get_vpot_fluxctstag_primecoords(fluxtime,i,j+N2NOT1,k+N3NOT1,prim,vpotlocal);
+      if(Nvec[1]==1)      MACP1A0(vpot,1,i,j+N2NOT1,k+N3NOT1)       =vpotlocal[1];
+
+      // A_y [up i-k]
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j,k+N3NOT1,prim,vpotlocal);
+      if(Nvec[2]==1)      MACP1A0(vpot,2,i+N1NOT1,j,k+N3NOT1)       =vpotlocal[2];
+
+      // A_z [up i-j]
+      get_vpot_fluxctstag_primecoords(fluxtime,i+N1NOT1,j+N2NOT1,k,prim,vpotlocal);
+      if(Nvec[3]==1)      MACP1A0(vpot,3,i+N1NOT1,j+N2NOT1,k)       =vpotlocal[3];
+
+    }
+  }
+}
+
+
+
+
+// Fix A_i to the init_vpot_user() version fo A_i within the NS and on the NS surface
+// NOTE: this can't know future evolved A_i (e.g. non-trivial) except *within* NS can set as a beginning to boundary condition.  But must avoid surface A_i!
+// But, with new deeppara, this dosetfix is not needed or wanted or correct.
 void adjust_fluxctstag_vpot_dosetfix(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int insideNS;
@@ -4001,11 +4103,15 @@ int is_ongrid(int dir, int i, int j, int k)
 
 
 // similar to adjust_fluxctstag_vpot_dosetextrapdirect_deep(), but instead of super average over many nearby zones, choose nearest neighbor and it's path-like partners for parabolic interpolation along that path
+// Only adjusts *interior* of NS, *not* surface since those can be updated from the EMFs.
+// Or put another way, cannot predict A_i
 void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
 
 
+
+  dualfprintf(fail_file,"adjustvpotdeep: nstep=%ld steppart=%d fluxtime=%21.15g\n",nstep,steppart,fluxtime);
 
   //////////////
   //
@@ -4219,7 +4325,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*
 
 
 	      // GODMARK DEBUG: OVERRIDE TEST
-	      usecompact=0; // for field, for some reason compact leads to kinks -- lowers order to get compactvalue too often?  Why should matter for para along path?
+	      //usecompact=0; // for field, for some reason compact leads to kinks -- lowers order to get compactvalue too often?  Why should matter for para along path?
 
 
 	      // transfer over compact interpolated value
@@ -4922,6 +5028,7 @@ void adjust_fluxcttoth_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // special NS boundary code for EMFs for staggered fields
 //void adjust_fluxctstag_emfs_new(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 // GODMARK TODO DEBUG
+// NOTE: BOUNDPLPR will set EMF1,EMF2 for axisymmetric case since those are at faces.  And EMF3 just zero.  So will be exactly correct except zeroing-out EMF3 on boundary.  That's a good check that both functions are doing the same thing -- so more general 3D case is more likely bug free.
 void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
@@ -4954,9 +5061,10 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   FTYPE Bcontouse[NDIM];
   int localisinside,localhasmask,localhasinside;
   int localin,odir1left,odir2left,odir12left;
+  int m,l;
 
 
-
+  dualfprintf(fail_file,"adjustemfs: nstep=%ld steppart=%d fluxtime=%21.15g\n",nstep,steppart,fluxtime);
 
   
   if(DOSETFIXEMF==0) return;
@@ -5024,8 +5132,23 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	//
 	// Setup guess for primitive at CORN_{dir}
 	//
+	// prim contains pb for *CENT* value of primitive, which is a poor guess in terms of preserving symmetry.  But it'll be overwritten by init_dsandvels() below
+	// But will be different B[dir] than from PLPR that uses directly interpolated value that is exactly in right place if one of odir's is zero.
+	//
 	////////////////////////
 	PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+
+	// defaults
+	Bcontouse[dir]=pr[B1+dir-1];
+	Bcontouse[odir1]=pr[B1+odir1-1];
+	Bcontouse[odir2]=pr[B1+odir2-1];
+
+
+	////////////////////////
+	//
+	// Now get B and v from actual interpolations
+	//
+	////////////////////////
       
 
 	////////////////////////////////
@@ -5039,20 +5162,55 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 	Bconl[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,0); // jump in odir2
 	Bconr[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,1); // jump in odir2
-	//		GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l); // vel
 	Bconl[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,0); // jump in odir1
 	Bconr[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,1); // jump in odir1
+
+	
+	// pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
+	//		GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l); // vel for jump in 
 	//		GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l); // vel
+	// v^{odir2}  with jump in +-odir1 and +-odir2
+	// v^{odir1}  with jump in +-odir1 and +-odir2
+	//	  pr[U1-1+odir2]=0.25*(GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
+	//	  pr[U1-1+odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
+	
+
+	// Also deal with field that doesn't directly come into EMF, but indirectly can through velocity chosen.
+	// Instead of defaulting to init_dsandvels_nsbh averaged B[dir]:
+	// Better to use p_l and p_r from flux interpolation.  So will be consistent with flux interpolation for EMF.
+	// CORN2 uses dir=FACE=1 and averages (or selects) in 3 (k,k-1) and averages (or selects) in 1 (l/r)
+	// So in general, B[dir] is *from* CENT with respect to odir1,odir2 coordinates, but *located* at FACE[odir1,odir2,lr]
+	// Determination of which B[dir] to use for averaging or selecting (of 8 choices or 4 l/r pairs)
+
 
 	// TODO: Could compute normal field analytically at CORN_i and use that -- most correct.
 	// GODMARK DEBUG: 
 	if(0){
 	  Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
 	  Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+	  
+	  for(m=0;m<NUMCS;m++){
+	    for(l=0;l<NUMCS;l++){
+	      pr[U1-1+odir2]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
+	      pr[U1-1+odir1]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
+	    }
+	  }
+
+	  // recall pl/pr are located at same location (same i,j,k) for a given interface.
+	  Bcontouse[dir]=(1.0/8.0)*(
+				    +GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1)
+				    +GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1)
+				    +GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)
+				    +GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)
+				    );
+
 	}
 	else{
 
 	  // Decide which corner is more inside NS (so more representative of desired surface field).  Might be better (more stable) than just averaging.
+	  // For field, want to choose surface value if possible.  If not possible, then must choose completely external field.  This defines what must be copied from exterior.  Average if more than one.
+	  // For velocity, interpolation comes from CENT, which will be overwritten by init_dsandvels().
+
 	  // one case can be analytically overridden, but other two cases really does mix internal and external A_{dir}
 	  // For A_i, always some mixture of l+r unless override with analytical solution in some cases
 	  // But when dealing with Bperp1 and Bperp2, copying from exterior makes sense since those B^i have no fixed values from surface of NS.
@@ -5060,63 +5218,140 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	  // 2^4-2=14 cases for each odir(1,2)
 	  // can't be 1 1 1 1 or 0 0 0 0 -- at least one cell has to inside and at least one has to be not inside
 
+
 	  // skip 1 1 1 1
+	  FTYPE totalweight;
 	  if     (localin==1 && odir1left==1 && odir2left==1 && odir12left==0){
 	    Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
 	    Bcontouse[odir2]=Bconl[odir2]; // one inside NS, choose surface one
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    // This will then behave like PLPR for setting flux when doing field-corrected fix for using prext[]
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==1){
 	    Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
 	    Bcontouse[odir2]=Bconr[odir2]; // one inside
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==0){
 	    Bcontouse[odir1]=Bconl[odir1]; // can't obtain from surface alone, so use exterior
 	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]); // both are on surface -- could choose analytical solution, but just average surface solution
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==1){
 	    Bcontouse[odir1]=Bconr[odir1]; // one is inside NS, so then choose surface one
 	    Bcontouse[odir2]=Bconl[odir2]; // one is inside NS, so then choose surface one
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==0){
 	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
 	    Bcontouse[odir2]=Bconl[odir2]; // can't obtain from surface alone, so use exterior
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==1){
 	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
 	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==0){
 	    Bcontouse[odir1]=Bconr[odir1]; // on one surface
 	    Bcontouse[odir2]=Bconr[odir2]; // on one surface
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  // recover 0 1 1 1
 	  else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==1){
 	    Bcontouse[odir1]=Bconr[odir1];
 	    Bcontouse[odir2]=Bconr[odir2];
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==0){
 	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
 	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==1){
 	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
 	    Bcontouse[odir2]=Bconr[odir2]; // one inside, so use exterior one
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==0){
 	    Bcontouse[odir1]=Bconr[odir1]; // can get from one surface
 	    Bcontouse[odir2]=Bconl[odir2]; // can get from one surface
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==1){
 	    Bcontouse[odir1]=Bconr[odir1]; // can't get from surface, so use exterior
 	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==0){
 	    Bcontouse[odir1]=Bconl[odir1];
 	    Bcontouse[odir2]=Bconr[odir2];
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else if(localin==0 && odir1left==0 && odir2left==0 && odir12left==1){
 	    Bcontouse[odir1]=Bconl[odir1];
 	    Bcontouse[odir2]=Bconl[odir2];
+	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+	    Bcontouse[dir]=0.0;  totalweight=0.0;
+	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
 	  }
 	  else{
 	    dualfprintf(fail_file,"bad set: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
@@ -5125,6 +5360,12 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	  }
 	}// end else 1
 
+	////////////////////////////////
+	//
+	// NOTE: Bcontouse[dir] from face interpolation already striped of gdet
+	//
+	// Bcontouse[odir1/odir2] from corner interpolation may have gdet or not
+	//
 
 	// get "gdet" factor (really, whatever factor also used in fluxctstag.c:fluxcalc_fluxctstag_emf_1d() )
 	// used to get true B^i since needed, and used later to get flux from emf
@@ -5143,6 +5384,11 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	pr[B1+odir2-1]=Bcontouse[odir2]*igdetnosing;
 #endif
 	// still need to get pr[B1+dir-1], which will be from interpolation in init_dsandvels_nsbh()		
+
+
+	dualfprintf(fail_file,"EMFCOMPARE1: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
+	dualfprintf(fail_file,"EMFCOMPARE2: %d %d %d\n",localisinside,localhasmask,localhasinside);
+	PLOOP(pl,pliter) dualfprintf(fail_file,"EMFCOMPARE3: pl=%d prim=%21.15g\n",pl,pr[pl]);
 
 		  
 	///////////////////////
@@ -5165,10 +5411,18 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	  bl2met2metp2v_genloc(whichvel, whichcoord, pr, i, j, k, pos);
 
 
-	  // set B^\mu [internally uses pglobal and pstagglobal to set B, so uses previous time-step values for B -- problem for RK? GODMARK]
-	  Bcon[TT]=0.0;
+	  // DEBUG:
+	  PLOOP(pliter,pl){
+	    dualfprintf(fail_file,"COMPAREEMF: dir=%d : ijk=%d %d %d : pl=%d pr=%21.15g\n",dir,i,j,k,pl,pr[pl]);
+	  }
+
+
+	  // set B^\mu
+  	  Bcon[TT]=0.0;
 	  SLOOPA(lll) Bcon[lll] = pr[B1+lll-1];
-		    
+
+
+#if(0)
 	  // get u^\mu
 	  get_geometry(i, j, k, pos, ptrgeom);
 	  ucon_calc(pr, ptrgeom, ucon, others);
@@ -5189,6 +5443,24 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	  // get_odirs(): dir=3 gives odir1=1 and odir2=2
 	  // so cyclic in: dir,odir1,odir2
 	  emf = Bcon[odir2] * vcon[odir1] - Bcon[odir1] * vcon[odir2];
+#else
+
+	  // bit excessive for flux since only need 1 of them not all 3 or whole matrix that's computed internally
+	  FTYPE flux[NPR];
+	  struct of_state q;
+	  get_geometry(i, j, k, pos, ptrgeom);
+	  get_state(pr, ptrgeom, &q) ;
+	  dualfprintf(fail_file,"gdet=%21.15g : B1=%21.15g B2=%21.15g B3=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",gdet,pr[B1],pr[B2],pr[B3],q.ucon[TT],q.ucon[1],q.ucon[2],q.ucon[3]);
+	  if(Nvec[odir1]>1){
+	    dualfaradayspatial_calc(pr,odir1,&q,&flux[B1]); // fills B1->B3
+	    emf=flux[B1+odir2-1];
+	  }
+	  else{
+	    dualfaradayspatial_calc(pr,odir2,&q,&flux[B1]); // fills B1->B3
+	    emf=-flux[B1+odir1-1];
+	  }
+	      
+#endif
 
 
 	  // DEBUG:
@@ -5520,6 +5792,10 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
 
 
 
+  dualfprintf(fail_file,"setplpr: nstep=%ld steppart=%d dir=%d fluxtime=%21.15g ijk=%d %d %d\n",nstep,steppart,dir,fluxtime,i,j,k);
+
+
+
   if(DONSBOUNDPLPR==0) return;
 
 
@@ -5566,7 +5842,7 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       // internally uses pglobal and pstagglobal for field
       // p_l or p_r is default field if interpolation-extrapolation to loc=pos fails to be contained entirely within NS
       // decide if should use interpolated face value (say one-side) or use interpolation provided by init_dsandvels_nsbh that tries to exclude outside NS values of field
-      // default first (used only when no other possibility)
+      // default first (used only when no other possibility.  Corresponds to pb @ CENT -- so bad for symmetry)
       PLOOP(pliter,pl) prext[pl]=pr[pl]=MACP0A1(prim,i,j,k,pl);
       // used code's one-sided interpolation
       if(faceinside){
@@ -5619,7 +5895,7 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       }
 
 
-    }
+    }// end if doing BOUNDPLPR>=1
 
     
 
@@ -5737,6 +6013,8 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
   int insideNS;
   int jj;
 
+
+  dualfprintf(fail_file,"init_dsandvels_nsbh: nstep=%ld steppart=%d time=%21.15g : ijk=%d %d %d\n",nstep,steppart,time,i,j,k);
 
 
   if(FLUXB!=FLUXCTSTAG){
@@ -5966,7 +6244,9 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
     }
     else if(pos==CORN1){
 
-      if(inittype==-2){
+      // if inittype==-3, B1,B2,B3 are already set properly by _emf function (B1 using averaging unless Nvec[1]==1)
+
+      if(inittype==-2 || inittype==-3){
 	// then interppr[B1,B2,B3] are already interpolated well by code
       }
       else{
@@ -5991,7 +6271,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	}
 
 	// average B2 face2 in interpdir=3 to get CORN1
-	if(k>=-N3BND+N3NOT1 && inittype!=-3){ // if inittype==-3, B2,B3 are already set properly by _emf function
+	if(k>=-N3BND+N3NOT1){
 	  totalweight=0.0;    
 	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
 	  totalweight+=weight;
@@ -6030,13 +6310,13 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	  dualfprintf(fail_file,"CORN1DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
 	}
 
-      }// end if interptype!=-2
+      }// end if interptype!=-2 && !=-3
 
     }
     else if(pos==CORN2){
 
-      if(inittype==-2){
-	// then interppr[B1,B2,B3] are already interpolated well by code
+      if(inittype==-2 || inittype==-3){
+	// then interppr[B1,B2,B3] are already interpolated well by code (or as best possible)
       }
       else{
 
@@ -6060,7 +6340,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	}
 
 	// average B1 face1 in interpdir=3 to get CORN2
-	if(k>=-N3BND+N3NOT1 && inittype!=-3){
+	if(k>=-N3BND+N3NOT1){
 	  totalweight=0.0;    
 	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
 	  totalweight+=weight;
@@ -6075,7 +6355,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	  }
 	}
 	// average B3 face3 in interpdir=1 to get CORN2
-	if(i>=-N1BND+N1NOT1 && inittype!=-3){
+	if(i>=-N1BND+N1NOT1){
 	  totalweight=0.0;    
 	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
 	  totalweight+=weight;
@@ -6099,12 +6379,12 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	  dualfprintf(fail_file,"CORN2DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
 	}
 	
-      }// end if interptype!=-2
+      }// end if interptype!=-2 && !=-3
 
     }
     else if(pos==CORN3){
 
-      if(inittype==-2){
+      if(inittype==-2 || inittype==-3){
 	// then interppr[B1,B2,B3] are already interpolated well by code
       }
       else{
@@ -6129,7 +6409,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	}
 
 	// average B1 face1 in interpdir=2 to get CORN3
-	if(j>=-N2BND+N2NOT1 && inittype!=-3){
+	if(j>=-N2BND+N2NOT1){
 	  totalweight=0.0;    
 	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
 	  totalweight+=weight;
@@ -6144,7 +6424,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	  }
 	}
 	// average B2 face2 in interpdir=1 to get CORN3
-	if(i>=-N1BND+N1NOT1 && inittype!=-3){
+	if(i>=-N1BND+N1NOT1){
 	  totalweight=0.0;    
 	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
 	  totalweight+=weight;
@@ -6168,7 +6448,7 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 	}
 
 
-      }// end if interptype!=-2
+      }// end if interptype!=-2 && !=-3
 
     }
     else if(pos==CORNT){ // GODMARK: not controlled with mask yet, but not needed yet
@@ -6625,7 +6905,7 @@ int setNSparms(SFTYPE time, FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns
   // TEST
   //  *omegak=0;
 
-  //  dualfprintf(fail_file,"INSET: setNSparms: time=%21.15g\n",time);
+  dualfprintf(fail_file,"setNSparms: setNSparms: time=%21.15g\n",time);
 
   
   // 0->1 after sigma has increased somewhat
@@ -6934,7 +7214,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 
 
   // now compute (prim/pstag/ucons/Bhat)[A_i]
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat); // time ultimately needed for a boundary call
   if(funreturn!=0) return(funreturn);
  
 
