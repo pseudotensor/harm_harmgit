@@ -330,36 +330,10 @@ int fluxcalc_fluxctstag(int stage,
 
 
 
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after stag1D in fluxctstag.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
-      }
-    }
-  }
-
-
-
 
   // Evolve A_i
   evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pr, Nvec, fluxvec, NULL, CUf, CUnew, fluxdt, fluxtime, vpot);
 
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after evolve_vpotgeneral in fluxctstag.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
-      }
-    }
-  }
 
 
 
@@ -658,7 +632,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
 
 
-#if(1) // DEBUG:
+#if(0) // DEBUG:
     if(i==26 && j==40 && k==0){
       dualfprintf(fail_file,"ORIG: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
       dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
@@ -792,9 +766,6 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
   // next use of pstagscratch by fluxcalc() will be correct (see  setup_rktimestep() commends for RK4)
   ustagpoint2pstag(upoint,pstag);
 
-  // DEBUG:
-  dualfprintf(fail_file,"inustag2fieldcent1a: %21.15g %21.15g\n",MACP0A1(upoint,25,40,0,B3),MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"inustag2fieldcent1b: %21.15g %21.15g\n",MACP0A1(upoint,26,40,0,B3),MACP0A1(pstag,26,40,0,B3));
 
   if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
 
@@ -812,9 +783,6 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
 
   bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep, USEMPI);
 
-  // DEBUG:
-  dualfprintf(fail_file,"inustag2fieldcent2a: %21.15g %21.15g\n",MACP0A1(upoint,25,40,0,B3),MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"inustag2fieldcent2b: %21.15g %21.15g\n",MACP0A1(upoint,26,40,0,B3),MACP0A1(pstag,26,40,0,B3));
 
   // note that ustag isn't bounded, but is used for divb calculation, which is thus only valid at active CENT cells -- but that's all that's in normal dumps unless FULLOUTPUT is used
 
@@ -822,10 +790,6 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
   // pstagescratch should contain result of deaverage_ustag2pstag() -- gets utoinvert ready for inversion using guess pb
   // other quantities in utoinvert are unchanged by this function (and if needed de-averaging this didn't do it!)
   interpolate_pfield_face2cent(preal,pstag,upoint,pcent,face2cent,dqvec,GLOBALPOINT(prc),GLOBALPOINT(pleft),GLOBALPOINT(pright),Nvec);
-
-  // DEBUG:
-  dualfprintf(fail_file,"inustag2fieldcent3a: %21.15g\n",MACP0A1(pcent,25,40,0,B3));
-  dualfprintf(fail_file,"inustag2fieldcent3b: %21.15g\n",MACP0A1(pcent,26,40,0,B3));
 
 
 #if(0)

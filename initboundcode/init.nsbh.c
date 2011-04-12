@@ -9,17 +9,17 @@
 // 8) B3 small radius is mostly wrong sign and very chunky.  : More correct at small time.
 // 9) uu3 wrong sign for larger radius.  omegaf (both omegaf1 and omegaf2) also wrong sign at larger radius.  Also, both are changing along along NS surface despite fixing PLPR : Was metric terms at small time.
 // 10) uu2 correct sign everywhere except right around polar axis of NS -- but sign follows switches of B1,B2 for desired rotation.
-// *11) uu1<0 everywhere even at larger radius where should be uu1>0.  Caused by wrong sign for uu3?  Or maybe transient due to field moving near t=0?
-// **12) Figure out why compact for A_3 leads to kinks.  Improve A_{dir} interpolation so better near pole.
+// 11) uu1<0 everywhere even at larger radius where should be uu1>0.  Caused by wrong sign for uu3?  Or maybe transient due to field moving near t=0?
+// ***12) Figure out why compact for A_3 leads to kinks.  Improve A_{dir} interpolation so better near pole.
 // 13) Why does F->U3/omegaf get updated before (1 step off) of EMF->B3?  : Was metric stuff.
 //       SUBSTEP0: t=0 so nothing happens
 //       SUBSTEP1: t=bit more : EMF/F non-zero on surface of NS, and EMF/F used to update B3stag&B3/U3, so both should be updated
 
-// **14) uu0 dies on surface with new additions for bound_ (mono and usecompact)
+// ***14) uu0 dies on surface with new additions for bound_ (mono and usecompact)
 // Seems to be usecompact, death in uu0 on surface at checkaphi 2 (normal DT for dumps) even if mono3=mono4=1 are set.
 
-// **15) Why is B3 in ghost cells being set to 0?  (see EMF @ i=26 j=40 debug code for i=25 and i=26) : Seems was due to usecompact==0
-//       Also, Why is p[B3] changing sign with equal magnitude right across the NS surface?  Seems A_i not set well since pstag update leads to jumpiness? .. usecompact=1 in vpot doesn't help.  still switches sign!
+// 15) Why is B3 in ghost cells being set to 0?  (see EMF @ i=26 j=40 debug code for i=25 and i=26) : Seems was due to usecompact==0
+//       Also, Why is p[B3] changing sign with equal magnitude right across the NS surface?  Seems A_i not set well since pstag update leads to jumpiness? .. usecompact=1 in vpot doesn't help.  Better with general usecompact that actually includes A_2 (duh).
 
 
 
@@ -452,7 +452,7 @@ int init_global(void)
 
 
   // GODMARK TODO DEBUG TEST
-  DODIAGEVERYSUBSTEP=1;
+  DODIAGEVERYSUBSTEP=0;
 
 
   return(0);
@@ -2190,8 +2190,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     FTYPE prpass[NPR],prnew[NPR];
     int whichvel,whichcoord,i,j,k;
     int initreturn;
-    int inittype=0; // evolve type
-    //  don't set inittypeglobal, set by init_primitives
+    int inittype;
     int ii,jj,kk;
     int baducononsurface;
     int yyystart,yyyend;
@@ -2199,7 +2198,25 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     int odir1,odir2;
     int pos;
     int isinsideNSijk,hasmaskijk,hasinsideijk;
+    struct of_geom geomdontusecorn;
+    struct of_geom *ptrgeomcorn;
+    struct of_geom geomdontuse[5];
+    // must be array of pointers so each pointer can change
+    struct of_geom *(ptrgeom[5]);
+    int ptriter;
 
+
+
+    // must assign these pointers inside parallel region since new pointer per parallel thread
+    for(ptriter=0;ptriter<5;ptriter++){
+      ptrgeom[ptriter]=&(geomdontuse[ptriter]);
+    }
+    ptrgeomcorn=&geomdontusecorn;
+
+
+
+    // evolve type (don't set inittypeglobal, set by init_primitives)
+    inittype=0;
 
 
 
@@ -2215,13 +2232,8 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-    struct of_geom geomdontusecorn;
-    struct of_geom *ptrgeomcorn=&geomdontusecorn;
-    struct of_geom geomdontuse[5];
-    struct of_geom *(ptrgeom[5]); // must be array of pointers so each pointer can change
-
-
-
+    //////////////////
+    // LOOP
     OPENMP3DLOOPVARSDEFINE;
     ////////  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
@@ -2233,10 +2245,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
       // loop over dirs.  dir=0 for CENT and dir=1,2,3 for CORN's.
       for(dir=dirstart;dir<=dirend;dir++){
-
-
-	// DEBUG:
-	dualfprintf(fail_file,"INGEN: ijk=%d %d %d dir=%d\n",i,j,k,dir);
 
 
 	// get odir's
@@ -2272,15 +2280,10 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	  int isongridall,isinsideall;
 	  int mono4[NPR];
 	  int mono3[NPR];
-	  int ptriter;
 
 
 
 
-	  // setup initial array of ptrgeom's
-	  for(ptriter=0;ptriter<5;ptriter++){
-	    ptrgeom[ptriter]=&(geomdontuse[ptriter]);
-	  }
 
 
 
@@ -2300,10 +2303,11 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 	  // DEBUG:
-	  dualfprintf(fail_file,"ijk=%d %d %d iijjkk=%d %d %d\n",i,j,k,ii,jj,kk);
-	  for(yyy=1;yyy<=3;yyy++){
-	    dualfprintf(fail_file,"yyy=%d delorig=%d del=%d\n",yyy,delorig[yyy],del[yyy]);
-	  }
+	  //	  dualfprintf(fail_file,"ijk=%d %d %d iijjkk=%d %d %d\n",i,j,k,ii,jj,kk);
+	  //	  for(yyy=1;yyy<=3;yyy++){
+	  //	    dualfprintf(fail_file,"yyy=%d delorig=%d del=%d\n",yyy,delorig[yyy],del[yyy]);
+	  //	  }
+
 	  
 
 	  // now have offset for each cell to grab from starting ii,jj,kk position
@@ -2383,7 +2387,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 	      // DEBUG:
-	      dualfprintf(fail_file,"ijkref=%5.2g %5.2g %5.2g : ijkcorn=%d %d %d poscorn=%d ijkalt0=%d %d %d ijkalt1=%d %d %d ijkalt2=%d %d %d ijkalt3=%d %d %d\n",iref,jref,kref,icorn,jcorn,kcorn,poscorn,ialt[0],jalt[0],kalt[0],ialt[1],jalt[1],kalt[1],ialt[2],jalt[2],kalt[2],ialt[3],jalt[3],kalt[3]);
+	      //	      dualfprintf(fail_file,"ijkref=%5.2g %5.2g %5.2g : ijkcorn=%d %d %d poscorn=%d ijkalt0=%d %d %d ijkalt1=%d %d %d ijkalt2=%d %d %d ijkalt3=%d %d %d\n",iref,jref,kref,icorn,jcorn,kcorn,poscorn,ialt[0],jalt[0],kalt[0],ialt[1],jalt[1],kalt[1],ialt[2],jalt[2],kalt[2],ialt[3],jalt[3],kalt[3]);
 
 	    
 
@@ -2416,18 +2420,8 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"BEFORE ASSIGNMENT\n");
-
-
 	      // positions and values along special path
 	      xpos[0]=0.0;
-
-
-	      // setup initial array of ptrgeom's
-	      for(ptriter=0;ptriter<5;ptriter++){
-		ptrgeom[ptriter]=&(geomdontuse[ptriter]);
-	      }
 
 
 	      for(yyy=yyystart;yyy<=yyyend;yyy++){
@@ -2436,25 +2430,15 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,ialt[yyy],jalt[yyy],kalt[yyy],pl);
 
 
-		// DEBUG:
-		dualfprintf(fail_file,"AFTER ASS1\n");
-
 		// rescale
 		get_geometry(ialt[yyy], jalt[yyy], kalt[yyy], pos, ptrgeom[yyy+1]);
 		rescale_pl(time,dir,ptrgeom[yyy+1], prpass ,localsingle[yyy+1]);
-
-		// DEBUG:
-		dualfprintf(fail_file,"AFTER RESC1\n");
-
 
 		// reference point is between i,j,k and ii,jj,kk
 		xpos[yyy+1]=sqrt((iref-ialt[yyy])*(iref-ialt[yyy]) + (jref-jalt[yyy])*(jref-jalt[yyy]) + (kref-kalt[yyy])*(kref-kalt[yyy]));
 		if(yyy<=1) xpos[yyy+1]*=-1.0; // really negative relative to ijkref
 	      }
 
-
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT1\n");
 
 
 	      if(cando4==1){
@@ -2488,9 +2472,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 	      
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT2\n");
-
 	      if(cando2==1){
 
 		// perform (linear) interpolation for these points (only yyy=1,2 corresponding to localsingle[2,3] and xpos[2,3])
@@ -2515,12 +2496,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 
-	   
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT3\n");
-
-	      
-
 
 	      // GODMARK TODO TEST DEBUG:
 
@@ -2538,9 +2513,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 	      }
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT4\n");
-
 
 	      // transfer over compact interpolated value
 	      if(usecompact==1){
@@ -2550,9 +2522,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		unrescale_pl(time,dir,ptrgeomcorn, localsingle[0],compactvalue); // so compactvalue is back to normal prim type (i.e. not rescaled)
 	      }
 
-
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT5\n");
 
 
 	      // DEBUG:
@@ -2571,9 +2540,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		if(vpot!=NULL) pliter=nprend+1;
 	      }
 	    
-
-	      // DEBUG:
-	      dualfprintf(fail_file,"AFTER ASSIGNMENT6\n");
 
 
 	    }// end if possible to use compact
@@ -2598,6 +2564,11 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    jjjj=jj+2*del[2];
 	    kkkk=kk+2*del[3];
 
+
+	    // DEBUG:
+	    //	    dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
+
+
 	    // ensure points are on grid while not inside NS
 	    // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
 	    // For dir==0, not quite necessary, but ok since NS shouldn't be so close to edge of grid.
@@ -2612,8 +2583,9 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    else  isinside[3]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[3],&hasinside[3]); // assume this already taken care of by usecompact==0,1
 
 
-	    // setup initial array of ptrgeom's
-	    for(ptriter=0;ptriter<5;ptriter++){
+	    // this redefines use of ptrgeom[], and so need to regive potential memory space to the pointer since that pointer may be pointing to internal memory space
+	    // but only loop over 1-3 since that's all that's modified below.  For example, need to keep ptrgeom[0], which didn't change.
+	    for(ptriter=1;ptriter<=3;ptriter++){
 	      ptrgeom[ptriter]=&(geomdontuse[ptriter]);
 	    }
 
@@ -2659,6 +2631,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 	      
+
 	      // get rescaled prim to interpolate
 	      // get value to rescale
 	      if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,ii,jj,kk);
@@ -2722,6 +2695,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		if(vpot!=NULL) pliter=nprend+1;
 
 	      }// end over pl
+
 
 
 
@@ -2807,6 +2781,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		}
 
 	      }
+
 
 
 	      // unrescale to get final prim
@@ -3772,9 +3747,9 @@ void adjust_fluxctstag_vpot_dosetextrapdirect(SFTYPE fluxtime, FTYPE (*prim)[NST
   //
   // For copy/extrpolate, just use grid-directed copy/extrapolation.  No need to use corners since interpolation (which will use this information) is anyways 1D per dimension.
   //
-  // NOTE: Only 1 layer deep so far: GODMARK
+  // NOTE: Only 1 layer deep
   //
-  // GODMARK: TODO: need to account for possibly multiple interps/extraps to same point -- so add-up values and divide by number of them -- but then have to keep track of #
+  // Need to account for possibly multiple interps/extraps to same point -- so add-up values and divide by number of them -- but then have to keep track of #
   //
   //////////////
 
@@ -3938,7 +3913,7 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
   // get NS parameters
   setNSparms(time,&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
-  dualfprintf(fail_file,"MAGIC1\n");
+  dualfprintf(fail_file,"MAGIC1: dir=%d ijk=%d %d %d\n",dir,i,j,k);
 
   // set pos for computing geometry and primitive (not done so far)
   if(dir==1) pos=CORN1;
@@ -4334,9 +4309,9 @@ void adjust_fluxctstag_vpot_dosetextrap(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][
   //
   // For copy/extrpolate, just use grid-directed copy/extrapolation.  No need to use corners since interpolation (which will use this information) is anyways 1D per dimension.
   //
-  // NOTE: Only 1 layer deep so far: GODMARK
+  // NOTE: Only 1 layer deep
   //
-  // GODMARK: TODO: need to account for possibly multiple interps/extraps to same point -- so add-up values and divide by number of them -- but then have to keep track of #
+  // need to account for possibly multiple interps/extraps to same point -- so add-up values and divide by number of them -- but then have to keep track of #
   //
   //////////////
 
@@ -5660,25 +5635,26 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       // for dir==1, B2,B3 should come from exterior, etc.
       // Actually, more generally, Bperp1 and Bperp2 come from mixter of values from the surface and exterior for A_i, so this may be overdoing it.
       // But seems ok, since (at least B3) has no fixed value and comes from derivatives in A_i.  So when dealing with B^i (not A_i), this copying from exterior alone seems reasonable.
-#if(1) // GODMARK DEBUG TEST
-      // This seems required to have stable (albeit inaccurate) omegaf.  Probably related to B3 and dir==1 and dir==2.
-      // But still not correct value of omegaf -- jumps at surface.  B3 has jump?
-      // Note, I wasn't doing this before with old1 bound and oscillated as well.  Maybe oscillations related to para for B3 but old bound fixes B3 bit more so doesn't oscillate when use those CENT values here.
+      if(1){
+	// This seems required to have stable (albeit inaccurate) omegaf.  Probably related to B3 and dir==1 and dir==2.
+	// But still not correct value of omegaf -- jumps at surface.  B3 has jump?
+	// Note, I wasn't doing this before with old1 bound and oscillated as well.  Maybe oscillations related to para for B3 but old bound fixes B3 bit more so doesn't oscillate when use those CENT values here.
 
-      // So don't have to do this inside init_dsandvels_nsbh() for DONSBOUNDPLPR>=2 below
-      if(dir==1){
-	pr[B2]=prext[B2];
-	pr[B3]=prext[B3];
+	// So don't have to do this inside init_dsandvels_nsbh() for DONSBOUNDPLPR>=2 below
+	if(dir==1){
+	  pr[B2]=prext[B2];
+	  pr[B3]=prext[B3];
+	}
+	else if(dir==2){
+	  pr[B1]=prext[B1];
+	  pr[B3]=prext[B3];
+	}
+	else if(dir==3){
+	  pr[B1]=prext[B1];
+	  pr[B2]=prext[B2];
+	}
       }
-      else if(dir==2){
-	pr[B1]=prext[B1];
-	pr[B3]=prext[B3];
-      }
-      else if(dir==3){
-	pr[B1]=prext[B1];
-	pr[B2]=prext[B2];
-      }
-#endif
+
 
       // DEBUG:
       PLOOP(pliter,pl){
@@ -6696,7 +6672,8 @@ int setNSparms(SFTYPE time, FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns
   // TEST
   //  *omegak=0;
 
-  dualfprintf(fail_file,"setNSparms: setNSparms: time=%21.15g\n",time);
+  // DEBUG:
+  //  dualfprintf(fail_file,"setNSparms: setNSparms: time=%21.15g\n",time);
 
   
   // 0->1 after sigma has increased somewhat

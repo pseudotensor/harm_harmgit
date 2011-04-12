@@ -331,13 +331,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   }
 
 
-  // DEBUG:
-  dualfprintf(fail_file,"afterevolve_withvpot_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
-  dualfprintf(fail_file,"afterevolve_withvpot_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
-  dualfprintf(fail_file,"afterevolve_withvpot_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"afterevolve_withvpot_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
-  dualfprintf(fail_file,"afterevolve_withvpot_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
-  dualfprintf(fail_file,"afterevolve_withvpot_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
   //////////////////////
@@ -381,13 +374,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
 
-  // DEBUG:
-  dualfprintf(fail_file,"after bound_beforeevolveprim_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_beforeevolveprim_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
-  dualfprintf(fail_file,"after bound_beforeevolveprim_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_beforeevolveprim_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
-  dualfprintf(fail_file,"after bound_beforeevolveprim_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_beforeevolveprim_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
   if(failed>0) dualfprintf(fail_file,"2failed=%d\n",failed);
@@ -493,13 +479,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
 
-  // DEBUG:
-  dualfprintf(fail_file,"after bound_evolveprim_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_evolveprim_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
-  dualfprintf(fail_file,"after bound_evolveprim_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_evolveprim_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
-  dualfprintf(fail_file,"after bound_evolveprim_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
-  dualfprintf(fail_file,"after bound_evolveprim_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
 
@@ -553,13 +532,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   }// end if truestep
 
 
-  // DEBUG:
-  dualfprintf(fail_file,"after currents_a %21.15g\n",MACP0A1(pf,25,40,0,B3));
-  dualfprintf(fail_file,"after currents_b %21.15g\n",MACP0A1(pf,26,40,0,B3));
-  dualfprintf(fail_file,"after currents_c %21.15g\n",MACP0A1(pstag,25,40,0,B3));
-  dualfprintf(fail_file,"after currents_d %21.15g\n",MACP0A1(pstag,26,40,0,B3));
-  dualfprintf(fail_file,"after currents_e %21.15g\n",MACP0A1(ucons,25,40,0,B3));
-  dualfprintf(fail_file,"after currents_f %21.15g\n",MACP0A1(ucons,26,40,0,B3));
 
 
   /////////////////////////////////////

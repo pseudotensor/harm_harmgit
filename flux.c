@@ -149,20 +149,6 @@ int fluxcalc(int stage,
 
 
 
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after fluxcalc_flux in flux.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(F1,ip1mac(i),j,k,pl),MACP0A1(F1,i,j,k,pl),MACP0A1(F2,i,jp1mac(j),k,pl),MACP0A1(F2,i,j,k,pl));
-      }
-    }
-  }
-
-
-
 #if(0)
   // DEBUG:
   if(Nvec[1]>1) FULLLOOP PLOOP(pliter,pl) MACP1A1(fluxvec,1,i,j,k,pl)+=MACP1A1(fluxvecEM,1,i,j,k,pl);
@@ -209,20 +195,6 @@ int fluxcalc(int stage,
 
   }// end if staggered method where can update A_i directly
 
-
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after fluxcalc_fluxctstag in flux.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(F1,ip1mac(i),j,k,pl),MACP0A1(F1,i,j,k,pl),MACP0A1(F2,i,jp1mac(j),k,pl),MACP0A1(F2,i,j,k,pl));
-      }
-    }
-  }
-  
 
 
 #if(PRODUCTION==0)
@@ -331,20 +303,6 @@ int fluxcalc(int stage,
   //
   /////////////////////////////
   cleanup_fluxes(Nvec,ptrfluxvec);
-
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after cleanup_fluxes in flux.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(F1,ip1mac(i),j,k,pl),MACP0A1(F1,i,j,k,pl),MACP0A1(F2,i,jp1mac(j),k,pl),MACP0A1(F2,i,j,k,pl));
-      }
-    }
-  }
-
 
 
   //////////////////////////////

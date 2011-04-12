@@ -1152,24 +1152,6 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after adjust_emfs in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
-      }
-    }
-  }
-
-
-
-
-
-
-
   if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0){
     if(initialstep==1){
       // For all current TIMEORDERs, Ui is always from pi so always from last ucum or vpotcum
@@ -1187,19 +1169,6 @@ int evolve_vpotgeneral(int whichmethod, int stage,
   }
 
 
-  // DEBUG:
-  {
-    int i,j,k;
-    i=26;j=40;k=0;
-    if(i==26 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after initvpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
-      }
-    }
-  }
-
-
   if(MODIFYEMFORVPOT==MODIFYVPOT){  // overall, get new emf/fluxes
 
 
@@ -1208,18 +1177,6 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     // vpotcum argument is set to NULL since don't want to update ucum-like quantity yet
     update_vpot(whichmethod, stage, pr, fluxvec, emf, CUf, CUnew, fluxdt, vpot, vpot0, vpotlast, NULL);
 
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=26;j=40;k=0;
-    if(i==26 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after update_vpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
-      }
-    }
-  }
 
 
     //////////////////////////////
@@ -1233,51 +1190,11 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     adjust_vpot(fluxtime, whichmethod, pr, Nvec, vpot);
 
 
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after adjust_vpot in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
-      }
-    }
-  }
-
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=26;j=40;k=0;
-    if(i==26 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after adjustvpot in fluxvpot.c: %21.15g %21.15g %21.15g %21.15g\n",MACP1A0(vpot,2,i,j,k),MACP1A0(vpot0,2,i,j,k),MACP1A0(vpotlast,2,i,j,k),MACP1A0(vpotcum,2,i,j,k));
-      }
-    }
-  }
-
-
     // now obtain EMF_i from A_i and Aold_i
     // this sets EMFs so that one only has to adjust A_i and not also EMF_i
     // A_i,Aold_i -> EMF_i (in F_i)
     // like deriving flux from Uf and Ui (NOTE: not derived from Ucum)
     set_emfflux(whichmethod, stage,pr,fluxvec,emf,CUf, CUnew, fluxdt,vpot,vpot0,vpotlast);
-
-
-  // DEBUG:
-  {
-    int i,j,k;
-    i=25;j=40;k=0;
-    if(i==25 && j==40){
-      int pliter,pl;
-      PLOOP(pliter,pl) {
-	dualfprintf(fail_file,"after set_emfflux in fluxvpot.c: %21.15g %21.15g : %21.15g %21.15g\n",MACP0A1(fluxvec[1],ip1mac(i),j,k,pl),MACP0A1(fluxvec[1],i,j,k,pl),MACP0A1(fluxvec[2],i,jp1mac(j),k,pl),MACP0A1(fluxvec[2],i,j,k,pl));
-      }
-    }
-  }
-
 
 
   }
