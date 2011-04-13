@@ -27,6 +27,7 @@
 //
 // NOTE the start-up sequence:
 //
+// 0) pre-dump) t=0, switches->0, so omegaf=0.  Initially have B3=uu3=0.  Note that vpot,B,etc. are renormalized so BCs will pass through unnormalized fields at first.
 // 1) dump0) t=0, switches->0, so omegaf=0.  Initially have B3=uu3=0
 // 2) dump1) t=completed first substep, fluxtime=0 during substep so switches still off.  boundtime=some dt
 // 3) dump2) t=completed second substep, fluxtime=some dt so switches->on (so omegaf=omegak if hard to full on switch).  boundtime=some next dt.  In BL, uu3>0 on NS surface -> EMF1/2 non-zero -> B3 non-zero.  But also, in KS, uu3>0 means u_1 non-zero even if B3=0 such that u^1=u^2=0 (i.e. stationary condition on  NS surface).  So u.B non-zero, so T^p_\phi non-zero, so uu3 *on grid* becomes non-zero.
@@ -88,8 +89,8 @@ static int unrescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *pr
 static FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k);
 
 
-static int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4);
-static int checkmono3(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3);
+static int checkmono4(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4);
+static int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3);
 
 
 static void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
@@ -1929,9 +1930,9 @@ int unrescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *prin, FTY
 
 
 // check for monotonicity of using 4 point *interpolation*
-int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
+int checkmono4(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
 {
-  FTYPE x0=xpos[0]; // x0 in middle
+  FTYPE x0=xpos[0]; // x0 in middle (y0 not set, so not used)
   FTYPE x1=xpos[1]; // x1 on edge
   FTYPE x2=xpos[2];
   FTYPE x3=xpos[3];
@@ -2013,14 +2014,15 @@ int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
 	      (y1 - 1.*y3)*pow(x4,3.)),2.),0.5));
 
 
-  // ensure within the range of the values used for interpolation
-  if(xextreme[0]>=x1 && xextreme[0]<=x4 && xextreme[1]>=x1 && xextreme[1]<=x4){
+  // ensure extremum is outside the range of the values used for interpolation
+  if(xextreme[0]<=xpos[firstpos] && xextreme[0]>=xpos[lastpos] && xextreme[1]<=xpos[firstpos] && xextreme[1]>=xpos[lastpos]){
     mono=1;
   }
   else mono=0;
 
   // GODMARK TODO TEST DEBUG:
-  //  mono=1;
+  // Forcing mono for (at least) field will lead to more kinks because of overlapping fixed values along interpolation that will require non-monotonicity to compress field together leading to smoother interpolation
+  // mono=1;
 
   return(mono);
 
@@ -2029,9 +2031,9 @@ int checkmono4(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4)
 
 
 // check for monotonicity of using 3 point *extrapolation*
-int checkmono3(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3)
+int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3)
 {
-  FTYPE x0=xpos[0]; // x0 on edge
+  FTYPE x0=xpos[0]; // x0 on edge (y0 not set, so not used)
   FTYPE x1=xpos[1];
   FTYPE x2=xpos[2];
   FTYPE x3=xpos[3]; // x3 on other edge
@@ -2050,14 +2052,15 @@ int checkmono3(FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3)
     pow(x3,2.))*pow(-1.*x3*y1 - 1.*x1*y2 + x3*y2 + x2*(y1 - 1.*y3) + x1*y3,-1.);
 
   
-  // ensure within the range of the values used for interpolation
-  if(xextreme>=x1 && xextreme<=x3){
+  // ensure extremum is outside the range of the values used for interpolation
+  if(xextreme<=xpos[firstpos] && xextreme>=xpos[lastpos]){
     mono=1;
   }
   else mono=0;
   
 
   // GODMARK TODO TEST DEBUG:
+  // Forcing mono for (at least) field will lead to more kinks because of overlapping fixed values along interpolation that will require non-monotonicity to compress field together leading to smoother interpolation
   //  mono=1;
 
 
@@ -2169,7 +2172,7 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 
-
+#define CHECKUCON 1
 
 // generalized boundary conditions function for deeppara method
 void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
@@ -2187,7 +2190,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
     int pl,pliter;
-    FTYPE prpass[NPR],prnew[NPR];
+    FTYPE prpass[NPR],prnew[NPR],prold[NPR];
     int whichvel,whichcoord,i,j,k;
     int initreturn;
     int inittype;
@@ -2196,15 +2199,17 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     int yyystart,yyyend;
     int dir,dirstart,dirend;
     int odir1,odir2;
-    int pos;
+    int pos,posprim;
     int isinsideNSijk,hasmaskijk,hasinsideijk;
     struct of_geom geomdontusecorn;
     struct of_geom *ptrgeomcorn;
     struct of_geom geomdontuse[5];
     // must be array of pointers so each pointer can change
     struct of_geom *(ptrgeom[5]);
+    struct of_geom geomdontuse4ucon[5];
+    struct of_geom *(ptrgeom4ucon[5]);
     int ptriter;
-
+    int firstpos,lastpos;
 
 
     // must assign these pointers inside parallel region since new pointer per parallel thread
@@ -2256,6 +2261,8 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	else if(dir==2) pos=CORN2;
 	else if(dir==3) pos=CORN3;
 
+	posprim=CENT; // position of primitive
+
 	
 	// Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
 	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk);
@@ -2278,8 +2285,9 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	  int testi;
 	  int yyy;
 	  int isongridall,isinsideall;
-	  int mono4[NPR];
+	  int mono4[NPR],mono3left[NPR],mono3right[NPR];
 	  int mono3[NPR];
+	  int constrained;
 
 
 
@@ -2318,9 +2326,11 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
+
+
 	    ///////////////////
 	    //
-	    // Check if can use compact point instead of outer point
+	    // Check if can use compact point instead of outer point and compute *compactvalue*
 	    //
 	    ///////////////////
 
@@ -2352,7 +2362,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-	    // GODMARK TODO: special case for axisymmetry only
+ 	    // GODMARK TODO: special case for axisymmetry only
 	    // see if can use more compact (interpolated) point for parabolic extrapolation
 	    if(abs(del[1])==abs(del[2]) && abs(del[1])>0){ // GODMARK TODO: Special case
 
@@ -2404,11 +2414,24 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 	      int cando4=0;
+	      int cando3left=0;
+	      int cando3right=0;
 	      int cando2=0;
+	      int donecompact=0;
 	      if(isongrid[2]==1 && isongrid[3]==1 && isinside[2]==0 && isinside[3]==0){ // then assume 2 points are on surface at corner of NS (index 2,3 for isongrid[] and isinside[])
 		yyystart=1;
 		yyyend=2;
 		cando2=1;
+	      }
+	      if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){// then can do 3 point interpolation
+		yyystart=0;
+		yyyend=2;
+		cando3left=1;
+	      }
+	      if(isongrid[2]==1 && isongrid[3]==1 && isongrid[4]==1 && isinside[2]==0 && isinside[3]==0 && isinside[4]==0){ // then can do 3 point interpolation
+		yyystart=1;
+		yyyend=3;
+		cando3right=1;
 	      }
 	      if(isongridall==4 && isinsideall==0){// then all points are good to use
 		
@@ -2440,14 +2463,33 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 
-
-	      if(cando4==1){
+	      ////////////////////////
+	      //
+	      // Attempt 4 point interpolation
+	      //
+	      ////////////////////////
+	      if(donecompact==0 && cando4==1){
 		PLOOP(pliter,pl){
 		  
 		  if(vpot!=NULL) pl=0;
 		  
-		  // check for monotonicity of using 4 points
-		  mono4[pl]=checkmono4(xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
+		  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+		  if(vpot!=NULL){
+		    constrained=0;
+		    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+		    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+		    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+		    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+		  }
+		  else constrained=0; // ignore constraint question for non-field
+
+		  if(constrained>=2) mono4[pl]=1; // avoid overconstraint for field
+		  else{
+		    // check for monotonicity of using 4 points
+		    // [0] is in middle, so order is really 1,2,0,3,4.  And only need to be monotonic between 2 & 3 since other points can actually be correctly non-monotonic.  Just don't want to introduce extra non-monotonicity between points
+		    firstpos=2; lastpos=3; // 0 is really at "2.5"
+		    mono4[pl]=checkmono4(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
+		  }
 
 		  if(mono4[pl]==1){
 
@@ -2458,9 +2500,11 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		      +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[4])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2])*(xpos[3]-xpos[4]))
 		      +localsingle[4][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[4]-xpos[1])*(xpos[4]-xpos[2])*(xpos[4]-xpos[3]))
 		      ;
+		    
+		    usecompactpl[pl]=1; // says compact value is good to go
+		    donecompact=1; // says no attempt any other weaker interpolations
 		  }// end if monotonic
 
-		  usecompactpl[pl]=1;
 
 		  if(vpot!=NULL) pliter=nprend+1;
 
@@ -2470,47 +2514,146 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      else{
 		PLOOP(pliter,pl) mono4[pl]=0; // so diags appear reasonable looking
 	      }
+
+
+	      ////////////////////////
+	      //
+	      // Attempt one of two 3 point interpolations
+	      //
+	      ////////////////////////
+  	      if(donecompact==0 && (cando3left==1 || cando3right==1)){
+		FTYPE xposnew[5],yfun[5];
+
+		PLOOP(pliter,pl){
+		  
+		  if(vpot!=NULL) pl=0;
+		  
+		  // check for monotonicity of using 3 points
+		  if(cando3left==1){
+		    xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+		    xposnew[1]=xpos[1]; yfun[1]=localsingle[1][pl];
+		    xposnew[2]=xpos[2]; yfun[2]=localsingle[2][pl];
+		    xposnew[3]=xpos[3]; yfun[3]=localsingle[3][pl];
+		    // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+		    if(vpot!=NULL){
+		      constrained=0;
+		      if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+		      if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+		      if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+		    }
+		    else constrained=0; // ignore constraint question for non-field
+
+		    if(constrained>=2) mono3left[pl]=1; // avoid overconstraint for field
+		    else{
+		      // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
+		      firstpos=2; lastpos=3;
+		      mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+		    }
+		  }
+		  else mono3left[pl]=0;
+
+		  if(cando3right==1){
+		    xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+		    xposnew[1]=xpos[2]; yfun[1]=localsingle[2][pl];
+		    xposnew[2]=xpos[3]; yfun[2]=localsingle[3][pl];
+		    xposnew[3]=xpos[4]; yfun[3]=localsingle[4][pl];
+		    // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+		    if(vpot!=NULL){
+		      constrained=0;
+		      if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+		      if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+		      if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+		    }
+		    else constrained=0; // ignore constraint question for non-field
+
+		    if(constrained>=2) mono3right[pl]=1; // avoid overconstraint for field
+		    else{
+		      // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
+		      firstpos=1; lastpos=3;
+		      mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+		    }
+		  }
+		  else mono3right[pl]=0;
+
+		  if(mono3left[pl]==1 || mono3right[pl]==1){
+
+		    // perform interpolation for these points if monotonic using 3 points
+		    localsingle[0][pl] =
+		      +yfun[1]*(xposnew[0]-xposnew[2])*(xposnew[0]-xposnew[3])/((xposnew[1]-xposnew[2])*(xposnew[1]-xposnew[3]))
+		      +yfun[2]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[3])/((xposnew[2]-xposnew[1])*(xposnew[2]-xposnew[3]))
+		      +yfun[3]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[2])/((xposnew[3]-xposnew[1])*(xposnew[3]-xposnew[2]))
+		      ;
+
+		    usecompactpl[pl]=1; // says compact value is good to go
+		    donecompact=1; // says no attempt any other weaker interpolations
+		  }// end if monotonic
+
+
+		  if(vpot!=NULL) pliter=nprend+1;
+
+		}// end pl
+			
+	      }
+	      else{
+		PLOOP(pliter,pl){
+		  mono3left[pl]=0; // so diags appear reasonable looking
+		  mono3right[pl]=0; // so diags appear reasonable looking
+		}
+	      }
 	      
 
-	      if(cando2==1){
+	      ////////////////////////
+	      //
+	      // Attempt 2 point interpolation
+	      //
+	      ////////////////////////
+	      if(donecompact==0 && cando2==1){
 
 		// perform (linear) interpolation for these points (only yyy=1,2 corresponding to localsingle[2,3] and xpos[2,3])
 		PLOOP(pliter,pl){
 
 		  if(vpot!=NULL) pl=0;
 
-		  if(mono4[pl]==0){ // then revert to using 2 points
-		    localsingle[0][pl] =
-		      +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
-		      +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
-		      ;
-
-		    usecompactpl[pl]=1;
-
-		  }// end mono4==0
-
+		  localsingle[0][pl] =
+		    +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
+		    +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
+		    ;
+		  
+		  usecompactpl[pl]=1;
+		  donecompact=1;
+		  
 		  if(vpot!=NULL) pliter=nprend+1;
 
 		}// end pl
 		
+	      }// end for cando2
+
+	    
+
+
+	      // check if ever did compact interpolation
+	      if(donecompact==0){
+		usecompact=0;
+		dualfprintf(fail_file,"WARNING: Reached donecompact=0 for all attempts, so no compact possible: ijk=%d %d %d dir=%d\n",i,j,k,dir);
 	      }
+	      else{
 
 
+		// GODMARK TODO TEST DEBUG:
 
-	      // GODMARK TODO TEST DEBUG:
-
-	      // choose default
-	      //usecompact=0;
-	      usecompact=1; // default is can do it
+		// choose default
+		//usecompact=0;
+		usecompact=1; // default is compactvalue was computed
 
 
-	      PLOOP(pliter,pl){
-		if(vpot!=NULL) pl=0;
+		PLOOP(pliter,pl){
+		  if(vpot!=NULL) pl=0;
 
-		if(usecompactpl[pl]==0) usecompact=0;
+		  if(usecompactpl[pl]==0) usecompact=0; // disable usecompact if couldn't do it for some reason for any pl
 
-		if(vpot!=NULL) pliter=nprend+1;
+		  if(vpot!=NULL) pliter=nprend+1;
 
+		}
 	      }
 
 
@@ -2525,7 +2668,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 	      // DEBUG:
-	      dualfprintf(fail_file,"usecompactC=%d: ijk=%d %d %d : ijkref=%21.15g %21.15g %21.15g : can42=%d %d\n",usecompact,i,j,k,iref,jref,kref,cando4,cando2);
+	      dualfprintf(fail_file,"dir=%d usecompactC=%d: ijk=%d %d %d : ijkref=%21.15g %21.15g %21.15g : can4332=%d %d %d %d\n",dir,usecompact,i,j,k,iref,jref,kref,cando4,cando3left,cando3right,cando2);
 	      for(yyy=0;yyy<=3;yyy++){
 		dualfprintf(fail_file,"COMPACTMOREC: %d %d (%d %d) : ialt=%d jalt=%d kalt=%d\n",isongrid[yyy+1],isinside[yyy+1],isongridall,isinsideall,ialt[yyy],jalt[yyy],kalt[yyy]);
 	      }
@@ -2535,7 +2678,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		for(spaceiter=yyystart+1;spaceiter<=yyyend+1;spaceiter++){
 		  dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
 		}
-		dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],usecompactpl[pl]);
+		dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : mono3left=%d mono3right=%d :  usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],mono3left[pl],mono3right[pl],usecompactpl[pl]);
 
 		if(vpot!=NULL) pliter=nprend+1;
 	      }
@@ -2614,22 +2757,30 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 
-	      // get \gamma to ensure not going to copy-in bad (i.e. limited due to bsq low and gamma\sim GAMMAMAX) values.
-	      // both vpot and prim BC versions use prim for this!
-	      ucon_calc(MAC(prim,ii,jj,kk),ptrgeom[1],ucon[1],others[1]);
-	      ucon_calc(MAC(prim,iii,jjj,kkk),ptrgeom[2],ucon[2],others[2]);
-	      if(usecompact==0) ucon_calc(MAC(prim,iiii,jjjj,kkkk),ptrgeom[3],ucon[3],others[3]);
-	      else{
-		FTYPE ucontemp1[NDIM],ucontemp2[NDIM];
-		FTYPE otherstemp1[NUMOTHERSTATERESULTS],otherstemp2[NUMOTHERSTATERESULTS];
+	      if(CHECKUCON && vpot==NULL){
+		
+		// so pos is correct
+		for(ptriter=0;ptriter<5;ptriter++) ptrgeom4ucon[ptriter]=ptrgeom[ptriter];
 
-		ucon_calc(MAC(prim,i,j,k),ptrgeom[0],ucontemp1,otherstemp1);
-		ucon_calc(MAC(prim,ii,jj,kk),ptrgeom[1],ucontemp1,otherstemp2);
-		int jjiter;
-		DLOOPA(jjiter) ucon[3][jjiter]=0.5*(ucontemp1[jjiter]+ucontemp2[jjiter]); // only need ucon[TT] below, so assume rest are only roughly accurate (if use others, would be bad near BH where u^\mu interpolations can lead to undefined velocities
+		// get \gamma to ensure not going to copy-in bad (i.e. limited due to bsq low and gamma\sim GAMMAMAX) values.
+		// both vpot and prim BC versions use prim for this!
+		ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucon[1],others[1]);
+		ucon_calc(MAC(prim,iii,jjj,kkk),ptrgeom4ucon[2],ucon[2],others[2]);
+		if(usecompact==0) ucon_calc(MAC(prim,iiii,jjjj,kkkk),ptrgeom4ucon[3],ucon[3],others[3]);
+		else{
+		  FTYPE ucontemp1[NDIM],ucontemp2[NDIM];
+		  FTYPE otherstemp1[NUMOTHERSTATERESULTS],otherstemp2[NUMOTHERSTATERESULTS];
+		  
+		  ucon_calc(MAC(prim,i,j,k),ptrgeom4ucon[0],ucontemp1,otherstemp1);
+		  ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucontemp1,otherstemp2);
+		  int jjiter;
+		  DLOOPA(jjiter) ucon[3][jjiter]=0.5*(ucontemp1[jjiter]+ucontemp2[jjiter]); // only need ucon[TT] below, so assume rest are only roughly accurate (if use others, would be bad near BH where u^\mu interpolations can lead to undefined velocities
+		  for(jjiter=0;jjiter<NUMOTHERSTATERESULTS;jjiter++) others[3][jjiter]=0.5*(otherstemp1[jjiter]+otherstemp2[jjiter]);
+		  
+		}
 
-	      }
-
+	      }//end if computing ucon for later checks
+	      
 	      
 
 	      // get rescaled prim to interpolate
@@ -2651,12 +2802,37 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 	      
 	      
+	      FTYPE error;
+	      int constrained;
+	      error=0;
 	      // perform parabolic interpolation for these points
 	      PLOOP(pliter,pl){
 		if(vpot!=NULL) pl=0;
 
-		// check for monotonicity of using 3 point *extrapolation*
-		mono3[pl]=checkmono3(xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+		// check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+		if(vpot!=NULL){
+		  constrained=0;
+		  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+		  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+		  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+		}
+		else constrained=0; // ignore constraint question for non-field
+
+		if(constrained>=2){
+		  // constrained==1 would be normal extrapolation through 1 NS surface value for field or 1
+		  // then force assumption that mono3=1 so even if checkmono3 would give mono3=0, we allow for some non-monotonicity to allow freedom in field to avoid it being overconstrained and generating kinks
+		  mono3[pl]=1;
+		}
+		else{
+		  // check for monotonicity of using 3 point *extrapolation*
+		  // points must be in order
+		  // only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
+		  if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
+		  else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
+		  mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+		}
+
+
 		if(mono3[pl]==1){
 
 		  localsingle[0][pl] =
@@ -2672,7 +2848,18 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		  if(usecompact==0) { other1=1; other2=2; }
 		  else { other1=3; other2=1; }
 
-		  FTYPE error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
+		  // For interpolation of A_i in a dir\neq i, constant value is fine and may even be preferred
+		  if(
+		     ((dir==1 &&(!(del[2]==0&&del[3]==0)))&&(vpot!=NULL) ||
+		      (dir==2 &&(!(del[1]==0&&del[3]==0)))&&(vpot!=NULL) ||
+		      (dir==3 &&(!(del[1]==0&&del[2]==0)))&&(vpot!=NULL)) ||
+		     (vpot==NULL)
+		     )
+		    error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
+		  else{
+		    error=0;
+		  }
+		  
 
 		  FTYPE caseA,caseB;
 		  
@@ -2700,7 +2887,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-	      if(vpot==NULL){ // only makes sense to change U1-U3 if modifying prim
+	      if(CHECKUCON && vpot==NULL){ // only makes sense to change U1-U3 if modifying prim
 		//////////
 		//	    
 		// only use point (localsingle[0]) if not out of wack when doing FFDE (or lower GAMMAMAX if doing MHD)
@@ -2798,19 +2985,13 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      }
 
 
-
 	      if(vpot!=NULL){
+		prold[0]=MACP1A0(vpot,dir,i,j,k);
 		MACP1A0(vpot,dir,i,j,k) = prnew[0];
 	      }
 	      else{
 		PLOOP(pliter,pl){
-		  // avoid field as test
-		  // TEST GODMARK (behaves similar to if only bound_??_old1() method.  So how copy field is strongly controlling behavior of omegaf (vs. time)
-		  // could be due to parabolic being too speculative and creating oscillation for B3 @ NS surface for fluxes
-		  // or could be due to allowing negative torques.  Might try forcing B3 to agree with expected omegaf and B^p sign (sweep back allowed only).  But to what extent is this overconstraining the possibly allowed solutions?  Unsteady solution need not have omegaf constant on field lines or match stellar value.
-		  // Might also try using linear or copy for B3.
-		  //		if(pl<B1 && pl>B3) MACP0A1(prim,i,j,k,pl) = prnew[pl];
-		  // GODMARK OOPS: Seems removing above also leads to same result.  So either code changed or calling _old1() somehow (still unknown) leads to some problem that hurts grid values.
+		  prold[pl]=MACP0A1(prim,i,j,k,pl);
 		  MACP0A1(prim,i,j,k,pl) = prnew[pl];
 		}
 	      }
@@ -2833,16 +3014,18 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    
 	    
 	    // DEBUG:
-	    dualfprintf(fail_file,"PDFC: ijk=%d %d %d : ijk2=%d %d %d : ijk3=%d %d %d\n",i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
-	    SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2: siter=%d : ison=%d isins=%d delorig=%d del=%d xpos=%21.15g ucon=%21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],delorig[spaceiter],del[spaceiter],xpos[spaceiter],ucon[spaceiter][TT]);
+	    dualfprintf(fail_file,"PDFC: dir=%d ijk=%d %d %d : ijk2=%d %d %d : ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
+	    SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2: siter=%d : ison=%d isins=%d xpos=%21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],xpos[spaceiter]);
+	    SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2b: siter=%d : delorig=%d del=%d\n",spaceiter,delorig[spaceiter],del[spaceiter]);
+	    if(CHECKUCON && vpot==NULL) SLOOPA(spaceiter) dualfprintf(fail_file,"siter=%d : ucon=%21.15g\n",spaceiter,ucon[spaceiter][TT]);
 	    if(vpot!=NULL){
 	      pl=0;
-	      SLOOPA(spaceiter) dualfprintf(fail_file,"si=%d pl=%d : %21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-	      dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP1A0(vpot,dir,i,j,k),mono3[pl]);
+	      SLOOPA(spaceiter) dualfprintf(fail_file,"si=%d pl=%d : los=%21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
+	      dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : vpot=%21.15g : oldvpot=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP1A0(vpot,dir,i,j,k),prold[0],mono3[pl]);
 	    }
 	    else{
 	      SLOOPA(spaceiter) PLOOP(pliter,pl) dualfprintf(fail_file,"si=%d pl=%d : %21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-	      PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP0A1(prim,i,j,k,pl),mono3[pl]);
+	      PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : primold=%21.15g: mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP0A1(prim,i,j,k,pl),prold[pl],mono3[pl]);
 	    }
 	  }// end if interpproblem==0 from get_del()
 	  else{
@@ -2856,6 +3039,9 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	  //
 	  ////////////////
 	  if(interpproblem==1){
+	    
+	    dualfprintf(fail_file,"Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
+
 
 	    if(vpot!=NULL){
 	      FTYPE vpotlocal[NDIM];
@@ -2864,8 +3050,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    }
 	    else{
 	   
-	      dualfprintf(fail_file,"CENT: Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
-
 	      initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,time,i,j,k,MAC(prim,i,j,k),NULL);
 
 	      if(initreturn>0){
@@ -3458,10 +3642,6 @@ int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, in
 #define DOSETFIXEMF 1
 
 
-// TEST
-//#define DONSBOUNDPLPR 2
-//#define DOSETFIXEMF 1
-
 
 
 // TIME SWITCHES
@@ -3913,7 +4093,6 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
   // get NS parameters
   setNSparms(time,&rns,&omegak, &omegaf, &Rns,&Rsoft,&v0);
 
-  dualfprintf(fail_file,"MAGIC1: dir=%d ijk=%d %d %d\n",dir,i,j,k);
 
   // set pos for computing geometry and primitive (not done so far)
   if(dir==1) pos=CORN1;
@@ -3927,7 +4106,6 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
   FTYPE x,y,z;
 
 
-  dualfprintf(fail_file,"MAGIC2\n");
 
   FTYPE xns,yns,zns;
   FTYPE Vns[NDIM],Vcartns[NDIM];
@@ -3944,7 +4122,6 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
   //	  yns=Vcartns[2];
   //	  zns=Vcartns[3];
 
-  dualfprintf(fail_file,"MAGIC3\n");
 
 
   FTYPE rescaleA;
@@ -3964,8 +4141,6 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
 
     rescaleA=1.0;
   }
-
-  dualfprintf(fail_file,"MAGIC4\n");
 
   
   // return thing that one should multiply by in order to remove dependence
@@ -4267,7 +4442,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deeppara(SFTYPE fluxtime, FTYPE (*
 
   dualfprintf(fail_file,"adjustvpotdeep: nstep=%ld steppart=%d fluxtime=%21.15g\n",nstep,steppart,fluxtime);
 
-  bound_gen_deeppara(fluxtime, prim, Nvec, vpot); // with vpot !=NULL, boundary conditions will be applied to only vpot
+  bound_gen_deeppara(fluxtime, prim, Nvec, vpot); // with vpot !=NULL, boundary conditions will be applied to only vpot and prim will be used if necessary to compute quantities
 
 
   return;

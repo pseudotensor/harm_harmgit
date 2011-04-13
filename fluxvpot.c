@@ -1179,6 +1179,7 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
+
     //////////////////////////////
     //
     // User "boundary conditions" to modify A_i's before used
@@ -1188,6 +1189,7 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
     // A_i -> Amod_i (-> A_i)
     adjust_vpot(fluxtime, whichmethod, pr, Nvec, vpot);
+
 
 
     // now obtain EMF_i from A_i and Aold_i
@@ -1216,6 +1218,7 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     update_vpot(whichmethod, stage, pr, fluxvec, emf, CUf, CUnew, fluxdt, vpot, vpot0, vpotlast, vpotcum);
 
 
+
     // update vpotlast
     for(dimen=0;dimen<NDIM;dimen++) copy_3dvpot_fullloopp1(vpot[dimen],vpotlast[dimen]);
 
@@ -1227,6 +1230,7 @@ int evolve_vpotgeneral(int whichmethod, int stage,
       // 3) vpotcum will be what's reported in diagnostics with this assignment
       for(dimen=0;dimen<NDIM;dimen++) copy_3dvpot_fullloopp1(vpotcum[dimen],vpot[dimen]);
     }
+
 
   }
 
