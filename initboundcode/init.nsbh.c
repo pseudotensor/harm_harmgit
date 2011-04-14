@@ -96,6 +96,13 @@ static int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1
 static void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
 
+static int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int *del, int *usecompactpl, FTYPE *compactvalue, FTYPE *retiref, FTYPE *retjref, FTYPE *retkref, int *retposcorn, int *reticorn, int *retjcorn, int *retkcorn);
+
+static int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *numpointsused, FTYPE *prfulldel);
+
+static int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int iii, int jjj, int kkk, int iiii, int jjjj, int kkkk, FTYPE *xpos, FTYPE localsingle[5][NPR], struct of_geom *(ptrgeom[5]), int usecompact);
+
+
 
 
 #define switcht(t,t1,t2) (t>t1 && t<t2 ? (t-t1)/(t2-t1) : (t<=t1 ? 0.0 : 1.0) )
@@ -2070,6 +2077,133 @@ int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE
 
 
 
+// NOT DONE -- see below
+// based upon do_reduce_near_cusps() in reconstructeno.c
+// detect cusp
+#define MAXCUSP 10
+#define SQRT_CUSP_EPSILON (500.0L*NUMEPSILON)
+#define CUSP_EPSILON (SQRT_CUSP_EPSILON*SQRT_CUSP_EPSILON)
+int checkcusp(int firstpos, int lastpos, FTYPE *xpos, FTYPE *yfun)
+{
+  int do_reduce = 0;
+  FTYPE a_first_der_arr[4];
+  FTYPE a_second_der_arr[3];
+  FTYPE *first_der_arr;
+  FTYPE *second_der_arr;
+  FTYPE normu;
+  FTYPE epsilon;
+  int i;
+  FTYPE a_u[MAXCUSP],a_pos[MAXCUSP];
+  FTYPE *u,*pos;
+  int min_index,max_index;
+
+
+  // setup stored x and y
+  min_index=firstpos-2;
+  max_index=lastpos-2;
+  pos=&a_pos[MAXCUSP/2];
+  u=&a_u[MAXCUSP/2];
+  first_der_arr=&a_first_der_arr[2];
+  second_der_arr=&a_second_der_arr[1];
+
+  for( i = -2; i <= 2; i++ ){
+    pos[i] = xpos[firstpos+2+i];
+    u[i] = yfun[firstpos+2+i];
+  }
+
+
+  normu=0.0;
+  for( i = -2; i <= 2; i++ ){
+    normu += fabs(u[i]);
+  }
+
+  for( i = -2; i <= 1; i++ ){
+    first_der_arr[i]=(u[i+1]-u[i])/(pos[i+1]-pos[i]);
+  }
+  for( i = -1; i <= 1; i++ ){
+    second_der_arr[i]=(first_der_arr[i]-u[i-1])/(0.5*(pos[i+1]+pos[i]) - 0.5*(pos[i]+pos[i-1]));
+  }
+
+
+  epsilon = normu * CUSP_EPSILON;
+
+
+  // NOT DONE -- nothing below is correct/checked/etc.
+
+
+  if( min_index <= -2 && max_index >= 2 ) {  //only proceed if there is enough data around
+    second_der_arr[0] = (u[0] + u[2]) - 2 * u[1];
+    second_der_arr[1] = (u[-1] + u[1]) - 2 * u[0];
+    second_der_arr[2] = (u[0] + u[-2]) - 2 * u[-1];
+
+    if( second_der_arr[2] * ( u[0] - u[-1] ) > -epsilon &&
+	second_der_arr[1] * ( u[0] - u[-1] ) < epsilon)
+      {
+	if( ( u[2] - u[1] ) * ( u[0] - u[-1] ) < epsilon  ) {
+	  do_reduce |= 2;  //to 2nd order  //atch correct reduction
+	}
+	else if(  ( u[1] - u[0] ) * ( u[0] - u[-1] ) < epsilon ) {
+	  do_reduce |= 1;  //to 1st order  //atch correct reduction
+	}
+      }
+
+    if( second_der_arr[0] * ( u[0] - u[1] ) > -epsilon &&
+	second_der_arr[1] * ( u[0] - u[1] ) < epsilon
+	)
+      {
+	if( ( u[-2] - u[-1] ) * ( u[0] - u[1] ) < epsilon ) {
+	  do_reduce |= 2;  //to 2nd order  //atch correct reduction
+	}
+	else if( ( u[-1] - u[0] ) * ( u[0] - u[1] ) < epsilon ) {
+	  do_reduce |= 1;  //to 1st order  //atch correct reduction
+	}
+      }
+  }
+
+  return( do_reduce );
+}
+
+
+
+
+// NOT DONE
+// detect kink
+#define BADKINK 1.0
+int checkkink(int firstpos, int lastpos, FTYPE *xpos, FTYPE *yfun)
+{
+  int kink;
+  FTYPE der[2],ders;
+
+  // xpos[0],yfun[0] hold extrapolated x,y
+  // xpos[firstpos],ypos[firstpos] holds next x,y
+  // xpos[firstpos+1],ypos[firstpos+1] holds next x,y
+
+  if(firstpos+1<lastpos){
+    dualfprintf(fail_file,"Not enough points in checkink\n");
+    myexit(189482345);
+  }
+
+  // get first derivatives
+  der[0]=(yfun[firstpos]-yfun[0])/(xpos[firstpos]-xpos[0]);
+  der[1]=(yfun[firstpos+1]-yfun[firstpos])/(xpos[firstpos+1]-xpos[firstpos]);
+  ders=(yfun[firstpos+1]-yfun[0])/(xpos[firstpos+1]-xpos[0]);
+
+  if(sign(der[0])!=sign(der[1]) && (fabs(der[0])/(fabs(ders)+SMALL)>BADKINK || fabs(der[1])/(fabs(ders)+SMALL)>BADKINK ) ){
+    kink=1;
+  }
+  else kink=0;
+
+
+  return(kink);
+}
+
+
+
+
+
+
+
+
 // bound CENTered quantities
 int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
@@ -2172,56 +2306,30 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 
-#define CHECKUCON 1
 
 // generalized boundary conditions function for deeppara method
 void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
 
-
-
-
-
-
   //#pragma omp parallel //private(i,j,k,initreturn,whichvel,whichcoord) OPENMPGLOBALPRIVATEFULL
 #pragma omp parallel OPENMPGLOBALPRIVATEFULL
   {
-
-
-    int pl,pliter;
-    FTYPE prpass[NPR],prnew[NPR],prold[NPR];
     int whichvel,whichcoord,i,j,k;
-    int initreturn;
-    int inittype;
     int ii,jj,kk;
-    int baducononsurface;
-    int yyystart,yyyend;
     int dir,dirstart,dirend;
     int odir1,odir2;
-    int pos,posprim;
+    int pos;
     int isinsideNSijk,hasmaskijk,hasinsideijk;
-    struct of_geom geomdontusecorn;
-    struct of_geom *ptrgeomcorn;
-    struct of_geom geomdontuse[5];
-    // must be array of pointers so each pointer can change
-    struct of_geom *(ptrgeom[5]);
-    struct of_geom geomdontuse4ucon[5];
-    struct of_geom *(ptrgeom4ucon[5]);
-    int ptriter;
-    int firstpos,lastpos;
+    int deliter;
+    FTYPE dumbinf;
 
 
-    // must assign these pointers inside parallel region since new pointer per parallel thread
-    for(ptriter=0;ptriter<5;ptriter++){
-      ptrgeom[ptriter]=&(geomdontuse[ptriter]);
+    if(PRODUCTION==0){
+      dumbinf=1.0;
+      dumbinf/=0.0;
     }
-    ptrgeomcorn=&geomdontusecorn;
-
-
-
-    // evolve type (don't set inittypeglobal, set by init_primitives)
-    inittype=0;
+    else dumbinf=0.0;
 
 
 
@@ -2236,7 +2344,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     }
 
 
-
     //////////////////
     // LOOP
     OPENMP3DLOOPVARSDEFINE;
@@ -2247,10 +2354,8 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-
       // loop over dirs.  dir=0 for CENT and dir=1,2,3 for CORN's.
       for(dir=dirstart;dir<=dirend;dir++){
-
 
 	// get odir's
 	get_odirs(dir,&odir1,&odir2);
@@ -2261,7 +2366,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	else if(dir==2) pos=CORN2;
 	else if(dir==3) pos=CORN3;
 
-	posprim=CENT; // position of primitive
 
 	
 	// Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
@@ -2269,35 +2373,16 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	//	isinsideNSijk=GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
 	// if inside NS, then use shell values to form average (distance weighted) answer for boundary values
 
-	
 	if(isinsideNSijk){
 
-	  int spaceiter;
 	  int interpproblem;
-	  int iii,jjj,kkk;
-	  int iiii,jjjj,kkkk;
-	  int isongrid[5],isinside[5],hasmask[5],hasinside[5];
-	  FTYPE localsingle[5][NPR];
-	  FTYPE xpos[5];
 	  int delorig[5];
 	  int del[5];
-	  FTYPE ucon[5][NDIM],others[5][NUMOTHERSTATERESULTS];
-	  int testi;
-	  int yyy;
-	  int isongridall,isinsideall;
-	  int mono4[NPR],mono3left[NPR],mono3right[NPR];
-	  int mono3[NPR];
-	  int constrained;
+	  int pliter,pl;
+	  int countonsurface[NDIM]={0};
+	  int countiter;
 
 
-
-
-
-
-
-	  // get geometry for i,j,k so can unrescale below
-	  get_geometry(i, j, k, pos, ptrgeom[0]);
-	
 	  // get nearest neighbor for this dir=0 (CENT) or A_{dir}
 	  ii=i+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0);
 	  jj=j+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1);
@@ -2309,737 +2394,166 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	  interpproblem+=get_del(i,j,k,ii,jj,kk,delorig,del);
 
 
-
 	  // DEBUG:
-	  //	  dualfprintf(fail_file,"ijk=%d %d %d iijjkk=%d %d %d\n",i,j,k,ii,jj,kk);
-	  //	  for(yyy=1;yyy<=3;yyy++){
-	  //	    dualfprintf(fail_file,"yyy=%d delorig=%d del=%d\n",yyy,delorig[yyy],del[yyy]);
-	  //	  }
+	  int spaceiter;
+	  SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2b: siter=%d : delorig=%d del=%d\n",spaceiter,delorig[spaceiter],del[spaceiter]);
 
-	  
 
 	  // now have offset for each cell to grab from starting ii,jj,kk position
 	  if(interpproblem==0){
 
 
-
-
-
-
-
-
-	    ///////////////////
-	    //
-	    // Check if can use compact point instead of outer point and compute *compactvalue*
-	    //
-	    ///////////////////
-
-
-	    int usecompact;
-	    usecompact=0; //default
-	    int usecompactpl[NPR];
-	    int ialt[4],jalt[4],kalt[4]; // doesn't include ijk, so only 4 needed when going from 0..3
-	    PLOOP(pliter,pl) usecompactpl[pl]=0;
+	    // get compactvalue corresponding to perpendicular interpolation across nearest points to i,j,k
+	    int usecompact,usecompactpl[NPR];
 	    FTYPE compactvalue[NPR];
-
-	    // compact value position
+ 	    PLOOP(pliter,pl) compactvalue[pl]=dumbinf;
 	    FTYPE iref,jref,kref;
-	    iref=(FTYPE)ii-0.5*sign((FTYPE)del[1])*N1NOT1;
-	    jref=(FTYPE)jj-0.5*sign((FTYPE)del[2])*N2NOT1;
-	    kref=(FTYPE)kk-0.5*sign((FTYPE)del[3])*N3NOT1;
+	    int poscorn,icorn,jcorn,kcorn;
+	    usecompact=get_compactvalue(time, prim, Nvec, vpot,  dir,  pos, i,  j,  k,  ii,  jj,  kk, del, usecompactpl, compactvalue,&iref,&jref,&kref,&poscorn,&icorn,&jcorn,&kcorn);
 
 
-	    // get geometry for iref,jref,kref so can unrescale below
-	    int icorn,jcorn,kcorn,poscorn;
-
-	    // apparently all dir=0,1,2,3 are same for ijkcorn
-	    if(iref>i) icorn=ii;
-	    else icorn=ii-1*ROUND2INT(sign((FTYPE)del[1]))*N1NOT1;
-	    if(jref>j) jcorn=jj;
-	    else jcorn=jj-1*ROUND2INT(sign((FTYPE)del[2]))*N2NOT1;
-	    if(kref>k) kcorn=kk;
-	    else kcorn=kk-1*ROUND2INT(sign((FTYPE)del[3]))*N3NOT1;
+	    dualfprintf(fail_file,"BEFORE PRFULLDEL\n");
 
 
+	    // get interpolation along full del[1,2,3] direction
+	    // assumes optimal to interpolate along diagonal.  Sometimes, however, leads to kink along grid directions and code notices the kinks and dissipation is inevitable.
+	    int gotfullvalue;
+	    FTYPE prfulldel[NPR];
+ 	    PLOOP(pliter,pl) prfulldel[pl]=dumbinf;
+	    int isongridfull[5],isinsidefull[5],hasmaskfull[5],hasinsidefull[5];
+	    int numpointsusedfulldel;
 
- 	    // GODMARK TODO: special case for axisymmetry only
-	    // see if can use more compact (interpolated) point for parabolic extrapolation
-	    if(abs(del[1])==abs(del[2]) && abs(del[1])>0){ // GODMARK TODO: Special case
-
-
-
+	    gotfullvalue=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, del, usecompact, compactvalue, isongridfull, isinsidefull, hasmaskfull, hasinsidefull, &numpointsusedfulldel, prfulldel);
+	    for(countiter=0;countiter<=numpointsusedfulldel;countiter++){
+	      if(isongridfull[countiter]==1 && isinsidefull[countiter]==0 && hasmaskfull[countiter]==1 && hasinsidefull[countiter]==1) countonsurface[0]++;
+	    }
 
 	    
-	      // GODMARK TODO: special case for axisymmetry only
-	      if(dir==0) poscorn=CORN3;
-	      else if(dir==1) poscorn=FACE2;
-	      else if(dir==2) poscorn=FACE1;
-	      else if(dir==3) poscorn=CENT;
-
-
-
-
-	      // seems all dir's are same for ijkalt
-#define FUNCI(tj) (ROUND2INT(iref - ((jj-jref)/(ii-iref))*(tj-jref)) ) // rotated around iref,jref
-#define FUNCJ(ti) (ROUND2INT(jref - ((ii-iref)/(jj-jref))*(ti-iref)) ) // rotated around iref,jref
-	      
-	      jalt[0]=jref-0.5-1.0 + 0;
-	      jalt[1]=jref-0.5-1.0 + 1;
-	      jalt[2]=jref-0.5-1.0 + 2;
-	      jalt[3]=jref-0.5-1.0 + 3;
-	      
-	      ialt[0]=FUNCI(jalt[0]);
-	      ialt[1]=FUNCI(jalt[1]);
-	      ialt[2]=FUNCI(jalt[2]);
-	      ialt[3]=FUNCI(jalt[3]);
+	    dualfprintf(fail_file,"BEFORE PRDEL123\n");
 	    
-	      kalt[0]=kalt[1]=kalt[2]=kalt[3]=k;
+
+	    // get interpolation along individual del directions if del
+
+	    int gotvaluedel[NDIM];
+	    FTYPE prdel[NDIM][NPR];
+	    int isongriddel[NDIM][5],isinsidedel[NDIM][5],hasmaskdel[NDIM][5],hasinsidedel[NDIM][5];
+	    int numpointsuseddel[NDIM];
+	    SLOOPA(deliter) PLOOP(pliter,pl) prdel[deliter][pl]=dumbinf;
+	    
+
+	    int countdeldimen=0;
+
+	    int ijk[NDIM]; ijk[1]=i; ijk[2]=j; ijk[3]=k;
+	    
+	    SLOOPA(deliter){ if(del[deliter]!=0) countdeldimen++; }
+	    if(countdeldimen>=2){ // only relevant (different than get_fulldel_interpolation() above that obtained prfulldel) if at least two del's are non-zero
+
+	      int delalt[NDIM][NDIM];
+	      int iijjkkalt[NDIM][NDIM];
+
+	      SLOOPA(deliter){// over grid-aligned directions (deliter refers to directions 1,2, or 3)
+
+		// no need to do interpolation if no del in that direction
+		if(del[deliter]==0) continue;
+
+		// get odir's
+		int odir1del,odir2del;
+		get_odirs(deliter,&odir1del,&odir2del);
+
+		// delalt[which direction][amount of del1,del2,del3 for that direction]
+		delalt[deliter][deliter]=del[deliter]; // del along del-direction
+		delalt[deliter][odir1del]=delalt[deliter][odir2del]=0; // del=0 for orthogonal directions for interpolation along del-direction 
+
+		// ii,jj,kk is same since same nearest neighbor (not inside NS).  Any del's added will only be farther from NS, so always outside -- because NS has regular constant closed curvature.
+		// iref,jref,kref,poscorn,icorn,jcorn,kcorn won't be used since usecompact=0
+		int localusecompact=0; // compactvalue won't be used
+		
+		gotvaluedel[deliter]=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, delalt[deliter], localusecompact, compactvalue, isongriddel[deliter], isinsidedel[deliter], hasmaskdel[deliter], hasinsidedel[deliter], &numpointsuseddel[deliter],  prdel[deliter]);
+
+		// iterate if other points used are actually on surface (only occurs for A_i)
+		for(countiter=0;countiter<=numpointsuseddel[deliter];countiter++){
+		  if(isongriddel[deliter][countiter]==1 && isinsidedel[deliter][countiter]==0 && hasmaskdel[deliter][countiter]==1 && hasinsidedel[deliter][countiter]==1) countonsurface[deliter]++;
+		}
+	      }
 
 
 	      // DEBUG:
-	      //	      dualfprintf(fail_file,"ijkref=%5.2g %5.2g %5.2g : ijkcorn=%d %d %d poscorn=%d ijkalt0=%d %d %d ijkalt1=%d %d %d ijkalt2=%d %d %d ijkalt3=%d %d %d\n",iref,jref,kref,icorn,jcorn,kcorn,poscorn,ialt[0],jalt[0],kalt[0],ialt[1],jalt[1],kalt[1],ialt[2],jalt[2],kalt[2],ialt[3],jalt[3],kalt[3]);
-
-	    
-
-	      // ensure points are on grid while not inside NS
-	      // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
-	      
-	      isongridall=isinsideall=0; // init
-	      for(yyy=0;yyy<=3;yyy++){
-		isongrid[yyy+1]=is_dir_onactivegrid(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
-		isinside[yyy+1]=is_dir_insideNS(dir,ialt[yyy],jalt[yyy],kalt[yyy], &hasmask[yyy+1],&hasinside[yyy+1]);
-		
-		isongridall+=isongrid[yyy+1]; // should add up to 4
-		isinsideall+=isinside[yyy+1]; // should stay 0
-	      }
-
-	      int cando4=0;
-	      int cando3left=0;
-	      int cando3right=0;
-	      int cando2=0;
-	      int donecompact=0;
-	      if(isongrid[2]==1 && isongrid[3]==1 && isinside[2]==0 && isinside[3]==0){ // then assume 2 points are on surface at corner of NS (index 2,3 for isongrid[] and isinside[])
-		yyystart=1;
-		yyyend=2;
-		cando2=1;
-	      }
-	      if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){// then can do 3 point interpolation
-		yyystart=0;
-		yyyend=2;
-		cando3left=1;
-	      }
-	      if(isongrid[2]==1 && isongrid[3]==1 && isongrid[4]==1 && isinside[2]==0 && isinside[3]==0 && isinside[4]==0){ // then can do 3 point interpolation
-		yyystart=1;
-		yyyend=3;
-		cando3right=1;
-	      }
-	      if(isongridall==4 && isinsideall==0){// then all points are good to use
-		
-		// below yyystart,yyyend overrides smaller stencils above
-		yyystart=0;
-		yyyend=3;
-		cando4=1;
-	      }
-
-
-
-	      // positions and values along special path
-	      xpos[0]=0.0;
-
-
-	      for(yyy=yyystart;yyy<=yyyend;yyy++){
-		// get value to interpolate
-		if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,ialt[yyy],jalt[yyy],kalt[yyy]);
-		else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,ialt[yyy],jalt[yyy],kalt[yyy],pl);
-
-
-		// rescale
-		get_geometry(ialt[yyy], jalt[yyy], kalt[yyy], pos, ptrgeom[yyy+1]);
-		rescale_pl(time,dir,ptrgeom[yyy+1], prpass ,localsingle[yyy+1]);
-
-		// reference point is between i,j,k and ii,jj,kk
-		xpos[yyy+1]=sqrt((iref-ialt[yyy])*(iref-ialt[yyy]) + (jref-jalt[yyy])*(jref-jalt[yyy]) + (kref-kalt[yyy])*(kref-kalt[yyy]));
-		if(yyy<=1) xpos[yyy+1]*=-1.0; // really negative relative to ijkref
-	      }
-
-
-	      ////////////////////////
-	      //
-	      // Attempt 4 point interpolation
-	      //
-	      ////////////////////////
-	      if(donecompact==0 && cando4==1){
-		PLOOP(pliter,pl){
-		  
-		  if(vpot!=NULL) pl=0;
-		  
-		  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-		  if(vpot!=NULL){
-		    constrained=0;
-		    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-		    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-		    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-		    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
-		  }
-		  else constrained=0; // ignore constraint question for non-field
-
-		  if(constrained>=2) mono4[pl]=1; // avoid overconstraint for field
-		  else{
-		    // check for monotonicity of using 4 points
-		    // [0] is in middle, so order is really 1,2,0,3,4.  And only need to be monotonic between 2 & 3 since other points can actually be correctly non-monotonic.  Just don't want to introduce extra non-monotonicity between points
-		    firstpos=2; lastpos=3; // 0 is really at "2.5"
-		    mono4[pl]=checkmono4(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
-		  }
-
-		  if(mono4[pl]==1){
-
-		    // perform interpolation for these points if monotonic using 4 points
-		    localsingle[0][pl] =
-		      +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3])*(xpos[1]-xpos[4]))
-		      +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3])*(xpos[2]-xpos[4]))
-		      +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[4])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2])*(xpos[3]-xpos[4]))
-		      +localsingle[4][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[4]-xpos[1])*(xpos[4]-xpos[2])*(xpos[4]-xpos[3]))
-		      ;
-		    
-		    usecompactpl[pl]=1; // says compact value is good to go
-		    donecompact=1; // says no attempt any other weaker interpolations
-		  }// end if monotonic
-
-
-		  if(vpot!=NULL) pliter=nprend+1;
-
-		}// end pl
-			
-	      }
-	      else{
-		PLOOP(pliter,pl) mono4[pl]=0; // so diags appear reasonable looking
-	      }
-
-
-	      ////////////////////////
-	      //
-	      // Attempt one of two 3 point interpolations
-	      //
-	      ////////////////////////
-  	      if(donecompact==0 && (cando3left==1 || cando3right==1)){
-		FTYPE xposnew[5],yfun[5];
-
-		PLOOP(pliter,pl){
-		  
-		  if(vpot!=NULL) pl=0;
-		  
-		  // check for monotonicity of using 3 points
-		  if(cando3left==1){
-		    xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
-		    xposnew[1]=xpos[1]; yfun[1]=localsingle[1][pl];
-		    xposnew[2]=xpos[2]; yfun[2]=localsingle[2][pl];
-		    xposnew[3]=xpos[3]; yfun[3]=localsingle[3][pl];
-		    // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-		    if(vpot!=NULL){
-		      constrained=0;
-		      if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-		      if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-		      if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-		    }
-		    else constrained=0; // ignore constraint question for non-field
-
-		    if(constrained>=2) mono3left[pl]=1; // avoid overconstraint for field
-		    else{
-		      // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
-		      firstpos=2; lastpos=3;
-		      mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
-		    }
-		  }
-		  else mono3left[pl]=0;
-
-		  if(cando3right==1){
-		    xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
-		    xposnew[1]=xpos[2]; yfun[1]=localsingle[2][pl];
-		    xposnew[2]=xpos[3]; yfun[2]=localsingle[3][pl];
-		    xposnew[3]=xpos[4]; yfun[3]=localsingle[4][pl];
-		    // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-		    if(vpot!=NULL){
-		      constrained=0;
-		      if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-		      if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-		      if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
-		    }
-		    else constrained=0; // ignore constraint question for non-field
-
-		    if(constrained>=2) mono3right[pl]=1; // avoid overconstraint for field
-		    else{
-		      // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
-		      firstpos=1; lastpos=3;
-		      mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
-		    }
-		  }
-		  else mono3right[pl]=0;
-
-		  if(mono3left[pl]==1 || mono3right[pl]==1){
-
-		    // perform interpolation for these points if monotonic using 3 points
-		    localsingle[0][pl] =
-		      +yfun[1]*(xposnew[0]-xposnew[2])*(xposnew[0]-xposnew[3])/((xposnew[1]-xposnew[2])*(xposnew[1]-xposnew[3]))
-		      +yfun[2]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[3])/((xposnew[2]-xposnew[1])*(xposnew[2]-xposnew[3]))
-		      +yfun[3]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[2])/((xposnew[3]-xposnew[1])*(xposnew[3]-xposnew[2]))
-		      ;
-
-		    usecompactpl[pl]=1; // says compact value is good to go
-		    donecompact=1; // says no attempt any other weaker interpolations
-		  }// end if monotonic
-
-
-		  if(vpot!=NULL) pliter=nprend+1;
-
-		}// end pl
-			
-	      }
-	      else{
-		PLOOP(pliter,pl){
-		  mono3left[pl]=0; // so diags appear reasonable looking
-		  mono3right[pl]=0; // so diags appear reasonable looking
-		}
-	      }
-	      
-
-	      ////////////////////////
-	      //
-	      // Attempt 2 point interpolation
-	      //
-	      ////////////////////////
-	      if(donecompact==0 && cando2==1){
-
-		// perform (linear) interpolation for these points (only yyy=1,2 corresponding to localsingle[2,3] and xpos[2,3])
-		PLOOP(pliter,pl){
-
-		  if(vpot!=NULL) pl=0;
-
-		  localsingle[0][pl] =
-		    +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
-		    +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
-		    ;
-		  
-		  usecompactpl[pl]=1;
-		  donecompact=1;
-		  
-		  if(vpot!=NULL) pliter=nprend+1;
-
-		}// end pl
-		
-	      }// end for cando2
-
-	    
-
-
-	      // check if ever did compact interpolation
-	      if(donecompact==0){
-		usecompact=0;
-		dualfprintf(fail_file,"WARNING: Reached donecompact=0 for all attempts, so no compact possible: ijk=%d %d %d dir=%d\n",i,j,k,dir);
-	      }
-	      else{
-
-
-		// GODMARK TODO TEST DEBUG:
-
-		// choose default
-		//usecompact=0;
-		usecompact=1; // default is compactvalue was computed
-
-
-		PLOOP(pliter,pl){
-		  if(vpot!=NULL) pl=0;
-
-		  if(usecompactpl[pl]==0) usecompact=0; // disable usecompact if couldn't do it for some reason for any pl
-
-		  if(vpot!=NULL) pliter=nprend+1;
-
-		}
-	      }
-
-
-	      // transfer over compact interpolated value
-	      if(usecompact==1){
-		// get ijkref geometry
-		get_geometry(icorn, jcorn, kcorn, poscorn, ptrgeomcorn);
-		// unrescale
-		unrescale_pl(time,dir,ptrgeomcorn, localsingle[0],compactvalue); // so compactvalue is back to normal prim type (i.e. not rescaled)
-	      }
-
-
-
-	      // DEBUG:
-	      dualfprintf(fail_file,"dir=%d usecompactC=%d: ijk=%d %d %d : ijkref=%21.15g %21.15g %21.15g : can4332=%d %d %d %d\n",dir,usecompact,i,j,k,iref,jref,kref,cando4,cando3left,cando3right,cando2);
-	      for(yyy=0;yyy<=3;yyy++){
-		dualfprintf(fail_file,"COMPACTMOREC: %d %d (%d %d) : ialt=%d jalt=%d kalt=%d\n",isongrid[yyy+1],isinside[yyy+1],isongridall,isinsideall,ialt[yyy],jalt[yyy],kalt[yyy]);
-	      }
+	      // compare various versions
 	      PLOOP(pliter,pl){
-		if(vpot!=NULL) pl=0;
-
-		for(spaceiter=yyystart+1;spaceiter<=yyyend+1;spaceiter++){
-		  dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
-		}
-		dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : mono3left=%d mono3right=%d :  usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],mono3left[pl],mono3right[pl],usecompactpl[pl]);
-
-		if(vpot!=NULL) pliter=nprend+1;
+		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldel=%21.15g prdel1=%21.15g prdel2=%21.15g prdel3=%21.15g\n",dir,i,j,k,pl,prfulldel[pl],prdel[1][pl],prdel[2][pl],prdel[3][pl]);
 	      }
+
+
+	    }// end if at least 2 dimensions have del	  
+
+
+	    dualfprintf(fail_file,"AFTER PRDEL123\n");
+
+
+
+	    // compare diagonal 
 	    
 
+	    FTYPE prnew[NPR];
+	    // compute final
+	    PLOOP(pliter,pl) prnew[pl]=prfulldel[pl];
+	    if(countdeldimen>=2){
+#if(0)
+	      // just average all versions (prfulldel, and any prdel's that are valid)
+	      if(del[1]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[1][pl];
+	      if(del[2]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[2][pl];
+	      if(del[3]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[3][pl];
+	      // normalize
+	      PLOOP(pliter,pl) prnew[pl]/=(1.0+(FTYPE)countdeldimen);
 
-	    }// end if possible to use compact
-
-
-
-
-
-
-
-	    //////////////////
-	    //
-	    // Normal extrapolation (with usecompact option)
-	    //
-	    //////////////////
-
-	    iii=ii+del[1];
-	    jjj=jj+del[2];
-	    kkk=kk+del[3];
-   
-	    iiii=ii+2*del[1];
-	    jjjj=jj+2*del[2];
-	    kkkk=kk+2*del[3];
-
-
-	    // DEBUG:
-	    //	    dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
-
-
-	    // ensure points are on grid while not inside NS
-	    // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
-	    // For dir==0, not quite necessary, but ok since NS shouldn't be so close to edge of grid.
-	    isongrid[1]=is_dir_onactivegrid(dir,ii,jj,kk);
-	    isongrid[2]=is_dir_onactivegrid(dir,iii,jjj,kkk);
-	    if(usecompact==0) isongrid[3]=is_dir_onactivegrid(dir,iiii,jjjj,kkkk);
-	    else isongrid[3]=MAX(is_dir_onactivegrid(dir,i,j,k),is_dir_onactivegrid(dir,ii,jj,kk));
-
-	    isinside[1]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[1],&hasinside[1]);
-	    isinside[2]=is_dir_insideNS(dir,iii,jjj,kkk, &hasmask[2],&hasinside[2]);
-	    if(usecompact==0) isinside[3]=is_dir_insideNS(dir,iiii,jjjj,kkkk, &hasmask[3],&hasinside[3]);
-	    else  isinside[3]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[3],&hasinside[3]); // assume this already taken care of by usecompact==0,1
-
-
-	    // this redefines use of ptrgeom[], and so need to regive potential memory space to the pointer since that pointer may be pointing to internal memory space
-	    // but only loop over 1-3 since that's all that's modified below.  For example, need to keep ptrgeom[0], which didn't change.
-	    for(ptriter=1;ptriter<=3;ptriter++){
-	      ptrgeom[ptriter]=&(geomdontuse[ptriter]);
+#elif(1)
+	      // only average if no preference
+	      // give preference to those cases that have fewest fixed values
+	      PLOOP(pliter,pl) prnew[pl]=0.0;
+	      FTYPE totalweight=0.0;
+	      if(gotfullvalue==1 && (countonsurface[0]<=countonsurface[1] || del[1]==0) && (countonsurface[0]<=countonsurface[2] || del[2]==0) && (countonsurface[0]<=countonsurface[3] || del[3]==0)){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prfulldel[pl]; }
+	      if(gotvaluedel[1]==1 && del[1]!=0 && (countonsurface[1]<=countonsurface[2] || del[2]==0) && (countonsurface[1]<=countonsurface[3] || del[3]==0)){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[1][pl]; }
+	      if(gotvaluedel[2]==1 && del[2]!=0 && (countonsurface[2]<=countonsurface[1] || del[1]==0) && (countonsurface[2]<=countonsurface[3] || del[3]==0)){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[2][pl]; }
+	      if(gotvaluedel[3]==1 && del[3]!=0 && (countonsurface[3]<=countonsurface[1] || del[1]==0) && (countonsurface[3]<=countonsurface[2] || del[2]==0)){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[3][pl]; }
+	      
+	      if(totalweight!=0.0) PLOOP(pliter,pl) prnew[pl]/=totalweight;
+	      else{
+		dualfprintf(fail_file,"Never got preference for countonsurface.  Shouldn't happen\n");
+		myexit(48225252);
+	      }
+#endif
 	    }
 
 
-	    if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){
-	      
-	      
-	      // position along special path
-	      xpos[0]=0.0;
-	      xpos[1]=sqrt((i-ii)*(i-ii) + (j-jj)*(j-jj) + (k-kk)*(k-kk));
-	      xpos[2]=sqrt((i-iii)*(i-iii) + (j-jjj)*(j-jjj) + (k-kkk)*(k-kkk));
-	      if(usecompact==0) xpos[3]=sqrt((i-iiii)*(i-iiii) + (j-jjjj)*(j-jjjj) + (k-kkkk)*(k-kkkk));
-	      else xpos[3]=sqrt((i-iref)*(i-iref) + (j-jref)*(j-jref) + (k-kref)*(k-kref));
-	      
-	      
-	      // get geometry for ii,jj,kk
-	      get_geometry(ii, jj, kk, pos, ptrgeom[1]);
-	      // get geometry for iii,jjj,kkk
-	      get_geometry(iii, jjj, kkk, pos, ptrgeom[2]);
-	      // get geometry for iiii,jjjj,kkkk
-	      if(usecompact==0){
-		get_geometry(iiii, jjjj, kkkk, pos, ptrgeom[3]);
-	      }
-	      else{
-		get_geometry(icorn, jcorn, kcorn, poscorn, ptrgeom[3]);
-	      }
-
-
-	      if(CHECKUCON && vpot==NULL){
-		
-		// so pos is correct
-		for(ptriter=0;ptriter<5;ptriter++) ptrgeom4ucon[ptriter]=ptrgeom[ptriter];
-
-		// get \gamma to ensure not going to copy-in bad (i.e. limited due to bsq low and gamma\sim GAMMAMAX) values.
-		// both vpot and prim BC versions use prim for this!
-		ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucon[1],others[1]);
-		ucon_calc(MAC(prim,iii,jjj,kkk),ptrgeom4ucon[2],ucon[2],others[2]);
-		if(usecompact==0) ucon_calc(MAC(prim,iiii,jjjj,kkkk),ptrgeom4ucon[3],ucon[3],others[3]);
-		else{
-		  FTYPE ucontemp1[NDIM],ucontemp2[NDIM];
-		  FTYPE otherstemp1[NUMOTHERSTATERESULTS],otherstemp2[NUMOTHERSTATERESULTS];
-		  
-		  ucon_calc(MAC(prim,i,j,k),ptrgeom4ucon[0],ucontemp1,otherstemp1);
-		  ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucontemp1,otherstemp2);
-		  int jjiter;
-		  DLOOPA(jjiter) ucon[3][jjiter]=0.5*(ucontemp1[jjiter]+ucontemp2[jjiter]); // only need ucon[TT] below, so assume rest are only roughly accurate (if use others, would be bad near BH where u^\mu interpolations can lead to undefined velocities
-		  for(jjiter=0;jjiter<NUMOTHERSTATERESULTS;jjiter++) others[3][jjiter]=0.5*(otherstemp1[jjiter]+otherstemp2[jjiter]);
-		  
-		}
-
-	      }//end if computing ucon for later checks
-	      
-	      
-
-	      // get rescaled prim to interpolate
-	      // get value to rescale
-	      if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,ii,jj,kk);
-	      else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,ii,jj,kk,pl);
-	      rescale_pl(time,dir,ptrgeom[1], prpass,localsingle[1]);
-
-	      if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,iii,jjj,kkk);
-	      else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,iii,jjj,kkk,pl);
-	      rescale_pl(time,dir,ptrgeom[2], prpass,localsingle[2]);
-
-	      if(usecompact==0){
-		if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,iiii,jjjj,kkkk);
-		else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,iiii,jjjj,kkkk,pl);
-		rescale_pl(time,dir,ptrgeom[3], prpass,localsingle[3]);
-	      }
-	      else rescale_pl(time,dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
-
-	      
-	      
-	      FTYPE error;
-	      int constrained;
-	      error=0;
-	      // perform parabolic interpolation for these points
-	      PLOOP(pliter,pl){
-		if(vpot!=NULL) pl=0;
-
-		// check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-		if(vpot!=NULL){
-		  constrained=0;
-		  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-		  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-		  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-		}
-		else constrained=0; // ignore constraint question for non-field
-
-		if(constrained>=2){
-		  // constrained==1 would be normal extrapolation through 1 NS surface value for field or 1
-		  // then force assumption that mono3=1 so even if checkmono3 would give mono3=0, we allow for some non-monotonicity to allow freedom in field to avoid it being overconstrained and generating kinks
-		  mono3[pl]=1;
-		}
-		else{
-		  // check for monotonicity of using 3 point *extrapolation*
-		  // points must be in order
-		  // only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
-		  if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
-		  else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
-		  mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
-		}
-
-
-		if(mono3[pl]==1){
-
-		  localsingle[0][pl] =
-		    +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3]))
-		    +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3]))
-		    +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2]))
-		    ;
-
-		}// end if mono
-		else{ // then revert to using 2 points and so must be mono
-		  // GODMARK TODO: won't be continuous when mono switches!
-		  int other1,other2;
-		  if(usecompact==0) { other1=1; other2=2; }
-		  else { other1=3; other2=1; }
-
-		  // For interpolation of A_i in a dir\neq i, constant value is fine and may even be preferred
-		  if(
-		     ((dir==1 &&(!(del[2]==0&&del[3]==0)))&&(vpot!=NULL) ||
-		      (dir==2 &&(!(del[1]==0&&del[3]==0)))&&(vpot!=NULL) ||
-		      (dir==3 &&(!(del[1]==0&&del[2]==0)))&&(vpot!=NULL)) ||
-		     (vpot==NULL)
-		     )
-		    error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
-		  else{
-		    error=0;
-		  }
-		  
-
-		  FTYPE caseA,caseB;
-		  
-		  // linear extrapolation
-		  caseA=
-		    +localsingle[other1][pl]*(xpos[0]-xpos[other2])/((xpos[other1]-xpos[other2]))
-		    +localsingle[other2][pl]*(xpos[0]-xpos[other1])/((xpos[other2]-xpos[other1]))
-		    ;
-		  
-		  caseB= +localsingle[other1][pl]; // nearest neighbor extrapolation
-		  
-		  
-		  // GODMARK TODO: free parameters.
-		  FTYPE switcherror = switcht(error,0.5,0.8);
-		  
-		  localsingle[0][pl]=caseB*switcherror + (1.0-switcherror)*caseA;
-		    
-		}
-
-		if(vpot!=NULL) pliter=nprend+1;
-
-	      }// end over pl
-
-
-
-
-
-	      if(CHECKUCON && vpot==NULL){ // only makes sense to change U1-U3 if modifying prim
-		//////////
-		//	    
-		// only use point (localsingle[0]) if not out of wack when doing FFDE (or lower GAMMAMAX if doing MHD)
-		//
-		// NOTE: If usecompact==1, then ucon[3][TT] is actually nearest to i,j,k.  So should treat ucon[1,2,3] as if could be at any position.  So 2^3=8 choices.
-		//
-		//////////
-		baducononsurface=0;
-		if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // <<<
-		  // then assume velocities are good as interpolated
-		}
-		else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX  && ucon[3][TT]>=0.5*GAMMAMAX){ // <<>
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[1][pl]*(xpos[0]-xpos[2])/((xpos[1]-xpos[2]))
-			+localsingle[2][pl]*(xpos[0]-xpos[1])/((xpos[2]-xpos[1]))
-			;
-		    }
-		  }
-		}
-		else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX && ucon[3][TT]>=0.5*GAMMAMAX){ // <>>
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[1][pl];
-		      ;
-		    }
-		  }
-		}
-		else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // <><
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[1][pl]*(xpos[0]-xpos[1])/((xpos[3]-xpos[1]))
-			+localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[1]-xpos[3]))
-			;
-		    }
-		  }
-		}
-		else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // ><<
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[2][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
-			+localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
-			;
-		    }
-		  }
-		}
-		else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]>=0.5*GAMMAMAX){ // ><>
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[2][pl];
-		      ;
-		    }
-		  }
-		}
-		else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX  && ucon[3][TT]<0.5*GAMMAMAX){ // >><
-
-		  PLOOP(pliter,pl){
-		    if(pl>=U1 || pl<=U3){
-		      localsingle[0][pl] =
-			+localsingle[3][pl];
-		      ;
-		    }
-		  }
-		}
-		else{ // >>>
-		  // just use bad copy -- nothing else to do
-		  baducononsurface=1;
-		}
-
-	      }
-
-
-
-	      // unrescale to get final prim
-	      unrescale_pl(time,dir,ptrgeom[0],localsingle[0], prnew);
-
-
-	      // GODMARK TEST DEBUG (try simple copy for U3,B3 -- note, this means copying from corner for COUNT=2 DUP cells, which leads to pointiness in copy since corners aren't updated in step with grid-directed cells)
-	      // 
-	      //	      prnew[U3]=MACP0A1(prim,ii,jj,kk,U3);
-	      //	      prnew[B3]=MACP0A1(prim,ii,jj,kk,B3);
-
-	      if(fabs(prnew[U3])<1E-5){
-		dualfprintf(fail_file,"nstep=%ld steppart=%d ODDLY LOW v3: ijk=%d %d %d : %21.15g %21.15g\n",nstep,steppart,i,j,k,prnew[U3],prnew[B3]);
-	      }
-
-
-	      if(vpot!=NULL){
-		prold[0]=MACP1A0(vpot,dir,i,j,k);
-		MACP1A0(vpot,dir,i,j,k) = prnew[0];
-	      }
-	      else{
-		PLOOP(pliter,pl){
-		  prold[pl]=MACP0A1(prim,i,j,k,pl);
-		  MACP0A1(prim,i,j,k,pl) = prnew[pl];
-		}
-	      }
-
-	      
-	    }// end if ongrid and is not inside NS
-	    else{
-	      if(vpot!=NULL){
-		MACP1A0(vpot,dir,i,j,k) = +localsingle[1][0];
-	      }
-	      else{
-		// for now, assume just lowest order if near boundary
-		PLOOP(pliter,pl){
-		  MACP0A1(prim,i,j,k,pl) = +localsingle[1][pl];
-		}
-	      }
-
-	      dualfprintf(fail_file,"UNEXPECTED: near boundary: dir=%d : ijk=%d %d %d : ijk2=%d %d %d\n",dir,i,j,k,ii,jj,kk);
-	    }
-	    
-	    
-	    // DEBUG:
-	    dualfprintf(fail_file,"PDFC: dir=%d ijk=%d %d %d : ijk2=%d %d %d : ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
-	    SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2: siter=%d : ison=%d isins=%d xpos=%21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],xpos[spaceiter]);
-	    SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2b: siter=%d : delorig=%d del=%d\n",spaceiter,delorig[spaceiter],del[spaceiter]);
-	    if(CHECKUCON && vpot==NULL) SLOOPA(spaceiter) dualfprintf(fail_file,"siter=%d : ucon=%21.15g\n",spaceiter,ucon[spaceiter][TT]);
+	    // store old values and assign final vpot/prim
+	    FTYPE prold[NPR];
 	    if(vpot!=NULL){
-	      pl=0;
-	      SLOOPA(spaceiter) dualfprintf(fail_file,"si=%d pl=%d : los=%21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-	      dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : vpot=%21.15g : oldvpot=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP1A0(vpot,dir,i,j,k),prold[0],mono3[pl]);
+	      prold[0]=MACP1A0(vpot,dir,i,j,k);
+	      MACP1A0(vpot,dir,i,j,k) = prnew[0];
 	    }
 	    else{
-	      SLOOPA(spaceiter) PLOOP(pliter,pl) dualfprintf(fail_file,"si=%d pl=%d : %21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-	      PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : primold=%21.15g: mono3=%d\n",nstep,t,pl,localsingle[0][pl],MACP0A1(prim,i,j,k,pl),prold[pl],mono3[pl]);
+	      PLOOP(pliter,pl){
+		prold[pl]=MACP0A1(prim,i,j,k,pl);
+		MACP0A1(prim,i,j,k,pl) = prnew[pl];
+	      }
 	    }
+
+
+	    // DEBUG:
+	    if(vpot!=NULL){
+	      dualfprintf(fail_file,"dir=%d ijk=%d %d %d prold=%21.15g prnew=%21.5g\n",dir,i,j,k,prold[0],prnew[0]);
+	    }
+	    else{
+	      PLOOP(pliter,pl){
+		dualfprintf(fail_file,"dir=%d ijk=%d %d %d pl=%d : prold=%21.15g prnew=%21.5g\n",dir,i,j,k,pl,prold[pl],prnew[pl]);
+	      }
+	    }
+
+	  
+
 	  }// end if interpproblem==0 from get_del()
 	  else{
-	    interpproblem++;
-	  }
 
-
-	  ////////////////
-	  //
-	  // see if had interp problem  || baducononsurface==1
-	  //
-	  ////////////////
-	  if(interpproblem==1){
-	    
 	    dualfprintf(fail_file,"Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
 
 
@@ -3050,6 +2564,12 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    }
 	    else{
 	   
+	      int inittype;
+	      int initreturn;
+
+	      // evolve type (don't set inittypeglobal, set by init_primitives)
+	      inittype=0;
+
 	      initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,time,i,j,k,MAC(prim,i,j,k),NULL);
 
 	      if(initreturn>0){
@@ -3072,6 +2592,777 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
+
+
+
+
+// Check if can use compact point instead of outer point and compute *compactvalue*
+int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int *del, int *usecompactpl, FTYPE *compactvalue, FTYPE *retiref, FTYPE *retjref, FTYPE *retkref, int *retposcorn, int *reticorn, int *retjcorn, int *retkcorn)
+{
+  int usecompact;
+  int ialt[4],jalt[4],kalt[4]; // doesn't include ijk, so only 4 needed when going from 0..3
+  struct of_geom geomdontusecorn;
+  struct of_geom *ptrgeomcorn;
+  struct of_geom geomdontuse[5];
+  // must be array of pointers so each pointer can change
+  struct of_geom *(ptrgeom[5]);
+  int ptriter;
+  int firstpos,lastpos;
+  int pl,pliter;
+  int isongridall,isinsideall;
+  int isongrid[5],isinside[5],hasmask[5],hasinside[5];
+  int yyy;
+  int yyystart,yyyend;
+  FTYPE xpos[5];
+  FTYPE prpass[NPR];
+  FTYPE localsingle[5][NPR];
+  int constrained;
+  int mono4[NPR],mono3left[NPR],mono3right[NPR];
+
+
+
+  // must assign these pointers inside parallel region since new pointer per parallel thread
+  for(ptriter=0;ptriter<5;ptriter++){
+    ptrgeom[ptriter]=&(geomdontuse[ptriter]);
+  }
+  ptrgeomcorn=&geomdontusecorn;
+
+
+
+  //default
+  usecompact=0;
+  PLOOP(pliter,pl) usecompactpl[pl]=0;
+
+
+  // compact value position
+  FTYPE iref,jref,kref;
+  iref=(FTYPE)ii-0.5*sign((FTYPE)del[1])*N1NOT1;
+  jref=(FTYPE)jj-0.5*sign((FTYPE)del[2])*N2NOT1;
+  kref=(FTYPE)kk-0.5*sign((FTYPE)del[3])*N3NOT1;
+
+
+  // get geometry for iref,jref,kref so can unrescale below
+  int icorn,jcorn,kcorn,poscorn;
+
+  // apparently all dir=0,1,2,3 are same for ijkcorn
+  if(iref>i) icorn=ii;
+  else icorn=ii-1*ROUND2INT(sign((FTYPE)del[1]))*N1NOT1;
+  if(jref>j) jcorn=jj;
+  else jcorn=jj-1*ROUND2INT(sign((FTYPE)del[2]))*N2NOT1;
+  if(kref>k) kcorn=kk;
+  else kcorn=kk-1*ROUND2INT(sign((FTYPE)del[3]))*N3NOT1;
+
+
+
+  // GODMARK TODO: special case for axisymmetry only
+  // see if can use more compact (interpolated) point for parabolic extrapolation
+  if(abs(del[1])==abs(del[2]) && abs(del[1])>0){ // GODMARK TODO: Special case
+
+
+
+
+	    
+    // GODMARK TODO: special case for axisymmetry only
+    if(dir==0) poscorn=CORN3;
+    else if(dir==1) poscorn=FACE2;
+    else if(dir==2) poscorn=FACE1;
+    else if(dir==3) poscorn=CENT;
+
+
+
+
+    // seems all dir's are same for ijkalt
+#define FUNCI(tj) (ROUND2INT(iref - ((jj-jref)/(ii-iref))*(tj-jref)) ) // rotated around iref,jref
+#define FUNCJ(ti) (ROUND2INT(jref - ((ii-iref)/(jj-jref))*(ti-iref)) ) // rotated around iref,jref
+	      
+    jalt[0]=jref-0.5-1.0 + 0;
+    jalt[1]=jref-0.5-1.0 + 1;
+    jalt[2]=jref-0.5-1.0 + 2;
+    jalt[3]=jref-0.5-1.0 + 3;
+	      
+    ialt[0]=FUNCI(jalt[0]);
+    ialt[1]=FUNCI(jalt[1]);
+    ialt[2]=FUNCI(jalt[2]);
+    ialt[3]=FUNCI(jalt[3]);
+	    
+    kalt[0]=kalt[1]=kalt[2]=kalt[3]=k;
+
+
+    // DEBUG:
+    //	      dualfprintf(fail_file,"ijkref=%5.2g %5.2g %5.2g : ijkcorn=%d %d %d poscorn=%d ijkalt0=%d %d %d ijkalt1=%d %d %d ijkalt2=%d %d %d ijkalt3=%d %d %d\n",iref,jref,kref,icorn,jcorn,kcorn,poscorn,ialt[0],jalt[0],kalt[0],ialt[1],jalt[1],kalt[1],ialt[2],jalt[2],kalt[2],ialt[3],jalt[3],kalt[3]);
+
+	    
+
+    // ensure points are on grid while not inside NS
+    // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
+	      
+    isongridall=isinsideall=0; // init
+    for(yyy=0;yyy<=3;yyy++){
+      isongrid[yyy+1]=is_dir_onactivegrid(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
+      isinside[yyy+1]=is_dir_insideNS(dir,ialt[yyy],jalt[yyy],kalt[yyy], &hasmask[yyy+1],&hasinside[yyy+1]);
+		
+      isongridall+=isongrid[yyy+1]; // should add up to 4
+      isinsideall+=isinside[yyy+1]; // should stay 0
+    }
+
+
+    int cando4=0;
+    int cando3left=0;
+    int cando3right=0;
+    int cando2=0;
+    int donecompact=0;
+
+    // default in case all cando's will be zero, so by default avoid loop that sets values up
+    yyystart=0;
+    yyyend=-1;
+      
+    if(isongrid[2]==1 && isongrid[3]==1 && isinside[2]==0 && isinside[3]==0){ // then assume 2 points are on surface at corner of NS (index 2,3 for isongrid[] and isinside[])
+      yyystart=1;
+      yyyend=2;
+      cando2=1;
+    }
+    if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){// then can do 3 point interpolation
+      yyystart=0;
+      yyyend=2;
+      cando3left=1;
+    }
+    if(isongrid[2]==1 && isongrid[3]==1 && isongrid[4]==1 && isinside[2]==0 && isinside[3]==0 && isinside[4]==0){ // then can do 3 point interpolation
+      yyystart=1;
+      yyyend=3;
+      cando3right=1;
+    }
+    if(isongridall==4 && isinsideall==0){// then all points are good to use
+		
+      // below yyystart,yyyend overrides smaller stencils above
+      yyystart=0;
+      yyyend=3;
+      cando4=1;
+    }
+
+
+
+    // positions and values along special path
+    xpos[0]=0.0;
+
+
+    for(yyy=yyystart;yyy<=yyyend;yyy++){
+      // get value to interpolate
+      if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,ialt[yyy],jalt[yyy],kalt[yyy]);
+      else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,ialt[yyy],jalt[yyy],kalt[yyy],pl);
+
+
+      // rescale (ptrgeom[0] never use to get compactvalue)
+      get_geometry(ialt[yyy], jalt[yyy], kalt[yyy], pos, ptrgeom[yyy+1]);
+      rescale_pl(time,dir,ptrgeom[yyy+1], prpass ,localsingle[yyy+1]);
+
+      // reference point is between i,j,k and ii,jj,kk
+      xpos[yyy+1]=sqrt((iref-ialt[yyy])*(iref-ialt[yyy]) + (jref-jalt[yyy])*(jref-jalt[yyy]) + (kref-kalt[yyy])*(kref-kalt[yyy]));
+      if(yyy<=1) xpos[yyy+1]*=-1.0; // really negative relative to ijkref
+    }
+
+
+
+    ////////////////////////
+    //
+    // Attempt 4 point interpolation
+    //
+    ////////////////////////
+    if(donecompact==0 && cando4==1){
+      PLOOP(pliter,pl){
+		  
+	if(vpot!=NULL) pl=0;
+		  
+	// check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+	if(vpot!=NULL){
+	  constrained=0;
+	  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	  if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	}
+	else constrained=0; // ignore constraint question for non-field
+
+	if(constrained>=2) mono4[pl]=1; // avoid overconstraint for field
+	else{
+	  // check for monotonicity of using 4 points
+	  // [0] is in middle, so order is really 1,2,0,3,4.  And only need to be monotonic between 2 & 3 since other points can actually be correctly non-monotonic.  Just don't want to introduce extra non-monotonicity between points
+	  firstpos=2; lastpos=3; // 0 is really at "2.5"
+	  mono4[pl]=checkmono4(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
+	}
+
+	if(mono4[pl]==1){
+
+	  // perform interpolation for these points if monotonic using 4 points
+	  localsingle[0][pl] =
+	    +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3])*(xpos[1]-xpos[4]))
+	    +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3])*(xpos[2]-xpos[4]))
+	    +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[4])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2])*(xpos[3]-xpos[4]))
+	    +localsingle[4][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[4]-xpos[1])*(xpos[4]-xpos[2])*(xpos[4]-xpos[3]))
+	    ;
+		    
+	  usecompactpl[pl]=1; // says compact value is good to go
+	  donecompact=1; // says no attempt any other weaker interpolations
+	}// end if monotonic
+
+
+	if(vpot!=NULL) pliter=nprend+1;
+
+      }// end pl
+			
+    }
+    else{
+      PLOOP(pliter,pl) mono4[pl]=0; // so diags appear reasonable looking
+    }
+
+
+    ////////////////////////
+    //
+    // Attempt one of two 3 point interpolations
+    //
+    ////////////////////////
+    if(donecompact==0 && (cando3left==1 || cando3right==1)){
+      FTYPE xposnew[5],yfun[5];
+
+      PLOOP(pliter,pl){
+		  
+	if(vpot!=NULL) pl=0;
+		  
+	// check for monotonicity of using 3 points
+	if(cando3left==1){
+	  xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+	  xposnew[1]=xpos[1]; yfun[1]=localsingle[1][pl];
+	  xposnew[2]=xpos[2]; yfun[2]=localsingle[2][pl];
+	  xposnew[3]=xpos[3]; yfun[3]=localsingle[3][pl];
+	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+	  if(vpot!=NULL){
+	    constrained=0;
+	    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	  }
+	  else constrained=0; // ignore constraint question for non-field
+
+	  if(constrained>=2) mono3left[pl]=1; // avoid overconstraint for field
+	  else{
+	    // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
+	    firstpos=2; lastpos=3;
+	    mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	  }
+	}
+	else mono3left[pl]=0;
+
+	if(cando3right==1){
+	  xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+	  xposnew[1]=xpos[2]; yfun[1]=localsingle[2][pl];
+	  xposnew[2]=xpos[3]; yfun[2]=localsingle[3][pl];
+	  xposnew[3]=xpos[4]; yfun[3]=localsingle[4][pl];
+	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+	  if(vpot!=NULL){
+	    constrained=0;
+	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	  }
+	  else constrained=0; // ignore constraint question for non-field
+
+	  if(constrained>=2) mono3right[pl]=1; // avoid overconstraint for field
+	  else{
+	    // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
+	    firstpos=1; lastpos=3;
+	    mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	  }
+	}
+	else mono3right[pl]=0;
+
+	if(mono3left[pl]==1 || mono3right[pl]==1){
+
+	  // perform interpolation for these points if monotonic using 3 points
+	  localsingle[0][pl] =
+	    +yfun[1]*(xposnew[0]-xposnew[2])*(xposnew[0]-xposnew[3])/((xposnew[1]-xposnew[2])*(xposnew[1]-xposnew[3]))
+	    +yfun[2]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[3])/((xposnew[2]-xposnew[1])*(xposnew[2]-xposnew[3]))
+	    +yfun[3]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[2])/((xposnew[3]-xposnew[1])*(xposnew[3]-xposnew[2]))
+	    ;
+
+	  usecompactpl[pl]=1; // says compact value is good to go
+	  donecompact=1; // says no attempt any other weaker interpolations
+	}// end if monotonic
+
+
+	if(vpot!=NULL) pliter=nprend+1;
+
+      }// end pl
+			
+    }
+    else{
+      PLOOP(pliter,pl){
+	mono3left[pl]=0; // so diags appear reasonable looking
+	mono3right[pl]=0; // so diags appear reasonable looking
+      }
+    }
+	      
+
+
+    ////////////////////////
+    //
+    // Attempt 2 point interpolation
+    //
+    ////////////////////////
+    if(donecompact==0 && cando2==1){
+
+      // perform (linear) interpolation for these points (only yyy=1,2 corresponding to localsingle[2,3] and xpos[2,3])
+      PLOOP(pliter,pl){
+
+	if(vpot!=NULL) pl=0;
+
+	localsingle[0][pl] =
+	  +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
+	  +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
+	  ;
+		  
+	usecompactpl[pl]=1;
+	donecompact=1;
+		  
+	if(vpot!=NULL) pliter=nprend+1;
+
+      }// end pl
+		
+    }// end for cando2
+
+	    
+
+    // check if ever did compact interpolation
+    if(donecompact==0){
+      usecompact=0;
+      dualfprintf(fail_file,"WARNING: Reached donecompact=0 for all attempts, so no compact possible: ijk=%d %d %d dir=%d\n",i,j,k,dir);
+    }
+    else{
+
+
+      // GODMARK TODO TEST DEBUG:
+
+      // choose default
+      //usecompact=0;
+      usecompact=1; // default is compactvalue was computed
+
+
+      PLOOP(pliter,pl){
+	if(vpot!=NULL) pl=0;
+
+	if(usecompactpl[pl]==0) usecompact=0; // disable usecompact if couldn't do it for some reason for any pl
+
+	if(vpot!=NULL) pliter=nprend+1;
+
+      }
+    }
+
+
+    // transfer over compact interpolated value
+    if(usecompact==1){
+      // get ijkref geometry
+      get_geometry(icorn, jcorn, kcorn, poscorn, ptrgeomcorn);
+      // unrescale
+      unrescale_pl(time,dir,ptrgeomcorn, localsingle[0],compactvalue); // so compactvalue is back to normal prim type (i.e. not rescaled)
+    }
+
+
+    // DEBUG:
+    dualfprintf(fail_file,"dir=%d usecompactC=%d: ijk=%d %d %d : ijkref=%21.15g %21.15g %21.15g : can4332=%d %d %d %d\n",dir,usecompact,i,j,k,iref,jref,kref,cando4,cando3left,cando3right,cando2);
+    for(yyy=0;yyy<=3;yyy++){
+      dualfprintf(fail_file,"COMPACTMOREC: %d %d (%d %d) : ialt=%d jalt=%d kalt=%d\n",isongrid[yyy+1],isinside[yyy+1],isongridall,isinsideall,ialt[yyy],jalt[yyy],kalt[yyy]);
+    }
+    PLOOP(pliter,pl){
+      if(vpot!=NULL) pl=0;
+
+      int spaceiter;
+      for(spaceiter=yyystart+1;spaceiter<=yyyend+1;spaceiter++){
+	dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
+      }
+      dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : mono3left=%d mono3right=%d :  usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],mono3left[pl],mono3right[pl],usecompactpl[pl]);
+
+      if(vpot!=NULL) pliter=nprend+1;
+    }
+	    
+
+
+  }// end if possible to use compact
+
+
+
+  // other things to return
+  *retiref=iref;
+  *retjref=jref;
+  *retkref=kref;
+
+  *retposcorn=poscorn;
+  *reticorn=icorn;
+  *retjcorn=jcorn;
+  *retkcorn=kcorn;
+
+
+  return(usecompact);
+}
+
+
+
+
+
+#define CHECKUCON 1
+// interpolate along del[1,2,3] with usecompact option
+int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *numpointsused, FTYPE *prfulldel)
+{
+  int iii,jjj,kkk;
+  int iiii,jjjj,kkkk;
+  int spaceiter;
+  FTYPE localsingle[5][NPR];
+  FTYPE xpos[5];
+  int testi;
+  int mono3[NPR];
+  int constrained;
+  struct of_geom geomdontuse[5];
+  // must be array of pointers so each pointer can change
+  struct of_geom *(ptrgeom[5]);
+  FTYPE prpass[NPR];
+  int firstpos,lastpos;
+  int ptriter;
+  int pliter,pl;
+
+
+
+  // must assign these pointers inside parallel region since new pointer per parallel thread
+  for(ptriter=0;ptriter<5;ptriter++){
+    ptrgeom[ptriter]=&(geomdontuse[ptriter]);
+  }
+
+  // get geometry for i,j,k so can unrescale below
+  get_geometry(i, j, k, pos, ptrgeom[0]);
+	
+
+  iii=ii+del[1];
+  jjj=jj+del[2];
+  kkk=kk+del[3];
+   
+  iiii=ii+2*del[1];
+  jjjj=jj+2*del[2];
+  kkkk=kk+2*del[3];
+
+
+  // DEBUG:
+  //	    dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
+
+
+  // ensure points are on grid while not inside NS
+  // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
+  // For dir==0, not quite necessary, but ok since NS shouldn't be so close to edge of grid.
+  isongrid[1]=is_dir_onactivegrid(dir,ii,jj,kk);
+  isongrid[2]=is_dir_onactivegrid(dir,iii,jjj,kkk);
+  if(usecompact==0) isongrid[3]=is_dir_onactivegrid(dir,iiii,jjjj,kkkk);
+  else isongrid[3]=MAX(is_dir_onactivegrid(dir,i,j,k),is_dir_onactivegrid(dir,ii,jj,kk));
+
+  isinside[1]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[1],&hasinside[1]);
+  isinside[2]=is_dir_insideNS(dir,iii,jjj,kkk, &hasmask[2],&hasinside[2]);
+  if(usecompact==0) isinside[3]=is_dir_insideNS(dir,iiii,jjjj,kkkk, &hasmask[3],&hasinside[3]);
+  else  isinside[3]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[3],&hasinside[3]); // assume this already taken care of by usecompact==0,1
+
+
+
+  if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){
+	      
+	      
+    // position along special path
+    xpos[0]=0.0;
+    xpos[1]=sqrt((i-ii)*(i-ii) + (j-jj)*(j-jj) + (k-kk)*(k-kk));
+    xpos[2]=sqrt((i-iii)*(i-iii) + (j-jjj)*(j-jjj) + (k-kkk)*(k-kkk));
+    if(usecompact==0) xpos[3]=sqrt((i-iiii)*(i-iiii) + (j-jjjj)*(j-jjjj) + (k-kkkk)*(k-kkkk));
+    else xpos[3]=sqrt((i-iref)*(i-iref) + (j-jref)*(j-jref) + (k-kref)*(k-kref));
+	      
+	      
+    // get geometry for ii,jj,kk
+    get_geometry(ii, jj, kk, pos, ptrgeom[1]);
+    // get geometry for iii,jjj,kkk
+    get_geometry(iii, jjj, kkk, pos, ptrgeom[2]);
+    // get geometry for iiii,jjjj,kkkk
+    if(usecompact==0){
+      get_geometry(iiii, jjjj, kkkk, pos, ptrgeom[3]);
+    }
+    else{
+      get_geometry(icorn, jcorn, kcorn, poscorn, ptrgeom[3]);
+    }
+
+
+
+
+    // get rescaled prim to interpolate
+    // get value to rescale
+    if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,ii,jj,kk);
+    else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,ii,jj,kk,pl);
+    rescale_pl(time,dir,ptrgeom[1], prpass,localsingle[1]);
+
+    if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,iii,jjj,kkk);
+    else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,iii,jjj,kkk,pl);
+    rescale_pl(time,dir,ptrgeom[2], prpass,localsingle[2]);
+
+    if(usecompact==0){
+      if(vpot!=NULL) prpass[0]=MACP1A0(vpot,dir,iiii,jjjj,kkkk);
+      else PLOOP(pliter,pl) prpass[pl]=MACP0A1(prim,iiii,jjjj,kkkk,pl);
+      rescale_pl(time,dir,ptrgeom[3], prpass,localsingle[3]);
+    }
+    else rescale_pl(time,dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
+
+	      
+	      
+    FTYPE error;
+    error=0;
+    // perform parabolic interpolation for these points
+    PLOOP(pliter,pl){
+      if(vpot!=NULL) pl=0;
+
+      // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+      if(vpot!=NULL){
+	constrained=0;
+	if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+      }
+      else constrained=0; // ignore constraint question for non-field
+
+      if(constrained>=2){
+	// constrained==1 would be normal extrapolation through 1 NS surface value for field or 1
+	// then force assumption that mono3=1 so even if checkmono3 would give mono3=0, we allow for some non-monotonicity to allow freedom in field to avoid it being overconstrained and generating kinks
+	mono3[pl]=1;
+      }
+      else{
+	// check for monotonicity of using 3 point *extrapolation*
+	// points must be in order
+	// only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
+	if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
+	else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
+	mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+      }
+
+
+      if(mono3[pl]==1){
+	*numpointsused=3;
+
+	localsingle[0][pl] =
+	  +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3]))
+	  +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3]))
+	  +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2]))
+	  ;
+
+      }// end if mono
+      else{ // then revert to using 2 points and so must be mono
+	// GODMARK TODO: won't be continuous when mono switches!
+	int other1,other2;
+	if(usecompact==0) { other1=1; other2=2; }
+	else { other1=3; other2=1; }
+
+	// For interpolation of A_i in a dir\neq i, constant value is fine and may even be preferred
+	if(
+	   ((dir==1 &&(!(del[2]==0&&del[3]==0)))&&(vpot!=NULL) ||
+	    (dir==2 &&(!(del[1]==0&&del[3]==0)))&&(vpot!=NULL) ||
+	    (dir==3 &&(!(del[1]==0&&del[2]==0)))&&(vpot!=NULL)) ||
+	   (vpot==NULL)
+	   )
+	  error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
+	else{
+	  error=0;
+	}
+
+
+
+	FTYPE caseA,caseB;
+		  
+	// linear extrapolation
+	caseA=
+	  +localsingle[other1][pl]*(xpos[0]-xpos[other2])/((xpos[other1]-xpos[other2]))
+	  +localsingle[other2][pl]*(xpos[0]-xpos[other1])/((xpos[other2]-xpos[other1]))
+	  ;
+		  
+	caseB= +localsingle[other1][pl]; // nearest neighbor extrapolation
+		  
+		  
+	// GODMARK TODO: free parameters.
+	FTYPE switcherror = switcht(error,0.5,0.8);
+		  
+	localsingle[0][pl]=caseB*switcherror + (1.0-switcherror)*caseA;
+
+	*numpointsused=ROUND2INT(1*switcherror + (1.0-switcherror)*2); // estimate
+
+		    
+      }
+
+      if(vpot!=NULL) pliter=nprend+1;
+
+    }// end over pl
+
+
+
+
+    if(CHECKUCON && vpot==NULL){ // only makes sense to change U1-U3 if modifying prim
+      // ignore returned value
+      checkucon_modifyuu(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iii, jjj, kkk, iiii, jjjj, kkkk, xpos, localsingle, ptrgeom, usecompact);
+    }
+
+
+    //////////////
+    //
+    // unrescale final prim/vpot
+    //
+    //////////////
+    unrescale_pl(time,dir,ptrgeom[0],localsingle[0], prfulldel);
+
+
+	      
+  }// end if ongrid and is not inside NS
+  else{
+    dualfprintf(fail_file,"UNEXPECTED: near boundary: dir=%d : ijk=%d %d %d : ijk2=%d %d %d ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
+    *numpointsused=0;
+    return(1);
+  }
+
+
+	    
+	    
+  // DEBUG:
+  dualfprintf(fail_file,"PDFC: dir=%d ijk=%d %d %d : ijk2=%d %d %d : ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
+  SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2: siter=%d : ison=%d isins=%d xpos=%21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],xpos[spaceiter]);
+  if(vpot!=NULL){
+    pl=0;
+    SLOOPA(spaceiter) dualfprintf(fail_file,"si=%d pl=%d : los=%21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
+    dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : vpot=%21.15g : oldvpot=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],mono3[pl]);
+  }
+  else{
+    SLOOPA(spaceiter) PLOOP(pliter,pl) dualfprintf(fail_file,"si=%d pl=%d : %21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],mono3[pl]);
+  }
+
+
+  return(0); // 0 indicates got value (i.e. no error)
+}
+
+
+
+
+// check that uu0 is reasonable value and if not, then modify how UU1-UU3 interpolated
+int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int iii, int jjj, int kkk, int iiii, int jjjj, int kkkk, FTYPE *xpos, FTYPE localsingle[5][NPR], struct of_geom *(ptrgeom[5]), int usecompact)
+{
+  int baducononsurface;
+  int ptriter;
+  struct of_geom geomdontuse4ucon[5];
+  struct of_geom *(ptrgeom4ucon[5]);
+  FTYPE ucon[5][NDIM],others[5][NUMOTHERSTATERESULTS];
+  int pliter,pl;
+
+
+
+  // pos used for ptrgeom is correct for prim since not doing this for vpot
+  for(ptriter=0;ptriter<5;ptriter++) ptrgeom4ucon[ptriter]=ptrgeom[ptriter];
+
+
+  // get \gamma to ensure not going to copy-in bad (i.e. limited due to bsq low and gamma\sim GAMMAMAX) values.
+  // both vpot and prim BC versions use prim for this!
+  ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucon[1],others[1]);
+  ucon_calc(MAC(prim,iii,jjj,kkk),ptrgeom4ucon[2],ucon[2],others[2]);
+  if(usecompact==0) ucon_calc(MAC(prim,iiii,jjjj,kkkk),ptrgeom4ucon[3],ucon[3],others[3]);
+  else{
+    FTYPE ucontemp1[NDIM],ucontemp2[NDIM];
+    FTYPE otherstemp1[NUMOTHERSTATERESULTS],otherstemp2[NUMOTHERSTATERESULTS];
+		  
+    ucon_calc(MAC(prim,i,j,k),ptrgeom4ucon[0],ucontemp1,otherstemp1);
+    ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucontemp1,otherstemp2);
+    int jjiter;
+    DLOOPA(jjiter) ucon[3][jjiter]=0.5*(ucontemp1[jjiter]+ucontemp2[jjiter]); // only need ucon[TT] below, so assume rest are only roughly accurate (if use others, would be bad near BH where u^\mu interpolations can lead to undefined velocities
+    for(jjiter=0;jjiter<NUMOTHERSTATERESULTS;jjiter++) others[3][jjiter]=0.5*(otherstemp1[jjiter]+otherstemp2[jjiter]);
+		  
+  }
+
+  //////////
+  //	    
+  // only use point (localsingle[0]) if not out of wack when doing FFDE (or lower GAMMAMAX if doing MHD)
+  //
+  // NOTE: If usecompact==1, then ucon[3][TT] is actually nearest to i,j,k.  So should treat ucon[1,2,3] as if could be at any position.  So 2^3=8 choices.
+  //
+  //////////
+  baducononsurface=0;
+  if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // <<<
+    // then assume velocities are good as interpolated
+  }
+  else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX  && ucon[3][TT]>=0.5*GAMMAMAX){ // <<>
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[1][pl]*(xpos[0]-xpos[2])/((xpos[1]-xpos[2]))
+	  +localsingle[2][pl]*(xpos[0]-xpos[1])/((xpos[2]-xpos[1]))
+	  ;
+      }
+    }
+  }
+  else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX && ucon[3][TT]>=0.5*GAMMAMAX){ // <>>
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[1][pl];
+	;
+      }
+    }
+  }
+  else if(ucon[1][TT]<0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // <><
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[1][pl]*(xpos[0]-xpos[1])/((xpos[3]-xpos[1]))
+	  +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[1]-xpos[3]))
+	  ;
+      }
+    }
+  }
+  else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]<0.5*GAMMAMAX){ // ><<
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[2][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
+	  +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
+	  ;
+      }
+    }
+  }
+  else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]<0.5*GAMMAMAX && ucon[3][TT]>=0.5*GAMMAMAX){ // ><>
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[2][pl];
+	;
+      }
+    }
+  }
+  else if(ucon[1][TT]>=0.5*GAMMAMAX && ucon[2][TT]>=0.5*GAMMAMAX  && ucon[3][TT]<0.5*GAMMAMAX){ // >><
+
+    PLOOP(pliter,pl){
+      if(pl>=U1 || pl<=U3){
+	localsingle[0][pl] =
+	  +localsingle[3][pl];
+	;
+      }
+    }
+  }
+  else{ // >>>
+    // just use bad copy -- nothing else to do
+    baducononsurface=1;
+  }
+
+
+  // DEBUG:
+  int spaceiter;
+  SLOOPA(spaceiter) dualfprintf(fail_file,"siter=%d : ucon=%21.15g\n",spaceiter,ucon[spaceiter][TT]);
+
+
+  return(baducononsurface);
+}
 
 
 

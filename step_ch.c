@@ -320,14 +320,17 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
   //
   ////////////////
-  if(EVOLVEWITHVPOT && TRACKVPOT && finalstep){
+  if(EVOLVEWITHVPOT && TRACKVPOT && (finalstep)){
     // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
     // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
     // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
 
     //  only do this on the final step where A_i has been set as the cumulative Acum  (like ucum) so that not just an arbitrary intermediate step that redefines B's.
-    // FUCK
-    //    evolve_withvpot(boundtime, pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp); // boundtime since this time is used for a boundary call inside this function
+
+    // NOTEMARK: No, actually want to do on every substep that defines vpot (vpot holds substep (Uf-like) value on substeps except final step where it holds cumulative final value (Ucum-like)) since need staggered field (say inside NS for init.nsbh.c) to be consistent with A_i so that the smooth extrapolation of A_i translates into smooth Bstag^i so that interpolation of Bstag->Bcent gives smooth results.
+    // NOTEMARK: If A_i is set inconsistent with EMF_i, then this step will reveal A_i overridding EMF_i results and probably producing undesirable results.
+    // NOTEMARK: No again, if vpot update is consistent with EMFs (as it should be as code is setup in fluxvpot.c), then Bstag only off by machine error from A_i, so only need to do this infrequently.
+    evolve_withvpot(boundtime, pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp); // boundtime since this time is used for a boundary call inside this function
   }
 
 
