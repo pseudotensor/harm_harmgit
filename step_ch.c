@@ -370,7 +370,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   trifprintf("[b1");
 #endif
 
-  MYFUN(bound_beforeevolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,UTOPRIMFIXMPICONSISTENT>0),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 1);
+  MYFUN(bound_beforeevolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,UTOPRIMFIXMPICONSISTENT>0),"step_ch.c:post_advance()", "bound_beforeevolveprim()", 1);
 
 #if(PRODUCTION==0)
   trifprintf("]");
@@ -473,7 +473,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // required in general
   //
   /////////////////////////////////////
-  MYFUN(bound_evolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,USEMPI),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 2);
+  MYFUN(bound_evolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,USEMPI),"step_ch.c:post_advance()", "bound_evolveprim()", 2);
 
   //#endif
 
@@ -1398,13 +1398,52 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
 
 
+
+
+
+
+
+/////////////////////////////
+//
+// System boundary routines that calls other system routines and user routines
+//
+/////////////////////////////
+
+
+
+// Who calls bound_anypstag():
+// v1)
+// step_ch.c: bound_evolveprim calls bound_allprim calls bound_anyallprim calls bound_anypstag
+// step_ch.c: bound_beforeevolveprim calls bound_anyallprim calls bound_anypstag
+// fluxctstag.c : bound_pstag calls bound_anypstag
+//
+// v2)
+// But if bound pstag in fluxctstag.c so Bcent can be interpolated from Bstag, then don't need to do it again!
+// fluxctstag.c : bound_pstag calls bound_anypstag
+
+
+
+
 // normal full bounding during evolution
+// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
 int bound_evolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
 {
+  int boundvartype=BOUNDPRIMTYPE;
 
   dualfprintf(fail_file,"bound_evolveprim\n");
 
-  bound_allprim(boundstage, boundtime, prim,pstag,ucons,finalstep,doboundmpi);
+
+  bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+  if(unewisavg && BOUNDUNEW){
+    // SUPERGODMARK:
+    // if not outflow boundary, then can bound u as p
+    // desirable since machine errors can be different and lead to secular changes
+    // esp. in MPI
+    bound_uavg(boundstage, boundtime, boundvartype, ucons,pstag, ucons, finalstep,doboundmpi);
+  }
+
+
+  //  bound_allprim(boundstage, boundtime, prim,pstag,ucons,finalstep,doboundmpi);
 
   return(0);
 
@@ -1412,13 +1451,23 @@ int bound_evolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NS
 
 
 // simple bounding during evolution
+// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
 int bound_beforeevolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep, int doboundmpi)
 {
-  int boundvartype=BOUNDPRIMSIMPLETYPE;
+  int boundvartype=BOUNDPRIMSIMPLETYPE; // tells boundary routines that only bounding 1 layer deep
 
   dualfprintf(fail_file,"bound_beforeevolveprim\n");
 
-  bound_anyallprim(boundstage, boundtime, boundvartype, prim,pstag,ucons,finalstep,doboundmpi);
+  bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+  if(unewisavg && BOUNDUNEW){
+    // SUPERGODMARK:
+    // if not outflow boundary, then can bound u as p
+    // desirable since machine errors can be different and lead to secular changes
+    // esp. in MPI
+    bound_uavg(boundstage, boundtime, boundvartype, ucons,pstag, ucons, finalstep,doboundmpi);
+  }
+
+
 
   return(0);
 
