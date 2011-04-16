@@ -89,6 +89,8 @@ static int unrescale_pl(SFTYPE time, int dir, struct of_geom *ptrgeom, FTYPE *pr
 static FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k);
 
 
+static int get_fixedvalues(int dir, int i, int j, int k, int ii, int jj, int kk);
+
 static int checkmono4(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3, FTYPE y4);
 static int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE y2, FTYPE y3);
 
@@ -1279,6 +1281,63 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
 
 
 
+
+
+
+
+
+// get number of fixedvalues for implied interpolation
+int get_fixedvalues(int dir, int i, int j, int k, int ii, int jj, int kk)
+{
+  int fixedvalues=0;
+
+  // avoid nearest neighbor if it means extrapolation will require passing through more than one fixed point.  That would limit freedom too much and generate kinks for A_i that is present on surface in some cases.
+  // Note that one could reduce to lower order if outer-most points are the ones that are fixed, but in general it's always the nearest ones that are fixed since that's the surface.
+  // potentially 1-2 (or more?) values for extrapolation may be fixed, so check, and don't consider this as new nearest neighbor if >1 fixed values
+  // dir=0 (CENT) would always have only 0 fixed values for concave NS surface.
+  if(dir>=1 && dir<=3){
+
+    // get del
+    int deloriglocal[NDIM],dellocal[NDIM];
+    get_del(i,j,k,ii,jj,kk,deloriglocal,dellocal);
+
+    int isinsidelocal[NDIM],hasmasklocal[NDIM],hasinsidelocal[NDIM],fixedvalue[NDIM];
+
+    // get ii,jj,kk result
+    isinsidelocal[1]=is_dir_insideNS(dir, ii, jj, kk, &hasmasklocal[1], &hasinsidelocal[1]);
+    fixedvalue[1]=(isinsidelocal[1]==0 && hasmasklocal[1]==1 && hasinsidelocal[1]==1);
+
+		  
+    // get iii,jjj,kkk result
+    int iii,jjj,kkk;
+    iii=ii+dellocal[1];
+    jjj=jj+dellocal[2];
+    kkk=kk+dellocal[3];
+    isinsidelocal[2]=is_dir_insideNS(dir, iii, jjj, kkk, &hasmasklocal[2], &hasinsidelocal[2]);
+    fixedvalue[2]=(isinsidelocal[2]==0 && hasmasklocal[2]==1 && hasinsidelocal[2]==1);
+
+    // get iiii,jjjj,kkkk result
+    int iiii,jjjj,kkkk;
+    iiii=ii+2*dellocal[1];
+    jjjj=jj+2*dellocal[2];
+    kkkk=kk+2*dellocal[3];
+    isinsidelocal[3]=is_dir_insideNS(dir, iiii, jjjj, kkkk, &hasmasklocal[3], &hasinsidelocal[3]);
+    fixedvalue[3]=(isinsidelocal[3]==0 && hasmasklocal[3]==1 && hasinsidelocal[3]==1);
+
+    // now have all 3 points.  Is ok if 1 is local, but try to avoid >1
+    int fiter;
+    SLOOPA(fiter) fixedvalues+=fixedvalue[fiter];
+
+  }
+  else fixedvalues=0;
+
+
+  return(fixedvalues);
+
+}
+
+
+
 // check if NS has sufficient grid depth for boundary conditions to be used for interpolations on smoothish functions
 // ensure NS is at least 2*N1BND in size in i, 2*N2BND in size in j, 2*N3BND in size in k, so that BCs exist
 // Can't have just one point if using more than one point for BCs since then interpolations will see jumps.
@@ -1451,23 +1510,25 @@ int check_nsdepth(SFTYPE time)
   //
   //////////////
 
-#define MINDISTLOCAL 1.01
-
   // over i,j,k for which need distance
-  FTYPE dist; // for CENT,CORN1,CORN2,CORN3
-  FTYPE mindist[NDIM];
   int lll;
   int dir;
-  int hasmask,hasinside;
-  int count[NDIM];
+
   int localisinside[NDIM];
   int localhasmask[NDIM];
   int localhasinside[NDIM];
+  int hasmask,hasinside;
 
 
-
+  //////////////////////////
+  //
+  // main loop over i,j,k
+  //
+  //////////////////////////
   COMPFULLLOOP{
     
+
+    // initialize nsmask
     // only relevant for cells that act as boundary cells (i.e. inside NS in relevant sense)
     // CENT and A_{dir} @ CORN_{dir}
     for(dir=0;dir<=3;dir++){
@@ -1488,71 +1549,98 @@ int check_nsdepth(SFTYPE time)
     if(localisinside[0]==1 || localisinside[1]==1 || localisinside[2]==1 || localisinside[3]==1){
 
 
-      // over ii,jj,kk that could be shell
-      DLOOPA(lll) mindist[lll]=BIG; // start assuming large and find minimum
+#define MINDISTLOCAL 1.01
+#define MAXNEIGH 10 // maximum number of last few neighbors (so many because tracking DUP's as well
 
+      FTYPE dist; // for CENT,CORN1,CORN2,CORN3
+      // start assuming large and find minimum
+      FTYPE mindist[NDIM][MAXNEIGH]={BIG}; // [which dir][which neighbor]=[this neighbor's distance, corresponding to some smallest(smallish) distance relative to other neighbors]
 
-  
-      for(dir=1;dir<=3;dir++) count[dir]=0;
-
+      int lastneigh[NDIM][MAXNEIGH][NDIM]={-100}; //[which dir][which last neighbor][which i,j,k = 1,2,3]=[ii or jj or kk]
+      int lastfixed[NDIM][MAXNEIGH]={-100}; // [which dir][which neighbor]=[number of fixed points for implied 3-point interpolation (prfulldel)]
+      int lastcount[NDIM][MAXNEIGH]={-100}; // [which dir][which neighbor]=[number of DUPs so far for this entry]
+      int numneigh[NDIM]={0}; // [which dir]=[number of neighbors]
+      int count[NDIM][MAXNEIGH]={0}; // [which dir][which neighbor]=[number of neighbors that have same dist (duplicates)]
+      int neighbase=0; // neighbase is fixed to be 0 as per below algorithm's method of shifting
 
 
       ///////////////////
       //
-      // Get neighbor(s)
+      // Get neighbor(s) (loop over ii,jj,kk)
       //
       ///////////////////
       COMPLOOPNiijjkk(ii,jj,kk){
-      
-
+ 
 	// CENT and CORN_dir (GODMARK: TODO: This code has become very expensive in bound if doing 3D, so maybe ignore maxdist and just use whatever find?)
-	for(dir=0;dir<=3;dir++){
+	for(dir=0;dir<=3;dir++){ // loop over dir's
 
-	  // DEBUG:
-	  //	  dualfprintf(fail_file,"Get: dir=%d\n",dir);
-	  
 	  if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
-
-	    // DEBUG:
-	    //	    dualfprintf(fail_file,"Get localisinside: dir=%d\n",dir);
-
-
 	    isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside);
 
-	    // DEBUG:
-	    //	    dualfprintf(fail_file,"Get isinside call: dir=%d : %d %d %d : %d %d %d\n",dir,ii,jj,kk,isinside,hasmask,hasinside);
-
-
-	    
+    
 	    if(isinside==0 && hasmask==1 && hasinside==1){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+
+	      // get dist for this ii,jj,kk
 	      dist=sqrt( (ii-i)*(ii-i) + (jj-j)*(jj-j) + (kk-k)*(kk-k) );
-	      if(fabs(dist-mindist[dir])<1E-3){ // if within same cell distance, then average out so that choosing bit farther cell but more symmetric
-		count[dir]++;
-		// accumulate ii,jj,kk as vector sum
 
+	      // first loop over any existing neighbors and see if dist is similar to their dist that was chosen as some prior mindist
+	      {
+		int neighiter;
+		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){
+
+		  if(fabs(dist-mindist[dir][neighiter])<1E-3){ // if within same cell distance, then average out so that choosing bit farther cell but more symmetric
+		    // DEBUG:
+		    dualfprintf(fail_file,"DUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist);
+
+		    // then just keep adding to same neighbor
+		    count[dir][neighiter]++;
+		    // accumulate ii,jj,kk as vector sum
+		    lastneigh[dir][neighiter][1]+=(ii-i);
+		    lastneigh[dir][neighiter][2]+=(jj-j);
+		    lastneigh[dir][neighiter][3]+=(kk-k);
+		    // add up number of fixed points
+		    lastfixed[dir][neighiter]+=get_fixedvalues(dir, i, j, k, ii, jj, kk); // note we are summing number of fixed, so in the end question is to obtain lowest total or equally number of fixed per duplicate
+		    mindist[dir][neighiter]=dist; // same if dup, but ok to assign again
+		  }
+		}
+	      }
+
+	      int gotmin=0;
+	      {
+		int neighiter;
+		// second, loop over and see if really smaller than all others so far
+		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){
+		  if(dist<mindist[dir][neighiter]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
+		    gotmin++;
+		  }
+		}
+	      }
+	      // see if min over all existing stored neighbors
+	      if(gotmin>=MIN(MAXNEIGH,numneigh[dir])){ // note that this gets triggered if never any other neighbors yet, as required.
 		// DEBUG:
-		dualfprintf(fail_file,"DUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist);
+		dualfprintf(fail_file,"NOTDUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist,mindist[dir][0]);
+		// then got closer neighbor, so shift neighbor list and assign
+		
+		// shift neighbors (lose neighbors if there are more than MAXNEIGH neighbors, which is fine since don't expect too many equally valid neighbors)
+		int neighiter;
+		for(neighiter=MAXNEIGH-1;neighiter>=1;neighiter--){// only down to 1 since last copy is 0->1
+		  count[dir][neighiter]=count[dir][neighiter-1];
+		  int siter; SLOOPA(siter) lastneigh[dir][neighiter][siter]=lastneigh[dir][neighiter-1][siter];
+		  lastfixed[dir][neighiter]=lastfixed[dir][neighiter-1];
+		  mindist[dir][neighiter]=mindist[dir][neighiter-1];
+		}
+		
+		// now assign values for (not add values to) new neighbor
+		numneigh[dir]++; // really new neighbor at new distance
+		 // new values for new neighbor
+		count[dir][neighbase]=1; // reset duplicate count
+		lastneigh[dir][neighbase][1]=(ii-i);
+		lastneigh[dir][neighbase][2]=(jj-j);
+		lastneigh[dir][neighbase][3]=(kk-k);
+		lastfixed[dir][neighbase]=get_fixedvalues(dir, i, j, k, ii, jj, kk);
+		mindist[dir][neighbase]=dist;
+	      }// end if really got new min over all prior neighbors
 
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)+=(ii-i);
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)+=(jj-j);
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)+=(kk-k);
-	      }
-	      else if(dist<mindist[dir]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
-		count[dir]=1; // reset duplicate count
-
-		// DEBUG:
-		dualfprintf(fail_file,"NOTDUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist,mindist[dir]);
-
-		mindist[dir]=dist;
-
-		// get ii,jj,kk that is nearest neighbor to i,j,k 
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)=(ii-i);
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)=(jj-j);
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)=(kk-k);
-	      }
-	      else{
-		// then ignore this point
-	      }
 	    }// end if not inside (and if A_i then has mask)
 	  }
 	}// over dir
@@ -1560,10 +1648,45 @@ int check_nsdepth(SFTYPE time)
       }// over ii,jj,kk
 
 
+#define DONEIGHBORFIX 1
 
 
+      // TODO: If not last, but second to last, was part of a DUP group, then choosing just the last one of the DUP's will produce asymmetries.  But other DUP members may be later than once mindist triggered on non-DUP.
+      // Maybe re-find all similar dist neighbors?  Expensive?
+      // Or, keep track of not just mindist but all prior stored neighbors?  probably good.  Problem: DUP versions need to be fixed below, which comes after
+      
+      // choose neighbor that has lowest number of fixed values used for extrapolation.  This gives extrapolation more freedom/flexibility for field moving on surface to avoid kinks through the surface.
+      if(DONEIGHBORFIX){
+	for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
 
+	  // count[dir][neighbase] contains final count of dups for final ii,jj,kk
+	  if(count[dir][neighbase]==1){ // GODMARK TODO OPTMARK: for now only do for count==1 since count>1 has to be modified to be a closer neighbor (DODUPFIX) and count>1 (expensively) handled in interpolation code so already can reduce to lower fixedvalues.  If also dealt with count>1, would make interpolations less expensive
 
+	    // loop over neighbors in order from latest to oldest:  in general because last ones would have lower dist[] values and so closer as desirable.
+	    int neighiter;
+	    FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]/((FTYPE)count[dir][neighbase]); // start with existing neighbor's fixed point count per duplicate
+	    for(neighiter=1;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){ // only iterate for existing number of neighbors actually stored up to maximum number stored.
+	      FTYPE newfixed=(FTYPE)lastfixed[dir][neighiter]/((FTYPE)(count[dir][neighiter]));
+	      if(newfixed<lowestfixed-1E-3){ // only choose if strictly lower, not just equal, since if only equal then might as well use closer neighbor.  1E-3 avoids machine precision issues so really must be actually lower, not just lower by machine error
+
+		// DEBUG:
+		dualfprintf(fail_file,"CHOSENEWNEIGHBOR: dir=%d ijk=%d %d %d oldijk2=%d %d %d newijk2=%d %d %d : oldfixed=%21.15g newfixed=%21.15g : oldcount=%d newcount=%d : oldmindist=%21.15g newmindist=%21.15g\n",dir,i,j,k,lastneigh[dir][neighbase][1],lastneigh[dir][neighbase][2],lastneigh[dir][neighbase][3],lastneigh[dir][neighiter][1],lastneigh[dir][neighiter][2],lastneigh[dir][neighiter][3],lowestfixed,newfixed,count[dir][neighbase],count[dir][neighiter],mindist[dir][neighbase],mindist[dir][neighiter]);
+
+		lowestfixed=newfixed;
+		// overwrite [neighbase] with this version
+		count[dir][neighbase]=count[dir][neighiter];
+		lastneigh[dir][neighbase][1]=lastneigh[dir][neighiter][1];
+		lastneigh[dir][neighbase][2]=lastneigh[dir][neighiter][2];
+		lastneigh[dir][neighbase][3]=lastneigh[dir][neighiter][3];
+		lastfixed[dir][neighbase]=lastfixed[dir][neighiter];
+		mindist[dir][neighbase]=mindist[dir][neighiter];
+	      
+	      }// end if strictly lower fixed count
+	    }// end over neighiter
+	  }// end if final ii,jj,kk was not a duplicate
+	}// end over dir
+
+      }// end if fixing neighbors
 
 
 
@@ -1572,7 +1695,6 @@ int check_nsdepth(SFTYPE time)
 
       // NOTEMARK: When DUPFIX ends up using corner cell(s) instead of shorter direct cells, then on substeps the copy will be less up-to-date than the copies from face directions since flux update is along face directions and not corners.  Should be updated within another substep.
       // This causes, e.g., pr[U3] to be zero in ghost cells because that ghost copies from corner to itself that hasn't been updated in a single substep once rotation is turned on.
-
 
 
       if(DODUPFIX){
@@ -1590,64 +1712,13 @@ int check_nsdepth(SFTYPE time)
 	for(dir=0;dir<=3;dir++){
 	  if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
 
-	    if(count[dir]==0){
+	    if(count[dir][neighbase]==0){
 	      dualfprintf(fail_file,"Never found nearest neighbor! dir=%d : %d %d %d\n",dir,i,j,k);
 	    }
-	    else if(count[dir]==1){
+	    else if(count[dir][neighbase]==1){
 	      // then nothing else to do except worry that too many fixed values may be used in the interpolation if along grid lines when dealing with A_i that can be on surface of NS)
-
-	      // avoid nearest neighbor if it means extrapolation will require passing through more than one fixed point.  That would limit freedom too much and generate kinks for A_i that is present on surface in some cases.
-	      // Note that one could reduce to lower order if outer-most points are the ones that are fixed, but in general it's always the nearest ones that are fixed since that's the surface.
-	      // potentially 1-2 (or more?) values for extrapolation may be fixed, so check, and don't consider this as new nearest neighbor if >1 fixed values
-	      // dir=0 (CENT) would always have only 0 fixed values for concave NS surface.
-	      if(dir>=1 && dir<=3){
-		
-		// get ii,jj,kk
-		ii=i+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0);
-		jj=j+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1);
-		kk=k+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2);
-
-		// get del
-		int deloriglocal[NDIM],dellocal[NDIM];
-		get_del(i,j,k,ii,jj,kk,deloriglocal,dellocal);
-
-		int isinsidelocal[NDIM],hasmasklocal[NDIM],hasinsidelocal[NDIM],fixedvalue[NDIM];
-
-		// get ii,jj,kk result
-		isinsidelocal[1]=is_dir_insideNS(dir, ii, jj, kk, &hasmasklocal[1], &hasinsidelocal[1]);
-		fixedvalue[1]=(isinsidelocal[1]==0 && hasmasklocal[1]==1 && hasinsidelocal[1]==1);
-
-		  
-		// get iii,jjj,kkk result
-		iii=ii+dellocal[1];
-		jjj=jj+dellocal[2];
-		kkk=kk+dellocal[3];
-		isinsidelocal[2]=is_dir_insideNS(dir, iii, jjj, kkk, &hasmasklocal[2], &hasinsidelocal[2]);
-		fixedvalue[2]=(isinsidelocal[2]==0 && hasmasklocal[2]==1 && hasinsidelocal[2]==1);
-
-		// get iiii,jjjj,kkkk result
-		iiii=ii+2*dellocal[1];
-		jjjj=jj+2*dellocal[2];
-		kkkk=kk+2*dellocal[3];
-		isinsidelocal[3]=is_dir_insideNS(dir, iiii, jjjj, kkkk, &hasmasklocal[3], &hasinsidelocal[3]);
-		fixedvalue[3]=(isinsidelocal[3]==0 && hasmasklocal[3]==1 && hasinsidelocal[3]==1);
-
-		// now have all 3 points.  Is ok if 1 is local, but try to avoid >1
-		int fiter;
-		int fixedvalues=0;
-		SLOOPA(fiter) fixedvalues+=fixedvalue[fiter];
-
-		if(fixedvalues>1){
-		  // try .......................  ok, put back in previous section within ii,jj,kk loop.  Store last few closest versions and their projected fixedvalue count, and once done (up there still) revert to closest that has fewest fixedvalues (but only if count=1 !!!).
-
-		}
-
-	      }
-	      // else nothing to do
-
-
 	    }
-	    else if(count[dir]>1){
+	    else if(count[dir][neighbase]>1){
 	      // if multiple cases, then iterate back towards i,j,k until find more closest neighbor along that path.
 
 
@@ -1656,9 +1727,10 @@ int check_nsdepth(SFTYPE time)
 
 
 	      // set initial ii,jj,kk
-	      ii=i+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0);
-	      jj=j+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1);
-	      kk=k+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2);
+	      ii=i+lastneigh[dir][neighbase][1];
+	      jj=j+lastneigh[dir][neighbase][2];
+	      kk=k+lastneigh[dir][neighbase][3];
+
 
 	      if(i==ii && j==jj & k==kk){
 		dualfprintf(fail_file,"DUP got ijk==ijk2: %d %d %d : %d %d %d\n",i,j,k,ii,jj,kk);
@@ -1795,27 +1867,45 @@ int check_nsdepth(SFTYPE time)
 		dualfprintf(fail_file,"DUPDONE: dir=%d count=%d : %d %d %d : %d %d %d\n",dir,count[dir],i,j,k,ii,jj,kk);
 
 
-		// get final ii,jj,kk
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)=ii-i;
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)=jj-j;
-		GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)=kk-k;
-
+		// get final modified ii,jj,kk
+		lastneigh[dir][neighbase][1]=ii-i;
+		lastneigh[dir][neighbase][2]=jj-j;
+		lastneigh[dir][neighbase][3]=kk-k;
+		
 	      }// end if original ii,jj,kk is not a mask cell already
 	    }// end if multiple counts for this dir
-	  }// end switch to turn on/off multiple counts fix (for debugging)
+	  }// end if inside NS in relevant sense
+	    
+	}// over all dirs=0,1,2,3
+	
+      }// end if DUPFIX
 
-
+      
+      
+      /////////////////
+      //
+      // Make final assignments to nsmask array
+      //
+      ////////////////
+      for(dir=0;dir<=3;dir++){
+	if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
+	  
+	  // store ii,jj,kk that is nearest neighbor to i,j,k 
+	  // uses [neighbase] as reference
+	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)=lastneigh[dir][neighbase][1];
+	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)=lastneigh[dir][neighbase][2];
+	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)=lastneigh[dir][neighbase][3];
+		
 	  // force lowest min to be 1.01
 	  // assume never itself (i.e. 0 distance) or would use that fact
-	  if(mindist[dir]<MINDISTLOCAL){
-	    mindist[dir]=MINDISTLOCAL; // if i,j,k is not on shell, and found shell, then must be 1 cell away, so avoid (int)(0.9999)->0 and set as 1.01 so (int)1.01 -> 1
+	  if(mindist[dir][neighbase]<MINDISTLOCAL){
+	    mindist[dir][neighbase]=MINDISTLOCAL; // if i,j,k is not on shell, and found shell, then must be 1 cell away, so avoid (int)(0.9999)->0 and set as 1.01 so (int)1.01 -> 1
 	  }
 
 	  // now have mindist for this i,j,k
-	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKDISTTOSHELL+dir)=(int)mindist[dir];
+	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKDISTTOSHELL+dir)=(int)mindist[dir][neighbase];
 
 	}// end if inside NS in relevant sense
-
       }// over all dirs=0,1,2,3
 
     }// end if cell is inside NS in sense needed for BCs
@@ -1832,6 +1922,7 @@ int check_nsdepth(SFTYPE time)
   //
   //////////////////////////
   if(numprocs==1){
+
     nscheck=fopen("nscheck.dat","wt");
     if(nscheck==NULL){
       dualfprintf(fail_file,"Couldn't open nscheck.dat\n");
@@ -1849,7 +1940,93 @@ int check_nsdepth(SFTYPE time)
     }
 
     fclose(nscheck);
-  }
+
+
+    if(N3==1){ // for debug only
+      
+      // generate 2D text-map of mask information
+#define MASKLOOPN1(i) for(i=0;i<=N1*3-1;i++)
+#define MASKLOOPN2(j) for(j=0;j<=N2*3-1;j++)
+      
+      dualfprintf(fail_file,"MASKPLOT\n");
+      dualfprintf(fail_file,"i=   ");
+      COMPLOOPN1{
+	dualfprintf(fail_file,"%3d",i);
+      }
+      dualfprintf(fail_file,"\n");
+      int truei,truej,truek;
+      
+      truek=0;
+      MASKLOOPN2(j){
+	truej=j/3;
+	if(j%3==1) dualfprintf(fail_file,"j=%03d ",truej); // stick in middle
+	else if(j%3==2) dualfprintf(fail_file,"     "); // space
+	//	MASKLOOPN1(i){
+	COMPLOOPN1{
+	  int isinsideplot[NDIM],hasmaskplot[NDIM],hasinsideplot[NDIM],isonsurfaceplot[NDIM];
+	  int isinsideplotip1[NDIM],hasmaskplotip1[NDIM],hasinsideplotip1[NDIM],isonsurfaceplotip1[NDIM];
+	  int isinsideplotjp1[NDIM],hasmaskplotjp1[NDIM],hasinsideplotjp1[NDIM],isonsurfaceplotjp1[NDIM];
+	  int dirplot;
+	  
+	  //truei=i/3;
+	  truei=i;
+	  
+	  
+	  for(dirplot=0;dirplot<=3;dirplot++){
+	    isinsideplot[dirplot]=is_dir_insideNS(dirplot, truei, truej, truek, &hasmaskplot[dirplot], &hasinsideplot[dirplot]);
+	    isonsurfaceplot[dirplot]=(isinsideplot[dirplot]==0 && hasmaskplot[dirplot]==1 && hasinsideplot[dirplot]==1);
+	  }
+
+	  for(dirplot=0;dirplot<=3;dirplot++){
+	    isinsideplotip1[dirplot]=is_dir_insideNS(dirplot, truei+N1NOT1, truej, truek, &hasmaskplotip1[dirplot], &hasinsideplotip1[dirplot]);
+	    isonsurfaceplotip1[dirplot]=(isinsideplotip1[dirplot]==0 && hasmaskplotip1[dirplot]==1 && hasinsideplotip1[dirplot]==1);
+	  }
+
+	  for(dirplot=0;dirplot<=3;dirplot++){
+	    isinsideplotjp1[dirplot]=is_dir_insideNS(dirplot, truei, truej+N2NOT1, truek, &hasmaskplotjp1[dirplot], &hasinsideplotjp1[dirplot]);
+	    isonsurfaceplotjp1[dirplot]=(isinsideplotjp1[dirplot]==0 && hasmaskplotjp1[dirplot]==1 && hasinsideplotjp1[dirplot]==1);
+	  }
+	
+
+	  if(j%3==0){// then top part, which is same as bottom part of next, so skip.  Well, or excluded since can't have NS surface up there
+	  }
+	  else if(j%3==1){// then middle part
+	    if(GLOBALMACP0A1(nsmask,truei,truej,truek,NSMASKINSIDE) && isonsurfaceplot[1]){
+	      dualfprintf(fail_file,"|I");
+	    }
+	    else if(GLOBALMACP0A1(nsmask,truei,truej,truek,NSMASKINSIDE)){
+	      dualfprintf(fail_file," I");
+	    }
+	    else if(isonsurfaceplot[1]){
+	      dualfprintf(fail_file,"| ");
+	    }
+	    else{
+	      dualfprintf(fail_file,"  ");
+	    }
+	  }
+	  else if(j%3==2){ // lower part
+	    if(isonsurfaceplot[2] && isonsurfaceplot[3]){
+	      dualfprintf(fail_file,"L-");
+	    }
+	    else if(isonsurfaceplot[2]){
+	      dualfprintf(fail_file," -");
+	    }
+	    else if(isonsurfaceplot[3]){
+	      dualfprintf(fail_file,"L ");
+	    }
+	    else{
+	      dualfprintf(fail_file,"  ");
+	    }
+	  }
+	  
+	}// end over comploopn1
+
+	if(j%3==1 || j%3==2) dualfprintf(fail_file,"\n");
+      }// end over maskloopn2
+    }// end if N3==1
+
+
+  }//end if numprocs==1
 
 
   //////////////
