@@ -24,6 +24,9 @@
 // ***16) Use globally fixed curvature sign around NS and convert fixed corners to boundary corners even if jumping by more than 1 cell.  Flux between will be able to move around, but only within bounds of fixed points.
 //        But unsure about Ad1,Ad2.  Can skip them (or looks like would skip all of them!) since they carry rotation.
 //        Unsure about what can skip or if can skip anything at all.
+//     First, try to convert only a few points to BC type, where have problems.  See if even works.  Only modify for A_3 for now.  Some general sense of relaxing A_i when convexifies in perp1i and perp2i plane.
+
+// 17) Evolve A_i (i.e. A_1 and A_2) directly instead of using EMFs for points on NS surface.  More accurate and no dissipation issue.  Like fixing A_3, but fixing all by updating via EMF_i computed on surface from known values.  Actually, with A_1 and A_2 at FACE2 and FACE1 (respectively), since BOUNDPLPR fixes exactly using v,B right there, same as fixing.  In any case, don't really know B^2 at FACE1 and B^1 at FACE2.  Interpolation would be as good as doing now.
 
 
 /////////////////
