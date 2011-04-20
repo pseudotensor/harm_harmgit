@@ -76,7 +76,7 @@ static int pos_NS(SFTYPE time, FTYPE *V, FTYPE *Vns, FTYPE *Vcartns, FTYPE *absr
 
 static int setNSparms(SFTYPE time, FTYPE *rns, FTYPE *omegak, FTYPE *omegaf, FTYPE *Rns, FTYPE *Rsoft, FTYPE *v0);
 
-static int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside);
+static int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, int *reallyonsurface, int *cancopyfrom);
 static int is_dir_onactivegrid(int dir, int i, int j, int k);
 static int is_ongrid(int dir, int i, int j, int k);
 
@@ -100,7 +100,7 @@ static void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 
 static int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int *del, int *usecompactpl, FTYPE *compactvalue, FTYPE *retiref, FTYPE *retjref, FTYPE *retkref, int *retposcorn, int *reticorn, int *retjcorn, int *retkcorn);
 
-static int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *numpointsused, FTYPE *prfulldel);
+static int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *reallyonsurface, int *cancopyfrom, int *numpointsused, FTYPE *xpos, int *compactpoint, FTYPE *prfulldel, FTYPE *prfulldelreduced);
 
 static int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, int iii, int jjj, int kkk, int iiii, int jjjj, int kkkk, FTYPE *xpos, FTYPE localsingle[5][NPR], struct of_geom *(ptrgeom[5]), int usecompact);
 
@@ -1168,7 +1168,7 @@ int BASEMACP0A1(nsmask,N1M,N2M,N3M,NUMMASKFLAGS);
 // check if A_i is fully inside NS (else should be fixed or evolved and not extrapolated/interpolated)
 // also report if shell is a neighbor
 // if A_i is just inside by half-cell (at CENT relative to actual surface), allow hasinside==1 if is mask cell and inside cells are next to it.  So if need to know if A_dir or EMF_dir are actually on the surface, should ask if isinside==0 && hasmask==1 && hasinside==1 && (not case that all 4 cells around corner are INSIDE and not case that all 4 cells around corner are notINSIDE)
-int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
+int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, int *reallyonsurface, int *cancopyfrom)
 {
   int odir1,odir2;
   int isinside;
@@ -1178,6 +1178,10 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
     isinside=GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
     *hasmask=GLOBALMACP0A1(nsmask,i,j,k,NSMASKSHELL);
     if(*hasmask==1) *hasinside=1; // for loc=CENT, if on mask, then must be inside type nearby.
+    else *hasinside=0;
+
+    *reallyonsurface=0; // never so
+    *cancopyfrom=(isinside==0 && *hasmask==1 && *hasinside==1);
   }
   else{
 
@@ -1247,6 +1251,12 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
 
     }
 
+
+    // indicates really on surface (note: only true for dir==3 with also N3==1
+    *reallyonsurface=(isinside==0 && *hasmask==1 && *hasinside==1);
+
+
+
     // check if dir-direction corresponds to surface normal direction (so dir value is treated as loc=CENT quantity)
     // This ensures if mask cell nearby but no inside cell that (e.g. if dir==2 and N3NOT1==0) that know that this is near surface by half-cell
     // This A_dir or EMF_dir can then be used to copy into the ghost cells since it's either fixed (on surface exactly) or active (for some values, no surface values and only active ones can be source)
@@ -1265,11 +1275,13 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside)
     }
        
 
+    // in cases where no exact on-surface value, indicate that can copy from active value on active grid
+    *cancopyfrom=(isinside==0 && *hasmask==1 && *hasinside==1);
     
 
     //////
     //
-    //    So if isinside==0 and hasmask==1 and hasinside==1, then this point is right on the NS surface, so can use that cell to copy from for BCs
+    //    So if isinside==0 and hasmask==1 and hasinside==1, then this point is right on (near) the NS surface, so can use that cell to copy from for BCs
     //
     /////
 
@@ -1301,11 +1313,12 @@ int get_fixedvalues(int dir, int i, int j, int k, int ii, int jj, int kk)
     int deloriglocal[NDIM],dellocal[NDIM];
     get_del(i,j,k,ii,jj,kk,deloriglocal,dellocal);
 
-    int isinsidelocal[NDIM],hasmasklocal[NDIM],hasinsidelocal[NDIM],fixedvalue[NDIM];
+    int isinsidelocal[NDIM],hasmasklocal[NDIM],hasinsidelocal[NDIM],reallyonsurfacelocal[NDIM],cancopyfromlocal[NDIM];
+    int fixedvalue[NDIM];
 
     // get ii,jj,kk result
-    isinsidelocal[1]=is_dir_insideNS(dir, ii, jj, kk, &hasmasklocal[1], &hasinsidelocal[1]);
-    fixedvalue[1]=(isinsidelocal[1]==0 && hasmasklocal[1]==1 && hasinsidelocal[1]==1);
+    isinsidelocal[1]=is_dir_insideNS(dir, ii, jj, kk, &hasmasklocal[1], &hasinsidelocal[1], &reallyonsurfacelocal[1], &cancopyfromlocal[1]);
+    fixedvalue[1]=reallyonsurfacelocal[1];  //(isinsidelocal[1]==0 && hasmasklocal[1]==1 && hasinsidelocal[1]==1);
 
 		  
     // get iii,jjj,kkk result
@@ -1313,16 +1326,16 @@ int get_fixedvalues(int dir, int i, int j, int k, int ii, int jj, int kk)
     iii=ii+dellocal[1];
     jjj=jj+dellocal[2];
     kkk=kk+dellocal[3];
-    isinsidelocal[2]=is_dir_insideNS(dir, iii, jjj, kkk, &hasmasklocal[2], &hasinsidelocal[2]);
-    fixedvalue[2]=(isinsidelocal[2]==0 && hasmasklocal[2]==1 && hasinsidelocal[2]==1);
+    isinsidelocal[2]=is_dir_insideNS(dir, iii, jjj, kkk, &hasmasklocal[2], &hasinsidelocal[2], &reallyonsurfacelocal[2], &cancopyfromlocal[2]);
+    fixedvalue[2]=reallyonsurfacelocal[2];  //=(isinsidelocal[2]==0 && hasmasklocal[2]==1 && hasinsidelocal[2]==1);
 
     // get iiii,jjjj,kkkk result
     int iiii,jjjj,kkkk;
     iiii=ii+2*dellocal[1];
     jjjj=jj+2*dellocal[2];
     kkkk=kk+2*dellocal[3];
-    isinsidelocal[3]=is_dir_insideNS(dir, iiii, jjjj, kkkk, &hasmasklocal[3], &hasinsidelocal[3]);
-    fixedvalue[3]=(isinsidelocal[3]==0 && hasmasklocal[3]==1 && hasinsidelocal[3]==1);
+    isinsidelocal[3]=is_dir_insideNS(dir, iiii, jjjj, kkkk, &hasmasklocal[3], &hasinsidelocal[3], &reallyonsurfacelocal[3], &cancopyfromlocal[3]);
+    fixedvalue[3]=reallyonsurfacelocal[3];  //=(isinsidelocal[3]==0 && hasmasklocal[3]==1 && hasinsidelocal[3]==1);
 
     // now have all 3 points.  Is ok if 1 is local, but try to avoid >1
     int fiter;
@@ -1514,10 +1527,8 @@ int check_nsdepth(SFTYPE time)
   int lll;
   int dir;
 
-  int localisinside[NDIM];
-  int localhasmask[NDIM];
-  int localhasinside[NDIM];
-  int hasmask,hasinside;
+  int localisinside[NDIM], localhasmask[NDIM], localhasinside[NDIM],localreallyonsurface[NDIM],localcancopyfrom[NDIM];
+  int hasmask,hasinside,reallyonsurface,cancopyfrom;
 
 
   //////////////////////////
@@ -1532,7 +1543,7 @@ int check_nsdepth(SFTYPE time)
     // only relevant for cells that act as boundary cells (i.e. inside NS in relevant sense)
     // CENT and A_{dir} @ CORN_{dir}
     for(dir=0;dir<=3;dir++){
-      localisinside[dir]=is_dir_insideNS(dir, i, j, k, &localhasmask[dir], &localhasinside[dir]);
+      localisinside[dir]=is_dir_insideNS(dir, i, j, k, &localhasmask[dir], &localhasinside[dir], &localreallyonsurface[dir], &localcancopyfrom[dir]);
 
       // set up default
       GLOBALMACP0A1(nsmask,i,j,k,NSMASKDISTTOSHELL+dir)=0;
@@ -1554,15 +1565,34 @@ int check_nsdepth(SFTYPE time)
 
       FTYPE dist; // for CENT,CORN1,CORN2,CORN3
       // start assuming large and find minimum
-      FTYPE mindist[NDIM][MAXNEIGH]={BIG}; // [which dir][which neighbor]=[this neighbor's distance, corresponding to some smallest(smallish) distance relative to other neighbors]
+      FTYPE mindist[NDIM][MAXNEIGH]={{BIG}}; // [which dir][which neighbor]=[this neighbor's distance, corresponding to some smallest(smallish) distance relative to other neighbors]
 
-      int lastneigh[NDIM][MAXNEIGH][NDIM]={-100}; //[which dir][which last neighbor][which i,j,k = 1,2,3]=[ii or jj or kk]
-      int lastfixed[NDIM][MAXNEIGH]={-100}; // [which dir][which neighbor]=[number of fixed points for implied 3-point interpolation (prfulldel)]
-      int lastcount[NDIM][MAXNEIGH]={-100}; // [which dir][which neighbor]=[number of DUPs so far for this entry]
+      int lastneigh[NDIM][MAXNEIGH][NDIM]={{{-100}}}; //[which dir][which last neighbor][which i,j,k = 1,2,3]=[ii or jj or kk]
+      int lastfixed[NDIM][MAXNEIGH]={{NBIGM}}; // [which dir][which neighbor]=[number of fixed points for implied 3-point interpolation (prfulldel)]
+      int lastcount[NDIM][MAXNEIGH]={{0}}; // [which dir][which neighbor]=[number of DUPs so far for this entry]
       int numneigh[NDIM]={0}; // [which dir]=[number of neighbors]
-      int count[NDIM][MAXNEIGH]={0}; // [which dir][which neighbor]=[number of neighbors that have same dist (duplicates)]
+      int count[NDIM][MAXNEIGH]={{0}}; // [which dir][which neighbor]=[number of neighbors that have same dist (duplicates)]
       int neighbase=0; // neighbase is fixed to be 0 as per below algorithm's method of shifting
+      int newfixed[NDIM];
 
+      // GODMARK: Why do above nested curly braces not set initial assignment?
+      // Seems I have to do it myself for mindist at least
+      for(dir=0;dir<=3;dir++){
+	numneigh[dir]=0;
+	int neighiter;
+	for(neighiter=0;neighiter<MAXNEIGH;neighiter++){
+	  mindist[dir][neighiter]=BIG;
+	  count[dir][neighiter]=0;
+
+	  int spaceiter;
+	  DLOOPA(spaceiter) lastneigh[dir][neighiter][spaceiter]=-100;
+	  lastfixed[dir][neighiter]=NBIGM;
+	  lastcount[dir][neighiter]=0;
+	}
+      }
+
+      // http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Flanguage%2Fref%2Faryin.htm
+      // static int number[3] = { [0] = 5, [2] = 7 }; // skip over elements in init of array
 
       ///////////////////
       //
@@ -1575,22 +1605,37 @@ int check_nsdepth(SFTYPE time)
 	for(dir=0;dir<=3;dir++){ // loop over dir's
 
 	  if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
-	    isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside);
+	    isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
 
     
-	    if(isinside==0 && hasmask==1 && hasinside==1){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+	    //	    if(isinside==0 && hasmask==1 && hasinside==1){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+	    if(cancopyfrom){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+
+	      // DEBUG:
+	      //	      dualfprintf(fail_file,"WTF: dir=%d ijk=%d %d %d : ijk2=%d %d %d : mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,mindist[dir][0]);
+
 
 	      // get dist for this ii,jj,kk
 	      dist=sqrt( (ii-i)*(ii-i) + (jj-j)*(jj-j) + (kk-k)*(kk-k) );
 
+	      // get fixed values count
+	      newfixed[dir]=get_fixedvalues(dir, i, j, k, ii, jj, kk);
+
+	      // DEBUG:
+	      //	      if(dir==3 && i==36 && j==24){
+	      //		dualfprintf(fail_file,"FU: dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g : numneigh=%d mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist,numneigh[dir],mindist[dir][0]);
+	      //	      }
+
+
+	      int founddup=0;
 	      // first loop over any existing neighbors and see if dist is similar to their dist that was chosen as some prior mindist
 	      {
 		int neighiter;
-		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){
+		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){ // only up to numneigh[dir] (unless larger than MAXNEIGH) since DUPs only exist if array filled-in already
 
-		  if(fabs(dist-mindist[dir][neighiter])<1E-3){ // if within same cell distance, then average out so that choosing bit farther cell but more symmetric
+		  if(newfixed[dir]==lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3){ // if within same cell distance and fixed interpolation count, then treat as duplicate since can't distinguish
 		    // DEBUG:
-		    dualfprintf(fail_file,"DUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist);
+		    dualfprintf(fail_file,"DUP: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : lorig123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
 
 		    // then just keep adding to same neighbor
 		    count[dir][neighiter]++;
@@ -1599,31 +1644,67 @@ int check_nsdepth(SFTYPE time)
 		    lastneigh[dir][neighiter][2]+=(jj-j);
 		    lastneigh[dir][neighiter][3]+=(kk-k);
 		    // add up number of fixed points
-		    lastfixed[dir][neighiter]+=get_fixedvalues(dir, i, j, k, ii, jj, kk); // note we are summing number of fixed, so in the end question is to obtain lowest total or equally number of fixed per duplicate
+		    //		    lastfixed[dir][neighiter]+=newfixed[dir]; // note we are summing number of fixed, so in the end question is to obtain lowest total or equally number of fixed per duplicate
+		    lastfixed[dir][neighiter]=newfixed[dir]; // same fixed, but ok to assign again
 		    mindist[dir][neighiter]=dist; // same if dup, but ok to assign again
+
+		    founddup=1; // indicate that found duplicate
+
+		    // DEBUG:
+		    dualfprintf(fail_file,"DUP2: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : l123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
+
+
 		  }
 		}
 	      }
 
 	      int gotmin=0;
-	      {
-		int neighiter;
-		// second, loop over and see if really smaller than all others so far
-		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){
-		  if(dist<mindist[dir][neighiter]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
-		    gotmin++;
+	      int whichmin=0;
+	      if(founddup==0){
+		{
+		  // second, loop over and see if really closer or fewer fixed points than any others
+		  int neighiter;
+
+		  // then really smaller distance (used to avoid machine precision issues) or a lower fixed count
+		  //		  if(dist<mindist[dir][neighiter]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
+		  // (newfixed[dir]==lastfixed[dir][neighiter] && dist<mindist[dir][neighiter]-1E-3)
+		  // (dist<mindist[dir][neighiter]-1E-3) || (newfixed[dir]<=lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3)
+
+
+		  // gotmin=0: same or smaller distance and same or fewer fixed points (most preferred to trigger on)
+		  // this should be good since if ever both were same (so undetermined duplicate), above duplicate check should merge the points already
+		  for(neighiter=0;neighiter<MAXNEIGH;neighiter++){ // not up to numneigh[dir] because it's 0 at first -- and in general want to trigger on being smaller than existing large values if filling-in new point
+		    if( newfixed[dir]<=lastfixed[dir][neighiter] && (dist<mindist[dir][neighiter]-1E-3 || fabs(dist-mindist[dir][neighiter])<1E-3) ){
+		      gotmin=1;
+		      whichmin=neighiter;
+		      break; // will use whichmin to insert this data into storage arrays
+		    }
 		  }
+
+
+		  if(gotmin==0){
+		    dualfprintf(fail_file,"Still gotmin==0 (This is ok, but check that really wanted to ignore this point): dir=%d ijk=%d %d %d iijjkk=%d %d %d : dist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist);
+		  }
+
 		}
 	      }
+
+	      // DEBUG:
+	      //	      if(dir==3 && i==36 && j==24){
+	      //		dualfprintf(fail_file,"FU2: dir=%d ijk=%d %d %d : ijk2=%d %d %d : gotmin=%d (%21.15g %21.15g)\n",dir,i,j,k,ii,jj,kk,gotmin,dist,mindist[dir][whichmin]);
+	      //	      }
+
+
 	      // see if min over all existing stored neighbors
-	      if(gotmin>=MIN(MAXNEIGH,numneigh[dir])){ // note that this gets triggered if never any other neighbors yet, as required.
+	      //if(gotmin>=MIN(MAXNEIGH,numneigh[dir])){ // note that this gets triggered if never any other neighbors yet, as required.
+	      if(gotmin!=0){ // note that this gets triggered if never any other neighbors yet, as required.
 		// DEBUG:
-		dualfprintf(fail_file,"NOTDUP: dir=%d : count=%d : ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g\n",dir,count[dir],i,j,k,ii,jj,kk,dist,mindist[dir][0]);
+		dualfprintf(fail_file,"NOTDUP : gotmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d\n",gotmin,count[dir][neighbase],dir,i,j,k,ii,jj,kk,dist,mindist[dir][neighbase],newfixed[dir]);
 		// then got closer neighbor, so shift neighbor list and assign
 		
 		// shift neighbors (lose neighbors if there are more than MAXNEIGH neighbors, which is fine since don't expect too many equally valid neighbors)
 		int neighiter;
-		for(neighiter=MAXNEIGH-1;neighiter>=1;neighiter--){// only down to 1 since last copy is 0->1
+		for(neighiter=MAXNEIGH-1;neighiter>=whichmin+1;neighiter--){// only down to whichmin+1, since [whichmin] is old point for which new point is just closer. So [whichmin] is moved up to [whichmin+1] to make room for new point at [whichmin].  This sorts by distance, else could lose good small distance out the right side of array!
 		  count[dir][neighiter]=count[dir][neighiter-1];
 		  int siter; SLOOPA(siter) lastneigh[dir][neighiter][siter]=lastneigh[dir][neighiter-1][siter];
 		  lastfixed[dir][neighiter]=lastfixed[dir][neighiter-1];
@@ -1633,12 +1714,15 @@ int check_nsdepth(SFTYPE time)
 		// now assign values for (not add values to) new neighbor
 		numneigh[dir]++; // really new neighbor at new distance
 		 // new values for new neighbor
-		count[dir][neighbase]=1; // reset duplicate count
-		lastneigh[dir][neighbase][1]=(ii-i);
-		lastneigh[dir][neighbase][2]=(jj-j);
-		lastneigh[dir][neighbase][3]=(kk-k);
-		lastfixed[dir][neighbase]=get_fixedvalues(dir, i, j, k, ii, jj, kk);
-		mindist[dir][neighbase]=dist;
+		count[dir][whichmin]=1; // sets as not duplicate count
+		lastneigh[dir][whichmin][1]=(ii-i);
+		lastneigh[dir][whichmin][2]=(jj-j);
+		lastneigh[dir][whichmin][3]=(kk-k);
+		lastfixed[dir][whichmin]=newfixed[dir];
+		mindist[dir][whichmin]=dist;
+
+		dualfprintf(fail_file,"NOTDUP2 : whichmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d l123=%d %d %d\n",whichmin,count[dir][whichmin],dir,i,j,k,ii,jj,kk,dist,mindist[dir][whichmin],newfixed[dir],i+lastneigh[dir][whichmin][1],j+lastneigh[dir][whichmin][2],k+lastneigh[dir][whichmin][3]);
+
 	      }// end if really got new min over all prior neighbors
 
 	    }// end if not inside (and if A_i then has mask)
@@ -1646,6 +1730,50 @@ int check_nsdepth(SFTYPE time)
 	}// over dir
       
       }// over ii,jj,kk
+
+
+
+
+      
+#define DOSTUCKFIX 1
+
+      // check if i,j,k==ii,jj,kk and shift over such that removes such a useless point
+      if(DOSTUCKFIX){
+	for(dir=0;dir<=3;dir++){
+
+	  numneigh[dir]=MIN(numneigh[dir],MAXNEIGH); // set number of neighbors as real possible upper limit since may reduce below MAXNEIGH now
+	  for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
+
+	    if(lastneigh[dir][neighiter][1]==0 && lastneigh[dir][neighiter][2]==0 && lastneigh[dir][neighiter][3]==0){
+	      // then shift on top of this useless point (even if formed from duplicates, since couldn't choose among them unless one would break symmetry (or find another indicator))
+
+	      for(int neighiter2=neighiter;neighiter2<MIN(numneigh[dir],MAXNEIGH)-1;neighiter2++){ // -1 since lost data from removal
+		count[dir][neighiter2]=count[dir][neighiter2+1];
+		int siter; SLOOPA(siter) lastneigh[dir][neighiter2][siter]=lastneigh[dir][neighiter2+1][siter];
+		lastfixed[dir][neighiter2]=lastfixed[dir][neighiter2+1];
+		mindist[dir][neighiter2]=mindist[dir][neighiter2+1];
+	      }
+
+
+	      // reduce count (will go below MAXNEIGH now so don't show (in debug) the upper-end that was used to copy to lower end)
+	      numneigh[dir]--;
+	      // and need to drop back one, since will next be doing neighiter++ and want to evaluate the same neighiter as here because it's actually new data not checked yet
+	      neighiter--;
+
+ 	      // DEBUG:
+	      dualfprintf(fail_file,"DOSTUCKFIX: dir=%d ijk=%d %d %d : (new)neighiter=%d (new)numneigh=%d\n",dir,i,j,k,neighiter,numneigh[dir]);
+
+
+	    }// end if stuck point
+	  }// end over neighiter
+	}// end over dir
+      }// end if fixing stuck points
+
+
+
+
+
+
 
 
 #define DONEIGHBORFIX 1
@@ -1660,33 +1788,45 @@ int check_nsdepth(SFTYPE time)
 	for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
 
 	  // count[dir][neighbase] contains final count of dups for final ii,jj,kk
-	  if(count[dir][neighbase]==1){ // GODMARK TODO OPTMARK: for now only do for count==1 since count>1 has to be modified to be a closer neighbor (DODUPFIX) and count>1 (expensively) handled in interpolation code so already can reduce to lower fixedvalues.  If also dealt with count>1, would make interpolations less expensive
+	  //	  if(count[dir][neighbase]==1){ // GODMARK TODO OPTMARK: for now only do for count==1 since count>1 has to be modified to be a closer neighbor (DODUPFIX) and count>1 (expensively) handled in interpolation code so already can reduce to lower fixedvalues.  If also dealt with count>1, would make interpolations less expensive
 
-	    // loop over neighbors in order from latest to oldest:  in general because last ones would have lower dist[] values and so closer as desirable.
-	    int neighiter;
-	    FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]/((FTYPE)count[dir][neighbase]); // start with existing neighbor's fixed point count per duplicate
-	    for(neighiter=1;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){ // only iterate for existing number of neighbors actually stored up to maximum number stored.
-	      FTYPE newfixed=(FTYPE)lastfixed[dir][neighiter]/((FTYPE)(count[dir][neighiter]));
-	      if(newfixed<lowestfixed-1E-3){ // only choose if strictly lower, not just equal, since if only equal then might as well use closer neighbor.  1E-3 avoids machine precision issues so really must be actually lower, not just lower by machine error
+	  // loop over neighbors in order from latest to oldest:  in general because last ones would have lower dist[] values and so closer as desirable.
+	  int neighiter;
+	  //	  FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]/((FTYPE)count[dir][neighbase]); // start with existing neighbor's fixed point count per duplicate
+	  FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]; // now grouping by fixed counts too and not adding-up fixed counts for dups, so only look at fixed count itself
+	  for(neighiter=1;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){ // only iterate for existing number of neighbors actually stored up to maximum number stored.
+	    //	    FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter]/((FTYPE)(count[dir][neighiter]));
+	    FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter];
+	    if(otherfixed<lowestfixed-1E-3){ // only choose if strictly lower, not just equal, since if only equal then might as well use closer neighbor.  1E-3 avoids machine precision issues so really must be actually lower, not just lower by machine error
 
-		// DEBUG:
-		dualfprintf(fail_file,"CHOSENEWNEIGHBOR: dir=%d ijk=%d %d %d oldijk2=%d %d %d newijk2=%d %d %d : oldfixed=%21.15g newfixed=%21.15g : oldcount=%d newcount=%d : oldmindist=%21.15g newmindist=%21.15g\n",dir,i,j,k,lastneigh[dir][neighbase][1],lastneigh[dir][neighbase][2],lastneigh[dir][neighbase][3],lastneigh[dir][neighiter][1],lastneigh[dir][neighiter][2],lastneigh[dir][neighiter][3],lowestfixed,newfixed,count[dir][neighbase],count[dir][neighiter],mindist[dir][neighbase],mindist[dir][neighiter]);
+	      // DEBUG:
+	      dualfprintf(fail_file,"CHOSENEWNEIGHBOR: dir=%d ijk=%d %d %d oldijk2=%d %d %d newijk2=%d %d %d : oldfixed=%21.15g otherfixed=%21.15g : oldcount=%d newcount=%d : oldmindist=%21.15g newmindist=%21.15g\n",dir,i,j,k,lastneigh[dir][neighbase][1],lastneigh[dir][neighbase][2],lastneigh[dir][neighbase][3],lastneigh[dir][neighiter][1],lastneigh[dir][neighiter][2],lastneigh[dir][neighiter][3],lowestfixed,otherfixed,count[dir][neighbase],count[dir][neighiter],mindist[dir][neighbase],mindist[dir][neighiter]);
 
-		lowestfixed=newfixed;
-		// overwrite [neighbase] with this version
-		count[dir][neighbase]=count[dir][neighiter];
-		lastneigh[dir][neighbase][1]=lastneigh[dir][neighiter][1];
-		lastneigh[dir][neighbase][2]=lastneigh[dir][neighiter][2];
-		lastneigh[dir][neighbase][3]=lastneigh[dir][neighiter][3];
-		lastfixed[dir][neighbase]=lastfixed[dir][neighiter];
-		mindist[dir][neighbase]=mindist[dir][neighiter];
+	      lowestfixed=otherfixed;
+	      // overwrite [neighbase] with this version
+	      count[dir][neighbase]=count[dir][neighiter];
+	      lastneigh[dir][neighbase][1]=lastneigh[dir][neighiter][1];
+	      lastneigh[dir][neighbase][2]=lastneigh[dir][neighiter][2];
+	      lastneigh[dir][neighbase][3]=lastneigh[dir][neighiter][3];
+	      lastfixed[dir][neighbase]=lastfixed[dir][neighiter];
+	      mindist[dir][neighbase]=mindist[dir][neighiter];
 	      
-	      }// end if strictly lower fixed count
-	    }// end over neighiter
-	  }// end if final ii,jj,kk was not a duplicate
+	    }// end if strictly lower fixed count
+	  }// end over neighiter
+	  //}// end if final ii,jj,kk was not a duplicate
 	}// end over dir
 
       }// end if fixing neighbors
+
+
+
+      
+      // DEBUG:
+      for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
+	for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
+	  dualfprintf(fail_file,"REPORTBEFOREDUPFIX: dir=%d ijk=%d %d %d : neighiter=%d :: count=%d initial iijjkk=%d %d %d fixed=%d mindist=%21.15g\n",dir,i,j,k,neighiter,count[dir][neighiter],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3],lastfixed[dir][neighiter],mindist[dir][neighiter]);
+	}
+      }
 
 
 
@@ -1705,7 +1845,7 @@ int check_nsdepth(SFTYPE time)
 	///////////////////
 	int interpproblem;
 	int delsuperorig[4],delorig[4],del[4];
-	int hasmaskold,hasinsideold;
+	int cancopyfromold;
 	int whilecheckiter;
 	int isongrid;
 	int trialshift;
@@ -1722,14 +1862,14 @@ int check_nsdepth(SFTYPE time)
 	      // if multiple cases, then iterate back towards i,j,k until find more closest neighbor along that path.
 
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"COUNT: dir=%d ijk=%d %d %d : count=%d\n",dir,i,j,k,count[dir]);
-
-
 	      // set initial ii,jj,kk
 	      ii=i+lastneigh[dir][neighbase][1];
 	      jj=j+lastneigh[dir][neighbase][2];
 	      kk=k+lastneigh[dir][neighbase][3];
+
+
+	      // DEBUG:
+	      dualfprintf(fail_file,"COUNT: dir=%d ijk=%d %d %d : count=%d initial iijjkk=%d %d %d\n",dir,i,j,k,count[dir][neighbase],ii,jj,kk);
 
 
 	      if(i==ii && j==jj & k==kk){
@@ -1739,14 +1879,15 @@ int check_nsdepth(SFTYPE time)
 
 	      // check if already a mask cell
 	      isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
-	      if(isongrid==0){ isinside=hasmask=hasinside=0; }
-	      else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside);
+	      if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
+	      else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
 
 
-	      if(! (hasmask==1 && hasinside==1 )){ // only need to do something if not already on boundary
+	      //	      if(! (hasmask==1 && hasinside==1 )){ // only need to do something if not already on boundary (boundary that is values that can copy from)
+	      if(cancopyfrom==0){ // only need to do something if not already on boundary (boundary that is values that can copy from)
 
 		// DEBUG:
-		dualfprintf(fail_file,"INITIALDUPFIX: dir=%d count=%d : %d %d %d : %d %d %d : ihh=%d %d %d\n",dir,count[dir],i,j,k,ii,jj,kk, isinside, hasmask, hasinside);
+		dualfprintf(fail_file,"INITIALDUPFIX: dir=%d count=%d : %d %d %d : %d %d %d : ihhrc=%d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk, isinside, hasmask, hasinside, reallyonsurface, cancopyfrom);
 
 		// get delsuperorig
 		interpproblem=get_del(i,j,k,ii,jj,kk,delsuperorig,del);
@@ -1765,6 +1906,9 @@ int check_nsdepth(SFTYPE time)
 		  jj0=jj;
 		  kk0=kk;
 
+		  // in some rare cases, may still be inside NS even if dup, so then need to move out instead of in.
+		  int signdir=(isinside==1 ? 1 : -1);
+
 		  if(trialshift==0){
 
 		    // original using actual path
@@ -1773,15 +1917,15 @@ int check_nsdepth(SFTYPE time)
 		    kk0true=kk;
 
 		    // shift ii,jj,kk back to i,j,k
-		    ii-=del[1];
-		    jj-=del[2];
-		    kk-=del[3];
+		    ii=ii+signdir*del[1];
+		    jj=jj+signdir*del[2];
+		    kk=kk+signdir*del[3];
 		  }
 		  else if(trialshift>0){
 		    // shift by direction with largest absolute offset and then only by 1 unit each step in that direction, unless that direction has no offset to begin with
-		    ii-=ROUND2INT(sign(del[1])) * MIN(1,abs(del[1])) * (abs(del[1])>=abs(del[2]) && abs(del[1])>=abs(del[3]));
-		    jj-=ROUND2INT(sign(del[2])) * MIN(1,abs(del[2])) * (abs(del[2])>=abs(del[1]) && abs(del[2])>=abs(del[3]));
-		    kk-=ROUND2INT(sign(del[3])) * MIN(1,abs(del[3])) * (abs(del[3])>=abs(del[1]) && abs(del[3])>=abs(del[2]));
+		    ii=ii+signdir*ROUND2INT(sign(del[1])) * MIN(1,abs(del[1])) * (abs(del[1])>=abs(del[2]) && abs(del[1])>=abs(del[3]));
+		    jj=jj+signdir*ROUND2INT(sign(del[2])) * MIN(1,abs(del[2])) * (abs(del[2])>=abs(del[1]) && abs(del[2])>=abs(del[3]));
+		    kk=kk+signdir*ROUND2INT(sign(del[3])) * MIN(1,abs(del[3])) * (abs(del[3])>=abs(del[1]) && abs(del[3])>=abs(del[2]));
 
 		    trialshift++;
 
@@ -1793,17 +1937,16 @@ int check_nsdepth(SFTYPE time)
 		  // check if external to NS (or on shell)
 		  // only check if on the grid
 		  isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
-		  if(isongrid==0){ isinside=hasmask=hasinside=0; }
-		  else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside);
-		  //	  if(isinside==0 && hasmask==1 && hasinside==1) break; // then good
+		  if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
+		  else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
 
 		  // DEBUG:
-		  dualfprintf(fail_file,"DUPFIXING: dir=%d count=%d : %d %d %d : %d %d %d : %d %d %d\n",dir,count[dir],i,j,k,ii,jj,kk,isinside,hasmask,hasinside);
+		  dualfprintf(fail_file,"DUPFIXING: dir=%d count=%d : %d %d %d : %d %d %d : %d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk,isinside,hasmask,hasinside,reallyonsurface,&cancopyfrom);
 		  int delloop;
 		  SLOOPA(delloop) dualfprintf(fail_file,"DUPFIXING2: del=%d : %d %d %d\n",delloop,del[delloop],delorig[delloop],delsuperorig[delloop]);
 
 
-		  if(interpproblem==0 && isongrid==1 && hasmask==1 && hasinside==1){
+		  if(interpproblem==0 && isongrid==1 && cancopyfrom==1){
 		    // then this ii,jj,kk the one we want to keep
 		    break;
 		  }
@@ -1815,18 +1958,12 @@ int check_nsdepth(SFTYPE time)
 		    jj=jj0;
 		    kk=kk0;
 
-		    if(hasmaskold==1 && hasinsideold==1){
+		    if(cancopyfromold==1){
 		      // then done!  back-up cell is a mask cell, so that's good
 		      break;
 		    }
-		    else if(hasmaskold==0 || hasinsideold==0){
+		    else{
 		      // try shifting by 1 unit (trying to get a mask cell)
-
-		      // FUCK:
-		      //		      ii=ii0true;
-		      //		      jj=jj0true;
-		      //		      kk=kk0true;
-		      //		      break;
 
 		      // DEBUG:
 		      dualfprintf(fail_file,"Doing trialshift: dir=%d : ijk=%d %d %d : ts=%d : ijk2=%d %d %d\n",dir,i,j,k,trialshift,ii,jj,kk);
@@ -1853,8 +1990,7 @@ int check_nsdepth(SFTYPE time)
 		  }
 
 		  // if here, then still going
-		  hasmaskold=hasmask;
-		  hasinsideold=hasinside;
+		  cancopyfromold=cancopyfrom;
 
 		  if(whilecheckiter<100) whilecheckiter++;
 		  else{
@@ -1864,13 +2000,13 @@ int check_nsdepth(SFTYPE time)
 
 	    
 		// DEBUG:
-		dualfprintf(fail_file,"DUPDONE: dir=%d count=%d : %d %d %d : %d %d %d\n",dir,count[dir],i,j,k,ii,jj,kk);
+		dualfprintf(fail_file,"DUPDONE: dir=%d count=%d : %d %d %d : %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk);
 
 
 		// get final modified ii,jj,kk
-		lastneigh[dir][neighbase][1]=ii-i;
-		lastneigh[dir][neighbase][2]=jj-j;
-		lastneigh[dir][neighbase][3]=kk-k;
+		lastneigh[dir][neighbase][1]=(ii-i);
+		lastneigh[dir][neighbase][2]=(jj-j);
+		lastneigh[dir][neighbase][3]=(kk-k);
 		
 	      }// end if original ii,jj,kk is not a mask cell already
 	    }// end if multiple counts for this dir
@@ -1943,86 +2079,55 @@ int check_nsdepth(SFTYPE time)
 
 
     if(N3==1){ // for debug only
-      
-      // generate 2D text-map of mask information
-#define MASKLOOPN1(i) for(i=0;i<=N1*3-1;i++)
-#define MASKLOOPN2(j) for(j=0;j<=N2*3-1;j++)
-      
-      dualfprintf(fail_file,"MASKPLOT\n");
-      dualfprintf(fail_file,"i=   ");
-      COMPLOOPN1{
-	dualfprintf(fail_file,"%3d",i);
+
+
+      if(1){
+	// just plot all types separately and merge manually by shifting graphic or paper
+	// in Konsole shell, can use smaller font, print to file as .ps (all 4 dirplots), open in photoshop, overlay all 4 appropriately, save, flatten, copy section, paste into new image, set size as 8.5x?" size, and print.
+	int dirplot,dira;
+	for(dirplot=0;dirplot<=4;dirplot++){
+	  dualfprintf(fail_file,"dirplot=%d\n",dirplot);
+	  k=0;
+	  COMPLOOPN2{
+	    COMPLOOPN1{
+	      int isinsideplot[NDIM],hasmaskplot[NDIM],hasinsideplot[NDIM],reallyonsurfaceplot[NDIM],cancopyfromplot[NDIM];
+	      int isonsurfaceplot[NDIM];
+	   
+	      if(dirplot<4) dira=dirplot;
+	      else if(dirplot==4) dira=0;
+ 
+	      isinsideplot[dira]=is_dir_insideNS(dira, i, j, k, &hasmaskplot[dira], &hasinsideplot[dira], &reallyonsurfaceplot[dira], &cancopyfromplot[dira]);
+	      isonsurfaceplot[dira]=cancopyfromplot[dira]; //(isinsideplot[dira]==0 && hasmaskplot[dira]==1 && hasinsideplot[dira]==1);
+   
+	      if(dira==0){ // CENT
+		if(dirplot==0){
+		  if(isinsideplot[dira]) dualfprintf(fail_file,"I");
+		  else  dualfprintf(fail_file,"O");
+		}
+		else if(dirplot==4){
+		  if(GLOBALMACP0A1(nsmask,i,j,k,NSMASKSHELL)) dualfprintf(fail_file,"S");
+		  else  dualfprintf(fail_file," ");
+		}		
+	      }
+	      else if(dira==1){ // CORN1==FACE2
+		if(isonsurfaceplot[dira]) dualfprintf(fail_file,"-");
+		else  dualfprintf(fail_file," ");
+	      }
+	      else if(dira==2){ // CORN2==FACE1
+		if(isonsurfaceplot[dira]) dualfprintf(fail_file,"|");
+		else  dualfprintf(fail_file," ");
+	      }
+	      else if(dira==3){ // CORN3
+		if(isonsurfaceplot[dira]) dualfprintf(fail_file,".");
+		else  dualfprintf(fail_file," ");
+	      }
+	    }// end COMPLOOPN1
+	    dualfprintf(fail_file,"\n");
+	  }// end COMPLOOPN2
+	}// end over dirs
       }
-      dualfprintf(fail_file,"\n");
-      int truei,truej,truek;
-      
-      truek=0;
-      MASKLOOPN2(j){
-	truej=j/3;
-	if(j%3==1) dualfprintf(fail_file,"j=%03d ",truej); // stick in middle
-	else if(j%3==2) dualfprintf(fail_file,"     "); // space
-	//	MASKLOOPN1(i){
-	COMPLOOPN1{
-	  int isinsideplot[NDIM],hasmaskplot[NDIM],hasinsideplot[NDIM],isonsurfaceplot[NDIM];
-	  int isinsideplotip1[NDIM],hasmaskplotip1[NDIM],hasinsideplotip1[NDIM],isonsurfaceplotip1[NDIM];
-	  int isinsideplotjp1[NDIM],hasmaskplotjp1[NDIM],hasinsideplotjp1[NDIM],isonsurfaceplotjp1[NDIM];
-	  int dirplot;
-	  
-	  //truei=i/3;
-	  truei=i;
-	  
-	  
-	  for(dirplot=0;dirplot<=3;dirplot++){
-	    isinsideplot[dirplot]=is_dir_insideNS(dirplot, truei, truej, truek, &hasmaskplot[dirplot], &hasinsideplot[dirplot]);
-	    isonsurfaceplot[dirplot]=(isinsideplot[dirplot]==0 && hasmaskplot[dirplot]==1 && hasinsideplot[dirplot]==1);
-	  }
 
-	  for(dirplot=0;dirplot<=3;dirplot++){
-	    isinsideplotip1[dirplot]=is_dir_insideNS(dirplot, truei+N1NOT1, truej, truek, &hasmaskplotip1[dirplot], &hasinsideplotip1[dirplot]);
-	    isonsurfaceplotip1[dirplot]=(isinsideplotip1[dirplot]==0 && hasmaskplotip1[dirplot]==1 && hasinsideplotip1[dirplot]==1);
-	  }
 
-	  for(dirplot=0;dirplot<=3;dirplot++){
-	    isinsideplotjp1[dirplot]=is_dir_insideNS(dirplot, truei, truej+N2NOT1, truek, &hasmaskplotjp1[dirplot], &hasinsideplotjp1[dirplot]);
-	    isonsurfaceplotjp1[dirplot]=(isinsideplotjp1[dirplot]==0 && hasmaskplotjp1[dirplot]==1 && hasinsideplotjp1[dirplot]==1);
-	  }
-	
-
-	  if(j%3==0){// then top part, which is same as bottom part of next, so skip.  Well, or excluded since can't have NS surface up there
-	  }
-	  else if(j%3==1){// then middle part
-	    if(GLOBALMACP0A1(nsmask,truei,truej,truek,NSMASKINSIDE) && isonsurfaceplot[1]){
-	      dualfprintf(fail_file,"|I");
-	    }
-	    else if(GLOBALMACP0A1(nsmask,truei,truej,truek,NSMASKINSIDE)){
-	      dualfprintf(fail_file," I");
-	    }
-	    else if(isonsurfaceplot[1]){
-	      dualfprintf(fail_file,"| ");
-	    }
-	    else{
-	      dualfprintf(fail_file,"  ");
-	    }
-	  }
-	  else if(j%3==2){ // lower part
-	    if(isonsurfaceplot[2] && isonsurfaceplot[3]){
-	      dualfprintf(fail_file,"L-");
-	    }
-	    else if(isonsurfaceplot[2]){
-	      dualfprintf(fail_file," -");
-	    }
-	    else if(isonsurfaceplot[3]){
-	      dualfprintf(fail_file,"L ");
-	    }
-	    else{
-	      dualfprintf(fail_file,"  ");
-	    }
-	  }
-	  
-	}// end over comploopn1
-
-	if(j%3==1 || j%3==2) dualfprintf(fail_file,"\n");
-      }// end over maskloopn2
     }// end if N3==1
 
 
@@ -2545,7 +2650,8 @@ int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir,
 
 
 
-
+#define FULLINTERP 0
+#define REDUCEDINTERP 1
 
 
 // generalized boundary conditions function for deeppara method
@@ -2561,7 +2667,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     int dir,dirstart,dirend;
     int odir1,odir2;
     int pos;
-    int isinsideNSijk,hasmaskijk,hasinsideijk;
+    int isinsideNSijk,hasmaskijk,hasinsideijk,reallyonsurfaceijk,cancopyfromijk;
     int deliter;
     FTYPE dumbinf;
 
@@ -2610,7 +2716,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 	
 	// Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
-	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk);
+	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk, &reallyonsurfaceijk, &cancopyfromijk);
 	//	isinsideNSijk=GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
 	// if inside NS, then use shell values to form average (distance weighted) answer for boundary values
 
@@ -2666,15 +2772,22 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    // assumes optimal to interpolate along diagonal.  Sometimes, however, leads to kink along grid directions and code notices the kinks and dissipation is inevitable.
 	    //
 	    ///////////////
+	    int gotvaluedel[NDIM];
+	    int numpointsuseddel[NDIM];
 	    int gotfullvalue;
-	    FTYPE prfulldel[NPR];
- 	    PLOOP(pliter,pl) prfulldel[pl]=dumbinf;
-	    int isongridfull[5],isinsidefull[5],hasmaskfull[5],hasinsidefull[5];
+	    FTYPE prfulldel[2][NPR];
+ 	    for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prfulldel[rediter][pl]=dumbinf;
+	    int isongridfull[5],isinsidefull[5],hasmaskfull[5],hasinsidefull[5],reallyonsurfacefull[5],cancopyfromfull[5];
+	    FTYPE xposfull[5];
 	    int numpointsusedfulldel;
+	    int compactpointfull;
+  
+	    gotvaluedel[0]=gotfullvalue=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, del, usecompact, compactvalue, isongridfull, isinsidefull, hasmaskfull, hasinsidefull, reallyonsurfacefull, cancopyfromfull, &numpointsusedfulldel, xposfull, &compactpointfull, prfulldel[0], prfulldel[1]);
+	    numpointsuseddel[0]=numpointsusedfulldel; // for later
 
-	    gotfullvalue=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, del, usecompact, compactvalue, isongridfull, isinsidefull, hasmaskfull, hasinsidefull, &numpointsusedfulldel, prfulldel);
-	    for(countiter=0;countiter<=numpointsusedfulldel;countiter++){
-	      if(isongridfull[countiter]==1 && isinsidefull[countiter]==0 && hasmaskfull[countiter]==1 && hasinsidefull[countiter]==1) countonsurface[0]++;
+	    for(countiter=1;countiter<=numpointsusedfulldel;countiter++){// avoid 0 since that's i,j,k itself, and go to =numpoints since that's 1,2,3,...numpoints all used to get value at i,j,k
+	      //	      if(isongridfull[countiter]==1 && isinsidefull[countiter]==0 && hasmaskfull[countiter]==1 && hasinsidefull[countiter]==1) countonsurface[0]++;
+	      if(isongridfull[countiter]==1 && reallyonsurfacefull[countiter]==1) countonsurface[0]++; // actually only restrict if really on the surface where value is fixed, else still flexible point.
 	      if(isinsidefull[countiter]==1) countinsidesurface[0]++; // gotvaluedel==0 if any points inside surface, so not needed yet
 	    }
 
@@ -2687,11 +2800,12 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    // get interpolation along individual del directions if del!=0
 	    //
 	    ////////////////
-	    int gotvaluedel[NDIM];
-	    FTYPE prdel[NDIM][NPR];
-	    int isongriddel[NDIM][5],isinsidedel[NDIM][5],hasmaskdel[NDIM][5],hasinsidedel[NDIM][5];
-	    int numpointsuseddel[NDIM];
-	    SLOOPA(deliter) PLOOP(pliter,pl) prdel[deliter][pl]=dumbinf;
+	    FTYPE prdel[2][NDIM][NPR];
+	    int isongriddel[NDIM][5],isinsidedel[NDIM][5],hasmaskdel[NDIM][5],hasinsidedel[NDIM][5],reallyonsurfacedel[NDIM][5],cancopyfromdel[NDIM][5];
+	    FTYPE xposdel[NDIM][5];
+	    int compactpointdel[NDIM];
+
+	    for(int rediter=0;rediter<2;rediter++) SLOOPA(deliter) PLOOP(pliter,pl) prdel[rediter][deliter][pl]=dumbinf;
 	    
 
 	    int countdeldimen=0;
@@ -2713,29 +2827,52 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 		int odir1del,odir2del;
 		get_odirs(deliter,&odir1del,&odir2del);
 
-		// delalt[which direction][amount of del1,del2,del3 (1,2,3) for that direction]
-		delalt[deliter][deliter]=del[deliter]; // del along del-direction
+		
+		delalt[deliter][deliter]=del[deliter]; // delalt[which direction][amount of del1,del2,del3 (1,2,3) for that direction] = [del along del-direction]
 		delalt[deliter][odir1del]=delalt[deliter][odir2del]=0; // del=0 for orthogonal directions for interpolation along del-direction 
 
 		// Any del's added will only be farther from NS, so always outside -- because NS has regular constant closed curvature.
 		// iref,jref,kref,poscorn,icorn,jcorn,kcorn won't be used since usecompact=0
 		int localusecompact=0; // compactvalue won't be used
 		int iidel,jjdel,kkdel;
+		int isinsidetemp,hasmasktemp,hasinsidetemp,reallyonsurfacetemp,cancopyfromtemp;
 
-		// new reference point for nearest neighbor, which if here, should be on surface or outside NS
-		iidel=i+delalt[deliter][1];
-		jjdel=j+delalt[deliter][2];
-		kkdel=k+delalt[deliter][3];
+		// starting guess for iijjkkdel
+		iidel = i + (ii-i)*(deliter==1);
+		jjdel = j + (jj-j)*(deliter==2);
+		kkdel = k + (kk-k)*(deliter==3);
+
+		// new reference point for nearest neighbor, which if here, should be on surface or outside NS.  Since using single index ii or jj or kk generally won't be far enough along grid lines, search for valid point
+		int numtries=0;
+#define MAXNUMTRIES (Nvec[deliter])
+		while(1){
+		  isinsidetemp=is_dir_insideNS(dir, iidel, jjdel, kkdel, &hasmasktemp, &hasinsidetemp, &reallyonsurfacetemp, &cancopyfromtemp);
+		  if(isinsidetemp==1){
+		    iidel += (deliter==1)*(delalt[deliter][1]>=1 ? 1 : (delalt[deliter][1]<=-1 ? -1 : 0));
+		    jjdel += (deliter==2)*(delalt[deliter][2]>=1 ? 1 : (delalt[deliter][2]<=-1 ? -1 : 0));
+		    kkdel += (deliter==3)*(delalt[deliter][3]>=1 ? 1 : (delalt[deliter][3]<=-1 ? -1 : 0));
+		  }
+		  else{
+		    // then done finding near-surface (strictly outside) point
+		    break;
+		  }
+		  numtries++;
+		  if(numtries>MAXNUMTRIES){
+		    dualfprintf(fail_file,"Reached numtries=%d for dir=%d ijk=%d %d %d : iijjkkdel=%d %d %d\n",numtries,dir,i,j,k,iidel,jjdel,kkdel);
+		    myexit(633254236);
+		  }
+		}
 
 		// DEBUG:
 		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : deliter=%d odir12del=%d %d iijjkkdel=%d %d %d\n",dir,i,j,k,deliter,odir1del,odir2del,iidel,jjdel,kkdel);
 
 		
-		gotvaluedel[deliter]=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, iidel, jjdel, kkdel, iref, jref, kref, poscorn, icorn, jcorn, kcorn, delalt[deliter], localusecompact, compactvalue, isongriddel[deliter], isinsidedel[deliter], hasmaskdel[deliter], hasinsidedel[deliter], &numpointsuseddel[deliter],  prdel[deliter]);
+		gotvaluedel[deliter]=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, iidel, jjdel, kkdel, iref, jref, kref, poscorn, icorn, jcorn, kcorn, delalt[deliter], localusecompact, compactvalue, isongriddel[deliter], isinsidedel[deliter], hasmaskdel[deliter], hasinsidedel[deliter], reallyonsurfacedel[deliter], cancopyfromdel[deliter], &numpointsuseddel[deliter],  xposdel[deliter], &compactpointdel[deliter], prdel[0][deliter],prdel[1][deliter]);
 
 		// iterate if other points used are actually on surface (only occurs for A_i)
-		for(countiter=0;countiter<=numpointsuseddel[deliter];countiter++){
-		  if(isongriddel[deliter][countiter]==1 && isinsidedel[deliter][countiter]==0 && hasmaskdel[deliter][countiter]==1 && hasinsidedel[deliter][countiter]==1) countonsurface[deliter]++;
+		for(countiter=1;countiter<=numpointsuseddel[deliter];countiter++){ // avoid 0 point that is i,j,k itself, and go out to =numpoints since includes one of points to get value at i,j,k
+		  //		  if(isongriddel[deliter][countiter]==1 && isinsidedel[deliter][countiter]==0 && hasmaskdel[deliter][countiter]==1 && hasinsidedel[deliter][countiter]==1) countonsurface[deliter]++;
+		  if(isongriddel[deliter][countiter]==1 && reallyonsurfacedel[deliter][countiter]==1) countonsurface[deliter]++; // only count of really on surface; trying to avoid fixed values
 		  if(isinsidedel[deliter][countiter]==1) countinsidesurface[deliter]++; // gotvaluedel==0 if any points inside surface, so not needed yet
 		}
 	      }
@@ -2746,7 +2883,8 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	      PLOOP(pliter,pl){
 		if(vpot!=NULL) pl=0;
 
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldel=%21.15g prdel1=%21.15g prdel2=%21.15g prdel3=%21.15g\n",dir,i,j,k,pl,prfulldel[pl],prdel[1][pl],prdel[2][pl],prdel[3][pl]);
+		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldel=%21.15g prdel1=%21.15g prdel2=%21.15g prdel3=%21.15g\n",dir,i,j,k,pl,prfulldel[0][pl],prdel[0][1][pl],prdel[0][2][pl],prdel[0][3][pl]);
+		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldelreduced=%21.15g prdelreduced1=%21.15g prdelreduced2=%21.15g prdelreduced3=%21.15g\n",dir,i,j,k,pl,prfulldel[1][pl],prdel[1][1][pl],prdel[1][2][pl],prdel[1][3][pl]);
 
 		if(vpot!=NULL) pliter=nprend+1;
 	      }
@@ -2759,36 +2897,6 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-#if(0)	    
-	    ////////////////
-	    //
-	    // get interpolation along diagonal path if normal path has multiple fixed values and diagonal path has fewer fixed values.  Only relevant for quantities that can be on the surface (A_i, not prim).
-	    //
-	    ////////////////
-	    if(countonsurface[0]>1 && dir!=0){
-	      // then might be able to avoid overconstraint from >1 fixed values being used in extrapolation for A_i
-
-	      deldiag[3]=del[3];
-	      // only try these two cases for now
-	      // by moving both del's by 
-	      if(del[1]==0 && del[2]!=0 && N1NOT1==1){
-		deldiag[1]=del[2];
-		deldiag[2]=del[2];
-		// get value
-		deldiag[1]=-del[2];
-		deldiag[2]=del[2];
-	      }
-	      else if(del[2]==0 && del[1]!=0){
-		deldiag[1]=del[1];
-		deldiag[2]=del[1];
-		// get value
-		deldiag[1]=del[1];
-		deldiag[2]=-del[1];
-	      }
-	      
-	      
-	    }
-#endif
 
 
 
@@ -2797,64 +2905,191 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 	    // Determine which path to use for extrapolation
 	    //
 	    ///////////////////////	    
+	    
+	    
+	    FTYPE prnew[2][NPR];
 
-	    FTYPE prnew[NPR];
-	    // compute final
-	    PLOOP(pliter,pl) prnew[pl]=prfulldel[pl];
+	    // default
+	    PLOOP(pliter,pl) prnew[FULLINTERP][pl]=prfulldel[FULLINTERP][pl];
+
+
+
 	    if(countdeldimen>=2){
 #if(0)
 	      // just average all versions (prfulldel, and any prdel's that are valid)
-	      if(del[1]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[1][pl];
-	      if(del[2]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[2][pl];
-	      if(del[3]!=0) PLOOP(pliter,pl) prnew[pl]+=prdel[3][pl];
+	      PLOOP(pliter,pl) prnew[0][pl]=prfulldel[pl];
+	      if(del[1]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[1][pl];
+	      if(del[2]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[2][pl];
+	      if(del[3]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[3][pl];
 	      // normalize
-	      PLOOP(pliter,pl) prnew[pl]/=(1.0+(FTYPE)countdeldimen);
+	      PLOOP(pliter,pl) prnew[0][pl]/=(1.0+(FTYPE)countdeldimen);
 
 #elif(1)
-	      // only average if no preference
 	      // give preference to those cases that have fewest fixed values
-	      PLOOP(pliter,pl) prnew[pl]=0.0;
+	      for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prnew[rediter][pl]=0.0;
 
-	      FTYPE totalweight=0.0;
+	      FTYPE totalweight[2]={0.0,0.0};
 	      int ignore[NDIM],ignoreiter;
-	      SLOOPA(ignoreiter) ignore[ignoreiter]=del[ignoreiter]==0 || gotvaluedel[ignoreiter]==0;
-
-
-	      if(gotfullvalue==1 && (countonsurface[0]<=countonsurface[1] || ignore[1]) && (countonsurface[0]<=countonsurface[2] || ignore[2]) && (countonsurface[0]<=countonsurface[3] || ignore[3])){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prfulldel[pl]; }
-	      if(gotvaluedel[1]==1 && del[1]!=0 && (countonsurface[1]<=countonsurface[2] || ignore[2]) && (countonsurface[1]<=countonsurface[3] || ignore[3])){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[1][pl]; }
-	      if(gotvaluedel[2]==1 && del[2]!=0 && (countonsurface[2]<=countonsurface[1] || ignore[1]) && (countonsurface[2]<=countonsurface[3] || ignore[3])){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[2][pl]; }
-	      if(gotvaluedel[3]==1 && del[3]!=0 && (countonsurface[3]<=countonsurface[1] || ignore[1]) && (countonsurface[3]<=countonsurface[2] || ignore[2])){ totalweight++; PLOOP(pliter,pl) prnew[pl]+=prdel[3][pl]; }
-	      
-	      if(totalweight!=0.0) PLOOP(pliter,pl) prnew[pl]/=totalweight;
-	      else{
-		dualfprintf(fail_file,"Never got preference for countonsurface.  Shouldn't happen: counts=%d %d %d %d : gots=%d %d %d %d\n",countonsurface[0],countonsurface[1],countonsurface[2],countonsurface[3],gotfullvalue,gotvaluedel[1],gotvaluedel[2],gotvaluedel[3]);
-		myexit(48225252);
+	      /////////////////////
+	      //
+	      // translate some prfull results into del[0] form for simplicity of routines below
+	      //
+	      /////////////////////
+	      if(usecompact==1){
+		xposdel[0][0]=xposfull[0];
+		xposdel[0][1]=xposfull[compactpointfull];
+		xposdel[0][2]=xposfull[1];
+		xposdel[0][3]=xposfull[2];
 	      }
+	      else{
+		xposdel[0][0]=xposfull[0];
+		xposdel[0][1]=xposfull[1];
+		xposdel[0][2]=xposfull[2];
+		xposdel[0][3]=xposfull[3];
+	      }
+	      ignore[0]=(gotvaluedel[0]==0);
+	      SLOOPA(ignoreiter) ignore[ignoreiter]=(del[ignoreiter]==0 || gotvaluedel[ignoreiter]==0);
+	      for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prdel[rediter][0][pl]=prfulldel[rediter][pl];
+
+
+	      /////////////////////////////
+	      //
+	      // Get conditional averaged value of both rediter's
+	      //
+	      /////////////////////////////
+	      for(int rediter=0;rediter<2;rediter++){ // over normal and reduced value
+
+		// also weight by distance to first point, so closer points are used if all equal counts for number of points used that are on surface (i.e. countonsurface)
+		if(gotvaluedel[0]==1 && (countonsurface[0]<=countonsurface[1] || ignore[1]) && (countonsurface[0]<=countonsurface[2] || ignore[2]) && (countonsurface[0]<=countonsurface[3] || ignore[3])){
+		  totalweight[rediter]+=1.0/(xposdel[0][1]*xposdel[0][1]);
+		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][0][pl]/(xposdel[0][1]*xposdel[0][1]);
+		}
+		if(gotvaluedel[1]==1 && del[1]!=0 && (countonsurface[1]<=countonsurface[0] || ignore[0]) && (countonsurface[1]<=countonsurface[2] || ignore[2]) && (countonsurface[1]<=countonsurface[3] || ignore[3])){
+		  totalweight[rediter]+=1.0/(xposdel[1][1]*xposdel[1][1]);
+		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][1][pl]/(xposdel[1][1]*xposdel[1][1]);
+		}
+		if(gotvaluedel[2]==1 && del[2]!=0 && (countonsurface[2]<=countonsurface[0] || ignore[0]) && (countonsurface[2]<=countonsurface[1] || ignore[1]) && (countonsurface[2]<=countonsurface[3] || ignore[3])){
+		  totalweight[rediter]+=1.0/(xposdel[2][1]*xposdel[2][1]);
+		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][2][pl]/(xposdel[2][1]*xposdel[2][1]);
+		}
+		if(gotvaluedel[3]==1 && del[3]!=0 && (countonsurface[3]<=countonsurface[0] || ignore[0]) && (countonsurface[3]<=countonsurface[1] || ignore[1]) && (countonsurface[3]<=countonsurface[2] || ignore[2])){
+		  totalweight[rediter]+=1.0/(xposdel[3][1]*xposdel[3][1]);
+		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][3][pl]/(xposdel[3][1]*xposdel[3][1]);
+		}
+ 
+	      
+		if(totalweight[rediter]!=0.0) PLOOP(pliter,pl) prnew[rediter][pl]/=totalweight[rediter];
+		else{
+		  dualfprintf(fail_file,"Never got preference for countonsurface.  Shouldn't happen: counts=%d %d %d %d : gots=%d %d %d %d\n",countonsurface[0],countonsurface[1],countonsurface[2],countonsurface[3],gotfullvalue,gotvaluedel[1],gotvaluedel[2],gotvaluedel[3]);
+		  myexit(48225252);
+		}
+
+
+
+		//  DEBUG:
+		DLOOPA(deliter){
+		  if(deliter==0 || del[deliter]!=0){
+		    dualfprintf(fail_file,"rediter=%d deliter=%d countonsurface=%d ignore=%d gotvaluedel=%d totalweight=%21.15g\n",rediter,deliter,countonsurface[deliter],ignore[deliter],gotvaluedel[deliter],totalweight[rediter]);
+		    for(spaceiter=0;spaceiter<=numpointsuseddel[deliter];spaceiter++) dualfprintf(fail_file,"point=%d xpos=%21.15g\n",spaceiter,xposdel[deliter][spaceiter]);
+		  }
+		}
+	      
+	      }
+
+
+
+	      if(1){
+		//////////////
+		//
+		// Try to avoid kinks along all paths to i,j,k by manipulating result at i,j,k
+		//
+		///////////////
+
+		// Try using value that is closest to the conditional weighted averaged linear interpolation
+		// the reduced average is the most conservative value, but least accurate if higher-order terms are required
+
+		FTYPE error[NDIM][NPR];
+		DLOOPA(deliter){
+		  PLOOP(pliter,pl){
+		    if(vpot!=NULL) pl=0;
+
+		    if(deliter==0 || del[deliter]!=0) error[deliter][pl]=fabs(prdel[FULLINTERP][deliter][pl]-prnew[REDUCEDINTERP][pl]); // compare individual fully interpolated value with conditional weighted averaged linear interpolation value
+		    else error[deliter][pl]=BIG;
+
+		    // DEBUG:
+		    dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d deliter=%d error=%21.15g\n",dir,i,j,k,pl,deliter,error[deliter][pl]);
+
+		    if(vpot!=NULL) pliter=nprend+1;
+		  }
+		}
+		
+		// now overwrite prnew[0] that is the fully interpolated value with value closest to "conditional weighted averaged linear" value
+		int choose=0;
+		PLOOP(pliter,pl){
+		  if(vpot!=NULL) pl=0;
+
+		  if(error[0][pl]<=error[1][pl] && error[0][pl]<=error[2][pl] && error[0][pl]<=error[3][pl]){ // <= so catches case when all errors are zero when reduced case used as full case
+		    choose=0;
+		  }
+		  else if(error[1][pl]<=error[0][pl] && error[1][pl]<=error[2][pl] && error[1][pl]<=error[3][pl]){
+		    choose=1;
+		  }
+		  else if(error[2][pl]<=error[0][pl] && error[2][pl]<=error[1][pl] && error[2][pl]<=error[3][pl]){
+		    choose=2;
+		  }
+		  else if(error[3][pl]<=error[0][pl] && error[3][pl]<=error[1][pl] && error[3][pl]<=error[2][pl]){
+		    choose=3;
+		  }
+		  else{
+		    dualfprintf(fail_file,"Never got small error: dir=%d ijk=%d %d %d\n",dir,i,j,k);
+		    myexit(34765634);
+		  }
+
+		  prnew[FULLINTERP][pl]=prdel[FULLINTERP][choose][pl];
+
+		  // DEBUG:
+		  dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d choose=%d\n",dir,i,j,k,pl,choose);
+
+		  if(vpot!=NULL) pliter=nprend+1;
+		}// end over pl
+	      }		
+
+
 #endif
+
 	    }
 
 
+
+
+
+
+
+	    //////////////
+	    //
 	    // store old values and assign final vpot/prim
+	    //
+	    /////////////
 	    FTYPE prold[NPR];
 	    if(vpot!=NULL){
 	      prold[0]=MACP1A0(vpot,dir,i,j,k);
-	      MACP1A0(vpot,dir,i,j,k) = prnew[0];
+	      MACP1A0(vpot,dir,i,j,k) = prnew[FULLINTERP][0];
 	    }
 	    else{
 	      PLOOP(pliter,pl){
 		prold[pl]=MACP0A1(prim,i,j,k,pl);
-		MACP0A1(prim,i,j,k,pl) = prnew[pl];
+		MACP0A1(prim,i,j,k,pl) = prnew[FULLINTERP][pl];
 	      }
 	    }
 
 
 	    // DEBUG:
 	    if(vpot!=NULL){
-	      dualfprintf(fail_file,"dir=%d ijk=%d %d %d prold=%21.15g prnew=%21.5g\n",dir,i,j,k,prold[0],prnew[0]);
+	      dualfprintf(fail_file,"dir=%d ijk=%d %d %d prold=%21.15g prnew=%21.5g\n",dir,i,j,k,prold[0],prnew[FULLINTERP][0]);
 	    }
 	    else{
 	      PLOOP(pliter,pl){
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d pl=%d : prold=%21.15g prnew=%21.5g\n",dir,i,j,k,pl,prold[pl],prnew[pl]);
+		dualfprintf(fail_file,"dir=%d ijk=%d %d %d pl=%d : prold=%21.15g prnew=%21.5g\n",dir,i,j,k,pl,prold[pl],prnew[FULLINTERP][pl]);
 	      }
 	    }
 
@@ -2902,7 +3137,10 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-
+// whether to (by default) allow use of usecompact==1
+// NOTEMARK: The problem with usecompact=1 with A_\phi (or anything on surface) is that the compact point will necessarily use all fixed points.  So in the end, interpolation will be through 2 fixed points instead of only 1 or 0, which constrains the interpolation to allow more kinky or jumpy behavior near surface.
+//#define DEFAULTUSECOMPACT 1
+#define DEFAULTUSECOMPACT 0
 
 
 // Check if can use compact point instead of outer point and compute *compactvalue*
@@ -2919,7 +3157,7 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
   int firstpos,lastpos;
   int pl,pliter;
   int isongridall,isinsideall;
-  int isongrid[5],isinside[5],hasmask[5],hasinside[5];
+  int isongrid[5],isinside[5],hasmask[5],hasinside[5],reallyonsurface[5],cancopyfrom[5];
   int yyy;
   int yyystart,yyyend;
   FTYPE xpos[5];
@@ -3034,7 +3272,7 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
     isongridall=isinsideall=0; // init
     for(yyy=0;yyy<=3;yyy++){
       isongrid[yyy+1]=is_dir_onactivegrid(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
-      isinside[yyy+1]=is_dir_insideNS(dir,ialt[yyy],jalt[yyy],kalt[yyy], &hasmask[yyy+1],&hasinside[yyy+1]);
+      isinside[yyy+1]=is_dir_insideNS(dir,ialt[yyy],jalt[yyy],kalt[yyy], &hasmask[yyy+1],&hasinside[yyy+1],&reallyonsurface[yyy+1],&cancopyfrom[yyy+1]);
 		
       isongridall+=isongrid[yyy+1]; // should add up to 4
       isinsideall+=isinside[yyy+1]; // should stay 0
@@ -3110,10 +3348,14 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 	// check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
 	if(vpot!=NULL){
 	  constrained=0;
-	  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	  if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	  //	  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	  //	  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	  //	  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	  //	  if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	  if(reallyonsurface[1]==1) constrained++;
+	  if(reallyonsurface[2]==1) constrained++;
+	  if(reallyonsurface[3]==1) constrained++;
+	  if(reallyonsurface[4]==1) constrained++;
 	}
 	else constrained=0; // ignore constraint question for non-field
 
@@ -3171,9 +3413,12 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
 	  if(vpot!=NULL){
 	    constrained=0;
-	    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	    //	    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	    //	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	    //	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	    if(reallyonsurface[1]==1) constrained++;
+	    if(reallyonsurface[2]==1) constrained++;
+	    if(reallyonsurface[3]==1) constrained++;
 	  }
 	  else constrained=0; // ignore constraint question for non-field
 
@@ -3194,9 +3439,12 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
 	  if(vpot!=NULL){
 	    constrained=0;
-	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	    //	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	    //	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	    //	    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+	    if(reallyonsurface[2]==1) constrained++;
+	    if(reallyonsurface[3]==1) constrained++;
+	    if(reallyonsurface[4]==1) constrained++;
 	  }
 	  else constrained=0; // ignore constraint question for non-field
 
@@ -3273,11 +3521,10 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
     else{
 
 
-      // GODMARK TODO TEST DEBUG:
-
       // choose default
-      //usecompact=0;
-      usecompact=1; // default is compactvalue was computed
+      usecompact=DEFAULTUSECOMPACT; // default is compactvalue was computed
+
+
 
 
       PLOOP(pliter,pl){
@@ -3310,7 +3557,7 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 
       int spaceiter;
       for(spaceiter=yyystart+1;spaceiter<=yyyend+1;spaceiter++){
-	dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
+	dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[pl=%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
       }
       dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : mono3left=%d mono3right=%d :  usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],mono3left[pl],mono3right[pl],usecompactpl[pl]);
 
@@ -3346,13 +3593,13 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 
 #define CHECKUCON 1
 // interpolate along del[1,2,3] with usecompact option
-int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *numpointsused, FTYPE *prfulldel)
+int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir, int pos, int i, int j, int k, int ii, int jj, int kk, FTYPE iref, FTYPE jref, FTYPE kref, int poscorn, int icorn, int jcorn, int kcorn, int *del, int usecompact, FTYPE *compactvalue, int *isongrid, int *isinside, int *hasmask, int *hasinside, int *reallyonsurface, int *cancopyfrom, int *numpointsused, FTYPE *xpos, int *compactpoint, FTYPE *prfulldel, FTYPE *prfulldelreduced)
 {
   int iii,jjj,kkk;
   int iiii,jjjj,kkkk;
   int spaceiter;
   FTYPE localsingle[5][NPR];
-  FTYPE xpos[5];
+  //  FTYPE xpos[5];
   int testi;
   int mono3[NPR];
   int constrained;
@@ -3388,18 +3635,26 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   //	    dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
 
 
+  // compactpoint tells (upon return) which point was used for the compact value (xpos, etc.)
+  *compactpoint=3;
+  // numpointsused is over all pl, so take max case below
+  *numpointsused=0;
+
+
   // ensure points are on grid while not inside NS
   // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
   // For dir==0, not quite necessary, but ok since NS shouldn't be so close to edge of grid.
+  isongrid[0]=is_dir_onactivegrid(dir,i,j,k);
   isongrid[1]=is_dir_onactivegrid(dir,ii,jj,kk);
   isongrid[2]=is_dir_onactivegrid(dir,iii,jjj,kkk);
   if(usecompact==0) isongrid[3]=is_dir_onactivegrid(dir,iiii,jjjj,kkkk);
   else isongrid[3]=MAX(is_dir_onactivegrid(dir,i,j,k),is_dir_onactivegrid(dir,ii,jj,kk));
 
-  isinside[1]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[1],&hasinside[1]);
-  isinside[2]=is_dir_insideNS(dir,iii,jjj,kkk, &hasmask[2],&hasinside[2]);
-  if(usecompact==0) isinside[3]=is_dir_insideNS(dir,iiii,jjjj,kkkk, &hasmask[3],&hasinside[3]);
-  else  isinside[3]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[3],&hasinside[3]); // assume this already taken care of by usecompact==0,1
+  isinside[0]=is_dir_insideNS(dir,i,j,k, &hasmask[0],&hasinside[0],&reallyonsurface[0],&cancopyfrom[0]);
+  isinside[1]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[1],&hasinside[1],&reallyonsurface[1],&cancopyfrom[1]);
+  isinside[2]=is_dir_insideNS(dir,iii,jjj,kkk, &hasmask[2],&hasinside[2],&reallyonsurface[2],&cancopyfrom[2]);
+  if(usecompact==0) isinside[3]=is_dir_insideNS(dir,iiii,jjjj,kkkk, &hasmask[3],&hasinside[3],&reallyonsurface[3],&cancopyfrom[3]);
+  else  isinside[3]=is_dir_insideNS(dir,ii,jj,kk, &hasmask[3],&hasinside[3],&reallyonsurface[3],&cancopyfrom[3]); // assume this already taken care of by usecompact==0,1
 
 
 
@@ -3446,8 +3701,11 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     }
     else rescale_pl(time,dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
 
+
 	      
 	      
+    FTYPE reducedcase[NPR];
+    int numpointsreduced;
     FTYPE error;
     error=0;
     // perform parabolic interpolation for these points
@@ -3457,9 +3715,12 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
       // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
       if(vpot!=NULL){
 	constrained=0;
-	if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	//	if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+	//	if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+	//	if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+	if(reallyonsurface[1]==1) constrained++;
+	if(reallyonsurface[2]==1) constrained++;
+	if(reallyonsurface[3]==1) constrained++;
       }
       else constrained=0; // ignore constraint question for non-field
 
@@ -3479,7 +3740,7 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
 
       if(mono3[pl]==1){
-	*numpointsused=3;
+	*numpointsused=MAX(*numpointsused,3);
 
 	localsingle[0][pl] =
 	  +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3]))
@@ -3488,7 +3749,11 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	  ;
 
       }// end if mono
-      else{ // then revert to using 2 points and so must be mono
+
+
+
+
+      {// get linear and constant versions
 	// GODMARK TODO: won't be continuous when mono switches!
 	int other1,other2;
 	if(usecompact==0) { other1=1; other2=2; }
@@ -3521,13 +3786,19 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		  
 	// GODMARK TODO: free parameters.
 	FTYPE switcherror = switcht(error,0.5,0.8);
-		  
-	localsingle[0][pl]=caseB*switcherror + (1.0-switcherror)*caseA;
 
-	*numpointsused=ROUND2INT(1*switcherror + (1.0-switcherror)*2); // estimate
+	reducedcase[pl]=caseB*switcherror + (1.0-switcherror)*caseA;
+	numpointsreduced=ROUND2INT(1*switcherror + (1.0-switcherror)*2); // estimate
 
-		    
+      }// end getting linear and constant versions
+
+
+      
+      if(mono3[pl]==0){// then revert to using 2 points and so must be mono
+	localsingle[0][pl]=reducedcase[pl];
+	*numpointsused=MAX(*numpointsused,numpointsreduced);
       }
+
 
       if(vpot!=NULL) pliter=nprend+1;
 
@@ -3549,6 +3820,9 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     //////////////
     unrescale_pl(time,dir,ptrgeom[0],localsingle[0], prfulldel);
 
+    //get reduced case
+    unrescale_pl(time,dir,ptrgeom[0],reducedcase, prfulldelreduced);
+
 
 	      
   }// end if ongrid and is not inside NS
@@ -3567,12 +3841,18 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   if(vpot!=NULL){
     pl=0;
     SLOOPA(spaceiter) dualfprintf(fail_file,"si=%d pl=%d : los=%21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-    dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : vpot=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],mono3[pl]);
+    dualfprintf(fail_file,"PDFC3v: %ld t=%21.15g : pl=%d : los0=%21.15g : vpot=%21.15g : vpotreduced=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],prfulldelreduced[pl],mono3[pl]);
   }
   else{
     SLOOPA(spaceiter) PLOOP(pliter,pl) dualfprintf(fail_file,"si=%d pl=%d : %21.15g\n",spaceiter,pl,localsingle[spaceiter][pl]);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],mono3[pl]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"PDFC3p: %ld t=%21.15g : pl=%d : los0=%21.15g : prim=%21.15g : primreduced=%21.15g: mono3=%d\n",nstep,t,pl,localsingle[0][pl],prfulldel[pl],prfulldelreduced[pl],mono3[pl]);
   }
+
+  // DEBUG:
+  for(spaceiter=0;spaceiter<=*numpointsused;spaceiter++){
+    dualfprintf(fail_file,"point=%d of <=%d : dir=%d ijk=%d %d %d : isinside=%d hasmask=%d hasinside=%d reallyonsurface=%d cancopyfrom=%d\n",spaceiter,*numpointsused,dir,i,j,k,isinside[spaceiter],hasmask[spaceiter],hasinside[spaceiter],reallyonsurface[spaceiter],cancopyfrom[spaceiter]);
+  }
+
 
 
   return(0); // 0 indicates got value (i.e. no error)
@@ -4827,7 +5107,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim
     struct of_geom *ptrgeomii=&geomdontuseii;
     int isinsideNSijk;    
     int isinsideNSiijjkk;    
-    int hasmaskijk,hasinsideijk;
+    int hasmaskijk,hasinsideijk,reallyonsurfaceijk,cancopyfromijk;
     FTYPE weight4[4],function4[4];
     int ijk4[3][4];
 
@@ -4853,7 +5133,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim
 	get_odirs(dir,&odir1,&odir2);
 
 	// Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
-	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk);
+	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk, &reallyonsurfaceijk, &cancopyfromijk);
 
 
 	if(isinsideNSijk){
@@ -4891,11 +5171,11 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim
 	    int iip=ii+N1NOT1;
 	    int jjp=jj+N2NOT1;
 	    int kkp=kk+N3NOT1;
-	    int hasmaskiijjkk,hasinsideiijjkk;
+	    int hasmaskiijjkk,hasinsideiijjkk,reallyonsurfaceiijjkk,cancopyfromiijjkk;
 
 	    // see if ii,jj,kk point is inside for A_i
 	    int isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
-	    isinsideNSiijjkk=is_dir_insideNS(dir,ii,jj,kk, &hasmaskiijjkk, &hasinsideiijjkk);
+	    isinsideNSiijjkk=is_dir_insideNS(dir,ii,jj,kk, &hasmaskiijjkk, &hasinsideiijjkk, &reallyonsurfaceiijjkk, &cancopyfromiijjkk);
 
 	    
 	    // 0 : average out
@@ -4906,7 +5186,8 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim
 	    // has to be on grid
 	    // if a shell grid (then either fixed or evolved point, which can be used for interpolation to i,j,k)
 	    // can't itself be inside NS, but needs to have a shell
-	    if(isongrid && isinsideNSiijjkk==0 && hasmaskiijjkk==1 && hasinsideiijjkk==1){
+	    //	    if(isongrid && isinsideNSiijjkk==0 && hasmaskiijjkk==1 && hasinsideiijjkk==1){
+	    if(isongrid && cancopyfromiijjkk==1){
 	      // then found shell value, add to the i,j,k value
 	      FTYPE dist;
 	      dist=sqrt((ii-i)*(ii-i) + (jj-j)*(jj-j) + (kk-k)*(kk-k));
@@ -5633,7 +5914,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   FTYPE Bcon[NDIM],ucon[NDIM],vcon[NDIM],others[NUMOTHERSTATERESULTS];
   FTYPE Bconl[NDIM],Bconr[NDIM];
   FTYPE Bcontouse[NDIM];
-  int localisinside,localhasmask,localhasinside;
+  int localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom;
   int localin,odir1left,odir2left,odir12left;
   int m,l;
 
@@ -5685,7 +5966,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
       else if(dir==3) pos=CORN3;
       
       // get where this pos is relative to inside and shell
-      localisinside=is_dir_insideNS(dir, i, j, k, &localhasmask, &localhasinside);
+      localisinside=is_dir_insideNS(dir, i, j, k, &localhasmask, &localhasinside, &localreallyonsurface, &localcancopyfrom);
 
       // get whether inside NS surrounding CORN_{dir} position
       localin=   GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
@@ -5694,12 +5975,19 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
       odir12left=GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir1==3)*N3NOT1-(odir2==3)*N3NOT1,NSMASKINSIDE);
 
 
+#if(0)
       if(
 	 (localisinside==0 && localhasmask==1 && localhasinside==1)&& // this EMF_{dir} is on NS surface or as close to surface as possible
 	 (!(localin==0 && odir1left==0 && odir2left==0 && odir12left==0)) && // but for EMF_{dir}'s that don't have both odir1,odir2 directions existing, really ensure EMF is on surface and not just inside or just outside surface as is_dir_insideNS() determines for extrapolation purposes
 	 (!(localin==1 && odir1left==1 && odir2left==1 && odir12left==1))
-	 ){
+	 )
+#endif
+#if(1)
+	// EMF really on the NS surface
+	if(localreallyonsurface==1)
+#endif
 
+	{
 
 
 	////////////////////////
@@ -5929,7 +6217,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 	  }
 	  else{
 	    dualfprintf(fail_file,"bad set: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
-	    dualfprintf(fail_file,"bad set2: %d %d %d\n",localisinside,localhasmask,localhasinside);
+	    dualfprintf(fail_file,"bad set2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
 	    myexit(198352546);
 	  }
 	}// end else 1
@@ -5961,7 +6249,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 	dualfprintf(fail_file,"EMFCOMPARE1: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
-	dualfprintf(fail_file,"EMFCOMPARE2: %d %d %d\n",localisinside,localhasmask,localhasinside);
+	dualfprintf(fail_file,"EMFCOMPARE2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
 	PLOOP(pl,pliter) dualfprintf(fail_file,"EMFCOMPARE3: pl=%d prim=%21.15g\n",pl,pr[pl]);
 
 		  
@@ -6198,7 +6486,7 @@ void adjust_fluxctstag_emfs_old1(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3
 		// 
 		FTYPE Bconl[NDIM],Bconr[NDIM];
 		FTYPE Bcontouse[NDIM];
-		int localisinside,localhasmask,localhasinside;
+		int localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom;
 
 		Bconl[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,ii,jj,kk,odir1,NUMCS,0); // jump in odir2
 		Bconr[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,ii,jj,kk,odir1,NUMCS,1); // jump in odir2
