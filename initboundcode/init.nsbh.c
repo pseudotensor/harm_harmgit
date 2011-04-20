@@ -21,6 +21,7 @@
 // 15) Why is B3 in ghost cells being set to 0?  (see EMF @ i=26 j=40 debug code for i=25 and i=26) : Seems was due to usecompact==0
 //       Also, Why is p[B3] changing sign with equal magnitude right across the NS surface?  Seems A_i not set well since pstag update leads to jumpiness? .. usecompact=1 in vpot doesn't help.  Better with general usecompact that actually includes A_2 (duh).
 
+// ***16) Use globally fixed curvature sign around NS and convert fixed corners to boundary corners even if jumping by more than 1 cell.  Flux between will be able to move around, but only within bounds of fixed points.
 
 
 /////////////////
