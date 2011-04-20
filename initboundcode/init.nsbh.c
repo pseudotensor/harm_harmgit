@@ -22,6 +22,8 @@
 //       Also, Why is p[B3] changing sign with equal magnitude right across the NS surface?  Seems A_i not set well since pstag update leads to jumpiness? .. usecompact=1 in vpot doesn't help.  Better with general usecompact that actually includes A_2 (duh).
 
 // ***16) Use globally fixed curvature sign around NS and convert fixed corners to boundary corners even if jumping by more than 1 cell.  Flux between will be able to move around, but only within bounds of fixed points.
+//        But unsure about Ad1,Ad2.  Can skip them (or looks like would skip all of them!) since they carry rotation.
+//        Unsure about what can skip or if can skip anything at all.
 
 
 /////////////////
@@ -1173,6 +1175,9 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
 {
   int odir1,odir2;
   int isinside;
+
+
+  // GODMARK TODO SUPERMARK: TO FIX FOR CURVATURE VERSION OF ON SURFACE
 
 
   if(dir==0){
@@ -4689,6 +4694,8 @@ void adjust_fluxctstag_vpot_dosetfix_new(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2]
   //////////////
 
 
+  // GODMARK TODO SUPERMARK: TO FIX FOR CURVATURE VERSION OF ON SURFACE
+
   COMPFULLLOOP{ // First go over all non-surface + surface cells for simplicity
 
 
@@ -5972,26 +5979,24 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
       // get where this pos is relative to inside and shell
       localisinside=is_dir_insideNS(dir, i, j, k, &localhasmask, &localhasinside, &localreallyonsurface, &localcancopyfrom);
 
+
+      // GODMARK TODO SUPERMARK: TO FIX FOR CURVATURE VERSION OF ON SURFACE
       // get whether inside NS surrounding CORN_{dir} position
-      localin=   GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
-      odir1left= GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1,j-(odir1==2)*N2NOT1,k-(odir1==3)*N3NOT1,NSMASKINSIDE);
-      odir2left= GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1,j-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1,NSMASKINSIDE);
-      odir12left=GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir1==3)*N3NOT1-(odir2==3)*N3NOT1,NSMASKINSIDE);
+      //      localin=   GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
+      //      odir1left= GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1,j-(odir1==2)*N2NOT1,k-(odir1==3)*N3NOT1,NSMASKINSIDE);
+      //      odir2left= GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1,j-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1,NSMASKINSIDE);
+      //      odir12left=GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir1==3)*N3NOT1-(odir2==3)*N3NOT1,NSMASKINSIDE);
+      //#if(0)
+      //      if(
+      //	 (localisinside==0 && localhasmask==1 && localhasinside==1)&& // this EMF_{dir} is on NS surface or as close to surface as possible
+      //	 (!(localin==0 && odir1left==0 && odir2left==0 && odir12left==0)) && // but for EMF_{dir}'s that don't have both odir1,odir2 directions existing, really ensure EMF is on surface and not just inside or just outside surface as is_dir_insideNS() determines for extrapolation purposes
+      //	 (!(localin==1 && odir1left==1 && odir2left==1 && odir12left==1))
+      //	 )
+      //#endif
 
 
-#if(0)
-      if(
-	 (localisinside==0 && localhasmask==1 && localhasinside==1)&& // this EMF_{dir} is on NS surface or as close to surface as possible
-	 (!(localin==0 && odir1left==0 && odir2left==0 && odir12left==0)) && // but for EMF_{dir}'s that don't have both odir1,odir2 directions existing, really ensure EMF is on surface and not just inside or just outside surface as is_dir_insideNS() determines for extrapolation purposes
-	 (!(localin==1 && odir1left==1 && odir2left==1 && odir12left==1))
-	 )
-#endif
-#if(1)
-	// EMF really on the NS surface
-	if(localreallyonsurface==1)
-#endif
-
-	{
+      // EMF really on the NS surface
+      if(localreallyonsurface==1){
 
 
 	////////////////////////
@@ -6680,6 +6685,7 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
   jp=j+(dir==2)*N2NOT1;
   kp=k+(dir==3)*N3NOT1;
 
+  // GODMARK TODO SUPERMARK: TO FIX FOR CURVATURE VERSION OF ON SURFACE
   int faceinside,faceshell,faceboth;
   faceinside=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1    && GLOBALMACP0A1(nsmask,im,jm,km,NSMASKSHELL)==1); // |    shell    |face_i    i inNS    |
   faceshell =(GLOBALMACP0A1(nsmask,im,jm,km,NSMASKINSIDE)==1 && GLOBALMACP0A1(nsmask,i,j,k,NSMASKSHELL)==1);    // |    inNS     |face_i    i shell   |
