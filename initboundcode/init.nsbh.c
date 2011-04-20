@@ -3426,7 +3426,8 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 	  else{
 	    // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
 	    firstpos=2; lastpos=3;
-	    mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	    if(dir==0) mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	    else mono3left[pl]=1; // assume want field to always use mono (never any discontinuities)
 	  }
 	}
 	else mono3left[pl]=0;
@@ -3452,7 +3453,8 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 	  else{
 	    // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
 	    firstpos=1; lastpos=3;
-	    mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	    if(dir==0) mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+	    else mono3right[pl]=1; // assume want field to always use mono (never any discontinuities)
 	  }
 	}
 	else mono3right[pl]=0;
@@ -3735,7 +3737,8 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	// only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
 	if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
 	else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
-	mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+	if(dir==0) mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+	else mono3[pl]=1; // assume want field to always use mono (never any discontinuities)
       }
 
 
