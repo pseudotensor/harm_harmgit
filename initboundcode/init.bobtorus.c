@@ -1,7 +1,7 @@
 
-/* 
+/*
  *
- * generates initial conditions for a fishbone & moncrief disk 
+ * generates initial conditions for a fishbone & moncrief disk
  * with exterior at minimum values for density & internal energy.
  *
  * cfg 8-10-01
@@ -19,6 +19,7 @@
 #define THINDISKFROMMATHEMATICA 3
 #define THINTORUS 4
 #define THICKDISKFROMMATHEMATICA 5
+#define LIMOTORUS 6
 
 
 // For blandford problem also need to set:
@@ -53,9 +54,11 @@ static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file global
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 
-static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
-static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-static FTYPE torusrmax;   // AKMARK: torus pressure max
+static FTYPE toruskappa;
+static FTYPE torusn;
+static FTYPE torusrmax;
+static FTYPE torusrbreak1, torusrbreak2;
+static FTYPE torusxi;
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 
@@ -64,21 +67,21 @@ static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 #include "init.torus.h"
 
 #undef SLOWFAC
-             
+
 int prepre_init_specific_init(void)
 {
   int funreturn;
-  
+
   /////////////////////
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // AKMARK: do full phi
-  
+  dofull2pi = 0;
+
   global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
-  
+
   //binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
-   
+
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -93,7 +96,7 @@ int pre_init_specific_init(void)
   // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
 #if( WHICHPROBLEM == THINDISKFROMMATHEMATICA )
   h_over_r=0.1;
-#elif( WHICHPROBLEM == THINTORUS )
+#elif( WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS )
   h_over_r=0.1;
 #elif( WHICHPROBLEM == THICKDISKFROMMATHEMATICA )
   h_over_r=0.3;
@@ -134,7 +137,7 @@ int init_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTOR
 
 
   return(0);
- 
+
 }
 
 
@@ -184,11 +187,11 @@ Field parameter studies in 2D axisymmetry at 256^2:
 
 1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
- 
+
 
 Spin parameter study in 2D axisymmetry at 256^2:
 
- 
+
 
 1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
@@ -210,7 +213,7 @@ Questions for Roger:
 2) Choice for field shape -- specifically?
 3) Choice for flux threading disk vs. BH initially?
 4) Ask about BZ77 and residual A_\phi at pole
-5) 
+5)
 
 */
 
@@ -219,13 +222,13 @@ Questions for Roger:
 // AKMARK: grid coordinates
 int init_defcoord(void)
 {
-  
+
   // define coordinate type
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   defcoord = SJETCOORDS;
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   defcoord = REBECCAGRID ;
-#elif(WHICHPROBLEM==THINTORUS)
+#elif(WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS)
   defcoord = SJETCOORDS;
   //defcoord = REBECCAGRID ;
 #elif(WHICHPROBLEM==GRBJET)
@@ -239,14 +242,14 @@ int init_defcoord(void)
 
 int init_grid(void)
 {
-  
+
   // metric stuff first
 
 
 // AKMARK: spin
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
-#elif(WHICHPROBLEM==THINTORUS)
+#elif(WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS)
   a = 0.9;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
@@ -254,7 +257,7 @@ int init_grid(void)
   a = 0.95;   //so that Risco ~ 2
 #endif
 
- 
+
   Rhor=rhor_calc(0);
 
   // AKMARK: hslope
@@ -278,7 +281,7 @@ int init_grid(void)
   Rin = 0.9 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
   Rout = 200.;
-#elif(WHICHPROBLEM==THINTORUS)
+#elif(WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.88 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.3;
@@ -298,7 +301,7 @@ int init_grid(void)
   global_npow2=4.0; //power exponent
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
   global_rbr = 100.;  //radius at which hyperexponentiation kicks in
-  
+
   /////////////////////
   //ANGULAR GRID SETUP
   /////////////////////
@@ -314,34 +317,34 @@ int init_grid(void)
   //if rsjet = 0, then no modification <- *** default for use with grid cylindrification
   //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
   //                which makes the timestep larger
-  global_rsjet = 0.0; 
+  global_rsjet = 0.0;
 
   //distance at which theta-resolution is *exactly* uniform in the jet grid -- want to have this at BH horizon;
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
-  //the larger r0grid, the larger the thickness of the jet 
+  //the larger r0grid, the larger the thickness of the jet
   //to resolve
-  global_r0grid = Rin;    
+  global_r0grid = Rin;
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
   global_r0jet = 3;
-    
+
   //distance after which the jet grid collimates according to the usual jet formula
   //the larger this distance, the wider is the jet region of the grid
   global_rjetend = 15;
-    
+
   //distance at which disk part of the grid becomes monopolar
-  //the larger r0disk, the larger the thickness of the disk 
+  //the larger r0disk, the larger the thickness of the disk
   //to resolve
   global_r0disk = global_r0jet;
 
   //distance after which the disk grid collimates to merge with the jet grid
   //should be roughly outer edge of the disk
   global_rdiskend = 80;
-  
-  global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
-  global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
-    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
+
+  global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylindrical
+  global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one
+    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
     //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
     //by POLEDEATH (see bounds.tools.c).
@@ -373,7 +376,7 @@ int init_global(void)
 // AKMARK: cooling
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
-#elif( WHICHPROBLEM==THINTORUS )
+#elif( WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS )
   //cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
   cooling = NOCOOLING; //no cooling
 #else
@@ -385,7 +388,7 @@ int init_global(void)
   FLUXB = FLUXCTSTAG;
 
 // AKMARK: floors
-#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
+#if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -426,13 +429,13 @@ int init_global(void)
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
-  /* debug file */  
+  /* debug file */
   DTdumpgen[DEBUGDUMPTYPE] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 2000;
 
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS)
   /* output choices */
   tf = 20000.;
 
@@ -446,7 +449,7 @@ int init_global(void)
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
-  /* debug file */  
+  /* debug file */
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
@@ -455,7 +458,7 @@ int init_global(void)
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
   tf = 5E5;
-  
+
   DTd = 250.;                 /* dumping frequency, in units of M */
   DTavg = 250.0;
   DTener = 2.0;                       /* logfile frequency, in units of M */
@@ -493,22 +496,26 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
-  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
+  beta = 1.e2 ;   // AKMARK: minimum plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
 
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.97;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 20.;   // AKMARK: torus pressure max
+  torusrmax = 20.;   // AKMARK: torus pressure max location
+  torusrbreak1 = 42.;   // AKMARK: torusrbreak1,2 are torus angular momentum break radii (only used for THINTORUSHASBREAKS and LIMOTORUS)
+  torusrbreak2 = 1000.;
+  torusxi = 0.708;   // AKMARK: LIMOTORUS: ratio of torus angular momentum to Keplerian
+
 
   // AKMARK: torus inner radius
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
   rin = 6. ;
-  toruskappa = 1e-3; 
-  torusrmax = 12.; 
+  toruskappa = 1e-3;
+  torusrmax = 12.;
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
-#elif(WHICHPROBLEM==THINTORUS)
+#elif(WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS)
   rin = 10. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
@@ -517,11 +524,11 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rin = Risco;
 #endif
 
-  
+
 
 
 #if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA && WHICHPROBLEM != THICKDISKFROMMATHEMATICA )
-  //SASMARK restart: need to populate panalytic with IC's; DO NOT do this 
+  //SASMARK restart: need to populate panalytic with IC's; DO NOT do this
   //when reading the ICs in from a file since then need to carry the file around
   if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
@@ -536,7 +543,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   // check that singularities are properly represented by code
   check_spc_singularities_user();
 
-  
+
   return(0);
 
 }
@@ -547,7 +554,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA )
   //read initial conditions from input file for the Mathematica-generated thin-disk ICs
 #if(ANALYTICMEMORY==0)
 #error Cannot do THINDISKFROMMATHEMATICA problem with ANALYTICMEMORY==0.  Please set ANALYTICMEMORY = 1.
@@ -577,8 +584,10 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
+  #if (WHICHPROBLEM == LIMOTORUS)
+  int init_dsandvels_limotorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
+  #endif
 
-// AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
@@ -587,6 +596,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   return(init_dsandvels_thindiskfrommathematica(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==THINTORUS)
   return(init_dsandvels_thintorus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==LIMOTORUS)
+  return(init_dsandvels_limotorus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
 
 }
@@ -610,7 +621,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   FTYPE r,th;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS )
   FTYPE fieldhor;
 #endif
 
@@ -640,11 +651,11 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
     /* field-in-disk version */
-    
+
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
 
 // AKMARK: magnetic loop radial wavelength
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS )
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
@@ -671,7 +682,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 	u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
+#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS || WHICHPROBLEM == LIMOTORUS )
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
       if(r > STARTFIELD) q = ((u_av/umax) - 0.2)*pow(r,0.75) ;
       else q = 0. ;
@@ -685,7 +696,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       q = rho_av / rhomax - 0.2;
       if (q > 0.)      vpot += q;
 #endif
-    
+
     }
   }
 
@@ -712,7 +723,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
- 
+
 
   return(0);
 
@@ -731,7 +742,7 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 
   funreturn=user1_getmax_densities(prim,rhomax, umax);
   if(funreturn!=0) return(funreturn);
- 
+
   return(0);
 }
 
@@ -743,7 +754,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
   int funreturn;
   int eqslice;
   FTYPE parms[MAXPASSPARMS];
-  
+
   if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
     eqslice=1;
   }
@@ -755,7 +766,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 
   funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
   if(funreturn!=0) return(funreturn);
- 
+
   return(0);
 }
 
@@ -765,10 +776,10 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
- 
+
   funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
   if(funreturn!=0) return(funreturn);
- 
+
   return(0);
 
 }
@@ -789,7 +800,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS || WHICHPROBLEM == LIMOTORUS){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){
@@ -798,10 +809,10 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   else {
     atmospheretype=1; // default
   }
- 
+
   funreturn=user1_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
   if(funreturn!=0) return(funreturn);
- 
+
   return(0);
 
 }
@@ -811,7 +822,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
 int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
   int funreturn;
-  
+
   funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
   if(funreturn!=0) return(funreturn);
 
@@ -883,7 +894,7 @@ int theproblem_set_myid(void)
 {
   int group_by_node_set_myid(int n1tile, int n2tile, int n3tile);
   int retval;
- 
+
   // default is to do nothing
   //  retval=jet_set_myid();
 #if(DO_REMAP_MPI_TASKS)
@@ -891,7 +902,7 @@ int theproblem_set_myid(void)
   //retval=group_by_node_set_myid( 3, 2, 2 );  //3x2x2 for Kraken
 #else
   retval=0;
-#endif  
+#endif
   // do other things?
 
   return(retval);

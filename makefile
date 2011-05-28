@@ -140,7 +140,7 @@ endif
 
 ifeq ($(USEPGCC),1)
 MCC=mpicc
-endif    
+endif
 
 ifeq ($(USEUB),1)
 MCC=/usr/bin/mpicc.mpich
@@ -156,7 +156,7 @@ ECHOSWITCH=
 USELAPACK=0
 endif
 
-endif    
+endif
 #################### DONE IF USEMPI
 
 
@@ -201,7 +201,7 @@ ifeq ($(USEGCC),1)
 endif
 
 ifeq ($(USEPGCC),1)
-endif    
+endif
 
 ifeq ($(USEUB),1)
 USEGCC=1
@@ -209,7 +209,7 @@ ECHOSWITCH=
 USELAPACK=0
 endif
 
-endif    
+endif
 #################### DONE IF USEMPI
 
 
@@ -266,6 +266,15 @@ ifeq ($(USELAPACK),1)
 	LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
 else
 	LAPACKLDFLAGS=
+endif
+
+ifeq ($(USEGSL),1)
+#	below gives GSL support
+	GSLCFLAGS=`gsl-config --cflags`
+	GSLLDFLAGS=`gsl-config --libs`
+else
+	GSLCFLAGS=
+	GSLLDFLAGS=
 endif
 
 ifeq ($(USEOPENMP),1)
@@ -336,7 +345,7 @@ CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
 #CFLAGS = -O6 -g
 #CFLAGS = -O0 -pg -g
 LDFLAGS = -lm $(LAPACKLDFLAGS)
-# -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB) 
+# -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB)
 
 #CC = cc
 #AR	=	ar r
@@ -574,9 +583,11 @@ endif
 
 ifeq ($(USEKRAKENICC),1)
 LONGDOUBLECOMMAND=
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLCFLAGS)
+# AKMARK: added -no-ipo following Bob's discovery that -ipo is the cause of holes appearing in disk
 COMP=cc $(DFLAGS)
-CFLAGSPRE = -fast -msse3 $(DFLAGS)
+#CFLAGSPRE = -fast -msse3 $(DFLAGS)
+CFLAGSPRE = -fast $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
 LDFLAGS = -lm  $(LAPACKLDFLAGS)
@@ -584,7 +595,7 @@ endif
 
 ifeq ($(USEPFE),1)
 LONGDOUBLECOMMAND=-m128bit-long-double
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA) $(GSLCFLAGS)
 COMP=mpicc $(DFLAGS)
 CFLAGSPRE= -O3 -funroll-loops $(DFLAGS)
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
@@ -611,9 +622,10 @@ CFLAGSNONPRECISE=$(LONGDOUBLECOMMAND) $(CFLAGSPRENONPRECISE)
 CFLAGS=$(LONGDOUBLECOMMAND) $(CFLAGSPRE)
 GCCCFLAGS=$(LONGDOUBLECOMMAND) $(GCCCFLAGSPRE)
 else
-CFLAGS=$(CFLAGSPRE)
-CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE)
-GCCCFLAGS=$(GCCCFLAGSPRE)
+CFLAGS=$(CFLAGSPRE) $(GSLCFLAGS)
+CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE) $(GSLCFLAGS)
+GCCCFLAGS=$(GCCCFLAGSPRE) $(GSLCFLAGS)
+LDFLAGS+=$(GSLLDFLAGS)
 endif
 
 # for for normal installation of v5d and hdf

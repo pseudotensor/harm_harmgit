@@ -30,6 +30,14 @@ USETACCRANGER=0
 USEPFE=0
 
 
+#####################
+#
+# GSL CHOICE (needed for limotorus)
+#
+#####################
+USEGSL=1
+
+
 ########################
 #
 # PERFORMANCE CHECKS WITH GPROF
@@ -38,7 +46,7 @@ USEPFE=0
 # default should be 0 since has large performance hit.
 USEGPROF=0
 
- 
+
 ########################
 #
 # Debug information in binary
