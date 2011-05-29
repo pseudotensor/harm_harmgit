@@ -35,7 +35,7 @@ USEPFE=0
 # GSL CHOICE (needed for limotorus)
 #
 #####################
-USEGSL=1
+USEGSL=0
 
 
 ########################
