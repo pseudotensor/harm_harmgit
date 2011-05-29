@@ -610,6 +610,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define VERTFIELD 1
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
+#define LIMOFIELD 4
 
 //#define FIELDTYPE BLANDFORDQUAD
 #define FIELDTYPE DISKFIELD
@@ -627,6 +628,11 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   FTYPE fieldhor;
 #endif
 
+#if(FIELDTYPE==LIMOFIELD)
+  FTYPE lambda, rsmooth, anorm, rchop, fr, fr_start;
+  int jmid, ichop;
+  SFTYPE u_av_mid, u_av_chop, uchop, uchopmid;
+#endif
 
 
   vpot=0.0;
@@ -700,6 +706,43 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 #endif
 
     }
+
+
+    /* limo torus field version */
+
+    #if(FIELDTYPE==LIMOFIELD)
+      lambda = 2.5;
+      rsmooth=20.; //appears in tanh factor to squash strong field at torus inner edge
+      //      anorm=0.000940983/sqrt(beta); //normalization determined from mathematica notebook
+      anorm=1.; //letting HARM normalize the field
+      jmid = totalsize[2]/2;
+      #define STARTFIELD 25.
+
+      rchop = 550.; //outer boundary of field loops
+      ichop = compute_ichop( rchop ); //corresponding radial grid index
+
+      // average of energy density that lives on CORN3
+      u_av = get_limotorus_uav(i,j,k);
+      u_av_mid = get_limotorus_uav(i,jmid-startpos[2],k);
+      u_av_chop = get_limotorus_uav(ichop-startpos[1],jmid-startpos[2],k);
+
+      // vector potential follows contours of UU
+      uchop = u_av - u_av_chop; //vpot->zero on contour of radius r=rchop
+      uchopmid = u_av_mid - u_av_chop; //vpot->zero away from midplane
+
+      if (r > STARTFIELD && r < rchop) {
+         q = anorm * (uchop - 0.2*uchopmid) / (0.8*uchopmid + SMALL) * pow(sin(th), 3); // * pow(tanh(r/rsmooth),2);
+      } else q = 0;
+
+      if(q > 0.) {
+         fr = (pow(r,0.6)/0.6  + 0.5/0.4*pow(r,-0.4)) / lambda;
+         fr_start = (pow(STARTFIELD,0.6)/0.6  + 0.5/0.4*pow(STARTFIELD,-0.4)) / lambda;
+         vpot += q * sin(fr - fr_start) ;
+      }
+
+    #endif
+
+
   }
 
   //////////////////////////////////
