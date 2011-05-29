@@ -107,6 +107,17 @@ USESPECIAL4GENERATE=1
 USELAPACK=0
 endif
 
+ifeq ($(USEPFESGIMPT),1)
+# override again
+USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
+AVOIDFORK=1
+MCC=icc
+CCGENERATE=icc
+USESPECIAL4GENERATE=1
+USELAPACK=0
+endif
+
 ifeq ($(USEICCGENERIC),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
@@ -585,6 +596,7 @@ ifeq ($(USEKRAKENICC),1)
 LONGDOUBLECOMMAND=
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLCFLAGS)
 # AKMARK: added -no-ipo following Bob's discovery that -ipo is the cause of holes appearing in disk
+# AKMARK: related suggestion by Sasha to disable -msse3 in CFLAGSPRE
 COMP=cc $(DFLAGS)
 #CFLAGSPRE = -fast -msse3 $(DFLAGS)
 CFLAGSPRE = -fast $(DFLAGS)
@@ -602,6 +614,17 @@ CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 $(DFLAGS)
 #LDFLAGS= -lm  $(LAPACKLDFLAGS)
 LDFLAGS= $(LAPACKLDFLAGS)
+endif
+
+ifeq ($(USEPFESGIMPT),1)
+LONGDOUBLECOMMAND=-m128bit-long-double
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA) $(GSLCFLAGS)
+COMP=icc $(DFLAGS)
+CFLAGSPRE= -O3 -funroll-loops $(DFLAGS)
+CFLAGSPRENONPRECISE= $(CFLAGSPRE)
+GCCCFLAGSPRE= -O3 $(DFLAGS)
+#LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= -lmpi $(LAPACKLDFLAGS)
 endif
 
 
