@@ -18,6 +18,7 @@
 #define UNI2LOG 1500
 #define UNIRSINTH2 1600
 #define SJETCOORDS 3000
+#define SJETCOORDS_BOB 3100
 
 // equal and lower have analytic dxdxp
 //#define ANALYTICSWITCH 500
