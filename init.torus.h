@@ -540,7 +540,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   int pl;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
-#if(TORUSHASBREAKS == 1)
+#if(THINTORUSHASBREAKS == 1)
   FTYPE rbreak1, rbreak2, lbreak1, lbreak2;
 #endif
 
@@ -570,9 +570,9 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   kappa = toruskappa;   // AKMARK: entropy constant KK from mathematica file
   n = torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
   rmax = torusrmax;   // AKMARK: torus pressure max
-#if(TORUSHASBREAKS == 1)   //AKMARK: midplane radii at which break in angular momentum profile occurs
-  rbreak1 = 25.;
-  rbreak2 = 75.;
+#if(THINTORUSHASBREAKS == 1)   //AKMARK: midplane radii at which break in angular momentum profile occurs
+  rbreak1 = torusrbreak1;
+  rbreak2 = torusrbreak2;
 #endif
 
 
@@ -599,7 +599,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   r = rin;
   th = M_PI_2l;
   lin = thintorus_findl( r, th, a, c, al );
-#if(TORUSHASBREAKS == 1)
+#if(THINTORUSHASBREAKS == 1)
   lbreak1 = thintorus_findl( rbreak1, th, a, c, al);
   lbreak2 = thintorus_findl( rbreak2, th, a, c, al);
 #endif
@@ -620,7 +620,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
 
   //l at current r, th
   l = thintorus_findl( r, th, a, c, al );
-#if(TORUSHASBREAKS == 1)
+#if(THINTORUSHASBREAKS == 1)
   if (l < lbreak1) l = lbreak1;
   if (l > lbreak2) l = lbreak2;
 #endif

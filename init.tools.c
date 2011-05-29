@@ -5,12 +5,12 @@
 int setRin_withchecks(FTYPE *rin)
 {
   FTYPE Rhor,rminus;
- 
+
   Rhor=rhor_calc(0);
   *rin=setRin(setihor());
 
   //  (*rin) = 0.98 * Rhor;
-  
+
 
   trifprintf("R0=%21.15g Rhor=%21.15g Rin=%21.15g Rout=%21.15g ihor=%d\n",R0,Rhor,(*rin),Rout,setihor());
 
@@ -60,7 +60,7 @@ int user1_prepre_init_specific_init(void)
 int user1_init_conservatives(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*Utemp)[NSTORE2][NSTORE3][NPR], FTYPE (*U)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
-  
+
   PLOOPBONLY(pl) trifprintf("fieldfrompotential[%d]=%d\n",pl-B1+1,fieldfrompotential[pl-B1+1]);
 
 
@@ -103,7 +103,7 @@ int user1_init_global(void)
   // ENO-RELATED STUFF
   //
   ///////////////////////
-  
+
   INVERTFROMAVERAGEIFFAILED = 1;
   LIMIT_AC_PRIM_FRAC_CHANGE = 1;
   MAX_AC_PRIM_FRAC_CHANGE = 0.1;
@@ -164,7 +164,7 @@ int user1_init_global(void)
     //  TIMEORDER=3;
     //  fluxmethod= HLLFLUX;
     fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
-  
+
 
     //  UTOPRIMVERSION=UTOPRIM5D1;
     UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
@@ -251,7 +251,7 @@ int user1_init_global(void)
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
-  /* debug file */  
+  /* debug file */
   DTdumpgen[DEBUGDUMPTYPE] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
@@ -281,7 +281,7 @@ int user1_init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTY
   if(pr[RHO]<pratm[RHO]){
     PLOOP(pliter,pl) pr[pl]=pratm[pl];
   }
-  
+
 
   *whichvel=WHICHVEL;
   *whichcoord=PRIMECOORDS;
@@ -346,7 +346,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   // normalize density if wanted
   //
-  /////////////////////////////// 
+  ///////////////////////////////
   // at this point densities are still standard, so just send "prim"
   trifprintf("Normalize densities\n");
   normalize_densities(prim);
@@ -358,7 +358,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   // Define an atmosphere if wanted
   //
-  /////////////////////////////// 
+  ///////////////////////////////
 
   if(DOEVOLVERHO||DOEVOLVEUU){
     // normalized atmosphere
@@ -394,7 +394,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   // Set analytics
   //
-  /////////////////////////////// 
+  ///////////////////////////////
 
 
 #if(ANALYTICMEMORY)
@@ -409,7 +409,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   // These may be used to define vector potential below
   // Also setup pre_fixup() type quantities
   //
-  /////////////////////////////// 
+  ///////////////////////////////
   trifprintf("Fixup and Bound #1\n");
 
 #if(FIXUPAFTERINIT)
@@ -425,12 +425,12 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 
 
 
-  
+
   /////////////////////////////
   //
   // Initialize field from vector potential
   //
-  /////////////////////////////// 
+  ///////////////////////////////
 #if(1)
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
   normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
@@ -457,7 +457,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   // BOUND AGAIN IN CASE USING PANALYTIC TO BOUND!
   //
-  /////////////////////////////// 
+  ///////////////////////////////
   trifprintf("Fixup and Bound #2\n");
 
 #if(FIXUPAFTERINIT)
@@ -472,7 +472,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   //
   // Set EOSextras related to keeping table result consistent
   //
-  /////////////////////////////// 
+  ///////////////////////////////
 
   if(WHICHEOS==KAZFULL){
     FULLLOOP{
@@ -508,7 +508,7 @@ int user1_init_vpot2field_user(int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFT
   int i,j,k,pl,pliter;
   int toreturn;
   extern int set_fieldfrompotential(int *fieldfrompotential);
-   
+
 
   // uses ptemparray as temporary variable
   // use PLOOP (not PLOOPBONLY) since rho,u,etc. used for interpolation in some cases
@@ -546,7 +546,7 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
   FTYPE rin,rhodisk;
-  
+
 
   *rhomax=0;
   *umax=0;
@@ -611,7 +611,7 @@ int user1_getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, 
 {
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
-  
+
 
   *rhomax=0;
   *umax=0;
@@ -621,9 +621,9 @@ int user1_getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, 
     bl_coord_ijk_2(i, j, k, CENT, X, V);
     r=V[1];
     th=V[2];
-      
+
     //    dualfprintf(fail_file,"rho=%g u=%g\n",MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-     
+
     if (MACP0A1(prim,i,j,k,RHO) > *rhomax)   *rhomax = MACP0A1(prim,i,j,k,RHO);
     if (MACP0A1(prim,i,j,k,UU) > *umax )    *umax = MACP0A1(prim,i,j,k,UU);
   }
@@ -660,8 +660,8 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   FTYPE rin;
   int loc;
 
-  
-  
+
+
 
   rin=parms[0];
 
@@ -679,7 +679,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       bl_coord_ijk_2(i, j, k, loc, X, V);
       r=V[1];
       th=V[2];
-      
+
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
 	gotnormal=1;
 	if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
@@ -703,7 +703,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
 
       beta_ij=pg_ij/(bsq_ij*0.5);
-      
+
       if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
 
     }
@@ -764,7 +764,7 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
 #endif
   trifprintf("initial beta: %21.15g (should be %21.15g) norm=%21.15g\n", beta_act,beta,norm);
 
-  
+
   // not quite right since only correct static field energy, not moving field energy
   normalize_field_withnorm(norm, prim, pstag, ucons, vpot, Bhat);
 
@@ -842,9 +842,9 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
     prlocal[UU]  = 0;
   }
 
-    
+
   // bl-normal observer (4-vel components)
-  
+
   // normal observer velocity in atmosphere
   if(whichvel==VEL4){
     prlocal[U1] = -ptrgeom->gcon[GIND(0,1)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
@@ -864,7 +864,7 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
     prlocal[U2] = 0.0;
     prlocal[U3] = 0.0;
   }
-  
+
   if(whichcond==1){
     if(100.0*dt>TAUADJUSTATM){
       dualfprintf(fail_file,"dt=%21.15g and TAUADJUSTATM=%21.15g\n",dt,TAUADJUSTATM);
@@ -873,13 +873,13 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
     // TAUADJUSTATM must be >> dt always in order for this to make sense (i.e. critical damping to fixed solution)
     PLOOP(pliter,pl) pr[pl] = pr[pl]+(prlocal[pl]-pr[pl])*dt/TAUADJUSTATM;
   }
-  else if(whichcond==0){ 
+  else if(whichcond==0){
     PLOOP(pliter,pl) pr[pl] = prlocal[pl];
     // very specific
     // always outflow field
     //    pr[B1] = pr[B2] = pr[B3] = 0;
   }
-  else if(whichcond==-1){ 
+  else if(whichcond==-1){
     // t=0, just sets as "floor"
     PLOOP(pliter,pl) pr[pl] = prlocal[pl];
     pr[B1] = pr[B2] = pr[B3] = 0;

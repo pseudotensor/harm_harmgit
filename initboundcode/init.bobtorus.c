@@ -46,7 +46,7 @@
 #define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
 
-#define TORUSHASBREAKS 0   // AKMARK: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
+#define THINTORUSHASBREAKS 0   // AKMARK: THINTORUS: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
 
 #define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
 
@@ -363,7 +363,9 @@ int init_global(void)
   funreturn=user1_init_global();
   if(funreturn!=0) return(funreturn);
 
+  // AKMARK: Courant factor, adiabatic index (the latter is defined in a couple of other places, not sure which one takes precedence, so redefine here for safety)
   cour = 0.8; //increase courant factor
+  gam = 5./3.;
 
   //////////////////
   // overrides for more detailed problem dependence
