@@ -108,7 +108,7 @@ int prepre_init_specific_init(void)
 
   dofull2pi = 0;   // AKMARK: do full phi
   
-  global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
@@ -315,7 +315,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 34.; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -329,7 +329,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
-  rin = 10. ;
+  rin = 15. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -361,7 +361,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.83 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.21;
+  R0 = 0.3;
   Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
@@ -377,7 +377,7 @@ int init_grid(void)
   //radial hyperexponential grid
   global_npow2=4.0; //power exponent
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-  global_rbr = 100.;  //radius at which hyperexponentiation kicks in
+  global_rbr = 1000.;  //radius at which hyperexponentiation kicks in
   
   /////////////////////
   //ANGULAR GRID SETUP
@@ -470,9 +470,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=0.5*1E3;
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
@@ -524,7 +524,7 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 10.0;
+  DTdumpgen[ENERDUMPTYPE] = 100.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 5.0;
   // fieldline locked to images so can overlay
@@ -534,7 +534,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 20000;
+  DTr = 60000;
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
@@ -570,6 +570,10 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
+
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E3;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);
