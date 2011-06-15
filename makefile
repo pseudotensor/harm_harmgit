@@ -126,6 +126,13 @@ MCC=mpicc
 COMP=icc
 endif
 
+ifeq ($(USEICCINTELNEW),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC=mpicc
+COMP=icc
+endif
+
 ifeq ($(USETACCRANGER),1)
 # don't have to avoid fork/system calls
 USEMCCSWITCHFORGCC=0
@@ -198,6 +205,9 @@ ifeq ($(USEICCGENERIC),1)
 endif
 
 ifeq ($(USEICCINTEL),1)
+endif
+
+ifeq ($(USEICCINTELNEW),1)
 endif
 
 ifeq ($(USETACCRANGER),1)
@@ -274,17 +284,20 @@ ifeq ($(USELAPACK),1)
 #	below gives blas and lapack support
 	LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
 
-ifeq ($(USETACCLONESTAR4),1)
-
+ifeq ($(USELAPACKNEW),1)
 # below for ki-jmck or lonestar4
 	LAPACKLDFLAGS=-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 endif
 
 
-
 else
 	LAPACKLDFLAGS=
 endif
+
+
+
+
+
 
 ifeq ($(USEOPENMP),1)
 	OPMPFLAGS=-openmp
@@ -481,6 +494,35 @@ LDFLAGSOTHER=
 
 
 endif
+
+
+
+
+
+
+
+
+# Intel machine specific
+ifeq ($(USEICCINTELNEW),1)
+
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+LONGDOUBLECOMMAND=-long_double
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
+CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+
+
+LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGSOTHER=
+
+
+endif
+
+
+
+
+
 
 
 ifeq ($(USETACCLONESTAR4),1)

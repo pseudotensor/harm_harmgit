@@ -187,9 +187,12 @@ ENFORCEPRECISION=0
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
 USELAPACK=1
+# below is for new form of library -l line
+USELAPACKNEW=1
 else
 # NO choice for below
 USELAPACK=0
+USELAPACKNEW=0
 endif
 #
 ####################
@@ -212,6 +215,7 @@ endif
 $(warning USEMPI is $(USEMPI))
 $(warning USEOPENMP is $(USEOPENMP))
 $(warning USELAPACK is $(USELAPACK))
+$(warning USELAPACKNEW is $(USELAPACKNEW))
 $(warning ENFORCEPRECISION is $(ENFORCEPRECISION))
 
 
