@@ -1094,6 +1094,8 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 
 ////////////////////////
 //
+// Evolve A_i (either just updating A_i to be consistent with fluxes/emf, or manipulate A_i/EMFs/Fluxes and then update A_i)
+//
 // Like advance() but for A_i with allowed modifications to either EMF or A_i directly
 //
 // Can evolve with vpot (i.e. could have modified A_i or may want A_i to be machine accurate instead of drifting from B^i)
@@ -1133,8 +1135,8 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
-  if(EVOLVEWITHVPOT==0){
-    dualfprintf(fail_file,"Shouldn't be in evolve_vpotgeneral() with EVOLVEWITHVPOT==0\n");
+  if(EVOLVEWITHVPOT==0 && TRACKVPOT==0){
+    dualfprintf(fail_file,"Shouldn't be in evolve_vpotgeneral() with EVOLVEWITHVPOT==0 && TRACKVPOT==0\n");
     myexit(45986252);
   }
 

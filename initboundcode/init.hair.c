@@ -202,8 +202,8 @@ int init_grid(void)
   //  myexit(666);
   
   // metric stuff first
-  a = 0.0 ;
-  //a = 0.99 ;
+  //  a = 0.0 ;
+  a = 0.99 ;
   //  a = 0.9375 ;
   
 
@@ -803,7 +803,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
   if(FIELDTYPE==NSFIELD){
     FTYPE xns=0.0;
-    FTYPE absrdiff=abs(r-0.0);
+    FTYPE absrdiff=fabs(r-0.0);
     FTYPE Rsoft=1.0; // so geometry doesn't vary with $a$
     //    vpot += 0.5*Rin*Rin*Rin*(xns-x)*pow(xns-x,1.0)/pow(absrdiff+Rsoft,3.0) ;
     vpot += 0.5*Rsoft*Rsoft*Rsoft*sin(th)*sin(th)/r ;

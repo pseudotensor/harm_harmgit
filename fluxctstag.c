@@ -331,7 +331,7 @@ int fluxcalc_fluxctstag(int stage,
 
 
 
-  if(EVOLVEWITHVPOT>0){
+  if(EVOLVEWITHVPOT>0 ||  TRACKVPOT>0){
     // Evolve A_i
     evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pr, Nvec, fluxvec, NULL, CUf, CUnew, fluxdt, fluxtime, vpot);
   }
