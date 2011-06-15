@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# scp jon@ki-rh42.slac.stanford.edu:/data/jon/switchpaper/paper/harm_switch_original/scripts/lonestarrestartsustain.sh .
+# scp jon@ki-rh42.slac.stanford.edu:/data/jon/latestcode/harmgit/scripts/lonestarrestartsustain.sh .
 
 EXPECTED_ARGS=1
 
@@ -42,11 +42,11 @@ if [ $percdiff -lt 10 ]
 then
     echo "Using last rdump: $oldrdump"
     cp $oldrdump rdump-0.orig.bin
-    ln -s rdump-0.orig.bin rdump-0.bin
+    cp rdump-0.orig.bin rdump-0.bin
 else
     echo "Using 2nd to last rdump: $oldrdump2"
     cp $oldrdump2 rdump-0.orig.bin
-    ln -s rdump-0.orig.bin rdump-0
+    cp rdump-0.orig.bin rdump-0
 fi
 
 

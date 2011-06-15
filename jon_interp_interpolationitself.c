@@ -103,6 +103,9 @@ int compute_spatial_interpolation(void)
 
   LOOPINTERP{
 
+    // DEBUG
+    //    fprintf(stderr,"%d %d %d %d\n",h,i,j,k); fflush(stderr);
+
 
     if(DEBUGINTERP){
       if(j==0) fprintf(stderr,"%d %d %d %d\n",h,i,j,k); fflush(stderr);
@@ -121,12 +124,18 @@ int compute_spatial_interpolation(void)
     //    }
 
     
-    //fprintf(stderr,"%d %d %d %d :: %g %g %g %g\n",h,i,j,k,t,r,th,ph); fflush(stderr);
+    // DEBUG
+    //    fprintf(stderr,"pre-old_coord(): %d %d %d %d :: %g %g %g %g\n",h,i,j,k,t,r,th,ph); fflush(stderr);
 
 
     // find old grid's X from that new grid's t,r,th,ph
     // input must be those coordinates (here t,r,th,ph) corresponding to metric's original coordinates after transforming back using dxdxp from PRIMECOORDS.  Otherwise, not seeking correct solution in root finder that obtains X
+    // In cases where X must diverge to +-infinity to reach desired r,th,ph, assume this is out of bounds corresponding to nosolution==2
     nosolution=old_coord(t,r,th,ph,X) ;
+
+
+    // DEBUG
+    //    fprintf(stderr,"pre-interp: %d %d %d %d :: %g %g %g %g\n",h,i,j,k,t,r,th,ph); fflush(stderr);
 
 
     ////////////////////////
@@ -202,6 +211,7 @@ int compute_spatial_interpolation(void)
       }
     }
 
+    // DEBUG
     if(DEBUGINTERP){
       fprintf(stderr,"get=%d nosol=%d :: %d %d %d %d :: %g %g %g %g :: %g %g %g %g\n",getinterp,nosolution, h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3]) ; fflush(stderr);
     }
@@ -226,6 +236,7 @@ int compute_spatial_interpolation(void)
       //      	fprintf(stderr,"i=%d j=%d r=%21.15g th=%21.15g X[1]=%21.15g X[2]=%21.15g iold=%d jold=%d\n",i,j,r,th,X[1],X[2],iold,jold);
       //      }
 
+      // DEBUG
       if(DEBUGINTERP){
 	fprintf(stderr,"doing hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       }
@@ -234,6 +245,7 @@ int compute_spatial_interpolation(void)
       // TRANSPLANT
       //////////////////////////////
 
+      // DEBUG
       if(DEBUGINTERP){
 	fprintf(stderr,"Done copy\n"); fflush(stderr);
       }
@@ -256,6 +268,7 @@ int compute_spatial_interpolation(void)
 	exit(1);
       }
 
+      // DEBUG
       if(DEBUGINTERP){
 	fprintf(stderr,"Done interp h=%d i=%d j=%d k=%d\n",h,i,j,k); fflush(stderr);
       }
@@ -264,6 +277,7 @@ int compute_spatial_interpolation(void)
       if(DATATYPE==0) newimage[h][i][j][k] = FLOAT2IMAGE(ftemp);
       else newdata[h][i][j][k] = (FTYPE)(ftemp) ;
 
+      // DEBUG
       if(DEBUGINTERP){
 	fprintf(stderr,"Done set newdata\n"); fflush(stderr);
       }
@@ -283,11 +297,9 @@ int compute_spatial_interpolation(void)
       //      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       //      }
 
-
+      // DEBUG
       if(DEBUGINTERP){
-	if(r>40){
-	  fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d : %g\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold, ftemp);
-	}
+	fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d : %g\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold, ftemp);
       }
 
 
@@ -1195,6 +1207,7 @@ static int root_find2(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
   int ni;
 
 
+
   // target t,r,th,ph
   ni=0; // newt() needs things to start at 1 not 0, so set ni=0 so next ni++ iterates ni to 1
   ni++; spc_target[ni]=t;
@@ -1218,6 +1231,8 @@ static int root_find2(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
 #endif
 
 
+
+
   // assume didn't find
   notfoundsolution=1;
   for(attempt=0;attempt<NUMATTEMPTS;attempt++){
@@ -1237,11 +1252,26 @@ static int root_find2(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
     //    for(jj=1;jj<=4;jj++) fprintf(stderr,"Xtrial[%d]=%21.15g\n",jj,Xtrial[jj]);
 
 
+
+
 #if(ROOTMETHOD==2)
     newt  (ANALYTICJAC,NULL,Xtrial, 4, &notfoundsolution,X2spc,usrfun_joninterp2);
 #elif(ROOTMETHOD==3)
     broydn(ANALYTICJAC,NULL,Xtrial, 4, &notfoundsolution,X2spc,usrfun_joninterp2);
 #endif
+
+
+    // DEBUG:
+    //    fprintf(stderr,"notfoundsolution=%d\n",notfoundsolution); fflush(stderr);
+
+
+    if(notfoundsolution==2){
+      // then fjac bad -- probably out of bounds off grid for grid defined with singularity on interpolated grid.
+      fprintf(stderr,"fjac singularity found -- treating as off grid and no solution\n");
+      for(jj=1;jj<=4;jj++) fprintf(stderr,"fjab used: Xtrial[%d]=%21.15g\n",jj,Xtrial[jj]);
+      return(2);
+    }
+
 
     // quick message, and try again
     if(SIMPLEDEBUGINTERP){
@@ -1256,8 +1286,14 @@ static int root_find2(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *X)
     }
   }
 
+
+  // DEBUG:
+  //  fprintf(stderr,"attempt=%d : %d %d",attempt,notfoundsolution,nrerrorflag); fflush(stderr);
+
+
+
   if(notfoundsolution||nrerrorflag){
-    if(SIMPLEDEBUGINTERP){
+    if(1||SIMPLEDEBUGINTERP){
       fprintf(stderr,"Couldn't find solution after %d attempts\n",attempt); fflush(stderr);
     }
     return(1);
@@ -1390,12 +1426,25 @@ static int usrfun_joninterp2(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff
   int ni;
 
 
+
   // X and Xguess different rank
   ni=0; // redo Xguess so in normal HARM format
   ni++; X[0]=Xguess[ni];
   ni++; X[1]=Xguess[ni];
   ni++; X[2]=Xguess[ni];
   ni++; X[3]=Xguess[ni];
+
+
+  if(
+     (oN0!=1)&&((X[0]-startx[0] < 0) || (X[0]-Xmax[0] >= 0)) ||
+     (oN1!=1)&&((X[1]-startx[1] < 0) || (X[1]-Xmax[1] >= 0)) ||
+     (oN2!=1)&&((X[2]-startx[2] < 0) || (X[2]-Xmax[2] >= 0)) ||
+     (oN3!=1)&&((X[3]-startx[3] < 0) || (X[3]-Xmax[3] >= 0))
+     ){
+    // then beyond bounds
+  }
+
+
 
 
   // find current r,th from current X
@@ -1408,6 +1457,9 @@ static int usrfun_joninterp2(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff
   ni++; spc_diff[ni]=spc_curr[2]-spc_target[ni];
   ni++; spc_diff[ni]=spc_curr[3]-spc_target[ni];
 
+
+  // DEBUG
+  //  for(i=1;i<=4;i++) fprintf(stderr,"%d: Xguess=%21.15g spc_diff=%21.15g spc_target=%21.15g\n",i,Xguess[i],spc_diff[i],spc_target[i]);
 
   //////////////////
   //

@@ -9,7 +9,7 @@
 
 #$ -V                    #Inherit the submission environment
 #$ -cwd                  # Start job in submission directory
-#$ -N zb1              # Job Name
+#$ -N zb2              # Job Name
 #$ -j y                  # Combine stderr and stdout
 #$ -o $JOB_NAME.o$JOB_ID # Name of the output file (eg. myMPI.oJobID)
 #$ -pe 12way 1536          # Requests 12 tasks/node, 24 cores total
@@ -38,11 +38,11 @@ NTOT=1536
 echo $NTOT
 FILENAME="zb"
 echo $FILENAME
-#DIRFILE="/home/00961/uzdensky/thickdisk7/"
-#DIRFILE="/home/teragrid/tg456703/"
-DIRFILE="/home/01014/tg802609/"
+#DIRFILE="/home1/00961/uzdensky/zakamskabig/"
+#DIRFILE="/home1/teragrid/tg456703/zakamskabig/"
+DIRFILE="/home1/01014/tg802609/zakamskabig/"
 echo $DIRFILE
-RUNDIR=$WORK/zb1/
+RUNDIR=$SCRATCH/zb2/
 echo $RUNDIR
 
 

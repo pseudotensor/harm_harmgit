@@ -189,7 +189,7 @@
 #define DOEVOLVEMETRIC 0
 #define EVOLVEMETRICSUBSTEP 1 // evolve metric every substep
 #define LIMITSOURCES 1
-#define LIMITDTWITHSOURCETERM 1
+#define LIMITDTWITHSOURCETERM 0 // causes problems, drops dt too low
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
 #define DODISS 0

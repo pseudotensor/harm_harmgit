@@ -2340,34 +2340,48 @@ int poledeath(int whichx2,
 
 
 	    //////////
-	    // for densities, u1, and u3, average in radius too!
+	    // u1, and u3, average in radius too!
 	    // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
-	    for(pl=RHO;pl<=U3;pl++){
+	    for(pl=U1;pl<=U3;pl++){
 	      if(pl==U2) continue;
-	    
+		
 	      if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
 	      else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	    }
 
 
-	    if(BCSIGMACONSTATPOLE==1){
-	      
-	      pl=RHO;
-	      FTYPE bsqr,sigmar;
 
-	      if (bsq_calc(MAC(prim,ri,rj,rk), ptrrgeom[pl], &bsqr) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 1);
-	      sigmar=bsqr/(2.0*fabs(MACP0A1(prim,ri,rj,rk,pl)));
-
-	      // ensure constant sigma at pole
-	      FTYPE bsq,sigma;
-	      if (bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 2);
-	      sigma=bsq/(2.0*fabs(MACP0A1(prim,i,j,k,pl)));
-
-	      if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
-		MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
+	    if(EOMTYPE!=EOMFFDE){
+	      //////////
+	      // for densities
+	      // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
+	      for(pl=RHO;pl<=UU;pl++){
+		
+		if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+		else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	      }
-	      // do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
-	    }// end if BCSIGMACONSTATPOLE==1
+
+
+	      if(BCSIGMACONSTATPOLE==1){
+		
+		pl=RHO;
+		FTYPE bsqr,sigmar;
+		
+		if (bsq_calc(MAC(prim,ri,rj,rk), ptrrgeom[pl], &bsqr) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 1);
+		sigmar=bsqr/(2.0*fabs(MACP0A1(prim,ri,rj,rk,pl)));
+		
+		// ensure constant sigma at pole
+		FTYPE bsq,sigma;
+		if (bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 2);
+		sigma=bsq/(2.0*fabs(MACP0A1(prim,i,j,k,pl)));
+		
+		if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
+		  MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
+		}
+		// do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
+	      }// end if BCSIGMACONSTATPOLE==1
+	    }// end if EOMTYPE!=EOMFFDE
+
 
 	  }    
 	}

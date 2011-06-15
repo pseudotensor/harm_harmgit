@@ -1133,6 +1133,11 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
+  if(EVOLVEWITHVPOT==0){
+    dualfprintf(fail_file,"Shouldn't be in evolve_vpotgeneral() with EVOLVEWITHVPOT==0\n");
+    myexit(45986252);
+  }
+
 
   //////////////////
   //

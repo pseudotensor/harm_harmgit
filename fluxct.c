@@ -202,12 +202,13 @@ int flux_ct(int stage,
 
   MYFUN(flux_ct_diffusivecorrections(stage, pb, emf, vconemf, dq1, dq2, dq3, F1, F2, F3),"step_ch.c:advance()", "flux_ct",1);
 
-
-
-  // Evolve A_i
-  // Had to be here where EMFs are at standard CORN1,2,3 positions and before final F assigned
-  // TOTH CT method doesn't cleanly differentiate between point update and average update of A_i, so just stick to TOTH CT EMF itself
-  evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pb, Nvec, NULL, emf, CUf, CUnew, fluxdt, fluxtime, vpot);
+  
+  if(EVOLVEWITHVPOT>0){
+    // Evolve A_i
+    // Had to be here where EMFs are at standard CORN1,2,3 positions and before final F assigned
+    // TOTH CT method doesn't cleanly differentiate between point update and average update of A_i, so just stick to TOTH CT EMF itself
+    evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pb, Nvec, NULL, emf, CUf, CUnew, fluxdt, fluxtime, vpot);
+  }
 
 
   //////////////

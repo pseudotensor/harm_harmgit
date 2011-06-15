@@ -27,7 +27,7 @@
 #define SAFE 2.0
 #define TRYTOL 1E-10 // attempted tolerance
 #define OKTOL 1e-5 // error must be below this to avoid report
-#define FAILTOL 1e-1
+#define FAILTOL 1e-3
 #endif
 
 // whether to turn on extensive recent debugging
@@ -67,7 +67,7 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
   FTYPE truecon,truecon2;
   int nrlasti,nrgoodi,nrgoodj;
   FTYPE nrerr,nrans,nrgoodhh;
-
+  int iterfailed;
 
 
   trytollocal=NUMEPSILONPOW23;
@@ -102,6 +102,7 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
   // START BIG LOOP over Jon's iterations
   //
   //////////////////////
+  iterfailed=0;
   while(1){
 
 
@@ -323,13 +324,14 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
     if(iter>=MAXITER){
       if(err<OKTOL) break;
       else{ // then maybe problems
-	if(minerror<OKTOL){
-	  ans=minans;
+	ans=minans;
+
+	if((minerror<OKTOL || err<OKTOL)){
 	  break;	      // then accept as answer
 	}
 	else{
 	  // then must fail
-	  dualfprintf(fail_file,"iter>MAXITER: never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",OKTOL,err,ii,jj,kk);
+	  dualfprintf(fail_file,"iter=%d>=MAXITER=%d: never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",iter,MAXITER,OKTOL,err,ii,jj,kk);
 	  dualfprintf(fail_file,"gi=%d gj=%d gk=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 	  dualfprintf(fail_file,"ti=%d tj=%d tk=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k);
 	  dualfprintf(fail_file,"miniter=%d errlist[miniter]=%21.15g hhlist[miniter]=%21.15g\n",miniter,errlist[miniter],hhlist[miniter]);
@@ -337,11 +339,12 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
 	  for(iterdebug=0;iterdebug<iter;iterdebug++){
 	    dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
 	  }
-	  //	  if(err>=FAILTOL) myexit(67);
-	  if(err>=FAILTOL) return(1); // indicate failure
-	}
-      }      
-    }
+
+	  iterfailed=1;
+	  break;
+	}//end if not OKTOL
+      }// end if not OKTOL for only err
+    }// end if iter>=MAXITER
 #endif // end JCM addition
 
 
@@ -358,6 +361,11 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
   }
   else{
     if(debugfail>=2) dualfprintf(fail_file,"Bad NUMREC error at i=%d j=%d k=%d ii=%d jj=%d kk=%d error=%21.15g ans=%21.15g :: iter=%d lasti=%d minerrorhstart=%21.15g firsthstart=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ii,jj,kk,err,ans,iter,lasti,minerrorhstart,firsthstart);
+  }
+
+
+  if(err>=FAILTOL){
+    return(1); // indicate failure
   }
 
 
@@ -1918,6 +1926,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
 
   }
+
+
+
+
 
 
   // DIFFNUMREC version has DIFFGAMMIE as default value

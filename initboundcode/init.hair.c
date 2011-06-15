@@ -22,6 +22,9 @@ static FTYPE rhodisk;
 
 static FTYPE nz_func(FTYPE R) ;
 
+FTYPE normglobal;
+int inittypeglobal; // for bounds to communicate detail of what doing
+
 
 
 int prepre_init_specific_init(void)
@@ -173,7 +176,7 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM 0 // choice
+#define WHICHPROBLEM NORMALTORUS // choice
 
 
 int init_defcoord(void)
@@ -181,7 +184,8 @@ int init_defcoord(void)
   
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // define coordinate type
-  defcoord = JET3COORDS;
+  //  defcoord = JET3COORDS;
+  defcoord = LOGRSINTH;
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -193,18 +197,25 @@ int init_defcoord(void)
 
 int init_grid(void)
 {
+
+  //  dualfprintf(fail_file,"must normalize field so sigma large and chosen at t=0 since not that way right now\n");
+  //  myexit(666);
   
   // metric stuff first
-  a = 0.9375 ;
+  a = 0.0 ;
+  //a = 0.99 ;
+  //  a = 0.9375 ;
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = 0.0;
+  R0 = 0.5;
   Rout = 40.0;
+  //R0 = 0.0;
+  //Rout = 40;
 #elif(WHICHPROBLEM==GRBJET)
-  R0 = -3.0;
-  Rout = 1E5;
+  R0 = 0.2;
+  Rout = 1E3;
 #endif
 
  
@@ -345,10 +356,43 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
   
 
+  if(RESTARTMODE==1){
+    dualfprintf(fail_file,"WARNING: On lonestar4 with zakamskabig restart (first restart attempt), reaching inside below conditional eventually leads to core dump on several tasks.  Some core dumps are good, and show i index inside transform_primitive_pstag() called by transform_primitive_vB called in user1_init_primitives() for the first exposed loop -- leads to crazy i index (very negative or positive).  So memory segfault occurs.  No idea where that i is being changed.  Maybe memory leak, but all cores that had good core dump looked ok.  So maybe something odd going on.  Note pglobal and panalytic and other arrays have funny or NULL-like address, but aren't used so probably just an optimization thing.");
+
+
+    /*
+(gdb) bt
+#0  transform_primitive_pstag (whichvel=0, whichcoord=1, i=-1534771426, j=-4, k=11,
+    p=0x130b79f0, pstag=0x130ba300) at fluxvpot.c:1196
+#1  0x0000000000408989 in transform_primitive_vB (whichvel=0, whichcoord=1, i=-1534771426,
+    j=-4, k=11, p=0x130b79f0, pstag=0x130ba300) at initbase.c:2718
+#2  0x0000000000405826 in user1_init_primitives (prim=0x0, pstag=0x1,
+    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.tools.c:340
+#3  0x000000000040466e in init_grid_post_set_grid (prim=0x0, pstag=0x1,
+    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.c:367
+#4  0x000000000040b8bd in init (argc=0x0, argv=0x1) at initbase.c:143
+#5  0x00000000004bd96a in main (argc=6, argv=0x7fffd5b2ec08) at main.c:30
+(gdb) print myid
+$4 = 1380
+(gdb) print startpos
+$5 = {0, 136, 64, 112}
+(gdb) print mycpux1
+No symbol "mycpux1" in current context.
+(gdb) print numprocs
+$6 = 1536
+
+
+     */
+
+  }
 
 
   //SASMARK restart: need to populate panalytic with IC's
-  if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
+  if(0&& RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
     //    MYFUN(init_primitives(prim,pstag,ucons,vpot,Bhat,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
 
@@ -374,8 +418,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int funreturn;
+  int inittype;
 
-  funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
+
+  inittype=1;
+
+  funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -385,10 +433,12 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+
+  // assume inittype not used, pos==CENT, and time doesn't matter (e.g. only used at t=0)
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
@@ -477,7 +527,8 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   /* regions outside torus */
   // this region is already in Kerr Schild prime in proper primitive quantity for velocity
-  if (lnh < 0. || r < rin) {
+  if (1 || lnh < 0. || r < rin) { //  NO DISK
+  //if (lnh < 0. || r < rin) {
 
 
     get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
@@ -610,8 +661,13 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 #define VERTFIELD 1
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
+#define TOROIDALFIELD 4
+#define NSFIELD 6
 
-#define FIELDTYPE DISKFIELD
+//#define FIELDTYPE VERTFIELD
+//#define FIELDTYPE DISKFIELD
+#define FIELDTYPE NSFIELD
+
 
 FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower)
 {
@@ -673,16 +729,27 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 
 
 
+
+
 // assumes normal field in pr
 // SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, q;
-  FTYPE r,th;
+  FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
+  FTYPE x,y,z;
 
 
+  r=V[1];
+  th=V[2];
+  ph=V[3];
+
+  // Cartesian position
+  x = r*cos(ph)*sin(th);
+  y = r*sin(ph)*sin(th);
+  z = r*cos(th);
 
 
   vpot=0.0;
@@ -690,8 +757,6 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
   if(l==3){// A_\phi
 
-    r=V[1];
-    th=V[2];
 
 
 
@@ -735,6 +800,17 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     }
   }
 
+
+  if(FIELDTYPE==NSFIELD){
+    FTYPE xns=0.0;
+    FTYPE absrdiff=abs(r-0.0);
+    FTYPE Rsoft=1.0; // so geometry doesn't vary with $a$
+    //    vpot += 0.5*Rin*Rin*Rin*(xns-x)*pow(xns-x,1.0)/pow(absrdiff+Rsoft,3.0) ;
+    vpot += 0.5*Rsoft*Rsoft*Rsoft*sin(th)*sin(th)/r ;
+
+
+  }
+
   //////////////////////////////////
   //
   // finally assign what's returned
@@ -751,12 +827,12 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
 
-int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
   int fieldfrompotential[NDIM];
 
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
  
 
@@ -823,18 +899,32 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 }
 
 
+
 // assumes normal field definition
 int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
+  int normalize_field_sigma(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+  int normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
  
-  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  if(funreturn!=0) return(funreturn);
+  if(0){ // not doig beta normalization for disk-less IC
+    funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+    if(funreturn!=0) return(funreturn);
+  }
+  else{
+    // initialize right at the limit near pole
+    funreturn=user1_normalize_field_sigma(BSQORHOLIMIT,1.0,prim, pstag, ucons, vpot, Bhat); // t is ok here
+    if(EOMTYPE!=EOMFFDE) user1_normalize_densities_postnormalizefield(t, prim); // t is ok here
+
+    if(funreturn!=0) return(funreturn);    
+  }
  
   return(0);
 
 }
+
+
 
 
 
@@ -992,4 +1082,26 @@ int theproblem_set_myid(void)
 
 }
 
+
+
+void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+void adjust_fluxcttoth_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+
+void adjust_fluxcttoth_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  // not used
+}
+
+void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+{
+  // not used
+}
 

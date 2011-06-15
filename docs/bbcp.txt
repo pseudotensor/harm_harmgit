@@ -3,6 +3,14 @@
 //
 // File transfer notes:
 //
+// http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+/
+
+// use:
+// http://www.iozone.org/
+// or FDT to benchmark disk performance to see what can get
+
+//
 //
 // Lonestar + Ranger -> Ranch for data storage:
 // http://services.tacc.utexas.edu/index.php/ranch-user-guide/
