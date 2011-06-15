@@ -124,7 +124,7 @@
 // comment below 3 lines when not wanting to test
 // uncomment when wanting to test, and then look at make.log
 //
-#if(1)
+#if(0)
 #if(!defined(doublereal))
 typedef double doublereal;
 #endif
