@@ -58,6 +58,8 @@ static FTYPE rjetend;
 static FTYPE r0disk;
 static FTYPE rdiskend;
 static FTYPE jetnu;
+static FTYPE x10;
+static FTYPE x20;
 
 
 // for defcoord=JET6COORDS
@@ -455,62 +457,65 @@ void set_coord_parms_deps(int defcoordlocal)
     /////////////////////
     // RADIAL GRID SETUP
     /////////////////////
-    npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+    npow=global_npow;  //don't change it, essentially equivalent to changing cpow2
 
     //radial hyperexponential grid
-    npow2=4.0; //power exponent
-    cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-    rbr = 100.;  //radius at which hyperexponentiation kicks in
+    npow2=global_npow2; //power exponent
+    cpow2=global_cpow2; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = global_rbr;  //radius at which hyperexponentiation kicks in
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
     /////////////////////
     //ANGULAR GRID SETUP
     /////////////////////
 
+    x10 = global_x10;
+    x20 = global_x20;
+     
     //transverse resolution fraction devoted to different components
     //(sum should be <1)
-    fracdisk = 0.2;
-    fracjet = 0.5;
+    fracdisk = global_fracdisk;
+    fracjet = global_fracjet;
 
-    jetnu = 0.75;  //the nu-parameter that determines jet shape
+    jetnu = global_jetnu;  //the nu-parameter that determines jet shape
 
     //subtractor, controls the size of the last few cells close to axis:
     //if rsjet = 0, then no modification <- *** default for use with grid cylindrification
     //if rsjet ~ 0.5, the grid is nearly vertical rather than monopolar,
     //                which makes the timestep larger
-    rsjet = 0.0; 
+    rsjet = global_rsjet; 
 
     //distance at which theta-resolution is *exactly* uniform in the jet grid -- want to have this at BH horizon;
     //otherwise, near-uniform near jet axis but less resolution (much) further from it
     //the larger r0grid, the larger the thickness of the jet 
     //to resolve
-    r0grid = Rin;    
+    r0grid = global_r0grid;    
 
     //distance at which jet part of the grid becomes monopolar
     //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
-    r0jet = 3;
+    r0jet = global_r0jet;
     
     //distance after which the jet grid collimates according to the usual jet formula
     //the larger this distance, the wider is the jet region of the grid
-    rjetend = 15;
+    rjetend = global_rjetend;
     
     //distance at which disk part of the grid becomes monopolar
     //the larger r0disk, the larger the thickness of the disk 
     //to resolve
-    r0disk = r0jet;
+    r0disk = global_r0disk;
 
     //distance after which the disk grid collimates to merge with the jet grid
     //should be roughly outer edge of the disk
-    rdiskend = 80;
+    rdiskend = global_rdiskend;
 
     /////////////////////
     //PHI GRID SETUP
     /////////////////////
     if( dofull2pi ) {
-      fracphi = 1.;
+      fracphi = 1;
     }
     else {
-      fracphi = 0.5;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+      fracphi = global_fracphi;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
     }   
   }
   else if (defcoordlocal == JET6COORDS) {
@@ -620,7 +625,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu,x10,x20);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -719,6 +724,7 @@ void read_coord_parms(int defcoordlocal)
       else if (defcoordlocal == SJETCOORDS) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
 	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&jetnu);
+        fscanf(in,HEADER2IN,&x10,&x20);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
@@ -836,6 +842,8 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rdiskend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x10, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x20, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET6COORDS) {
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -3508,12 +3516,6 @@ FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 //            V[2] = 0 and pi
 void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
 {
-  FTYPE x10 = 3.3;;   // AKMARK
-  FTYPE x20 = -1. + 1./totalsize[2]; //This restricts grid cylindrification to the one 
-    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
-    //This trick minimizes the resulting pole deresolution and relaxes the time step.
-    //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
-    //by POLEDEATH (see bounds.tools.c).
   FTYPE npiovertwos;
   FTYPE X[NDIM], V[NDIM];
   FTYPE Vin[NDIM];
