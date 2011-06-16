@@ -1,12 +1,14 @@
 #include "decs.h"
 
 
+static int restart_init_point_check(int which, int i, int j, int k);
+
+
 // only check basic important inputs from restart dump file
 int restart_init_simple_checks(int which)
 {
   int gotnan;
   int i,j,k;
-  int pliter,pl;
 
   //////////////
   //
@@ -15,18 +17,39 @@ int restart_init_simple_checks(int which)
   //////////////
   // make sure all zones are not nan
   gotnan=0;
-  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
-    PDUMPLOOP(pliter,pl){
-      if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) || !finite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
-	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : %21.15g %21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
-	//	myexit(24968346);
-	gotnan=1;
-      }
-    }
+  // OPENMPOPTMARK: Don't optimize since critical region
+
+  if(which<=2){ // see initbase.c
+    LOOP{  gotnan+=restart_init_point_check(which,i,j,k); }
   }
+  else{
+    FULLLOOP{  gotnan+=restart_init_point_check(which,i,j,k); }
+  }
+
+
+
   if(gotnan) myexit(39476346);
 
   return(0);
+
+}
+
+int restart_init_point_check(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  PDUMPLOOP(pliter,pl){
+    if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) || !finite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
+      dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : %21.15g %21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
+      //	myexit(24968346);
+      gotnan++;
+    }
+  }
+
+  return(gotnan);
 
 }
 

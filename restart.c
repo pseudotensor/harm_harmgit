@@ -210,7 +210,7 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   // counters not crucial
   //  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] + dnumcolumns[DEBUGDUMPTYPE] ;
 
-  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
+  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
 
   
   if(EVOLVEWITHVPOT){
