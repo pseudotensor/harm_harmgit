@@ -59,7 +59,9 @@ extern int image_content(int i, int j, int k, MPI_Datatype datatype,void *writeb
 extern void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *max, FTYPE*min,FTYPE*sum);
 
 extern int restart_init(int which);
+extern int restart_init_simple_checks(int which);
 extern int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
+
 
 
 // restart dump

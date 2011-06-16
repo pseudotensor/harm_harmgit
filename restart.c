@@ -127,6 +127,9 @@ int restart_init(int which)
   trifprintf("proc: %d t=%21.15g failed=%d\n", myid, t, failed);
 
 
+  // very basic checks on primary grid-based quantities read from restart dump
+  restart_init_simple_checks(1);
+
 
   trifprintf("end restart_init\n");
 
@@ -209,6 +212,12 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 
   *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
 
+  
+  if(EVOLVEWITHVPOT){
+    // only need to store vpot in rdump if using vpot to evolve B.  Otherwise, vpot is just derived from B and not needed except as diagnostic.
+    *numcolumns += dnumcolumns[VPOTDUMPTYPE];
+  }
+
   *numversion=1;
 }
 
@@ -223,10 +232,13 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(unewglobal,i,j,k),0,NPR,writebuf);
 
   // NOTEMARK: see also dump.c
-  if(dnumcolumns[VPOTDUMPTYPE]>0){
-    int jj;
-    for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-      myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+
+  if(EVOLVEWITHVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+      }
     }
   }
 
@@ -295,10 +307,13 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
   myget(datatype,GLOBALMAC(unewglobal,i,j,k),0,NPR,writebuf);
 
   // NOTEMARK: see also dump.c
-  if(dnumcolumns[VPOTDUMPTYPE]>0){
-    int jj;
-    for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-      myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+
+  if(EVOLVEWITHVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+      }
     }
   }
 

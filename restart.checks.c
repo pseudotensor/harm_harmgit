@@ -1,5 +1,38 @@
 #include "decs.h"
 
+
+// only check basic important inputs from restart dump file
+int restart_init_simple_checks(int which)
+{
+  int gotnan;
+  int i,j,k;
+  int pliter,pl;
+
+  //////////////
+  //
+  // make sure all zones are not nan just as read-in from file
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
+    PDUMPLOOP(pliter,pl){
+      if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) || !finite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
+	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : %21.15g %21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
+	//	myexit(24968346);
+	gotnan=1;
+      }
+    }
+  }
+  if(gotnan) myexit(39476346);
+
+  return(0);
+
+}
+
+
+
+
 /////////////////////
 //
 // At this point all grid type parameters should be set as if done with init()

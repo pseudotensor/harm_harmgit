@@ -92,10 +92,12 @@ int init(int *argc, char **argv[])
   //
   ///////////////
   if(RESTARTMODE==1){
+    trifprintf("start restart_init: proc=%04d\n",myid);
     if (restart_init(WHICHFILE) >= 1) {
       dualfprintf(fail_file, "main:restart_init: failure\n");
       return(1);
     }
+    trifprintf("end restart_init: proc=%04d\n",myid);
 
     // don't bound read-in data yet since need grid and other things
 
@@ -357,15 +359,27 @@ int init(int *argc, char **argv[])
   else if(RESTARTMODE==1){
 
 
+    restart_init_simple_checks(2);
+
+
 #if(FIXUPAFTERINIT)
+    trifprintf("before fixup() during restart: proc=%04d\n",myid);
     if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
       FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
+    trifprintf("after fixup() during restart: proc=%04d\n",myid);
 #endif
+    trifprintf("before bound_allprim() during restart: proc=%04d\n",myid);
     if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
       FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+    trifprintf("after bound_allprim() during restart: proc=%04d\n",myid);
       
+    trifprintf("before pre_fixup() during restart: proc=%04d\n",myid);
     if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
       FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+    trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
+
+
+    restart_init_simple_checks(3);
 
 
     ////////////////
@@ -375,13 +389,24 @@ int init(int *argc, char **argv[])
     // For RESTARTMODE==0 the pstag quantity is set by user or during vector potential conversion to u and p, but during restart we only read-in p and unew while we need also pstagscratch
     //
     /////////////////
+    trifprintf("before ucons2upointppoint during restart: proc=%04d\n",myid);
     ucons2upointppoint(t, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(ulastglobal),GLOBALPOINT(pglobal)); // this regenerates pcentered for B1,B2,B3
+    trifprintf("after ucons2upointppoint during restart: proc=%04d\n",myid);
+
+
+    restart_init_simple_checks(4);
 
 
     // after all parameters and primitives are set, then can set these items
+    trifprintf("before post_init and post_init_specific_init during restart: proc=%04d\n",myid);
     post_init(GLOBALPOINT(pglobal),GLOBALPOINT(cfaraday));
     // user post_init function
     post_init_specific_init();
+    trifprintf("after post_init and post_init_specific_init during restart: proc=%04d\n",myid);
+
+
+    restart_init_simple_checks(5);
+
 
     // don't want conservatives or primitives to change, just compute metric
     if(DOSELFGRAVVSR){
@@ -391,10 +416,12 @@ int init(int *argc, char **argv[])
     }
 
 
+    trifprintf("before restart_init_checks() during restart: proc=%04d\n",myid);
     if (restart_init_checks(WHICHFILE, GLOBALPOINT(pglobal), GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal)) >= 1) {
       dualfprintf(fail_file, "main:restart_init_checks: failure\n");
       return(1);
     }
+    trifprintf("after restart_init_checks() during restart: proc=%04d\n",myid);
 
 
     trifprintf( "proc: %d restart completed: failed=%d\n", myid, failed);
