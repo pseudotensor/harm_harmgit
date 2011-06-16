@@ -33,6 +33,9 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
   int pl,pliter;
 
 
+  dualfprintf(fail_file,"Need to update full3d issue\n");
+  myexit(666);
+
   // specify location of primitives
   PALLLOOP(pl) dirprim[pl]=CENT;
   //  dualfprintf(fail_file,"start bound_prim\n"); // CHANGINGMARK

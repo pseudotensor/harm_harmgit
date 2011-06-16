@@ -5,8 +5,6 @@
 /* bound array containing entire set of primitive variables */
 
 
-#define BOUNDPRIMLOC 0
-#define BOUNDPSTAGLOC 1
 
 static int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
@@ -153,7 +151,7 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X2DN;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2dn_polaraxis_full3d(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2dn_polaraxis_full3d(1,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
 	bound_x2dn_polaraxis(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -168,7 +166,7 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X2UP;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2up_polaraxis_full3d(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2up_polaraxis_full3d(1,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
 	bound_x2up_polaraxis(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -273,9 +271,80 @@ void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k,
 {
 }
 
+
 ///Called after the MPI boundary routines
-int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+// many things here are copied from above
+int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
+  int dirprim[NPR];
+  int pliter,pl;
+
+  int inboundloop[NDIM];
+  int outboundloop[NDIM];
+  int innormalloop[NDIM];
+  int outnormalloop[NDIM];
+  int inoutlohi[NUMUPDOWN][NUMUPDOWN][NDIM];
+  int riin,riout,rjin,rjout,rkin,rkout;
+  int dosetbc[COMPDIM*2];
+  int enerregion;
+  int *localenerpos;
+  int dir;
+
+
+
+
+  ////////////////////////
+  //
+  // set bound loop
+  //
+  ///////////////////////
+  set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
+
+
+  // for CZLOOP:
+  // avoid looping over region outside active+ghost grid
+  // good because somewhat general and avoid bad inversions, etc.
+  //  enerregion=TRUEGLOBALENERREGION;
+  enerregion=ACTIVEREGION; // now replaces TRUEGLOBALENERREGION
+  localenerpos=enerposreg[enerregion];
+  // if(WITHINENERREGION(localenerpos,i,j,k)){
+  // note that localenerpos[X1DN] sets first evolved cell
+
+
+  if(ispstag==BOUNDPRIMLOC){
+    // specify location of primitives
+    PALLLOOP(pl) dirprim[pl]=CENT;
+  }
+  
+  if(ispstag==BOUNDPSTAGLOC){
+    // specify location of primitives
+    PALLLOOP(pl) dirprim[pl]=CENT;
+    dirprim[B1]=FACE1;
+    dirprim[B2]=FACE2;
+    dirprim[B3]=FACE3;
+  }
+
+
+  // use post-MPI values to operate poledeath() since otherwise boundary values poledeath uses are not set yet
+  if(whichdir==2){
+
+    dir=X2DN;
+    if(dosetbc[dir]){
+      if(BCtype[dir]==POLARAXIS && special3dspc){
+	bound_x2dn_polaraxis_full3d(2,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+      }
+    }
+
+
+    dir=X2UP;
+    if(dosetbc[dir]){
+      if(BCtype[dir]==POLARAXIS && special3dspc){
+	bound_x2up_polaraxis_full3d(2,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+      }
+    }
+
+  }
+
 
   return(0);
 }

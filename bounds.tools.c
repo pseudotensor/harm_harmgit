@@ -624,6 +624,7 @@ int bound_x1dn_sym(
 
 // X2 inner POLARAXIS
 int bound_x2dn_polaraxis_full3d(
+				int whichcall,
 		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
@@ -723,7 +724,8 @@ int bound_x2dn_polaraxis_full3d(
 	}// end if ncpux3==1
 
 	// SUPERGODMARK: continue to use for now
-	if(BCtype[X2DN]==POLARAXIS){
+	// only do poledeath() after MPI call (i.e. whichcall==2)
+	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
 	  if(POLEDEATH) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
@@ -876,6 +878,7 @@ int bound_x2dn_polaraxis(
 
 // X2 outer POLARAXIS full3d
 int bound_x2up_polaraxis_full3d(
+				int whichcall,
 		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
@@ -978,7 +981,8 @@ int bound_x2up_polaraxis_full3d(
 	}// end if ncpux3==1
 
 	// SUPERGODMARK: continue to use for now
-	if(BCtype[X2UP]==POLARAXIS){
+	// only do poledeath() after MPI call (i.e. whichcall==2)
+	if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
 	  if(POLEDEATH) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 

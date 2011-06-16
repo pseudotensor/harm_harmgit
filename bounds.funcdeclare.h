@@ -25,7 +25,7 @@ extern int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE 
 // user bounds:
 extern int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
-extern int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+extern int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_flux_user(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
 extern int bound_pflag_user(int boundstage, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
 

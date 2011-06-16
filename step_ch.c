@@ -1653,7 +1653,8 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_prim_user_after_mpi_dir(boundstage, boundtime, dir, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
+      int ispstag=BOUNDPRIMLOC;
+      MYFUN(bound_prim_user_after_mpi_dir(boundstage, boundtime, dir, boundvartype, ispstag, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
     }// end if stage0 or stagem1
 
 
@@ -1730,7 +1731,8 @@ int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*p
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_prim_user_after_mpi_dir(boundstage,boundtime, dir,pstag),"step_ch.c:bound_pstag()", "bound_prim_user_after_mpi()", 1);
+      int ispstag=BOUNDPSTAGLOC;
+      MYFUN(bound_prim_user_after_mpi_dir(boundstage, boundtime, dir, mystagboundvar, ispstag, pstag),"step_ch.c:bound_pstag()", "bound_prim_user_after_mpi()", 1);
     }// end if stage0 or stagem1
 
 

@@ -34,6 +34,7 @@ extern int bound_x1dn_sym(
 		       int *localenerpos
 		   );
 extern int bound_x2dn_polaraxis_full3d(
+				       int whichcall,
 		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
@@ -56,6 +57,7 @@ extern int bound_x2dn_polaraxis(
 		       int *localenerpos
 			 );
 extern int bound_x2up_polaraxis_full3d(
+				       int whichcall,
 		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,

@@ -692,6 +692,11 @@
 #define BOUNDFLUXSIMPLETYPE 6
 
 
+// ispstag:
+#define BOUNDPRIMLOC 0
+#define BOUNDPSTAGLOC 1
+
+
 // -------------> r
 // |	     3    
 // |	    1-0   
