@@ -32,6 +32,25 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 
+  //////////////
+  //
+  // make sure all zones are not nan before fixup and bound
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
+    PDUMPLOOP(pliter,pl){
+      if(!finite(MACP0A1(prim,i,j,k,pl))){
+	dualfprintf(fail_file,"before fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	//	myexit(24968346);
+	gotnan=1;
+      }
+    }
+  }
+  if(gotnan) myexit(24968341);
+
+
 
   //////////
   // NOW CHECK THE DATA and apply "fixups" if necessary
@@ -102,6 +121,24 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 
+  //////////////
+  //
+  // make sure all zones are not nan after fixup
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
+    PDUMPLOOP(pliter,pl){
+      if(!finite(MACP0A1(prim,i,j,k,pl))){
+	dualfprintf(fail_file,"after fixup & before bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	//	myexit(24968346);
+	gotnan=1;
+      }
+    }
+  }
+  if(gotnan) myexit(24968341);
+
 
 
   /////////////////////
@@ -128,7 +165,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   FULLLOOP{// OPENMPOPTMARK: Don't optimize since critical region
     PDUMPLOOP(pliter,pl){
       if(!finite(MACP0A1(prim,i,j,k,pl))){
-	dualfprintf(fail_file,"restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	dualfprintf(fail_file,"after fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
 	//	myexit(24968346);
 	gotnan=1;
       }

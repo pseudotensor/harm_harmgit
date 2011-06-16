@@ -202,8 +202,8 @@ int init_grid(void)
   //  myexit(666);
   
   // metric stuff first
-  //  a = 0.0 ;
-  a = 0.99 ;
+  a = 0.0 ;
+  //  a = 0.99 ;
   //  a = 0.9375 ;
   
 
@@ -259,9 +259,9 @@ int init_global(void)
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E3;
+  BSQORHOLIMIT=1E4; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1E5;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #elif(WHICHPROBLEM==GRBJET)

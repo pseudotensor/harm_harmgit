@@ -2002,6 +2002,12 @@ void check_bnd_num(void)
   }
 
 
+  if(TRACKVPOT==0 && EVOLVEWITHVPOT==1){
+    dualfprintf(fail_file,"Must turn on TRACKVPOT if EVOLVEWITHVPOT==1\n");
+    myexit(38974632);
+  }
+
+
 
   // external checks
   parainitchecks();

@@ -171,9 +171,6 @@ void init_dnumcolumns_dnumversion(void)
   int i;
 
   extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -187,6 +184,10 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
 
 
@@ -205,10 +206,6 @@ void init_dnumcolumns_dnumversion(void)
 
   // image
   set_image_content_dnumcolumns_dnumversion(&dnumcolumns[IMAGEDUMPTYPE],&dnumversion[IMAGEDUMPTYPE]);
-  // rdump
-  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
-  // rmetricdump
-  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
   // dump
   set_dump_content_dnumcolumns_dnumversion(&dnumcolumns[MAINDUMPTYPE],&dnumversion[MAINDUMPTYPE]);
   // gdump
@@ -235,6 +232,11 @@ void init_dnumcolumns_dnumversion(void)
   set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPTYPE],&dnumversion[VPOTDUMPTYPE]);
   // failfloordudump
   set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
+
+  // rdump (must come after all normal dumps since dnumcolumns used by restart to store other things needed up restart that are dealt with also above)
+  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
+  // rmetricdump
+  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
 
 
 
@@ -653,6 +655,9 @@ extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numv
 int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   // could also make everything FTYPE and convert like for normal i,j dump file
+
+
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,GLOBALMAC(failfloorcount,i,j,k),0,2*NUMTSCALES*NUMFAILFLOORFLAGS,writebuf);
     
   return(0);
@@ -1298,6 +1303,7 @@ void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversi
 int dissdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,NUMDISSFUNPOS,writebuf);
 
   return (0);
@@ -1573,6 +1579,7 @@ int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int jj;
 
+  // NOTEMARK: see also restart.c since this is added to restart 
   for(jj=0;jj<NUMVPOTDUMP;jj++){
     myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
   }
@@ -1635,6 +1642,7 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 {
   int pl;
 
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,&GLOBALMAC(failfloordu,i,j,k),0,NPR,writebuf); // NPR
   
   return (0);
