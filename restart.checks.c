@@ -53,8 +53,8 @@ static int restart_init_point_check_pglobal(int which, int i, int j, int k)
   gotnan=0;
 
   PDUMPLOOP(pliter,pl){
-    if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) || !finite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
-      dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : %21.15g %21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
+    if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) ){
+      dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl));
       //	myexit(24968346);
       gotnan++;
     }
@@ -74,7 +74,7 @@ static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
   gotnan=0;
 
   PDUMPLOOP(pliter,pl){
-    if(DOENOFLUX != NOENOFLUX || (FLUXB==FLUXCTSTAG &&(pl==B1 || pl==B2 || pl==B3)) ){
+    if(DOENOFLUX != NOENOFLUX || (FLUXB==FLUXCTSTAG &&(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3)) ){
       if(!finite(GLOBALMACP0A1(unewglobal,i,j,k,pl)) ){
 	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : unewglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(unewglobal,i,j,k,pl));
 	//	myexit(24968346);
@@ -99,7 +99,7 @@ static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
   
   if(FLUXB==FLUXCTSTAG){
     PDUMPLOOP(pliter,pl){
-      if(pl==B1 || pl==B2 || pl==B3){
+      if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
 	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl)) ){
 	  dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pstagglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pstagglobal,i,j,k,pl));
 	  //	myexit(24968346);

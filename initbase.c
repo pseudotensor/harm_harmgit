@@ -391,6 +391,12 @@ int init(int *argc, char **argv[])
     restart_init_simple_checks(3);
 
 
+    // before can interpolate inside ucons2upointppoint(), need to compute things needed by interpolation, including for STORESHOCKINDICATOR==1
+    if(STORESHOCKINDICATOR==1){
+      pre_interpolate_and_advance(GLOBALPOINT(pglobal));
+    }
+
+
     ////////////////
     //
     // Note there is no need to convert average or quasi-deaveraged field to staggered field (see comments in ucons2upointppoint())
@@ -479,35 +485,10 @@ int init(int *argc, char **argv[])
 
 
 #if(PRODUCTION==0)
-  //////////////
-  //
-  // make sure all zones are not nan before ending init
-  //
-  /////////////
-  gotnan=0;
-  FULLLOOP{ // diagnostic check
-    PINTERPLOOP(pliter,pl){ // only check those things that will be interpolated since rest of things assumed to be not necessary as primitive and generated as conserved/flux from other primitives
-      if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl))){
-	dualfprintf(fail_file,"init/restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	gotnan=1;
-      }
-    }
-  }
-  if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753487);
 
+  // final checks
+  restart_init_simple_checks(6);
 
-  if(FLUXB==FLUXCTSTAG){
-    gotnan=0;
-    FULLLOOP{ // diagnostic check
-      PLOOPBONLY(pl){ // only check those things that will be interpolated since rest of things assumed to be not necessary as primitive and generated as conserved/flux from other primitives
-	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl))){
-	  dualfprintf(fail_file,"init/restart data has pstag NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	  gotnan=1;
-	}
-      }
-    }
-    if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753488);
-  }
 #endif
 
 

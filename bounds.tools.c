@@ -1389,7 +1389,8 @@ int bound_checks1(
       // Can't use FULLLOOP since different boundary types go different depths into boundary cells
       //      PALLLOOP(pl){
       PBOUNDLOOP(pliter,pl){
-	if(pl==B1 || pl==B2 || pl==B3){
+	// for staggered field, avoid inner-most cell since isn't needed or computed and so can be NaN
+	if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
 	  if(!finite(MACP0A1(prim,i,j,k,pl))){
 	    trigger++;
 	    dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,pl);

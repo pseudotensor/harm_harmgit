@@ -213,8 +213,8 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
 
   
-  if(EVOLVEWITHVPOT){
-    // only need to store vpot in rdump if using vpot to evolve B.  Otherwise, vpot is just derived from B and not needed except as diagnostic.
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
     *numcolumns += dnumcolumns[VPOTDUMPTYPE];
   }
 
@@ -233,7 +233,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // NOTEMARK: see also dump.c
 
-  if(EVOLVEWITHVPOT){
+  if(EVOLVEWITHVPOT||TRACKVPOT){
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
@@ -308,7 +308,7 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
   // NOTEMARK: see also dump.c
 
-  if(EVOLVEWITHVPOT){
+  if(EVOLVEWITHVPOT||TRACKVPOT){
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){

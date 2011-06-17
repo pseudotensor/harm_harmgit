@@ -226,6 +226,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
+
     ////////////////////
     //  If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
     ///////////////////
@@ -248,6 +249,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
       }
     }
+
 
 
 
@@ -284,8 +286,11 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     //
     ///////////// ENTROPY GRMHD
     //
-    ///////////////////////////////////////////////////
     // direct entropy evolution (can use old Utoprim() or new code, but not all codes have entropy inversion)
+    //
+    ///////////////////////////////////////////////////
+
+
 
 #if(0)
     // GODMARK: I noticed that old 5D method is very poor in finding the solution in large gradients so fails alot leading to averaging and run-away field growths in semi-static regions leading to untrustable solution.
@@ -341,6 +346,10 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       }
     }
 #endif
+
+
+
+
 
 
     ////////////////////
@@ -562,6 +571,7 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
 
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
+      // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
       int modcons=0;
       FTYPE Ui[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
@@ -694,6 +704,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
 
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
+      // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
       int modcons=0;
       FTYPE Ui[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
@@ -893,6 +904,18 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     if(FAILIFBADCHECK && badinversionfail){
       (*lpflag)=UTOPRIMFAILCONVBADINVERTCOMPARE;
     }
+
+
+
+    ////////////
+    //
+    // Account for any conserved quantity change (could be just difference created by primtoU, but still tells order of issue)
+    //
+    // only makes sense to account for changes in U if inversion is treated as success
+    //
+    // Also, only makes sense if using primitives as basis.  Since, if use U as basis, then each iteration relies upon old correct U without any error introduced due to inversion.
+    //
+    /////////////
 
 
 

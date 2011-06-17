@@ -1176,7 +1176,11 @@ int evolve_vpotgeneral(int whichmethod, int stage,
   }
 
 
-  if(MODIFYEMFORVPOT==MODIFYVPOT){  // overall, get new emf/fluxes
+  // EVOLVEWITHVPOT==1 means use A_i as ultimate basis for B^i. So can modify A_i and affect resulting B^i while keeping divB=0
+  // MODIFYEMFORVPOT==MODIFYVPOT means allow modification of fluxes/emfs using A_i (no point unless A_i is used to compute B^i)
+
+
+  if(MODIFYEMFORVPOT==MODIFYVPOT && EVOLVEWITHVPOT>0){  // overall, get new emf/fluxes
 
 
     // flux->A_i : get new vpot using fluxes
@@ -1209,7 +1213,7 @@ int evolve_vpotgeneral(int whichmethod, int stage,
   }
 
 
-  if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0){ // overall, update A_i using emf/fluxes
+  if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0){ // overall, update A_i using emf/fluxes (either original or new from modified A_i)
 
     ////////////////
     //
