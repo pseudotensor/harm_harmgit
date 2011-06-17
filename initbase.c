@@ -78,7 +78,14 @@ int init(int *argc, char **argv[])
     init_defgrid(); // init default grid
     init_grid(); // request choices for grid/coordinate/metric parameters
 
+
     set_coord_parms_deps(defcoord); // requires correct defcoord at least
+
+    // requires special3dspc, periodicx?, and dofull2pi and other things defining grid type already be set
+    // after the below call, can then call boundary functions and MPI decomposition will be ready
+    init_placeongrid_griddecomposition();
+    
+
 
   }
 
@@ -364,18 +371,20 @@ int init(int *argc, char **argv[])
 
 #if(FIXUPAFTERINIT)
     trifprintf("before fixup() during restart: proc=%04d\n",myid);
-    if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
-      FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
+    if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)  FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
     trifprintf("after fixup() during restart: proc=%04d\n",myid);
 #endif
+
     trifprintf("before bound_allprim() during restart: proc=%04d\n",myid);
-    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
-      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+    // pstag not computed from unewglobal yet, so don't bound it.  It'll get self-consistently bounded when ucons2upointppoint() is called below
+    //    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+    if (bound_prim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
     trifprintf("after bound_allprim() during restart: proc=%04d\n",myid);
+
+
       
     trifprintf("before pre_fixup() during restart: proc=%04d\n",myid);
-    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
-      FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
     trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
 
 
@@ -387,6 +396,7 @@ int init(int *argc, char **argv[])
     // Note there is no need to convert average or quasi-deaveraged field to staggered field (see comments in ucons2upointppoint())
     // However, divb diagnostics at first won't be right at t=0 since set to use primitive for lower-order method, but just assume diagnostic won't likely be immediately after restart
     // For RESTARTMODE==0 the pstag quantity is set by user or during vector potential conversion to u and p, but during restart we only read-in p and unew while we need also pstagscratch
+    // so after ucons2upointppoint() call, pcent as in boundaries will not be updated but not required.  And it will not be Nan since did bound above.
     //
     /////////////////
     trifprintf("before ucons2upointppoint during restart: proc=%04d\n",myid);
@@ -875,8 +885,6 @@ int pre_init(int *argc, char **argv[])
 
 
 
-
-
   // must do in MPI mode or not MPI mode  
   init_MPI_GRMHD(argc, argv);
 
@@ -989,11 +997,28 @@ int pre_init(int *argc, char **argv[])
 #endif
 
 
+  
   ///////////////
   // 0 out these things so dump files are readable by SM under any cases
   ///////////////
   FULLLOOP{
-    PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // then pl=B1,B2,B3 actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+      PLOOP(pliter,pl){
+	if(! (pl==B1 || pl==B2 || pl==B3) ){
+	  GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+	}
+      }
+    }
+    else if(DOENOFLUX != NOENOFLUX){
+      // then all pl actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+    }
+    else{
+      PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+    }
+
+
 #if(CALCFARADAYANDCURRENTS)
     DLOOPA(jj) GLOBALMACP0A1(jcon,i,j,k,jj)=0.0;
     for(pl=0;pl<NUMFARADAY;pl++) GLOBALMACP0A1(fcon,i,j,k,pl)=0.0;
@@ -1244,6 +1269,13 @@ int init_defglobal(void)
   AVOIDADVANCESHIFTX3DN= 1;
   AVOIDADVANCESHIFTX3UP= 1;
   GLOBALBCMOVEDWITHACTIVESECTION= 0;
+
+
+
+  // special3dspc assignment must come after dofull2pi and periodicx? are set in prepre_init()
+  // must come before any use of special3dspc such as by init_placeongrid_griddecomposition()
+  special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
+  trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
 
 
   return(0);
@@ -1526,9 +1558,6 @@ int post_par_set(void)
 
   trifprintf("useghostplusactive=%d extrazones4emf=%d\n",useghostplusactive,extrazones4emf);
 
-  special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
-
-  trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
 
   trifprintf("Setting orders\n");
   orders_set();

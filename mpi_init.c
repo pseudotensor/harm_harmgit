@@ -136,8 +136,8 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
   // after below can use dualfprintf, and trifprintf, etc.
   init_genfiles(0);
 
-  // after below can bound data using MPI
-  init_placeongrid();
+  // after below, can access intra-CPU MPI related setup (all but boundary (i.e. inter-CPU MPI related) stuff)
+  init_placeongrid_gridlocation();
 
 
 
@@ -472,23 +472,15 @@ void set_primgridpos(void)
 
 
 
-void init_placeongrid(void)
+// setup per-cpu parameters
+void init_placeongrid_gridlocation(void)
 {
   // 3's were COMPDIM, but below code is fixed to require all 3 now
-  int stage,stagei,stagef;
   int i, j, m, l;
   int N[3 + 1];
 
-  int dir, bti;
-  int opp[3*2];
-  int pl,pliter;
 
-  int numbnd[NDIM],surfa[NDIM];
-  int numnpr;
-  int gridpos;
-
-
-  trifprintf("begin: init_placeongrid ... ");
+  trifprintf("begin: init_placeongrid_gridlocation ... ");
 
 
 
@@ -558,6 +550,63 @@ void init_placeongrid(void)
   realtotalcompzones=realtotalzones;
   itotalzones = itotalsize[1] * itotalsize[2] * itotalsize[3];
 
+
+
+
+
+  /////////////////
+  //
+  // output those things that were defined
+  //
+  /////////////////
+
+#if(USEMPI)
+  fprintf(log_file,"myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
+#endif
+  trifprintf("\nnumprocs(MPI)=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d\n",numprocs,ncpux1,ncpux2,ncpux3,numopenmpthreads);
+  trifprintf("\n Per MPI Task: N1=%d N2=%d N3=%d\n",N1,N2,N3);
+  fprintf(log_file,"per: %d %d\n", periodicx1, periodicx2);
+
+  for (m = 1; m <= COMPDIM; m++) {
+    fprintf(log_file,"mycpupos[%d]: %d\n", m, mycpupos[m]);
+    fprintf(log_file, "startpos[%d]: %d\n", m, startpos[m]);
+    fprintf(log_file, "endpos[%d]: %d\n", m, endpos[m]);
+    fprintf(log_file, "totalsize[%d]: %lld\n", m, totalsize[m]);
+  }
+
+  trifprintf("totalzones: %d\n", totalzones);
+
+
+  fflush(log_file);
+
+
+
+
+  trifprintf("end: init_placeongrid_gridlocation\n");
+
+
+}
+
+
+
+// setup inter-CPU grid information for message passing for domain decompsition
+// These thigns only need to be setup by first call to boundary conditions code
+void init_placeongrid_griddecomposition(void)
+{
+  // 3's were COMPDIM, but below code is fixed to require all 3 now
+  int stage,stagei,stagef;
+  int i, j, m, l;
+
+  int dir, bti;
+  int opp[3*2];
+  int pl,pliter;
+
+  int numbnd[NDIM],surfa[NDIM];
+  int numnpr;
+  int gridpos;
+
+
+  trifprintf("begin: init_placeongrid_griddecomposition ... ");
 
 
 
@@ -936,7 +985,7 @@ void init_placeongrid(void)
 
     ///////////////////
     //
-    // get number of boundary cells and number of quantities to bound
+    // get number of boundary cells and number of quantities to bound for this bti
     //
     ///////////////////
     set_numbnd(bti, numbnd, &numnpr);
@@ -1315,20 +1364,6 @@ void init_placeongrid(void)
   //
   /////////////////
 
-#if(USEMPI)
-  fprintf(log_file,"myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
-#endif
-  trifprintf("\nnumprocs(MPI)=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d\n",numprocs,ncpux1,ncpux2,ncpux3,numopenmpthreads);
-  trifprintf("\n Per MPI Task: N1=%d N2=%d N3=%d\n",N1,N2,N3);
-  fprintf(log_file,"per: %d %d\n", periodicx1, periodicx2);
-
-  for (m = 1; m <= COMPDIM; m++) {
-    fprintf(log_file,"mycpupos[%d]: %d\n", m, mycpupos[m]);
-    fprintf(log_file, "startpos[%d]: %d\n", m, startpos[m]);
-    fprintf(log_file, "endpos[%d]: %d\n", m, endpos[m]);
-    fprintf(log_file, "totalsize[%d]: %lld\n", m, totalsize[m]);
-  }
-
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {
     for (m = 0; m < COMPDIM*2; m++) {
       for(l = 0 ; l < DIRGENNUMVARS ; l++) {
@@ -1347,7 +1382,6 @@ void init_placeongrid(void)
     }
   }
 
-  trifprintf("totalzones: %d\n", totalzones);
 
 
 
@@ -1396,8 +1430,10 @@ void init_placeongrid(void)
 
 
 
-  trifprintf("end: init_placeongrid\n");
+  trifprintf("end: init_placeongrid_griddecomposition\n");
 }
+
+
 
 
 int myexit(int call_code)

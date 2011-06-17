@@ -25,8 +25,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew);
 static int compare_ffde_inversions(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats);
 
-static int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
-static int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
+static int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
+static int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
 
 
 int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
@@ -108,6 +108,16 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
+  /////////////////////////////////////////////////////////
+  //
+  // Copy over Ugeomfree/pr to Ugeomfree0/pr0
+  //
+  ////////////////////////////////////////////////////////
+  PALLLOOP(pl){
+    Ugeomfree0[pl]=Ugeomfree[pl];
+    pr0[pl]=pr[pl];
+  }
+
 
 
 
@@ -135,7 +145,6 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
   //
   ////////////////////////
-
   invert_scalars(ptrgeom, Uold,Ugeomfree0,Ugeomfree,pr0,pr);
 
 
@@ -226,7 +235,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-	tryentropyinversion(hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
+	tryentropyinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
 	if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
 	  usedhotinversion=0;
 	  usedentropyinversion=1;
@@ -251,7 +260,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-	trycoldinversion(hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
+	trycoldinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
 	if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
 	  usedhotinversion=0;
 	  usedentropyinversion=0;
@@ -344,7 +353,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 	
       if(entropypflag){
-	trycoldinversion(entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
+	trycoldinversion(finalstep, entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats);
 	if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
 	  usedhotinversion=0;
 	  usedentropyinversion=0;
@@ -505,7 +514,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 #define USEENTROPYIFHOTFAILCONV 1
 
 // try entropy inversion of hot one fails
-int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
+int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
 {
   int pl;
   FTYPE prhot[NPR],prentropy[NPR];
@@ -543,10 +552,30 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure,
     // check if entropy solution is good
     if(IFUTOPRIMNOFAILORFIXED(entropypflag)){
 
-      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDENTROPY; // default then is that no failure (or fixed-up failure)
+
+      // set pflag so diag_fixup knows used entropy inversion
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDENTROPY;
+
 
       // then keep entropy solution
       PALLLOOP(pl) pr[pl]=prentropy[pl];
+
+
+      // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
+      int modcons=0;
+      FTYPE Ui[NPR];
+      // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
+      UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
+      // account for change to hot MHD conserved quantities
+      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,COUNTENTROPY);
+      
+      // reset pflag, unless still need to do some kind of averaging
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDENTROPY){
+	// default then is that no failure
+	// already accounted for and just a soft failure that doesn't require fixup anymore (and can't leave as UTOPRIMFAILFIXEDUTOPRIM since fixup would complain about not resetting the flag)
+	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+      }
+
 
 
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
@@ -591,7 +620,7 @@ int tryentropyinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure,
 #define USECOLDIFHOTFAILCONV 1
 
 // try cold inversion of hot one fails
-int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
+int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
 {
   int pl;
   FTYPE prhot[NPR],prcold[NPR];
@@ -659,6 +688,26 @@ int trycoldinversion(PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FT
 	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1; // assume only internal energy needs correcting by averaging
 	
       }// end if (else) trying cold inversion
+
+
+
+
+
+      // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
+      int modcons=0;
+      FTYPE Ui[NPR];
+      // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
+      UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
+      // account for change to hot MHD conserved quantities
+      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,COUNTCOLD);
+
+      // reset pflag since above does full accounting, unless need to average-out internal energy still
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDCOLD){
+	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+      }
+
+
+
 
     }// else if coldpflag is bad
     else{

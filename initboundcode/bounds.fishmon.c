@@ -197,9 +197,6 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
   }
 
 
-  if(whichdir==1 && N2==1 && N3==1 || N3==1 && whichdir==2 || N3>1 && whichdir==3){ // not completely general
-    bound_checks1(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-  }
 
 
 
@@ -344,6 +341,15 @@ int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir
     }
 
   }
+
+
+  // can only really check boundaries after MPI is done
+  // e.g. periodicx3 and ncpux3==2 and then MPi required to set k<0 and k>=ncpux2*N3 cells
+  if(whichdir==1 && N2==1 && N3==1 || N3==1 && whichdir==2 || N3>1 && whichdir==3){ // not completely general conditional
+    bound_checks1(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+  }
+
+
 
 
   return(0);

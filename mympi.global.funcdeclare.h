@@ -47,7 +47,8 @@ extern int init_default_MPI_GRMHD_myid(void);
 extern int init_MPI_GRMHD_myid(void);
 extern int report_myid(FILE *out);
 extern void init_MPI_setupfilesandgrid(int argc, char *argv[]);
-extern void init_placeongrid(void);
+extern void init_placeongrid_gridlocation(void);
+extern void init_placeongrid_griddecomposition(void);
 extern int myexit(int call_code);
 extern int final_myexit(void);
 

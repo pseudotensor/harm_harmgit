@@ -1,7 +1,9 @@
 #include "decs.h"
 
 
-static int restart_init_point_check(int which, int i, int j, int k);
+static int restart_init_point_check_pglobal(int which, int i, int j, int k);
+static int restart_init_point_check_unewglobal(int which, int i, int j, int k);
+static int restart_init_point_check_pstagglobal(int which, int i, int j, int k);
 
 
 // only check basic important inputs from restart dump file
@@ -20,10 +22,17 @@ int restart_init_simple_checks(int which)
   // OPENMPOPTMARK: Don't optimize since critical region
 
   if(which<=2){ // see initbase.c
-    LOOP{  gotnan+=restart_init_point_check(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
+  }
+  else if(which<=3){
+    FULLLOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
   }
   else{
-    FULLLOOP{  gotnan+=restart_init_point_check(which,i,j,k); }
+    FULLLOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
+    FULLLOOP{  gotnan+=restart_init_point_check_pstagglobal(which,i,j,k); }
   }
 
 
@@ -34,7 +43,9 @@ int restart_init_simple_checks(int which)
 
 }
 
-int restart_init_point_check(int which, int i, int j, int k)
+
+// check pglobal
+static int restart_init_point_check_pglobal(int which, int i, int j, int k)
 {
   int pliter,pl;
   int gotnan;
@@ -48,6 +59,56 @@ int restart_init_point_check(int which, int i, int j, int k)
       gotnan++;
     }
   }
+
+  return(gotnan);
+
+}
+
+
+// also check unewglobal for that portion that's used
+static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  PDUMPLOOP(pliter,pl){
+    if(DOENOFLUX != NOENOFLUX || (FLUXB==FLUXCTSTAG &&(pl==B1 || pl==B2 || pl==B3)) ){
+      if(!finite(GLOBALMACP0A1(unewglobal,i,j,k,pl)) ){
+	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : unewglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(unewglobal,i,j,k,pl));
+	//	myexit(24968346);
+	gotnan++;
+      }
+    }
+  }
+
+  return(gotnan);
+
+}
+
+
+// also check pstagglobal once computed
+static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  
+  if(FLUXB==FLUXCTSTAG){
+    PDUMPLOOP(pliter,pl){
+      if(pl==B1 || pl==B2 || pl==B3){
+	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl)) ){
+	  dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pstagglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pstagglobal,i,j,k,pl));
+	  //	myexit(24968346);
+	  gotnan++;
+	}
+      }
+    }
+  }
+
 
   return(gotnan);
 

@@ -112,9 +112,9 @@ dest[iter] = src[iter];\
 // PACKLOOP() in boundmpi.c and PACKLOOP_INT() boundmpiint.c uses these correctly since refer to i,j,k in correct order
 // SUPERGENLOOP() as used in interpline.c is correct since always refer to i,j,k in correct order
 // GENLOOP() in diag.c correctly uses i,j,k in order
-#define SUPERGENLOOP1(i,istart,istop,di) for((i)=(istart);(i)<=(istop);(i)+=(di))
-#define SUPERGENLOOP2(j,jstart,jstop,dj) for((j)=(jstart);(j)<=(jstop);(j)+=(dj))
-#define SUPERGENLOOP3(k,kstart,kstop,dk) for((k)=(kstart);(k)<=(kstop);(k)+=(dk))
+#define SUPERGENLOOP1(i,istart,istop,di) for((i)=(istart);(di>0 ? (i)<=(istop) : (i)>=(istop)); (i)+=(di))
+#define SUPERGENLOOP2(j,jstart,jstop,dj) for((j)=(jstart);(dj>0 ? (j)<=(jstop) : (j)>=(jstop)); (j)+=(dj))
+#define SUPERGENLOOP3(k,kstart,kstop,dk) for((k)=(kstart);(dk>0 ? (k)<=(kstop) : (k)>=(kstop)); (k)+=(dk))
 
 #define GENLOOP1(i,istart,istop) SUPERGENLOOP1(i,istart,istop,1)
 #define GENLOOP2(j,jstart,jstop) SUPERGENLOOP2(j,jstart,jstop,1)
