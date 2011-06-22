@@ -94,7 +94,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   setbuf=malloc(numcolumns*sizeofdatatype);
   if(setbuf==NULL){
     dualfprintf(fail_file,"cannot allocate memory to setbuf in %s %s with numcolumns=%d and sizeofdatatype=%d\n",fileprefix,filesuffix,numcolumns,sizeofdatatype);
-    myexit(1);
+    myexit(927656247);
   }
 
 
@@ -168,7 +168,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
     // create files for each column, or each column's header if mpicombine==1
     if((fpp=(FILE**)malloc(sizeof(FILE*)*numfiles))==NULL){
       dualfprintf(fail_file,"couldn't open fpp in dump()\n");
-      myexit(2);
+      myexit(8365665474);
     }// now fpp[i] indexes a list of file pointers
 
 
@@ -306,7 +306,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextbuf!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
-	  myexit(1);
+	  myexit(932736466);
 	}
 	
 	// get the content of 1 row
@@ -315,7 +315,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextcol!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(1);
+	  myexit(8367456556);
 	}
       }// end DUMPGENLOOP
     }// end readwrite==READFILE
@@ -341,7 +341,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextcol!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(1);
+	  myexit(19785566);
 	}
 
 	// write all at once
@@ -351,7 +351,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextbuf!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%d)\n",numcolumns,nextbuf);
-	  myexit(1);
+	  myexit(94675455);
 	}
 
 

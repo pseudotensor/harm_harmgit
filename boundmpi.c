@@ -252,6 +252,8 @@ void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*w
     }
     */
     workbc[PACK][dir][bci++] = MACP0A1(prim,i,j,k,pr) * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][PACK][pr];
+
+
   }
 }
 
@@ -325,6 +327,7 @@ void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBI
 	   ,dirgenset[boundtype][dir][DIRNUMPR] // not used if doing general quantity loop
 	   ){
     MACP0A1(prim,i,j,k,pr)=workbc[UNPACK][dir][bci++] * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][UNPACK][pr];
+
   }
 }
 

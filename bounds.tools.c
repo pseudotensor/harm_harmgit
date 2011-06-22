@@ -2,6 +2,7 @@
 #include "decs.h"
 
 
+
 #define ADJUSTFLUXCT 0 // whether to adjust fluxCT
 
 // GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
@@ -3009,3 +3010,41 @@ void check_spc_singularities_user(void)
 
 }
 
+
+
+// DEBUG special3dspc
+// check matching CPUs have correct information across pole
+// stick in debugspecial3dspc(0, whichdir, ispstag, prim); calls before and after various stages defined through (e.g.) which=0,1,2,3,4,...
+int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k,pliter,pl;
+
+
+  dualfprintf(fail_file,"nstep=%ld steppart=%d which=%d whichdir=%d ispstag=%d\n",nstep,steppart,which,whichdir,ispstag);
+  for(pl=0;pl<=7;pl++){
+    if(ispstag==1 && (pl<5 || pl>7)) continue;
+    dualfprintf(fail_file,"pl=%d\n",pl);
+    for(k=-N3BND;k<=N3BND;k++){ // was looking at just k=0, but seeing now if all other k are good.
+      dualfprintf(fail_file,"k=%d\n",k);
+      dualfprintf(fail_file,"%02s | i=\n   ","j");
+      for(i=-N1BND;i<=N1BND;i++){
+	if(ispstag==1 && (pl==5 && i==-N1BND)) dualfprintf(fail_file,"%021s ","NA");
+	else dualfprintf(fail_file,"%19s%02d "," ",i);
+      }
+      dualfprintf(fail_file,"\n");
+      for(j=-N2BND;j<=N2BND;j++){
+	dualfprintf(fail_file,"%02d ",j);
+	for(i=-N1BND;i<=N1BND;i++){
+	  if(ispstag==1 && (pl==5 && i==-N1BND || pl==6 && j==-N2BND)) dualfprintf(fail_file,  "%21s ","NA");
+	  else  dualfprintf(fail_file,  "%21.15g ",MACP0A1(prim,i,j,k,pl));
+	}
+	dualfprintf(fail_file,"\n");
+      }
+      dualfprintf(fail_file,"\n");
+    }
+  }// end over pl
+
+
+  return(0);
+
+}

@@ -51,7 +51,7 @@ int init_MPI_general(int *argc, char **argv[])
     fprintf(stderr,
 	    "Must increase MAXCPUS in global.h, %d is too many\n",
 	    truenumprocs);
-    myexit(1);
+    myexit(38743421);
   }
 
 
@@ -446,7 +446,7 @@ void set_primgridpos(void)
   // all centered
   DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDPRIMTYPE][dir][pl]=primgridpos[BOUNDPRIMSIMPLETYPE][dir][pl]=CENTGRID;
 
-  // pstag (centered except along dir
+  // pstag (centered except along dir)
   DIRLOOP(dir) PALLLOOP(pl){
     if(
        ((dir==X1DN || dir==X1UP) && pl==B1)
@@ -520,15 +520,15 @@ void init_placeongrid_gridlocation(void)
   for(m=1;m<=COMPDIM;m++){
     if((mycpupos0[m]=(int*)malloc(sizeof(int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate mycpupos0[%d]\n",m);
-      myexit(1);
+      myexit(2845725);
     }
     if((startpos0[m]=(int*)malloc(sizeof(int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate startpos0[%d]\n",m);
-      myexit(1);
+      myexit(2845726);
     }
     if((endpos0[m]=(int*)malloc(sizeof(int)*numprocs))==NULL){
       dualfprintf(fail_file,"can't allocate endpos0[%d]\n",m);
-      myexit(1);
+      myexit(2845727);
     }
   }
   // for cpu=0 as master to rest, needs this info
@@ -1057,9 +1057,11 @@ void init_placeongrid_griddecomposition(void)
 
 
 	// below also correct for "if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD))"
-	// for ISSPC, assumes "j=0" at \theta=0 and "j=N2" at \theta=\pi is copied to other CPUs.  Some CPUs dominate others, but all consistent in the end!  So that's good.
-	// Note that this is unlike was setup, where copied j=0 and j=N2-1 effectively.
-	// in general recall that for pstag and prim are bounded with same location indices -- no special shifting.
+	// for ISSPC, assumes "j=0" at \theta=0 and "j=N2" at \theta=\pi is copied to other CPUs.
+	// mycpupos[3]<ncpux3/2 CPUs dominate others for polar value of B2, but all consistent in the end!
+	// That should only affect things to machine accuracy since both poles should evolve polar B2 the same.
+	//
+	// Note that this special polar copy is unlike was setup, where copied j=0 and j=N2-1 effectively.
 	if(special3dspc&&(ncpux3>1)&&(mycpupos[2]==0 && dir==X2DN || mycpupos[2]==ncpux2-1 && dir==X2UP) ){
 	  if(dir==X2UP){ // up
 	    gridpos=CENTGRID;
@@ -1068,7 +1070,11 @@ void init_placeongrid_griddecomposition(void)
 	    dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
 
 	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2);  // inverted order // diff compared to non-pole // includes j=N2 right at pole
+	    // mycpupos[3]<ncpux3/2 packs j=N2
+
+	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2);  // inverted order // diff compared to non-pole // includes j=N2 right at pole
+	    else  dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2)-(SHIFT2);  // inverted order // do not pack j=N2 right at pole since will come from matching CPU
+
 	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1+SHIFT2)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
 	    dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
 
@@ -1095,7 +1101,10 @@ void init_placeongrid_griddecomposition(void)
 	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
 
 	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=0; // includes j=0 right at pole
+	    // mycpupos[3]<ncpux3/2 packs j=0
+	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=0; // includes j=0 right at pole
+	    else dirloopset[bti][dir][gridpos][DIRPSTART2]=SHIFT2; // doesn't includes j=0 right at pole
+
 	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
 	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
 	  }
@@ -1231,7 +1240,10 @@ void init_placeongrid_griddecomposition(void)
 	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
 
 	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
+	    // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
+	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2)+(SHIFT2);
+	    else dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2); // includes from j=N2
+
 	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
 	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
 	  }
@@ -1242,7 +1254,10 @@ void init_placeongrid_griddecomposition(void)
 	    dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
 
 	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-0; // diff due to pole copy // inverted order compared to packing
+	    // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
+	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2; // inverted order compared to packing
+	    else dirloopset[bti][dir][gridpos][DIRUSTART2]=-0; // diff due to pole copy // inverted order compared to packing
+
 	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =-0-(numbnd[2]-SHIFT2);
 	    dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
 
@@ -1641,7 +1656,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux2*ncpux3){
     fprintf(stderr,"problem with inner x1-group: numranks: %d ncpux2: %d ncpux3: %d ncpux2*ncpux3: %d\n",numranks,ncpux2,ncpux3,ncpux2*ncpux3);
-    myexit(1);
+    myexit(97834683);
   }
   // now ranks holds inner x1 boundary of cpus, and numranks holds number of such ranks
 
@@ -1660,7 +1675,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux2*ncpux3){
     fprintf(stderr,"problem with outer x1-group: numranks: %d ncpux2*ncpux3: %d\n",numranks,ncpux2*ncpux3);
-    myexit(1);
+    myexit(92787621);
   }
   // now create group and communicator
   MPI_Group_incl(MPI_GROUP_WORLD, numranks, ranks, &grprem[0]);
@@ -1677,7 +1692,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux1*ncpux3){
     fprintf(stderr,"problem with inner x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
-    myexit(1);
+    myexit(83649545);
   }
   // now create group and communicator
   MPI_Group_incl(MPI_GROUP_WORLD, numranks, ranks, &grprem[1]);
@@ -1694,7 +1709,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux1*ncpux3){
     fprintf(stderr,"problem with outer x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
-    myexit(1);
+    myexit(28364888);
   }
 
   // now create group and communicator
@@ -1714,7 +1729,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux1*ncpux2){
     fprintf(stderr,"problem with inner x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
-    myexit(1);
+    myexit(18758365);
   }
   // now create group and communicator
   MPI_Group_incl(MPI_GROUP_WORLD, numranks, ranks, &grprem[5]);
@@ -1731,7 +1746,7 @@ void init_MPIgroup(void)
   numranks=j;
   if(numranks!=ncpux1*ncpux2){
     fprintf(stderr,"problem with outer x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
-    myexit(1);
+    myexit(29776546);
   }
 
   // now create group and communicator

@@ -29,3 +29,7 @@ extern int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int w
 extern int bound_flux_user(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
 extern int bound_pflag_user(int boundstage, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
 
+
+
+extern int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+

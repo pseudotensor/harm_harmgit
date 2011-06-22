@@ -12,6 +12,7 @@ int init(int *argc, char **argv[])
   extern int init_defgrid(void);
   extern int init_defglobal(void);
   extern int init_defconsts(void);
+  extern int init_arrays_before_set_pu(void);
   extern int post_par_set(void);
   extern void filterffde(int i, int j, int k, FTYPE *pr);
   extern void filter_coldgrmhd(int i, int j, int k, FTYPE *pr);
@@ -85,6 +86,10 @@ int init(int *argc, char **argv[])
     // after the below call, can then call boundary functions and MPI decomposition will be ready
     init_placeongrid_griddecomposition();
     
+
+    // set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
+    init_arrays_before_set_pu();
+  
 
 
   }
@@ -979,37 +984,6 @@ int pre_init(int *argc, char **argv[])
 
 
   
-  ///////////////
-  // 0 out these things so dump files are readable by SM under any cases
-  ///////////////
-  FULLLOOP{
-
-    if(FLUXB==FLUXCTSTAG){
-      // then pl=B1,B2,B3 actually should be correct (i.e. not NaN), so don't reset those so nan-check works
-      PLOOP(pliter,pl){
-	if(! (pl==B1 || pl==B2 || pl==B3) ){
-	  GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
-	}
-      }
-    }
-    else if(DOENOFLUX != NOENOFLUX){
-      // then all pl actually should be correct (i.e. not NaN), so don't reset those so nan-check works
-    }
-    else{
-      PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
-    }
-
-
-#if(CALCFARADAYANDCURRENTS)
-    DLOOPA(jj) GLOBALMACP0A1(jcon,i,j,k,jj)=0.0;
-    for(pl=0;pl<NUMFARADAY;pl++) GLOBALMACP0A1(fcon,i,j,k,pl)=0.0;
-#endif
-  }
-
-
-
-
-
 
   return(0);
 }
@@ -1483,10 +1457,50 @@ int compute_currents_t0(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[N
 #endif
 
 
-    return(0);
+  return(0);
 
 }
 
+
+
+// set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
+int init_arrays_before_set_pu(void)
+{
+  int i,j,k,pliter,pl;
+  int jj;
+
+  ///////////////
+  // 0 out these things so dump files are readable by SM under any cases
+  ///////////////
+  FULLLOOP{
+
+    if(FLUXB==FLUXCTSTAG){
+      // then pl=B1,B2,B3 actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+      PLOOP(pliter,pl){
+	if(! (pl==B1 || pl==B2 || pl==B3) ){
+	  GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+	}
+      }
+    }
+    else if(DOENOFLUX != NOENOFLUX){
+      // then all pl actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+    }
+    else{
+      PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+    }
+
+
+#if(CALCFARADAYANDCURRENTS)
+    DLOOPA(jj) GLOBALMACP0A1(jcon,i,j,k,jj)=0.0;
+    for(pl=0;pl<NUMFARADAY;pl++) GLOBALMACP0A1(fcon,i,j,k,pl)=0.0;
+#endif
+
+  }
+
+
+  return(0);
+
+}
 
 
 

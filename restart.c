@@ -172,6 +172,12 @@ int restart_write(long dump_cnt)
   char fileformat[MAXFILENAME];
   long truedump_cnt;
 
+
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_write(dump_cnt);
+
+
+
   trifprintf("begin dumping rdump# %ld ... ",dump_cnt);
 
   whichdump=RESTARTDUMPTYPE;
@@ -267,7 +273,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+// read restart file
 int restart_read(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -276,6 +282,10 @@ int restart_read(long dump_cnt)
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
   int bintxt;
+
+
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_read(dump_cnt);
 
 
   trifprintf("begin reading rdump# %ld ... ",dump_cnt);
@@ -299,6 +309,7 @@ int restart_read(long dump_cnt)
 }
 
 
+// read-restart content
 int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -336,6 +347,223 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
   return(0);
 }
+
+
+
+
+
+
+
+
+
+
+
+// read-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+// Since both write *and* read full 3D file with j shifted up, read-in puts quantities in correct location, so no remapping needed.
+// All j=N2 values will be overwritten by normal MPI calls, except the last one for mycpupos[2]==ncpux2-1 that will use the read-in values
+// Note that order of normal restart read/write and upperpole read/write doesn't matter since all values are correctly positioned during read-write.
+
+// This is all done because normal MPI fileio routines assume standard j=0..N-1 or j=1..N block, but staggered stuff has j=0..N block for spherical polar coordinates.  No other directions (i.e. i or k) require this.
+// For simplicity, we just output two full 3D files with j shifted.
+int restartupperpole_read(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+  int bintxt;
+
+
+  trifprintf("begin reading rdumpupperpole# %ld ... ",dump_cnt);
+
+  whichdump=RESTARTUPPERPOLEDUMPTYPE;
+  datatype=MPI_FTYPE;
+  bintxt=binaryoutput;
+  strcpy(fileprefix,"dumps/rdumpupperpole");
+  strcpy(fileformat,"-%01ld");
+  strcpy(filesuffix,"");
+ 
+  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartupperpole_header,rupperpoledump_read_content)>=1) return(1);
+
+
+#if(0)
+  // NOT USED ANYMORE, but, if did remapping, it would look something like the below.
+  {
+    // SPECIAL CASE:
+    // now that have read-in shifted values, must assign them to correct locations
+    
+    int i,j,k,pliter,pl;
+    jshifted=j+SHIFT2;
+    LOOPF1 LOOPF3{
+      PLOOP(pliter,pl){
+	//	if(pl==B1 || pl==B2 || pl==B3){
+	if(pl==B2){
+	  GLOBALMACP0A1(unewglobal,i,jshifted-SHIFT2,k,pl)=GLOBALMACP0A1(unewglobal,i,jshifted,k,pl);
+	}
+      }
+    }
+  }
+#endif
+
+
+  trifprintf("end reading rdumpupperpole# %ld ... ",dump_cnt);
+
+
+  return(0);
+
+}
+
+
+// read-restart upperpole header
+int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+{
+
+  // nothing so far
+
+  return(0);
+}
+
+// write-restart upperpole header
+int write_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+{
+
+  // nothing so far
+
+  return(0);
+}
+
+
+// read-restart upperpole content
+int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+
+  int jshifted;
+
+  // j+SHIFT2 so that fake 3D read-in fills j=N2 for mycpupos[2]==ncpux2-1 (tj=totalsize[2]) when MPI routines think they are accessing j=N2-SHIFT2
+  jshifted=j+SHIFT2;
+
+  // Just B2 is on pole
+  myget(datatype,GLOBALMAC(unewglobal,i,jshifted,k),B2,1,writebuf);
+
+  // NOTEMARK: see also dump.c
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+ 
+
+  return(0);
+}
+
+
+
+
+
+// write-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+int restartupperpole_write(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+  long truedump_cnt;
+
+  trifprintf("begin dumping rdumpupperpole# %ld ... ",dump_cnt);
+
+  whichdump=RESTARTUPPERPOLEDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/rdumpupperpole");
+  if(dump_cnt>=0) {
+    strcpy(fileformat,"-%01ld"); // very quick restart
+    truedump_cnt=dump_cnt;
+  }
+  else {
+    strcpy(fileformat,"--%04ld"); // assumed at some longer cycle and never overwritten .. must rename this to normal format to use as real rdump.
+    truedump_cnt=-dump_cnt-1;
+  }
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,truedump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,write_restartupperpole_header,rupperpoledump_content)>=1) return(1);
+
+  trifprintf("end dumping rdumpupperpole# %ld ... ",dump_cnt);
+
+
+  return(0);
+
+}
+
+
+
+
+// read-restart upperpole numcolumns
+// number of columns for restart
+void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+
+  // Just B2 is on pole
+  *numcolumns=1;
+
+  
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
+    *numcolumns += NDIM-1; // only A_0, A_1, and A_3 are on pole
+  }
+
+  *numversion=0;
+}
+
+// write-restart upperpole numcolumns
+void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+  extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  // same as read:
+  set_rupperpoledump_read_content_dnumcolumns_dnumversion(numcolumns,numversion);
+
+}
+
+
+
+// write-restart upperpole content
+int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+
+  int jshifted;
+
+  // j+SHIFT2 so that fake 3D read-in fills j=N2 for mycpupos[2]==ncpux2-1 (tj=totalsize[2]) when MPI routines think they are accessing j=N2-SHIFT2
+  jshifted=j+SHIFT2;
+
+  // Only B2 is on pole
+  myset(datatype,GLOBALMAC(unewglobal,i,jshifted,k),B2,1,writebuf);
+
+  // NOTEMARK: see also dump.c
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+
+  return(0);
+}
+
+
+
+
+
+
 
 
 

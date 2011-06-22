@@ -186,6 +186,9 @@ int init_defcoord(void)
   // define coordinate type
   //  defcoord = JET3COORDS;
   defcoord = LOGRSINTH;
+  //  defcoord = JET6COORDS;
+  // GODMARK: also set rbr in coord.c to 1E3 if Rout=1E4 and using JET6COORDS
+
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -259,9 +262,9 @@ int init_global(void)
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=1E4; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E5;
+  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #elif(WHICHPROBLEM==GRBJET)
@@ -284,7 +287,7 @@ int init_global(void)
   tf = 2000.0;
 
   /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTUPPERPOLEDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;

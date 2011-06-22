@@ -64,6 +64,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   dumpfuncgen[IMAGEDUMPTYPE]=&image_dump;
   dumpfuncgen[RESTARTDUMPTYPE]=&restart_write;
+  dumpfuncgen[RESTARTUPPERPOLEDUMPTYPE]=&restartupperpole_write;
   dumpfuncgen[RESTARTMETRICDUMPTYPE]=&restartmetric_write;
   dumpfuncgen[MAINDUMPTYPE]=&dump;
   dumpfuncgen[GRIDDUMPTYPE]=&gdump;
@@ -324,6 +325,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 	// MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
 	// so can restart at a dump without reconstructing the rdump from a dump.
 	// Also, if run out of disk space then normal rdump's can be corrupted
+
+	// avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
+	//	if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
 	restart_write(-(long)dumpcntgen[dumptypeiter]-1);
 	if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntgen[dumptypeiter]-1);
       }
@@ -568,6 +572,15 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
     dodumpgen[IMAGEDUMPTYPE]=1;
   }
   else dodumpgen[IMAGEDUMPTYPE]=0;
+
+
+  // upperpole restart is (for now) always called inside normal restart dump call, so avoid extra call that this would create
+  // RESTARTUPPERPOLEDUMPTYPE
+  //  if((FLUXB==FLUXCTSTAG&&special3dspc==1)&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
+  //    dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=1;
+  //  }
+  //  else dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
+ dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
 
 
   // RESTARTDUMPTYPE

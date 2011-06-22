@@ -185,7 +185,11 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
+  extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
   extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
   extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
@@ -234,6 +238,8 @@ void init_dnumcolumns_dnumversion(void)
   set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
 
   // rdump (must come after all normal dumps since dnumcolumns used by restart to store other things needed up restart that are dealt with also above)
+  // rupperpoledump
+  set_rupperpoledump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTUPPERPOLEDUMPTYPE],&dnumversion[RESTARTUPPERPOLEDUMPTYPE]);
   set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
   // rmetricdump
   set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
