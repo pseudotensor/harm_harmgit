@@ -420,7 +420,7 @@ int init(int *argc, char **argv[])
     int boundvartype=BOUNDPRIMTYPE;
     int finalstep=1;
     int doboundmpi=1;
-    bound_uavg(STAGEM1, t, boundvartype, GLOBALPOINT(unewglobal),GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal), finalstep,doboundmpi);
+    bound_anypstag(STAGEM1, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), finalstep,doboundmpi);
   }
   if(EVOLVEWITHVPOT||TRACKVPOT){
     int boundvartype=BOUNDVPOTTYPE;

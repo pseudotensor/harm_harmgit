@@ -1676,6 +1676,7 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
 // CALLS directly real and MPI boundary functions
 // pstag is at FACE1,2,3 for fields, so user bound is different
 // MPI bounding is the same as CENT quantities
+// used when restarting in initbase.c to bound unewglobal for FLUXB==FLUXCTSTAG
 int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
 {
   int pl,pliter;
@@ -1817,6 +1818,9 @@ int bound_vpot(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)
 
   return(0);
 }
+
+
+
 
 
 
