@@ -193,7 +193,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
 
   TIMEORDER = 2;
-  DTr = 2000;
+  DTr = 6000;
+  tf = 1e5;
 
   if(funreturn!=0) return(funreturn);
 
@@ -518,7 +519,7 @@ int init_global(void)
 
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   /* output choices */
-  tf = 20000.;
+  tf = 1e5; //also check post_init_specific_init()
 
   /* dumping frequency, in units of M */
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
@@ -534,7 +535,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 60000;
+  DTr = 6000;  //also see post_init_specific_init()
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
