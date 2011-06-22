@@ -1648,7 +1648,7 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
     }// end if stage0 or stagem1
   
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, dir, boundvartype, prim, NULL, NULL, NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
     }
 
     // real boundary zones
@@ -1726,7 +1726,7 @@ int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*p
 
 
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, dir, mystagboundvar, pstag, NULL, NULL, NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, dir, mystagboundvar, pstag, NULL, NULL, NULL,NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
     }
 
     // real boundary zones
@@ -1780,7 +1780,38 @@ int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[N
 
 
   if(doboundmpi){
-    MYFUN(bound_mpi(boundstage, boundvartype, NULL, F1, F2, F3),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+    MYFUN(bound_mpi(boundstage, boundvartype, NULL, F1, F2, F3, NULL),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+  }
+
+
+  return(0);
+}
+
+
+// used when restarting in initbase.c
+int bound_vpot(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int finalstep, int doboundmpi)
+{
+  int dir;
+
+
+
+  if(boundvartype==BOUNDVPOTTYPE || boundvartype==BOUNDVPOTSIMPLETYPE){
+    // then can stay
+  }
+  else{
+    dualfprintf(fail_file,"Shouldn't be in bound_vpot() with boundvartype=%d\n",boundvartype);
+    myexit(3483466);
+  }
+
+
+  // real boundary zones
+  if((boundstage==STAGE0)||(boundstage==STAGEM1)){
+    MYFUN(bound_vpot_user(boundstage,boundtime, boundvartype,vpot),"step_ch.c:bound_vpot()", "bound_vpot_user()", 1);
+  }// end if stage0 or stagem1
+
+
+  if(doboundmpi){
+    MYFUN(bound_mpi(boundstage, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);
   }
 
 

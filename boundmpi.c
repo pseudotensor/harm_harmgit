@@ -7,14 +7,14 @@
 
 
 // bound all directions
-int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+  int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   int whichdir;
 
-  whichdir=1; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3);
-  whichdir=2; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3);
-  whichdir=3; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3);
+  whichdir=1; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
+  whichdir=2; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
+  whichdir=3; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
 
   return(0);
 }
@@ -24,9 +24,10 @@ int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 // boundtype specifies whether to bound scalar or to bound vector that is only needed to be bound along that direction
-int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*prim2bound[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*vpot2bound[NDIM])[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
   int dir;
 #if(DEBUG)
   int i,j,k,pl,pliter;
@@ -117,8 +118,25 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
 
 
 
+  ///////////
+  //
+  // initialize prim2bound and vpot2bound so interior code knows which to act upon
+  //
+  ///////////
+  {
+    int jj;
+    for(jj=0;jj<NDIM;jj++){
+      prim2bound[jj]=NULL;
+      vpot2bound[jj]=NULL;
+    }
+  }
 
 
+  ///////////
+  //
+  // set prim2bound or vpot2bound
+  //
+  ///////////
   if(boundtype==BOUNDPRIMTYPE || boundtype==BOUNDPRIMSIMPLETYPE || boundtype==BOUNDPSTAGTYPE || boundtype==BOUNDPSTAGSIMPLETYPE){
     prim2bound[1]=prim;
     prim2bound[2]=prim;
@@ -128,6 +146,11 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
     prim2bound[1]=F1;
     prim2bound[2]=F2;
     prim2bound[3]=F3;
+  }
+  else if(boundtype==BOUNDVPOTTYPE || boundtype==BOUNDVPOTSIMPLETYPE){
+    vpot2bound[1]=vpot;
+    vpot2bound[2]=vpot;
+    vpot2bound[3]=vpot;
   }
   else{
     dualfprintf(fail_file,"No such type of MPI bounding: boundtype=%d\n",boundtype);
@@ -144,13 +167,13 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
     //
     /////////////////
     if((boundstage==STAGEM1)||(boundstage==STAGE0)){
-      for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],workbc);
+      for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
     //fprintf(fail_file,"innerboundhere2\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE1)){
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
-      for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir]);
+      for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendwait(dir,requests);
     }
   }
@@ -163,13 +186,13 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
     //fprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE2)){
       // now dir=0,1(X1UP,X1DN) is done, so can start 2,3(X2UP,X2DN)
-      for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],workbc);
+      for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
     //fprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE3)){
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
-      for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir]);
+      for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendwait(dir,requests);
     }
     //fprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
@@ -183,13 +206,13 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
     //fprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE4)){
       // now dir=0,1,2,3(X1UP,X1DN,X2UP,X2DN) is done, so can start 4,5(X3UP,X3DN)
-      for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],workbc);
+      for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
     //fprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE5)){
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
-      for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir]);
+      for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendwait(dir,requests);
     }
     //fprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
@@ -224,37 +247,77 @@ int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NST
 // Since pr used to control loop range, PLOOPMPI() must be at outer loop
 #define PACKLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk,pr,num) PLOOPMPI(pr,num) SUPERGENLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk)
 
+#define PACKLOOPORIG(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk,pr,num) PLOOPMPIORIG(pr,num) SUPERGENLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk)
+
+
+// the last element not used if SPILTNPR==1
+#define PACKBLOCK 	   i,j,k					\
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR3] \
+	   ,pr \
+      ,dirgenset[boundtype][dir][DIRNUMPR]
+
+
+
 // packs data for shipment
-void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM])
+void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM])
 {
   // dir=direction sending
   int i,j,k;
   int bci,pr;
 
   bci=0;
-  PACKLOOP(i,j,k
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART3]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP3]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR3]
-	   ,pr
-	   ,dirgenset[boundtype][dir][DIRNUMPR] // this element not used if SPILTNPR==1
-	   ){
-    /*
-    if(bci>=dirgenset[boundtype][dir][DIRSIZE]){
-      dualfprintf(fail_file,"pack memory leak: bci: %d dirgenset[%d][DIRSIZE]: %d\n",bci,dirgenset[boundtype][dir][DIRSIZE]);
-      myexit(10);
-    }
-    */
-    workbc[PACK][dir][bci++] = MACP0A1(prim,i,j,k,pr) * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][PACK][pr];
+  if(vpot==NULL){
+    PACKLOOP(i,j,k					\
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR3] \
+	   ,pr \
+      ,dirgenset[boundtype][dir][DIRNUMPR]){
+
+       /*
+	 if(bci>=dirgenset[boundtype][dir][DIRSIZE]){
+	 dualfprintf(fail_file,"pack memory leak: bci: %d dirgenset[%d][DIRSIZE]: %d\n",bci,dirgenset[boundtype][dir][DIRSIZE]);
+	 myexit(10);
+	 }
+       */
+
+       workbc[PACK][dir][bci++] = MACP0A1(prim,i,j,k,pr) * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][PACK][pr];
+ 
+     }// end of vpot==NULL loop
+       
+  }// end if vpot==NULL
+  else{
+    PACKLOOPORIG(i,j,k					\
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRPDIR3] \
+	   ,pr \
+      ,dirgenset[boundtype][dir][DIRNUMPR]){
+      workbc[PACK][dir][bci++] = MACP1A0(vpot,pr,i,j,k) * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][PACK][pr];
+    }// end vpot!=NULL loop
+  }// end if vpot!=NULL
 
 
-  }
 }
 
 #if(USEMPI)
@@ -267,6 +330,7 @@ void sendrecv(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * N
   // must be consistent with how PLOOPMPI is setup
   if(boundtype==BOUNDPRIMTYPE || boundtype==BOUNDPRIMSIMPLETYPE || boundtype==BOUNDPSTAGTYPE || boundtype==BOUNDPSTAGSIMPLETYPE) truesize=dirgenset[boundtype][dir][DIRSIZE]/NPRBOUND;
   else if(boundtype==BOUNDFLUXTYPE || boundtype==BOUNDFLUXSIMPLETYPE) truesize=dirgenset[boundtype][dir][DIRSIZE]/NFLUXBOUND;
+  else if(boundtype==BOUNDVPOTTYPE || boundtype==BOUNDVPOTSIMPLETYPE) truesize=dirgenset[boundtype][dir][DIRSIZE]/NDIM;
   else{
     dualfprintf(fail_file,"No such boundtype=%d in sendrecv() in boundmpi.c\n",boundtype);
     myexit(34867364);
@@ -306,29 +370,62 @@ void recvwait(int dir,MPI_Request *requests)
 #endif
 
 
-void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+// last element not used if doing general quantity loop
+#define UNPACKBLOCK 	   i,j,k \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR3] \
+	   ,pr \
+	   ,dirgenset[boundtype][dir][DIRNUMPR]
+
+
+void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   // dir is direction receiving from
   int i,j,k;
   int bci,pr;
 
   bci=0;
-  PACKLOOP(i,j,k
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART3]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP3]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR1]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR2]
-	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR3]
-	   ,pr
-	   ,dirgenset[boundtype][dir][DIRNUMPR] // not used if doing general quantity loop
-	   ){
-    MACP0A1(prim,i,j,k,pr)=workbc[UNPACK][dir][bci++] * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][UNPACK][pr];
+  if(vpot==NULL){
+    PACKLOOP(i,j,k \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR3] \
+	   ,pr \
+	   ,dirgenset[boundtype][dir][DIRNUMPR]){
 
+      MACP0A1(prim,i,j,k,pr)=workbc[UNPACK][dir][bci++] * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][UNPACK][pr];
+    }
   }
+  else{
+    PACKLOOPORIG(i,j,k \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTART3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUSTOP3] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR1] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR2] \
+	   ,dirloopset[boundtype][dir][primgridpos[boundtype][dir][pr]][DIRUDIR3] \
+	   ,pr \
+	   ,dirgenset[boundtype][dir][DIRNUMPR]){
+      MACP1A0(vpot,pr,i,j,k)=workbc[UNPACK][dir][bci++] * primfactor[boundtype][dir][primgridpos[boundtype][dir][pr]][UNPACK][pr];
+    }
+  }
+
 }
 
 #if(USEMPI)

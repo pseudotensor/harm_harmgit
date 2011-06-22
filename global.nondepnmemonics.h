@@ -681,7 +681,7 @@
 // PURE mnemonics
 //
 ///////////////////////////////////
-#define NUMBOUNDTYPES 7
+#define NUMBOUNDTYPES 9
 //
 #define BOUNDPRIMTYPE 0
 #define BOUNDPRIMSIMPLETYPE 1
@@ -690,6 +690,8 @@
 #define BOUNDINTTYPE 4 // always simple
 #define BOUNDFLUXTYPE 5
 #define BOUNDFLUXSIMPLETYPE 6
+#define BOUNDVPOTTYPE 7
+#define BOUNDVPOTSIMPLETYPE 8
 
 
 // ispstag:

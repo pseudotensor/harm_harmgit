@@ -414,6 +414,21 @@ int init(int *argc, char **argv[])
     ucons2upointppoint(t, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(ulastglobal),GLOBALPOINT(pglobal)); // this regenerates pcentered for B1,B2,B3
     trifprintf("after ucons2upointppoint during restart: proc=%04d\n",myid);
 
+    
+    // now bound unewglobal and vpot's
+  if(FLUXB==FLUXCTSTAG){
+    int boundvartype=BOUNDPRIMTYPE;
+    int finalstep=1;
+    int doboundmpi=1;
+    bound_uavg(STAGEM1, t, boundvartype, GLOBALPOINT(unewglobal),GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal), finalstep,doboundmpi);
+  }
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    int boundvartype=BOUNDVPOTTYPE;
+    int finalstep=1;
+    int doboundmpi=1;
+    bound_vpot(STAGEM1, t, boundvartype, GLOBALPOINT(vpotarrayglobal), finalstep,doboundmpi);
+  }
+
 
     restart_init_simple_checks(4);
 

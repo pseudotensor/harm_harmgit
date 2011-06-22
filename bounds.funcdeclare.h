@@ -22,14 +22,15 @@ extern int bound_pflag(int boundstage, SFTYPE boundtime, PFTYPE (*primbase)[NSTO
 
 extern int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi);
 
+extern int bound_vpot(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int finalstep, int doboundmpi);
+
 // user bounds:
 extern int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
 extern int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_flux_user(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
 extern int bound_pflag_user(int boundstage, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
-
-
+extern int bound_vpot_user(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
 extern int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 

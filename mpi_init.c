@@ -460,8 +460,25 @@ void set_primgridpos(void)
     }
   }
 
+
   // all staggered (since F1 along dir=1, etc.)
-  DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDFLUXTYPE][dir][pl]=primgridpos[BOUNDFLUXSIMPLETYPE][dir][pl]=CENTGRID;
+  DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDFLUXTYPE][dir][pl]=primgridpos[BOUNDFLUXSIMPLETYPE][dir][pl]=STAGGRID;
+
+
+  // vpot (centered except along perp to dir for A_i)
+  DIRLOOP(dir) DLOOPA(pl){
+    if(
+       ((dir==X2DN || dir==X2UP || dir==X3DN || dir==X3UP) && pl==1)
+       ||((dir==X1DN || dir==X1UP || dir==X3DN || dir==X3UP) && pl==2)
+       ||((dir==X1DN || dir==X1UP || dir==X2DN || dir==X2UP) && pl==3)
+       ){
+      primgridpos[BOUNDVPOTTYPE][dir][pl]=primgridpos[BOUNDVPOTSIMPLETYPE][dir][pl]=STAGGRID;
+    }
+    else{
+      primgridpos[BOUNDVPOTTYPE][dir][pl]=primgridpos[BOUNDVPOTSIMPLETYPE][dir][pl]=CENTGRID;
+    }
+  }
+
 
   // all centered
   DIRLOOP(dir) PALLLOOP(pl) primgridpos[BOUNDINTTYPE][dir][pl]=CENTGRID;
@@ -876,6 +893,9 @@ void init_placeongrid_griddecomposition(void)
 	else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
 	  dirgenset[bti][dir][DIRNUMPR]=NFLUXBOUND;// not used if SPLITNPR==1 or doing general range for quantities
 	}
+	else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+	  dirgenset[bti][dir][DIRNUMPR]=NDIM;// used
+	}
 	else{
 	  dualfprintf(fail_file,"No such bti=%d setup in set number of variable types in mpi_init.c\n",bti);
 	  myexit(246346769);
@@ -897,6 +917,7 @@ void init_placeongrid_griddecomposition(void)
 	   || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE
 	   || bti==BOUNDINTTYPE
 	   || bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE
+	   || bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE
 	   ){
 	  // sets size of transfer for primitive
 	  if((dir==X1UP)||(dir==X1DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
@@ -967,6 +988,8 @@ void init_placeongrid_griddecomposition(void)
   //
   // set BOUNDFLUXTYPE : FACE(1/2/3) quantities -- used to only bound along flux direction (all that's needed for ENO to de-average flux using finite difference method)
   //
+  // set BOUNDVPOTTYPE : perp to dir is staggered except A_0
+  //
   // and BOUNDFLUXSIMPLETYPE too
   ///////////////////////////////////////////////////////////////////
 
@@ -976,6 +999,9 @@ void init_placeongrid_griddecomposition(void)
       // then can stay
     }
     else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
+      // then can stay
+    }
+    else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
       // then can stay
     }
     else{
@@ -1091,6 +1117,13 @@ void init_placeongrid_griddecomposition(void)
 		// override for symmetric quantities
 		primfactor[bti][dir][gridpos][PACK][U2]=1.0; // \detg T^2_2 is symmetric.
 		primfactor[bti][dir][gridpos][PACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+	      }
+	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+		// Here we flip upon packing (assumes FLIPGDETAXIS==0 so that \detg is always positive)
+		DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0;
+		// override for symmetric quantities
+		primfactor[bti][dir][gridpos][PACK][0]=1.0; // A_0
+		primfactor[bti][dir][gridpos][PACK][2]=1.0; // A_2
 	      }
 	    }// end over gridpos
 	  }
@@ -1273,6 +1306,13 @@ void init_placeongrid_griddecomposition(void)
 		// override for symmetric quantities
 		primfactor[bti][dir][gridpos][UNPACK][U2]=1.0; // \detg T^2_2 is symmetric.
 		primfactor[bti][dir][gridpos][UNPACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+	      }
+	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+		// Here we flip upon unpacking (assumes FLIPGDETAXIS==0 so that \detg is always positive)
+		DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0;
+		// override for symmetric quantities
+		primfactor[bti][dir][gridpos][UNPACK][0]=1.0; // A_0
+		primfactor[bti][dir][gridpos][UNPACK][2]=1.0; // A_2
 	      }
 	    }// end over gridpos
 

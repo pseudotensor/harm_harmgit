@@ -300,6 +300,7 @@ int restart_read(long dump_cnt)
   if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content)>=1) return(1);
 
 
+  // NOTE: for FLUXB==FLUXCTSTAG, unewglobal and vpot are bounded in initbase.c for boundary edges and inter-MPI edges
 
   trifprintf("end reading rdump# %ld ... ",dump_cnt);
 
