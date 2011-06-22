@@ -404,6 +404,7 @@
 
 
 // whether to check on inversion and report problem
+// Also, use diag_fixup() to account for changes in U when inversion success (tracks changes due to Newton iteration error and machine error)
 #define CHECKONINVERSION 1
 
 #define PRECISEINVERSION 1
