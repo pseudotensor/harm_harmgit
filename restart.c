@@ -420,7 +420,13 @@ int restartupperpole_read(long dump_cnt)
 int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -429,7 +435,13 @@ int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcol
 int write_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -690,7 +702,13 @@ int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebu
 int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -698,7 +716,13 @@ int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolum
 int read_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -1067,7 +1091,12 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
   //FAILFLOORLOOP(indexfinalstep,tscale,floor)
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+  if(1){// FUCKMARK (temp mod to allow read-in of prior restart files)
+    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*(NUMFAILFLOORFLAGS-2),MPI_CTYPE,headerptr);
+  }
+  else{ //new format
+    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+  }
 
   // end new June 6,2003
 

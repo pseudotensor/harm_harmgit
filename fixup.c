@@ -77,7 +77,7 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
     // first bound failure flag
     // OPTMARK: could optimize bound of pflag since often failures don't occur (just ask if any failures first), although probably negligible performance hit
     if(stage<STAGE2){
-      bound_pflag(boundstage, boundtime, GLOBALPOINT(pflag), finalstep, USEMPI);
+      bound_pflag(boundstage, finalstep, boundtime, GLOBALPOINT(pflag), USEMPI);
       if(stage!=STAGEM1) boundstage++;
     }
 
@@ -1797,6 +1797,14 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   }
   else if(mypflag==UTOPRIMFAILFIXEDCOLD){
     utoprimfailtype=COUNTCOLD;
+    docorrectucons=0; // account, but don't change conserved quantities
+  }
+  else if(mypflag==UTOPRIMFAILFIXEDBOUND1){
+    utoprimfailtype=COUNTBOUND1;
+    docorrectucons=0; // account, but don't change conserved quantities
+  }
+  else if(mypflag==UTOPRIMFAILFIXEDBOUND2){
+    utoprimfailtype=COUNTBOUND2;
     docorrectucons=0; // account, but don't change conserved quantities
   }
   else if(mypflag==UTOPRIMFAILFIXEDUTOPRIM){

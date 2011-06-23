@@ -7,14 +7,14 @@
 
 
 // bound all directions
-int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int bound_mpi(int boundstage, int finalstep, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   int whichdir;
 
-  whichdir=1; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
-  whichdir=2; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
-  whichdir=3; bound_mpi_dir(boundstage, whichdir, boundtype, prim, F1, F2, F3, vpot);
+  whichdir=1; bound_mpi_dir(boundstage, finalstep, whichdir, boundtype, prim, F1, F2, F3, vpot);
+  whichdir=2; bound_mpi_dir(boundstage, finalstep, whichdir, boundtype, prim, F1, F2, F3, vpot);
+  whichdir=3; bound_mpi_dir(boundstage, finalstep, whichdir, boundtype, prim, F1, F2, F3, vpot);
 
   return(0);
 }
@@ -24,7 +24,7 @@ int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 // boundtype specifies whether to bound scalar or to bound vector that is only needed to be bound along that direction
-int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*prim2bound[NDIM])[NSTORE2][NSTORE3][NPR];
   FTYPE (*vpot2bound[NDIM])[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];

@@ -275,8 +275,11 @@ int init(int *argc, char **argv[])
 #endif
 
       
-      if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
-	FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+      {
+	int finalstep=1; // assume user wants to know if initial conserved quants changed
+	if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
+	  FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+      }
 
 
       // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
@@ -381,9 +384,13 @@ int init(int *argc, char **argv[])
 #endif
 
     trifprintf("before bound_allprim() during restart: proc=%04d\n",myid);
-    // pstag not computed from unewglobal yet, so don't bound it.  It'll get self-consistently bounded when ucons2upointppoint() is called below
-    //    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
-    if (bound_prim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+
+    {
+      // pstag not computed from unewglobal yet, so don't bound it.  It'll get self-consistently bounded when ucons2upointppoint() is called below
+      int finalstep=1; // assume user wants to know if initial conserved quants changed
+      if (bound_prim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+    }
+
     trifprintf("after bound_allprim() during restart: proc=%04d\n",myid);
 
 
@@ -418,15 +425,15 @@ int init(int *argc, char **argv[])
     // now bound unewglobal and vpot's
   if(FLUXB==FLUXCTSTAG){
     int boundvartype=BOUNDPRIMTYPE;
-    int finalstep=1;
+    int finalstep=1; // assume user wants to know if initial conserved quants changed
     int doboundmpi=1;
-    bound_anypstag(STAGEM1, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), finalstep,doboundmpi);
+    bound_anypstag(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), doboundmpi);
   }
   if(EVOLVEWITHVPOT||TRACKVPOT){
     int boundvartype=BOUNDVPOTTYPE;
-    int finalstep=1;
+    int finalstep=1; // assume user wants to know if initial conserved quants changed
     int doboundmpi=1;
-    bound_vpot(STAGEM1, t, boundvartype, GLOBALPOINT(vpotarrayglobal), finalstep,doboundmpi);
+    bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi);
   }
 
 

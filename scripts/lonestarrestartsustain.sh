@@ -38,7 +38,17 @@ percdiff=$(( (100*($oldrdumpsize-$oldrdumpsize2))/$oldrdumpsize2 ))
 mkdir -p $SCRATCH/zb$mynum/dumps/
 cd $SCRATCH/zb$mynum/dumps/
 
-if [ $percdiff -lt 10 ]
+uselast=1
+if [ $percdiff -gt 10 ]
+then
+    uselast=0
+fi
+if [ $percdiff -lt -10 ]
+then
+    uselast=0
+fi
+
+if [ $uselast -eq 1 ]
 then
     echo "Using last rdump: $oldrdump"
     cp $oldrdump rdump-0.orig.bin
@@ -46,7 +56,7 @@ then
 else
     echo "Using 2nd to last rdump: $oldrdump2"
     cp $oldrdump2 rdump-0.orig.bin
-    cp rdump-0.orig.bin rdump-0
+    cp rdump-0.orig.bin rdump-0.bin
 fi
 
 

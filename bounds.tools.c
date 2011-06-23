@@ -86,7 +86,7 @@
 // Currently assume completely general situation where 
 // only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
 // SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
-int bound_x1dn_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
   int pl,pliter;
@@ -135,7 +135,7 @@ int bound_x1dn_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boun
 // Currently assume completely general situation where 
 // only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
 // SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
-int bound_x1up_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
   int pl,pliter;
@@ -179,7 +179,7 @@ int bound_x1up_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boun
 
 // X1 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x1dn_outflow(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -281,7 +281,7 @@ int bound_x1dn_outflow(
 	    rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
 	  }
 #elif(HORIZONEXTRAP==3)
-	  extrapfunc(X1DN,j,k,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  extrapfunc(X1DN,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 #endif
 
 
@@ -344,7 +344,7 @@ int bound_x1dn_outflow(
 
 // X1 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x1up_outflow(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -441,7 +441,7 @@ int bound_x1up_outflow(
 	    rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
 	  }
 #elif(OUTEREXTRAP==3)
-	  extrapfunc(X1UP,j,k,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  extrapfunc(X1UP,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 #endif
 
 
@@ -510,7 +510,7 @@ int bound_x1up_outflow(
 
 // X1 inner R0SING
 int bound_x1dn_sym(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -612,7 +612,7 @@ int bound_x1dn_sym(
   } // end parallel region
 
   if(BCtype[X1DN]==R0SING){
-    bound_x1dn_r0singfixinterior(boundstage, boundtime, whichdir, boundvartype, dirprim,ispstag, prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+    bound_x1dn_r0singfixinterior(boundstage,finalstep, boundtime, whichdir, boundvartype, dirprim,ispstag, prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
   }
 
 
@@ -626,16 +626,16 @@ int bound_x1dn_sym(
 // X2 inner POLARAXIS
 int bound_x2dn_polaraxis_full3d(
 				int whichcall,
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
+				int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+				int *inboundloop,
+				int *outboundloop,
+				int *innormalloop,
+				int *outnormalloop,
+				int (*inoutlohi)[NUMUPDOWN][NDIM],
+				int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+				int *dosetbc,
+				int enerregion,
+				int *localenerpos
 		       )
 {
 
@@ -727,7 +727,7 @@ int bound_x2dn_polaraxis_full3d(
 	// SUPERGODMARK: continue to use for now
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
 
@@ -760,16 +760,16 @@ int bound_x2dn_polaraxis_full3d(
 
 // X2 inner POLARAXIS
 int bound_x2dn_polaraxis(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
+			 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+			 int *inboundloop,
+			 int *outboundloop,
+			 int *innormalloop,
+			 int *outnormalloop,
+			 int (*inoutlohi)[NUMUPDOWN][NDIM],
+			 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+			 int *dosetbc,
+			 int enerregion,
+			 int *localenerpos
 		       )
 {
 
@@ -853,7 +853,7 @@ int bound_x2dn_polaraxis(
 	}// end if polar or asym condition
 
 	if(BCtype[X2DN]==POLARAXIS){
-	  if(POLEDEATH) poledeath(X2DN,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 	
       }// end if inner CPU wall
@@ -880,16 +880,16 @@ int bound_x2dn_polaraxis(
 // X2 outer POLARAXIS full3d
 int bound_x2up_polaraxis_full3d(
 				int whichcall,
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
+				int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+				int *inboundloop,
+				int *outboundloop,
+				int *innormalloop,
+				int *outnormalloop,
+				int (*inoutlohi)[NUMUPDOWN][NDIM],
+				int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+				int *dosetbc,
+				int enerregion,
+				int *localenerpos
 		       )
 {
 
@@ -984,7 +984,7 @@ int bound_x2up_polaraxis_full3d(
 	// SUPERGODMARK: continue to use for now
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
       }// end if outer CPU wall
@@ -1007,7 +1007,7 @@ int bound_x2up_polaraxis_full3d(
 
 // X2 outer POLARAXIS
 int bound_x2up_polaraxis(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -1101,7 +1101,7 @@ int bound_x2up_polaraxis(
 
 
 	if(BCtype[X2UP]==POLARAXIS){
-	  if(POLEDEATH) poledeath(X2UP,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
       
       }// end if mycpupos[2]==ncpux2-1
@@ -1125,7 +1125,7 @@ int bound_x2up_polaraxis(
 
 // X3 inner periodic
 int bound_x3_periodic(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -1224,7 +1224,7 @@ int bound_x3_periodic(
 
 // X1 inner R0SING
 int bound_x1dn_r0singfixinterior(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -1355,7 +1355,7 @@ int bound_x1dn_r0singfixinterior(
 
 // Check that boundary conditions were set properly
 int bound_checks1(
-		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
 		       int *outboundloop,
 		       int *innormalloop,
@@ -1394,7 +1394,7 @@ int bound_checks1(
 	if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
 	  if(!finite(MACP0A1(prim,i,j,k,pl))){
 	    trigger++;
-	    dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,pl);
+	    dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
 	  }
 	}
       }
@@ -1406,7 +1406,7 @@ int bound_checks1(
       PBOUNDLOOP(pliter,pl){
 	if(!finite(MACP0A1(prim,i,j,k,pl))){
 	  trigger++;
-	  dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,pl);
+	  dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
 	}
       }
     }
@@ -1429,7 +1429,7 @@ int bound_checks1(
 // boundary = X1DN or X1UP
 // assume if ispstag==1 then only doing field part -- otherwise logic would get more complicated
 int extrapfunc(int boundary, int j,int k,
-	       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	       int *inboundloop,
 	       int *outboundloop,
 	       int *innormalloop,
@@ -2038,7 +2038,7 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
 // interpolate across pole to remove numerical errors there
 // Note that this function is done over all zones
 int poledeath(int whichx2,
-	      int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	      int *inboundloop,
 	      int *outboundloop,
 	      int *innormalloop,
@@ -2089,6 +2089,7 @@ int poledeath(int whichx2,
   struct of_geom rgeomdontuse[NPR];
   struct of_geom *ptrrgeom[NPR];
   FTYPE dxdxp[NDIM][NDIM];
+  FTYPE pr0[NPR];
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
@@ -2190,12 +2191,16 @@ int poledeath(int whichx2,
       OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-
+      // set reference positions in i,k
       ri = i;
       rk = k;
 
 
+      //////////////////
+      //
       // set radial positions to average over
+      //
+      //////////////////
       if(ri==inoutlohi[POINTDOWN][POINTDOWN][1]){
 	// shift up, but not including ri
 	rim1=ri+1;
@@ -2230,7 +2235,9 @@ int poledeath(int whichx2,
 	get_geometry(ri, rjtest, rk, dirprim[U1], ptrrgeom[U1]);
 	gamma_calc(MAC(prim,ri,rjtest,rk), ptrrgeom[U1],&gammarjtest,&qsqrjtest);
 
-	for (j = deathjs0; j <= deathje0; j++) {
+
+
+	for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here)
 
 	  //POLEDENSITYDROPFACTOR
 	  //POLEGAMMAJUMPFACTOR
@@ -2300,6 +2307,8 @@ int poledeath(int whichx2,
       ////////////////////////////////
       //
       // reference location geometry and coordinates
+      //
+      ////////////////////////////////
 
       PBOUNDLOOP(pliter,pl) {
 	coord_ijk(ri,rj,rk,dirprim[pl],Xr[pl]); // reference locations for B2/U2
@@ -2313,13 +2322,27 @@ int poledeath(int whichx2,
 
 
 
+
+
+
       ////////////////////////////////
       //
-      // Loop over points to be modified
+      // Loop over points to be modified (prim's are only modifed here)
       //
       ////////////////////////////////
 
       for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+
+
+
+	//////////////
+	//
+	// setup initial pr
+	//
+	//////////////
+	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+
+
 
 
 	PBOUNDLOOP(pliter,pl) {
@@ -2556,9 +2579,25 @@ int poledeath(int whichx2,
 
 
 
+	///////////
+	//
+	// accounting for on-grid changes
+	//
+	////////////
+	int modcons=1;
+	FTYPE *ucons;
+	ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	// GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,ptrgeom[RHO],finalstep,COUNTBOUND1);
+
+
+
       }// end loop over j
     }// end loop 13
   }// end if POLEDEATH
+
+
+
 
 
 
@@ -2582,7 +2621,19 @@ int poledeath(int whichx2,
 	for (j = gammadeathjs; j <= gammadeathje; j++) {
 
 
-	  // ok-to-keep below as forever debug
+	  //////////////
+	  //
+	  // setup initial pr
+	  //
+	  //////////////
+	  PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+
+
+	  ///////////
+	  //
+	  // forever-kept debug
+	  //
+	  ///////////
 	  PBOUNDLOOP(pliter,pl2){
 	    if( !isfinite( MACP0A1(prim,i,j,k,pl2))){
 	      dualfprintf(fail_file,"BNDNAN: ispstag=%d t=%21.15g nstep=%ld steppart=%d :: i=%d j=%d k=%d pl2=%d prim=%21.15g\n",ispstag,t,nstep,steppart,i,j,k,pl2,MACP0A1(prim,i,j,k,pl2));
@@ -2591,7 +2642,11 @@ int poledeath(int whichx2,
 
 
 
-
+	  ///////////
+	  //
+	  // get u^r and limit if necessary
+	  //
+	  ///////////
 	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
 	  ucon_calc(MAC(prim,i,j,k),ptrgeom[pl],ucon, others);
@@ -2614,9 +2669,23 @@ int poledeath(int whichx2,
 	  else{
 	    limit_gamma(GAMMAPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
 	  }
-	}
+
+
+	  ///////////
+	  //
+	  // accounting for on-grid changes
+	  //
+	  ////////////
+	  int modcons=1;
+	  FTYPE *ucons;
+	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	  // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,ptrgeom[RHO],finalstep,COUNTBOUND2);
+
+
+	}// end over j
       }// end loop 13
-    }
+    }// end if ispstag==0
   }// end if POLEGAMMADEATH
 
 

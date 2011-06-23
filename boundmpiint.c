@@ -1,7 +1,7 @@
 #include "decs.h"
 
 
-int bound_mpi_int(int boundstage, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
+int bound_mpi_int(int boundstage, int finalstep, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
   int dir;
 
@@ -187,7 +187,7 @@ void unpack_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMP
 
 // fake MPI bound call so fills same locations with fakevalue
 // no actual MPI calls are made -- just uses the same structures for simplicity
-int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
+int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
 {
   int dir;
 

@@ -205,11 +205,12 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
      ){
 
     // for dump, rdump, and divb in ener
-    bound_allprim(STAGEM1,localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), 1, USEMPI);
+    int finalstep=0; // only for diagnostics, no accounting.
+    bound_allprim(STAGEM1,finalstep, localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), USEMPI);
     if(DOENOFLUX != NOENOFLUX){
       // bound GLOBALPOINT(udump) (unew) so divb can be computed at MPI boundaries (still real boundaries won't be computed correctly for OUTFLOW types)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
-      bound_mpi(STAGEM1,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+      bound_mpi(STAGEM1,finalstep,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
     }
   }
   

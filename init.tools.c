@@ -424,8 +424,10 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #endif
 
 
-  if (bound_prim(STAGEM1,t,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
-
+  {
+    int finalstep=1; //  modifies initial ucum-like-primitives
+    if (bound_prim(STAGEM1,finalstep,t,prim, pstag, Bhat, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
+  }
 
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
@@ -477,7 +479,10 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+  {
+    int finalstep=1; //  modifies initial ucum-like-primitives
+    if (bound_allprim(STAGEM1,finalstep,0.0,prim,pstag,ucons, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+  }
 
 
 

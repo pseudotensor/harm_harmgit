@@ -191,7 +191,9 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       //  read or write header: header is read/written in whatever style chosen to the top of each dump file created
       //
       ///////////////////////////////////
-      headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+      if(headerfun!=NULL){
+	headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+      }
 
       ////////////////////////////
       //
@@ -206,8 +208,10 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       // deal with transition between header and data
       if(readwrite==READFILE){
 	if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
-	  // now move past \n
-	  if(gopastlinebreak(fpp[coliter])) checkstatus=1;
+	  if(headerfun!=NULL){
+	    // now move past \n
+	    if(gopastlinebreak(fpp[coliter])) checkstatus=1;
+	  }
 	}
       }
       // get position that would start real data
