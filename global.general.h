@@ -138,4 +138,5 @@ typedef double doublereal;
 
 
 
-
+// whether including debug info for NSBH problem
+#define DEBUGNSBH 0

@@ -1431,7 +1431,6 @@ int bound_evolveprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*pr
 {
   int boundvartype=BOUNDPRIMTYPE;
 
-  dualfprintf(fail_file,"bound_evolveprim\n");
 
 
   bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
@@ -1457,7 +1456,6 @@ int bound_beforeevolveprim(int boundstage,int finalstep, SFTYPE boundtime, FTYPE
 {
   int boundvartype=BOUNDPRIMSIMPLETYPE; // tells boundary routines that only bounding 1 layer deep
 
-  dualfprintf(fail_file,"bound_beforeevolveprim\n");
 
   bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
   if(unewisavg && BOUNDUNEW){
@@ -1479,7 +1477,6 @@ int bound_prim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NS
 {
   int boundvartype=BOUNDPRIMTYPE;
 
-  dualfprintf(fail_file,"bound_prim\n");
 
   bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
 
@@ -1504,7 +1501,6 @@ int bound_allprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)
 {
   int boundvartype=BOUNDPRIMTYPE;
 
-  dualfprintf(fail_file,"bound_allprim\n");
 
   bound_anyallprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag,ucons,doboundmpi);
 
@@ -1520,7 +1516,6 @@ int bound_anyallprim(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 {
   int mystagboundvar;
 
-  dualfprintf(fail_file,"bound_anyallprim\n");
 
 
   if(FLUXB==FLUXCTSTAG){
@@ -1556,7 +1551,6 @@ int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
   FTYPE (*uavg)[NSTORE2][NSTORE3][NPR];
 
 
-  dualfprintf(fail_file,"bound_uavg\n");
 
 
   // assign uavg
@@ -1614,7 +1608,6 @@ int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvart
   int dir;
 
 
-  dualfprintf(fail_file,"bound_anyprim\n");
 
 
   if(DOGRIDSECTIONING){

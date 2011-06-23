@@ -1368,8 +1368,9 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
       plforflux=plforfluxlist[dir];
       signforflux=signforfluxlist[dir];
 
-      
+#if(DEBUGNSBH)
       dualfprintf(fail_file,"nstep=%ld steppart=%d dir=%d fluxdir=%d plforflux=%d locvpot=%d geomeodir=%d pldir=%d signforflux=%21.15g\n",nstep,steppart,dir,fluxdir,plforflux,locvpot[dir][odir2[dir]],B1-1+odir1[dir],pldir,signforflux);
+#endif
 
 
       if(Nvec[fluxdir]>1){
@@ -1426,9 +1427,11 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 	  if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
 
 
+#if(DEBUGNSBH)
 	  if(dir==2 && i==26 && j==40){
 	    dualfprintf(fail_file,"inside update_vpot: %21.15g (%21.15g %21.15g %21.15g) dt=%21.15g vpot0=%21.15g vpotlast=%21.15g myemf=%21.15g\n",MACP1A0(vpot,dir,i,j,k),CUf[0],CUf[1],CUf[2],dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf);
 	  }
+#endif
 
 
 	  //	if(dir==3){
