@@ -168,7 +168,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
     // create files for each column, or each column's header if mpicombine==1
     if((fpp=(FILE**)malloc(sizeof(FILE*)*numfiles))==NULL){
       dualfprintf(fail_file,"couldn't open fpp in dump()\n");
-      myexit(8365665474);
+      myexit(836565474);
     }// now fpp[i] indexes a list of file pointers
 
 
@@ -319,7 +319,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextcol!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(8367456556);
+	  myexit(836745613);
 	}
       }// end DUMPGENLOOP
     }// end readwrite==READFILE

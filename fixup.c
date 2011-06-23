@@ -50,7 +50,7 @@ int pre_fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 // operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
 // this function actually changes primitives
-int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
+int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   int stage,stagei,stagef;
   int boundstage;
@@ -126,7 +126,7 @@ int post_fixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR]
 
 
 // this function just reports problems, but doesn't fix them
-int post_fixup_nofixup(int stageit, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
+int post_fixup_nofixup(int stageit, int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
   fixup_utoprim_nofixup(STAGEM1,pv,pbackup,ucons,finalstep);
