@@ -394,7 +394,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = Risco;
   //  rin = 15.0 ;
   rin = 10.0 ;
-#endif
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
