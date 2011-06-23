@@ -117,6 +117,9 @@
 // for longer file names
 #define MAXFILENAMELONG 2000
 
+// return code used to indicate failure of dump_gen() was file not found instead of any other error
+#define FILENOTFOUND 2490834
+
 // for WHICHVEL
 // 0: 4-velocity (leads to ambiguous u^t +- discr part)
 // 1: 3-velocity (unambiguous u^t but interpolation is not constrained to be a good 3-velocity)

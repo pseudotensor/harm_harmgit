@@ -162,6 +162,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   ///////////////
 
   checkstatus=0; // no error so far
+  int problemloadingfile=0;
   if((USEMPI&&(myid==0)&&(mpicombine==1))||(mpicombine==0)){// for mpicombine==1 even with ROMIO, real filename and header not needed
 
     // only one CPU does header if mpicombine==1, header+dump done in all CPUs if mpicombine==0
@@ -182,9 +183,27 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       if ((fpp[coliter] = fopen(dfnamreal, filerw)) == NULL) {
 	dualfprintf(fail_file, "error opening %s %s (fullname=%s) file\n",fileprefix,filesuffix,dfnamreal);
 	dualfprintf(fail_file, "Check if disk full or have correct permissions\n");
-	myexit(2490834);
+	problemloadingfile=1;
       }
+    }// end COLLOOP
+  }// end if myid or mpicombine==0 (split the loop so that can check for file existence first)
 
+
+  // need to broadcast whether got all files or had problem
+#if(USEMPI)
+  MPI_Bcast(&problemloadingfile,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
+#endif
+  if(problemloadingfile){
+    // indicate failure, but one may wish to set some defaults if no file, so don't hard fail.
+    return(FILENOTFOUND);
+  }
+
+
+
+  checkstatus=0; // no error so far
+  if((USEMPI&&(myid==0)&&(mpicombine==1))||(mpicombine==0)){// for mpicombine==1 even with ROMIO, real filename and header not needed
+    // setup each file corresponding to each column
+    COLLOOP(coliter){
 
       //////////////////////////////////
       //
@@ -225,6 +244,9 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 
 
   }
+
+
+
   // need to broadcast the header size to other CPUs for ROMIO
 #if(USEMPI&&USEROMIO)
   MPI_Bcast(&uptodatabytesize,1,MPI_LONG,MPIid[0], MPI_COMM_GRMHD);

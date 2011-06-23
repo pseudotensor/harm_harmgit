@@ -385,7 +385,34 @@ int restartupperpole_read(long dump_cnt)
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
  
-  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartupperpole_header,rupperpoledump_read_content)>=1) return(1);
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartupperpole_header,rupperpoledump_read_content);
+
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"SUPERWARNING: resetting upperpole to zero since no restart file for upperpole is available\n");
+
+    if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
+      // then assume user knows what they are doing and just set array to zero
+      int i,j,k,jshifted;
+      DUMPGENLOOP{ // same loop as dump_gen() uses
+	if(j!=N2-1) continue; // force only assignment right at j==N2 so still doesn't matter what order the normal and upperpole restart calls are made
+	jshifted=j+SHIFT2;
+	GLOBALMACP0A1(unewglobal,i,jshifted,k,B2)=0.0;
+
+	if(EVOLVEWITHVPOT||TRACKVPOT){
+	  if(dnumcolumns[VPOTDUMPTYPE]>0){
+	    int jj;
+	    for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	      if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	      GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
+	    }
+	  }
+	}
+      }// end FULLLOOP
+    }// end if true upper pole
+  }
+  else return(1);
+    
 
 
 #if(0)
