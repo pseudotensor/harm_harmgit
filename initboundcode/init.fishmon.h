@@ -145,7 +145,7 @@
 #define MAXWELL PRIMMAXWELL
 
 
-#define TRACKVPOT 0 // not on by default
+#define TRACKVPOT 1 // now on by default
 #define EVOLVEWITHVPOT 0 // not on by default
 
 #define DOGRIDSECTIONING 0 // not on by default

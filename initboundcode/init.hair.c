@@ -1,3 +1,5 @@
+// uses init.fishmon.h and bounds.fishmon.c
+
 
 /* 
  *
@@ -88,6 +90,10 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+  // assume ok to use cour=0.5 for now
+  //  cour=0.8;
+  //  fluxmethod= HLLFLUX;
+
   return(0);
 }
 
@@ -152,7 +158,6 @@ Spin parameter study in 2D axisymmetry at 256^2:
  
 
 1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
-
 H/R parameter study in 2D axisymmetry at 256^2:
 
 1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
@@ -201,8 +206,6 @@ int init_defcoord(void)
 int init_grid(void)
 {
 
-  //  dualfprintf(fail_file,"must normalize field so sigma large and chosen at t=0 since not that way right now\n");
-  //  myexit(666);
   
   // metric stuff first
   a = 0.0 ;
@@ -212,10 +215,14 @@ int init_grid(void)
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  // R0=0.5 used to help high spin case
   R0 = 0.5;
   Rout = 40.0;
   //R0 = 0.0;
   //Rout = 40;
+
+  //Rout = 1.3*2*1E4; // for JET6COORDS
+
 #elif(WHICHPROBLEM==GRBJET)
   R0 = 0.2;
   Rout = 1E3;
@@ -285,10 +292,12 @@ int init_global(void)
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
   tf = 2000.0;
+  
+  //  tf = 1.3E4*2.0; // for JET6COORDS case
 
-  /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTUPPERPOLEDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
+  // default dumping period
+  for(int idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;
   /* image file frequ., in units of M */
@@ -296,11 +305,9 @@ int init_global(void)
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
-  /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 3000;
+  DTr = 1000;
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
