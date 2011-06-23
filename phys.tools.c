@@ -2997,6 +2997,7 @@ int OBtopr_general3n(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, FTYPE *normalvec,stru
   lower_vec(Bccon,geom,Bccov);
   lower_vec(normalvec,geom,normalveccov);
 
+  Bsq_normal=0.0;
   SLOOPA(j) Bsq_normal+=Bccon[j]*normalveccov[j];
 
   absB_normal=sqrt(Bsq_normal);

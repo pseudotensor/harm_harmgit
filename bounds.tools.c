@@ -2588,7 +2588,13 @@ int poledeath(int whichx2,
 	FTYPE *ucons;
 	ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
 	// GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
-	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,ptrgeom[RHO],finalstep,COUNTBOUND1);
+	// in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	struct of_geom *fixupptrgeom;
+	PBOUNDLOOP(pliter,pl) {
+	  fixupptrgeom=ptrgeom[pl];
+	  break;
+	}
+	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
 
 
 
@@ -2680,7 +2686,13 @@ int poledeath(int whichx2,
 	  FTYPE *ucons;
 	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
 	  // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
-	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,ptrgeom[RHO],finalstep,COUNTBOUND2);
+	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	  struct of_geom *fixupptrgeom;
+	  PBOUNDLOOP(pliter,pl) {
+	    fixupptrgeom=ptrgeom[pl];
+	    break;
+	  }
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
 
 
 	}// end over j
