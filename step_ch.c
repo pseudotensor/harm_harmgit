@@ -649,6 +649,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     /////////////////////////////////////
     steppart=timeorder;
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+    finalstepglobal=finalstep;
 
 #if(PRODUCTION==0)
     trifprintf("|%ds",timeorder);
@@ -1100,6 +1101,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
     }
 
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+    finalstepglobal=finalstep;
 
 
 

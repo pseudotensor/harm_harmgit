@@ -246,6 +246,7 @@ static int advance_standard(
   else{
     finalstep=0;
   }
+  finalstepglobal=finalstep;
 
 
   /////////
@@ -980,6 +981,7 @@ static int advance_finitevolume(
   else{
     finalstep=0;
   }
+  finalstepglobal=finalstep;
 
   /////////
   //

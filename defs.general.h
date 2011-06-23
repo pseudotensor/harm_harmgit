@@ -52,6 +52,7 @@ long fluxdumprealnstep;
 FTYPE TDYNORYEglobal,Hglobal;
 FTYPE rcurr, hcurr;
 FTYPE drsing;
+int finalstepglobal;
 
 //int istart, istop, jstart, jstop;
 #if(SIMULBCCALC!=-1) 
