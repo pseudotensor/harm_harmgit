@@ -2,12 +2,12 @@
 
 # scp jon@ki-rh42.slac.stanford.edu:/data/jon/latestcode/harmgit/scripts/lonestarrestartsustain.sh .
 
-EXPECTED_ARGS=1
+EXPECTED_ARGS=2
 
 
 if [ $# -ne $EXPECTED_ARGS ]
 then
-  echo "Usage: `basename $0` {new job number}"
+  echo "Usage: `basename $0` {new job number} {batch run dir and stderr/stdout location"
   exit
 fi
 
@@ -16,13 +16,14 @@ fi
 
 mynum=$1
 myoldnum=$(($mynum-1))
+batchrundir=$2
 
 echo Using old $myoldnum to setup $mynum
 
 ####################
 # copy over stderr/stdout file to run directory
 mkdir -p $SCRATCH/zb$myoldnum/stderrstdout/
-mv ~/zakamskabig/zb$myoldnum.o* $SCRATCH/zb$myoldnum/stderrstdout/
+mv $batchrundir/zb$myoldnum.o* $SCRATCH/zb$myoldnum/stderrstdout/
 
 ####################
 # copy over last rdump (assumes reasonable size)
@@ -62,7 +63,7 @@ fi
 
 ####################
 # Setup new batch for new number using old restart file
-cd ~/zakamskabig/
+cd $batchrundir
 alias mv='mv'
 alias cp='cp'
 mv batch.qsub.tacclonestar4.zakamskabig batch.qsub.tacclonestar4.zakamskabig.orig

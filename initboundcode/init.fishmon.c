@@ -1,4 +1,9 @@
 // uses init.fishmon.h and bounds.fishmon.c
+// See also coord.c, init.tools.c, and restart.c if changes to header/dumpfile
+// For thickdisk7->fishmon(new):
+// a) must change TRACKVPOT->0.  If doing zakamskabig,then use some large-box versions of parameters given by WHICHPROBLEM==THICKDISK case.
+// b) Also, if restarting from old zakamskabig, must truncate read restart of normal dump file, (upper pole file should zero out values as desired), NUMFAILFLOORFLAGS-> (NUMFAILFLOORFLAGS-2) upon read, NUMDUMPTYPES->NUMDUMPTYPES-1
+// c) Also, set makehead.inc USETACCLONESTAR4->1
 
 
 /* 
@@ -207,7 +212,7 @@ int init_defcoord(void)
   
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // define coordinate type
-  //  defcoord = JET3COORDS;
+  defcoord = JET3COORDS;
 #elif(WHICHPROBLEM==THICKDISK)
   defcoord = JET6COORDS;
 #elif(WHICHPROBLEM==GRBJET)
@@ -311,7 +316,8 @@ int init_global(void)
 
 
   // default dumping period
-  for(int idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+  int idt;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;
@@ -873,7 +879,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
 
-    if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK2VERT){
+    if(FIELDTYPE==DISK2FIELD || FIELDTYPE==DISK2VERT){
       // average of density that lives on CORN3
 
 
