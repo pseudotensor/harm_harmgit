@@ -109,7 +109,6 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 
   if(whichdir==1){
 
-
     dir=X1DN;
     if(dosetbc[dir]){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
@@ -144,7 +143,6 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
     }
 
 
-
   }
   else if(whichdir==2){
 
@@ -177,6 +175,8 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
     }
 
+
+
   }
   else if(whichdir==3){
 
@@ -194,6 +194,8 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       dualfprintf(fail_file,"No such whichdir=%d\n",whichdir);
       myexit(2436262);
     }
+
+
   }
 
 

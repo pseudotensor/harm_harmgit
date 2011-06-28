@@ -383,7 +383,7 @@ int init(int *argc, char **argv[])
     trifprintf("after fixup() during restart: proc=%04d\n",myid);
 #endif
 
-    trifprintf("before bound_allprim() during restart: proc=%04d\n",myid);
+    trifprintf("before bound_prim() during restart: proc=%04d\n",myid);
 
     {
       // pstag not computed from unewglobal yet, so don't bound it.  It'll get self-consistently bounded when ucons2upointppoint() is called below
@@ -391,7 +391,7 @@ int init(int *argc, char **argv[])
       if (bound_prim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
     }
 
-    trifprintf("after bound_allprim() during restart: proc=%04d\n",myid);
+    trifprintf("after bound_prim() during restart: proc=%04d\n",myid);
 
 
       

@@ -18,6 +18,7 @@ int init_MPI_general(int *argc, char **argv[])
   int ierr;
 #if(USEOPENMP)
   int provided,required=MPI_THREAD_MULTIPLE;
+  // lonestar4 locked-up here for some reason.   Had to set USEOPENMP->0 in makehead.inc.  Ranger was fine with openmp, but wasn't using openmp with lonestar3 with production runs, so unsure what situation is.
   ierr=MPI_Init_thread(argc, argv,required,&provided);
   fprintf(stderr,"Using MPI_Init_thread with required=%d and provided=%d\n",required,provided);
 #else
@@ -803,14 +804,14 @@ void init_placeongrid_griddecomposition(void)
 	  int othercpupos1 = mycpupos[1];
 	  int othercpupos2 = mycpupos[2];
 	  int othercpupos3 = (mycpupos[3] + (int)ncpux3/2)%ncpux3;
-	  int othermyid = othercpupos1 + othercpupos2*ncpux1 + othercpupos3*ncpux1*ncpux3;
+	  int othermyid = othercpupos1 + othercpupos2*ncpux1 + othercpupos3*ncpux1*ncpux2;
 	  if(mycpupos[2]==0 && dir==X2DN){
 	    dirgenset[bti][dir][DIROTHER] = othermyid;
 	    dirgenset[bti][dir][DIROPP]=X2DN; // X2DN communicates with X2DN on other CPU
 	  }
 	  else if(mycpupos[2]==ncpux2-1 && dir==X2UP){
 	    dirgenset[bti][dir][DIROTHER] = othermyid;
-	    dirgenset[bti][dir][DIROPP]=X2UP;; // X2UP communicates with X2UP on other CPU
+	    dirgenset[bti][dir][DIROPP]=X2UP; // X2UP communicates with X2UP on other CPU
 	  }
 	}
       }
