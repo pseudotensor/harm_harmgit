@@ -990,7 +990,22 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   }
  
   funreturn=user1_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
+
+  // override
+  FTYPE r,th;
+  bl_coord_ijk_2(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, V);
+  r=V[1];
+  th=V[2];
+
+  
+  if(DOEVOLVERHO) pr[RHO] = RHOMIN*pow(r,-5.5);
+  if(DOEVOLVEUU) prlocal[UU]  = UUMIN*pow(r,-2.5);
+
   if(funreturn!=0) return(funreturn);
+
+
+
+
  
   return(0);
 

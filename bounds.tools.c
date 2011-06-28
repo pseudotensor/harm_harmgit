@@ -31,12 +31,12 @@
 // causes problems with stability at just beyond pole
 // for field line plots, can just set B^\theta=0 along pole
 #if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
-#define POLEDEATH0 (N2BND==0 ? 0 : 2) 
+#define POLEDEATH0 (N2BND==0 ? 0 : MIN(2,N2BND)) 
 #else
-#define POLEDEATH0 (N2BND==0 ? 0 : 1) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
+#define POLEDEATH0 (N2BND==0 ? 0 : MIN(1,N2BND)) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
 #endif
 //#define MAXPOLEDEATH N2BND // can't be larger than N2BND
-#define MAXPOLEDEATH (N2BND==0 ? 0 : 2) // can't be larger than N2BND
+#define MAXPOLEDEATH (N2BND==0 ? 0 : MIN(2,N2BND)) // can't be larger than N2BND
 #define DEATHEXPANDAMOUNT 0
 
 #define POLEINTERPTYPE 3 // 0=set uu2=bu2=0, 1=linearly interpolate uu2,bu2  2=interpolate B_\phi into pole  3 =linearly for uu2 unless sucking on pole
@@ -2140,6 +2140,17 @@ int poledeath(int whichx2,
     gammadeathje=0+POLEGAMMADEATH-1;
     if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
     if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathjs0 = 0;
+    //      deathjstest = 0;
+    //      deathstagjs0 = 0;
+    //      deathstagjstest = 0;
+    //      gammadeathjs=0;
+    //    }
+
   }
   else if(whichx2==X2UP){
     rj0=N2-1-POLEDEATH;
@@ -2172,6 +2183,17 @@ int poledeath(int whichx2,
     gammadeathje = N2-1+POLEGAMMADEATH;
     if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
     if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+
+
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathje0 = N2-1;
+    //      deathjetest = N2-1;
+    //      deathstagje0 = N2-1;
+    //      deathstagjetest = N2-1;
+    //      gammadeathje=N2-1;
+    //    }
+
   }
   
 
@@ -2325,6 +2347,7 @@ int poledeath(int whichx2,
 
 
 
+
       ////////////////////////////////
       //
       // Loop over points to be modified (prim's are only modifed here)
@@ -2341,6 +2364,7 @@ int poledeath(int whichx2,
 	//
 	//////////////
 	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	int madechange=0;
 
 
 
@@ -2364,7 +2388,7 @@ int poledeath(int whichx2,
 
 
 	if(ispstag==0){
-	  // symmetric quantities
+	  // symmetric (if reflecting BC at pole) quantities
 	  if(j>=deathjs && j<=deathje){
 
 
@@ -2376,6 +2400,7 @@ int poledeath(int whichx2,
 		
 	      if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
 	      else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	      madechange++;
 	    }
 
 
@@ -2388,6 +2413,7 @@ int poledeath(int whichx2,
 		
 		if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
 		else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		madechange++;
 	      }
 
 
@@ -2406,18 +2432,19 @@ int poledeath(int whichx2,
 		
 		if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
 		  MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
+		  madechange++;
 		}
 		// do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
 	      }// end if BCSIGMACONSTATPOLE==1
 	    }// end if EOMTYPE!=EOMFFDE
 
 
-	  }    
-	}
+	  }// end if correct j
+	}// end if ispstag==0
 
 
 
-	// symmetric quantities
+	// symmetric (if reflecting BC at pole) quantities
 	if(j>=deathjs && j<=deathje){
 	  // B1 left alone
 	}
@@ -2428,30 +2455,158 @@ int poledeath(int whichx2,
 	   dirprim[B2]==FACE2 && j>=deathstagjs && j<=deathstagje || 
 	   dirprim[B2]==CENT && j>=deathjs && j<=deathje
 	   ){
-	  /////////////////////////////
-	  // B2:
+	  
+	  if(N2==1){
+	    /////////////////////////////
+	    // B2:
 #if(POLEINTERPTYPE==0)
-	  // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-	  // anti-symmetric quantities:
-	  MACP0A1(prim,i,j,k,B2) = 0.;
+	    // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
+	    // anti-symmetric (if reflecting BC at pole) quantities:
+	    MACP0A1(prim,i,j,k,B2) = 0.;
+	    madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-	  // anti-symmetric:
-	  // assume X[2] goes through 0 at the pole and isn't positive definite
-	  pl=B2;
-	  if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rjstag,rk,pl) + MACP0A1(prim,ri,rjstag,rk,pl) + MACP0A1(prim,rip1,rjstag,rk,pl));
-	  else  ftemp=MACP0A1(prim,ri,rjstag,rk,pl);
-	  MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	    // anti-symmetric (if reflecting BC at pole):
+	    // assume X[2] goes through 0 at the pole and isn't positive definite
+	    pl=B2;
+	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rjstag,rk,pl) + MACP0A1(prim,ri,rjstag,rk,pl) + MACP0A1(prim,rip1,rjstag,rk,pl));
+	    else  ftemp=MACP0A1(prim,ri,rjstag,rk,pl);
+	    MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	    madechange++;
 
 #elif(POLEINTERPTYPE==3)
-
-	  // then don't modify B2 -- trying to avoid instabilities related to divb=0 violation.  And seems B2 behaves ok
-
+	    // then don't modify B2 -- trying to avoid instabilities related to divb=0 violation.  And seems B2 behaves ok
 #endif
-	
+	  }
+	  else{
+	    // then don't modify B2 to ensure divB=0
+	  }
+
 	}
+
+
+
+
+
+	// symmetric quantity:      
+	if(j>=deathjs && j<=deathje){
+
+	  ////////////////
+	  // B3:
+	  pl=B3;
+
+	  if(N3==1){
+
+#if(POLEINTERPTYPE==0 || POLEINTERPTYPE==1)
+	    // symmetric:
+	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	    MACP0A1(prim,i,j,k,B3) = ftemp;
+	    madechange++;
+
+#elif(POLEINTERPTYPE==2)
+	    // symmetric:
+	    // approximate B_\phi copy, which (unlike copying B3) can resolve singular currents on axis
+	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	    MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
+	    madechange++;
+
+#elif(POLEINTERPTYPE==3)
+	    // symmetric:
+	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	    MACP0A1(prim,i,j,k,B3) = ftemp;
+	    madechange++;
+#endif
+	  }// end if N3==1
+	  else{
+	    // then do nothing if in 3D
+	  }
+
+
+	  if(ispstag==0){
+
+	    ///////////////////////////////////
+	    //
+	    // do rest if any -- assumed at CENT
+	    //
+	    ///////////////////////////////////
+	    for(pl=B3+1;pl<NPRBOUND;pl++){
+	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+	      else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+	      MACP0A1(prim,i,j,k,pl)=ftemp;
+	      madechange++;
+	    }
+	  }
+
+	}// end over CENT-type quantities
+
+
+
+	if(madechange){
+	  ///////////
+	  //
+	  // accounting for on-grid changes
+	  //
+	  ////////////
+	  int modcons=1;
+	  FTYPE *ucons;
+	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	  // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	  struct of_geom *fixupptrgeom;
+	  PBOUNDLOOP(pliter,pl) {
+	    fixupptrgeom=ptrgeom[pl];
+	    break;
+	  }
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	}
+
       
-      
+      }// end loop over j
+
+
+
+
+      ////////////////////////////////
+      //
+      // Loop over points to be modified (prim's are only modifed here)
+      //
+      // independent loop over j from above density loop since U2 changes may required RHO and those must already all be changed for all j
+      //
+      ////////////////////////////////
+
+      for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+
+
+
+	//////////////
+	//
+	// setup initial pr
+	//
+	//////////////
+	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	int madechange=0;
+
+
+
+
+	PBOUNDLOOP(pliter,pl) {
+	  // pole location
+	  coord_ijk(i,poleloc,k,FACE2,X0); // pole locations for B2/U2
+
+	  // current location
+	  bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+	  if(AVERAGEINRADIUS && (V[pl][RR]>RADIUSTOSTARTAVERAGING)){
+	    doavginradius[pl]=1;
+	  }
+	  else doavginradius[pl]=0;
+
+	}
+
       
       
 	if(ispstag==0){
@@ -2461,21 +2616,69 @@ int poledeath(int whichx2,
 	    // U2:
 	    pl=U2;
 
+
+	    if(special3dspc){
+	      // U2 not necessarily anti-symmetric in this case.
+	      // This will be kinda odd if POLEDEATH>1 due to comparing non-local regions.
+	      // But, for now, POLEDEATH<=1 is set so make sense.
+
+	      int jother;
+	      FTYPE signD;
+	      if(j<N2/2){
+		jother=-1-j;
+	      }
+	      else{
+		jother=N2-1+(N2-j);
+	      }
+
+	      if(j>=jother) signD=+1.0;
+	      else signD=-1.0;
+
+
+	      // see if sucking on pole
+	      FTYPE rhovjhere,rhovjother,rhovDiff;
+	      rhovjhere =MACP0A1mod(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
+	      rhovjother=MACP0A1mod(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
+
+	      rhovDiff=signD*(rhovjhere-rhovjother);
+	      // same gdet, so no need to multiply both by same factor for below test
+	      if(rhovDiff>0.0){
+		// then sucking on pole
+		// must change active and ghost cells consistently for any number of CPUs
+		// so average-out the suck to zero suck by changing the values equally (as weighted by mass)
+		MACP0A1mod(prim,i,j,k,U2)      += -signD*rhovDiff*0.5/MACP0A1mod(prim,i,j,k,RHO);
+		madechange++;
+		//		MACP0A1mod(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1mod(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
+
+		// Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to U2->0
+	      }
+	      else{
+		// then just enforce linear behavior near pole
+		// NOT YET
+	      }
+
+
+	    }
+	    else{
+
+
 #if(POLEINTERPTYPE==0)
 	    // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-	    // anti-symmetric quantities:
+	    // anti-symmetric (if reflecting BC at pole) quantities:
 	    MACP0A1(prim,i,j,k,pl) = 0.;
+	    madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-	    // anti-symmetric:
+	    // anti-symmetric (if reflecting BC at pole):
 	    // assume X[2] goes through 0 at the pole and isn't positive definite
 	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
 	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
 	    MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	    madechange++;
 
 #elif(POLEINTERPTYPE==3)
 
-	    // anti-symmetric:
+	    // anti-symmetric (if reflecting BC at pole):
 
 	    // assume X[2] goes through 0 at the pole and isn't positive definite
 
@@ -2496,6 +2699,7 @@ int poledeath(int whichx2,
 
 	      // assume ftemp is at reference location
 	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	      madechange++;
 	    }
 	    else if(whichx2==X2UP && ftemp<0.0){
 	      // then sucking on \theta=\pi pole
@@ -2509,6 +2713,7 @@ int poledeath(int whichx2,
 
 	      // assume ftemp is at reference location (same formula for both poles)
 	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	      madechange++;
 	    }
 	    else{
 	      // otherwise enforce natural regular linear behavior on U2
@@ -2516,86 +2721,42 @@ int poledeath(int whichx2,
 	      else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
 	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	      madechange++;
 	    }
 
 #if( UTHETAPOLEDEATH )
 	    //if interpolated u^\theta, now convert back to u^2
 	    dxdxprim_ijk(i, j, k, CENT, dxdxp);
 	    MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
+	    madechange++;
 #endif
 
-#endif
+#endif // endif POLEINTERPTYPE==3
+	    }// end if special3dspc==0
+
+	  }// end if correct j range
+	}// end if ispstag==0
+
+
+
+	if(madechange){ // only need accounting if actually made a change
+	  ///////////
+	  //
+	  // accounting for on-grid changes
+	  //
+	  ////////////
+	  int modcons=1;
+	  FTYPE *ucons;
+	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	  // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	  struct of_geom *fixupptrgeom;
+	  PBOUNDLOOP(pliter,pl) {
+	    fixupptrgeom=ptrgeom[pl];
+	    break;
 	  }
-	}	
-
-
-	// symmetric quantity:      
-	if(j>=deathjs && j<=deathje){
-
-	  ////////////////
-	  // B3:
-	  pl=B3;
-
-#if(POLEINTERPTYPE==0 || POLEINTERPTYPE==1)
-	  // symmetric:
-	  if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	  else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	  MACP0A1(prim,i,j,k,B3) = ftemp;
-
-#elif(POLEINTERPTYPE==2)
-	  // symmetric:
-	  // approximate B_\phi copy, which (unlike copying B3) can resolve singular currents on axis
-	  if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	  else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	  MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
-
-#elif(POLEINTERPTYPE==3)
-	  // then do nothing if in 3D
-	  if(N3==1){
-	    // symmetric:
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	    MACP0A1(prim,i,j,k,B3) = ftemp;
-	  }// else do nothing
-#endif
-
-
-
-	  if(ispstag==0){
-
-	    ///////////////////////////////////
-	    //
-	    // do rest if any -- assumed at CENT
-	    //
-	    ///////////////////////////////////
-	    for(pl=B3+1;pl<NPRBOUND;pl++){
-	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	      else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	      MACP0A1(prim,i,j,k,pl)=ftemp;
-	    }
-	  }
-
-	}// end over CENT-type quantities
-
-
-
-	///////////
-	//
-	// accounting for on-grid changes
-	//
-	////////////
-	int modcons=1;
-	FTYPE *ucons;
-	ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
-	// GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
-	// in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
-	struct of_geom *fixupptrgeom;
-	PBOUNDLOOP(pliter,pl) {
-	  fixupptrgeom=ptrgeom[pl];
-	  break;
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
 	}
-	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
-
 
 
       }// end loop over j
@@ -2633,6 +2794,7 @@ int poledeath(int whichx2,
 	  //
 	  //////////////
 	  PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	  int madechange=0;
 
 
 	  ///////////
@@ -2671,28 +2833,34 @@ int poledeath(int whichx2,
 	    }
 
 	    limit_gamma(gammavaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+	    madechange++;
 	  }
 	  else{
 	    limit_gamma(GAMMAPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+	    madechange++;
 	  }
 
 
-	  ///////////
-	  //
-	  // accounting for on-grid changes
-	  //
-	  ////////////
-	  int modcons=1;
-	  FTYPE *ucons;
-	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
-	  // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
-	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
-	  struct of_geom *fixupptrgeom;
-	  PBOUNDLOOP(pliter,pl) {
-	    fixupptrgeom=ptrgeom[pl];
-	    break;
+
+
+	  if(madechange){
+	    ///////////
+	    //
+	    // accounting for on-grid changes
+	    //
+	    ////////////
+	    int modcons=1;
+	    FTYPE *ucons;
+	    ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	    // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
+	    // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	    struct of_geom *fixupptrgeom;
+	    PBOUNDLOOP(pliter,pl) {
+	      fixupptrgeom=ptrgeom[pl];
+	      break;
+	    }
+	    diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
 	  }
-	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
 
 
 	}// end over j
