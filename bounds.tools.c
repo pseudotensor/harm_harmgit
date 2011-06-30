@@ -2082,6 +2082,7 @@ int poledeath(int whichx2,
   struct of_geom rgeomdontuse[NPR];
   struct of_geom *ptrrgeom[NPR];
   FTYPE dxdxp[NDIM][NDIM];
+  FTYPE pr0[NPR];
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
@@ -2183,12 +2184,16 @@ int poledeath(int whichx2,
       OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-
+      // set reference positions in i,k
       ri = i;
       rk = k;
 
 
+      //////////////////
+      //
       // set radial positions to average over
+      //
+      //////////////////
       if(ri==inoutlohi[POINTDOWN][POINTDOWN][1]){
 	// shift up, but not including ri
 	rim1=ri+1;
@@ -2223,7 +2228,9 @@ int poledeath(int whichx2,
 	get_geometry(ri, rjtest, rk, dirprim[U1], ptrrgeom[U1]);
 	gamma_calc(MAC(prim,ri,rjtest,rk), ptrrgeom[U1],&gammarjtest,&qsqrjtest);
 
-	for (j = deathjs0; j <= deathje0; j++) {
+
+
+	for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here)
 
 	  //POLEDENSITYDROPFACTOR
 	  //POLEGAMMAJUMPFACTOR
@@ -2293,6 +2300,8 @@ int poledeath(int whichx2,
       ////////////////////////////////
       //
       // reference location geometry and coordinates
+      //
+      ////////////////////////////////
 
       PBOUNDLOOP(pliter,pl) {
 	coord_ijk(ri,rj,rk,dirprim[pl],Xr[pl]); // reference locations for B2/U2
@@ -2306,13 +2315,27 @@ int poledeath(int whichx2,
 
 
 
+
+
+
       ////////////////////////////////
       //
-      // Loop over points to be modified
+      // Loop over points to be modified (prim's are only modifed here)
       //
       ////////////////////////////////
 
       for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+
+
+
+	//////////////
+	//
+	// setup initial pr
+	//
+	//////////////
+	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+
+
 
 
 	PBOUNDLOOP(pliter,pl) {
@@ -2515,9 +2538,31 @@ int poledeath(int whichx2,
 
 
 
+	///////////
+	//
+	// accounting for on-grid changes
+	//
+	////////////
+	int modcons=1;
+	FTYPE *ucons;
+	ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	// GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+	// in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	struct of_geom *fixupptrgeom;
+	PBOUNDLOOP(pliter,pl) {
+	  fixupptrgeom=ptrgeom[pl];
+	  break;
+	}
+	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+
+
+
       }// end loop over j
     }// end loop 13
   }// end if POLEDEATH
+
+
+
 
 
 
@@ -2541,7 +2586,19 @@ int poledeath(int whichx2,
 	for (j = gammadeathjs; j <= gammadeathje; j++) {
 
 
-	  // ok-to-keep below as forever debug
+	  //////////////
+	  //
+	  // setup initial pr
+	  //
+	  //////////////
+	  PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+
+
+	  ///////////
+	  //
+	  // forever-kept debug
+	  //
+	  ///////////
 	  PBOUNDLOOP(pliter,pl2){
 	    if( !isfinite( MACP0A1(prim,i,j,k,pl2))){
 	      dualfprintf(fail_file,"BNDNAN: ispstag=%d t=%21.15g nstep=%ld steppart=%d :: i=%d j=%d k=%d pl2=%d prim=%21.15g\n",ispstag,t,nstep,steppart,i,j,k,pl2,MACP0A1(prim,i,j,k,pl2));
@@ -2550,7 +2607,11 @@ int poledeath(int whichx2,
 
 
 
-
+	  ///////////
+	  //
+	  // get u^r and limit if necessary
+	  //
+	  ///////////
 	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
 	  ucon_calc(MAC(prim,i,j,k),ptrgeom[pl],ucon, others);
@@ -2573,9 +2634,29 @@ int poledeath(int whichx2,
 	  else{
 	    limit_gamma(GAMMAPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
 	  }
-	}
+
+
+	  ///////////
+	  //
+	  // accounting for on-grid changes
+	  //
+	  ////////////
+	  int modcons=1;
+	  FTYPE *ucons;
+	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+	  // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
+	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	  struct of_geom *fixupptrgeom;
+	  PBOUNDLOOP(pliter,pl) {
+	    fixupptrgeom=ptrgeom[pl];
+	    break;
+	  }
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+
+
+	}// end over j
       }// end loop 13
-    }
+    }// end if ispstag==0
   }// end if POLEGAMMADEATH
 
 
