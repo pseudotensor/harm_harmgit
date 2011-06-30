@@ -193,7 +193,7 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
 
   TIMEORDER = 2;
-  DTr = 6000;
+  DTr = 3000;
   tf = 1e5;
 
   if(funreturn!=0) return(funreturn);
