@@ -2083,6 +2083,7 @@ int poledeath(int whichx2,
   struct of_geom *ptrrgeom[NPR];
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE pr0[NPR];
+  int finalstep = finalstepglobal;
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
