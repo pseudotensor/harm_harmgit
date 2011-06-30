@@ -752,6 +752,7 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
 
 
   if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+  finalstepglobal=finalstep;
 
 
 
@@ -2145,6 +2146,7 @@ int interpolate_ustag2fieldcent_donor
 
   // bound new pstag
   if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+  finalstepglobal=finalstep;
   bound_pstag(stage, boundtime, preal, pstag, upoint, finalstep, USEMPI);
 
 

@@ -42,6 +42,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int whichDT;
   int (*dumpfuncgen[NUMDUMPTYPES])(long dump_cnt);
+  int finalstepbackup;
 
   
 
@@ -203,6 +204,8 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
      || (PRODUCTION>0 && (dodumpgen[MAINDUMPTYPE]))
      ){
 
+    finalstepbackup = finalstepglobal;
+    finalstepglobal = 0;  //only for diagnostic, no accounting
     // for dump, rdump, and divb in ener
     bound_allprim(STAGEM1,localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), 1, USEMPI);
     if(DOENOFLUX != NOENOFLUX){
@@ -210,6 +213,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
       bound_mpi(STAGEM1,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL);
     }
+    finalstepglobal = finalstepbackup;
   }
   
 

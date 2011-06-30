@@ -21,6 +21,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   int failflag=0;
   extern int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt);
   int gotnan;
+  int finalstepbackup;
 
 
 
@@ -109,11 +110,14 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   // BOUND during restart
   //
   /////////////////////
+  finalstepbackup=finalstepglobal;
+  finalstepglobal=1;
   if (bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI) >= 1) {
     fprintf(fail_file, "restart_init:bound_allprim: failure\n");
     fflush(fail_file);
     return (1);
   }
+  finalstepglobal=finalstepbackup;
 
   trifprintf( "proc: %d bound restart completed: failed=%d\n", myid,failed);
 
