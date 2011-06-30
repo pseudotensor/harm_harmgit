@@ -2554,7 +2554,7 @@ int poledeath(int whichx2,
 	  fixupptrgeom=ptrgeom[pl];
 	  break;
 	}
-	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTEOSLOOKUPFAIL);
 
 
 
@@ -2652,7 +2652,7 @@ int poledeath(int whichx2,
 	    fixupptrgeom=ptrgeom[pl];
 	    break;
 	  }
-	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTEOSLOOKUPFAIL);
 
 
 	}// end over j
