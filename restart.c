@@ -297,7 +297,18 @@ int restart_read(long dump_cnt)
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
  
-  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content)>=1) return(1);
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+  
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"restart file not found\n");
+    myexit(87343363);
+  }
+  else if(failreturn>0){
+    dualfprintf(fail_file,"restart file: other read error\n");
+    myexit(7165766);
+  }
+
 
 
   // NOTE: for FLUXB==FLUXCTSTAG, unewglobal and vpot are bounded in initbase.c for boundary edges and inter-MPI edges
@@ -411,7 +422,7 @@ int restartupperpole_read(long dump_cnt)
       }// end FULLLOOP
     }// end if true upper pole
   }
-  else return(1);
+  else if(failreturn>0) return(1);
     
 
 
@@ -777,7 +788,19 @@ int restartmetric_read(long dump_cnt)
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
  
-  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartmetric_header,rmetricdump_read_content)>=1) return(1);
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartmetric_header,rmetricdump_read_content);
+  
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"restartmetric file not found\n");
+    myexit(26525667);
+  }
+  else if(failreturn>0){
+    dualfprintf(fail_file,"restartmetric file: other read error\n");
+    myexit(71857346);
+  }
+
+
 
 
 

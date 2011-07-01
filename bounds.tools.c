@@ -2090,6 +2090,8 @@ int poledeath(int whichx2,
   struct of_geom *ptrrgeom[NPR];
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE pr0[NPR];
+  int jstep;
+
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
@@ -2111,6 +2113,9 @@ int poledeath(int whichx2,
 
   // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
   if(whichx2==X2DN){
+
+    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
+
     rj0 = POLEDEATH;
     rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
     poleloc = 0;
@@ -2259,7 +2264,7 @@ int poledeath(int whichx2,
 
 
 
-	for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here)
+	for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here, so no need for special j loop or diag_fixup)
 
 	  //POLEDENSITYDROPFACTOR
 	  //POLEGAMMAJUMPFACTOR
@@ -2347,6 +2352,11 @@ int poledeath(int whichx2,
 
 
 
+      //#define DEATHLOOP2 for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+      //      for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+      // always iterate from active to ghost cell, so can modify active and have ready for ghost
+      // didn't redefine js and je, they always go from small to large values, which is why ordering below
+#define DEATHLOOP2(whichx2) for (j = (whichx2==X2UP ? MIN(deathstagjs,deathjs) : MAX(deathstagje,deathje)) ; (whichx2==X2UP ? (j <= MAX(deathstagje,deathje)) : (j >= MIN(deathstagjs,deathjs)) )   ; (whichx2==X2UP ? j++ : j--) )
 
       ////////////////////////////////
       //
@@ -2354,7 +2364,7 @@ int poledeath(int whichx2,
       //
       ////////////////////////////////
 
-      for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+      DEATHLOOP2(whichx2){
 
 
 
@@ -2408,7 +2418,7 @@ int poledeath(int whichx2,
 	    if(EOMTYPE!=EOMFFDE){
 	      //////////
 	      // for densities
-	      // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
+	      // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
 	      for(pl=RHO;pl<=UU;pl++){
 		
 		if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
@@ -2577,7 +2587,7 @@ int poledeath(int whichx2,
       //
       ////////////////////////////////
 
-      for (j = MIN(deathstagjs,deathjs); j <= MAX(deathstagje,deathje); j++) {
+      DEATHLOOP2(whichx2){
 
 
 
@@ -2637,18 +2647,46 @@ int poledeath(int whichx2,
 
 	      // see if sucking on pole
 	      FTYPE rhovjhere,rhovjother,rhovDiff;
-	      rhovjhere =MACP0A1mod(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
-	      rhovjother=MACP0A1mod(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
+	      rhovjhere =MACP0A1(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
+	      rhovjother=MACP0A1(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
 
 	      rhovDiff=signD*(rhovjhere-rhovjother);
 	      // same gdet, so no need to multiply both by same factor for below test
+	      // make change to both simultaneously so that when other j is hit, rhovDiff condition is no longer hit and all is consistent as if separate memory field for entire poledeath before final copy-over to primitive memory space.
+	      // But do active grid cells first (determined by DEATHLOOPJ) so diag_fixup() occurs on active region for accounting.
 	      if(rhovDiff>0.0){
 		// then sucking on pole
 		// must change active and ghost cells consistently for any number of CPUs
 		// so average-out the suck to zero suck by changing the values equally (as weighted by mass)
-		MACP0A1mod(prim,i,j,k,U2)      += -signD*rhovDiff*0.5/MACP0A1mod(prim,i,j,k,RHO);
-		madechange++;
-		//		MACP0A1mod(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1mod(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
+		FTYPE dU2     =-signD*rhovDiff*0.5/MACP0A1(prim,i,j,k,RHO);
+		FTYPE U2jhere = MACP0A1mod(prim,i,j,k,U2);
+		FTYPE U2jother= MACP0A1mod(prim,i,jother,k,U2);
+
+		if( (fabs(U2jhere)>fabs(dU2))&&(fabs(U2jother)>fabs(dU2)) ){
+		  // only change if in both cases we lower the velocity, not increase.
+		  MACP0A1(prim,i,j,k,U2)      += dU2;
+		  MACP0A1(prim,i,jother,k,U2) -= dU2;
+		  madechange++;
+		}
+		else{ // then jhere or jother is changed by an absolute magnitude more than its value, which we want to avoid
+		  // crush a bit only as much as leaves smaller value changed as much as possible without increasing its magnitude
+		  if(fabs(U2jhere)<fabs(U2jother)){
+		    // then drop jhere as closest to fixed value (100% change), and reset jother with same value
+		    MACP0A1(prim,i,j,k,U2) *= -1.0;
+		    MACP0A1(prim,i,jother,k,U2) = MACP0A1(prim,i,j,k,U2);
+		    madechange++;
+		  }
+		  else{
+		    // then drops down to value matching other side so D=0 in the end still, so still no sucking.
+		    MACP0A1(prim,i,jother,k,U2) *= -1.0;
+		    MACP0A1(prim,i,j,k,U2) = MACP0A1(prim,i,jother,k,U2);
+		    madechange++;
+		  }
+		}// end else abs mag of change is larger than 100% for one of the values
+
+		//		  MACP0A1(prim,i,j,k,U2)      =0.0;
+		//		  madechange++;
+		//		MACP0A1(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
 
 		// Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to U2->0
 	      }
@@ -2663,66 +2701,70 @@ int poledeath(int whichx2,
 
 
 #if(POLEINTERPTYPE==0)
-	    // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-	    // anti-symmetric (if reflecting BC at pole) quantities:
-	    MACP0A1(prim,i,j,k,pl) = 0.;
-	    madechange++;
+	      // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
+	      // anti-symmetric (if reflecting BC at pole) quantities:
+	      MACP0A1(prim,i,j,k,pl) = 0.;
+	      madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-	    // anti-symmetric (if reflecting BC at pole):
-	    // assume X[2] goes through 0 at the pole and isn't positive definite
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	    MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	    madechange++;
+	      // anti-symmetric (if reflecting BC at pole):
+	      // assume X[2] goes through 0 at the pole and isn't positive definite
+	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+	      else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+	      madechange++;
 
 #elif(POLEINTERPTYPE==3)
 
-	    // anti-symmetric (if reflecting BC at pole):
+	      // anti-symmetric (if reflecting BC at pole):
 
-	    // assume X[2] goes through 0 at the pole and isn't positive definite
+	      // assume X[2] goes through 0 at the pole and isn't positive definite
 
-	    // choose reference value
-	    // 	ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+	      // choose reference value
+	      // 	ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+	      ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
-	    if(whichx2==X2DN && ftemp>0.0){
-	      // then sucking on \theta=0 pole
-	      // try to minimize sucking on pole by finding minimum U2 around
-	      for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-	      if(doavginradius[pl]){
-		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+	      if(whichx2==X2DN && ftemp>0.0){
+		// then sucking on \theta=0 pole
+		// try to minimize sucking on pole by finding minimum U2 around
+		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+		if(doavginradius[pl]){
+		  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+		  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+		}
+
+		ftemp=0.0; // try crushing sucking GODMARK
+
+		// assume ftemp is at reference location
+		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+		madechange++;
+	      }
+	      else if(whichx2==X2UP && ftemp<0.0){
+		// then sucking on \theta=\pi pole
+		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+		if(doavginradius[pl]){
+		  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+		  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+		}
+
+		ftemp=0.0; // try crushing sucking GODMARK
+
+		// assume ftemp is at reference location (same formula for both poles)
+		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+		madechange++;
+	      }
+	      else{
+		// otherwise enforce natural regular linear behavior on U2
+		if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+		else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+
+		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+		madechange++;
 	      }
 
-	      ftemp=0.0; // try crushing sucking GODMARK
+#endif // endif POLEINTERPTYPE==3
+	    }// end if special3dspc==0
 
-	      // assume ftemp is at reference location
-	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	      madechange++;
-	    }
-	    else if(whichx2==X2UP && ftemp<0.0){
-	      // then sucking on \theta=\pi pole
-	      for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-	      if(doavginradius[pl]){
-		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
-	      }
-
-	      ftemp=0.0; // try crushing sucking GODMARK
-
-	      // assume ftemp is at reference location (same formula for both poles)
-	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	      madechange++;
-	    }
-	    else{
-	      // otherwise enforce natural regular linear behavior on U2
-	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-	      else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
-
-	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	      madechange++;
-	    }
 
 #if( UTHETAPOLEDEATH )
 	    //if interpolated u^\theta, now convert back to u^2
@@ -2731,8 +2773,6 @@ int poledeath(int whichx2,
 	    madechange++;
 #endif
 
-#endif // endif POLEINTERPTYPE==3
-	    }// end if special3dspc==0
 
 	  }// end if correct j range
 	}// end if ispstag==0
@@ -2785,7 +2825,7 @@ int poledeath(int whichx2,
 	OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	for (j = gammadeathjs; j <= gammadeathje; j++) {
+	for (j = gammadeathjs; j <= gammadeathje; j++) { // currently not multiple-point dependent, so normal j loop is fine
 
 
 	  //////////////
