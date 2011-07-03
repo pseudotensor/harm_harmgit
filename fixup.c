@@ -1879,7 +1879,16 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 
   if(utoprimfailtype!=-1){
     // diagnostics
+#if(0)
     diag_fixup(docorrectucons,pr0, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
+#else
+    FTYPE diagUi[NPR];
+    int modcons=1;
+    // get ucons estimate (not really needed)
+    UtoU(UEVOLVE,UDIAG,ptrgeom,MAC(ucons,i,j,k),diagUi);
+    // account for change to hot MHD conserved quantities
+    diag_fixup_Ui_pf(modcons,diagUi,MAC(pv,i,j,k),ptrgeom,finalstep,(int)utoprimfailtype);
+#endif
     ////////////////
     //
     // reset true pflag counter to "no" (fixed) failure
