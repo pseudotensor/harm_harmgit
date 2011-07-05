@@ -527,7 +527,28 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   }// end if truestep
 
-
+#if(DOONESTEPDUACCOUNTING)
+  if(truestep && finalstep){
+    FTYPE Ui[NPR];
+    struct of_geom *ptrgeom;
+    struct of_geom geomdontuse;
+    
+    ptrgeom=&(geomdontuse);
+    
+    //loop over (0..N1-1, 0..N2-1, 0..N3-1):
+    LOOP{
+      PALLLOOP(pl){ 
+	get_geometry(i, j, k, CENT, ptrgeom);
+	break;
+      }
+      UtoU(UEVOLVE,UDIAG,ptrgeom,MAC(ucons,i,j,k),Ui);
+      // account for change to hot MHD conserved quantities
+      // use pf as final primitive (guessed since this is what is dumped below)
+      diag_fixup_Ui_pf(-1,Ui,MAC(pf,i,j,k),ptrgeom,finalstep,COUNTEOSLOOKUPFAIL);
+    }
+  }    
+#endif
+  
   /////////////////////////////////////
   //
   // Diagnostics

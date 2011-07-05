@@ -339,74 +339,78 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
     PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
   }
 
-
-  ///////////////////
-  //
-  // get correction
-  //
-  //////////////////
-  PALLLOOP(pl){
-	    
-    // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
-    // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
-    dUincell[pl]=dVF * deltaUavg[pl];
-
-    if(DOFLOORDIAG){
-      // only store this diagnostic once (not for each enerregion)
-      // Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
-      // Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
-      GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
-    }
-
-  }// end over pl's
-
-
-
-
-  //////////////
-  //
-  // Loop over ENERREGIONs
-  //
-  //////////////
-  ENERREGIONLOOP(enerregion){
-
-    // setup pointers to enerregion diagnostics
-    enerpos=enerposreg[enerregion];
-    fladd=fladdreg[enerregion];
-    fladdterms=fladdtermsreg[enerregion];
-
-
-    ///////////
+#if( DOONESTEPDUACCOUNTING )
+  //only do aggregate accounting, after the fact (just before taking the new time step)
+  if( docorrectuconslocal < 0 ){
+#endif
+    ///////////////////
     //
-    // determine if within diagnostic region
+    // get correction
     //
-    ///////////
-    is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    //////////////////
+    PALLLOOP(pl){
+	      
+      // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+      // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+      dUincell[pl]=dVF * deltaUavg[pl];
+
+      if(DOFLOORDIAG){
+	// only store this diagnostic once (not for each enerregion)
+	// Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
+	// Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
+	GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
+      }
+
+    }// end over pl's
 
 
-    /////////////////////////
+    //////////////
     //
-    // diagnostics (both for enerregion and single-region types)
+    // Loop over ENERREGIONs
     //
-    /////////////////////////
-    if(is_within_diagnostic_region){
+    //////////////
+    ENERREGIONLOOP(enerregion){
 
-      PALLLOOP(pl){
-	    
-	// dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
-	// So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
-	dUincell[pl]=dVF * deltaUavg[pl];
-
-	fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
-	fladd[pl] += dUincell[pl];
-	    
-
-      }// end over pl's
-    }// end if within diagnostic region
-
-  }// end over enerregions
+      // setup pointers to enerregion diagnostics
+      enerpos=enerposreg[enerregion];
+      fladd=fladdreg[enerregion];
+      fladdterms=fladdtermsreg[enerregion];
 
 
+      ///////////
+      //
+      // determine if within diagnostic region
+      //
+      ///////////
+      is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+
+      /////////////////////////
+      //
+      // diagnostics (both for enerregion and single-region types)
+      //
+      /////////////////////////
+      if(is_within_diagnostic_region){
+
+	PALLLOOP(pl){
+	      
+	  // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+	  // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+	  dUincell[pl]=dVF * deltaUavg[pl];
+
+	  fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
+	  fladd[pl] += dUincell[pl];
+	      
+
+	}// end over pl's
+      }// end if within diagnostic region
+
+    }// end over enerregions
+
+#if( DOONESTEPDUACCOUNTING )
+  }
+#endif
+  
   return(0);
 }
 
@@ -455,8 +459,11 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
     ///////////
     // determine if within correctable region
     ///////////
+#if( DOONESTEPDUACCOUNTING )
+    docorrectuconslocal=docorrectucons;
+#else
     docorrectuconslocal=diag_fixup_correctablecheck(docorrectucons,ptrgeom);
-
+#endif
 
 
     ////////////////////////
@@ -520,8 +527,11 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
   if(finalstep > 0){
 
     // determine if within correctable region
+#if( DOONESTEPDUACCOUNTING )
+    docorrectuconslocal=docorrectucons;
+#else
     docorrectuconslocal=diag_fixup_correctablecheck(docorrectucons,ptrgeom);
-
+#endif
     // Get Uf(pf)
     failreturn=get_state(pf,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
