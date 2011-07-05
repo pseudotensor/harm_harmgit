@@ -592,8 +592,12 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
     ///////////
     // determine if within correctable region
     ///////////
+#if( DOONESTEPDUACCOUNTING )
+    docorrectuconslocal=docorrectucons;
+#else
     docorrectuconslocal=diag_fixup_correctablecheck(docorrectucons,ptrgeom);
-
+#endif
+    
 
     ///////////
     //

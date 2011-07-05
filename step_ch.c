@@ -530,6 +530,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #if(DOONESTEPDUACCOUNTING)
   if(truestep && finalstep){
     FTYPE Ui[NPR];
+    int i, j, k, pl;
     struct of_geom *ptrgeom;
     struct of_geom geomdontuse;
     
