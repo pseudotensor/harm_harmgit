@@ -847,6 +847,11 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   ////////////////////
 #if(WHICHVEL==VELREL4)
+  //reset the initial value of primitive since separate accounting
+  PALLLOOP(pl){
+    pr0[pl]=pr[pl];
+  }
+  
   didchangeprim=0;
 
   failreturn=limit_gamma(GAMMAMAX,pr,ucons,ptrgeom,-1);
@@ -1242,7 +1247,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	// ACCOUNTING (static or average)
 	//
 	/////////////////////////////////
-	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);  //WRONG since measures delta w.r.t. fake prims
 
 
       }
@@ -3034,10 +3039,11 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // Account for changes in conserved quantities via changes in: \rho_0 and pr[U1..U3]
   //
   ///////////////////
-  if(didchange){
-    diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
-    return(-1);// indicates did change primitive
-  }
+
+  //if(didchange){
+  //  diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);  //AT: commented out to remove double accounting
+  //  return(-1);// indicates did change primitive
+  //}
 
 
   return(0); // indicates didn't change anything
