@@ -977,7 +977,7 @@ void parse_commandline(int argc, char *argv[])
       // old type of parsing of command line
       strcpy(argv[1],argv[0]); // force filename to be in -oldargs position so old parse doesn't see any difference compared to old code
       // drop count down by 1 and shift 0-position to be argv[1] that now contains filename, so no difference noticed.
-      old_parse_commandline(argc-1,argv+1); // add 1 to ignore oldargs as if doing old parsing method without any interior changes
+      old_parse_commandline(argc-1,argv[1]); // add 1 to ignore oldargs as if doing old parsing method without any interior changes
       oldparse=1;
     }
   }
