@@ -973,7 +973,7 @@ void parse_commandline(int argc, char *argv[])
   if(argc>1){
     i=1;
     if (strcmp(argv[i],"-oldargs")==0) {
-      fprintf(stderr,"Using old commend line read method\n");
+      fprintf(stderr,"Using old command line read method\n");
       // old type of parsing of command line
       strcpy(argv[1],argv[0]); // force filename to be in -oldargs position so old parse doesn't see any difference compared to old code
       // drop count down by 1 and shift 0-position to be argv[1] that now contains filename, so no difference noticed.
@@ -1525,6 +1525,12 @@ void old_parse_commandline(int argc, char *argv[])
       fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
     }
     old_usage(argc,basicargcnum); // report how to use program if not enough arguments
+  }
+  else{
+    // then just print out args
+    for(i=0;i<argc;i++){
+      fprintf(stderr,"argv[%d]=%s\n",i,argv[i]);
+    }
   }
 
 
