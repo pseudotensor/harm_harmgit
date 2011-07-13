@@ -968,16 +968,18 @@ void parse_commandline(int argc, char *argv[])
   int setbinaryinput=0,setbinaryoutput=0;
   int setinFTYPE=0,setoutFTYPE=0;
   int setreadheader=0,setwriteheader=0;
-
+  char **argvnew;
 
   if(argc>1){
     i=1;
     if (strcmp(argv[i],"-oldargs")==0) {
       fprintf(stderr,"Using old command line read method\n");
       // old type of parsing of command line
-      strcpy(argv[1],argv[0]); // force filename to be in -oldargs position so old parse doesn't see any difference compared to old code
+
       // drop count down by 1 and shift 0-position to be argv[1] that now contains filename, so no difference noticed.
-      old_parse_commandline(argc-1,argv+1); // add 1 to ignore oldargs as if doing old parsing method without any interior changes
+      argvnew=argv+1;
+
+      old_parse_commandline(argc-1,argvnew); // add 1 to ignore oldargs as if doing old parsing method without any interior changes (argvnew[0] won't have filename, but that's ok -- can't just copy over since different memory space for each pointer).
       oldparse=1;
     }
   }
