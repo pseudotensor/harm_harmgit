@@ -514,7 +514,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
   struct of_state q;
   FTYPE Uf[NPR],ucons[NPR];
   int failreturn;
-  int pl,enerregion;
+  int pliter,pl,enerregion;
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
@@ -538,29 +538,16 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
     failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Uf);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
-
     // get ucons
-    UtoU(UDIAG,UEVOLVE,ptrgeom,Ui,ucons);
-
-    ///////////
-    //
-    // Change ucons
-    //
-    ///////////
-    if(DOENOFLUX != NOENOFLUX){ // JONMARK
-      // notice that geometry comes after subtractions/additions of EOMs
-      // convert from UDIAG->UEVOLVE
-      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons);
-    }
-
-
+    PLOOP(pliter,pl) ucons[pl]=Ui[pl];
     // ensure B^i is really at center even if FLUXB==FLUXCTSTAG (that would have Ui[B1..B3] at staggered)
     // Assumes, as very generally true, that U[B1..B3] never change and can never be adjusted.
     PLOOPBONLY(pl) ucons[pl]=Uf[pl];
 
-
     // Get deltaUavg[] and also modify ucons if required and should
     diag_fixup_dUandaccount(ucons, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+
+    // GODMARK: NOENOFLUX==0 not accounted for
 
 
   }// end if finalstep>0
