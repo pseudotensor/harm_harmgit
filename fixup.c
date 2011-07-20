@@ -560,7 +560,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
 
 
     // Get deltaUavg[] and also modify ucons if required and should
-    diag_fixup_dUandaccount(Ucons, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+    diag_fixup_dUandaccount(ucons, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
   }// end if finalstep>0
