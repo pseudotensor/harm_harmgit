@@ -179,7 +179,7 @@
 #define MAILWHENDONE 0
 #define MAILFROMREMOTE 0
 #define REMOTEHOST "relativity.cfa.harvard.edu"
-#define EMAILADDRESS "jmckinney@cfa.harvard.edu"
+#define EMAILADDRESS "atchekho@princeton.edu"
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
 #define DOAVG 1
@@ -357,6 +357,9 @@ struct Ccoordparams {
 
 #undef FIELDLINEGDETB
 #define FIELDLINEGDETB 1
+
+#undef FIELDLINEFLUX
+#define FIELDLINEFLUX 1
 
 #undef CONNAXISYMM
 #define CONNAXISYMM 1

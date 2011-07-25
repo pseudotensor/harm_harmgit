@@ -780,11 +780,12 @@ void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 #endif
     +7*16 // Tud all 7 parts, all 4x4 terms (112)
     +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
+    +9    // 9 fluxes
     ;
 
 
   if(DOAVG2){
-    *numcolumns-=224;
+    *numcolumns-=(224+9);
   }
 
   // Version number:
@@ -849,6 +850,8 @@ int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 #if(DOAVG2==0)
   myset(datatype,GLOBALMAC(tudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
+
+  myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
 #endif
 
   return(0);
@@ -888,7 +891,7 @@ void set_avg2_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 
 
   if(DOAVG2){
-    *numcolumns=10 + 224; // otherwise doesn't exist so don't need to set
+    *numcolumns=10 + 224 + 9; // otherwise doesn't exist so don't need to set
   }
   else *numcolumns=0;
 
@@ -930,7 +933,9 @@ int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   // 112*2
 
-  // total=10+112*2=234
+  myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
+
+  // total=10+112*2=234 (2011-10-05: AT XXX: add 9 more?)
 
   return(0);
 }
@@ -1234,6 +1239,68 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   ftemp=(float)(GLOBALMACP0A1(udump,i,j,k,B3));
   myset(datatype,&ftemp,0,1,writebuf);
+#endif
+  
+#if( FIELDLINEFLUX == 1 )
+  //it is useful to have access to fluxes at cell faces directly for accurately plotting fluxes vs. radius
+  
+  ///////////////////
+  //
+  // F1
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+
+  ///////////////////
+  //
+  // F2
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+  
+  ///////////////////
+  //
+  // F3
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+  
 #endif
   
   // see grmhd-dualfcon2omegaf.nb
