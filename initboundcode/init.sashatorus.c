@@ -195,6 +195,9 @@ int post_init_specific_init(void)
   TIMEORDER = 2;
   DTr = 3000;
   tf = 1e5;
+  DOENERDIAG=0;
+  DOAVGDIAG=0;
+  //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
 
   if(funreturn!=0) return(funreturn);
 
