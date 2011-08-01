@@ -49,15 +49,32 @@
 
 #define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
 
+static const FTYPE aphipow = 2.5;
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 
 static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
 static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-static FTYPE torusrmax;   // AKMARK: torus pressure max
+FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
+FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
+void add_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void add_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void null_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+void null_3d_fieldonly_fullloop(FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+
+#if( DOFREEZETORUS )
+void add_torus_magnetic_fields(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+void save_torus_allvars(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+FTYPE BASEMACP0A1(global_ptorus,N1M,N2M,N3M,NPR);       /* space for primitive vars */
+FTYPE BASEMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR);       /* space for primitive vars */
+FTYPE BASEMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);       /* space for conserved vars */
+FTYPE PTRDEFGLOBALMACP0A1(global_ptorus,N1M,N2M,N3M,NPR);
+FTYPE PTRDEFGLOBALMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR);
+FTYPE PTRDEFGLOBALMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);
+#endif
 
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 
@@ -68,6 +85,22 @@ static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 int prepre_init_specific_init(void)
 {
   int funreturn;
+#if( DOFREEZETORUS )
+  FTYPE valueinit = 0.0;
+  int i, j, k, pliter, pl;
+#endif
+  
+#if( DOFREEZETORUS )
+  GLOBALPOINT(global_ptorus) = (FTYPE PTRMACP0A1(global_ptorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_ptorus,N1BND,N2BND,N3BND,0)));
+  GLOBALPOINT(global_pstagtorus) = (FTYPE PTRMACP0A1(global_pstagtorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_pstagtorus,N1BND,N2BND,N3BND,0)));
+  GLOBALPOINT(global_uconstorus) = (FTYPE PTRMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(global_uconstorus,N1BND,N2BND,N3BND,0)));
+  
+  FULLLOOP PLOOP(pliter,pl){
+    GLOBALMACP0A1(global_ptorus,i,j,k,pl) = valueinit;
+    GLOBALMACP0A1(global_pstagtorus,i,j,k,pl) = valueinit;
+    GLOBALMACP0A1(global_uconstorus,i,j,k,pl) = valueinit;
+  }
+#endif
   
   /////////////////////
   //PHI GRID SETUP
@@ -75,7 +108,7 @@ int prepre_init_specific_init(void)
 
   dofull2pi = 0;   // AKMARK: do full phi
   
-  global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
@@ -86,6 +119,21 @@ int prepre_init_specific_init(void)
 
 }
 
+#if( DOFREEZETORUS )
+void add_torus_magnetic_fields(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_ptorus),prim);
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_pstagtorus),pstag);
+  add_3d_fieldonly_fullloop(GLOBALPOINT(global_uconstorus),ucons);
+}
+
+void save_torus_allvars(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  copy_3dnpr_fullloop(prim,GLOBALPOINT(global_ptorus));
+  copy_3dnpr_fullloop(pstag,GLOBALPOINT(global_pstagtorus));
+  copy_3dnpr_fullloop(ucons,GLOBALPOINT(global_uconstorus));
+}
+#endif
 
 // AKMARK: h/r
 int pre_init_specific_init(void)
@@ -145,7 +193,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
 
   TIMEORDER = 2;
-  DTr = 2000;
+  DTr = 3000;
+  tf = 1e5;
 
   if(funreturn!=0) return(funreturn);
 
@@ -247,7 +296,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = 0.9;
+  a = 0.99;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #else
@@ -256,7 +305,39 @@ int init_grid(void)
 
  
   Rhor=rhor_calc(0);
+  Risco=rmso_calc(PROGRADERISCO);
 
+#if( DOAUTOCOMPUTEENK0 )
+  //this should be set to the final entropy constant
+  //this is done *automatically* for the case of WHICHPROBLEM == THINTORUS
+  //and THINTORUS_NORMALIZE_DENSITY == 1
+  global_toruskappafinal = 0.01;  
+#endif
+  
+  toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
+  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  torusrmax = 34.; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  
+  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
+  randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
+  
+  // AKMARK: torus inner radius
+#if(WHICHPROBLEM==NORMALTORUS)
+  //rin = Risco;
+  rin = 6. ;
+  toruskappa = 1e-3; 
+  torusrmax = 12.; 
+#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
+  rin = 20. ;
+#elif(WHICHPROBLEM==THINTORUS)
+  rin = 15. ;
+#elif(WHICHPROBLEM==KEPDISK)
+  //rin = (1. + h_over_r)*Risco;
+  rin = Risco;
+#elif(WHICHPROBLEM==GRBJET)
+  rin = Risco;
+#endif
+  
   // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
@@ -280,9 +361,9 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.;
-  Rout = 5.e4;
+  Rin = 0.83 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.3;
+  Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
@@ -297,7 +378,7 @@ int init_grid(void)
   //radial hyperexponential grid
   global_npow2=4.0; //power exponent
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-  global_rbr = 100.;  //radius at which hyperexponentiation kicks in
+  global_rbr = 1000.;  //radius at which hyperexponentiation kicks in
   
   /////////////////////
   //ANGULAR GRID SETUP
@@ -305,8 +386,8 @@ int init_grid(void)
 
   //transverse resolution fraction devoted to different components
   //(sum should be <1)
-  global_fracdisk = 0.2;
-  global_fracjet = 0.5;
+  global_fracdisk = 0.36;
+  global_fracjet = 0.3;
 
   global_jetnu = 0.75;  //the nu-parameter that determines jet shape
 
@@ -320,15 +401,15 @@ int init_grid(void)
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
   //the larger r0grid, the larger the thickness of the jet 
   //to resolve
-  global_r0grid = 1.5*Rin;    
+  global_r0grid = 5.0*Rin;    
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
-  global_r0jet = 3;
+  global_r0jet = Rin;
     
   //distance after which the jet grid collimates according to the usual jet formula
   //the larger this distance, the wider is the jet region of the grid
-  global_rjetend = 15;
+  global_rjetend = 5;
     
   //distance at which disk part of the grid becomes monopolar
   //the larger r0disk, the larger the thickness of the disk 
@@ -337,9 +418,9 @@ int init_grid(void)
 
   //distance after which the disk grid collimates to merge with the jet grid
   //should be roughly outer edge of the disk
-  global_rdiskend = 80;
+  global_rdiskend = 300.;
   
-  global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 2.4;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
@@ -390,11 +471,16 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=0.5*1E3;
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
+#if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
+//scale up to match the usual values after the corresponding density normalization in init_thintorus()
+  RHOMIN *= 70;
+  UUMIN *= 70;
+#endif
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -433,15 +519,15 @@ int init_global(void)
 
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   /* output choices */
-  tf = 20000.;
+  tf = 1e5; //also check post_init_specific_init()
 
   /* dumping frequency, in units of M */
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 10.0;
+  DTdumpgen[ENERDUMPTYPE] = 100.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 10.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 5.0;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
@@ -449,7 +535,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 20000;
+  DTr = 6000;  //also see post_init_specific_init()
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
@@ -486,38 +572,14 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E3;
+
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);
   Risco=rmso_calc(PROGRADERISCO);
-
-
-
-  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
-  randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
-
-  toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 20.;   // AKMARK: torus pressure max
-
-  // AKMARK: torus inner radius
-#if(WHICHPROBLEM==NORMALTORUS)
-  //rin = Risco;
-  rin = 6. ;
-  toruskappa = 1e-3; 
-  torusrmax = 12.; 
-#elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
-  rin = 20. ;
-#elif(WHICHPROBLEM==THINTORUS)
-  rin = 10. ;
-#elif(WHICHPROBLEM==KEPDISK)
-  //rin = (1. + h_over_r)*Risco;
-  rin = Risco;
-#elif(WHICHPROBLEM==GRBJET)
-  rin = Risco;
-#endif
-
   
-
 
 #if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA && WHICHPROBLEM != THICKDISKFROMMATHEMATICA )
   //SASMARK restart: need to populate panalytic with IC's; DO NOT do this 
@@ -596,15 +658,58 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define VERTFIELD 1
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
+#define DISKBHFIELD 4
 
-//#define FIELDTYPE BLANDFORDQUAD
+//Options for DISKBHFIELD
+#define BHFIELDVAL (4.0) //(3.4142135623730950488)
+#define BHFIELDNU (-1.0) //negative means hyperbolic field lines
+#define BHFIELDALPHA (1.5)
+#define BHFIELDR (1.)    //field stops at r = BHFIELDR * rin
+#define BHFIELDDZDR (.9) //asymptotic slope of field boundary (=dz/dr)
+#define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
+
+//#define FIELDTYPE DISKBHFIELD
 #define FIELDTYPE DISKFIELD
 
+FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
+{
+  FTYPE rh;
+  FTYPE vpotbh;
+  rh = rhor_calc(0);
+  if(BHFIELDNU>=0) {
+    //normalized vector potential: total vpot through BH equals some constant order unity
+    vpotbh = pow(r/rh,BHFIELDNU)*(1 - fabs(cos(th)));
+    if( vpotbh > (1 - fabs(cos(M_PI/4.))) ) vpotbh = (1 - fabs(cos(M_PI/4.)));
+    //rescale the flux to amplitude given by BHFLUX and add it up to vector potential
+  }
+  else if(BHFIELDNU<0) {
+    //roughly uniform Bz at constant slices of z = r*cos(th) nearly all the way to the edges of the torus
+    vpotbh = pow( r*sin(th)/(BHFIELDR*rin),2 ) 
+      / pow( 1+pow(
+		    fabs(r*cos(th))/(BHFIELDR*rin*BHFIELDDZDR*(1+pow(log10(1+r/rin),BHFIELDLOGPOW))),
+	       BHFIELDALPHA),
+	2./BHFIELDALPHA );
+    if( vpotbh > 1 ) vpotbh = 1;
+  }
+  return(vpotbh);
+}
 
+FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
+{
+  FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
+  int is_inside;
+  FTYPE vpotbh;
+  
+  vpotbh = vpotbh_normalized(r,th);
+  is_inside = (vpotbh>=1);
+  
+  return(is_inside);
+}
 
 // assumes normal field in pr
 int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
+  FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
   SFTYPE rho_av, u_av, q;
   FTYPE r,th;
   FTYPE vpot;
@@ -612,13 +717,24 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
   FTYPE fieldhor;
 #endif
-
+  FTYPE rh;
+  FTYPE vpotbh;
+  
+  rh = rhor_calc(0);
 
 
   vpot=0.0;
 
-
-  if(l==3){// A_\phi
+  if(l==-3){// A_\phi for bh field
+    r=V[1];
+    th=V[2];
+    if( FIELDTYPE==DISKBHFIELD ) {
+      vpotbh = vpotbh_normalized(r, th);
+      vpot += BHFIELDVAL * vpotbh;
+    }
+  }
+  
+  if(l==3){// A_\phi for disk
 
     r=V[1];
     th=V[2];
@@ -637,14 +753,13 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
     }
 
-
     /* field-in-disk version */
     
-    if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
+    if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKBHFIELD)||(FIELDTYPE==DISKVERT)){
 
 // AKMARK: magnetic loop radial wavelength
-#if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
-#define STARTFIELD (1.1*rin)
+#if( WHICHPROBLEM == THINTORUS ) 
+#define STARTFIELD (1.*rin)
       fieldhor=0.194;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
 #define STARTFIELD (1.1*rin)
@@ -672,7 +787,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
-      if(r > STARTFIELD) q = (r*r*(rho_av/rhomax));
+      if(r > STARTFIELD) q = (pow(r,aphipow)*(rho_av/rhomax));
       else q = 0. ;
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
@@ -717,6 +832,11 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 			       FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 			       FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   
+  int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+
+  int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  FTYPE get_maxprimvalrpow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE rpow, int pl );
+  
   int funreturn;
   int fieldfrompotential[NDIM];
   FTYPE rhomax, umax, amax;
@@ -725,11 +845,11 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
   
-#if(1)
+#if(1) //if optimizing disk flux
   getmax_densities(prim, &rhomax, &umax);
-  amax = get_maxval( A, 3 );
-  
-  trifprintf("amax = %g -- does not work somehow -- won't use it\n", amax);
+  //amax = get_maxval( A, 3 );
+  amax = get_maxprimvalrpow( prim, aphipow, RHO );
+  trifprintf("amax = %g\n", amax);
   
   //by now have the fields (centered and stag) computed from vector potential
     
@@ -740,19 +860,68 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
-			  
+	
   //4) call user1_init_vpot2field_user() again to recompute the fields
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
-  
 #endif
+
+  //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
+  normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
+
+#if( DOFREEZETORUS )
+  //save the torus field: it will be added on later
+  save_torus_allvars(prim, pstag, ucons, A );
+  //null out the field everywhere
+  null_3d_fieldonly_fullloop(prim);
+  null_3d_fieldonly_fullloop(pstag);
+  null_3d_fieldonly_fullloop(ucons);
+#endif
+  
+#if(FIELDTYPE==DISKBHFIELD) //if doing bh field
+  //compute vpot again after field was normalized
+  compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
+
+  //add vpot describing BH field 
+  add_vpot_bhfield_user_allgrid( A, prim );
+
+  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  if(funreturn!=0) return(funreturn);
+#endif
+  
   return(0);
 
 
 }
 
-//compute vector potential for midplane and axial symmetry configuration
+int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i, j, k, loc, userdir, dir, whichcoord;
+  FTYPE vpotuser[NDIM];
+  FTYPE X[NDIM], V[NDIM];
+  
+  //add in bh field vpot -- call:
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1+SHIFT2,0,N3-1+SHIFT3) {
+    // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
+    DLOOPA(userdir){
+      loc = CORN1 - 1 + userdir; //CORRECT?
+      bl_coord_ijk_2(i, j, k, loc, X, V); 
+      //note minus sign: -userdir; this indicates to only init bh field
+      init_vpot_user(&whichcoord, -userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+    }
+    // convert from user coordinate to PRIMECOORDS
+    ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
+    
+    DIMENLOOP(dir){
+      NOAVGCORN_1(A[dir],i,j,k) += vpotuser[dir];
+    }
+  }
+  return(0);
+}
+
+//compute vector potential assuming B_\phi = 0 and zero flux at poles
+//(not tested in non-axisymmetric field distribution but in principle should work)
 int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
@@ -776,11 +945,13 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
   DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
 
+  //first, bound to ensure consistency of magnetic fields across tiles
+  bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
 
   if( ncpux2 == 1 ) {
     //1-cpu version
-    for (i=0; i<N1+1; i++) {
-      for (k=0; k<N3; k++) {
+    for (i=0; i<N1+SHIFT1; i++) {
+      for (k=0; k<N3+SHIFT3; k++) {
 	//zero out starting element of vpot
 	NOAVGCORN_1(A[3],i,0,k) = 0.0;
 	//integrate vpot along the theta line
@@ -799,7 +970,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	//integrate vpot along the theta line
 	for (j=N2; j>N2/2; j--) {
 	  dir=1;
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	  get_geometry_gdetonly(i, jm1mac(j), k, FACE1-1+dir, ptrgeomf[dir]);
 	  set_igdetsimple(ptrgeomf[dir]);
 	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	  gdetnosing = 1.0/igdetgnosing[dir];
@@ -814,8 +985,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   else if( 0&&ncpux2 == 2 ) {
     //dualfprintf( fail_file, "Got into 2-cpu version, mycpupox[2] = %d\n", mycpupos[2] );
     //2-cpu version
-    for (i=0; i<N1+1; i++) {
-      for (k=0; k<N3; k++) {
+    for (i=0; i<N1+SHIFT1; i++) {
+      for (k=0; k<N3+SHIFT3; k++) {
 	if( mycpupos[2] == 0 ) {
 	  //zero out starting element of vpot
 	  NOAVGCORN_1(A[3],i,0,k) = 0.0;
@@ -831,13 +1002,15 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	    NOAVGCORN_1(A[1],i,j,k) = 0;
 	    NOAVGCORN_1(A[2],i,j,k) = 0;
 	  }
+	  //copy A[3] -> B[3] before bounding
+	  MACP0A1(pstag,i,N2-1,k,B3) = NOAVGCORN_1(A[3],i,N2,k);
 	}
 	else {
 	  NOAVGCORN_1(A[3],i,N2,k) = 0.0;
 	  //integrate vpot along the theta line
 	  for (j=N2; j>0; j--) {
 	    dir=1;
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	    get_geometry_gdetonly(i, jm1mac(j), k, FACE1-1+dir, ptrgeomf[dir]);
 	    set_igdetsimple(ptrgeomf[dir]);
 	    igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	    gdetnosing = 1.0/igdetgnosing[dir];
@@ -846,6 +1019,22 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	    NOAVGCORN_1(A[1],i,j,k) = 0;
 	    NOAVGCORN_1(A[2],i,j,k) = 0;
 	  }
+	  //copy A[3] -> B[3] before bounding
+	  MACP0A1(pstag,i,0,k,B3) = NOAVGCORN_1(A[3],i,0,k);
+	}
+      }
+    }
+    //just in case, wait until all CPUs get here
+#if(USEMPI)
+    MPI_Barrier(MPI_COMM_GRMHD);
+#endif
+    //bound here
+    bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+    //ensure consistency of vpot across the midplane
+    if( mycpupos[2] == ncpux2/2 ) {
+      for (i=0; i<N1+SHIFT1; i++) {
+	for (k=0; k<N3+SHIFT3; k++) {
+	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
     }
@@ -877,8 +1066,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	//then it's the turn of the current row of CPUs to pick up where the previous row has left it off
 	//since pstag is bounded unlike A, use pstag[B3] as temporary space to trasnfer values of A[3] between CPUs
 	//initialize lowest row of A[3]
-	for (i=0; i<N1+1; i++) {
-	  for (k=0; k<N3; k++) {
+	for (i=0; i<N1+SHIFT1; i++) {
+	  for (k=0; k<N3+SHIFT3; k++) {
 	    //zero out or copy starting element of vpot
 	    if( 0 == cj ) {
 	      //if CPU is at physical boundary, initialize (zero out) A[3]
@@ -910,8 +1099,8 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     }
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
-      for (i=0; i<N1+1; i++) {
-	for (k=0; k<N3; k++) {
+      for (i=0; i<N1+SHIFT1; i++) {
+	for (k=0; k<N3+SHIFT3; k++) {
 	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
 	}
       }
@@ -950,7 +1139,7 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
   //Now rescale staggered field components (ucons)
   //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
   //ZLOOP{
-  ZSLOOP(0,N1,0,N2-1,0,N3-1) {
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1,0,N3-1) {
     //cell centered ratio in this cell
     ratc_ij   = compute_rat(prim, A, rhomax, amax, targbeta, CENT, i, j, k);
     
@@ -1025,14 +1214,41 @@ FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFT
   // rat_ij = 0 outside of main body of torus
   // rat_ij ~ rho in between
   //ASSUMING DENSITY HAS ALREADY BEEN NORMALIZED -- SASMARK
-  //profile = ( r*MACP0A1(prim,i,j,k,RHO)/21.703575088105637 - 0.05 ) / 0.1;
-  profile = ( MACP0A1(prim,i,j,k,RHO)/rhomax - 0.05 ) / 0.1;
+  //profile = ( r*r*MACP0A1(prim,i,j,k,RHO)/578.36728604946757 - 0.05 ) / 0.1;
+  //profile = ( pow(r,aphipow)*MACP0A1(prim,i,j,k,RHO)/amax - 0.001 ) / 0.05;
+  profile = ( log10(pow(r,aphipow)*MACP0A1(prim,i,j,k,RHO)/amax+SMALL) + 3 ) / 1.0;
+  //profile = ( MACP0A1(prim,i,j,k,RHO)/rhomax - 0.05 ) / 0.1;
   //profile = ( sqrt(NOAVGCORN_1(A[3],i,j,k)/amax) - 0.05 ) / 0.1;
   if(profile<0) profile = 0;
   if(profile>1) profile = 1;  
   rat_ij *= profile;
   
   return(rat_ij);
+}
+
+FTYPE get_maxprimvalrpow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE rpow, int pl )
+{
+  int i,j,k;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE r;
+  
+  FTYPE val;
+  FTYPE maxval = -VERYBIG;
+  
+  ZLOOP {
+    coord(i,j,k,CENT,X);
+    bl_coord(X,V);
+  
+    r = V[1];
+    val = pow(r,rpow)*MACP0A1(prim,i,j,k,pl);
+    if ( val > maxval)      maxval = val;
+  }
+  
+  mpimax(&maxval);
+  
+  
+  return(maxval);
+  
 }
 
 
@@ -1043,7 +1259,7 @@ FTYPE get_maxval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SH
   FTYPE maxval = -VERYBIG;
   
   ZLOOP {
-    if (A[dir][i][j][k] > maxval)      maxval = A[dir][i][j][k];
+    if (NOAVGCORN_1(A[dir],i,j,k) > maxval)      maxval = NOAVGCORN_1(A[dir],i,j,k);
   }
   
   mpimax(&maxval);
@@ -1060,7 +1276,7 @@ FTYPE get_minval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SH
   FTYPE minval = VERYBIG;
   
   ZLOOP {
-    if (A[dir][i][j][k] < minval)      minval = A[dir][i][j][k];
+    if (NOAVGCORN_1(A[dir],i,j,k) < minval)      minval = NOAVGCORN_1(A[dir],i,j,k);
   }
   
   mpimin(&minval);
@@ -1111,12 +1327,26 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
- 
-  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  if(funreturn!=0) return(funreturn);
+  //nothing to do here: normalization moved to init_vpot2field_user()
+  
+  //funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  //if(funreturn!=0) return(funreturn);
  
   return(0);
 
+}
+
+// assumes normal field definition
+int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  int funreturn;
+  
+  
+  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  if(funreturn!=0) return(funreturn);
+  
+  return(0);
+  
 }
 
 
@@ -1244,3 +1474,85 @@ int theproblem_set_myid(void)
 
 }
 
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void add_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  
+  
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOPBONLY(pl) MACP0A1(dest,i,j,k,pl)+=MACP0A1(source,i,j,k,pl);
+      
+    }// end 3D loop
+    
+    
+  }// end parallel region
+  
+}
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void null_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  
+  
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOPBONLY(pl) MACP0A1(dest,i,j,k,pl)=0;
+      
+    }// end 3D loop
+    
+    
+  }// end parallel region
+  
+}
+
+// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+// put as function because then wrap-up OpenMP stuff
+void add_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND;
+  int js=-N2BND;
+  int je=N2-1+N2BND;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND;
+  
+  
+  add_3d_fieldonly(is, ie, js, je, ks, ke, source, dest);
+  
+  
+}
+
+void null_3d_fieldonly_fullloop(FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND;
+  int js=-N2BND;
+  int je=N2-1+N2BND;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND;
+  
+  
+  null_3d_fieldonly(is, ie, js, je, ks, ke, dest);
+  
+  
+}

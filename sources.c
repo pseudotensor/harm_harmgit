@@ -183,9 +183,13 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
         R = r*sin(th) ;
 	enk=u*(gam-1.)/(pow(rho, gam));
 	//enk0 = 1.e-3; //same as kappa in init.fishmon.c -- somehow wrong, is it because of wrong gam?!
+#if( DOAUTOCOMPUTEENK0 )
+	enk0 = global_toruskappafinal;
+#else
 	enk0 = 0.0043; //as read from ic's for thick torus
 	//enk0=0.00016; //Rebecca's version
 		//	enk0=0.00161;
+#endif
 	//	rin = (1. + h_over_r)*Risco;
 	rincool=10.;
         /* crude approximation */

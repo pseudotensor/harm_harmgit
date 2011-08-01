@@ -10,8 +10,10 @@ extern int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE 
 extern int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler);
 extern int fixup(int stage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep);
 extern int fixup1zone(FTYPE *pr,FTYPE *ucons, struct of_geom *ptrlgeom, int finalstep);
+
 extern int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled);
-extern int diag_fixup_U(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled);
+extern int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled);
+extern int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled);
 
 
 extern int superdebug(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, int whocalled);

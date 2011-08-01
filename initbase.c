@@ -24,6 +24,7 @@ int init(int *argc, char **argv[])
   int set_box_grid_parameters(void);
   int gotnan;
   int faketimeorder,fakenumtimeorders;
+  int finalstepbackup;
 
 
 
@@ -260,9 +261,11 @@ int init(int *argc, char **argv[])
 	FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
 
-      
+      finalstepbackup=finalstepglobal;
+      finalstepglobal=1;
       if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
 	FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+      finalstepglobal=finalstepbackup;
 
 
       // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
@@ -361,9 +364,12 @@ int init(int *argc, char **argv[])
     if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
       FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
+    finalstepbackup=finalstepglobal;
+    finalstepglobal=1;
     if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
       FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
-      
+    finalstepglobal=finalstepbackup;
+    
     if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
       FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
 

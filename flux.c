@@ -1185,7 +1185,9 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   int realisinterp;
   int dointerpolation;
   void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
-
+#if( 0 && DOFREEZETORUS )
+  extern FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
+#endif
 
 
 
@@ -1273,8 +1275,110 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   interpolate_prim_cent2face(stage, realisinterp, pr, pstag, pl_ct, pr_ct, dir, is, ie, js, je, ks, ke, idel, jdel, kdel, face, dq, cent2faceloop);
 
 
+  //SASMARK: put new OPENMP loop here that resets L/R states to no wall BC's
 
+#if( 0 && DOFREEZETORUS )
+  //only if during initial freezing period and only if doing for r or theta fluxes
+  if(t < FREEZETORUSTIME && (dir == 1 || dir == 2)) {
+#if(STOREFLUXSTATE)
+#pragma omp parallel  // then flux_compute() below uses *stored* state already
+#else
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // requires full information
+#endif
+    {
+      int i, j, k;
+      int deli, delj, delk;
+      FTYPE dtij;
+      FTYPE ctop;
+      struct of_geom geomdontusef;
+      struct of_geom *ptrgeomf=&geomdontusef;
+      struct of_geom geomdontusec2;
+      struct of_geom *ptrgeomc2=&geomdontusec2;
+      struct of_geom geomdontusec1;
+      struct of_geom *ptrgeomc1=&geomdontusec1;
+      int computewithleft,computewithright;
+      FTYPE Vf[NDIM],Vc1[NDIM],Vc2[NDIM];
+      FTYPE r, th;
+      int odir1, odir2;
+      FTYPE ucon_l[NPR], ucon_r[NPR];
+      int is_insidec1, is_insidec2;
 
+      odir1=dir%3+1;
+      odir2=(dir+1)%3+1;
+
+      
+      deli = delj = delk = 0;
+      
+      if( 1 == dir ) { deli = 1; }
+      if( 2 == dir ) { delj = 1; }
+      if( 3 == dir ) { delk = 1; }
+
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+      
+  #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+	//current interface
+	bl_coord_ijk(i,j,k,face,Vf);
+	
+	//two adjacent cells along dir:
+	
+	//center of the i,j,k cell
+	bl_coord_ijk(i,j,k,CENT,Vc2);
+	is_insidec2 = is_inside_torus_freeze_region(Vc2[1],Vc2[2]);
+	
+	//center of the cell on the other side of the i,j,k interface
+	bl_coord_ijk(i-deli, j-delj, k-delk, CENT, Vc1);
+	is_insidec1 = is_inside_torus_freeze_region(Vc1[1],Vc1[2]);
+	
+	//if one adjacent cell is inside and one outside:
+	if( is_insidec1 + is_insidec2 == 1 ) {
+	  //CONVERT TO VEL4 vels here
+
+	  get_geometry(i,j,k,face,ptrgeomf) ;
+	  // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
+	  if (pr2ucon(WHICHVEL, MACP1A0(pl_ct,dir,i,j,k), ptrgeomf, ucon_l) >= 1) {
+	    FAILSTATEMENT("flux.c:fluxcalc_standard_4fluxctstag()", "pr2ucon()", 1);
+	  }
+	  if (pr2ucon(WHICHVEL, MACP1A0(pr_ct,dir,i,j,k), ptrgeomf, ucon_r) >= 1) {
+	    FAILSTATEMENT("flux.c:fluxcalc_standard_4fluxctstag()()", "pr2ucon()", 1);
+	  }
+	  
+	  //should be done on VEL4 vels
+	  //nullify normal velocity
+	  ucon_l[dir] = 0.0;
+	  ucon_r[dir] = 0.0;
+	  
+	  if( 1 == is_insidec1 &&  0 == is_insidec2 ) {
+	    // torus | out
+	    //outflow all other things
+	    MACP1A1(pl_ct,dir,i,j,k,RHO) = MACP1A1(pr_ct,dir,i,j,k,RHO);
+	    MACP1A1(pl_ct,dir,i,j,k,UU)  = MACP1A1(pr_ct,dir,i,j,k,UU);
+	    ucon_l[TT] = ucon_r[TT];
+	    ucon_l[odir1] = ucon_r[odir1];
+	    ucon_l[odir2] = ucon_r[odir2];
+	  }
+	  else if( 0 == is_insidec1 &&  1 == is_insidec2 ) {
+	    // out | torus
+	    //outflow all other things
+	    MACP1A1(pr_ct,dir,i,j,k,RHO) = MACP1A1(pl_ct,dir,i,j,k,RHO);
+	    MACP1A1(pr_ct,dir,i,j,k,UU)  = MACP1A1(pl_ct,dir,i,j,k,UU);
+	    ucon_r[TT] = ucon_l[TT];
+	    ucon_r[odir1] = ucon_l[odir1];
+	    ucon_r[odir2] = ucon_l[odir2];
+	  }
+	  //CONVERT BACK TO VELREL4 vels
+	  // get prime geometry
+	  get_geometry(i,j,k,face,ptrgeomf) ;
+	  // convert from MCOORD prime 4-vel to MCOORD prime WHICHVEL-vel(i.e. primitive velocity of evolution)
+	  ucon2pr(WHICHVEL,ucon_l,ptrgeomf,MACP1A0(pl_ct,dir,i,j,k));
+	  ucon2pr(WHICHVEL,ucon_r,ptrgeomf,MACP1A0(pr_ct,dir,i,j,k));
+	}
+      }
+    }
+  }
+#endif
 
   //////////////////////////////////////
   //

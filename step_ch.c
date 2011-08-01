@@ -34,6 +34,9 @@ static int post_advance(int truestep, int *dumpingnext, int timeorder, int numti
 // take full step (called from main.c)
 int step_ch_full(int truestep, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
+#if( DOFREEZETORUS )
+  extern void add_torus_magnetic_fields(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+#endif
   FTYPE fullndt;
   // dumpingnext[0] = dumping just after this step
   // dumpingnext[1] = dumping just after the step after this step
@@ -47,6 +50,14 @@ int step_ch_full(int truestep, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
   // take full step
   step_ch(truestep,dumpingnext, &fullndt,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3,Atemp,uconstemp);
 
+#if( DOFREEZETORUS )
+  //here t and dt have not been updated yet
+  if( truestep && t < FREEZETORUSTIME && t + dt >= FREEZETORUSTIME ) {
+    //reinstate (by adding) magnetic fields in the torus
+    add_torus_magnetic_fields( prim, pstag, ucons, vpot );
+  }
+#endif
+  
   // things to do after taking full step
   if(truestep) post_stepch(dumpingnext, fullndt, prim);
 
@@ -516,7 +527,29 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   }// end if truestep
 
-
+#if(DOONESTEPDUACCOUNTING)
+  if(truestep && finalstep){
+    FTYPE Ui[NPR];
+    int i, j, k, pl;
+    struct of_geom *ptrgeom;
+    struct of_geom geomdontuse;
+    
+    ptrgeom=&(geomdontuse);
+    
+    //loop over (0..N1-1, 0..N2-1, 0..N3-1):
+    LOOP{
+      PALLLOOP(pl){ 
+	get_geometry(i, j, k, CENT, ptrgeom);
+	break;
+      }
+      UtoU(UEVOLVE,UDIAG,ptrgeom,MAC(ucons,i,j,k),Ui);
+      // account for change to hot MHD conserved quantities
+      // use pf as final primitive (guessed since this is what is dumped below)
+      diag_fixup_Ui_pf(-1,Ui,MAC(pf,i,j,k),ptrgeom,finalstep,COUNTEOSLOOKUPFAIL);
+    }
+  }    
+#endif
+  
   /////////////////////////////////////
   //
   // Diagnostics
@@ -638,6 +671,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     /////////////////////////////////////
     steppart=timeorder;
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+    finalstepglobal=finalstep;
 
 #if(PRODUCTION==0)
     trifprintf("|%ds",timeorder);
@@ -1089,6 +1123,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
     }
 
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
+    finalstepglobal=finalstep;
 
 
 

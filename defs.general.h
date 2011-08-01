@@ -52,6 +52,7 @@ long fluxdumprealnstep;
 FTYPE TDYNORYEglobal,Hglobal;
 FTYPE rcurr, hcurr;
 FTYPE drsing;
+int finalstepglobal;
 
 //int istart, istop, jstart, jstop;
 #if(SIMULBCCALC!=-1) 
@@ -325,8 +326,10 @@ FTYPE global_x10,global_x20,global_fracdisk,global_fracjet,global_jetnu,global_r
 //PHI GRID SETUP
 /////////////////////
 FTYPE global_fracphi;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
-
-
+/////////////////////
+//DISK INFO
+/////////////////////
+FTYPE global_toruskappafinal;
 
 int numbercpu[ 3+1 ];
 

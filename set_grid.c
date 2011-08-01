@@ -14,7 +14,7 @@ static void set_grid_metrics_others(void);
 static void symmetrize_X_V_dxdxp_idxdxp(void);
 
 
-#define ATTEMPTSYMMETRIZATION 1
+#define ATTEMPTSYMMETRIZATION 0
 
 // translate compgeom to some local quantities at loc,i,j,k
 int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)

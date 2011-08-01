@@ -37,6 +37,10 @@ static FTYPE compute_l_from_omega( FTYPE r, FTYPE th, FTYPE a, FTYPE omega );
 static FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE c, FTYPE al );
 static FTYPE nz_func(FTYPE R) ;
 
+//If user did not ask, do not normalize torus density to have unit rho at pressure max 
+#ifndef THINTORUS_NORMALIZE_DENSITY
+#define THINTORUS_NORMALIZE_DENSITY (0)
+#endif
 
 //reads in ICs from a file and stores them in panalytic array for future use in init_dsandvels
 int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
@@ -543,8 +547,9 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
 #if(THINTORUSHASBREAKS == 1)
   FTYPE rbreak1, rbreak2, lbreak1, lbreak2;
 #endif
-
-
+  FTYPE rho_at_pmax, rho_scale_factor;
+  
+    
   coord(ti, tj, tk, CENT, X);
   bl_coord(X, V);
   r=V[1];
@@ -607,7 +612,34 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   //finding DHK03 lin, utin, f (lin)
   utin = compute_udt( r, th, a, lin );
   flin = pow(fabs(1 - k*pow(lin,1 + al)),pow(1 + al,-1));
-
+ 
+  
+  ///
+  /// EXTRA CALCS AT PRESSURE MAX TO NORMALIZE DENSITY
+  ///
+  //l at pr. max r, th
+#if( THINTORUS_NORMALIZE_DENSITY )
+  r = rmax;
+  th = M_PI_2l;
+  l = lk;
+#if(THINTORUSHASBREAKS == 1)
+  if (l < lbreak1) l = lbreak1;
+  if (l > lbreak2) l = lbreak2;
+#endif
+  udt = compute_udt( r, th, a, l );
+  f = pow(fabs(1 - k*pow(l,1 + al)),pow(1 + al,-1));
+  hh = flin*utin*pow(f,-1)*pow(udt,-1);
+  eps = (-1 + hh)*pow(gam,-1);
+  rho_at_pmax = pow((-1 + gam)*eps*pow(kappa,-1),pow(-1 + gam,-1));
+  rho_scale_factor = 1.0/rho_at_pmax;
+#if( DOAUTOCOMPUTEENK0 )
+  //will be recomputed for every (ti,tj,tk), but is same for all of them, so ok
+  global_toruskappafinal = kappa * pow( rho_scale_factor, 1 - gam );
+#endif
+  
+#else
+  rho_scale_factor = 1.0;
+#endif
 
   ///
   /// Computations at current point: r, th
@@ -637,16 +669,22 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
   set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
 
   //avoid computations outside the torus (either imaginary or negative density): fill the region with atmosphere
-  if( eps < 0 || rho < pr[RHO] ) {
-    //then use atmospheric values
+  if( eps < 0 || rho*rho_scale_factor < pr[RHO] ) {
+    //then use atmospheric values 
     *whichvel=WHICHVEL;
     *whichcoord=PRIMECOORDS;
     return(0);
   }
 
   u = kappa * pow(rho, gam) / (gam - 1.);
-  om = compute_omega( r, th, a, l );
 
+#if( THINTORUS_NORMALIZE_DENSITY )
+  //rescale densities so rho at pmax is unity
+  rho *= rho_scale_factor;
+  u *= rho_scale_factor;
+#endif
+  
+  om = compute_omega( r, th, a, l );
   ur = 0.;
   uh = 0.;
   up = om; // = u^phi/u^t

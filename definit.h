@@ -404,6 +404,7 @@
 
 
 // whether to check on inversion and report problem
+// Also, use diag_fixup() to account for changes in U when inversion success (tracks changes due to Newton iteration error and machine error)
 #define CHECKONINVERSION 1
 
 #define PRECISEINVERSION 1
@@ -811,5 +812,10 @@
 
 // problem-dependent code activation
 #define USERERSETREGION 0
+#define DOAUTOCOMPUTEENK0 0
+#define DOONESTEPDUACCOUNTING 0
 
 #define DO_SPLIT_FLOORS 0
+#define USESJETLOGHOVERR 0
+#define DOIMPROVEJETCOORDS 0
+#define THINTORUS_NORMALIZE_DENSITY 0
