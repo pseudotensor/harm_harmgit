@@ -62,8 +62,8 @@ static FTYPE x10;
 static FTYPE x20;
 #if(USESJETLOGHOVERR)
 extern FTYPE torusrmax;
-#endif
 static FTYPE torusrmax_loc;
+#endif
 
 // for defcoord=JET6COORDS
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
@@ -506,8 +506,6 @@ void set_coord_parms_deps(int defcoordlocal)
     rdiskend = global_rdiskend;
 #if(USESJETLOGHOVERR)
     torusrmax_loc = torusrmax;
-#else
-    torusrmax_loc = 0.; //if not used, fill with dummy value
 #endif
     /////////////////////
     //PHI GRID SETUP
@@ -623,7 +621,11 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,torusrmax_loc,jetnu,x10,x20);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend);
+#if(USESJETLOGHOVERR)
+	fprintf(out,"%21.15g ",torusrmax_loc);
+#endif
+        fprintf(out,"%21.15g %21.15g %21.15g\n",jetnu,x10,x20);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -719,7 +721,10 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == SJETCOORDS) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
-	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&torusrmax_loc);
+	fscanf(in,HEADER8IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend);
+#if(USESJETLOGHOVERR)	
+	fscanf(in,HEADERONEIN,&torusrmax_loc);
+#endif
         fscanf(in,HEADER3IN,&jetnu,&x10,&x20);
       }
       else if (defcoordlocal == JET6COORDS) {
@@ -837,7 +842,9 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&fracjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rdiskend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+#if(USESJETLOGHOVERR)
     MPI_Bcast(&torusrmax_loc, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+#endif
     MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x10, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x20, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
