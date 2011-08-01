@@ -278,15 +278,16 @@ int user1_init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTY
   get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
   set_atmosphere(-1,WHICHVEL,ptrrealgeom,pratm); // set velocity in chosen WHICHVEL frame in any coordinate system
 
-//   if(pr[RHO]<pratm[RHO]){
-//     PLOOP(pliter,pl) pr[pl]=pratm[pl];
-//   }
-
+#if( DO_SPLIT_FLOORS == 0 )
+  if(pr[RHO]<pratm[RHO]){
+    PLOOP(pliter,pl) pr[pl]=pratm[pl];
+  }
+#else
   // AKMARK: better to check floors this way
   if(pr[RHO]<pratm[RHO] || pr[UU]<pratm[UU]) for (pl=U1; pl<NPR; pl++) pr[pl] = pratm[pl];
   if(pr[RHO]<pratm[RHO]) pr[RHO] = pratm[RHO];
   if(pr[UU]<pratm[UU]) pr[UU] = pratm[UU];
-
+#endif
 
   *whichvel=WHICHVEL;
   *whichcoord=PRIMECOORDS;

@@ -360,3 +360,6 @@ struct Ccoordparams {
 
 #undef CONNAXISYMM
 #define CONNAXISYMM 1
+
+#undef DO_SPLIT_FLOORS
+#define DO_SPLIT_FLOORS 1

@@ -812,4 +812,4 @@
 // problem-dependent code activation
 #define USERERSETREGION 0
 
-
+#define DO_SPLIT_FLOORS 0
