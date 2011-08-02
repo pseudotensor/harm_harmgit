@@ -1521,12 +1521,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 #else
     faker = fac*fakerjet + (1 - fac)*fakerdisk - rsjet*Rin;
     ror0nu = pow( faker/r0grid, jetnu/2 );
-    V[2] = thetaofx2( X[2], ror0nu );
-#endif
   
-  
-  
-
     if (defcoord == SJETCOORDS_BOB) {
        // Bob's modification: normalize ror0nu such that it is 1 near horizon, and introduce hslope - can get larger timestep.
        // Keeps grid cells spread evenly. Before, ror0nu was acting like an effective hslope (=0.37 for jetnu=0.75).
@@ -1544,15 +1539,8 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
        ror0nu *= hslope / pow( faker/r0grid, jetnu/2 );
     }
 
-    if( X[2] < -0.5 ) {
-      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
-    }
-    else if( X[2] >  0.5 ) {
-      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
-    }
-    else {
-      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
-    }
+    V[2] = thetaofx2( X[2], ror0nu );
+#endif
 #else
   //if((1+X[2])/2.<0.5){
   //  V[2] = M_PI * (1+X[2])/2. + ((1. - hslope) / 2.) * mysin(2. * M_PI * (1+X[2])/2.);
