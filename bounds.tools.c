@@ -2089,7 +2089,7 @@ int poledeath(int whichx2,
   struct of_geom rgeomdontuse[NPR];
   struct of_geom *ptrrgeom[NPR];
   FTYPE dxdxp[NDIM][NDIM];
-  FTYPE pr0[NPR];
+  FTYPE prdiag[NPR],pr[NPR];
   int jstep;
 
 
@@ -2373,7 +2373,7 @@ int poledeath(int whichx2,
 	// setup initial pr
 	//
 	//////////////
-	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
 	int madechange=0;
 
 
@@ -2570,7 +2570,9 @@ int poledeath(int whichx2,
 	    fixupptrgeom=ptrgeom[pl];
 	    break;
 	  }
-	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 	}
 
       
@@ -2596,7 +2598,7 @@ int poledeath(int whichx2,
 	// setup initial pr
 	//
 	//////////////
-	PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
 	int madechange=0;
 
 
@@ -2795,7 +2797,10 @@ int poledeath(int whichx2,
 	    fixupptrgeom=ptrgeom[pl];
 	    break;
 	  }
-	  diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+
+	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 	}
 
 
@@ -2833,7 +2838,7 @@ int poledeath(int whichx2,
 	  // setup initial pr
 	  //
 	  //////////////
-	  PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
+	  PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
 	  int madechange=0;
 
 
@@ -2899,7 +2904,11 @@ int poledeath(int whichx2,
 	      fixupptrgeom=ptrgeom[pl];
 	      break;
 	    }
-	    diag_fixup(modcons,pr0,MAC(prim,i,j,k),ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+	    
+	    PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+	    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+
 	  }
 
 

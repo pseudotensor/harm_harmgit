@@ -573,11 +573,11 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
       // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
       int modcons=0;
-      FTYPE Ui[NPR];
+      FTYPE Uievolve[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
-      UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
+      UtoU(UNOTHING,UEVOLVE,ptrgeom,Ugeomfree0,Uievolve);
       // account for change to hot MHD conserved quantities
-      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,COUNTENTROPY);
+      diag_fixup_Ui_pf(modcons,Uievolve,pr,ptrgeom,finalstep,COUNTENTROPY);
       
       // reset pflag, unless still need to do some kind of averaging
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDENTROPY){

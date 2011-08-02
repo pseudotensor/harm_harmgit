@@ -529,7 +529,8 @@ ifeq ($(USETACCLONESTAR4),1)
 LONGDOUBLECOMMAND=-long_double
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
 COMP=icc $(DFLAGS)  $(OPMPFLAGS) -Wl,-rpath,$(TACC_MKL_LIB) -I$(TACC_MKL_INC)
-CFLAGSPRENONPRECISE=-O2 -xT -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
+#CFLAGSPRENONPRECISE=-O2 -xT -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O3 -xSSE4.2 -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 # below only needed if compiling main() function file with gcc
 #GCCCFLAGSPRE= -Wall -O2 -L$ICC_LIB -lirc $(DFLAGS)

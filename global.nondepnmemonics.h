@@ -808,7 +808,7 @@
 
 
 // see failfloorcount counter
-#define NUMFAILFLOORFLAGS 14
+#define NUMFAILFLOORFLAGS 15
 //  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -824,6 +824,8 @@
 #define COUNTEOSLOOKUPFAIL 11
 #define COUNTBOUND1 12 // see bounds.tools.c (used when boundary code actually affects active zone values)
 #define COUNTBOUND2 13
+#define COUNTONESTEP 14
+
 
 // below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
 #define AVOIDI -100
@@ -833,6 +835,7 @@
 // failure codes for utoprim failures
 // NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
 #define NANPFLAG -100 // bad pflag
+#define UTOPRIMFAILFIXEDONESTEP -6
 #define UTOPRIMFAILFIXEDBOUND2 -5
 #define UTOPRIMFAILFIXEDBOUND1 -4
 #define UTOPRIMFAILFIXEDCOLD -3
@@ -1104,9 +1107,7 @@
 
 
 
-#define DO_ASSERTS 0
 
-#define FIELDLINEGDETB 0
-#define CONNAXISYMM 0
+
 
 

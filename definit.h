@@ -542,7 +542,9 @@
 #define CONNMACHINEBODY 1
 
 // whether connection coefficients are computed as being axisymmetric
-#define CONNAXISYMM 0
+// Speeds-up connection calculation when starting computations
+// currently all setups are axisymmetric metrics, but don't assume list won't diverge.
+#define CONNAXISYMM 1
 
 
 // if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
@@ -824,3 +826,11 @@
 
 // whether poledeath in bounds.tools.c keeps sigma constant in some cases
 #define BCSIGMACONSTATPOLE 0
+
+// whether to do one-step diag_fixup accounting
+#define DOONESTEPDUACCOUNTING 0
+
+#define FIELDLINEGDETB 0
+
+#define DO_ASSERTS 0
+

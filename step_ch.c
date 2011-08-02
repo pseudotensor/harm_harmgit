@@ -536,6 +536,14 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
+  if(DOONESTEPDUACCOUNTING){
+    // do one-step accounting for fixup related things (failures, floors, fixups, etc.)
+    // ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
+    diag_fixup_allzones(truestep, finalstep, pf, ucons);
+  }
+
+
+
 
   /////////////////////////////////////
   //

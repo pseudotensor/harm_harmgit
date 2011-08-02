@@ -214,31 +214,38 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
 
 
+// choose whether within correctable/diagnosticable region
 int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 {
   int is_within_correctable_region;
   int docorrectuconslocal;
 
-  ///////////
-  //
-  // determine if within correctable region
-  //
-  ///////////
-  if( DOENOFLUX != NOENOFLUX ) {
-    is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
+  if(DOONESTEPDUACCOUNTING){
+    docorrectuconslocal=docorrectucons;
   }
   else{
-    is_within_correctable_region=1; // assume diag_fixup() only called where ok to do change to ucons!
+    ///////////
+    //
+    // determine if within correctable region
+    //
+    ///////////
+    if( DOENOFLUX != NOENOFLUX ) {
+      is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
+    }
+    else{
+      is_within_correctable_region=1; // assume diag_fixup() only called where ok to do change to ucons!
+    }
+
+
+    ///////////
+    //
+    // determine if should do correction to ucons
+    // only correct once -- should really put correction somewhere else.
+    //
+    ///////////
+    docorrectuconslocal=docorrectucons  && is_within_correctable_region;
+
   }
-
-
-  ///////////
-  //
-  // determine if should do correction to ucons
-  // only correct once -- should really put correction somewhere else.
-  //
-  ///////////
-  docorrectuconslocal=docorrectucons  && is_within_correctable_region;
 
   return(docorrectuconslocal);
 
@@ -247,7 +254,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 
-
+// record who called the diag_fixup routine
 int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   int tscale;
@@ -340,74 +347,118 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
   }
 
 
-  ///////////////////
-  //
-  // get correction
-  //
-  //////////////////
-  PALLLOOP(pl){
+
+  //only do aggregate accounting, after the fact (just before taking the new time step)
+  if(DOONESTEPDUACCOUNTING && docorrectuconslocal < 0 ||  DOONESTEPDUACCOUNTING==0){
+
+    ///////////////////
+    //
+    // get correction
+    //
+    //////////////////
+    PALLLOOP(pl){
 	    
-    // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
-    // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
-    dUincell[pl]=dVF * deltaUavg[pl];
+      // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+      // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+      dUincell[pl]=dVF * deltaUavg[pl];
 
-    if(DOFLOORDIAG){
-      // only store this diagnostic once (not for each enerregion)
-      // Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
-      // Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
-      GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
-    }
+      if(DOFLOORDIAG){
+	// only store this diagnostic once (not for each enerregion)
+	// Note that unlike failfloorcount[], failfloordu[] is independent of fladd and fladdterms that are integrated simultaneously rather than in dump_ener.c
+	// Also note that failfloordu not stored in restart file, so like spatial debug info it is lost upon restart.
+	GLOBALMACP0A1(failfloordu,ptrgeom->i,ptrgeom->j,ptrgeom->k,pl)+=dUincell[pl];
+      }
 
-  }// end over pl's
-
-
+    }// end over pl's
 
 
-  //////////////
-  //
-  // Loop over ENERREGIONs
-  //
-  //////////////
-  ENERREGIONLOOP(enerregion){
-
-    // setup pointers to enerregion diagnostics
-    enerpos=enerposreg[enerregion];
-    fladd=fladdreg[enerregion];
-    fladdterms=fladdtermsreg[enerregion];
 
 
-    ///////////
+    //////////////
     //
-    // determine if within diagnostic region
+    // Loop over ENERREGIONs
     //
-    ///////////
-    is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    //////////////
+    ENERREGIONLOOP(enerregion){
+
+      // setup pointers to enerregion diagnostics
+      enerpos=enerposreg[enerregion];
+      fladd=fladdreg[enerregion];
+      fladdterms=fladdtermsreg[enerregion];
 
 
-    /////////////////////////
-    //
-    // diagnostics (both for enerregion and single-region types)
-    //
-    /////////////////////////
-    if(is_within_diagnostic_region){
+      ///////////
+      //
+      // determine if within diagnostic region
+      //
+      ///////////
+      is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
-      PALLLOOP(pl){
+
+      /////////////////////////
+      //
+      // diagnostics (both for enerregion and single-region types)
+      //
+      /////////////////////////
+      if(is_within_diagnostic_region){
+
+	PALLLOOP(pl){
 	    
-	// dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
-	// So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
-	dUincell[pl]=dVF * deltaUavg[pl];
+	  // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+	  // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+	  dUincell[pl]=dVF * deltaUavg[pl];
 
-	fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
-	fladd[pl] += dUincell[pl];
+	  fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
+	  fladd[pl] += dUincell[pl];
 	    
 
-      }// end over pl's
-    }// end if within diagnostic region
+	}// end over pl's
+      }// end if within diagnostic region
 
-  }// end over enerregions
+    }// end over enerregions
+
+  }// end if doing accounting
 
 
   return(0);
+}
+
+
+// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
+// for DOONESTEPDUACCOUNTING==1
+int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
+{
+
+  if(truestep && finalstep){
+    int i, j, k, pliter,pl;
+    struct of_geom *ptrgeom;
+    struct of_geom geomdontuse;
+
+    if(NOENOFLUX==0){
+      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with NOENOFLUX==0\n");
+      myexit(3487622211);
+    }
+    
+    ptrgeom=&(geomdontuse);
+    
+    COMPZLOOP{
+      get_geometry(i, j, k, CENT, ptrgeom);
+      // account for change of conserved quantities
+      // Primitives have been modified by fixup1zone() in advance.c (floors).
+      // During this call, called from post_advance(), pf also modified by bounds (poledeath,gammadeath) and also post_fixup() (failures, checks, limits).
+      //
+      // ucons=unewglobal that stores last steps final substep version of ucum that is full U[]
+      // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
+      // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
+
+      int docorrectucons=-1; // -1 is like 1, but is used to tell if coming from this function (if -1) or not (if 1)
+      diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
+    }
+  }    
+
+
+  return(0);
+
 }
 
 
@@ -420,7 +471,7 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   struct of_state q;
-  FTYPE Ui[NPR],Uf[NPR];
+  FTYPE Uicent[NPR],Ufcent[NPR];
   int failreturn;
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   FTYPE deltaUavg[NPR],Uiavg[NPR];
@@ -461,7 +512,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
 
     ////////////////////////
     //      
-    // Get Ui and Uf.  Don't do this inside enerregion because no point since assume diag_fixup() called in limited regions of i,j,k anyways.
+    // Get Uicent and Ufcent.  Don't do this inside enerregion because no point since assume diag_fixup() called in limited regions of i,j,k anyways.
     //
     // only account if within active zones for that region
     //
@@ -473,20 +524,21 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
     // before any changes
     failreturn=get_state(pr0,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Ui);
+    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Uicent);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
 	
 
     // after any changes
     failreturn=get_state(pr,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Uf);
+    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Ufcent);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
+    // if Uicent and Ufcent are both from pi and pf at CENT, then B1,B2,B3 entries are agreeably located even for FLUXB==FLUXCTSTAG
 
 
     // Get deltaUavg[] and also modify ucons if required and should
-    diag_fixup_dUandaccount(Ui, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+    diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
   }// end if finalstep>0
@@ -500,14 +552,15 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
 
 // like diag_fixup(), but input initial conserved quantity as Ui and final primitive as pf
 // Must use this when pi[Ui] doesn't exist and had to use non-hot-MHD inversion.
+// Assumes Ui is like unewglobal, so UEVOLVE type
 // Assume ultimately hot MHD equations are used, so need to get new Uf that'll differ from Ui
 // Also don't know Uf quite yet.
-int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled)
+int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   struct of_state q;
-  FTYPE Uf[NPR],ucons[NPR];
+  FTYPE Ufcent[NPR],Uicent[NPR],ucons[NPR];
   int failreturn;
-  int pl,enerregion;
+  int pliter,pl,enerregion;
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
@@ -522,30 +575,53 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
     // determine if within correctable region
     docorrectuconslocal=diag_fixup_correctablecheck(docorrectucons,ptrgeom);
 
-    // Get Uf(pf)
+
+
+    //////////////////
+    //
+    // Get ucons
+    //
+    //////////////////
+
+    // GODMARK: NOENOFLUX==0 not accounted for (have to change unewglobal or something like that)
+    PLOOP(pliter,pl) ucons[pl]=Uievolve[pl];
+
+
+    //////////////////
+    //
+    // Get Ufcent(pf[cent])
+    //
+    //////////////////
+
     failreturn=get_state(pf,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Uf);
+    failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Ufcent);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
 
-    // get ucons estimate (not really needed)
-    UtoU(UDIAG,UEVOLVE,ptrgeom,Ui,ucons);
-
-    ///////////
+    //////////////////
     //
-    // Change ucons
+    // Get Uicent
     //
-    ///////////
-    if(DOENOFLUX != NOENOFLUX){ // JONMARK
-      // notice that geometry comes after subtractions/additions of EOMs
-      // convert from UDIAG->UEVOLVE
-      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons);
-    }
+    //////////////////
+    
+    // UEVOLVE -> UDIAG
+    // Assumes that Uievolve is like unewglobal and is at general U[] position (i.e. U[B1..B3] staggered and otherwise centered for FLUXB==FLUXCTSTAG)
+    UtoU(UEVOLVE,UDIAG,ptrgeom,Uievolve,Uicent);
+
+    // Override B1..B3 with correct centered versions (correct both for value and geometry)
+    // ensure B^i is really at center even if FLUXB==FLUXCTSTAG (that would have Ui[B1..B3] at staggered)
+    // Assumes, as very generally true, that U[B1..B3] never change and can never be adjusted.
+    PLOOPBONLY(pl) Uicent[pl]=Ufcent[pl];
 
 
+    ////////////////
+    //
     // Get deltaUavg[] and also modify ucons if required and should
-    diag_fixup_dUandaccount(Ui, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+    //
+    ////////////////
+    diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+
 
 
   }// end if finalstep>0
@@ -562,11 +638,13 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *p
 // accounts for both failures and floor recoveries
 // only called on final step of RK once unew is defined since only on final step is unew modified if floor encountered
 // ONLY used by phys.ffde.c inversion routine when E^2>B^2
+// Assume Ui and Uf in UDIAG form
 int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled)
 {
+  FTYPE Uicent[NPR],Ufcent[NPR];
   struct of_state q;
   int failreturn;
-  int pl,enerregion, tscale;
+  int pliter,pl,enerregion, tscale;
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
@@ -593,17 +671,29 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 
     ///////////
     //
-    // Change ucons
+    // Change ucons (GODMARK: assumes Uf at CENT since uses single ptrgeom -- even though ucons is normally capable of being staggered for B1..B3)
     //
     ///////////
     if(DOENOFLUX != NOENOFLUX){ // JONMARK
       // notice that geometry comes after subtractions/additions of EOMs
-      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UDIAG->UEVOLVE
+      UtoU(UDIAG,UEVOLVE,ptrgeom,Uf,ucons); // convert from UDIAG->UEVOLVE 
     }
 
 
+    // get Uicent and Ufcent
+    // Assumes that Ui is like unewglobal and is at general U[] position (i.e. U[B1..B3] staggered and otherwise centered for FLUXB==FLUXCTSTAG)
+    PLOOP(pliter,pl){
+      Uicent[pl]=Ui[pl];
+      Ufcent[pl]=Uf[pl];
+    }
+
+    // ensure B^i is really at center even if FLUXB==FLUXCTSTAG (that would have Ui[B1..B3] at staggered)
+    // Assumes, as very generally true, that U[B1..B3] never change and can never be adjusted.
+    PLOOPBONLY(pl) Uicent[pl]=Ufcent[pl];
+
+
     // Get deltaUavg[] and also modify ucons if required and should
-    diag_fixup_dUandaccount(Ui, Uf, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+    diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
   }
@@ -623,7 +713,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 // finalstep==0 is non-accounting, finalstep==1 is accounting
 int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
-  int pl,pliter;
+  int pliter,pl;
   int ip, jp, im, jm;
   FTYPE bsq, del;
   FTYPE r, th, X[NDIM];
@@ -631,6 +721,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   struct of_state q;
   struct of_state dq;
   FTYPE prfloor[NPR];
+  FTYPE prdiag[NPR];
   FTYPE pr0[NPR];
   FTYPE prnew[NPR];
   FTYPE U[NPR];
@@ -654,6 +745,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   PALLLOOP(pl){
     checkfl[pl]=0;
     pr0[pl]=pr[pl];
+    prdiag[pl]=pr0[pl];
   }
 
   // shouldn't fail since before and after states should be ok, as
@@ -826,7 +918,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   ///////////////////////////////
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTFLOORACT);
+    int docorrectucons=1;
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTFLOORACT);
+    // now prdiag=pr as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to pr each time) would add each prior change to each next change)
+    PALLLOOP(pl) prdiag[pl]=pr[pl];
   }
 
 
@@ -837,6 +932,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   ////////////////////
 #if(WHICHVEL==VELREL4)
+  int docorrectucons=1;
   didchangeprim=0;
 
   failreturn=limit_gamma(GAMMAMAX,pr,ucons,ptrgeom,-1);
@@ -844,7 +940,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   if(failreturn==-1) didchangeprim=1;
 
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    PALLLOOP(pl) prdiag[pl]=pr[pl];
   }
 
 #endif// end if WHICHVEL==VEL4REL
@@ -1662,7 +1759,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   struct of_state q;
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
   int docorrectucons;
-
+  int pliter,pl;
 
 
   // account for changes by tracking conserved quantities
@@ -1807,6 +1904,10 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     utoprimfailtype=COUNTBOUND2;
     docorrectucons=0; // account, but don't change conserved quantities
   }
+  else if(mypflag==UTOPRIMFAILFIXEDONESTEP){
+    utoprimfailtype=COUNTONESTEP;
+    docorrectucons=0; // account, but don't change conserved quantities
+  }
   else if(mypflag==UTOPRIMFAILFIXEDUTOPRIM){
     dualfprintf(fail_file,"prior pflag not cleared: nstep=%ld steppart=%d t=%21.15g i=%d j=%d k=%d \n",nstep,steppart,t,i,j,k);
     utoprimfailtype=-1;
@@ -1821,7 +1922,11 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 
   if(utoprimfailtype!=-1){
     // diagnostics
-    diag_fixup(docorrectucons,pr0, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
+    FTYPE prdiag[NPR],pr[NPR];
+    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
+    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+
     ////////////////
     //
     // reset true pflag counter to "no" (fixed) failure
@@ -2959,7 +3064,10 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   //
   ///////////////////
   if(didchange){
-    diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    FTYPE prdiag[NPR];
+    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     return(-1);// indicates did change primitive
   }
 
@@ -3219,7 +3327,10 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
   }
 
   // account for changes
-  diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+  FTYPE prdiag[NPR];
+  PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+  diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
 #endif
 
@@ -3234,7 +3345,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
   int iin,iout;
   int jjn,jout;
   int kkn,kout;
-  FTYPE pr0[NPR];
+  FTYPE pr0[NPR],prdiag[NPR];
   int pl,pliter;
 
 
@@ -3258,7 +3369,11 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
       pr[U1]=0;
-      diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if( 
        ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==FIXEDOUTFLOW)&&(pr[U1+dir-1] > 0.)) 
@@ -3270,7 +3385,9 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       set_atmosphere(1,WHICHVEL,ptrgeom,pr);
 
       // below never really accounted for since on boundary zones
-      diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
   else if(dir==2){
@@ -3288,7 +3405,11 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
       pr[U2]=0;
-      diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
   else if(dir==3){
@@ -3306,7 +3427,11 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
       pr[U3]=0;
-      diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
   else return(1); // uh
@@ -3421,6 +3546,8 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   if(dofix){
     // set pre-primitive
     PALLLOOP(pl)    pr0[pl]=pr[pl];
+    FTYPE prdiag[NPR];
+    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
 
 
     /* find gamma and remove it from primitives */
@@ -3475,8 +3602,8 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     pr[U3] *= gamma ;
 
     // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
-    diag_fixup(1,pr0, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
-
+    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
     /* done */
     return(-1);
