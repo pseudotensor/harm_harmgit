@@ -620,7 +620,7 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET3COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
-      else if (defcoordlocal == SJETCOORDS) {
+      else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend);
 #if(USESJETLOGHOVERR)
 	fprintf(out,"%21.15g ",torusrmax_loc);
@@ -722,7 +722,7 @@ void read_coord_parms(int defcoordlocal)
       else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
 	fscanf(in,HEADER8IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend);
-#if(USESJETLOGHOVERR)	
+#if(USESJETLOGHOVERR)
 	fscanf(in,HEADERONEIN,&torusrmax_loc);
 #endif
         fscanf(in,HEADER3IN,&jetnu,&x10,&x20);
@@ -1472,7 +1472,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 #if(DOIMPROVEJETCOORDS)
     FTYPE ror0nudisk, ror0nujet, thetadisk, thetajet;
 #endif
-  
+
     V[0] = X[0];
 
     theexp = npow*X[1];
@@ -1495,10 +1495,10 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     fac = Ftrgen( fabs(X[2]), fracdisk, 1-fracjet, 0, 1 );
 
     //faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
-    
+
     rbeforedisk = mins( V[1], r0disk, 0.5*r0disk );
 #if(USESJETLOGHOVERR)
-    //rinsidedisk = 1 for r < torusrmax_loc and increases logarithmically while r <= rdiskend, after which it  
+    //rinsidedisk = 1 for r < torusrmax_loc and increases logarithmically while r <= rdiskend, after which it
     //levels off to the value = rinsidediskmax
     rinsidedisk = pow( 1. + 0.5*log10(mins(maxs(1,V[1]/torusrmax_loc,0.5),rdiskend/torusrmax_loc,0.5*rdiskend/torusrmax_loc)), 2./jetnu );
     rinsidediskmax = pow( 1. + 0.5*log10(rdiskend/torusrmax_loc), 2./jetnu);
@@ -1507,25 +1507,25 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     rinsidediskmax = 1.;
 #endif
     rafterdisk = maxs( 1, 1 + (V[1]-rdiskend)*r0jet/(rjetend*r0disk*rinsidediskmax), 0.5*rdiskend*r0jet/(rjetend*r0disk*rinsidediskmax) );
-    
+
     fakerdisk = rbeforedisk * rinsidedisk * rafterdisk;
-    
+
     fakerjet = mins( V[1], r0jet, 0.5*r0jet ) * maxs( 1, V[1]/rjetend, 0.5 );
-    
+
 #if( DOIMPROVEJETCOORDS )
     ror0nudisk = pow( (fakerdisk - rsjet*Rin)/r0grid, jetnu/2 );
     ror0nujet = pow( (fakerjet - rsjet*Rin)/r0grid, jetnu/2 );
     thetadisk = thetaofx2( X[2], ror0nudisk );
     thetajet = thetaofx2( X[2], ror0nujet );
-    V[2] = fac*thetajet + (1 - fac)*thetadisk; 
+    V[2] = fac*thetajet + (1 - fac)*thetadisk;
 #else
     faker = fac*fakerjet + (1 - fac)*fakerdisk - rsjet*Rin;
     ror0nu = pow( faker/r0grid, jetnu/2 );
     V[2] = thetaofx2( X[2], ror0nu );
 #endif
-  
-  
-  
+
+
+
 
     if (defcoord == SJETCOORDS_BOB) {
        // Bob's modification: normalize ror0nu such that it is 1 near horizon, and introduce hslope - can get larger timestep.
@@ -1561,7 +1561,7 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
   //  //      V[2] = 0.5*M_PI + M_PI * fabs(X[2]-0.5) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
   //  V[2] = M_PI - (M_PI * (1.0-(1+X[2])/2.)) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-(1+X[2])/2.)));
   //}
-  V[2] = M_PI_2l * (1.0+ X[2]); 
+  V[2] = M_PI_2l * (1.0+ X[2]);
 #endif
 
     // default is uniform \phi grid
@@ -1581,7 +1581,7 @@ FTYPE thetaofx2(FTYPE x2, FTYPE ror0nu)
     theta = M_PI_2l + atan( tan(x2*M_PI_2l)*ror0nu );
   }
   return(theta);
-}  
+}
 // Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
 // i.e. Just take d(bl-coord)/d(ksp uniform coord)
 // e.g. dr/dx1 d\theta/dx2
@@ -3496,11 +3496,11 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   Xout[2] -= 4 * ntimes;
 
   *ismirrored = 0;
-  
+
   if( Xout[2] > 0. ) {
     Xout[2] = -Xout[2];
     *ismirrored = 1-*ismirrored;
-  }    
+  }
 
   //now force -1 < Xout[2] < 0
   if( Xout[2] < -1. ) {
