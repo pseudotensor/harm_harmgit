@@ -620,7 +620,7 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET3COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
-      else if (defcoordlocal == SJETCOORDS) {
+      else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend);
 #if(USESJETLOGHOVERR)
 	fprintf(out,"%21.15g ",torusrmax_loc);
