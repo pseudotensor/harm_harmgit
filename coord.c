@@ -189,6 +189,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
     }
   }
+  else if (defcoordlocal == SNSCOORDS ) {
+  }
   else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
   }
   else if (defcoordlocal == JET6COORDS) {
@@ -450,6 +452,36 @@ void set_coord_parms_deps(int defcoordlocal)
   }
   else if (defcoordlocal == JET3COORDS) {
   }
+  else if (defcoordlocal == SNSCOORDS ) {
+    /////////////////////
+    // RADIAL GRID SETUP
+    /////////////////////
+    npow=global_npow;  //don't change it, essentially equivalent to changing cpow2
+    
+    //radial hyperexponential grid
+    npow2=global_npow2; //power exponent
+    cpow2=global_cpow2; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    rbr = global_rbr;  //radius at which hyperexponentiation kicks in
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
+    
+    /////////////////////
+    //ANGULAR GRID SETUP
+    /////////////////////
+    
+    x10 = global_x10;
+    x20 = global_x20;
+
+    /////////////////////
+    //PHI GRID SETUP
+    /////////////////////
+    if( dofull2pi ) {
+      fracphi = 1;
+    }
+    else {
+      fracphi = global_fracphi;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+    }
+    
+  }
   else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {   // AKMARK
     /////////////////////
     // RADIAL GRID SETUP
@@ -620,6 +652,10 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET3COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
+      else if (defcoordlocal == SNSCOORDS ) {
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+		npow,fracphi,npow2,cpow2,rbr,x1br,x10,x20);
+      }
       else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend);
 #if(USESJETLOGHOVERR)
@@ -718,6 +754,9 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == JET3COORDS) {
 	fscanf(in,HEADER6IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet);
+      }
+      else if (defcoordlocal == SNSCOORDS ) {
+	fscanf(in,HEADER8IN,&npow,&fracphi,&npow2,&cpow2,&rbr,&x1br,&x10,&x20);
       }
       else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
@@ -822,6 +861,16 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  }
+  else if (defcoordlocal == SNSCOORDS ) {
+    MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&fracphi, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x10, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&x20, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1102,6 +1151,21 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else{
       V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
     }
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+  }
+  else if (defcoord == SNSCOORDS ) {
+    V[0] = X[0];
+    
+    theexp = npow*X[1];
+    
+    if( X[1] > x1br ) {
+      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    }
+    //hyperexponential for X[1] > x1br
+    V[1] = R0+exp(theexp);
+    //uniform in theta
+    V[2] = M_PI_2l * (1.0+ X[2]); 
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
   }
@@ -2242,7 +2306,7 @@ void set_points()
     dx[2] = 1. / totalsize[2];
     dx[3] = 1.0/totalsize[3];
   }
-  else if (defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB) {
+  else if (defcoord == SNSCOORDS || defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB) {
     startx[1] = log(Rin-R0)/npow;
 
     if( Rout < rbr ) {
@@ -2528,7 +2592,7 @@ FTYPE setRin(int ihor)
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
-  else if(defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB){
+  else if(defcoord == SNSCOORDS || defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB){
     dualfprintf( fail_file, "setRin(): not implemented for SJETCOORDS\n" );
     myexit(1);
   }
