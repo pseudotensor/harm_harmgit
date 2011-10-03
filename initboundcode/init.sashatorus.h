@@ -164,8 +164,13 @@
 #define LIMIT_FLUXC2A_PRIM_CHANGE 0
 
 
-
+#if(0)
+//spherical polar rotating BH
 #define MCOORD KSCOORDS
+#else
+//spherical polar flat space for NS
+#define MCOORD SPCMINKMETRIC
+#endif
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
 #define ANALYTICMEMORY 1

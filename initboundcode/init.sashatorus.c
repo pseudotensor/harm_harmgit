@@ -19,7 +19,7 @@
 #define THINDISKFROMMATHEMATICA 3
 #define THINTORUS 4
 #define THICKDISKFROMMATHEMATICA 5
-
+#define NSTAR 6
 
 // For blandford problem also need to set:
 // 0) WHICHPROBLEM 2
@@ -42,8 +42,9 @@
 // AKMARK: which problem
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 //#define WHICHPROBLEM THICKDISKFROMMATHEMATICA // choice
-#define WHICHPROBLEM THINTORUS
+//#define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
+#define WHICHPROBLEM NSTAR
 
 #define TORUSHASBREAKS 0   // AKMARK: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
 
@@ -283,6 +284,8 @@ int init_defcoord(void)
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
+#elif(WHICHPROBLEM==NSTAR)
+  defcoord = SNSCOORDS;
 #endif
 
   return(0);
@@ -302,13 +305,12 @@ int init_grid(void)
   a = 0.99;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
+#elif(WHICHPROBLEM==NSTAR)
+  //flat metric so a meaningless
+  a = 0.;
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
-
- 
-  Rhor=rhor_calc(0);
-  Risco=rmso_calc(PROGRADERISCO);
 
 #if( DOAUTOCOMPUTEENK0 )
   //this should be set to the final entropy constant
@@ -339,6 +341,16 @@ int init_grid(void)
   rin = Risco;
 #elif(WHICHPROBLEM==GRBJET)
   rin = Risco;
+#elif(WHICHPROBLEM==NSTAR)
+  rin = 1.;
+#endif
+  
+#if(MCOORD==KSCOORDS)
+  Rhor=rhor_calc(0);
+  Risco=rmso_calc(PROGRADERISCO);
+#else
+  Rhor = rin;
+  Risco = rin;
 #endif
   
   // AKMARK: hslope
@@ -371,6 +383,9 @@ int init_grid(void)
 	setRin_withchecks(&Rin);
 	R0 = -3.0;
   Rout = 1E5;
+#elif(WHICHPROBLEM==NSTAR)
+  Rin = rin;
+  Rout = 1e2;
 #endif
 
   /////////////////////
@@ -382,9 +397,12 @@ int init_grid(void)
   global_npow2=4.0; //power exponent
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
   global_rbr = 1000.;  //radius at which hyperexponentiation kicks in
+  if(WHICHPROBLEM==NSTAR){
+    global_rbr = 10.;
+  }
   
   /////////////////////
-  //ANGULAR GRID SETUP
+  //ANGULAR GRID SETUP (so far irrelevant for WHICHPROBLEM==NSTAR)
   /////////////////////
 
   //transverse resolution fraction devoted to different components
@@ -474,13 +492,29 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=5*1E3;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=0.5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
 //scale up to match the usual values after the corresponding density normalization in init_thintorus()
+  RHOMIN *= 70;
+  UUMIN *= 70;
+#endif
+#if(WHICHPROBLEM==NSTAR)
+  BCtype[X1UP]=OUTFLOW;
+  BCtype[X1DN]=NSSURFACE;
+  //  rescaletype=1;
+  rescaletype=4;
+  //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=0.5*1E3;
+  RHOMIN = 1E-4;
+  UUMIN = 1E-6;
+#if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
+  //scale up to match the usual values after the corresponding density normalization in init_thintorus()
   RHOMIN *= 70;
   UUMIN *= 70;
 #endif
