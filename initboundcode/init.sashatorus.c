@@ -326,6 +326,10 @@ int init_grid(void)
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
   
+#if(MCOORD==KSCOORDS)
+  Rhor=rhor_calc(0);
+  Risco=rmso_calc(PROGRADERISCO);
+  
   // AKMARK: torus inner radius
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
@@ -341,18 +345,18 @@ int init_grid(void)
   rin = Risco;
 #elif(WHICHPROBLEM==GRBJET)
   rin = Risco;
-#elif(WHICHPROBLEM==NSTAR)
+#endif
+
+#else
+
+#if(WHICHPROBLEM==NSTAR)
   rin = 1.;
 #endif
-  
-#if(MCOORD==KSCOORDS)
-  Rhor=rhor_calc(0);
-  Risco=rmso_calc(PROGRADERISCO);
-#else
+
   Rhor = rin;
   Risco = rin;
 #endif
-  
+ 
   // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
@@ -513,11 +517,6 @@ int init_global(void)
   UORHOLIMIT=0.5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
-#if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
-  //scale up to match the usual values after the corresponding density normalization in init_thintorus()
-  RHOMIN *= 70;
-  UUMIN *= 70;
-#endif
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -574,6 +573,26 @@ int init_global(void)
   /* restart file period in steps */
   DTr = 6000;  //also see post_init_specific_init()
 
+#elif(WHICHPROBLEM == NSTAR)
+  /* output choices */
+  tf = 10.; //also check post_init_specific_init()
+  
+  /* dumping frequency, in units of M */
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
+  // ener period
+  DTdumpgen[ENERDUMPTYPE] = 100.0;
+  /* image file frequ., in units of M */
+  DTdumpgen[IMAGEDUMPTYPE] = 1.0;
+  // fieldline locked to images so can overlay
+  DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+  
+  /* debug file */  
+  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  // DTr = .1 ; /* restart file frequ., in units of M */
+  /* restart file period in steps */
+  DTr = 6000;  //also see post_init_specific_init()
+  
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
   tf = 5E5;
@@ -614,8 +633,13 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   UORHOLIMIT=5*1E3;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
+#if(MCOORD==KSCOORDS)
   Rhor=rhor_calc(0);
   Risco=rmso_calc(PROGRADERISCO);
+#else
+  Rhor = rin;
+  Risco = rin;
+#endif
   
 
 #if( ANALYTICMEMORY == 1 && WHICHPROBLEM != THINDISKFROMMATHEMATICA && WHICHPROBLEM != THICKDISKFROMMATHEMATICA )
@@ -685,6 +709,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   return(init_dsandvels_thindiskfrommathematica(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==THINTORUS)
   return(init_dsandvels_thintorus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==NSTAR)
+  return(init_dsandvels_nstar(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
 
 }
@@ -696,9 +722,10 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
 #define DISKBHFIELD 4
+#define NSFIELD 5
 
 //Options for DISKBHFIELD
-#define BHFIELDVAL (4.0) //(3.4142135623730950488)
+#define BHFIELDVAL (1.0) //(3.4142135623730950488)
 #define BHFIELDNU (-1.0) //negative means hyperbolic field lines
 #define BHFIELDALPHA (1.5)
 #define BHFIELDR (1.)    //field stops at r = BHFIELDR * rin
@@ -706,7 +733,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
 
 //#define FIELDTYPE DISKBHFIELD
-#define FIELDTYPE DISKFIELD
+//#define FIELDTYPE DISKFIELD
+#define FIELDTYPE NSFIELD
 
 FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 {
@@ -731,6 +759,14 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   return(vpotbh);
 }
 
+FTYPE vpotns_normalized( FTYPE r, FTYPE th )
+{
+  FTYPE vpot;
+  //normalized vector potential: total vpot through NS equals some constant order unity
+  vpot = 1 - fabs(cos(th));  //split-monopole
+  return(vpot);
+}
+
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
 {
   FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
@@ -747,6 +783,7 @@ FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
 int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
+  FTYPE vpotns_normalized( FTYPE r, FTYPE th );
   SFTYPE rho_av, u_av, q;
   FTYPE r,th;
   FTYPE vpot;
@@ -755,9 +792,13 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
   FTYPE fieldhor;
 #endif
   FTYPE rh;
-  FTYPE vpotbh;
+  FTYPE vpotbh, vpotns;
   
+#if(MCOORD==KSCOORDS)
   rh = rhor_calc(0);
+#else
+  rh = rin;
+#endif
 
 
   vpot=0.0;
@@ -788,6 +829,12 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       FTYPE rpow;
       rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
+    }
+
+    //NS field
+    if( FIELDTYPE==NSFIELD ) {
+      vpotns = vpotns_normalized(r, th);
+      vpot += BHFIELDVAL * vpotns;
     }
 
     /* field-in-disk version */

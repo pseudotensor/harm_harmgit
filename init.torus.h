@@ -709,6 +709,38 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
 
 }
 
+int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag)
+{
+  FTYPE r, th, R;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE rho, u, om, ur, uh, up;
+  int pl;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  
+  
+  coord(ti, tj, tk, CENT, X);
+  bl_coord(X, V);
+  r=V[1];
+  th=V[2];
+  
+  /* region outside disk? */
+  R = r*sin(th) ;
+  
+  get_geometry(ti, tj, tk, CENT, ptrgeom); // true coordinate system
+  set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+  
+  if(FLUXB==FLUXCTSTAG){
+    PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
+  }
+  
+
+  *whichvel=WHICHVEL;
+  *whichcoord=PRIMECOORDS;
+  return(0);
+  
+}
+
 
 #if (WHICHPROBLEM == LIMOTORUS)
 void compute_gd( FTYPE r, FTYPE th, FTYPE a, FTYPE *gdtt, FTYPE *gdtp, FTYPE *gdpp ) {
