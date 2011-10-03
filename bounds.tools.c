@@ -2592,8 +2592,7 @@ int poledeath(int whichx2,
 	  // setup initial pr
 	  //
 	  //////////////
-	  PLOOP(pliter,pl) pr0[pl]=MACP0A1(prim,i,j,k,pl);
-
+	  PLOOP(pliter,pl2) pr0[pl2]=MACP0A1(prim,i,j,k,pl2);
 
 	  ///////////
 	  //
