@@ -2819,6 +2819,8 @@ int poledeath(int whichx2,
   if(POLEGAMMADEATH){ // should come after POLEDEATH to be useful
     if(ispstag==0){
       // fixup
+
+
       // assume only dealing with velocities at same location (loop assumes CENT)
       pl=U1;
 
@@ -2835,10 +2837,10 @@ int poledeath(int whichx2,
 
 	  //////////////
 	  //
-	  // setup initial pr
+	  // setup initial pr (already using pl, so use pl2 for prdiag assignment/setup)
 	  //
 	  //////////////
-	  PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
+	  PLOOP(pliter,pl2) prdiag[pl2]=MACP0A1(prim,i,j,k,pl2);
 	  int madechange=0;
 
 
@@ -2898,16 +2900,16 @@ int poledeath(int whichx2,
 	    FTYPE *ucons;
 	    ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
 	    // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
-	    // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+	    // in general, not sure which pl2 really exists at this point, so pick first in PBOUNDLOOP loop
 	    struct of_geom *fixupptrgeom;
-	    PBOUNDLOOP(pliter,pl) {
-	      fixupptrgeom=ptrgeom[pl];
+	    PBOUNDLOOP(pliter,pl2) {
+	      fixupptrgeom=ptrgeom[pl2];
 	      break;
 	    }
 	    
-	    PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+	    PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
 	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
-	    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+	    PLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
 
 	  }
 

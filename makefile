@@ -638,6 +638,7 @@ GCCCFLAGSPRE=  $(CFLAGSPRE)
 LDFLAGS = -lm  $(LAPACKLDFLAGS)
 endif
 
+
 ifeq ($(USEKRAKEN),1)
 LONGDOUBLECOMMAND=
 DFLAGS=-DUSINGICC=0  -DUSINGORANGE=0 $(EXTRA)
@@ -651,9 +652,13 @@ endif
 
 ifeq ($(USEKRAKENICC),1)
 LONGDOUBLECOMMAND=
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLCFLAGS)
+# AKMARK: added -no-ipo following Bob's discovery that -ipo is the cause of holes appearing in disk
+# AKMARK: related suggestion by Sasha to disable -msse3 in CFLAGSPRE
+# Note that JCM already knew -ipo is bad.  It actually makes no sense to use.
 COMP=cc $(DFLAGS)
-CFLAGSPRE = -fast -msse3 $(DFLAGS)
+#CFLAGSPRE = -fast -msse3 $(DFLAGS)
+CFLAGSPRE = -fast $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
 LDFLAGS = -lm  $(LAPACKLDFLAGS)

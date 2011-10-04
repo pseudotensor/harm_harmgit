@@ -48,7 +48,7 @@ ls > allbutthickdisk7_dirs.txt
 
 # then pick out directories from tar files and then once have directory file allbutthickdisk7_tar.txt, do:
 
-for fil in `cat allbutthickdisk7_tar.txt` ; do echo $fil ; cat $fil | ssh jmckinne@ki-jmck "cd /data2/jmckinne/ ; tar -xvf - --wildcards --no-anchored '*fieldline*' '*dump0000.bin*' '*gdump.bin*' " ; done
+for fil in `cat allbutthickdisk7_tar.txt` ; do echo $fil ; cat $fil | ssh jmckinne@ki-jmck "cd /data2/jmckinne/ ; tar -xvf - --wildcards --no-anchored '*coordpa*' '*nprlist*' '*fieldline*' '*dump0000.bin*' '*gdump.bin*' " ; done
 
 
 ################
@@ -65,6 +65,20 @@ for fil in `cat allbutthickdisk7_dirs.txt` ; do echo $fil ; ssh jmckinne@ki-jmck
 
 ########################
 
+#on ranch (getting new QB toroidal runs (nothing from kraken yet)):
+
+echo "thickdisk3.lmn thickdisk17.ijk thickdiskr3.stuv thickdisk15r.abc thickdisk10.pqrs thickdisk10.tuv thickdisk3.opq thickdisk17.lmn thickdiskr3.xyz thickdisk15r.def" > dirs.txt
+
+rm -rf fieldlinepluslistdirs.txt
+for thedir in `cat dirs.txt` ; do echo $thedir ; find $thedir \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" -o -name "coordparms" -o -name "nprlist" \) -print >> fieldlinepluslistdirs.txt ; done
+
+for fil in fieldlinepluslistdirs.txt ; do stage $fil ; done
+
+~/bin/bbcp -a -k -f -p -r -s 20 -z -b +500 -I fieldlinepluslistdirs.txt -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/
+
+
+
+########################
 
 
 
@@ -203,7 +217,41 @@ find thickdiskrr2.ab thickdisk14.ab > postfilelist.txt
 New type of command allowed (overwrites correctly if failed copy, and less failed copies, but overwrites instead of appending for some reason):
 On ranch, -s 20 required to get 20MB/s since only given 1MB/sec per stream by ranch.
 
-nohup ~/bin/bbcp -s 20 -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:"thickdisk3abcdefgh thickdisk3.ijk" . >err3again.txt & 
+nohup ~/bin/bbcp -s 20 -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' tg802609@ranch.tacc.utexas.edu:"thickdisk3abcdefgh thickdisk3.ijk" . >err3again.txt & 
+
+
+
+#######################################
+On Kraken to ki-jmck:
+#http://www.nics.tennessee.edu/computing-resources/access
+
+
+From t = 0 out to t ~ 22500
+/lustre/scratch/atchekho/run/rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0
+
+From t = 22500 out to t ~ 31500 (with correct floor accounting)
+/lustre/scratch/atchekho/run/rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0_faildufix2
+
+# don't use below:
+#~/bin/bbcp -s 20 -b +200 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/
+
+# do below:
+echo "rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0" > ~/dirs1.txt
+echo "rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0_faildufix2" > ~/dirs2.txt
+
+# for other window since on Kraken, can't do passwordless ssh
+# -> change dirs1 -> dirs2 and back
+
+# Kraken barfs on: ls --color=never | grep --color=never -E 'fieldline.*\.bin|dump0000\.bin|gdump\.bin'
+# replace with: find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print
+
+for fil in `cat ~/dirs2.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs2.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  ~/bin/bbcp -a -k -f -p -r -z -b +200 -I ~/fieldlinepluslistdirs2.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+# for every 100th file do:
+# replace with: find . \( -name "fieldline??00.bin" -o -name "fieldline0000.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print
+
+
+for fil in `cat ~/dirs2.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline??00.bin" -o -name "fieldline0000.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs2frac.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  ~/bin/bbcp -a -k -f -p -r -z -b +200 -I ~/fieldlinepluslistdirs2frac.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
 
 
 

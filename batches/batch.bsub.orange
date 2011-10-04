@@ -4,6 +4,18 @@
 
 
 #BSUB -o output.log
+#http://kipac.stanford.edu/collab/computing/hardware/orange/overview
+# 96 cnodes, 2 CPUs, 4cores/CPU = 768 cores.
+#http://kipac.stanford.edu/collab/computing/docs/orange
+#bqueues | grep kipac 
+#kipac-ibq       125  Open:Active       -    -    1    -   254     0   254     0
+#kipac-gpuq      122  Open:Active       -    -    -    -     0     0     0     0
+#kipac-xocmpiq   121  Open:Active       -    -    -    -     0     0     0     0
+#kipac-xocq      120  Open:Active       -    -    -    -    41     5    36     0
+#kipac-testq      62  Open:Active       -    -    1    -     0     0     0     0
+#kipac-ibidleq    15  Open:Active       -    -    1    -     0     0     0     0
+#kipac-xocguestq  10  Open:Active       -    -    -    -     0     0     0     0
+#
 #BSUB -q kipac-ibq
 #BSUB -a openmpi
 #BSUB -J jon4
