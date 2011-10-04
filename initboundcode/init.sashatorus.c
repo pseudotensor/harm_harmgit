@@ -508,7 +508,7 @@ int init_global(void)
 #endif
 #elif(WHICHPROBLEM==NSTAR)
   BCtype[X1UP]=OUTFLOW;
-  BCtype[X1DN]=NSSURFACE;
+  BCtype[X1DN]=FIXEDUSEPANALYTIC;
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
