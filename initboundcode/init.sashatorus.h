@@ -12,9 +12,9 @@
 #endif
 
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
-#define N1 12
-#define N2 16
-#define N3 16
+#define N1 32
+#define N2 32
+#define N3 1
 
 // atch adjusts
 #undef MAXWELL
@@ -273,8 +273,8 @@
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-//#define CONNDERTYPE DIFFGAMMIE // DEBUG
-#define CONNDERTYPE DIFFNUMREC
+#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1
