@@ -1,5 +1,17 @@
 extern int bound_x1dn_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_x1up_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+extern int bound_x1dn_nssurface(
+			 int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+			 int *inboundloop,
+			 int *outboundloop,
+			 int *innormalloop,
+			 int *outnormalloop,
+			 int (*inoutlohi)[NUMUPDOWN][NDIM],
+			 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+			 int *dosetbc,
+			 int enerregion,
+			 int *localenerpos
+			 );
 extern int bound_x1dn_outflow(
 		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
