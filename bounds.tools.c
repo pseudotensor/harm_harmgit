@@ -179,7 +179,6 @@ int bound_x1dn_nssurface(
 	/* inner r boundary condition: u, just copy */
 	
 	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
 	OPENMPBCLOOPBLOCK{
 	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
@@ -190,12 +189,14 @@ int bound_x1dn_nssurface(
 	  rj=j;
 	  rk=k;
 	  
-	  
-	  //outflow everything first
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 	  
-	 
-	  //fix things: rho, u, B^1, Omega(how?; set v = 0 for now)
+	  //outflow everything first
+	  LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
+	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  }
+	  
+	  //fix things: rho, u, B^1, Omega(XXX how?; set v = 0 for now)
 	  if(ispstag){
 	    //note that this does not set B^r at r = R_in -- this has to be enforced through setting emf = 0
 	    //or sth similar
@@ -206,22 +207,25 @@ int bound_x1dn_nssurface(
 		}
 	      }
 	    }
-	  }
+	  }//else ispstag
 	  else{
 	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 	      PBOUNDLOOP(pliter,pl) {
-		if(pl==B1 || pl==RHO || pl==UU) {
+		if(    pl==B1 || pl==RHO 
+		    || pl==UU || pl==U1 
+		    || pl==U2 || pl==U3) { //XXX for now fix everything, worry about velocity later
 		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
 		}
 	      }
 	    }
-	  }
-	}
-      }
+	  }//end else ispstag
+	  
+	}//openmpblock
+      }//end if mycpupos[1]==0
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946836);
+      myexit(3946);
     }
     
     
