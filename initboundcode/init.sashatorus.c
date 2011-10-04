@@ -506,7 +506,7 @@ int init_global(void)
   RHOMIN *= 70;
   UUMIN *= 70;
 #endif
-#if(WHICHPROBLEM==NSTAR)
+#elif(WHICHPROBLEM==NSTAR)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=NSSURFACE;
   //  rescaletype=1;
