@@ -121,7 +121,9 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
 	bound_x1dn_analytic(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
       }
-      else{
+      else if(BCtype[dir]==NSSURFACE){
+	bound_x1dn_nssurface(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+      }      else{
 	dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
 	myexit(7598730);
       }

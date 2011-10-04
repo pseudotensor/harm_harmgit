@@ -127,6 +127,110 @@ int bound_x1dn_analytic(int boundstage, SFTYPE boundtime, int whichdir, int boun
   return(0);
 }
 
+// X1 inner NSSURFACE (created from OUTFLOW/FIXEDOUTFLOW)
+int bound_x1dn_nssurface(
+		       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+  
+  
+  
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    int locali1,globali1;
+    int locali2,globali2;
+    int ri1,ri2;
+    struct of_geom geom[NPR],rgeom[NPR];
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int horizonti;
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+    
+    
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+    
+    
+    if(BCtype[X1DN]==NSSURFACE){
+      
+      
+      if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) { 
+	/* inner r boundary condition: u, just copy */
+	
+	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+	  
+	  
+	  
+	  ri=riin;
+	  rj=j;
+	  rk=k;
+	  
+	  
+	  //outflow everything first
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+	  
+	 
+	  //fix things: rho, u, B^1, Omega(how?; set v = 0 for now)
+	  if(ispstag){
+	    //note that this does not set B^r at r = R_in -- this has to be enforced through setting emf = 0
+	    //or sth similar
+	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
+	      PBOUNDLOOP(pliter,pl) {
+		if(pl==B1) {
+		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+		}
+	      }
+	    }
+	  }
+	  else{
+	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
+	      PBOUNDLOOP(pliter,pl) {
+		if(pl==B1 || pl==RHO || pl==UU) {
+		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(3946836);
+    }
+    
+    
+  }// end parallel region
+  
+  
+  return(0);
+}
+
 
 // X1UP FIXEDUSINGPANALYTIC
 //
