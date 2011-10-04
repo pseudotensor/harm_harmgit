@@ -628,9 +628,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
-  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=5*1E3;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=0.5*1E3;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
 #if(MCOORD==KSCOORDS)
