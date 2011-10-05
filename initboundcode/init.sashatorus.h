@@ -182,7 +182,7 @@
 #define EMAILADDRESS "atchekho@princeton.edu"
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
-#define DOAVG 0
+#define DOAVG 1
 #define DOJETDIAG 0
 #define DOAVG2 0
 //BOBMARK

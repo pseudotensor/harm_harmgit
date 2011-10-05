@@ -196,7 +196,7 @@ int post_init_specific_init(void)
   DTr = 3000;
   tf = 1e5;
   DOENERDIAG=0;
-  DOAVGDIAG=0;
+  //DOAVGDIAG=0;  //set here to override after restart
   //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
 
   if(funreturn!=0) return(funreturn);
