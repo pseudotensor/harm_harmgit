@@ -299,7 +299,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = 0.99;
+  a = -0.9;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #else
@@ -319,7 +319,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 34.; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 37.1; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -364,8 +364,8 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.83 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.3;
+  Rin = 0.7 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.0;
   Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
@@ -423,7 +423,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 2.4;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
@@ -474,9 +474,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=5*1E3;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=0.5*1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #if(THINTORUS_NORMALIZE_DENSITY && WHICHPROBLEM == THINTORUS)
@@ -575,9 +575,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
-  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=5*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=5*1E3;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=0.5*1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=0.5*1E3;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);
