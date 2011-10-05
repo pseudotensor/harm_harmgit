@@ -1240,6 +1240,68 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&ftemp,0,1,writebuf);
 #endif
   
+#if( FIELDLINEFLUX == 1 )
+  //it is useful to have access to fluxes at cell faces directly for accurately plotting fluxes vs. radius
+  
+  ///////////////////
+  //
+  // F1
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+
+  ///////////////////
+  //
+  // F2
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+  
+  ///////////////////
+  //
+  // F3
+  //
+  //rest-mass flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,RHO));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //energy flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,UU));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  //ang. momentum flux
+  ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,U3));
+  myset(datatype,&ftemp,0,1,writebuf);
+  //
+  //
+  ////////////////////
+  
+#endif
+  
   // see grmhd-dualfcon2omegaf.nb
   // below can be obtained from above set of v and B
   // \Omega_F_1
