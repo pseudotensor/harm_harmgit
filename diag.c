@@ -1674,6 +1674,9 @@ void init_varstavg(void)
      GLOBALMACP0A1(tudtavg,i,j,k,ii)=0.0;
      GLOBALMACP0A1(atudtavg,i,j,k,ii)=0.0;
     }      
+    for(ii=0;ii<NUMFLUXES;ii++){
+      GLOBALMACP0A1(fluxtavg,i,j,k,ii)=0.0;
+    }      
     
   }
 }
@@ -1712,6 +1715,10 @@ void final_varstavg(FTYPE IDT)
     for(ii=0;ii<NUMSTRESSTERMS;ii++){
       GLOBALMACP0A1(tudtavg,i,j,k,ii)=GLOBALMACP0A1(tudtavg,i,j,k,ii)*IDT;
       GLOBALMACP0A1(atudtavg,i,j,k,ii)=GLOBALMACP0A1(atudtavg,i,j,k,ii)*IDT;
+    }      
+
+    for(ii=0;ii<NUMFLUXES;ii++){
+      GLOBALMACP0A1(fluxtavg,i,j,k,ii)=GLOBALMACP0A1(fluxtavg,i,j,k,ii)*IDT;
     }      
   }
 }
@@ -1917,7 +1924,19 @@ int set_varstavg(FTYPE tfrac)
       GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp6)*tfrac;
       ii++;
     }
+    
+    ii=0;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F1,i,j,k,RHO)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F1,i,j,k,UU)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F1,i,j,k,U3)*tfrac;ii++;
+    
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F2,i,j,k,RHO)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F2,i,j,k,UU)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F2,i,j,k,U3)*tfrac;ii++;
 
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F3,i,j,k,RHO)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F3,i,j,k,UU)*tfrac;ii++;
+    GLOBALMACP0A1(fluxtavg,i,j,k,ii)+=GLOBALMACP0A1(F3,i,j,k,U3)*tfrac;ii++;
   }
 
   return(0);

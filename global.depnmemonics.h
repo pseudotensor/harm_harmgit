@@ -401,6 +401,7 @@
 #define NUMFARADAY 6
 #define NUMOTHER 1
 #define NUMSTRESSTERMS (NUMFLUXTERMS*NDIM*NDIM)
+#define NUMFLUXES (9) //mass, energy, and ang. momentum fluxes for each dimension, i.e., 9 terms total
 
 /** GLOBAL ARRAY SECTION **/
 

@@ -849,6 +849,8 @@ int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 #if(DOAVG2==0)
   myset(datatype,GLOBALMAC(tudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
+
+  myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
 #endif
 
   return(0);
@@ -930,7 +932,9 @@ int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   // 112*2
 
-  // total=10+112*2=234
+  myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
+
+  // total=10+112*2=234 (2011-10-05: AT XXX: add 9 more?)
 
   return(0);
 }
