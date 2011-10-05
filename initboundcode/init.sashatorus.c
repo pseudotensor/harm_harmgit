@@ -732,6 +732,8 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDDZDR (.9) //asymptotic slope of field boundary (=dz/dr)
 #define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
 
+#define NSFIELDVAL (10.)
+
 //#define FIELDTYPE DISKBHFIELD
 //#define FIELDTYPE DISKFIELD
 #define FIELDTYPE NSFIELD
@@ -833,8 +835,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
     //NS field
     if( FIELDTYPE==NSFIELD ) {
-      vpotns = vpotns_normalized(r, th);
-      vpot += BHFIELDVAL * vpotns;
+      vpotns = 1-fabs(cos(th)); //vpotns_normalized(r, th);
+      vpot += NSFIELDVAL * vpotns;
     }
 
     /* field-in-disk version */
@@ -929,7 +931,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
   
-#if(1) //if optimizing disk flux
+#if(DO_OPTIMIZE_DISK_FLUX) //if optimizing disk flux
   getmax_densities(prim, &rhomax, &umax);
   //amax = get_maxval( A, 3 );
   amax = get_maxprimvalrpow( prim, aphipow, RHO );
@@ -1425,10 +1427,10 @@ int normalize_field_diskonly(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag
 {
   int funreturn;
   
-  
+#if(DO_NORMALIZE_FIELD)
   funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
   if(funreturn!=0) return(funreturn);
-  
+#endif
   return(0);
   
 }
