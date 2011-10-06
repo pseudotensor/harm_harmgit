@@ -780,11 +780,12 @@ void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 #endif
     +7*16 // Tud all 7 parts, all 4x4 terms (112)
     +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
+    +9    // 9 fluxes
     ;
 
 
   if(DOAVG2){
-    *numcolumns-=224;
+    *numcolumns-=(224+9);
   }
 
   // Version number:
