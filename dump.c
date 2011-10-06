@@ -891,7 +891,7 @@ void set_avg2_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 
 
   if(DOAVG2){
-    *numcolumns=10 + 224; // otherwise doesn't exist so don't need to set
+    *numcolumns=10 + 224 + 9; // otherwise doesn't exist so don't need to set
   }
   else *numcolumns=0;
 
