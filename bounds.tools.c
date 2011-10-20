@@ -2,7 +2,7 @@
 #include "decs.h"
 
 
-#define ADJUSTFLUXCT 0 // whether to adjust fluxCT
+#define ADJUSTFLUXCT 1 // whether to adjust fluxCT
 
 // GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
 
@@ -2890,7 +2890,7 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
   }
 
   if( DOGRIDSECTIONING==0) {  //don't do anything if sectioning not done
-    return;
+    //return; //commented in order to fix the fields at inner radius
   }
 
   
@@ -2903,7 +2903,8 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
       dir = DIRFROMDIMEN( dimen, dirsign );
 
 
-      if(dir==X1DN && BCtype[X1DN]==FIXEDUSEPANALYTIC || dir==X1UP && BCtype[X1UP]==FIXEDUSEPANALYTIC){ // otherwise don't do
+      if(dir==X1DN && BCtype[X1DN]==FIXEDUSEPANALYTIC || dir==X1UP && BCtype[X1UP]==FIXEDUSEPANALYTIC 
+      || dir==X1DN && BCtype[X1DN]==NSSURFACE ){ // otherwise don't do
 
 	//if boundary is not on this processor, do not modify emf's
 	i = dofluxreg[ACTIVEREGION][dir];
