@@ -2,7 +2,7 @@
 #include "decs.h"
 
 
-#define ADJUSTFLUXCT 1 // whether to adjust fluxCT
+#define ADJUSTFLUXCT 0 // whether to adjust fluxCT
 
 // GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
 
@@ -2884,16 +2884,15 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
   int dimen;
   int dirsign;
   
-  if(ADJUSTFLUXCT==0){
+  if(ADJUSTFLUXCT==0 && DOADJUSTEMFS==0){
     // then no need to set EMF's to zero to maintain divb=0, although can choose to still set EMF's to constant along appropriate directions to maintain stationarity all the way up to including the boundary. Not sure why that would be important to maintain.
     return;
   }
 
-  if( DOGRIDSECTIONING==0) {  //don't do anything if sectioning not done
-    //return; //commented in order to fix the fields at inner radius
+  if( DOGRIDSECTIONING==0 && DOADJUSTEMFS == 0 ) {  //don't do anything if sectioning not done
+    return; //commented in order to fix the fields at inner radius
   }
 
-  
   if(BCtype[X1DN]==FIXEDUSEPANALYTIC || BCtype[X1UP]==FIXEDUSEPANALYTIC){
     // only do if fixing BCs, not (e.g.) outflowing
 

@@ -395,3 +395,6 @@ struct Ccoordparams {
 
 #define DO_OPTIMIZE_DISK_FLUX 0
 #define DO_NORMALIZE_FIELD 0
+
+#undef DOADJUSTEMFS 
+#define DOADJUSTEMFS 1

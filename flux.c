@@ -194,7 +194,7 @@ int fluxcalc(int stage,
     // User "boundary conditions" to modify EMFs before used
     //
     /////////////////////////////
-    if(DOGRIDSECTIONING){
+    if(DOGRIDSECTIONING || DOADJUSTEMFS){
       adjust_fluxctstag_emfs(pr,Nvec,ptrfluxvec);
     }
 
