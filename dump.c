@@ -780,12 +780,18 @@ void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 #endif
     +7*16 // Tud all 7 parts, all 4x4 terms (112)
     +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
+#if(DOAVGFLUX)  
     +9    // 9 fluxes
+#endif
     ;
 
 
   if(DOAVG2){
-    *numcolumns-=(224+9);
+    *numcolumns-=(224
+#if(DOAVGFLUX)
+		  +9
+#endif		  
+		  );
   }
 
   // Version number:
@@ -851,7 +857,10 @@ int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(tudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
 
+#if(DOAVGFLUX)
   myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
+#endif
+
 #endif
 
   return(0);
@@ -933,8 +942,9 @@ int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(atudtavg,i,j,k),0,NUMSTRESSTERMS,writebuf);
   // 112*2
 
+#if(DOAVGFLUX)
   myset(datatype,GLOBALMAC(fluxtavg,i,j,k),0,NUMFLUXES,writebuf);
-
+#endif
   // total=10+112*2=234 (2011-10-05: AT XXX: add 9 more?)
 
   return(0);
@@ -1248,6 +1258,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // F1
   //
+#if(N1>1)
   //rest-mass flux
   ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,RHO));
   myset(datatype,&ftemp,0,1,writebuf);
@@ -1259,6 +1270,12 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //ang. momentum flux
   ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,U3));
   myset(datatype,&ftemp,0,1,writebuf);
+#else
+  ftemp=0;
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+#endif
   //
   //
   ////////////////////
@@ -1267,6 +1284,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // F2
   //
+#if(N2>1)
   //rest-mass flux
   ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,RHO));
   myset(datatype,&ftemp,0,1,writebuf);
@@ -1278,6 +1296,12 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //ang. momentum flux
   ftemp=(float)(GLOBALMACP0A1(F2,i,j,k,U3));
   myset(datatype,&ftemp,0,1,writebuf);
+#else
+  ftemp=0;
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+#endif
   //
   //
   ////////////////////
@@ -1286,6 +1310,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // F3
   //
+#if(N3>1)
   //rest-mass flux
   ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,RHO));
   myset(datatype,&ftemp,0,1,writebuf);
@@ -1297,6 +1322,12 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //ang. momentum flux
   ftemp=(float)(GLOBALMACP0A1(F3,i,j,k,U3));
   myset(datatype,&ftemp,0,1,writebuf);
+#else
+  ftemp=0;
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf);
+#endif
   //
   //
   ////////////////////
