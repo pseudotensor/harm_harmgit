@@ -211,10 +211,14 @@ int bound_x1dn_nssurface(
 	  else{
 	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 	      PBOUNDLOOP(pliter,pl) {
-		if(    pl==B1 || pl==RHO 
+		if( pl==RHO 
 		    || pl==UU || pl==U1 
 		    || pl==U2 || pl==U3) { //XXX for now fix everything, worry about velocity later
 		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+		}
+		else if( pl == B1 ){
+		  //centered field; need to reconstruct from gdetB1:
+		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl); //0.5*(GLOBALMACP0A1(pstaganalytic,i,j,k,pl)+GLOBALMACP0A1(pstaganalytic,i+1,j,k,pl));
 		}
 	      }
 	    }

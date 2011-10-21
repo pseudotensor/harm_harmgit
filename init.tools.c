@@ -565,8 +565,11 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   rin=parms[0];
   rhodisk=parms[1];
 
-
+#if(NORMALIZEBCCELLS)
+  FULLLOOP {
+#else
   COMPZLOOP {
+#endif
     bl_coord_ijk_2(i, j, k, CENT, X, V);
     r=V[1];
     th=V[2];
@@ -597,7 +600,11 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   //
   ////////////
 
-  COMPZLOOP{
+#if(NORMALIZEBCCELLS)
+  FULLLOOP {
+#else
+  COMPZLOOP {
+#endif
     MACP0A1(prim,i,j,k,RHO) *= rhodisk/(*rhomax);
     MACP0A1(prim,i,j,k,UU)  *= rhodisk/(*rhomax);
   }
