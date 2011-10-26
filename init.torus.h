@@ -734,8 +734,9 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
     PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
   }
   
-
-  *whichvel=WHICHVEL;
+  pr[U1]=0.5; //set up non-zero radial velocity
+  
+  *whichvel=VEL3;
   *whichcoord=PRIMECOORDS;
   return(0);
   
