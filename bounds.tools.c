@@ -2911,10 +2911,14 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
       || dir==X1DN && BCtype[X1DN]==NSSURFACE ){ // otherwise don't do
 
 	//if boundary is not on this processor, do not modify emf's
-	i = dofluxreg[ACTIVEREGION][dir];
-	if( i < -MAXBND ) continue;
-	if( i > N1-1+MAXBND) continue;
-
+	if( DOGRIDSECTIONING ) {
+	  i = dofluxreg[ACTIVEREGION][dir];
+	  if( i < -MAXBND ) continue;
+	  if( i > N1-1+MAXBND) continue;
+	}
+	else if( totalsize[1] > 0 && mycpupos[1] != 0 ) {
+	  continue;
+	}
 
 	//the boundary is on the processor, so reset emf's to zero at the boundary
 	COMPFULLLOOPP1_23{
