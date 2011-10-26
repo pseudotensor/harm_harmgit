@@ -2897,7 +2897,8 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
     return; //commented in order to fix the fields at inner radius
   }
 
-  if(BCtype[X1DN]==FIXEDUSEPANALYTIC || BCtype[X1UP]==FIXEDUSEPANALYTIC){
+  if(BCtype[X1DN]==FIXEDUSEPANALYTIC || BCtype[X1UP]==FIXEDUSEPANALYTIC 
+  || BCtype[X1DN]==NSSURFACE){
     // only do if fixing BCs, not (e.g.) outflowing
 
     //x1-dimension

@@ -262,6 +262,13 @@ int vpot2field(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIF
     copy_3d_fieldonly_fullloop(pfield,pstag);
     // from now on, pfield is assumed to be at CENT
   }
+  
+#if(ANALYTICMEMORY) //Added by Sasha
+  // copy over initial solution as analytic solution
+  // NEEDED FOR BOUND in case uses panalytic
+  //NULL says don't do copy of those quantitites
+  copy_prim2panalytic(NULL,NULL,pstag,GLOBALPOINT(pstaganalytic),NULL,NULL,NULL,NULL);
+#endif
 
 
 

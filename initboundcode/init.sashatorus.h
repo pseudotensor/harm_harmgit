@@ -397,7 +397,7 @@ struct Ccoordparams {
 #define DO_NORMALIZE_FIELD 0
 
 #undef DOADJUSTEMFS 
-#define DOADJUSTEMFS 0
+#define DOADJUSTEMFS 1
 
 #undef NORMALIZEBCCELLS
 #define NORMALIZEBCCELLS 1

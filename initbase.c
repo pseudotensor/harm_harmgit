@@ -511,18 +511,20 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       ////////////  COMPFULLLOOP{
-
-      PLOOP(pliter,pl) MACP0A1(panalytic,i,j,k,pl)=MACP0A1(prim,i,j,k,pl);
-      if(FIELDSTAGMEM){
+      
+      if( NULL != panalytic && NULL != prim ) {
+	PLOOP(pliter,pl) MACP0A1(panalytic,i,j,k,pl)=MACP0A1(prim,i,j,k,pl);
+      }
+      if(FIELDSTAGMEM && NULL != pstaganalytic && NULL != pstag){
 	PLOOP(pliter,pl) MACP0A1(pstaganalytic,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
       }
-      if(HIGHERORDERMEM){
+      if(HIGHERORDERMEM && NULL != Bhatanalytic && NULL != Bhat){
 	PLOOP(pliter,pl) MACP0A1(Bhatanalytic,i,j,k,pl)=MACP0A1(Bhat,i,j,k,pl);
       }
 
     }
 
-    if(TRACKVPOT){
+    if(TRACKVPOT && NULL != vpotanalytic && NULL != vpot){
       /////////      COMPFULLLOOPP1{
       OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
