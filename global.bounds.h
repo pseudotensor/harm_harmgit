@@ -147,5 +147,5 @@ extern void adjust_fluxcttoth_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 extern void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
 extern void check_spc_singularities_user(void);
 
-
+extern FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart);
 

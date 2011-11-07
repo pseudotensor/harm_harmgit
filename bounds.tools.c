@@ -141,6 +141,9 @@ int bound_x1dn_nssurface(
 		       int *localenerpos
 		       )
 {
+  int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
+  FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart);
+  extern FTYPE global_vpar0;
   
   
   
@@ -196,10 +199,9 @@ int bound_x1dn_nssurface(
 	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  }
 	  
-	  //fix things: rho, u, B^1, Omega(XXX how?; set v = 0 for now)
+	  //fix things: rho, u, B^1, Omega_F
 	  if(ispstag){
-	    //note that this does not set B^r at r = R_in -- this has to be enforced through setting emf = 0
-	    //or sth similar
+	    //note that this does not set B^r at r = R_in -- this is enforced through setting emf = 0
 	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 	      PBOUNDLOOP(pliter,pl) {
 		if(pl==B1) {
@@ -220,6 +222,8 @@ int bound_x1dn_nssurface(
 		  //centered field; need to reconstruct from gdetB1:
 		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl); //0.5*(GLOBALMACP0A1(pstaganalytic,i,j,k,pl)+GLOBALMACP0A1(pstaganalytic,i+1,j,k,pl));
 		}
+		//set velocity to stationary axisymmetry
+		set_vel_stataxi( ptrgeom[U1], get_omegaf(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
 	      }
 	    }
 	  }//end else ispstag
@@ -2928,13 +2932,39 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 	  MACP1A1(fluxvec,1,i,j,k,B1) = 0.0; // always zero
 #endif
 #if(N2>1)
-	  MACP1A1(fluxvec,2,i,j,k,B1) = 0.0;
+	  MACP1A1(fluxvec,2,i,j,k,B1) = 0.0; // 
 	  MACP1A1(fluxvec,2,i,j,k,B2) = 0.0; // always zero
 #endif
+
 	}
       }
 
-      
+
+      if( dir==X1DN && BCtype[X1DN]==NSSURFACE ){
+
+	//if boundary is not on this processor, do not modify emf's
+	if( DOGRIDSECTIONING ) {
+	  i = dofluxreg[ACTIVEREGION][dir];
+	  if( i < -MAXBND ) continue;
+	  if( i > N1-1+MAXBND) continue;
+	}
+	else if( totalsize[1] > 0 && mycpupos[1] != 0 ) {
+	  continue;
+	}
+	
+	//the boundary is on the processor, so reset emf's to zero at the boundary
+	COMPFULLLOOPP1_23{
+	  // EMF[2]:
+  #if(N3>1)
+	  km1 = km1mac(k);
+	  km1 = max(kval, INFULL3);
+	  myB1 = 0.5 * ( GLOBALMACP0A1(pstaganalytic,i,j,k,B1)+GLOBALMACP0A1(pstaganalytic,i,j,km1,B1) );
+	  MACP1A1(fluxvec,3,i,j,k,B1) = - get_omegaf(t,dt,steppart) * myB1;   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+	  MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
+  #endif
+	}
+      }
+	
       if(dir==X1UP && BCtype[dir]==FIXEDUSEPANALYTIC){ // i.e. don't reset EMF2=0 for lower boundary since that corresponds to rotation
 
 	//if boundary is not on this processor, do not modify emf's
@@ -2965,6 +2995,59 @@ void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTY
 }
 
 
+FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart)
+{
+  extern FTYPE t_transition;
+  FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart );
+  
+  return( a * get_omegaf_prefactor( t_transition, t, dt, steppart ) );
+  
+}
+
+FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart )
+{
+  FTYPE sin1st, sin2nd, sin4th;
+  FTYPE tsteppart;
+  FTYPE prefact = 1.;     //no prefactor by default
+  
+  
+  if(TIMEORDER==2){ 
+    tsteppart = t + 0.5 * dt; //tsteppartf;  //time of the end of the current substep so that the boundaries are OK
+    
+    if( 1 == steppart ) {
+      tsteppart += 0.5 * dt;
+    }
+  }
+  else{
+    tsteppart=t;
+  }
+  
+  // trace back in time to get the advected value of Omega (assume moves at speed of light)
+  //if( 1 ) { 
+  //    coord( i, j, k, geom->p, X );
+  //   bl_coord( X, V );
+  //    r = V[1];
+  //    tsteppart -= (r-Rin);  //trace back in time to the star surface r = Rin
+  //}
+  
+  tsteppart -= 0.1;  //wait for deltat = 0.1 to avoid startup effects; assume dt < 0.1
+  
+  
+  if( tsteppart < 0 ) {
+    tsteppart = 0.0;
+  }
+  
+  
+  if( tsteppart < t_transition ) {  //smoothly switch on the rotation with time
+    sin1st = sin( (tsteppart/t_transition-1) * M_PI_2l );
+    sin2nd = sin1st * sin1st;
+    sin4th = sin2nd * sin2nd;
+    prefact = 1 - sin4th;
+  }
+  
+  return( prefact );
+  
+}
 
 
 
@@ -3165,4 +3248,128 @@ void check_spc_singularities_user(void)
   }// end over poles
 
 }
+
+
+int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
+{
+  int i,j,k;
+  int pliter, pliter2, pl, pl2;
+  FTYPE vcon[NDIM]; // coordinate basis vcon
+  extern FTYPE Omegastar;
+  extern FTYPE Bpole;
+  extern FTYPE Vpar;
+  FTYPE prnew[NPR];
+  FTYPE Bcon[NDIM];
+  extern int OBtopr_general(FTYPE omegaf,FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  extern int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  extern int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  extern int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr);
+  //FTYPE X[NDIM], V[NDIM], r;
+  extern FTYPE t_transition;
+  
+  PBOUNDLOOP(pliter,pl){
+    if(!isfinite(pr[pl]) && (pl!=U1 && pl!=U2 && pl!=U3)){ //check if any of the primitives other than velocity is a nan
+      //don't do anything
+      return(0);
+    }
+  }
+  
+  i=geom->i;
+  j=geom->j;
+  k=geom->k;
+  
+  
+  
+  Bcon[0]=0;
+  Bcon[1]=pr[B1];
+  Bcon[2]=pr[B2];
+  Bcon[3]=pr[B3];
+  
+  
+#if(EOMTYPE==EOMFFDE) // what would be done in force-free with no parallel velocity
+  
+  //	  dualfprintf(fail_file,"Omegastar=%21.15g dxdxp[3][3]=%21.15g B1=%21.15g B2=%21.15g B3=%21.15g\n",Omegastar,dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
+  
+  ///////////////////////////////
+  //
+  // new way to get velocity
+  // surface rotates with angular frequency Omegastar to observer at infinity
+  if(OBtopr_general(omegaf,Bcon,geom,prnew)>=1){
+    dualfprintf(fail_file, "OBtopr(bounds): space-like error in init_postfield()\n");
+    dualfprintf(fail_file,"Cannot continue without 4-velocity!\n");
+    failed=1;
+    return(1);
+  }
+  // assign answer
+  pr[U1]=prnew[U1];
+  pr[U2]=prnew[U2];
+  pr[U3]=prnew[U3];
+  
+  //	  if(t>1.9 && t<2.1){
+  //dualfprintf(fail_file,"t=%21.15g i=%d j=%d\n",t,i,j);
+  //  dualfprintf(fail_file,"newus: %21.15g %21.15g %21.15g\n",prnew[U1],prnew[U2],prnew[U3]);
+  //  dualfprintf(fail_file,"Omegastar'=%21.15g Bcon1=%21.15g Bcon2=%21.15g Bcon3=%21.15g\n",Omegastar/dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
+  // }
+  
+#endif
+  
+#if(0)
+  // set  	    ucon[TT,etc.]
+  vcon[RR]=0; // surface that completely dissipates normal direction momentum
+  vcon[TH]=0; // "" for this component
+  // below assumes no phi mixing with other directions in grid
+  vcon[PH]=omegaf; // surface rotates with angular frequency Omegastar to observer at infinity
+  
+  // get in terms of primitive velocity
+  MYFUN(vcon2pr(WHICHVEL,vcon,geom,pr),"bounds.ns.c:bound_prim_user()", "vcon2pr()", 1);
+#endif
+  
+#if(EOMTYPE!=EOMFFDE) 
+  
+  ///////////////////////////////
+  //
+  // new way to get velocity
+  // surface rotates with angular frequency Omegastar to observer at infinity
+  if(EOMTYPE==EOMCOLDGRMHD && MCOORD==KSCOORDS) {
+    if(OBtopr_general3(omegaf,vpar,Bcon,geom,prnew)>=1){
+      dualfprintf(fail_file, "OBtopr(bounds): space-like error in init_postfield()\n");
+      dualfprintf(fail_file,"Cannot continue without 4-velocity!\n");
+      failed=1;
+      return(1);
+    }
+  }
+  else{
+    if(OBtopr_general3p(omegaf,vpar,Bcon,geom,prnew)>=1){
+      dualfprintf(fail_file, "OBtopr(bounds): space-like error in init_postfield()\n");
+      dualfprintf(fail_file,"Cannot continue without 4-velocity!\n");
+      failed=1;
+      return(1);
+    }
+  }
+  // assign answer
+  pr[U1]=prnew[U1];
+  pr[U2]=prnew[U2];
+  pr[U3]=prnew[U3];
+  
+  //dualfprintf( fail_file, "Actual vpar = %21.15g\n", pr[U1] );
+  
+#endif
+  
+  
+  PBOUNDLOOP(pliter,pl){
+    if(!isfinite(pr[pl])){
+      dualfprintf(fail_file,"not finite in set_vel_stataxi: i=%d j=%d steppart=%d nstep=%ld p = %d omegaf = %g vpar = %g\n",i+startpos[1],j+startpos[2],steppart,nstep, geom->p, omegaf, vpar);
+      PBOUNDLOOP(pliter2,pl2) dualfprintf(fail_file,"prim[%d]=%21.15g\n",pl2,pr[pl2]);
+      fflush( stderr );
+      fflush( stdout );
+      myexit(2525);
+    }
+  }
+  
+  
+  
+  return(0);
+  
+}
+
 

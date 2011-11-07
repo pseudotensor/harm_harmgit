@@ -58,6 +58,8 @@ static FTYPE rhodisk;
 static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
 static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
 FTYPE torusrmax;   // AKMARK: torus pressure max
+FTYPE t_transition;
+FTYPE global_vpar0;
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
@@ -199,7 +201,11 @@ int post_init_specific_init(void)
   DOENERDIAG=0;
   //DOAVGDIAG=0;  //set here to override after restart
   //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
-
+  
+  t_transition = 1.;
+  global_vpar0 = 0.5;
+  
+  
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -306,8 +312,8 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==NSTAR)
-  //flat metric so a meaningless
-  a = 0.;
+  //flat metric so use this instead of Omega_F
+  a = 3./8.;  //Omega_F = a; phi-velocity: v^\phi = a
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif

@@ -211,7 +211,6 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
 
 
 
-
 // see interpline.c
 int apply_bc_line(int nprlocalstart, int nprlocalend, int*nprlocallist, int doinverse, int iterdir, int recontype, int bs, int be, FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM])
 {

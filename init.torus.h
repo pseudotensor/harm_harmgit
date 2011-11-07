@@ -711,6 +711,7 @@ int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int 
 
 int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag)
 {
+  extern FTYPE global_vpar0;
   FTYPE r, th, R;
   FTYPE X[NDIM], V[NDIM];
   FTYPE rho, u, om, ur, uh, up;
@@ -734,7 +735,7 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
     PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
   }
   
-  pr[U1]=0.5; //set up non-zero radial velocity
+  pr[U1]=global_vpar0; //set up non-zero radial velocity
   
   *whichvel=VEL3;
   *whichcoord=PRIMECOORDS;
