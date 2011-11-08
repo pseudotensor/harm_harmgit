@@ -115,7 +115,7 @@ int prepre_init_specific_init(void)
   
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
-  t_transition = 10.;
+  t_transition = 1.;
   global_vpar0 = 0.5;
 
   funreturn=user1_prepre_init_specific_init();
@@ -775,8 +775,9 @@ FTYPE vpotns_normalized( FTYPE r, FTYPE th )
 {
   FTYPE vpot;
   //normalized vector potential: total vpot through NS equals some constant order unity
-  vpot = 1 - fabs(cos(th));  //split-monopole
-  //vpot = 1 - cos(th);  //monopole
+  //vpot = 1 - fabs(cos(th));  //split-monopole
+  //vpot = 1 - cos(th);        //monopole
+  vpot = sin(th)/(r*r);        //dipole
   return(vpot);
 }
 
