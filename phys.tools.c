@@ -2860,6 +2860,10 @@ int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, 
   FTYPE vcon[NDIM];
   FTYPE v0oB;
 
+  //ensure outflow
+  if (Bccon[1]<0) {
+    v0 *= -1.;
+  }
   lower_vec(Bccon,geom,Bccov);
 
   Bsq_poloidal=0.0+SMALL;
