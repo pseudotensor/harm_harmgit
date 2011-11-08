@@ -3000,8 +3000,12 @@ FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart)
 {
   extern FTYPE t_transition;
   FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart );
+  FTYPE dxdxp[NDIM][NDIM];
+
+  //assume dxdxp[3][3] is independent of location
+  dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
   
-  return( a * get_omegaf_prefactor( t_transition, t, dt, steppart ) );
+  return( a * get_omegaf_prefactor( t_transition, t, dt, steppart ) / dxdxp[3][3] );
   
 }
 
@@ -3340,7 +3344,8 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
     }
   }
   else{
-    if(OBtopr_general3p(omegaf,vpar,Bcon,geom,prnew)>=1){
+    //if(OBtopr_general3p(omegaf,vpar,Bcon,geom,prnew)>=1){
+    if(OBtopr_general(omegaf,Bcon,geom,prnew)>=1){
       dualfprintf(fail_file, "OBtopr(bounds): space-like error in init_postfield()\n");
       dualfprintf(fail_file,"Cannot continue without 4-velocity!\n");
       failed=1;
