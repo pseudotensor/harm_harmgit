@@ -525,7 +525,7 @@ int init_global(void)
   BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
   UORHOLIMIT=1E3;
   RHOMIN = 1E-4;
-  UUMIN = 1E-6;
+  UUMIN = 0.2*1E-4;
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
