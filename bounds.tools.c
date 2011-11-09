@@ -46,7 +46,7 @@
 #if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEGAMMADEATH0 0
 #else
-#define POLEGAMMADEATH0 1
+#define POLEGAMMADEATH0 0
 #endif
 // maximum allowed Lorentz factor near the pole (set to something large that should be allowed by solution -- problem and grid dependent)
 //#define GAMMAPOLE (2.0)
