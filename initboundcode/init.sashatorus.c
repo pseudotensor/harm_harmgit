@@ -316,7 +316,7 @@ int init_grid(void)
   a = 0.;
 #elif(WHICHPROBLEM==NSTAR)
   //flat metric so use this instead of Omega_F
-  a = 3./8.;  //Omega_F = a; phi-velocity: v^\phi = a
+  a = 0.2;  //Omega_F = a; phi-velocity: v^\phi = a
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
