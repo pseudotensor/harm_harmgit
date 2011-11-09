@@ -742,7 +742,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDDZDR (.9) //asymptotic slope of field boundary (=dz/dr)
 #define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
 
-#define NSFIELDVAL (0.5)
+#define NSFIELDVAL (3*3*0.5)
 
 //#define FIELDTYPE DISKBHFIELD
 //#define FIELDTYPE DISKFIELD
@@ -777,7 +777,7 @@ FTYPE vpotns_normalized( FTYPE r, FTYPE th )
   //normalized vector potential: total vpot through NS equals some constant order unity
   //vpot = 1 - fabs(cos(th));  //split-monopole
   //vpot = 1 - cos(th);        //monopole
-  vpot = sin(th)/(r*r);        //dipole
+  vpot = sin(th)*sin(th)/r;        //dipole
   return(vpot);
 }
 
