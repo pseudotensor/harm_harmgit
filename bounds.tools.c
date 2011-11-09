@@ -166,6 +166,7 @@ int bound_x1dn_nssurface(
     struct of_geom *ptrgeom[NPR];
     struct of_geom rgeomdontuse[NPR];
     struct of_geom *ptrrgeom[NPR];
+    FTYPE V[NDIM], rV[NDIM];
     
     
     // assign memory
@@ -193,10 +194,19 @@ int bound_x1dn_nssurface(
 	  rk=k;
 	  
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+	  pl=B3; bl_coord_ijk(ri,rj,rk,dirprim[pl],rV);
 	  
 	  //outflow everything first
 	  LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
-	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	    PBOUNDLOOP(pliter,pl) {
+	      if (pl==B3) {
+		bl_coord_ijk(i,j,k,dirprim[pl],V);
+		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (rV[1]*rV[1])/(V[1]*V[1]);
+	      }
+	      else {
+		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	      }
+	    }
 	  }
 	  
 	  //fix things: rho, u, B^1, Omega_F
