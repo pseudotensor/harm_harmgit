@@ -32,7 +32,7 @@
 #if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEDEATH0 (N2BND==0 ? 0 : 2) 
 #else
-#define POLEDEATH0 (N2BND==0 ? 0 : 1) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
+#define POLEDEATH0 (N2BND==0 ? 0 : 2) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
 #endif
 //#define MAXPOLEDEATH N2BND // can't be larger than N2BND
 #define MAXPOLEDEATH (N2BND==0 ? 0 : 2) // can't be larger than N2BND
