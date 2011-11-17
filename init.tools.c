@@ -843,6 +843,9 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
 	if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
 	else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
       }
+      else if(atmospheretype==4){
+	prlocal[RHO] = RHOMIN*pow(r,-6.0);
+      }
     }
     else{
       prlocal[RHO] = RHOMIN*pow(r,-1.5);
@@ -855,7 +858,12 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
 
   if(DOEVOLVEUU){
     // Bondi-like atmosphere
-    prlocal[UU]  = UUMIN*pow(r,-2.5);
+    if( atmospheretype == 4) {
+      prlocal[UU]  = UUMIN*pow(r,-6.0);
+    }
+    else {
+      prlocal[UU]  = UUMIN*pow(r,-2.5);
+    }
   }
   else{
     prlocal[UU]  = 0;
