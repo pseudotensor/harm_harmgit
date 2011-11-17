@@ -399,6 +399,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==NSTAR)
   Rin = rin;
   Rout = 1e2;
+  R0 = 0.9;
 #endif
 
   /////////////////////
