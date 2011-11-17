@@ -130,6 +130,13 @@ ifeq ($(USEICCINTEL),1)
 MCC=mpicc
 COMP=icc
 endif
+ 
+ifeq ($(USENAU),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC=icc -lmpi
+COMP=icc -lmpi
+endif
 
 ifeq ($(USETACCRANGER),1)
 # don't have to avoid fork/system calls
@@ -482,6 +489,28 @@ LDFLAGSOTHER=
 endif
 
 
+ifeq ($(USENAU),1)
+
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+LONGDOUBLECOMMAND=-long_double
+
+
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
+
+CFLAGSPRENONPRECISE=-O2 -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+
+
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+
+LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGSOTHER=
+
+
+
+
+endif
 
 
 
