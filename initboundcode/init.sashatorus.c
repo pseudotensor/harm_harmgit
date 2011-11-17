@@ -1464,13 +1464,13 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM==THINTORUS){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){
     atmospheretype=2;
   }
-  else if(WHICHPROBLEM==THINTORUS){
+  else if(WHICHPROBLEM==NSTAR){
     atmospheretype=4;
   }
   else {
