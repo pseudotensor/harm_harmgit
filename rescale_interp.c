@@ -582,7 +582,99 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     myexit(100);
   }
 
+#elif(VARTOINTERP==PRIMTOINTERP_PSR)
+  
+  
+#if(DOEXTRAINTERP==0)
+  dualfprintf(fail_file,"Shouldn't be trying to do VARTOINTERP=%d if DOEXTRAINTERP=%d\n",VARTOINTERP,DOEXTRAINTERP);
+  myexit(1);
+#endif
+  
+  //compute jacobian
+  //dxdxprim(X, V, dxdxp);
+  dxdxprim_ijk( ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, dxdxp );
+  
+  if(which==1){ // before interpolation, get quantities to interpolate
+    //B[1] -> r**3*dxdxp[1,1]*B[1]
+    //B[3] -> r**2*B[3]
+    
+    // get relative 4-velocity
+#if(WHICHVEL!=VELREL4)
+#error Not implemented
+    pr2ucon(WHICHVEL,pr, ptrgeom ,ucon);
+    ucon2pr(VELREL4,ucon,ptrgeom,newpr);
+    uconrel[TT]=0.0;
+    SLOOPA(j) uconrel[j]=newpr[UU+j];
+#else
+    uconrel[TT]=0.0;
+    SLOOPA(j) uconrel[j]=pr[UU+j];
+#endif
+    
+    // get Lorentz factor w.r.t. relative 4-velocity
+    gamma_calc_fromuconrel(uconrel,ptrgeom,&gamma,&qsq);
+    
+    //Use newpr[] as a temporary array
+    //copies ONLY vars to be interpolated
+    PINTERPLOOP(pliter,pl) newpr[pl]=pr[pl];
+    
+    newpr[B1] = (r*r*r*dxdxp[1][1])*pr[B1];
+    newpr[B3] = (r*r)*pr[B3];
+    
+    // interpolate relative 3-velocity
+    for(pl=U1;pl<=U3;pl++) newpr[pl]= uconrel[pl-U1+1]/gamma;
+    
+    //Interpolate u^\theta and B^\theta instead of u^2 and B^2:
+    //newpr[U2] *= dxdxp[2][2];
+    //newpr[B2] *= dxdxp[2][2];
+    
+    // interpolate \gamma separately
+    newpr[VSQ]=gamma;
+    
+    //Finally copy from newpr[] to p2interp[], HOWEVER:
+    //make sure only change only those elements of p2interp
+    //that the PINTERPLOOP loops over, otherwise trouble!
+    PINTERPLOOP(pliter,pl) p2interp[pl]=newpr[pl];
+  }
+  else  if(which==-1){ // after interpolation
+    //B[1] -> B[1]/(r**3*dxdxp[1,1])
+    //B[3] -> B[3]/(r**2)
+    
+    // assign over everything, adjust velocity below
+    //Use newpr[] as a temporary array
+    for (pl=0; pl<NPR; pl++) newpr[pl]=p2interp[pl];
 
+    //return back to u^2 and B^2 from u^\theta and B^\theta
+    //newpr[U2] /= dxdxp[2][2];
+    //newpr[B2] /= dxdxp[2][2];
+    
+    // get relative 4-velocity from \gamma and relative 3-velocity
+    uconrel[TT]=0;
+    SLOOPA(j) uconrel[j]=newpr[UU+j]*newpr[VSQ];
+    
+    // get WHICHVEL velocity
+#if(WHICHVEL!=VELREL4)
+#error Not implemented
+    pr2ucon(VELREL4,pr, ptrgeom ,ucon);
+    ucon2pr(WHICHVEL,ucon,ptrgeom,newpr1);
+    SLOOPA(j) newpr[UU+j]=newpr1[UU+j];
+#else
+    SLOOPA(j) newpr[UU+j]=uconrel[j];
+#endif
+    
+    newpr[B1] = p2interp[B1]/(r*r*r*dxdxp[1][1]);
+    newpr[B3] = p2interp[B3]/(r*r);
+    
+    //Finally copy from newpr[] to p2interp[], HOWEVER:
+    //make sure only change only those elements of p2interp
+    //that the PINTERPLOOP loops over, otherwise trouble!
+    PINTERPLOOP(pliter,pl) pr[pl]=newpr[pl];
+    
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+  
 
 #elif(VARTOINTERP==PRIMTOINTERP_RAMESH1)
 
