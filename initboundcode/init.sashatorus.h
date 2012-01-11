@@ -224,12 +224,12 @@
 //#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles. // still seems wrong -- need to test.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
-//#define EOMTYPE EOMGRMHD
+#define EOMTYPE EOMGRMHD
 //#define EOMTYPE EOMFFDE
-#define EOMTYPE EOMCOLDGRMHD
+//#define EOMTYPE EOMCOLDGRMHD
 #define UTOPRIMTRYAGAIN 0
-//#define WHICHEOS IDEALGAS
-#define WHICHEOS COLDEOS
+#define WHICHEOS IDEALGAS
+//#define WHICHEOS COLDEOS
 
 #define CHECKONINVERSION 0 // can slow things down
 

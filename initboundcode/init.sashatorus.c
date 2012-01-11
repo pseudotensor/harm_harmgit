@@ -522,9 +522,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=10*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=10*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=10*1E3;
+  BSQORHOLIMIT=1*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=1*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1*1E2;
   RHOMIN = 1E-4;
   UUMIN = 0.2*1E-4;
 #elif(WHICHPROBLEM==GRBJET)
@@ -638,9 +638,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
-  BSQORHOLIMIT=10*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=10*1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=10*1E3;
+  BSQORHOLIMIT=1*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=1*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1*1E2;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
 #if(MCOORD==KSCOORDS)
@@ -743,7 +743,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 #define BHFIELDDZDR (.9) //asymptotic slope of field boundary (=dz/dr)
 #define BHFIELDLOGPOW (2.) //power to which the log prefactor is taken
 
-#define NSFIELDVAL (3.162277660168379332*2*3*3*0.5)
+#define NSFIELDVAL (1.5*3.162277660168379332*2*3*3*0.5)
 
 //#define FIELDTYPE DISKBHFIELD
 //#define FIELDTYPE DISKFIELD
