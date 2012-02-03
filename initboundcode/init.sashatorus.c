@@ -526,11 +526,11 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=1*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1*1E2; // was 1E3 but latest BC test had 1E4
   UORHOLIMIT=1*1E2;
   RHOMIN = 1E-4;
-  UUMIN = 0.2*1E-4;
+  UUMIN = 1E-4;
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -642,7 +642,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
-  BSQORHOLIMIT=1*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1*1E2; // was 1E3 but latest BC test had 1E4
   UORHOLIMIT=1*1E2;
 
