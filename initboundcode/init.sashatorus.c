@@ -208,6 +208,10 @@ int post_init_specific_init(void)
   t_transition = 1.;
   global_vpar0 = 0.;
   
+  BSQORHOLIMIT=5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E2;
+
   
   if(funreturn!=0) return(funreturn);
 
