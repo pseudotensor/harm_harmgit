@@ -732,7 +732,7 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
   set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
   
   //hack: make pressure constant everywhere
-  pr[1] = 1;
+  pr[1] = 1e-3;
 
   if(FLUXB==FLUXCTSTAG){
     PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
