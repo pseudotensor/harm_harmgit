@@ -38,11 +38,32 @@
 
 // Below WITHINACTIVESECTIONEXPAND1() applies to only active computed cells with +-1 boundary cells.  Used, e.g., for setting timestep since often don't want to set timestep in same region flux is computed since just happens that needed p_l and p_r for CT method where fluxes end up not used
 #if( DOGRIDSECTIONING )
+
 #define WITHINACTIVESECTIONEXPAND1(ri,rj,rk) ( ri >= enerposreg[ACTIVEREGION][X1DN]-SHIFT1 && ri <= enerposreg[ACTIVEREGION][X1UP]+SHIFT1 \
                                      && rj >= enerposreg[ACTIVEREGION][X2DN]-SHIFT2 && rj <= enerposreg[ACTIVEREGION][X2UP]+SHIFT2 \
                                      && rk >= enerposreg[ACTIVEREGION][X3DN]-SHIFT3 && rk <= enerposreg[ACTIVEREGION][X3UP]+SHIFT3 )
+
+#define LOOPWITHINACTIVESECTIONEXPAND1(ri,rj,rk) GENLOOP(ri,rj,rk,enerposreg[ACTIVEREGION][X1DN]-SHIFT1,enerposreg[ACTIVEREGION][X1UP]+SHIFT1,enerposreg[ACTIVEREGION][X2DN]-SHIFT2,enerposreg[ACTIVEREGION][X2UP]+SHIFT2,enerposreg[ACTIVEREGION][X3DN]-SHIFT3,enerposreg[ACTIVEREGION][X3UP]+SHIFT3)
+
+#define WITHINACTIVESECTIONEXPAND1IS (enerposreg[ACTIVEREGION][X1DN]-SHIFT1)
+#define WITHINACTIVESECTIONEXPAND1IE (enerposreg[ACTIVEREGION][X1UP]+SHIFT1)
+#define WITHINACTIVESECTIONEXPAND1JS (enerposreg[ACTIVEREGION][X2DN]-SHIFT2)
+#define WITHINACTIVESECTIONEXPAND1JE (enerposreg[ACTIVEREGION][X2UP]+SHIFT2)
+#define WITHINACTIVESECTIONEXPAND1KS (enerposreg[ACTIVEREGION][X3DN]-SHIFT3)
+#define WITHINACTIVESECTIONEXPAND1KE (enerposreg[ACTIVEREGION][X3UP]+SHIFT3)
+
 #else
+
 #define WITHINACTIVESECTIONEXPAND1(ri,rj,rk) (ri >=-SHIFT1 && ri<=N1-1+SHIFT1 && rj>=-SHIFT2 && rj<=N2-1+SHIFT2 && rk>=-SHIFT3 && rk<=N3-1+SHIFT3 )
+#define LOOPWITHINACTIVESECTIONEXPAND1(ri,rj,rk) GENLOOP(ri,rj,rk,-SHIFT1,N1-1+SHIFT1,-SHIFT2,N2-1+SHIFT2,-SHIFT3,N3-1+SHIFT3)
+
+#define WITHINACTIVESECTIONEXPAND1IS (-SHIFT1)
+#define WITHINACTIVESECTIONEXPAND1IE (N1-1+SHIFT1)
+#define WITHINACTIVESECTIONEXPAND1JS (-SHIFT2)
+#define WITHINACTIVESECTIONEXPAND1JE (N2-1+SHIFT2)
+#define WITHINACTIVESECTIONEXPAND1KS (-SHIFT3)
+#define WITHINACTIVESECTIONEXPAND1KE (N3-1+SHIFT3)
+
 #endif
 
 

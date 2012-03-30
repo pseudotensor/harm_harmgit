@@ -395,6 +395,9 @@
 // default HARM was using VERY local LAXF (only wavespeeds from primitives interpolated to the edge).
 #define STOREWAVESPEEDS 0
 
+// whether to compute per cell $dt$ by storing $dt$ per dimension and then computing minimum per cell rather than minimum per dimension.  Can give up to a factor of 3X improvement in speed (just changes effective Courant factor).
+#define PERCELLDT 1
+
 // whether to use stored wave speeds for flux calculation (allows one to store wave speeds for interp.c but use true VERYLOCALVCHAR that is vchar's estimated from boundary as in standard HARM -- rather than maximum from center zones as done by STORED version of VERYLOCALVCHAR)
 // silly choice would be 0 if VCHARTYPE=GLOBALVCHAR since interp.c doesn't use the stored wave speeds if this is the case.  So shouldn't store in this case since no point.
 #define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS) // choice really independent of STOREWAVESPEEDS, but generall normally want to couple them

@@ -31,6 +31,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
   void set_gcov_htmetric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
   void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
   void set_gcov_ksmetric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
+  void set_gcov_ks_jp1_metric         (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
   void set_gcov_ks_bh_tov_metric (FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
   extern void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
   extern void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
@@ -49,8 +50,11 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 
-
+  ////////////////////////////////////
+  //
   // determine if asking for metric now or in past
+  //
+  /////////////////////////////////////
   if(DOEVOLVEMETRIC){
 
     //    if(ptrgeom->i==7 && nstep==1084){
@@ -88,7 +92,11 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 
-
+  ///////////////////////////
+  //
+  // Determine current X and get g_{\mu\nu}
+  //
+  ///////////////////////////
   if(presenttime){
 
 
@@ -123,6 +131,9 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	}
 	else if(whichcoord==KSCOORDS){
 	  set_gcov_ksmetric(V, gcovinfunc, gcovpertinfunc);
+	}
+	else if(whichcoord==KS_JP1_COORDS){
+	  set_gcov_ks_jp1_metric(V, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==KS_BH_TOV_COORDS){
 	  set_gcov_ks_bh_tov_metric(X, V, gcovinfunc, gcovpertinfunc);
@@ -164,10 +175,16 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	myexit(26632);
       }
 
+      /////////////////////////
+      //
+      // Account for self-gravity term.  Add it to g_{\mu\nu}.
+      //
+      /////////////////////////
 #if(DOSELFGRAVVSR)
       if(
 	 whichcoord==BLCOORDS ||
 	 whichcoord==KSCOORDS ||
+	 whichcoord==KS_JP1_COORDS ||
 	 whichcoord==HTMETRIC ||
 	 whichcoord==HTMETRICACCURATE ||
 	 whichcoord==SPCMINKMETRIC
@@ -213,13 +230,17 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	//	}
 
 
+	////////////
+	//
 	// add self-gravity perturbation to metric
+	//
+	////////////
 	DLOOPA(j){
 	  gcovinfunc[GIND(j,j)] += GINDASSIGNFACTOR(j,j)*gcovselfpert[j];
 	  gcovpertinfunc[j]+=gcovselfpert[j]; // in this way the perturbation part is always resolved
 	  //	dualfprintf(fail_file,"gcovselfpert[%d]=%21.15g\n",j,gcovselfpert[j]);
 	}
-	if(whichcoord==KSCOORDS){
+	if(whichcoord==KSCOORDS || whichcoord==KS_JP1_COORDS){
 	  // KS-form has these terms
 	  gcovinfunc[GIND(TT,RR)] += GINDASSIGNFACTOR(TT,RR)*gcovselfpert[TT];
 	  gcovinfunc[GIND(RR,TT)] = gcovinfunc[GIND(TT,RR)];
@@ -239,7 +260,12 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
       //  DLOOP(j,k) { fprintf(stderr,"1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
+
+      ///////////
+      //
       // whether to convert to prim coords
+      //
+      ///////////
       if(getprim==1){
 	// all the above are analytic, so have to convert to prim coords.
 	gcov2gcovprim(ptrgeom, X, V, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
@@ -255,8 +281,12 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
   }
   else{
 
+    //////////////
+    //
     // then not present time, and assume past time metric stored, so recover
     // also assume never ask for past time at arbitrary location, checked previously
+    //
+    //////////////
 
     if(ptrgeom->p!=NOWHERE){
 
@@ -456,15 +486,6 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       else matrix_inverse_metric(whichcoord,gcov,gcon);
 
     }
-    else if(whichcoord==KS_BH_TOV_COORDS){
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==KS_TOV_COORDS){
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==BL_TOV_COORDS){
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
     else if(whichcoord==KSCOORDS){
       //dualfprintf(fail_file,"mi in KSCOORDS\n");
       //DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);
@@ -482,27 +503,7 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       // since don't have gcon and want to keep things simple by only having to specify gcov 
       else matrix_inverse_metric(whichcoord,gcov,gcon);
     }
-    else if(whichcoord==HTMETRIC){
-      // do not have analytic gcon, so invert numerically
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==HTMETRICACCURATE){
-      // do not have analytic gcon, so invert numerically
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==CARTMINKMETRIC){
-      // do not have analytic gcon, so invert numerically
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==UNIGRAVITY){
-      // do not have analytic gcon, so invert numerically
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==CYLMINKMETRIC){
-      // do not have analytic gcon, so invert numerically
-      matrix_inverse_metric(whichcoord,gcov,gcon);
-    }
-    else if(whichcoord==SPCMINKMETRIC){
+    else if(whichcoord==KS_JP1_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==CARTMINKMETRIC || whichcoord==UNIGRAVITY || whichcoord==CYLMINKMETRIC || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS){
       // do not have analytic gcon, so invert numerically
       matrix_inverse_metric(whichcoord,gcov,gcon);
     }
@@ -532,62 +533,27 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
 	       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
+  void set_conn_general(FTYPE *X, struct of_geom *geom,
+			FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+  void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
+			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
-			      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_spcminkmetric(FTYPE *X, struct of_geom *geom,
 			      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
 			       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_unigravity(FTYPE *X, struct of_geom *geom,
-			   FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_htmetric(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_htmetric_accurate(FTYPE *X, struct of_geom *geom,
-				  FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_ks_bh_tov_metric(FTYPE *X, struct of_geom *geom,
-				 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_ks_tov_metric(FTYPE *X, struct of_geom *geom,
-			      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_bl_tov_metric(FTYPE *X, struct of_geom *geom,
-			      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  void set_conn_blmetric(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+  
 
-
-  if(whichcoord==BLCOORDS){
-    set_conn_blmetric(X,geom,conn,conn2);
+  if(whichcoord==KS_JP1_COORDS || whichcoord==BLCOORDS || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==UNIGRAVITY || whichcoord==SPCMINKMETRIC){
+    set_conn_general(X,geom,conn,conn2);
   }
   else if(whichcoord==KSCOORDS){
     set_conn_ksmetric(X,geom,conn,conn2);
   }
-  else if(whichcoord==KS_BH_TOV_COORDS){
-    set_conn_ks_bh_tov_metric(X,geom,conn,conn2);
-  }
-  else if(whichcoord==KS_TOV_COORDS){
-    set_conn_ks_tov_metric(X,geom,conn,conn2);
-  }
-  else if(whichcoord==BL_TOV_COORDS){
-    set_conn_bl_tov_metric(X,geom,conn,conn2);
-  }
-  else if(whichcoord==HTMETRIC){
-    set_conn_htmetric(X,geom,conn,conn2);
-  }
-  else if(whichcoord==HTMETRICACCURATE){
-    set_conn_htmetric_accurate(X,geom,conn,conn2);
-  }
-  else if(whichcoord==CARTMINKMETRIC){
-    set_conn_cartminkmetric(X,geom,conn,conn2);
-  }
-  else if(whichcoord==UNIGRAVITY){
-    set_conn_unigravity(X,geom,conn,conn2);
-  }
   else if(whichcoord==CYLMINKMETRIC){
     set_conn_cylminkmetric(X,geom,conn,conn2);
   }
-  else if(whichcoord==SPCMINKMETRIC){
-    set_conn_spcminkmetric(X,geom,conn,conn2);
+  else if(whichcoord==CARTMINKMETRIC){
+    set_conn_cartminkmetric(X,geom,conn,conn2);
   }
   else{
     dualfprintf(fail_file,"conn_func(): no such whichcoord=%d\n",whichcoord);
@@ -1297,6 +1263,8 @@ void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
+
+
 // (~t,r,\theta,~\phi)
 void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
@@ -1408,6 +1376,88 @@ void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   //}
 
 }
+
+
+// Johannsen & Psaltis 2011 metric
+void set_gcov_ks_jp1_metric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
+{
+  FTYPE r,th;
+  FTYPE mysin(FTYPE th);
+  FTYPE mycos(FTYPE th);
+  FTYPE MSQ;
+  FTYPE phi;
+  int j,k;
+  void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert);
+  FTYPE gcovksjp1pert[SYMMATRIXNDIM];
+  FTYPE gcovbhks[SYMMATRIXNDIM],gcovbhkspert[NDIM];
+  FTYPE r2small;
+  FTYPE disc;
+#if(SMOOTHSING)
+  FTYPE signr,rsmooth;
+#endif
+  FTYPE rsharp;
+
+
+#if(0)
+  // debug test
+  DLOOP(j,k) gcov[GIND(j,k)] = 0.0;
+  DLOOP(j,k) gcovksjp1pert[GIND(j,k)] = 0.0;
+  DLOOPA(j,j) gcov[GIND(j,j)] = 1.0;
+  gcovpert[TT] gcov[GIND(TT,TT)]=-1.0;
+  DLOOPA(j)  gcovpert[j]= 0.0;
+#endif
+  
+
+  r = rsharp = V[1];
+#if(SMOOTHSING)
+  signr=mysign(r);
+  rsmooth = signr*(fabs(r)+SMALL+drsing);
+  r = rsmooth;
+  r2small = r*r;
+#else
+  r2small = r*r + SMALL;
+#endif
+
+
+  th=V[2];
+
+
+  // Difference between Johannsen & Psaltis 2011 metric (/data/jon/mathematica/mathematica_merged/timj_kerrschild_form2.nb)
+  // See also checkinghowtimjmetricisdifferent.nb for printing of the below
+  // only non-zero and non-repeated (due to symmetry) terms:
+  DLOOP(j,k) gcovksjp1pert[GIND(j,k)] = 0.0;
+
+  gcovksjp1pert[GIND(0,0)]=-4.*EP3*r*(2.*r*(-2.*MBH + r) + pow (a,2) + cos (2.*th)*pow (a,2))*pow (MBH,3)*pow (pow (a,2) + cos (2.*th)*pow (a,2) + 2.*pow (r,2),-3);
+
+  gcovksjp1pert[GIND(0,1)]=2.*EP3*pow (MBH,4)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3);
+
+  gcovksjp1pert[GIND(1,1)]=-1. - 4.*pow (MBH,2)*pow (r,2)*(EP3*r*pow (MBH,3) + pow (r,4) + 2.*pow (a,2)*pow (r,2)*pow (cos (th),2) + pow (a,4)*pow (cos (th),4))*pow (r*(-2.*MBH + r) + pow (a,2),-1)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3) - 2.*MBH*r*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-1) + (EP3*r*pow (MBH,3)*(pow (r,2) + pow (a,2)*pow (cos (th),2)) + pow (pow (r,2) + pow (a,2)*pow (cos (th),2),3))*pow ((r*(-2.*MBH + r) + pow (a,2))*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2) + EP3*r*pow (a,2)*pow (MBH,3)*pow (sin (th),2),-1) + pow (a,2)*pow (r*(-2.*MBH + r) + pow (a,2),-2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2)*(-4.*EP3*pow (MBH,5)*pow (r,3) - 4.*pow (MBH,2)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2) + (pow (a,2) + pow (r,2))*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),3) + MBH*r*pow (a,2)*(2.*EP3*r*pow (MBH,3) + EP3*pow (MBH,2)*(pow (r,2) + pow (a,2)*pow (cos (th),2)) + 2.*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2))*pow (sin (th),2));
+
+  gcovksjp1pert[GIND(0,3)]=-2.*a*EP3*pow (MBH,4)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2);
+
+  gcovksjp1pert[GIND(1,3)]=0.125*a*EP3*r*pow (MBH,3)*(-4.*r*(2.*MBH + r)*pow (a,2) + 4.*r*(2.*MBH + r)*cos (2.*th)*pow (a,2) - 1.*pow (a,4) + cos (4.*th)*pow (a,4) + 32.*pow (MBH,2)*pow (r,2))*pow (r*(-2.*MBH + r) + pow (a,2),-1)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2);
+
+  gcovksjp1pert[GIND(3,3)]=4.*EP3*r*pow (a,2)*(2.*r*(2.*MBH + r) + pow (a,2) + cos (2.*th)*pow (a,2))*pow (MBH,3)*pow (pow (a,2) + cos (2.*th)*pow (a,2) + 2.*pow (r,2),-3)*pow (sin (th),4);
+
+
+
+  // get black hole KS metric
+  set_gcov_ksmetric(V, gcovbhks, gcovbhkspert);
+
+
+  // default is KS BH metric
+  // and add "perturbation" that is JP1 metric
+  // NOTEMARK: when using DLOOP(j,k) over GIND(j,k) for metric, *cannot* use += since that would go over same value twice!
+  DLOOP(j,k) gcov[GIND(j,k)] = gcovbhks[GIND(j,k)] + gcovksjp1pert[GIND(j,k)];
+  DLOOPA(j) gcovpert[j] = gcovbhkspert[j] + gcovksjp1pert[GIND(j,j)];
+  // i.e. JP1 terms are deviation from Kerr.  NOTEMARK: For g_{rr}, this adds and subtracts unity, so not acurate machine accurate.  But that's ok since applications with this metric are always for near the BH.
+
+
+
+}
+
+
+
 
 
 // (t,r,\theta,\phi)
@@ -1687,9 +1737,21 @@ void set_gcon_blmetric(FTYPE *V, FTYPE *gcon)
 
 ///////////////////////////
 //
-// CONNECTIONS (analytic or numerical)
+// CONNECTIONS (numerical or analytic)
 //
 ///////////////////////////
+
+
+void set_conn_general(FTYPE *X, struct of_geom *geom,
+			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+{
+  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
+			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+
+  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
+}
+
+
 
 void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
 			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
@@ -1766,43 +1828,7 @@ void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
 
 }
 
-void set_conn_unigravity(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
 
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-}
-
-
-void set_conn_spcminkmetric(FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-}
-
-
-void set_conn_htmetric(FTYPE *X, struct of_geom *geom,
-		       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-}
-
-void set_conn_htmetric_accurate(FTYPE *X, struct of_geom *geom,
-				FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-}
 
 void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
 		       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
@@ -1838,51 +1864,6 @@ void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
   //mks_conn_func(X,geom,conn,conn2);
   */
 
-}
-
-
-void set_conn_ks_bh_tov_metric(FTYPE *X, struct of_geom *geom,
-			       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-  
-
-}
-
-
-void set_conn_ks_tov_metric(FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-  
-
-}
-
-void set_conn_bl_tov_metric(FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-  
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
-  
-
-}
-
-
-void set_conn_blmetric(FTYPE *X, struct of_geom *geom,
-		       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
-{
-  void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
-
-  conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
 }
 
 

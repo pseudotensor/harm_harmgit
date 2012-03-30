@@ -317,3 +317,51 @@ Scratch:
 tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
 ~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
 
+
+
+
+
+
+#######
+# to clean stderr files:
+# find . -maxdepth 1 -name 'stderr_ranch*' -exec rm {} \; ; find . -maxdepth 1 -name 'stdout_ranch*' -exec rm {} \;  ;  find . -maxdepth 1 -name 'stdfull_ranch*' -exec rm {} \;  ;  find . -maxdepth 1 -name 'filestocopy.txt.*' -exec rm {} \;
+
+
+dirorig=`pwd`
+streams=2
+buffers=2000
+thesubdirname="dumps"
+counterbad=0
+
+#~/bin/bbcp -z -s $streams -b +$buffers -a -k -f -P 5 -V -l $dirorig/stderr_ranch.$thedir.$thesubdirname.$counterbad -T 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -I $dirorig/filestocopy.txt.$thedir.$thesubdirname tg802609@ranch.tacc.utexas.edu:$thedir/$thesubdirname/ &> $dirorig/stdfull_ranch.$thedir.$thesubdirname.$counterbad
+
+
+
+
+
+# bbcp.orig with recursive
+bbcp_CONFIGFN="~/.bbcp.cf"
+cd /lustre/scratch/jmckinne/
+dirorig=`pwd`
+thedir="thickdiskr3nextv"
+thesubdirname="dumps"
+cd $thedir/$thesubdirname/
+fulllist="$dirorig/files.test"
+#ls * > $fulllist
+#bufferoptions="-b +800"
+bufferoptions=""
+#streamoptions="-s 20"
+streamoptions=""
+options="-a -k -z -r -f -P 5 -V -C $dirorig/.bbcp.cf $bufferoptions $streamoptions"
+erroptions="-l $dirorig/stderr.test"
+#whichbbcp="bbcp.orig"
+whichbbcp="bbcp.v5"
+#connectoptions="-T 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/$whichbbcp -C ~/.bbcp.cf' -S 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/$whichbbcp -C ~/.bbcp.cf'"
+connectoptions=""
+destination="tg802609@ranch.tacc.utexas.edu:$thedir/$thesubdirname/"
+~/bin/$whichbbcp $options $erroptions $connectoptions * $destination
+#~/bin/$whichbbcp $options $erroptions $connectoptions -I $fulllist $destination
+cd $dirorig
+
+
+

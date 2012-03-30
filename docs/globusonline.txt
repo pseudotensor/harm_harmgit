@@ -1,0 +1,21 @@
+https://www.globusonline.org/
+
+
+###################################
+# from ki-jmck to Nautilus:
+# this unfortunately puts jmckinne into jmckinne.
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data2/jmckinne/ xsede#nautilus:/lustre/medusa/jmckinne/data2/jmckinne/ &> data2.globusonline.tryagain.errors_rev3.txt
+
+and:
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data1/jmckinne/ xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/ &> data1.globusonline.tryagain.errors_rev2.txt
+
+
+# but should have done instead:
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data2/jmckinne xsede#nautilus:/lustre/medusa/jmckinne/data2/ &> data2.globusonline.tryagain.errors_rev3.txt
+
+
+
+###################################
+# from Nautilus to ki-jmck:
+# with proper directory structure so sasha2b put into directory rather than recreating jmckinne again
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/sasha2b pseudotensor#ki-jmck:/data1/jmckinne/

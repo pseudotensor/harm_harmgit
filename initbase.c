@@ -203,7 +203,7 @@ int init(int *argc, char **argv[])
 	if(DOSELFGRAVVSR){
 	  trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
 	  // if box_grid needs to change, is done inside below function
-	  compute_new_metric_and_prims(0,MBH, a, QBH, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 	  trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
 	}
       }
@@ -454,7 +454,7 @@ int init(int *argc, char **argv[])
     // don't want conservatives or primitives to change, just compute metric
     if(DOSELFGRAVVSR){
       trifprintf("new metric with self-gravity\n");
-	  compute_new_metric_and_prims(0,MBH, a, QBH, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
       trifprintf("done with computing new metric with self-gravity dt=%21.15g\n",dt);
     }
 
@@ -1032,6 +1032,7 @@ int init_defgrid(void)
   a=a0;
   MBH=MBH0;
   QBH=QBH0;
+  EP3=EP30;
 
 
   return(0);
@@ -1355,6 +1356,7 @@ int init_defconsts(void)
   a0=0.0;
   MBH0=1.0;
   QBH0=0.0;
+  EP30=0.0;
   Mfactor=1.0;
   Jfactor=1.0;
   rhofactor=1.0;
@@ -1428,7 +1430,7 @@ int set_box_grid_parameters(void)
   // need to recompute horizon-related quantities if horizon is growing due to accretion
   if(ISBLACKHOLEMCOORD(MCOORD)){
     find_horizon(0);
-    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g\n",Rhor,Risco,MBH,a,QBH);
+    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3);
   }
   else{
     horizoni=horizoncpupos1=0;
@@ -1678,7 +1680,7 @@ void check_bnd_num(void)
   }
 
   if(GDETVOLDIFF){
-    if(     (MCOORD==BLCOORDS || MCOORD==KSCOORDS || MCOORD==HTMETRIC || MCOORD==HTMETRICACCURATE || MCOORD==SPCMINKMETRIC) ){
+    if(ISSPCMCOORDNATIVE(MCOORD)){
       // then fine
     }
     else{

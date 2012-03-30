@@ -247,17 +247,18 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
 // whichcoordin -> whichcoordout
 int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE *ucon)
 {
+  // GODMARK: need transformation from BL to KS_JP1 for EP3!=0
   if(whichcoordin==whichcoordout){// then no transformation
     return(0);
   }
-  else if((whichcoordin==BLCOORDS)&&(whichcoordout==KSCOORDS)){
+  else if((whichcoordin==BLCOORDS)&&(whichcoordout==KSCOORDS||whichcoordout==KS_JP1_COORDS)){
     bltoks(ii,jj,kk ,loc,ucon);    
   }
-  else if((whichcoordin==KSCOORDS)&&(whichcoordout==BLCOORDS)){
+  else if((whichcoordin==KSCOORDS || whichcoordin==KS_JP1_COORDS)&&(whichcoordout==BLCOORDS)){
     kstobl(ii,jj,kk ,loc,ucon);    
   }
   else{
-    dualfprintf(fail_file,"No such transformation: %d -> %d\n",whichcoordin,whichcoordout);
+    dualfprintf(fail_file,"HARDFAIL: No such transformation: %d -> %d\n",whichcoordin,whichcoordout);
     myexit(1);
   }
 

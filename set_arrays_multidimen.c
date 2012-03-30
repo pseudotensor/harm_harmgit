@@ -170,6 +170,14 @@ void set_arrays_multidimen()
 #endif
 
 
+#if(PERCELLDT)
+  GLOBALPOINT(dtijk) = (FTYPE PTRMACP0A1(dtijk,N1M,N2M,N3M,COMPDIM)) (&(BASEMACP0A1(dtijk,N1BND,N2BND,N3BND,-1))); // so access like dtijk[1,2,3]
+  FULLLOOP for(l=1;l<=COMPDIM;l++){
+    GLOBALMACP0A1(dtijk,i,j,k,l) = valueinit;
+  }
+#endif
+
+
 #if(STOREWAVESPEEDS>0)
   GLOBALPOINT(wspeedtemp) = (FTYPE PTRMACP0A1(wspeedtemp,N1M,N2M,N3M,NUMCS)) (&(BASEMACP0A1(wspeedtemp,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(wspeed) = (FTYPE PTRMACP2A0(wspeed,FILL,NUMCS,N1M,N2M,N3M)) (&(BASEMACP2A0(wspeed,-1,0,N1BND,N2BND,N3BND))); // shifted so wspeed[1,2,3] accesses the memory

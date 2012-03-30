@@ -203,6 +203,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
     // must be same as in dxdxp()
+    // GODMARK: Note njet here is overwritten by njet later, but could have been different values if setup variable names differently.
     if(0){ // first attempt
       r1jet=2.8;
       njet=0.3;
@@ -236,6 +237,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // for theta2
     h0=0.3; // inner-radial "hslope" for theta2
+    // GODMARK: Note that this overwrites above njet!
     njet=1.0; // power \theta_j \propto r^{-njet}
 
 
@@ -1145,6 +1147,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 #else
     // RAMESH BASED
+    // myhslope here is h2 in MCAF paper
+    // h0 here is h3 in MCAF paper
     myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
 
     // determine theta2
@@ -1160,6 +1164,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // determine theta0
     // JET3COORDS-based:
     myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    // myhslope here is h0 in MCAF paper
     th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 
     // determine switches (only function of radius and not x2 or theta)

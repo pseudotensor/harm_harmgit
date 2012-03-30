@@ -15,6 +15,8 @@
 #define KS_BH_TOV_COORDS 8 // KS BH+TOV mixed metric
 #define KS_TOV_COORDS 9 // KS TOV metric
 #define BL_TOV_COORDS 10 // BL TOV metric
+#define KS_JP1_COORDS 11 // KS Johannsen & Psaltis metric 2011
+
 
 // 0 : Boyer-Lindquist (based on r theta)
 // 1 : Kerr-Schild (based on bl coords)
@@ -24,12 +26,12 @@
 // if add new metric, identify base coordinate system is SPC or not in below macros:
 
 // check for metric.c on whether using spherical polar grid so can identify polar axis and r=0 singularities
-#define ISSPCMCOORDNATIVE(whichcoord) (whichcoord==BLCOORDS || whichcoord==KSCOORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS )
+#define ISSPCMCOORDNATIVE(whichcoord) (whichcoord==BLCOORDS || whichcoord==KSCOORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==KS_JP1_COORDS )
 
 #define ISSPCMCOORD(whichcoord) (whichcoord==PRIMECOORDS && ISSPCMCOORDNATIVE(MCOORD) || ISSPCMCOORDNATIVE(whichcoord))
 
 
 // black hole metrics
-#define ISBLACKHOLEMCOORD(whichcoord) (whichcoord==BLCOORDS ||whichcoord==KSCOORDS ||whichcoord==KS_BH_TOV_COORDS ||whichcoord==KS_TOV_COORDS ||whichcoord==BL_TOV_COORDS)
+#define ISBLACKHOLEMCOORD(whichcoord) (whichcoord==BLCOORDS ||whichcoord==KSCOORDS ||whichcoord==KS_BH_TOV_COORDS ||whichcoord==KS_TOV_COORDS ||whichcoord==BL_TOV_COORDS  || whichcoord==KS_JP1_COORDS)
 
 

@@ -149,6 +149,9 @@ int fluxcalc(int stage,
 
 
 
+
+
+
 #if(0)
   // DEBUG:
   if(Nvec[1]>1) FULLLOOP PLOOP(pliter,pl) MACP1A1(fluxvec,1,i,j,k,pl)+=MACP1A1(fluxvecEM,1,i,j,k,pl);
@@ -637,7 +640,6 @@ int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fl
 int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop)
 {
   int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata );
-  int i,j,k,pl,pliter;
   int dir;
   int idel, jdel, kdel, face;
   int is, ie, js, je, ks, ke;
@@ -684,6 +686,87 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
     trifprintf("%d",dir);
 #endif
   }// end DIMENLOOP(dir)
+
+
+
+
+
+
+  ///////////////////
+  //
+  // set per-cell minimum for dt
+  //
+  ///////////////////
+  if(PERCELLDT){
+    FTYPE ndtveclocal[NDIM];
+
+    {  
+      int dimen;
+      // set dimension having no influence on dt by default
+      DIMENLOOP(dimen){
+ 	*(ndtvec[dimen])=BIG;
+	ndtveclocal[dimen]=BIG;
+      }
+    }
+
+    // whehter dimension is relevant
+    int doingdimen[NDIM];
+    doingdimen[1]=N1NOT1;
+    doingdimen[2]=N2NOT1;
+    doingdimen[3]=N3NOT1;
+
+#pragma omp parallel
+    {
+      int i,j,k;
+      FTYPE wavedt;
+      int dimen;
+
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(WITHINACTIVESECTIONEXPAND1IS,WITHINACTIVESECTIONEXPAND1IE,WITHINACTIVESECTIONEXPAND1JS,WITHINACTIVESECTIONEXPAND1JE,WITHINACTIVESECTIONEXPAND1KS,WITHINACTIVESECTIONEXPAND1KE);
+    
+
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+	
+	// get dt for each dimension at each grid point -- but only if dimension is relevant (otherwise stays as BIG and doesn't affect wavedt)
+	DIMENLOOP(dimen) if(doingdimen[dimen]) ndtveclocal[dimen]=GLOBALMACP0A1(dtijk,i,j,k,dimen);
+	
+	// set local per-cell dt
+	// sum of inverses is proper for unsplit scheme based upon split interpolations/fluxes.
+	wavedt = 1. / (1. / ndtveclocal[1] + 1. / ndtveclocal[2] + 1. / ndtveclocal[3]);
+	
+	// use dimen=1 to store result
+	dimen=1;
+#pragma omp critical
+	{
+	  if (wavedt < *(ndtvec[dimen]) ){
+	    *ndtvec[dimen] = wavedt;
+	    // below are global so can report when other dt's are reported in advance.c
+	    waveglobaldti[dimen]=i;
+	    waveglobaldtj[dimen]=j;
+	    waveglobaldtk[dimen]=k;
+	  }
+	}// end critical region
+      }//end over 3dloopblock
+    }// end over parallel region
+
+    // store result in all of ndt1,ndt2,ndt3 so have result no matter how many dimensions working on, and just use correctly later.
+    {
+      int dimen;
+      DIMENLOOP(dimen){
+	if(doingdimen[dimen]){
+	  *ndtvec[dimen]=*ndtvec[1];
+	  waveglobaldti[dimen]=waveglobaldti[1];
+	  waveglobaldtj[dimen]=waveglobaldtj[1];
+	  waveglobaldtk[dimen]=waveglobaldtk[1];
+	}
+      }
+    }
+
+
+  }// end iver doing PERCELLDT
+
+
 
   return(0);
 
@@ -1079,22 +1162,38 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
 	//#endif
 
-	// only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-	// Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-	if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
-	  dtij = cour * dx[dir] / ctop;
+
+	////////////////////////
+	// set dt for this cell in this direction
+	dtij = cour * dx[dir] / ctop;
+
+
+	/////////////////////////////////
+	//
+	// save minimum dt
+	//
+	/////////////////////////////////
+	if(PERCELLDT==0){
+	  // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 
 #pragma omp critical
-	  {
-	    if (dtij < *ndt){
-	      *ndt = dtij;
-	      // below are global so can report when other dt's are reported in advance.c
-	      waveglobaldti[dir]=i;
-	      waveglobaldtj[dir]=j;
-	      waveglobaldtk[dir]=k;
-	    }
-	  }// end critical region
-	}// end if within dt-setting section
+	    {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
+	      if (dtij < *ndt){
+		*ndt = dtij;
+		// below are global so can report when other dt's are reported in advance.c
+		waveglobaldti[dir]=i;
+		waveglobaldtj[dir]=j;
+		waveglobaldtk[dir]=k;
+	      }
+	    }// end critical region
+	  }// end if within dt-setting section
+	}
+	else{
+	  GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
+	}
+
 
 
 
@@ -1332,22 +1431,39 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 	//    // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
 	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
 	//#endif
-	// only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-	// Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-	if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
-	  dtij = cour * dx[dir] / ctop;
 
+
+	////////////////////////
+	// set dt for this cell in this direction
+	dtij = cour * dx[dir] / ctop;
+
+
+	/////////////////////////////////
+	//
+	// save minimum dt
+	//
+	/////////////////////////////////
+	if(PERCELLDT==0){
+
+	  // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 #pragma omp critical
-	  {
-	    if (dtij < *ndt){
-	      *ndt = dtij;
-	      // below are global so can report when other dt's are reported in advance.c
-	      waveglobaldti[dir]=i;
-	      waveglobaldtj[dir]=j;
-	      waveglobaldtk[dir]=k;
-	    }
-	  }// end critical region
-	}// end if within dt-setting section
+	    {
+	      if (dtij < *ndt){
+		*ndt = dtij;
+		// below are global so can report when other dt's are reported in advance.c
+		waveglobaldti[dir]=i;
+		waveglobaldtj[dir]=j;
+		waveglobaldtk[dir]=k;
+	      }
+	    }// end critical region
+	  }// end if within dt-setting section
+	}
+	else{
+	  GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
+	}
+
 
 
       }// end if doing computing using both left+right states (required also for ctop to exist)

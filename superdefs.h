@@ -5,17 +5,17 @@
 
 to add a new variable:
 
-0) global.h: setup macro to turn on/off memory (BASEMAC??(name)) below.
+0) global.h: If macro type (before/after variable relative to 3D array indices), then setup macro to turn on/off memory (BASEMAC??(name)) to be used below.
 
 1) Add a variable called BASEMAC???(name) that is the *definition* of the memory space
 
-2) Lower down in this file, define a pointer of the same type
+2) superdefs.pointers.h: Define a pointer of the same type.
 
-3) set_arrays.c: add pointer shifting
+3) set_arrays.c or set_arrays_multidimen.c: add pointer shifting
 
-4) set_arrays.c: down lower, assign to 0 or valueinit
+4) set_arrays.c or set_arrays_multidimen.c: assign to 0 or valueinit
 
-5) set_array.c: use global.h macro to avoid assignments to memory is turned off
+5) set_array.c or set_arrays_multidimen.c: use global.h macro to avoid assignments to memory if turned off
 
 6) Use it!
 
@@ -98,6 +98,11 @@ FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 #endif
 #endif
 
+
+// for storing dt over all dimensions before computing minimum dt
+#if(PERCELLDT)
+FTYPE BASEMACP0A1(dtijk,N1M,N2M,N3M,COMPDIM);
+#endif
 
 
 #if(STOREWAVESPEEDS>0)

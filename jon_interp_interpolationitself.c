@@ -86,8 +86,8 @@ int compute_spatial_interpolation(void)
   unsigned char uctemp;
 
   
-  if(DATATYPE==0)   fprintf(stderr,"start to interpolate image\n");
-  else if(DATATYPE==1)   fprintf(stderr,"start to interpolate data\n");
+  if(DATATYPE==0)   fprintf(stderr,"start to interpolate image (in 3D, each . is each k from %d to %d)\n",0,nN3);
+  else if(DATATYPE==1)   fprintf(stderr,"start to interpolate data (in 3D, each . is each k from %d to %d)\n",0,nN3);
   fflush(stderr);
 
 
@@ -100,8 +100,14 @@ int compute_spatial_interpolation(void)
 
 
   
-
+  int kprogress=0;
   LOOPINTERP{
+
+    // assume if 3D want indicator of progress every k
+    if(k==kprogress){
+      fprintf(stderr,".");
+      kprogress++;
+    }
 
     // DEBUG
     //    fprintf(stderr,"%d %d %d %d\n",h,i,j,k); fflush(stderr);
@@ -358,7 +364,7 @@ void setup_newgrid(void)
     startyc=startx[2];
     startzc=startx[3]; // was 0
 
-    //	     &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH);
+    //	     &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&EP3);
 
     fakedtc=dtc;
     fakedxc=dxc;

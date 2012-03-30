@@ -7,9 +7,9 @@
 // OPENMPMARK: None of these functions should be called by multiple threads.
 
 // static declarations
-static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar);
+static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar, SFTYPE *EP3par);
 static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR]);
-static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar);
+static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar, SFTYPE *EP3par);
 static int interpX_phi(FTYPE *X, SFTYPE *phivsr_tot, SFTYPE *phi);
 
 
@@ -254,7 +254,7 @@ void control_time_store_metric(int whichtime, FTYPE *Cunew)
 // 5) static int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself)
 
 
-static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar)
+static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar, SFTYPE *EP3par)
 {
   int enerregion;  
   FTYPE j,dj;
@@ -365,12 +365,14 @@ static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar)
     *MBHpar=MBH0 + dE;
     *apar=a0 + dabh; // a = J/MBH.  Since used MBH to normalize dJ and dE above, then a is in correct per Lunit with G=c=1
     *QBHpar=QBH0;
+    *EP3par=EP30;
   }
 
 #if(USEMPI)
   MPI_Bcast(MBHpar,1,MPI_SFTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(apar,1,MPI_SFTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(QBHpar,1,MPI_SFTYPE,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(EP3par,1,MPI_SFTYPE,MPIid[0], MPI_COMM_GRMHD);
 #endif
 
 
@@ -394,7 +396,7 @@ static int get_new_metric_parms(SFTYPE *MBHpar, SFTYPE *apar, SFTYPE *QBHpar)
 int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int dochange, dochangesend;
-  SFTYPE MBHpar, apar, QBHpar;
+  SFTYPE MBHpar, apar, QBHpar, EP3par;
   static long lastupdatenstep;
   static int firsttime=1;
 
@@ -421,7 +423,7 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
   // if self-gravity is on, then this is just a way to get parameters to detect whether need to update metric rather than being update itself
   //
   ////////////
-  get_new_metric_parms(&MBHpar, &apar, &QBHpar);
+  get_new_metric_parms(&MBHpar, &apar, &QBHpar, &EP3par);
 
 
 
@@ -487,7 +489,7 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
     trifprintf("AM Changing metric from MBH=%21.15g to %21.15g and a=%21.15g to %21.15g\n",MBH,MBH0+dE,a,a0+dabh);
 
     // 1 below tells us not the initial time
-    compute_new_metric_and_prims(1,MBHpar,apar,QBHpar,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3, Atemp, uconstemp);
+    compute_new_metric_and_prims(1,MBHpar,apar,QBHpar,EP3par,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3, Atemp, uconstemp);
 
   }
   else{
@@ -558,7 +560,7 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 //
 // GODMARK: currently not using input parameters
 // used with EVOLVEMETRICSUBSTEP==0 || ==2
-int compute_new_metric_and_prims(int whichtime, SFTYPE MBHpar, SFTYPE apar, SFTYPE QBHpar, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
+int compute_new_metric_and_prims(int whichtime, SFTYPE MBHpar, SFTYPE apar, SFTYPE QBHpar, SFTYPE EP3par, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   SFTYPE dtold;
   FTYPE CUf=0.0, Cunew=0.0;
@@ -707,7 +709,7 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
     ////////////////////////////////////
     //
     // get new Kerr parameters from fluxes through inner-radial boundary (includes contribution from self-gravity)
-    get_new_metric_parms(&MBH, &a, &QBH);
+    get_new_metric_parms(&MBH, &a, &QBH, &EP3);
 
 
     // get old and new horizon
@@ -850,7 +852,7 @@ int action_ifchange_horizoni(int horizontiold,int horizontinew)
     }
     
     // set metric parameters for all CPUs
-    get_new_metric_parms(&MBH, &a, &QBH);
+    get_new_metric_parms(&MBH, &a, &QBH, &EP3);
     
     // now MBH has changed and need to compute new current_horizonti.
     // possible that current_horizonti will change again because of this extra mass, so need to continue growing until done
@@ -2560,7 +2562,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
       trifprintf("whereformedblackhole=%d horizoncpupos1=%d horizoni=%d\n",whereformedblackhole,horizoncpupos1,horizoni);
 
-      trifprintf("Using KS BH+TOV mixed metric and turning on BH with mass MBH=%21.15g, spin=%21.15g, and charge=%21.15g in metric units\n",MBH,a,QBH);
+      trifprintf("Using KS BH+TOV mixed metric and turning on BH with mass MBH=%21.15g, spin=%21.15g, and charge=%21.15g EP3=%21.15g in metric units\n",MBH,a,QBH,EP3);
 
       // DEBUG:
       //      myexit(9826);
@@ -2574,6 +2576,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     }
     else if(MCOORD==BLCOORDS ||
 	    MCOORD==KSCOORDS ||
+	    MCOORD==KS_JP1_COORDS ||
 	    MCOORD==HTMETRIC ||
 	    MCOORD==HTMETRICACCURATE ||
 	    MCOORD==SPCMINKMETRIC){

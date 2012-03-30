@@ -323,6 +323,8 @@ static int advance_standard(
       // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
       MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
+
+
   
 #if(0)// DEBUG:
     if(1){
@@ -1596,7 +1598,12 @@ static int prepare_globaldt(
   // unsplit multidimensional Courant condition
   //
   ////////////////
-  wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
+  if(PERCELLDT==0){
+    wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
+  }
+  else{
+    wavedt = ndt1; // full result stored in *any* of ndt1,2,3 regardless of whether dimension is relevant
+  }
 
 
 

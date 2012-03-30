@@ -885,7 +885,7 @@ int gdet_func_orig(int whichcoord, FTYPE (*generalmatrixlower)[NDIM], FTYPE *gde
     }
     else if(d>0.0){
       dualfprintf(fail_file,"Metric has bad signature: d=%21.15g\n",d);
-      DLOOP(j,k) dualfprintf(fail_file,"generalmatrixlower[%d][%d]=%21.15g\n",j,k,generalmatrixlower[GIND(j,k)]);
+      DLOOP(j,k) dualfprintf(fail_file,"generalmatrixlower[%d][%d]=%21.15g\n",j,k,generalmatrixlower[j][k]); // generalmatrixlower[][] is 2d array since using NR routines.
       myexit(3478);
     }
     else{
@@ -1483,12 +1483,12 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
   int j, k, l, m;
   FTYPE tmpgcov[SYMMATRIXNDIM];
 
-  DLOOP(j,k){
+  DLOOP(j,k){ // OPTMARK: In places where deal with symmetric metric that's using GIND(), could introduce new DLOOPMET(j,k) that only goes over required elements.  Only works for assignment to LHS, not RHS since need factors of two that arrive naturally in sum on RHS.
     tmpgcov[GIND(j,k)] = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
 	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
 	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
-	tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
+	tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k]; // GINDASSIGNFACTOR(j,k) not needed because tmpgcov not += to itself.  RHS is summed over as if entire metric there, as wanted.
       }
     // use tmpgcov since gcon might be same address as gconprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];

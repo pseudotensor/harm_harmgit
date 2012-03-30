@@ -59,7 +59,7 @@ FTYPE Xmetricnew[NDIM],Xmetricold[NDIM]; // used to store time of latest and old
 FTYPE endtdata,starttdata; // for 4D dump inputs
 
 
-FTYPE tdump,gam,spin,QBH,MBH; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
+FTYPE tdump,gam,spin,MBH,EP3; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
 int startpos[NDIM];
 int totalsize[NDIM];
 long realnstep,nstep;
