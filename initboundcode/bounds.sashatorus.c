@@ -5,11 +5,13 @@
 /* bound array containing entire set of primitive variables */
 
 
-static int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+
+static int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
 
-int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+
+int bound_prim_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int dirprim[NPR];
   int pl,pliter;
@@ -18,7 +20,7 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
   // specify location of primitives
   PALLLOOP(pl) dirprim[pl]=CENT;
   //  dualfprintf(fail_file,"start bound_prim\n"); // CHANGINGMARK
-  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, 0, dirprim, prim);
+  bound_prim_user_general(finalstep, boundstage, boundtime, whichdir, boundvartype, BOUNDPRIMLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_prim\n"); // CHANGINGMARK
 
   return(0);
@@ -26,7 +28,7 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
 
 
 // assume single user function takes care of primitive locations
-int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_pstag_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
   int dirprim[NPR];
@@ -56,7 +58,7 @@ int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int bou
 
   // assume before calling this that bound_pstag() setup PLOOPINTERP so only doing B1,B2,B3 (even though user may not respect this in bound_prim_user_general() -- which is ok since non-field quantities in pstag aren't needed -- may be problem if user_general() assumes primitive is reasonable)
   //  dualfprintf(fail_file,"start bound_pstag\n"); // CHANGINGMARK
-  bound_prim_user_general(boundstage, boundtime, whichdir, boundvartype, 1, dirprim, prim);
+  bound_prim_user_general(finalstep, boundstage, boundtime, whichdir, boundvartype, BOUNDPSTAGLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_pstag\n"); // CHANGINGMARK
 
 
@@ -67,7 +69,7 @@ int bound_pstag_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int bou
 
 
 // user boundary routine
-int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int inboundloop[NDIM];
   int outboundloop[NDIM];
@@ -112,17 +114,17 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X1DN;
     if(dosetbc[dir]){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
-	bound_x1dn_outflow(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x1dn_outflow(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if((BCtype[dir]==R0SING)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x1dn_sym(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x1dn_sym(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 
       }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
-	bound_x1dn_analytic(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+	bound_x1dn_analytic(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
       }
       else if(BCtype[dir]==NSSURFACE){
-	bound_x1dn_nssurface(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x1dn_nssurface(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else{
 	dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
@@ -134,10 +136,10 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X1UP;
     if(dosetbc[dir]){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
-	bound_x1up_outflow(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x1up_outflow(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
-	bound_x1up_analytic(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+	bound_x1up_analytic(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
       }
       else{
 	dualfprintf(fail_file,"No x1up boundary condition specified: %d\n",BCtype[dir]);
@@ -153,10 +155,10 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X2DN;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2dn_polaraxis_full3d(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2dn_polaraxis_full3d(1,finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x2dn_polaraxis(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2dn_polaraxis(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else{
 	dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
@@ -168,10 +170,10 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
     dir=X2UP;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2up_polaraxis_full3d(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2up_polaraxis_full3d(1,finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x2up_polaraxis(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x2up_polaraxis(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else{
 	dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
@@ -179,13 +181,15 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
       }
     }
 
+
+
   }
   else if(whichdir==3){
 
 
     if(dosetbc[X3DN] || dosetbc[X3UP]){
       if( (BCtype[X3DN]==PERIODIC)&&(BCtype[X3UP]==PERIODIC) ){
-	bound_x3_periodic(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	bound_x3_periodic(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
       else{
 	dualfprintf(fail_file,"No x3 boundary condition specified: %d %d\n",BCtype[X3DN],BCtype[X3UP]);
@@ -196,12 +200,10 @@ int bound_prim_user_general(int boundstage, SFTYPE boundtime, int whichdir, int 
       dualfprintf(fail_file,"No such whichdir=%d\n",whichdir);
       myexit(2436262);
     }
-  }
 
 
-  if(whichdir==1 && N2==1 && N3==1 || N3==1 && whichdir==2 || N3>1 && whichdir==3){ // not completely general
-    bound_checks1(boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
   }
+
 
 
 
@@ -272,9 +274,89 @@ void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k,
 {
 }
 
+
 ///Called after the MPI boundary routines
-int bound_prim_user_after_mpi_dir(int boundstage, SFTYPE boundtime, int whichdir, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+// many things here are copied from above
+int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
+  int dirprim[NPR];
+  int pliter,pl;
+
+  int inboundloop[NDIM];
+  int outboundloop[NDIM];
+  int innormalloop[NDIM];
+  int outnormalloop[NDIM];
+  int inoutlohi[NUMUPDOWN][NUMUPDOWN][NDIM];
+  int riin,riout,rjin,rjout,rkin,rkout;
+  int dosetbc[COMPDIM*2];
+  int enerregion;
+  int *localenerpos;
+  int dir;
+
+
+
+
+  ////////////////////////
+  //
+  // set bound loop
+  //
+  ///////////////////////
+  set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
+
+
+  // for CZLOOP:
+  // avoid looping over region outside active+ghost grid
+  // good because somewhat general and avoid bad inversions, etc.
+  //  enerregion=TRUEGLOBALENERREGION;
+  enerregion=ACTIVEREGION; // now replaces TRUEGLOBALENERREGION
+  localenerpos=enerposreg[enerregion];
+  // if(WITHINENERREGION(localenerpos,i,j,k)){
+  // note that localenerpos[X1DN] sets first evolved cell
+
+
+  if(ispstag==BOUNDPRIMLOC){
+    // specify location of primitives
+    PALLLOOP(pl) dirprim[pl]=CENT;
+  }
+  
+  if(ispstag==BOUNDPSTAGLOC){
+    // specify location of primitives
+    PALLLOOP(pl) dirprim[pl]=CENT;
+    dirprim[B1]=FACE1;
+    dirprim[B2]=FACE2;
+    dirprim[B3]=FACE3;
+  }
+
+
+  // use post-MPI values to operate poledeath() since otherwise boundary values poledeath uses are not set yet
+  if(whichdir==2){
+
+    dir=X2DN;
+    if(dosetbc[dir]){
+      if(BCtype[dir]==POLARAXIS && special3dspc){
+	bound_x2dn_polaraxis_full3d(2,finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+      }
+    }
+
+
+    dir=X2UP;
+    if(dosetbc[dir]){
+      if(BCtype[dir]==POLARAXIS && special3dspc){
+	bound_x2up_polaraxis_full3d(2,finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+      }
+    }
+
+  }
+
+
+  // can only really check boundaries after MPI is done
+  // e.g. periodicx3 and ncpux3==2 and then MPi required to set k<0 and k>=ncpux2*N3 cells
+  if(whichdir==1 && N2==1 && N3==1 || N3==1 && whichdir==2 || N3>1 && whichdir==3){ // not completely general conditional
+    bound_checks1(finalstep,boundstage,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+  }
+
+
+
 
   return(0);
 }

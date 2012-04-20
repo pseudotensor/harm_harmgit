@@ -39,6 +39,7 @@
 // 13) USE<systemtype>=1
 // 14) setup batch
 
+
 // AKMARK: which problem
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 //#define WHICHPROBLEM THICKDISKFROMMATHEMATICA // choice
@@ -232,53 +233,7 @@ int init_consts(void)
 }
 
 
-/*
 
-Models to run:
-
-Constant parameters:
-
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
-
-2) BSQORHOLIMIT=1E3, etc.
-
-3) PARALINE, FLUXCTSTAG, TO=4
-
-4) Form of A_\phi fixed
-
-Field parameter studies in 2D axisymmetry at 256^2:
-
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
-
- 
-
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
-
-H/R parameter study in 2D axisymmetry at 256^2:
-
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
-
-2D Fiducial Models:
-
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
-
-3D Fiducial Models:
-
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
-
-Questions for Roger:
-
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
-
-*/
 
 
 
@@ -682,6 +637,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int funreturn;
+  int inittype;
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA ) 
   //read initial conditions from input file for the Mathematica-generated thin-disk ICs
@@ -691,7 +647,9 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   read_data(panalytic);
 #endif
 
-  funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
+  inittype=1;
+
+  funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -701,13 +659,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-
-
-
-
-
-
-int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
@@ -799,7 +751,8 @@ FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
 }
 
 // assumes normal field in pr
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+// SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
+int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
   FTYPE vpotns_normalized( FTYPE r, FTYPE th );
@@ -922,7 +875,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
 
-int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax);
   int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
@@ -1662,3 +1615,28 @@ void null_3d_fieldonly_fullloop(FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
   
   
 }
+
+void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+void adjust_fluxcttoth_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+
+void adjust_fluxcttoth_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  // not used
+}
+
+void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+{
+  
+  user1_adjust_fluxctstag_emfs(fluxtime, prim, Nvec, fluxvec);
+
+}
+
+
