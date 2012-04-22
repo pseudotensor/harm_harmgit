@@ -98,7 +98,10 @@ void set_coord_parms(int defcoordlocal)
 }
 
 
+
 // Things to set that only depend upon defcoord and nothing else
+// NOTEMARK: By nothing else, that means things like hslope, R0, Rin, or anything else that user might set in init_grid()
+// Otherwise, even if set hslope here for example and then use hslope to set something else, hslope could change and that other parameter would be wrong and coordinates would be mismatched.
 void set_coord_parms_nodeps(int defcoordlocal)
 {
 
@@ -127,14 +130,6 @@ void set_coord_parms_nodeps(int defcoordlocal)
   }
   else if(defcoordlocal == COMPLEX2TH) {
     x2trans=0.1; // user settable, must be same as below in dxdxp
-    thetatores=2.5*h_over_r;
-
-    // fixed coefficients
-    m2=(3.*(-2.*thetatores + M_PI))/(2.*x2trans) + (4.*thetatores)/(-1. + 2.*x2trans);
-    d2=(2.*thetatores - M_PI + 2.*M_PI*x2trans)/(-2.*pow(x2trans,3.) + 4.*pow(x2trans,4.));
-    c2=(6.*thetatores - 3.*M_PI + 6.*M_PI*x2trans)/(2.*pow(x2trans,2.) - 4.*pow(x2trans, 3.));
-    m3=(2.*thetatores)/(1. - 2.*x2trans);
-    b3=M_PI/2. + thetatores/(-1. + 2.*x2trans);
   }
   else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
   }
@@ -209,11 +204,11 @@ void set_coord_parms_nodeps(int defcoordlocal)
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     rbr = 5E2;  //radius at which hyperexponentiation kicks in
-    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
 
 
 
     // must be same as in dxdxp()
+    // GODMARK: Note njet here is overwritten by njet later, but could have been different values if setup variable names differently.
     if(0){ // first attempt
       r1jet=2.8;
       njet=0.3;
@@ -247,6 +242,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // for theta2
     h0=0.3; // inner-radial "hslope" for theta2
+    // GODMARK: Note that this overwrites above njet!
     njet=1.0; // power \theta_j \propto r^{-njet}
 
 
@@ -369,28 +365,30 @@ void set_coord_parms_nodeps(int defcoordlocal)
   }
   else if (defcoordlocal == JET4COORDS ) {
     // see net_jet_grid.nb
+    // for small Rout, should use R0~0 (i.e. instead  use R0~-3) or hslope>1
+
 
     // this coordinate system uses:  R0 and npow for radius , hslope for theta1 , rsjet and r0 for switch and switchi , h0, rs, r0, njet for theta2 (as in JET3COORDS)
 
     // npow, R0, rs, r0, hslope, h0, r0jet, rsjet, njet
 
     // for radial grid
-    npow=10.0;
+    npow=1.0;
+    // npow=10.0;
     //npow=3.0;
     R0 = -3.0;
 
     // for switches
-    rs=10.0;
-    r0=20.0;
-
+    rs=15.0;
+    r0=25.0;
+ 
     // for theta1
     hslope=0.3 ; // resolve inner-radial region near equator
     // below 2 not used right now
-    r0jet=10.0; // divisor
+    r0jet=15.0; // divisor
     rsjet=0.0; // subtractor
 
     // for theta2
-    h0=hslope; // inner-radial "hslope" for theta2
     njet=0.34; // power \theta_j \propto r^{-njet}
   }
   else if (defcoordlocal == UNI2LOG) {
@@ -413,6 +411,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 }
 
+
+// stuff that depends upon ANYTHING external that might be set by user in init_grid() or by system in init_defgrid(), like R0, Rin, hslope, h_over_r, etc.
 void set_coord_parms_deps(int defcoordlocal)
 {
 
@@ -437,6 +437,14 @@ void set_coord_parms_deps(int defcoordlocal)
   else if(defcoordlocal == COMPLEX1TH) {
   }
   else if(defcoordlocal == COMPLEX2TH) {
+    thetatores=2.5*h_over_r;
+
+    // fixed coefficients
+    m2=(3.*(-2.*thetatores + M_PI))/(2.*x2trans) + (4.*thetatores)/(-1. + 2.*x2trans);
+    d2=(2.*thetatores - M_PI + 2.*M_PI*x2trans)/(-2.*pow(x2trans,3.) + 4.*pow(x2trans,4.));
+    c2=(6.*thetatores - 3.*M_PI + 6.*M_PI*x2trans)/(2.*pow(x2trans,2.) - 4.*pow(x2trans, 3.));
+    m3=(2.*thetatores)/(1. - 2.*x2trans);
+    b3=M_PI/2. + thetatores/(-1. + 2.*x2trans);
   }
   else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
   }
@@ -550,6 +558,7 @@ void set_coord_parms_deps(int defcoordlocal)
     }
   }
   else if (defcoordlocal == JET6COORDS) {
+    x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == JET5COORDS) {
   }
@@ -573,6 +582,8 @@ void set_coord_parms_deps(int defcoordlocal)
   else if (defcoordlocal == RAMESHCOORDS || defcoordlocal == RAMESHCOORDS_HALFDISK) {
   }
   else if (defcoordlocal == JET4COORDS ) {
+    // for theta2
+    h0=hslope; // inner-radial "hslope" for theta2
   }
   else if (defcoordlocal == UNI2LOG) {
 
@@ -726,8 +737,10 @@ void read_coord_parms(int defcoordlocal)
     }
     else{
       // don't want to overwrite since restart file sets this
-      //      fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
-      fscanf(in,HEADER5IN,&ftemp,&ftemp,&ftemp,&ftemp,&ftemp);
+      //      fscanf(in,HEADER5IN,&ftemp,&ftemp,&ftemp,&ftemp,&ftemp);
+      // NO: jon_interp.c requires read these in, so assume restart file has equal values to coordparms.dat file
+      fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
+      fscanf(in,"%d",&dofull2pi);
 
       if (defcoordlocal == LOGRSINTH) {
       }
@@ -958,6 +971,7 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&h0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1175,7 +1189,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     vofx_sjetcoords( X, V );
 #else
     //apply cylindrification to original coordinates
-    //[this internally calls vofx_sjetcoords()]
+    //[this internally calls vofx_sjetcoords()] 
     vofx_cylindrified( X, vofx_sjetcoords, V );
 #endif
 
@@ -1212,6 +1226,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 #else
     // RAMESH BASED
+    // myhslope here is h2 in MCAF paper
+    // h0 here is h3 in MCAF paper
     myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
 
     // determine theta2
@@ -1227,6 +1243,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // determine theta0
     // JET3COORDS-based:
     myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    // myhslope here is h0 in MCAF paper
     th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 
     // determine switches (only function of radius and not x2 or theta)
@@ -1325,7 +1342,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     if(X[2]>0.0) V[2] = ((Zout-0)*exp(npow*fabs(X[2])) + 0*exp(npow)-Zout)/(exp(npow)-1.0);
     else V[2] = ((Zin-0)*exp(npow*fabs(X[2])) + 0*exp(npow)-Zin)/(exp(npow)-1.0);
 
-  }
+  } 
   else if (defcoord == RAMESHCOORDS|| defcoord == RAMESHCOORDS_HALFDISK) {
     V[1] = R0+exp(pow(X[1],npow)) ;
 
@@ -1730,17 +1747,17 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     dxdxp[1][1] = V[1]-R0;
     dxdxp[2][2] = M_PI + (1. - hslope) * M_PI * cos(2. * M_PI * X[2]);
     dxdxp[3][3] = 2.0*M_PI;
-  }
+  } 
   else if (defcoord == COMPLEX1TH) {
     dxdxp[1][1] = V[1]-R0;
     dxdxp[2][2] = (210.*M_PI*Ri*pow(1. - 2.*X[2],2.)*pow(-1. + X[2],2.)*
 		   pow(X[2],2.) + der0*
 		   (-32.*pow(-1. + X[2],2.)*pow(X[2],2.)*
-		    (3. + 14.*(-1. + X[2])*X[2]) -
+		    (3. + 14.*(-1. + X[2])*X[2]) - 
 		    Ri*pow(1. - 2.*X[2],2.)*
 		    (-1. + 2.*(-1. + X[2])*X[2]*(2. + 49.*(-1. + X[2])*X[2]))))/Ri;
     dxdxp[3][3] = 2.0*M_PI;
-  }
+  } 
   else if(defcoord == COMPLEX2TH) {
     dxdxp[1][1] = V[1]-R0;
 
@@ -1901,7 +1918,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 
 
     // d\theta/dr
-    //(Pi*((-4*ArcTan((-0.5 + x2)*h(r)))/(4 + Power(h(r),2)) +
+    //(Pi*((-4*ArcTan((-0.5 + x2)*h(r)))/(4 + Power(h(r),2)) + 
     //       (4*(-1 + 2*x2)*ArcTan(h(r)/2.))/
     //        (4 + Power(1 - 2*x2,2)*Power(h(r),2)))*
     //     Derivative(1)(h)(r))/(4.*Power(ArcTan(h(r)/2.),2))
@@ -1909,7 +1926,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 
     // d\theta/dx1  = d\theta/dr dr/dx1
     dxdxp[2][1] =     (M_PI*dmyhslopedx1*(
-					  (-4.0*atan((-0.5 + myx2)*myhslope))/(4. + pow(myhslope,2.)) +
+					  (-4.0*atan((-0.5 + myx2)*myhslope))/(4. + pow(myhslope,2.)) + 
 					  (4.*(-1. + 2.*myx2)*atan(myhslope/2.))/(4. + pow(1. - 2.*myx2,2.)*pow(myhslope,2.))
 					  )
 		       )/(4.*pow(atan(myhslope/2.),2.));
@@ -2010,7 +2027,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 
     // d\theta/dx1  = d\theta/dr dr/dx1
     dtheta2dx1 =     (M_PI*dmyhslopedx1*(
-					  (-4.0*atan((-0.5 + myx2)*myhslope))/(4. + pow(myhslope,2.)) +
+					  (-4.0*atan((-0.5 + myx2)*myhslope))/(4. + pow(myhslope,2.)) + 
 					  (4.*(-1. + 2.*myx2)*atan(myhslope/2.))/(4. + pow(1. - 2.*myx2,2.)*pow(myhslope,2.))
 					  )
 		       )/(4.*pow(atan(myhslope/2.),2.));
@@ -2061,7 +2078,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 
 // Also, one can use NUMREC for dxdxp if using analytic connection or GAMMIEDERIVATIVE connection.
 
-//#define DXDERTYPE DIFFNUMREC
+//#define DXDERTYPE DIFFNUMREC 
 #define DXDERTYPE DIFFGAMMIE
 
 // see conn_func() for notes
@@ -2186,10 +2203,10 @@ FTYPE blcoordsimple(struct of_geom *ptrgeom, FTYPE*X, int i, int j) // i not use
 
 
 // /////////////////////////////////////////////////////////////////
-//
+// 
 // Below set X uniform grid -- usually doesn't change.
 // Can usually force startx[1]=startx[2]=0. and dx[1]=1./N1 dx[2]=1./N2
-//
+// 
 // /////////////////////////////////////////////////////////////////
 
 

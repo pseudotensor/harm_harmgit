@@ -99,6 +99,18 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
     numbnd[3]=SHIFT3;
     *numnpr = NFLUXBOUND;
   }
+  else if(boundvartype==BOUNDVPOTTYPE){
+    numbnd[1]=N1BND;
+    numbnd[2]=N2BND;
+    numbnd[3]=N3BND;
+    *numnpr = NDIM;
+  }
+  else if(boundvartype==BOUNDVPOTSIMPLETYPE){
+    numbnd[1]=SHIFT1;
+    numbnd[2]=SHIFT2;
+    numbnd[3]=SHIFT3;
+    *numnpr = NDIM;
+  }
   else{
     dualfprintf(fail_file,"set_numbnd(): No such boundvartype=%d\n",boundvartype);
     myexit(2436726);
@@ -309,6 +321,33 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
     inoutlohi[POINTUP][POINTDOWN][3]=OUTFACEBOUNDLO3;
     inoutlohi[POINTUP][POINTUP][3]=OUTFACEBOUNDHI3;
   }
+  else if(boundvartype==BOUNDVPOTTYPE || boundvartype==BOUNDVPOTSIMPLETYPE){
+    // face-like quantities for certain directions (GODMARK: Needs updating for true BCs on real boundaries (i.e. non-MPI boundaries), but not used so far)
+
+    dimen=1;
+    // IN:
+    inoutlohi[POINTDOWN][POINTDOWN][1]=INFACEBOUNDLO1;
+    inoutlohi[POINTDOWN][POINTUP][1]=INFACEBOUNDHI1;
+    // OUT:
+    inoutlohi[POINTUP][POINTDOWN][1]=OUTFACEBOUNDLO1;
+    inoutlohi[POINTUP][POINTUP][1]=OUTFACEBOUNDHI1;
+
+    // dir=2
+    // IN:
+    inoutlohi[POINTDOWN][POINTDOWN][2]=INFACEBOUNDLO2;
+    inoutlohi[POINTDOWN][POINTUP][2]=INFACEBOUNDHI2;
+    // OUT:
+    inoutlohi[POINTUP][POINTDOWN][2]=OUTFACEBOUNDLO2;
+    inoutlohi[POINTUP][POINTUP][2]=OUTFACEBOUNDHI2;
+
+    // dir=3
+    // IN:
+    inoutlohi[POINTDOWN][POINTDOWN][3]=INFACEBOUNDLO3;
+    inoutlohi[POINTDOWN][POINTUP][3]=INFACEBOUNDHI3;
+    // OUT:
+    inoutlohi[POINTUP][POINTDOWN][3]=OUTFACEBOUNDLO3;
+    inoutlohi[POINTUP][POINTUP][3]=OUTFACEBOUNDHI3;
+  }
 
 
   ///////////
@@ -355,6 +394,12 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
   *rkin=inoutlohi[POINTDOWN][POINTUP][3]+SHIFT3;
 
   if(boundvartype==BOUNDFLUXTYPE || boundvartype==BOUNDFLUXSIMPLETYPE){
+    // would be with extra -1 but defined expanded definition of OUTFACEBOUNDLO1
+    *riout=inoutlohi[POINTUP][POINTDOWN][1];
+    *rjout=inoutlohi[POINTUP][POINTDOWN][2];
+    *rkout=inoutlohi[POINTUP][POINTDOWN][3];
+  }
+  else if(boundvartype==BOUNDVPOTTYPE || boundvartype==BOUNDVPOTSIMPLETYPE){
     // would be with extra -1 but defined expanded definition of OUTFACEBOUNDLO1
     *riout=inoutlohi[POINTUP][POINTDOWN][1];
     *rjout=inoutlohi[POINTUP][POINTDOWN][2];
@@ -423,6 +468,19 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
 
   }
   else if(boundvartype==BOUNDFLUXTYPE || boundvartype==BOUNDFLUXSIMPLETYPE){
+    // face-like quantities
+    // centered-like quantities
+    innormalloop[1]=0+shifts[POINTDOWN][1];
+    outnormalloop[1]=N1-1+shifts[POINTUP][1];
+
+    innormalloop[2]=0+shifts[POINTDOWN][2];
+    outnormalloop[2]=N2-1+shifts[POINTUP][2];
+
+    innormalloop[3]=0+shifts[POINTDOWN][3];
+    outnormalloop[3]=N3-1+shifts[POINTUP][3];
+
+  }
+  else if(boundvartype==BOUNDVPOTTYPE || boundvartype==BOUNDVPOTSIMPLETYPE){
     // face-like quantities
     // centered-like quantities
     innormalloop[1]=0+shifts[POINTDOWN][1];

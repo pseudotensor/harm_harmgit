@@ -15,7 +15,7 @@ int riin,riout,rjin,rjout,rkin,rkout;
 int dosetbc[COMPDIM*2];
 
 // only bounds +-1 cell as required for pflags to exist for check_solution() checking and fixup_utoprim() averaging
-int bound_pflag_user(int boundstage, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
+int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
   int i,j,k,pl,pliter;
   int failreturn;

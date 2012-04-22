@@ -394,9 +394,15 @@
 #define NUMFLUXDUMP (NPR*4 + NPR*3*(1+2+2))
 
 
+#if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
 // 4 space-time directions with only spatial parts used for now
-#define NUMVPOTDUMP 4
-
+// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
+#define NUMVPOT (NDIM*4)
+#define NUMVPOTDUMP (NDIM)
+#else
+#define NUMVPOT (0)
+#define NUMVPOTDUMP (0)
+#endif
 
 
 // size of certain dumped tavg quantities

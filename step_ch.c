@@ -21,7 +21,7 @@ static void setup_rktimestep(int truestep, int *numtimeorders,
 static int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int step_ch(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
-static int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
+static int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
 
 
 
@@ -318,8 +318,33 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
 
 
 // things to do after advance()
-int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
+int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
+
+
+
+
+
+  ////////////////
+  //
+  // Use tracked A_i to update magnetic field
+  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
+  //
+  ////////////////
+  if(EVOLVEWITHVPOT && TRACKVPOT && (finalstep)){
+    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
+    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
+    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
+
+    //  only do this on the final step where A_i has been set as the cumulative Acum  (like ucum) so that not just an arbitrary intermediate step that redefines B's.
+
+    // NOTEMARK: No, actually want to do on every substep that defines vpot (vpot holds substep (Uf-like) value on substeps except final step where it holds cumulative final value (Ucum-like)) since need staggered field (say inside NS for init.nsbh.c) to be consistent with A_i so that the smooth extrapolation of A_i translates into smooth Bstag^i so that interpolation of Bstag->Bcent gives smooth results.
+    // NOTEMARK: If A_i is set inconsistent with EMF_i, then this step will reveal A_i overridding EMF_i results and probably producing undesirable results.
+    // NOTEMARK: No again, if vpot update is consistent with EMFs (as it should be as code is setup in fluxvpot.c), then Bstag only off by machine error from A_i, so only need to do this infrequently.
+    evolve_withvpot(boundtime, pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp); // boundtime since this time is used for a boundary call inside this function
+  }
+
+
 
 
   //////////////////////
@@ -343,6 +368,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // bound advanced values before post_fixup() so fixup_utoprim() has updated boundary values to base fixup on.
 
 
+  if(failed>0) dualfprintf(fail_file,"1failed=%d\n",failed);
 
   ////////////
   //
@@ -355,7 +381,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   trifprintf("[b1");
 #endif
 
-  MYFUN(bound_beforeevolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,UTOPRIMFIXMPICONSISTENT>0),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 1);
+  MYFUN(bound_beforeevolveprim(STAGEM1,finalstep,boundtime,pf,pstag,ucons,UTOPRIMFIXMPICONSISTENT>0),"step_ch.c:post_advance()", "bound_beforeevolveprim()", 1);
 
 #if(PRODUCTION==0)
   trifprintf("]");
@@ -364,6 +390,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
+  if(failed>0) dualfprintf(fail_file,"2failed=%d\n",failed);
 
 
 #if(PRODUCTION==0)
@@ -379,7 +406,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // if one doesn't care about MPI being same as non-MPI, then can move bound_prim() above to below error_check() and then remove prc<-pv in fixup_utoprim()
   //
   /////////////
-  MYFUN(post_fixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup()", 1);
+  MYFUN(post_fixup(STAGEM1,finalstep,boundtime, pf,pb,ucons),"step_ch.c:advance()", "post_fixup()", 1);
 
 #if(PRODUCTION==0)
   trifprintf( "]");
@@ -396,7 +423,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   // Then no need for boundary calls
   //
   ////////////
-  MYFUN(post_fixup_nofixup(STAGEM1,boundtime, pf,pb,ucons,finalstep),"step_ch.c:advance()", "post_fixup_nofixup()", 1);
+  MYFUN(post_fixup_nofixup(STAGEM1,finalstep,boundtime, pf,pb,ucons),"step_ch.c:advance()", "post_fixup_nofixup()", 1);
 
 #endif
 
@@ -445,6 +472,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
+
 #if(PRODUCTION==0)
   trifprintf( "[b2");
 #endif
@@ -452,11 +480,11 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   /////////////////////////////////////
   //
-  // normal bondary call
+  // normal bondary call (only bounds p (centered) and pstag (staggered field) and not A_i or F or other things)
   // required in general
   //
   /////////////////////////////////////
-  MYFUN(bound_evolveprim(STAGEM1,boundtime,pf,pstag,ucons,finalstep,USEMPI),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 2);
+  MYFUN(bound_evolveprim(STAGEM1,finalstep,boundtime,pf,pstag,ucons,USEMPI),"step_ch.c:post_advance()", "bound_evolveprim()", 2);
 
   //#endif
 
@@ -465,19 +493,9 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
 
-  ////////////////
-  //
-  // Use tracked A_i to update magnetic field
-  // Required to keep A_i in synch with field and only is different at the machine error level (which grows over long times, so why this is required and hardless)
-  //
-  ////////////////
-  if(EVOLVEWITHVPOT && TRACKVPOT){
-    // if evolving with vpot, then assume good enough to use final full timestep A_i to obtain new point fields
-    // less expensive than doing every substep and only wrong at machine error with factors extra for number of substeps
-    // SUPERGODMARK: Check convergence rate and check errors!!  SUPERCHANGINGMARK
-    // GODMARK: for now only do at the end of the full timestep to avoid being expensive -- doesn't really matter that didn't do it per substep since only machine differences
-    if(finalstep) evolve_withvpot(pf, pstag, ucons, vpot, Bhat, F1, F2, F3, Atemp,uconstemp);
-  }
+
+
+
 
   /////////////////////////////////////
   //
@@ -527,29 +545,17 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   }// end if truestep
 
-#if(DOONESTEPDUACCOUNTING)
-  if(truestep && finalstep){
-    FTYPE Ui[NPR];
-    int i, j, k, pl;
-    struct of_geom *ptrgeom;
-    struct of_geom geomdontuse;
-    
-    ptrgeom=&(geomdontuse);
-    
-    //loop over (0..N1-1, 0..N2-1, 0..N3-1):
-    LOOP{
-      PALLLOOP(pl){ 
-	get_geometry(i, j, k, CENT, ptrgeom);
-	break;
-      }
-      UtoU(UEVOLVE,UDIAG,ptrgeom,MAC(ucons,i,j,k),Ui);
-      // account for change to hot MHD conserved quantities
-      // use pf as final primitive (guessed since this is what is dumped below)
-      diag_fixup_Ui_pf(-1,Ui,MAC(pf,i,j,k),ptrgeom,finalstep,COUNTEOSLOOKUPFAIL);
-    }
-  }    
-#endif
-  
+
+
+  if(DOONESTEPDUACCOUNTING){
+    // do one-step accounting for fixup related things (failures, floors, fixups, etc.)
+    // ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
+    diag_fixup_allzones(truestep, finalstep, pf, ucons);
+  }
+
+
+
+
   /////////////////////////////////////
   //
   // Diagnostics
@@ -560,7 +566,7 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
     // no error check since assume if step_ch passed, diag(1) will pass
     if (DODIAGS && DODIAGEVERYSUBSTEP ){ //SASMARK -- moved the diags calls here
       GLOBALPOINT(pdump) = pf;
-      diag(DUMP_OUT,t,nstep,realnstep);
+      diag(DUMP_OUT,boundtime,nstep,realnstep); // boundtime corresponds to pf for this timeorder
 #if(PRODUCTION==0)
       trifprintf( "D");
 #endif
@@ -585,7 +591,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE *ndt);
+	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   
   int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR]);
   int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -610,8 +616,8 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   int i, j, k;
   int numtimeorders;
   int timeorder;
-  int finalstep;
-  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER];
+  int finalstep,initialstep;
+  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER], fluxtime[MAXTIMEORDER];
 
 
 
@@ -630,7 +636,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, NULL,NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL,NULL);
 
 
   // global debug tracking var
@@ -671,7 +677,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     /////////////////////////////////////
     steppart=timeorder;
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
-    finalstepglobal=finalstep;
+    if(timeorder==0) initialstep=1; else initialstep=0;
 
 #if(PRODUCTION==0)
     trifprintf("|%ds",timeorder);
@@ -758,7 +764,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       // advance (field only)
       // Only field parts of pff, uff, and ucum updated
       // on final timeorder, ucum used to get final B that will be used as B for final timeorder for non-field quantities
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
       // only need to bound field, so control PLOOPMPI
       nprboundstart=0;
@@ -767,7 +773,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       nprboundlist[1]=B2;
       nprboundlist[2]=B3;
       // with magnetic field, only  need to bound
-      MYFUN(bound_evolveprim(STAGEM1,boundtime[timeorder],pff[timeorder],pstag,uff[timeorder],finalstep,USEMPI),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 1);
+      MYFUN(bound_evolveprim(STAGEM1,finalstep,boundtime[timeorder],pff[timeorder],pstag,uff[timeorder],USEMPI),"step_ch.c:step_ch_simplempi()", "bound_evolveprim()", 1);
 
 
 
@@ -808,7 +814,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       // advance (non-field quantities)
       // only non-field parts of pff, uff, ucum updated
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
@@ -852,11 +858,15 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       advancepassnumber=-1; // implies do all things, no split
       // advance (all)
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
     } // end else if normal advance()
+
+
+
+
 
 
 
@@ -875,7 +885,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
     // POST ADVANCE
     //
     /////////////////////////////////////
-    post_advance(truestep, dumpingnext, timeorder, numtimeorders, finalstep, boundtime[timeorder], pii[timeorder],pbb[timeorder],pff[timeorder],pstag,ucons,vpot,Bhat, F1, F2, F3, Atemp, uconstemp);
+    post_advance(truestep, dumpingnext, timeorder, numtimeorders, finalstep, boundtime[timeorder], fluxtime[timeorder], pii[timeorder],pbb[timeorder],pff[timeorder],pstag,ucons,vpot,Bhat, F1, F2, F3, Atemp, uconstemp);
 
 
 
@@ -899,7 +909,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
 
 // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
-void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTYPE (*Cunew)[4], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
+void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTYPE (*Cunew)[4], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
 {
   int timeorder;
   SFTYPE ufdt[MAXTIMEORDER],ucumdt[MAXTIMEORDER];
@@ -932,6 +942,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
   //////////////////////
   fluxdt[0] = 0.0; // initialize
   boundtime[0] = 0.0; // initialize
+  fluxtime[0] = 0.0; // initialize
   Ui=dUgeom=0.0; // don't care about update from non-flux terms
   dUriemann=1.0; // indicates want dt applied on flux update
 
@@ -962,6 +973,14 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
 
     //  time of pf at end of substep
     boundtime[timeorder] = t + ufdt[timeorder];
+
+    // time of pb when used to compute flux
+    // and time of pb corresponds to time of previous pf (except for first substep where it's just t)
+    //     tstepparti = t + CUf[timeorder][3] * dt;
+    //      tsteppartf = t + CUf[timeorder][2] * dt +  CUf[timeorder][3] * dt;
+    if(timeorder>0) fluxtime[timeorder] =  t + CUf[timeorder-1][2] * dt +  CUf[timeorder-1][3] * dt;
+    else fluxtime[timeorder] =  t;
+
   }
 
 
@@ -993,7 +1012,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
   // DEBUG:
   dualfprintf(fail_file,"FLUXDT/BOUNDTIME: nstep=%ld ",nstep);
   for(timeorder=0;timeorder<numtimeorders;timeorder++){
-    dualfprintf(fail_file,"to=%d fluxdt=%21.15g fluxdtperdt=%21.15g boundtime=%21.15g\n",timeorder,fluxdt[timeorder],fluxdt[timeorder]/dt,boundtime[timeorder]);
+    dualfprintf(fail_file,"to=%d fluxdt=%21.15g fluxdtperdt=%21.15g boundtime=%21.15g fluxtime=%21.15g\n",timeorder,fluxdt[timeorder],fluxdt[timeorder]/dt,boundtime[timeorder],fluxtime[timeorder]);
   }
   dualfprintf(fail_file,"\n");
 #endif
@@ -1052,7 +1071,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
 	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE *ndt);
+	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   int boundstage;
   SFTYPE mydt;
   int stage, stagei,stagef;
@@ -1074,7 +1093,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   int numtimeorders;
   int finalstep;
   //  extern int horizon_flux(FTYPE (*F1)[NSTORE2][NSTORE3][NPR], SFTYPE Dt);
-  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER];
+  SFTYPE fluxdt[MAXTIMEORDER], boundtime[MAXTIMEORDER], fluxtime[MAXTIMEORDER];
 
 
 
@@ -1093,7 +1112,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, NULL, NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL, NULL);
 
 
 
@@ -1123,7 +1142,6 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
     }
 
     if(timeorder==numtimeorders-1) finalstep=1; else finalstep=0;
-    finalstepglobal=finalstep;
 
 
 
@@ -1190,7 +1208,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
       // only bounding if safe zones, unsafe needs bz complete
       if(stage<STAGE2){
-	bound_beforeevolveprim(boundstage, boundtime[timeorder], prevpf,pstag,ucons,finalstep,USEMPI); // pstag,ucons not right for supermpi
+	bound_beforeevolveprim(boundstage, finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI); // pstag,ucons not right for supermpi
 	if(stage!=STAGEM1) boundstage++;
       }
 
@@ -1201,14 +1219,14 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       partialstep=timeorder;      
       // not right for numtimeorders==4 // GODMARK
       // advance
-      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
+      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
       // must check before MPI operation (since asymmetries would desynchronize cpus)
       if(stage<STAGE2){
 	MYFUN(error_check(1),"step_ch.c", "error_check", 1);
       }
       if(stage!=STAGEM1){
 	if(stage<STAGE2){
-	  bound_evolveprim(boundstage, boundtime[timeorder], prevpf,pstag,ucons,finalstep,USEMPI);
+	  bound_evolveprim(boundstage,finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI);
 	  boundstage++;
 	}
       }
@@ -1222,7 +1240,8 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       mpifmin(&ndt);
     }
     // done when all stages are completed, so stencil used doesn't matter
-    MYFUN(post_fixup(STAGEM1,boundtime[timeorder], pf,pb,ucons,1),"step_ch.c:advance()", "post_fixup()", 1);
+    
+    MYFUN(post_fixup(STAGEM1,finalstep, boundtime[timeorder], pf,pb,ucons),"step_ch.c:advance()", "post_fixup()", 1);
   }
 
 
@@ -1399,10 +1418,51 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
 
 
+
+
+
+
+
+/////////////////////////////
+//
+// System boundary routines that calls other system routines and user routines
+//
+/////////////////////////////
+
+
+
+// Who calls bound_anypstag():
+// v1)
+// step_ch.c: bound_evolveprim calls bound_allprim calls bound_anyallprim calls bound_anypstag
+// step_ch.c: bound_beforeevolveprim calls bound_anyallprim calls bound_anypstag
+// fluxctstag.c : bound_pstag calls bound_anypstag
+//
+// v2)
+// But if bound pstag in fluxctstag.c so Bcent can be interpolated from Bstag, then don't need to do it again!
+// fluxctstag.c : bound_pstag calls bound_anypstag
+
+
+
+
 // normal full bounding during evolution
-int bound_evolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
+int bound_evolveprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
-  bound_allprim(boundstage, boundtime, prim,pstag,ucons,finalstep,doboundmpi);
+  int boundvartype=BOUNDPRIMTYPE;
+
+
+
+  bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
+  if(unewisavg && BOUNDUNEW){
+    // SUPERGODMARK:
+    // if not outflow boundary, then can bound u as p
+    // desirable since machine errors can be different and lead to secular changes
+    // esp. in MPI
+    bound_uavg(boundstage, finalstep, boundtime, boundvartype, ucons,pstag, ucons,doboundmpi);
+  }
+
+
+  //  bound_allprim(boundstage,finalstep, boundtime, prim,pstag,ucons,doboundmpi);
 
   return(0);
 
@@ -1410,33 +1470,45 @@ int bound_evolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NS
 
 
 // simple bounding during evolution
-int bound_beforeevolveprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep, int doboundmpi)
+// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
+int bound_beforeevolveprim(int boundstage,int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
-  int boundvartype=BOUNDPRIMSIMPLETYPE;
+  int boundvartype=BOUNDPRIMSIMPLETYPE; // tells boundary routines that only bounding 1 layer deep
 
-  bound_anyallprim(boundstage, boundtime, boundvartype, prim,pstag,ucons,finalstep,doboundmpi);
+
+  bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
+  if(unewisavg && BOUNDUNEW){
+    // SUPERGODMARK:
+    // if not outflow boundary, then can bound u as p
+    // desirable since machine errors can be different and lead to secular changes
+    // esp. in MPI
+    bound_uavg(boundstage, finalstep, boundtime, boundvartype, ucons,pstag, ucons,doboundmpi);
+  }
+
+
 
   return(0);
 
 }
 
 // normal bounding of non-staggered primitives
-int bound_prim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_prim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
 
-  bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+
+  bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
 
   return(0);
 
 }
 
 // normal bounding of staggered primitives
-int bound_pstag(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_pstag(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPSTAGTYPE;
 
-  bound_anypstag(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+  bound_anypstag(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
 
   return(0);
 
@@ -1444,11 +1516,12 @@ int bound_pstag(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3
 
 
 // normal bounding of all primitives
-int bound_allprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_allprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
 
-  bound_anyallprim(boundstage, boundtime, boundvartype, prim, pstag,ucons, finalstep,doboundmpi);
+
+  bound_anyallprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag,ucons,doboundmpi);
 
   return(0);
 
@@ -1458,19 +1531,21 @@ int bound_allprim(int boundstage, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTOR
 
 
 // bound all prims
-int bound_anyallprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep, int doboundmpi)
+int bound_anyallprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int doboundmpi)
 {
   int mystagboundvar;
 
+
+
   if(FLUXB==FLUXCTSTAG){
-    bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+    bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
     if(boundvartype==BOUNDPRIMTYPE) mystagboundvar=BOUNDPSTAGTYPE;
     else if(boundvartype==BOUNDPRIMSIMPLETYPE) mystagboundvar=BOUNDPSTAGSIMPLETYPE;
     else  mystagboundvar=boundvartype;
-    bound_anypstag(boundstage, boundtime, mystagboundvar, prim, pstag, ucons, finalstep,doboundmpi);
+    bound_anypstag(boundstage, finalstep, boundtime, mystagboundvar, prim, pstag, ucons,doboundmpi);
   }
   else{
-    bound_anyprim(boundstage, boundtime, boundvartype, prim, pstag, ucons, finalstep,doboundmpi);
+    bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
   }
 
 
@@ -1479,7 +1554,7 @@ int bound_anyallprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (
     // if not outflow boundary, then can bound u as p
     // desirable since machine errors can be different and lead to secular changes
     // esp. in MPI
-    bound_uavg(boundstage, boundtime, boundvartype, ucons,pstag, ucons, finalstep,doboundmpi);
+    bound_uavg(boundstage, finalstep, boundtime, boundvartype, ucons,pstag, ucons,doboundmpi);
   }
 
   return(0);
@@ -1489,10 +1564,12 @@ int bound_anyallprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (
 
 
 // bound uavg
-int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int mystagboundvar;
   FTYPE (*uavg)[NSTORE2][NSTORE3][NPR];
+
+
 
 
   // assign uavg
@@ -1506,7 +1583,7 @@ int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)
     // can modify for diag call if choose to avoid if outflow condition
     // or do something simple for outflow just for diagnostics
 #if(FULLOUTPUT!=0 && PRODUCTION==0)
-    bound_anyprim(boundstage, boundtime, boundvartype, uavg,pstag, uavg, finalstep,doboundmpi);
+    bound_anyprim(boundstage, finalstep, boundtime, boundvartype, uavg,pstag, uavg,doboundmpi);
 #endif
 
 
@@ -1514,7 +1591,7 @@ int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)
       // then need to bound all conservative quantities
       // SUPERGODMARK -- CHANGINGMARK -- need to generalize so bound knows if p or U quantity
       // other methods have only field "averaged" so only need to modify it
-      bound_anyprim(boundstage, boundtime, boundvartype, uavg, pstag, uavg, finalstep,doboundmpi);
+      bound_anyprim(boundstage, finalstep, boundtime, boundvartype, uavg, pstag, uavg,doboundmpi);
     }
 
     if(FLUXB==FLUXCTSTAG){
@@ -1524,7 +1601,7 @@ int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)
       else if(boundvartype==BOUNDPRIMSIMPLETYPE) mystagboundvar=BOUNDPSTAGSIMPLETYPE;
       else  mystagboundvar=boundvartype;
 
-      bound_anypstag(boundstage, boundtime, mystagboundvar, uavg, pstag, uavg, finalstep,doboundmpi);
+      bound_anypstag(boundstage, finalstep, boundtime, mystagboundvar, uavg, pstag, uavg,doboundmpi);
     }
   }
 
@@ -1540,7 +1617,7 @@ int bound_uavg(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)
 // CALLS directly real and MPI boundary functions
 // pstag = pstagglobal
 // ucons = unewglobal
-int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
@@ -1580,16 +1657,17 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_prim_user_dir(boundstage, boundtime, dir, boundvartype, prim),"step_ch.c:bound_prim()", "bound_prim_user()", 1);
+      MYFUN(bound_prim_user_dir(boundstage, finalstep, boundtime, dir, boundvartype, prim),"step_ch.c:bound_prim()", "bound_prim_user()", 1);
     }// end if stage0 or stagem1
   
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, dir, boundvartype, prim, NULL, NULL, NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, finalstep, dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
     }
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_prim_user_after_mpi_dir(boundstage, boundtime, dir, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
+      int ispstag=BOUNDPRIMLOC;
+      MYFUN(bound_prim_user_after_mpi_dir(boundstage, finalstep, boundtime, dir, boundvartype, ispstag, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
     }// end if stage0 or stagem1
 
 
@@ -1611,7 +1689,8 @@ int bound_anyprim(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*pr
 // CALLS directly real and MPI boundary functions
 // pstag is at FACE1,2,3 for fields, so user bound is different
 // MPI bounding is the same as CENT quantities
-int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+// used when restarting in initbase.c to bound unewglobal for FLUXB==FLUXCTSTAG
+int bound_anypstag(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int pl,pliter;
   int nprlocalstart,nprlocalend;
@@ -1656,17 +1735,18 @@ int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*p
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_pstag_user_dir(boundstage,boundtime, dir,mystagboundvar,pstag),"step_ch.c:bound_pstag()", "bound_pstag_user()", 1);
+      MYFUN(bound_pstag_user_dir(boundstage, finalstep, boundtime, dir,mystagboundvar,pstag),"step_ch.c:bound_pstag()", "bound_pstag_user()", 1);
     }// end if stage0 or stagem1
 
 
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, dir, mystagboundvar, pstag, NULL, NULL, NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, finalstep, dir, mystagboundvar, pstag, NULL, NULL, NULL,NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
     }
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      MYFUN(bound_prim_user_after_mpi_dir(boundstage,boundtime, dir,pstag),"step_ch.c:bound_pstag()", "bound_prim_user_after_mpi()", 1);
+      int ispstag=BOUNDPSTAGLOC;
+      MYFUN(bound_prim_user_after_mpi_dir(boundstage, finalstep, boundtime, dir, mystagboundvar, ispstag, pstag),"step_ch.c:bound_pstag()", "bound_prim_user_after_mpi()", 1);
     }// end if stage0 or stagem1
 
 
@@ -1687,7 +1767,7 @@ int bound_anypstag(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*p
 // CALLS directly real and MPI boundary functions
 // special bound for flux that only bounds in direction of flux itself (so not full cross-flux information)
 // used for finite difference version of ENO
-int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], int finalstep, int doboundmpi)
+int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int dir;
 
@@ -1709,12 +1789,43 @@ int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[N
 
   // real boundary zones
   if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-    MYFUN(bound_flux_user(boundstage,boundtime, boundvartype,F1,F2,F3),"step_ch.c:bound_flux()", "bound_flux_user()", 1);
+    MYFUN(bound_flux_user(boundstage, finalstep, boundtime, boundvartype,F1,F2,F3),"step_ch.c:bound_flux()", "bound_flux_user()", 1);
   }// end if stage0 or stagem1
 
 
   if(doboundmpi){
-    MYFUN(bound_mpi(boundstage, boundvartype, NULL, F1, F2, F3),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+    MYFUN(bound_mpi(boundstage, finalstep, boundvartype, NULL, F1, F2, F3, NULL),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+  }
+
+
+  return(0);
+}
+
+
+// used when restarting in initbase.c
+int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi)
+{
+  int dir;
+
+
+
+  if(boundvartype==BOUNDVPOTTYPE || boundvartype==BOUNDVPOTSIMPLETYPE){
+    // then can stay
+  }
+  else{
+    dualfprintf(fail_file,"Shouldn't be in bound_vpot() with boundvartype=%d\n",boundvartype);
+    myexit(3483466);
+  }
+
+
+  // real boundary zones
+  if((boundstage==STAGE0)||(boundstage==STAGEM1)){
+    MYFUN(bound_vpot_user(boundstage, finalstep, boundtime, boundvartype,vpot),"step_ch.c:bound_vpot()", "bound_vpot_user()", 1);
+  }// end if stage0 or stagem1
+
+
+  if(doboundmpi){
+    MYFUN(bound_mpi(boundstage, finalstep, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);
   }
 
 
@@ -1724,16 +1835,19 @@ int bound_flux(int boundstage, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[N
 
 
 
+
+
+
 // bound pflag type
 // CALLS directly real and MPI boundary functions
-int bound_pflag(int boundstage, SFTYPE boundtime, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int finalstep, int doboundmpi)
+int bound_pflag(int boundstage, int finalstep, SFTYPE boundtime, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int doboundmpi)
 {
   int boundvartype=BOUNDINTTYPE;
   
 
   if((boundstage==STAGE0)||(boundstage==STAGEM1)){
 
-    MYFUN(bound_pflag_user(boundstage, boundtime, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_pflag_user()", 1);
+    MYFUN(bound_pflag_user(boundstage, finalstep, boundtime, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_pflag_user()", 1);
 
   }// end bound stage
 
@@ -1741,12 +1855,12 @@ int bound_pflag(int boundstage, SFTYPE boundtime, PFTYPE (*prim)[NSTORE2][NSTORE
   if(doboundmpi){
 
     if(UTOPRIMFIXMPICONSISTENT==1){
-      MYFUN(bound_mpi_int(boundstage, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+      MYFUN(bound_mpi_int(boundstage, finalstep, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
     }
     else{
       // need to fill boundary cells with failure
       // otherwise, would have to go deeper into fixups and dependency chain for the UTOPRIMFIXMPICONSISTENT chocie would become too deep
-      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, finalstep, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
     }
 
   }

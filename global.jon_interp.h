@@ -175,23 +175,26 @@
 #define SCANARG "%f"
 #define SCANARGVEC "%f %f %f"
 #define SCANARG4VEC "%f %f %f %f"
+#define SCANFIELDLINE "%f %f %f %f %f %f %f %f %f %f %f" // 11 items
 // 16 args
 // 21 args after going to 3D and doing MBH/QBH
 // 6 more args
-#define SCANHEADER "%f %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %d %d %d %d %d %d %d %d %d"
+#define SCANHEADER "%f %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %f %d %d %d %d %d %d %d %d %d"
 #elif(REALTYPE==DOUBLETYPE)
 #define SCANARG "%lf"
 #define SCANARGVEC "%lf %lf %lf"
 #define SCANARG4VEC "%lf %lf %lf %lf"
-#define SCANHEADER "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %d %d %d %d %d %d %d %d %d"
+#define SCANFIELDLINE "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf" // 11 items
+#define SCANHEADER "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %lf %d %d %d %d %d %d %d %d %d"
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define SCANARG "%Lf"
 #define SCANARGVEC "%Lf %Lf %Lf"
 #define SCANARG4VEC "%Lf %Lf %Lf %Lf"
-#define SCANHEADER "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %d %d %d %d %d %d %d %d %d"
+#define SCANFIELDLINE "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf" // 11 items
+#define SCANHEADER "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %Lf %d %d %d %d %d %d %d %d %d"
 #endif
 
-#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g %d %d %d %d %d %d %d %d %d\n"
+#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g %g %d %d %d %d %d %d %d %d %d\n"
 
 
 
@@ -263,6 +266,11 @@ extern void setup_newgrid(void);
 
 
 extern void interp_bl_coord(FTYPE *X, FTYPE *V);
+
+
+
+extern void readelement(FILE *input, FTYPE *datain);
+extern void writeelement(FILE *output, FTYPE dataout);
 
 
 

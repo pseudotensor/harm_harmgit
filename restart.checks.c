@@ -1,5 +1,122 @@
 #include "decs.h"
 
+
+static int restart_init_point_check_pglobal(int which, int i, int j, int k);
+static int restart_init_point_check_unewglobal(int which, int i, int j, int k);
+static int restart_init_point_check_pstagglobal(int which, int i, int j, int k);
+
+
+// only check basic important inputs from restart dump file
+int restart_init_simple_checks(int which)
+{
+  int gotnan;
+  int i,j,k;
+
+  //////////////
+  //
+  // make sure all zones are not nan just as read-in from file
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  // OPENMPOPTMARK: Don't optimize since critical region
+
+  if(which<=2){ // see initbase.c
+    LOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
+  }
+  else if(which<=3){
+    FULLLOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
+  }
+  else{
+    FULLLOOP{  gotnan+=restart_init_point_check_pglobal(which,i,j,k); }
+    LOOP{  gotnan+=restart_init_point_check_unewglobal(which,i,j,k); }
+    FULLLOOP{  gotnan+=restart_init_point_check_pstagglobal(which,i,j,k); }
+  }
+
+
+
+  if(gotnan) myexit(39476346);
+
+  return(0);
+
+}
+
+
+// check pglobal
+static int restart_init_point_check_pglobal(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  PDUMPLOOP(pliter,pl){
+    if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) ){
+      dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl));
+      //	myexit(24968346);
+      gotnan++;
+    }
+  }
+
+  return(gotnan);
+
+}
+
+
+// also check unewglobal for that portion that's used
+static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  PDUMPLOOP(pliter,pl){
+    if(DOENOFLUX != NOENOFLUX || (FLUXB==FLUXCTSTAG &&(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3)) ){
+      if(!finite(GLOBALMACP0A1(unewglobal,i,j,k,pl)) ){
+	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : unewglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(unewglobal,i,j,k,pl));
+	//	myexit(24968346);
+	gotnan++;
+      }
+    }
+  }
+
+  return(gotnan);
+
+}
+
+
+// also check pstagglobal once computed
+static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
+{
+  int pliter,pl;
+  int gotnan;
+
+  gotnan=0;
+
+  
+  if(FLUXB==FLUXCTSTAG){
+    PDUMPLOOP(pliter,pl){
+      if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
+	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl)) ){
+	  dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pstagglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pstagglobal,i,j,k,pl));
+	  //	myexit(24968346);
+	  gotnan++;
+	}
+      }
+    }
+  }
+
+
+  return(gotnan);
+
+}
+
+
+
+
 /////////////////////
 //
 // At this point all grid type parameters should be set as if done with init()
@@ -21,7 +138,6 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   int failflag=0;
   extern int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt);
   int gotnan;
-  int finalstepbackup;
 
 
 
@@ -31,6 +147,25 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   //
   /////////
 
+
+
+  //////////////
+  //
+  // make sure all zones are not nan before fixup and bound
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
+    PDUMPLOOP(pliter,pl){
+      if(!finite(MACP0A1(prim,i,j,k,pl))){
+	dualfprintf(fail_file,"before fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	//	myexit(24968346);
+	gotnan=1;
+      }
+    }
+  }
+  if(gotnan) myexit(24968341);
 
 
 
@@ -103,6 +238,24 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 
+  //////////////
+  //
+  // make sure all zones are not nan after fixup
+  //
+  //////////////
+  // make sure all zones are not nan
+  gotnan=0;
+  LOOP{// OPENMPOPTMARK: Don't optimize since critical region
+    PDUMPLOOP(pliter,pl){
+      if(!finite(MACP0A1(prim,i,j,k,pl))){
+	dualfprintf(fail_file,"after fixup & before bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	//	myexit(24968346);
+	gotnan=1;
+      }
+    }
+  }
+  if(gotnan) myexit(24968341);
+
 
 
   /////////////////////
@@ -110,14 +263,12 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   // BOUND during restart
   //
   /////////////////////
-  finalstepbackup=finalstepglobal;
-  finalstepglobal=1;
-  if (bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI) >= 1) {
+  int finalstep=1; // user would want to know about changes to conserved quants during restart
+  if (bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI) >= 1) {
     fprintf(fail_file, "restart_init:bound_allprim: failure\n");
     fflush(fail_file);
     return (1);
   }
-  finalstepglobal=finalstepbackup;
 
   trifprintf( "proc: %d bound restart completed: failed=%d\n", myid,failed);
 
@@ -132,7 +283,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   FULLLOOP{// OPENMPOPTMARK: Don't optimize since critical region
     PDUMPLOOP(pliter,pl){
       if(!finite(MACP0A1(prim,i,j,k,pl))){
-	dualfprintf(fail_file,"restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+	dualfprintf(fail_file,"after fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
 	//	myexit(24968346);
 	gotnan=1;
       }

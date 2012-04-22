@@ -4,6 +4,8 @@
 // No user functions, unless new transformation of coordinates required
 
 
+// NOTE: When dealing with multiple coordinate geom structures, must keep the PRIMECOORD one separate since repoint pointer to storage of PRIMECOORD geom structure, and using that pointer again afterwards for non-PRIMECOORD or other uses would overwrite PRIMECOORD geom structure values used during evolution and elsewhere when get_geometry() called.
+
 
 // assumes all centered quantities (so for FLUXB==FLUXCTSTAG assumes operates on centered field versions)
 int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
@@ -17,12 +19,14 @@ int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int k
 }
 
 
-// converts whichvel/whichcoord velocity to WHICHVEL/MCOORD
+// converts whichvel/whichcoord velocity to WHICHVEL/(->MCOORD->PRIMECOORDS)
 // converts field too
 int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
   int k = 0;
   FTYPE ucon[NDIM];
+  struct of_geom geomdontusebl;
+  struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   FTYPE Bcon[NDIM];
@@ -37,9 +41,9 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
 
   // pr is in whichcoord coordinates
   // get geometry (non-prime coords)
-  gset_genloc(0,whichcoord,ii,jj,kk,loc,ptrgeom);
+  gset_genloc(0,whichcoord,ii,jj,kk,loc,ptrgeombl);
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
-  if (pr2ucon(whichvel,pr, ptrgeom ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc()", "pr2ucon()", 1);
+  if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc()", "pr2ucon()", 1);
 
   // convert field
   Bcon[0]=0.0;
@@ -114,6 +118,8 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 {
   int k = 0;
   FTYPE ucon[NDIM];
+  struct of_geom geomdontusebl;
+  struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   FTYPE Bcon[NDIM];
@@ -129,9 +135,9 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 
   // pr is in whichcoord coordinates
   // get geometry (non-prime coords)
-  gset(0,whichcoord,ii,jj,kk,ptrgeom);
+  gset(0,whichcoord,ii,jj,kk,ptrgeombl);
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
-  if (pr2ucon(whichvel,pr, ptrgeom ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen()", "pr2ucon()", 1);
+  if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen()", "pr2ucon()", 1);
 
 
   // field
@@ -163,14 +169,29 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 }
 
 
-// transform MCOORD prime primitive velocity to whichcoord whichvel velocity
+// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
 int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
-  int k = 0;
+  int loc;
+
+  loc=CENT;
+ 
+  return(metp2met2bl_genloc(whichvel, whichcoord, pr, ii, jj, kk, loc));
+
+}
+
+// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
+int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int pos)
+{
+  int k;
   FTYPE ucon[NDIM];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
+  struct of_geom geomdontusebl;
+  struct of_geom *ptrgeombl=&geomdontusebl;
   FTYPE Bcon[NDIM];
+
+
 
   // which=WHICHVEL
   // which==0 means supplied the 4-velocity
@@ -180,8 +201,9 @@ int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
   // if whichcood==PRIMECOORDS, then just pr2ucon and ucon2pr
   // effectively this results in changing from one primitive velocity to another within PRIMECOORDS
 
+
   // get prime MCOORD geometry
-  get_geometry(ii,jj,kk,CENT,ptrgeom) ;
+  get_geometry(ii,jj,kk,pos,ptrgeom) ;
   // transform prime MCOORD primitive to prim MCOORD 4-vel
   //  if (pr2ucon(WHICHVEL,pr, ptrgeom ,ucon) >= 1) FAILSTATEMENT("transforms.c:metp2met2bl()", "pr2ucon()", 1);
   MYFUN(pr2ucon(WHICHVEL,pr, ptrgeom ,ucon),"transforms.c:pr2ucon()","metp2met2bl",0);
@@ -191,44 +213,52 @@ int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
   SLOOPA(k) Bcon[k]=pr[B1+k-1];
 
 
+
   if(whichcoord>=0){
     // transform from prime MCOORD 4-vel to non-prime MCOORD 4-vel
-    metptomet(ii,jj,kk,ucon);
+    metptomet_genloc(ii,jj,kk,pos,ucon);
     // transform from non-prime MCOORD to non-prime whichcoord
-    coordtrans(MCOORD,whichcoord,ii,jj,kk,CENT,ucon);
+    coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,ucon);
 
     // convert field
-    metptomet(ii,jj,kk,Bcon);
-    coordtrans(MCOORD,whichcoord,ii,jj,kk,CENT,Bcon);
+    metptomet_genloc(ii,jj,kk,pos,Bcon);
+    coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,Bcon);
 
   }
   // else already in prime
 
+
   // transform from non-prime whichcoord 4-vel to non-prime whichcoord whichvel-velocity
-  gset(0,whichcoord,ii,jj,kk,ptrgeom);
-  ucon2pr(whichvel,ucon,ptrgeom,pr);
+  // can't use same ptrgeom here, since ptrgeom would then the PRIMECOORD version would be overwritten by "whichcoord" version
+  gset_genloc(0,whichcoord,ii,jj,kk,pos,ptrgeombl);
+
+  ucon2pr(whichvel,ucon,ptrgeombl,pr);
 
   // convert field
   SLOOPA(k) pr[B1+k-1]=Bcon[k];
 
-
   return(0);
 }
+
+
+
+
 
 // whichcoordin -> whichcoordout
 int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE *ucon)
 {
+  // GODMARK: need transformation from BL to KS_JP1 for EP3!=0
   if(whichcoordin==whichcoordout){// then no transformation
     return(0);
   }
-  else if((whichcoordin==BLCOORDS)&&(whichcoordout==KSCOORDS)){
+  else if((whichcoordin==BLCOORDS)&&(whichcoordout==KSCOORDS||whichcoordout==KS_JP1_COORDS)){
     bltoks(ii,jj,kk ,loc,ucon);    
   }
-  else if((whichcoordin==KSCOORDS)&&(whichcoordout==BLCOORDS)){
+  else if((whichcoordin==KSCOORDS || whichcoordin==KS_JP1_COORDS)&&(whichcoordout==BLCOORDS)){
     kstobl(ii,jj,kk ,loc,ucon);    
   }
   else{
-    dualfprintf(fail_file,"No such transformation: %d -> %d\n",whichcoordin,whichcoordout);
+    dualfprintf(fail_file,"HARDFAIL: No such transformation: %d -> %d\n",whichcoordin,whichcoordout);
     myexit(1);
   }
 

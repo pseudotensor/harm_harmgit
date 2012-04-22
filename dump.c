@@ -171,9 +171,6 @@ void init_dnumcolumns_dnumversion(void)
   int i;
 
   extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -187,6 +184,14 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  extern void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  extern void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
 
 
@@ -205,10 +210,6 @@ void init_dnumcolumns_dnumversion(void)
 
   // image
   set_image_content_dnumcolumns_dnumversion(&dnumcolumns[IMAGEDUMPTYPE],&dnumversion[IMAGEDUMPTYPE]);
-  // rdump
-  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
-  // rmetricdump
-  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
   // dump
   set_dump_content_dnumcolumns_dnumversion(&dnumcolumns[MAINDUMPTYPE],&dnumversion[MAINDUMPTYPE]);
   // gdump
@@ -235,6 +236,13 @@ void init_dnumcolumns_dnumversion(void)
   set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPTYPE],&dnumversion[VPOTDUMPTYPE]);
   // failfloordudump
   set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
+
+  // rdump (must come after all normal dumps since dnumcolumns used by restart to store other things needed up restart that are dealt with also above)
+  // rupperpoledump
+  set_rupperpoledump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTUPPERPOLEDUMPTYPE],&dnumversion[RESTARTUPPERPOLEDUMPTYPE]);
+  set_rdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTDUMPTYPE],&dnumversion[RESTARTDUMPTYPE]);
+  // rmetricdump
+  set_rmetricdump_content_dnumcolumns_dnumversion(&dnumcolumns[RESTARTMETRICDUMPTYPE],&dnumversion[RESTARTMETRICDUMPTYPE]);
 
 
 
@@ -380,6 +388,7 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
     fwrite(&localdt,sizeof(FTYPE),1,headerptr);
     fwrite(&MBH,sizeof(FTYPE),1,headerptr);
     fwrite(&QBH,sizeof(FTYPE),1,headerptr);
+    fwrite(&EP3,sizeof(FTYPE),1,headerptr);
     fwrite(&is,sizeof(int),1,headerptr);
     fwrite(&ie,sizeof(int),1,headerptr);
     fwrite(&js,sizeof(int),1,headerptr);
@@ -392,9 +401,9 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #endif
   }
   fflush(headerptr);
@@ -653,6 +662,9 @@ extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numv
 int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   // could also make everything FTYPE and convert like for normal i,j dump file
+
+
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,GLOBALMAC(failfloorcount,i,j,k),0,2*NUMTSCALES*NUMFAILFLOORFLAGS,writebuf);
     
   return(0);
@@ -1192,7 +1204,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   ftemp=(float)(-q.ucov[0]);
   myset(datatype,&ftemp,0,1,writebuf);
 
-  // -T^t_t/(gdet rho u^t)
+  // -T^t_t/(rho u^t)
   //  ftemp=(float)(-U[UU]/(ptrgeom->gdet * GLOBALMACP0A1(pdump,i,j,k,RHO)*q.ucon[TT]));
   //myset(datatype,&ftemp,0,1,writebuf);
 
@@ -1396,6 +1408,7 @@ void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversi
 int dissdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,NUMDISSFUNPOS,writebuf);
 
   return (0);
@@ -1671,7 +1684,8 @@ int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int jj;
 
-  DLOOPA(jj){
+  // NOTEMARK: see also restart.c since this is added to restart 
+  for(jj=0;jj<NUMVPOTDUMP;jj++){
     myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
   }
 
@@ -1733,6 +1747,7 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 {
   int pl;
 
+  // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,&GLOBALMAC(failfloordu,i,j,k),0,NPR,writebuf); // NPR
   
   return (0);

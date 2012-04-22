@@ -89,6 +89,7 @@ void newt(int useanalyticjac
 	  }
 
 
+	  // DEBUG
 	  //	  for (i=1;i<=n;i++)for (j=1;j<=n;j++)fprintf(stderr,"fjac[%d][%d]=%21.15g\n",i,j,fjac[i][j]);
 	
 
@@ -111,6 +112,7 @@ void newt(int useanalyticjac
 		ludcmp(fjac,n,indx,&d);
 		//		if(its==5) exit(0);
 
+		// DEBUG
 		//		for (i=1;i<=n;i++)fprintf(stderr,"indx[%d]=%d\n",i,indx[i]);
 
 		for (i=1;i<=n;i++){
@@ -119,6 +121,28 @@ void newt(int useanalyticjac
 		    exit(1);
 		  }
 		}
+
+
+
+		// check for singularity
+		int sing;
+		sing=0;
+		int nonzeroelements;
+
+		for (i=1;i<=n;i++){
+		  nonzeroelements=0;
+		  for(j=1;j<=n;j++){
+		    if(fabs(fjac[i][j])>SMALL) nonzeroelements++;
+		  }
+		  if(nonzeroelements==0) sing++;
+		}
+		if(sing>0){
+		  // found singularity
+		  *check=2;
+		  FREERETURN;
+		}
+
+
 
 
 		lubksb(fjac,n,indx,p);

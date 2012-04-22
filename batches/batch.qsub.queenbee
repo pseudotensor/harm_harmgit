@@ -1,0 +1,148 @@
+#!/bin/bash
+#  Sample Batch Script for a MVAPICH-Intel job
+#
+# http://www.loni.org/teragrid/users_guide.php
+#
+# REMEMBER for HARM code:
+# 1) PRODUCTION 1 in init.h
+# 2) Set N1,N2,N3, and MAXBND in init.h
+# 3) set lim[] in init.c
+# 4) mpd &
+#
+#
+# qsub <this filename>
+#
+#
+# $HOME/.soft contains:
+#
+#  @teragrid-basic
+#  @globus-4.0
+#  @teragrid-dev
+#
+# $HOME/.mpd.conf contains:
+#
+#  MPD_SECRETWORD=XXXXXXX     # random alphanumeric chars
+#                             # (MUST contain at least one alphabetic char)
+#
+# (make sure the file .mpd.conf has permissions 700)
+#
+#  Submit this script using the command: qsub <script_name>
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+# walltime : maximum wall clock time (hh:mm:ss)
+#PBS -l walltime=48:00:00
+#
+# workq, checkpt, preempt, priority (up to 128*8 procs)
+#PBS -q workq
+#
+#PBS -A TG-AST080025N
+#
+# nodes: number of 8-core nodes
+#   ppn: how many cores per node to use (1 through 8)
+#       (you are always charged for the entire node)
+#PBS -l nodes=64:ppn=8
+#
+# export all my environment variables to the job
+#PBS -V
+#
+# job name (default = name of script file)
+#PBS -N t3
+#
+#
+# filename for standard output (default = <job_name>.o<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -o thickdisk3a.out
+#
+# filename for standard error (default = <job_name>.e<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -e thickdisk3a.err
+#
+#PBS -m be
+#
+#PBS -M jmckinne@stanford.edu
+#
+#
+# End of embedded QSUB options
+#
+# set echo               # echo commands before execution; use for debugging
+#
+
+cd $SCR                # change to job scratch directory, 
+                       # use cdjob <jobid> to go to this directory once
+                       # the job has started
+
+###################
+#
+# setup run
+#
+##################
+#
+export NCPUX1=4
+export NCPUX2=4
+export NCPUX3=32
+export NTOT=512
+export FILENAME="thickdisk3"
+export DIRFILE="/home/jmckinne/thickdisk3"
+export RUNDIR=/work/jmckinne/thickdisk3/
+
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+# get executable and input files from mass storage
+cp $DIRFILE/$FILENAME .
+cp $DIRFILE/*.dat .
+cp $DIRFILE/*.txt .
+
+wait
+chmod u+x $FILENAME
+#wait
+
+##################################################
+#
+#   QueenBee SPECIFIC start job
+#
+##################################################
+
+# DOCS say cannot use pipe > to output
+
+export NPROCS=`wc -l $PBS_NODEFILE |gawk '//{print $1}'`
+#
+date
+#timing the time job starts
+#
+
+#mpd &
+
+# NO OPENMP NO RESTART
+mpirun_rsh -np $NPROCS -hostfile $PBS_NODEFILE $RUNDIR/$FILENAME $NCPUX1 $NCPUX2 $NCPUX3
+
+
+###########mpirun -machinefile $PBS_NODEFILE -np $NPROCS $RUNDIR/$FILENAME $NCPUX1 $NCPUX2 $NCPUX3
+
+
+date
+# timing your job

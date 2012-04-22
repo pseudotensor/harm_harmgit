@@ -11,3 +11,19 @@ extern int ucons2upointppoint(SFTYPE boundtime, FTYPE (*pfield)[NSTORE2][NSTORE3
 
 extern int deaverage_ustag2pstag(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
 
+
+extern int evolve_vpotgeneral(int whichmethod, int stage,
+		       int initialstep, int finalstep,
+		       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+		       int *Nvec,
+		       FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+		       FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+			      FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
+		       FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
+		       );
+
+
+extern void adjust_emfs(SFTYPE time, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
+
+extern void adjust_vpot(SFTYPE time, int whichmethod,FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+

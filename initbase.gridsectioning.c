@@ -633,7 +633,7 @@ int sashawind_set_enerregionupdate(int initialcall, int timeorder, int numtimeor
   ///////////////////
   *updateeverynumsteps=100;
   //number of steps after which position/size of active section is updated
-  *everynumsteps = updateeverynumsteps;
+  *everynumsteps = *updateeverynumsteps;
 
   return(0);
 }

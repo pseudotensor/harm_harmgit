@@ -407,7 +407,7 @@ int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt
   // write header
   if(bintxt==TEXTOUTPUT){
 
-    fprintf(headerptr, "RAW\n# t=%21.15g vartype=%2d  whichpl=%2d scale=%2d limits=%2d ",t, imagevartype, imagewhichpl, imagescale, imagelimits);
+    fprintf(headerptr, "RAW\n# t=%21.15g nstep=%ld vartype=%2d  whichpl=%2d scale=%2d limits=%2d ",t, nstep, imagevartype, imagewhichpl, imagescale, imagelimits);
     fprintf(headerptr, "aa=%g lmin=%g lmax=%g ",imageparms[ORIGIN],imageparms[LMIN],imageparms[LMAX]);
     fprintf(headerptr,"\n");
     

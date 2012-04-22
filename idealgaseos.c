@@ -52,9 +52,10 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE cs2;
 
   pressure = pressure_rho0_u_idealgas(EOSextra,rho0,u);
-  h=rho0+u+pressure;
+  h=rho0+u+pressure+SMALL;
 
   cs2=GAMMA*pressure/h;
+  if(cs2<0.0) cs2=0.0;
 
   return(cs2);
 

@@ -212,7 +212,6 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
   //  FTYPE dualf[NDIM];
-  int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf);
   //  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
   //  int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
 
@@ -237,6 +236,14 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
   if(nprlist[nprstart]<=B1 && nprlist[nprend]>=B3)
 #endif
   dualfaradayspatial_calc(pr,dir,q,&flux[B1]); // fills B1->B3
+
+
+#if(DEBUGNSBH)
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INprimetoflux_em: %21.15g %21.15g %21.15g\n",flux[B1],flux[B2],flux[B3]);
+  }
+#endif
 
 
   return (0);
@@ -350,7 +357,6 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf)
 {
   VARSTATIC FTYPE dualffull[NDIM];
-  int dualfullfaraday_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf);
 
 
   dualfullfaraday_calc(pr,dir,q,dualffull);
@@ -954,6 +960,15 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 #endif
 
 
+#if(DEBUGNSBH)
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INEM1: ucondir=%21.15g %21.15g\n",q->ucon[dir],mhd[3]);
+  }
+#endif
+
+
+
 }
 
 
@@ -1120,6 +1135,15 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   mhddiagpress[dir] = ptot;
 #endif
 
+
+#if(DEBUGNSBH)
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INMA: ucondir=%21.15g %21.15g\n",q->ucon[dir],mhd[3]);
+  }
+#endif
+
+
 }
 
 
@@ -1186,6 +1210,15 @@ void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_s
 
 #endif
 
+
+
+#if(DEBUGNSBH)
+  // DEBUG:
+  if(geom->i==26 && geom->j==40 && dir==1){
+    dualfprintf(fail_file,"INEM2: ucondir=%21.15g Bcondir=%21.15g (%21.15g %21.15g %21.15g) mhd3=%21.15g\n",q->ucon[dir],Bcon[dir],Bsq,udotB,oneovergammasq,mhd[3]);
+    DLOOPA(mu) dualfprintf(fail_file,"mu=%d ucov[mu]=%21.15g Bcov[mu]=%21.15g\n",mu,q->ucov[mu],Bcov[mu]);
+  }
+#endif
 
 
 }
@@ -2133,6 +2166,82 @@ int get_3velterm(FTYPE *vcon, struct of_geom *geom, FTYPE *velterm)
 }
 
 
+
+
+
+
+// for FFDE, check to make sure 3-velocity is good, otherwise will have to limit it
+// Bcon and vcon are code versions
+// returns code primitives such as WHICHVEL for velocity (although coordinates will still be whatever geom was)
+int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
+{
+  int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM]);
+  void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM]);
+  FTYPE dualf[NDIM][NDIM], T[NDIM][NDIM];
+  int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
+  FTYPE U[NPR];
+
+#if(EOMTYPE!=EOMFFDE)
+  dualfprintf(fail_file,"Only call limit_3vel_ffde() if doing EOMTYPE==EOMFFDE\n");
+  myexit(346983463);
+#endif
+
+
+  ////////////////////////
+  //
+  // get \dF^{\mu\nu}
+  //
+  ////////////////////////
+  dualf_calc(Bcon, vcon, dualf);
+
+  //////////////////////
+  //
+  // get T^\mu_\nu
+  //
+  //////////////////////
+  ffdestresstensor(dualf, geom, T);
+
+
+  ///////////////////
+  //
+  // setup conserved quantities
+  //
+  ///////////////////
+  U[RHO] = 0;
+  U[UU] = T[0][0]; // T^t_t
+  U[U1] = T[0][1]; // T^t_x
+  U[U2] = T[0][2]; // T^t_y
+  U[U3] = T[0][3]; // T^t_z
+  U[B1] = Bcon[1];
+  U[B2] = Bcon[2];
+  U[B3] = Bcon[3];
+
+
+
+  ///////////////////
+  //
+  // filter through inversion so v^i is limited to have Lorentz factor <=GAMMAMAX
+  //
+  ///////////////////
+
+
+  //  Utoprim_ffde(U, geom, pr);
+  struct of_newtonstats newtonstats; // not pointer
+  // initialize counters
+  newtonstats.nstroke=newtonstats.lntries=0;
+  int finalstep=1; // doesn't matter for ffde
+  MYFUN(Utoprimgen(finalstep,EVOLVEUTOPRIM,UNOTHING,U, geom, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+  //  nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+
+
+
+  return(0);
+
+}
+
+
+
+
 /* find contravariant time component of four-velocity from the 4velocity (3 terms)*/
 int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *ucon2, FTYPE *others)
 {
@@ -2874,6 +2983,42 @@ int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, 
   vcon[1] =        v0*Bccon[1]/absB_poloidal;
   vcon[2] =        v0*Bccon[2]/absB_poloidal;
   vcon[3] = omegaf+v0*Bccon[3]/absB_poloidal;
+
+  MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:OBtopr_general3p()", "vcon2pr() dir=0", 1);
+
+  return(0);
+
+}
+
+
+
+
+// input \Omega_F, extra 3-vel along the normal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+int OBtopr_general3n(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, FTYPE *normalvec,struct of_geom *geom, FTYPE *pr)
+{
+  int j;
+  FTYPE Bccov[NDIM];
+  FTYPE Bsq_normal;
+  FTYPE absB_normal;
+  FTYPE v0other;
+  FTYPE ftemp,ftemp2;
+  FTYPE vcon[NDIM];
+  FTYPE v0oB;
+
+  FTYPE normalveccov[NDIM];
+
+
+  lower_vec(Bccon,geom,Bccov);
+  lower_vec(normalvec,geom,normalveccov);
+
+  Bsq_normal=0.0;
+  SLOOPA(j) Bsq_normal+=Bccon[j]*normalveccov[j];
+
+  absB_normal=sqrt(Bsq_normal);
+
+  vcon[1] =        v0*Bccon[1]/absB_normal;
+  vcon[2] =        v0*Bccon[2]/absB_normal;
+  vcon[3] = omegaf+v0*Bccon[3]/absB_normal;
 
   MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:OBtopr_general3p()", "vcon2pr() dir=0", 1);
 

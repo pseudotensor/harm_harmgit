@@ -94,7 +94,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   setbuf=malloc(numcolumns*sizeofdatatype);
   if(setbuf==NULL){
     dualfprintf(fail_file,"cannot allocate memory to setbuf in %s %s with numcolumns=%d and sizeofdatatype=%d\n",fileprefix,filesuffix,numcolumns,sizeofdatatype);
-    myexit(1);
+    myexit(927656247);
   }
 
 
@@ -162,13 +162,14 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   ///////////////
 
   checkstatus=0; // no error so far
+  int problemloadingfile=0;
   if((USEMPI&&(myid==0)&&(mpicombine==1))||(mpicombine==0)){// for mpicombine==1 even with ROMIO, real filename and header not needed
 
     // only one CPU does header if mpicombine==1, header+dump done in all CPUs if mpicombine==0
     // create files for each column, or each column's header if mpicombine==1
     if((fpp=(FILE**)malloc(sizeof(FILE*)*numfiles))==NULL){
       dualfprintf(fail_file,"couldn't open fpp in dump()\n");
-      myexit(2);
+      myexit(836565474);
     }// now fpp[i] indexes a list of file pointers
 
 
@@ -182,16 +183,36 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       if ((fpp[coliter] = fopen(dfnamreal, filerw)) == NULL) {
 	dualfprintf(fail_file, "error opening %s %s (fullname=%s) file\n",fileprefix,filesuffix,dfnamreal);
 	dualfprintf(fail_file, "Check if disk full or have correct permissions\n");
-	myexit(2490834);
+	problemloadingfile=1;
       }
+    }// end COLLOOP
+  }// end if myid or mpicombine==0 (split the loop so that can check for file existence first)
 
+
+  // need to broadcast whether got all files or had problem
+#if(USEMPI)
+  MPI_Bcast(&problemloadingfile,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
+#endif
+  if(problemloadingfile){
+    // indicate failure, but one may wish to set some defaults if no file, so don't hard fail.
+    return(FILENOTFOUND);
+  }
+
+
+
+  checkstatus=0; // no error so far
+  if((USEMPI&&(myid==0)&&(mpicombine==1))||(mpicombine==0)){// for mpicombine==1 even with ROMIO, real filename and header not needed
+    // setup each file corresponding to each column
+    COLLOOP(coliter){
 
       //////////////////////////////////
       //
       //  read or write header: header is read/written in whatever style chosen to the top of each dump file created
       //
       ///////////////////////////////////
-      headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+      if(headerfun!=NULL){
+	headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+      }
 
       ////////////////////////////
       //
@@ -206,8 +227,10 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       // deal with transition between header and data
       if(readwrite==READFILE){
 	if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
-	  // now move past \n
-	  if(gopastlinebreak(fpp[coliter])) checkstatus=1;
+	  if(headerfun!=NULL){
+	    // now move past \n
+	    if(gopastlinebreak(fpp[coliter])) checkstatus=1;
+	  }
 	}
       }
       // get position that would start real data
@@ -221,6 +244,9 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 
 
   }
+
+
+
   // need to broadcast the header size to other CPUs for ROMIO
 #if(USEMPI&&USEROMIO)
   MPI_Bcast(&uptodatabytesize,1,MPI_LONG,MPIid[0], MPI_COMM_GRMHD);
@@ -306,7 +332,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextbuf!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
-	  myexit(1);
+	  myexit(932736466);
 	}
 	
 	// get the content of 1 row
@@ -315,7 +341,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextcol!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(1);
+	  myexit(836745613);
 	}
       }// end DUMPGENLOOP
     }// end readwrite==READFILE
@@ -341,7 +367,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextcol!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(1);
+	  myexit(19785566);
 	}
 
 	// write all at once
@@ -351,7 +377,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 	// check
 	if(nextbuf!=numcolumns){
 	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%d)\n",numcolumns,nextbuf);
-	  myexit(1);
+	  myexit(94675455);
 	}
 
 

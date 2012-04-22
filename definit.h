@@ -204,6 +204,9 @@
 // only machine error different from evolution of field itself
 #define EVOLVEWITHVPOT TRACKVPOT // choice
 
+// more often makes sense to modify A_i and not EMF_i, since want A_i to be smooth so Bstag^i is computed properly (and Bcent^i based upon Bstag^i)
+#define MODIFYEMFORVPOT MODIFYVPOT
+
 // whether to specify gdet at end when setting EMF or to have internal to variables before averaging.
 // point is that gdet at end is probably better, esp. at coordinate singularities.
 #define CORNGDETVERSION 1
@@ -392,6 +395,9 @@
 // default HARM was using VERY local LAXF (only wavespeeds from primitives interpolated to the edge).
 #define STOREWAVESPEEDS 0
 
+// whether to compute per cell $dt$ by storing $dt$ per dimension and then computing minimum per cell rather than minimum per dimension.  Can give up to a factor of 3X improvement in speed (just changes effective Courant factor).
+#define PERCELLDT 1
+
 // whether to use stored wave speeds for flux calculation (allows one to store wave speeds for interp.c but use true VERYLOCALVCHAR that is vchar's estimated from boundary as in standard HARM -- rather than maximum from center zones as done by STORED version of VERYLOCALVCHAR)
 // silly choice would be 0 if VCHARTYPE=GLOBALVCHAR since interp.c doesn't use the stored wave speeds if this is the case.  So shouldn't store in this case since no point.
 #define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS) // choice really independent of STOREWAVESPEEDS, but generall normally want to couple them
@@ -537,6 +543,12 @@
 // only makes sense for non-higher order scheme
 // does help near the pole to avoid failures
 #define CONNMACHINEBODY 1
+
+// whether connection coefficients are computed as being axisymmetric
+// Speeds-up connection calculation when starting computations
+// currently all setups are axisymmetric metrics, but don't assume list won't diverge.
+#define CONNAXISYMM 1
+
 
 // if WHICHEOM==WITHNOGDET, then below determines which EOMs get what geometric prefactor.  Notice (as described in phys.c's source_conn() ) that geometry issue applies AFTER additions/subtractions of EOMs (as done by REMOVERESTMASSFROMUU).
 #define WHICHEOM WITHGDET
@@ -688,6 +700,7 @@
 
 
 
+
 // whether to rescale interpolation
 #define RESCALEINTERP 0
 // 0: don't rescale
@@ -819,3 +832,14 @@
 #define USESJETLOGHOVERR 0
 #define DOIMPROVEJETCOORDS 0
 #define THINTORUS_NORMALIZE_DENSITY 0
+
+// whether poledeath in bounds.tools.c keeps sigma constant in some cases
+#define BCSIGMACONSTATPOLE 0
+
+// whether to do one-step diag_fixup accounting
+#define DOONESTEPDUACCOUNTING 0
+
+#define FIELDLINEGDETB 0
+
+#define DO_ASSERTS 0
+

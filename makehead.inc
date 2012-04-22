@@ -25,6 +25,7 @@ USEORANGE=0
 USENERSC=0
 USEKRAKEN=0
 USEKRAKENICC=0
+USETACCLONESTAR4=0
 USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
@@ -195,9 +196,12 @@ ENFORCEPRECISION=0
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
 USELAPACK=1
+# below is for new form of library -l line
+USELAPACKNEW=1
 else
 # NO choice for below
 USELAPACK=0
+USELAPACKNEW=0
 endif
 #
 ####################
@@ -220,6 +224,7 @@ endif
 $(warning USEMPI is $(USEMPI))
 $(warning USEOPENMP is $(USEOPENMP))
 $(warning USELAPACK is $(USELAPACK))
+$(warning USELAPACKNEW is $(USELAPACKNEW))
 $(warning ENFORCEPRECISION is $(ENFORCEPRECISION))
 
 

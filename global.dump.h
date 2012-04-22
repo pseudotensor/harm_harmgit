@@ -59,7 +59,9 @@ extern int image_content(int i, int j, int k, MPI_Datatype datatype,void *writeb
 extern void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *max, FTYPE*min,FTYPE*sum);
 
 extern int restart_init(int which);
+extern int restart_init_simple_checks(int which);
 extern int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
+
 
 
 // restart dump
@@ -72,6 +74,17 @@ extern int restart_write(long dump_cnt);
 extern int write_restart_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE* headerptr);
 extern int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
+// restart upperpole dump
+extern int restartupperpole_read(long dump_cnt);
+extern int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr);
+extern int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+extern int restartupperpole_write(long dump_cnt);
+extern int write_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr);
+extern int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
+
+
+
 // old metric restart dump
 extern int restartmetric_read(long which);
 extern int read_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE* headerptr);
@@ -79,6 +92,8 @@ extern int rmetricdump_read_content(int i, int j, int k, MPI_Datatype datatype,v
 extern int restartmetric_write(long dump_cnt);
 extern int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE* headerptr);
 extern int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
+
 
 extern void myfopen(char*fname, char*fmt, char*message, FILE ** fileptr);
 extern void myfclose(FILE ** fileptr,char*message);

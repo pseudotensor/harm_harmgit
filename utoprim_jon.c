@@ -145,7 +145,11 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
      Utoprim_1D, residual, and utsq */
   int real_dimen_newton;
   int whicheos;
+  int pliter;
 
+
+  // DEBUG:
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"%d %d %d : pl=%d U=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pl,U[pl]);
 
 
 #if(0)
@@ -259,7 +263,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   ///////////
   for(i = BCON1; i <= BCON3; i++) prim[i] = U[i] ;
 
-
+  
  
 
   ///////////
@@ -296,7 +300,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   /////////////
 
   // default is to treat all quantities as scalars
-  // Note that n eed PALLLOOP here since while not setting all quantities, may use all quantities
+  // Note that need PALLLOOP here since while not setting all quantities, may use all quantities
   PALLLOOP(i) prim_tmp[i] = prim[i];
   // field
   for( i = BCON1; i <= BCON3; i++ ) prim_tmp[i] = alpha*prim[i];
@@ -343,7 +347,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   //
   ///////////
   if( ret == 0 ) {
-    // only changed RHO through U3
+    // only changed RHO through U3 (otherwise have to remove alpha from B^i)
     for( i = 0; i <=U3; i++ ) prim[i] = prim_tmp[i];
   }
   else{
@@ -414,10 +418,15 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   // below used to be static global in this file
   FTYPE Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc ;
   FTYPE wglobal[3]; // [0] is normalization for Wp and [1] is normalization for Wtest, and [2] is for rho0gammasqresidabs term
+  int Wdependentsolution;
+
+
 #if(0) // old globals used for debugging -- can't be used during OpenMP computations
   static FTYPE Qcovorig[NDIM],Qconorig[NDIM],Qdotnorig,Qsqorig,Qtsqorig;
   static FTYPE Qtsqnew;
 #endif
+
+
    
 #if(DEBUGINDEX)
   // initialize debug indices
@@ -464,10 +473,11 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
 #if(0)
-  if(ptrgeom->i==1 && ptrgeom->j==18){
+  // DEBUG:
+  //  if(ptrgeom->i==1 && ptrgeom->j==18){
     DLOOPA(i) dualfprintf(fail_file,"Qtcon[%d]=%21.15g Bcon[%d]=%21.15g Bcov[%d]=%21.15g\n",i,Qtcon[i],i,Bcon[i],i,Bcov[i]);
-    dualfprintf(fail_file,"Bsq=%21.15g QdotB=%21.15g QdotBsq=%21.15g Qtsq=%21.15g Qdotn=%21.15g Qdotnp=%21.15g D=%21.15g Sc=%21.15g\n",Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
-  }
+    dualfprintf(fail_file,"Bsq=%21.15g QdotB=%21.15g QdotBsq=%21.15g Qtsq=%21.15g Qdotn=%21.15g Qdotnp=%21.15g D=%21.15g Sc=%21.15g\n",Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
+    //  }
 #endif
 
 
@@ -481,10 +491,14 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   ////////////////////////////////
 
   if(eomtype==EOMFFDE){
+    Wdependentsolution=0;
+
     // then perform the analytic inversion with Lorentz factor limit
     if(forcefree_inversion(ptrgeom, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim)) retval++;
   }
   else{
+    Wdependentsolution=1;
+
     /////////////
     //
     // SETUP ITERATIVE METHODS (good for GRMHD or entropy GRMHD or cold GRMHD)
@@ -686,9 +700,12 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   /////////////////////
 
   // check on result of inversion even if failure (i.e. even if retval>0)
+  // Can be done for Wdependentsolution==0, but ignore Wp
   check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
-  if(retval==0){
+
+  /// check on W' and convert W' -> prim[]
+  if(retval==0 && Wdependentsolution==1){
     //  Check if solution was found
     retval+=check_Wp(lpflag, eomtype, prim, U, ptrgeom, Wp_last, Wp, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra); // should add in case retval!=0 before this call
     if(retval) return(retval);
@@ -1694,6 +1711,7 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
   for(i = BCON1; i <= BCON3; i++) prim[i] = U[i] ;
 
 
+  // DEBUG:
   //  PLOOPALLINVERT(i) dualfprintf(fail_file,"vsq=%21.15g prim[%d]=%21.15g\n",vsq,i,prim[i]);
 
   return(0);

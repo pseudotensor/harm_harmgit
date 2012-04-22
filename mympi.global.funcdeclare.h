@@ -47,21 +47,22 @@ extern int init_default_MPI_GRMHD_myid(void);
 extern int init_MPI_GRMHD_myid(void);
 extern int report_myid(FILE *out);
 extern void init_MPI_setupfilesandgrid(int argc, char *argv[]);
-extern void init_placeongrid(void);
+extern void init_placeongrid_gridlocation(void);
+extern void init_placeongrid_griddecomposition(void);
 extern int myexit(int call_code);
 extern int final_myexit(void);
 
-extern int bound_mpi_dir(int boundstage, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+extern int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
-extern int bound_mpi(int boundstage, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+extern int bound_mpi(int boundstage, int finalstep, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
-extern int bound_mpi_int(int boundstage, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
-extern void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM]);
-extern void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+extern int bound_mpi_int(int boundstage, int finalstep, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
+extern void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM]);
+extern void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 extern void pack_int(int dir, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM]);
 extern void unpack_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
 
-extern int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
+extern int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
 extern void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
 
 

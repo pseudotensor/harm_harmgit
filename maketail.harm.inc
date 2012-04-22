@@ -1,7 +1,7 @@
 
 SRCSMANYPOINTS=\
 init.c init.tools.c initbase.c initbase.enerregions.c initbase.tools.c initbase.gridsectioning.c restart.c restart.checks.c set_arrays.c set_arrays_perpoint_perline.c set_arrays_multidimen.c mpi_set_arrays.c set_grid.c \
-advance.c copyandinit_functions.c reconstructeno.c paraenohybrid.c flux.c flux.mergedc2ea2cmethod.c higherorder_pointavg.c wavespeeds.c boundsflux.c \
+advance.c copyandinit_functions.c reconstructeno.c paraenohybrid.c flux.c flux.mergedc2ea2cmethod.c higherorder_pointavg.c wavespeeds.c boundsflux.c boundsvpot.c \
 fluxct.c fluxctstag.c fluxvpot.c \
 bounds.c bounds.tools.c boundsint.c \
 diag.c dump.c dumpgen.c dump_ener.c image.c \
@@ -13,7 +13,7 @@ geodesic.c
 
 OBJSMANYPOINTS=\
 init.o init.tools.o initbase.o initbase.enerregions.o initbase.tools.o initbase.gridsectioning.o restart.o restart.checks.o set_arrays.o set_arrays_perpoint_perline.o set_arrays_multidimen.o mpi_set_arrays.o set_grid.o \
-advance.o copyandinit_functions.o reconstructeno.o paraenohybrid.o flux.o  flux.mergedc2ea2cmethod.o higherorder_pointavg.o wavespeeds.o boundsflux.o \
+advance.o copyandinit_functions.o reconstructeno.o paraenohybrid.o flux.o  flux.mergedc2ea2cmethod.o higherorder_pointavg.o wavespeeds.o boundsflux.o boundsvpot.o \
 fluxct.o fluxctstag.o fluxvpot.o \
 bounds.o bounds.tools.o boundsint.o \
 diag.o dump.o dumpgen.o dump_ener.o image.o \

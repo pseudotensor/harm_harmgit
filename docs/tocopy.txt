@@ -1,0 +1,458 @@
+cd /lustre/scratch/atchekho/runcopy
+
+which=4 ; for fil in `cat ~/dirs$which.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs$which.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -b +500 -I ~/fieldlinepluslistdirs$which.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+~/bin/bbcp -z -s 20 -b +200 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' thickdisk3.opq thickdiskr3.xyz tg802609@ranch.tacc.utexas.edu:
+
+#on ranch (getting new QB toroidal runs (nothing from kraken yet)):
+
+echo "thickdisk3.lmn thickdisk17.ijk thickdiskr3.stuv thickdisk15r.abc thickdisk10.pqrs thickdisk10.tuv thickdisk3.opq thickdisk17.lmn thickdiskr3.xyz thickdisk15r.def" > dirs.txt
+#echo "thickdisk17.ijk thickdiskr3.stuv thickdisk15r.abc thickdisk10.pqrs thickdisk10.tuv thickdisk3.opq thickdisk17.lmn thickdiskr3.xyz thickdisk15r.def" > $fildirsnew
+
+
+rm -rf fieldlinepluslistdirs.txt
+for thedir in `cat dirs.txt` ; do echo $thedir ; find $thedir \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" -o -name "coordparms" -o -name "nprlist" \) -print >> fieldlinepluslistdirs.txt ; done
+
+ for fil in fieldlinepluslistdirs.txt ; do stage $fil ; done
+
+~/bin/bbcp -a -k -f -p -r -s 20 -z -b +500 -I fieldlinepluslistdirs.txt -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/
+
+#(repeat if fails.  Should take a bit and then ask password).
+
+
+
+###########################
+# from kraken (sasha stuff) to ki-jmck
+alias ls='ls'
+cd /lustre/scratch/jmckinne/
+#fil=~/dirs.txt
+fildirs=dirsnew.txt
+bdir=`pwd`/lists/
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+ls | egrep 'rtf*' > $fildirs
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+###########################
+# from kraken (jmckinne) to ranch:
+alias ls='ls'
+cd /lustre/scratch/jmckinne/
+mydirlist=`ls -rt | egrep 'thickdisk*'`
+~/bin/bbcp -z -s 20 -b +500 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' $mydirlist tg802609@ranch.tacc.utexas.edu:
+
+#NEW (from docopy.sh):
+
+# from kraken (jmckinne) to ranch:
+alias ls='ls'
+cd /lustre/scratch/jmckinne/
+#mydirlist=`ls -aprt | grep / | sed "s/\///" | egrep 'thickdisk*'`
+mydirlist=`ls -aprt | grep / | sed "s/\///" | egrep 'thickdiskhr3'`
+mydirlist2=`ls -aprt | grep / | sed "s/\///" | egrep 'thickdisk3'`
+#mydirlist2=`ls -aprt | grep / | sed "s/\///" | egrep 'runlocaldipole3dfiducial*'`
+finaldirlist="$mydirlist $mydirlist2"
+#finaldirlist="$mydirlist"
+for thedir in $finaldirlist
+  do
+
+  ~/bin/bbcp -z -s 20 -b +500 -a -k -f -r -P 5 -V -l stderr.$thedir -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' $thedir tg802609@ranch.tacc.utexas.edu:
+
+done
+
+###########################
+# from kraken (rblandfo) to ranch:
+alias ls='ls'
+cd /lustre/scratch/rblandfo/
+mydirlist=`ls -rt | egrep 'thickdisk*'`
+~/bin/bbcp -z -s 20 -b +500 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' $mydirlist tg802609@ranch.tacc.utexas.edu:
+
+
+for fil in fieldlinepluslistdirs.txt ; do stage $fil ; done
+
+
+
+
+##################################################################################
+
+# from ranch (thickdisk except thickdisk7) to ki-jmck
+alias ls='ls'
+cd ~
+fildirs=dirsnewfull.txt
+bdir=`pwd`/listsfull/
+mkdir $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+diit=`lssdir | grep -v thickdisk7 | grep -v blob | grep -v bbcp | grep -v bin | grep -v lists`
+echo $diit > $fildirs
+
+
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; for god in $bdir/list$fil.txt; do stage $god ; done  ; cd $dirorig ; done
+
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+############### recover thickdisk8
+
+fil=thickdisk8
+rm -rf ~/thickdisk8.list.txt
+export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > ~/thickdisk8.list.txt ; for god in `cat ~/thickdisk8.list.txt`  ; do stage $god ; done  ; cd $dirorig
+
+export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > ~/thickdisk8.list.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I ~/thickdisk8.list.txt -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig
+
+
+############### recover thickdisk9a (was thickdisk9)
+
+fil=thickdisk9a
+rm -rf ~/thickdisk9a.list.txt
+export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > ~/thickdisk9a.list.txt ; for god in `cat ~/thickdisk9a.list.txt`  ; do stage $god ; done  ; cd $dirorig
+
+export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > ~/thickdisk9a.list.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I ~/thickdisk9a.list.txt -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig
+
+
+
+
+############### only thickdisk3 and thickdiskhr3 that simulated further
+
+# from ranch (thickdisk except thickdisk7) to ki-jmck
+alias ls='ls'
+cd ~
+fildirs=dirsnewfull.txt
+bdir=`pwd`/listsfull/
+mkdir $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+diit1=`lssdir | grep thickdisk3`
+diit2=`lssdir | grep thickdiskhr3`
+echo $diit1 > $fildirs
+echo $diit2 >> $fildirs
+
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/liststage$fil.txt ; for god in `cat $bdir/liststage$fil.txt`; do stage $god ; done  ; cd $dirorig ; done
+
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/listcopy$fil.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/listcopy$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+########################################################################
+
+# from kraken directly (thickdisk except thickdisk7) to ki-jmck
+alias ls='ls'
+cd /lustre/scratch/jmckinne/
+fildirs=dirsnewfull.txt
+bdir=`pwd`/listsfull/
+mkdir $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+#diit1=`lssdir | grep thickdisk3`
+#diit2=`lssdir | grep thickdiskhr3`
+#echo $diit1 > $fildirs
+#echo $diit2 >> $fildirs
+diit=`lssdir | egrep 'thickdisk*'`
+echo $diit >> $fildirs
+
+
+for fil in `cat $fildirs`
+    do  
+    echo $fil
+    export dirorig=`pwd`
+    cd $fil/dumps/
+    find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/listcopy$fil.txt
+    ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/"
+    scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/
+    ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -l $dirorig/stderr.$fil -I $bdir/listcopy$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/
+    cd $dirorig
+done
+
+
+########################################################################
+
+########################################################################
+
+# from nautilus directly (sasha data)
+alias ls='ls'
+cd /lustre/medusa/jmckinne/
+fildirs=dirsnewfull.txt
+bdir=`pwd`/listsfull/
+mkdir $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+#diit1=`lssdir | grep thickdisk3`
+#diit2=`lssdir | grep thickdiskhr3`
+#echo $diit1 > $fildirs
+#echo $diit2 >> $fildirs
+#diit=`lssdir | egrep 'thickdisk*'`
+#diit=rtf2_20r62.5_a0.9_0_0_0_betatrue50_ny64_r0g200
+#diit='rtf2_20r62.5_a0.9_0_0_0_betatrue50_ny64_r0g200 rtf2_15r34.475_a0.5_0_0_0_newdiagnau rtf2_15r35_a0.2_0_0_0_newdiagnau rtf2_15r35.64_a-0.2_0_0_0'
+diit='rtf2_15r35.64_a-0.2_0_0_0'
+echo $diit > $fildirs
+
+
+
+
+for fil in `cat $fildirs`
+    do  
+    echo $fil
+    export dirorig=`pwd`
+    cd $fil/dumps/
+    find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/listcopy$fil.txt
+    ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data1/jmckinne/$fil/dumps/"
+    scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/$fil/
+    #
+    ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -l $dirorig/stderr.$fil -I $bdir/listcopy$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/$fil/dumps/
+    #
+    #~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -l $dirorig/stderr.$fil -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' fieldline*.bin jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/$fil/dumps/
+    #
+    cd $dirorig
+done
+
+
+########################################################################
+
+
+
+##################################################################################
+# from ranch (thickdisk7 only to data1 on ki-jmck)
+cd ~
+fildirs=dirsnew7.txt
+bdir=`pwd`/lists7/
+mkdir $bdir
+alias ls='ls'
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+diit=`lssdir | grep thickdisk7`
+echo $diit > $fildirs
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; for god in `cat $bdir/list$fil.txt` ; do stage $god ; done  ; cd $dirorig ; done
+
+
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data1/jmckinne/thickdisk7/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/thickdisk7/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/thickdisk7/$fil/dumps/  ; cd $dirorig ; done
+
+
+##################################################################################
+# from kraken directly (thickdisk7 only to data1 on ki-jmck)
+
+##################################################################################
+# from kraken directly (thickdisk7 only to data1 on ki-jmck)
+cd /lustre/scratch/rblandfo/
+fildirs=dirsnew7.txt
+bdir=`pwd`/lists7/
+mkdir $bdir
+alias ls='ls'
+alias lsdir='ls -lrt | egrep "^d"'
+alias lssdir='ls -prt | grep / | sed "s/\///"'
+alias lssdir2='ls -prt | grep / | tail -n +3 | sed "s/\///"'
+diit=`lssdir | grep thickdisk7`
+echo $diit > $fildirs
+
+
+##########for fil in `cat $fildirs`
+  do
+  echo $fil
+  export dirorig=`pwd`
+  cd $fil/dumps/
+  find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt
+      ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data1/jmckinne/thickdisk7/$fil/dumps/"
+      scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/thickdisk7/$fil/
+      ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -l $dirorig/stderr.$fil -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data1/jmckinne/thickdisk7/$fil/dumps/
+      cd $dirorig
+done
+
+##################################################################################
+########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+# from orange to ki-jmck
+mydirlist=`ls`
+~/bin/bbcp -z -s 20 -b +500 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' $mydirlist jmckinne@ki-jmck:/data1/jmckinne/from_lustre_orange/
+
+
+# from  ki-jmck orange
+cd /data1/jmckinne/thickdisk7/dumps/
+~/bin/bbcp -z -s 20 -b +500 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' fieldline*.bin gdump.bin dump0000.bin jmckinne@orange.slac.stanford.edu:/lustre/ki/orange/jmckinne/thickdisk7/dumps/
+
+# thickdisk7
+
+# from ki-jmck to orange
+alias ls='ls'
+cd /data2/jmckinne/
+fildirs=dirsnew.txt
+bdir=`pwd`/lists/
+mkdir -p $bdir
+ls | egrep 'thickdisk7*' > $fildirs
+#echo "thickdisk7" > $fildirs
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@orange.slac.stanford.edu "mkdir -p /lustre/ki/orange/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@orange.slac.stanford.edu:/lustre/ki/orange/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@orange.slac.stanford.edu:/lustre/ki/orange/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+# sasha99
+
+alias ls='ls' ; cd /data2/jmckinne/ ; fildirs=dirsnew.txt ; bdir=`pwd`/lists/ ; mkdir -p $bdir ; echo "sasha99" > $fildirs ; for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@orange.slac.stanford.edu "mkdir -p /lustre/ki/orange/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@orange.slac.stanford.edu:/lustre/ki/orange/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@orange.slac.stanford.edu:/lustre/ki/orange/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+# thickdisk7-like runs at different spins to check fft changes with spin
+
+# from ki-jmck to orange
+alias ls='ls'
+cd /data2/jmckinne/
+fildirs=dirsnew.txt
+bdir=`pwd`/lists/
+#destdir=/lustre/ki/orange/jmckinne/
+destdir=/nfs/slac/g/ki/ki14/jmckinne/
+mkdir -p $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+echo "thickdiskr1 thickdiskr2" > $fildirs
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@orange.slac.stanford.edu "mkdir -p $destdir/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@orange.slac.stanford.edu:$destdir/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@orange.slac.stanford.edu:$destdir/$fil/dumps/  ; cd $dirorig ; done
+
+
+# thickdisk3 run may show rotational vortex and lowF-QPO
+
+# from ki-jmck to orange
+alias ls='ls'
+cd /data2/jmckinne/
+fildirs=dirsnewtd3.txt
+bdir=`pwd`/liststd3/
+#destdir=/lustre/ki/orange/jmckinne/
+destdir=/nfs/slac/g/ki/ki14/jmckinne/
+mkdir -p $bdir
+#ls | egrep 'thickdisk*|rtf*' > $fildirs
+echo "thickdisk3" > $fildirs
+for fil in `cat $fildirs` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/list$fil.txt ; ssh jmckinne@orange.slac.stanford.edu "mkdir -p $destdir/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@orange.slac.stanford.edu:$destdir/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -s 20 -b +500 -I $bdir/list$fil.txt  -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@orange.slac.stanford.edu:$destdir/$fil/dumps/  ; cd $dirorig ; done
+
+
+# thickdisk3 run may show rotational vortex and lowF-QPO
+
+# from ki-jmck to orange sitting on orange
+sourcedir=/data2/jmckinne/thickdisk3/dumps/
+destdir=/nfs/slac/g/ki/ki14/jmckinne/
+cd $destdir
+~/bin/bbcp -a -k -f -p -r -s 20 -b +500 -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:$sourcedir/fieldline*.bin .
+
+
+
+
+##########################################
+
+# jmckinne
+cd ~/
+cd ~/thickdiskr3
+sleep 
+sh krakenrestartsustain_thickdisk.sh 2 tr3 thickdiskr3 nexth nexti
+
+
+cd ~/thickdisk3
+sleep 27000
+sh krakenrestartsustain_thickdisk.sh 2 t3 thickdisk3 x y
+
+cd ~/thickdisk10
+sleep 57600
+sh krakenrestartsustain_thickdisk.sh 2 t10 thickdisk10 nextd nexte
+
+cd ~/thickdisk15r
+sleep 2400
+sh krakenrestartsustain_thickdisk.sh 2 t15r thickdisk15r l m
+cd ~
+
+
+# rblandfo
+cd ~/ ; cd thickdisk17 ; sleep 58800 ; sh krakenrestartsustain_thickdisk.sh 2 t17 thickdisk17 v w
+
+cd ~/ ; cd thickdisk7 ; sleep 50400 ; sh krakenrestartsustain_thickdisk.sh 2 t7 thickdisk7 nextnextj nextnextk
+
+########################
+TO TRANSFER:
+1) ensure new rtf's are completely transferred
+2) Transfer new batch of thickdisk stuff to ki-jmck that was put onto ranch
+
+
+###############
+ls -alrt rdump* | tail  -10
+head -1 rdump-0.bin > rdump-0.bin.head
+tail -n +2  rdump-0.bin > rdump-0.bin.data
+emacs rdump-0.bin.head
+mv rdump-0.bin rdump-0.bin.orig
+cat rdump-0.bin.head rdump-0.bin.data  > rdump-0.bin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################
+
+
+
+# QB:(NOT YET) Ranch: (DONE)
+mv thickdisk15r.abc thickdiskr15.abc
+mv thickdisk15r.def thickdiskr15.def
+# Kraken:(DONE) Ranch: (DONE)
+mv thickdisk15rg thickdiskr15g
+mv thickdisk15rh thickdiskr15h
+mv thickdisk15ri thickdiskr15i
+mv thickdisk15rj thickdiskr15j
+mv thickdisk15rk thickdiskr15k
+mv thickdisk15rl thickdiskr15l
+mv thickdisk15rm thickdiskr15m
+mv thickdisk15rn thickdiskr15n
+mv thickdisk15ro thickdiskr15o
+mv thickdisk15rp thickdiskr15p
+mv thickdisk15rq thickdiskr15q
+mv thickdisk15rr thickdiskr15r
+mv thickdisk15rs thickdiskr15s
+mv thickdisk15rt thickdiskr15t
+mv thickdisk15ru thickdiskr15u
+mv thickdisk15rv thickdiskr15v
+mv thickdisk15rw thickdiskr15w
+
+# Kraken: DONE Ranch: (DONE)
+mv thickdisk33start thickdiskhr3start
+mv thickdisk33a thickdiskhr3a
+mv thickdisk33b thickdiskhr3b
+mv thickdisk33c thickdiskhr3c
+mv thickdisk33d thickdiskhr3d
+mv thickdisk33e thickdiskhr3e
+mv thickdisk33f thickdiskhr3f
+mv thickdisk33g thickdiskhr3g
+mv thickdisk33h thickdiskhr3h
+mv thickdisk33i thickdiskhr3i
+mv thickdisk33j thickdiskhr3j
+mv thickdisk33k thickdiskhr3k
+mv thickdisk33l thickdiskhr3l
+#mv thickdisk33m thickdiskhr3m # going on kraken (DONE ON ranch)
+
+
+
+error: globus_xio: System error in read: Is a directory
+globus_xio: A system call failed: Is a directory
+Source: file:///lustre/scratch/jmckinne/
+Dest:   gsiftp://gridftp.ranch.tacc.xsede.org/home/01014/tg802609/
+  thickdiskr3nexti
+
+globus-url-copy -vb -p 4 -stripe -tcp-bs 11M -r file:///lustre/

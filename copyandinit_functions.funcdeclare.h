@@ -39,3 +39,6 @@ extern void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYP
 
 extern void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR]);
 extern void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR]);
+
+extern void copy_3dvpot(int is, int ie, int js, int je, int ks, int ke, FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+extern void copy_3dvpot_fullloopp1(FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);

@@ -1,6 +1,11 @@
 #include "decs.h"
 
 
+extern FTYPE normglobal;
+extern int inittypeglobal; // for bounds to communicate detail of what doing
+
+extern int init_dsandvels(int inittype, int pos, int *whichvel, int *whichcoord, SFTYPE time, int i, int j, int k, FTYPE *p, FTYPE *pstag);
+
 
 int setRin_withchecks(FTYPE *rin)
 {
@@ -49,6 +54,12 @@ int user1_prepre_init_specific_init(void)
 #else
   periodicx3=0;
 #endif
+
+
+  if(PRODUCTION){
+    // assume if production always want binary data with text header
+    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
+  }
 
 
   return(0);
@@ -188,11 +199,13 @@ int user1_init_global(void)
 
 
     fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
-    FLUXB = FLUXCTTOTH;
-    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    //    FLUXB = FLUXCTTOTH;
+    FLUXB = FLUXCTSTAG;
+    //    UTOPRIMVERSION=UTOPRIM2DFINAL;
+    UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
     // whether/which ENO used to interpolate fluxes
-    DOENOFLUX = ENOFINITEVOLUME;
-    //  DOENOFLUX= NOENOFLUX;
+    //    DOENOFLUX = ENOFINITEVOLUME;
+    DOENOFLUX= NOENOFLUX;
     //DOENOFLUX=ENOFLUXRECON;
   }
 
@@ -298,7 +311,7 @@ int user1_init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTY
 
 
 
-int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR],
+int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR],
 			  FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int whichvel, whichcoord;
@@ -307,11 +320,8 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   FTYPE r,th,X[NDIM],V[NDIM];
   int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int init_dsandvels(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
   int init_atmosphere(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *pr);
   int pl,pliter;
-  int finalstepbackup;
-
 
   ///////////////////////////////////
   //
@@ -340,11 +350,12 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      initreturn=init_dsandvels(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers
+      initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,t,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers // t is ok here for initialization
       if(initreturn>0){
 	FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
       }
       else MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, pstag),"init.c:init_primitives","transform_primitive_vB()",0);
+
     }
   }// end parallel region
 
@@ -389,11 +400,11 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 	  if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
 	    FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
 	  }
+
 	}
       }// end 3D LOOP
     }// end parallel region
   }
-
 
 
 
@@ -410,6 +421,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
 
+
   /////////////////////////////
   //
   // Fixup and Bound variables since some primitive quantities may have changed
@@ -423,13 +435,17 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  finalstepbackup=finalstepglobal;
-  finalstepglobal=1;
-  if (bound_prim(STAGEM1,0.0,prim, pstag, Bhat, 1,USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1);
-  finalstepglobal=finalstepbackup;
+
+  {
+    int finalstep=1; //  modifies initial ucum-like-primitives
+    if (bound_prim(STAGEM1,finalstep,t,prim, pstag, Bhat, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
+  }
+
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
+
+
 
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
@@ -451,12 +467,13 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 
 
 
-
 #if(ANALYTICMEMORY)
   // copy over initial solution as analytic solution
   // NEEDED FOR BOUND in case uses panalytic
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
+
+
 
   /////////////////////////////
   //
@@ -474,10 +491,12 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  finalstepbackup=finalstepglobal;
-  finalstepglobal=1;
-  if (bound_allprim(STAGEM1,0.0,prim,pstag,ucons, 1, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
-  finalstepglobal=finalstepbackup;
+  {
+    int finalstep=1; //  modifies initial ucum-like-primitives
+    if (bound_allprim(STAGEM1,finalstep,0.0,prim,pstag,ucons, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
+  }
+
+
 
 
   /////////////////////////////
@@ -515,7 +534,7 @@ int user1_init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[N
 
 
 
-int user1_init_vpot2field_user(int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
   int toreturn;
@@ -530,7 +549,7 @@ int user1_init_vpot2field_user(int *fieldfrompotential, FTYPE (*A)[NSTORE1+SHIFT
 
   // obtain primitive magnetic field from vector potential
   // uses ptemparray as temporary variable.  Uses emf as temporary variable.
-  toreturn=vpot2field(A,GLOBALPOINT(ptemparray),pstag,ucons,Bhat,GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+  toreturn=vpot2field(time, A,GLOBALPOINT(ptemparray),pstag,ucons,Bhat,GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 
 
   // Can override vector potential choice for some field components, like B3 in axisymmetry
@@ -560,8 +579,8 @@ int user1_normalize_densities(int eqline, FTYPE *parms, FTYPE (*prim)[NSTORE2][N
   FTYPE rin,rhodisk;
 
 
-  *rhomax=0;
-  *umax=0;
+  *rhomax=SMALL;
+  *umax=SMALL;
   rin=parms[0];
   rhodisk=parms[1];
 
@@ -632,8 +651,8 @@ int user1_getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, 
   FTYPE X[NDIM],V[NDIM],r,th;
 
 
-  *rhomax=0;
-  *umax=0;
+  *rhomax=SMALL;
+  *umax=SMALL;
 
 
   ZLOOP{
@@ -769,6 +788,9 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
   int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *mypgmax, FTYPE *beta_min);
 
 
+  if(EOMTYPE==EOMFFDE) return(0); // do nothing
+
+
   // get initial maximum
   get_maxes(prim, &bsq_max, &mypgmax, &betamin);
   trifprintf("initial bsq_max: %21.15g pgmax: %21.15g betamin=%21.15g\n", bsq_max,mypgmax,betamin);
@@ -801,6 +823,219 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
 
   return(0);
 }
+
+
+#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMCOLDGRMHD||EOMTYPE==EOMENTROPYGRMHD)
+#define NORMALIZEFIELDMETHOD 0 // choice
+// 0 : by sigma
+// 1 : by b^2\sim B^2
+#else
+#define NORMALIZEFIELDMETHOD 1 // no choice
+#endif
+
+
+// assumes normal field definition for NSBH problem
+int user1_normalize_field_sigma(FTYPE sigma0, FTYPE bpole, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  FTYPE sigma_pole, bsq_pole, norm;
+  int user1_get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole);
+  
+  // get initial maximum
+  user1_get_sigmabsq_atpole(prim, &sigma_pole,&bsq_pole);
+  trifprintf("initial sigma_pole: %21.15g bsq_pole: %21.15g\n", sigma_pole,bsq_pole);
+
+  if(NORMALIZEFIELDMETHOD==0){
+    // get normalization parameter (uses final sigma to set field strength)
+    norm = sqrt(sigma0/sigma_pole);
+    trifprintf("initial sigma_pole: %21.15g (should be %21.15g) norm=%21.15g\n", sigma_pole,sigma0,norm);
+  }
+  else if(NORMALIZEFIELDMETHOD==1){
+    // get normalization parameter (uses final sigma to set field strength)
+    norm = sqrt(bpole*bpole/bsq_pole);
+    trifprintf("initial bsq_pole: %21.15g (should be %21.15g) norm=%21.15g\n", bsq_pole,bpole*bpole,norm);
+  }
+  
+  
+  // not quite right since only correct static field energy, not moving field energy
+  normalize_field_withnorm(norm, prim, pstag, ucons, vpot, Bhat);
+
+
+  // get new maxes to check if normalization is correct
+  user1_get_sigmabsq_atpole(prim, &sigma_pole,&bsq_pole);
+  trifprintf("new initial sigma_pole: %21.15g bsq_pole: %21.15g\n", sigma_pole,bsq_pole);
+
+
+  if(NORMALIZEFIELDMETHOD==0){
+    trifprintf("initial sigma_pole: %21.15g (should be %21.15g) norm=%21.15g\n", sigma_pole,sigma0,norm);
+  }
+  else if(NORMALIZEFIELDMETHOD==1){
+    trifprintf("initial bsq_pole: %21.15g (should be %21.15g) norm=%21.15g\n", bsq_pole,bpole*bpole,norm);
+  }
+
+
+
+  // for use when calling init_vpot_user later
+  // if called this twice, need both renormalizations as multiplied by each other
+  normglobal*=norm;
+
+
+  return(0);
+}
+
+
+// normalize densities after field has been normalized
+int user1_normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE r,th;
+  int loc;
+
+  
+  
+
+  loc=CENT;
+  FTYPE R;
+
+  FTYPE bsq_ij,sigma_ij;
+  FTYPE sigmahot_ij;
+  FTYPE uorho;
+
+
+  // LOOP
+  FULLLOOP{
+    get_geometry(i, j, k, loc, ptrgeom);
+
+    bl_coord_ijk_2(i, j, k, loc, X, V);
+    r=V[1];
+    th=V[2];
+    R=r*sin(th);
+
+    if(1){
+
+      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+
+      // \sigma \sim \mu \sim b^2/(2\rho_0)
+      sigma_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,RHO)+SMALL));
+
+      if(sigma_ij>BSQORHOLIMIT*0.5){
+	dualfprintf(fail_file,"RENORMDEN1: %d %d %d %21.15g %21.15g\n",i,j,k,sigma_ij,MACP0A1(prim,i,j,k,RHO));
+	MACP0A1(prim,i,j,k,RHO)*=sigma_ij/(BSQORHOLIMIT*0.5);
+      }
+
+      // \sigma \sim \mu \sim b^2/(2u)
+      sigmahot_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,UU))+SMALL);
+					   
+      if(sigmahot_ij>BSQOULIMIT*0.5){
+	dualfprintf(fail_file,"RENORMDEN2: %d %d %d %21.15g %21.15g\n",i,j,k,sigmahot_ij,MACP0A1(prim,i,j,k,UU));
+	MACP0A1(prim,i,j,k,UU)*=sigmahot_ij/(BSQOULIMIT*0.5);
+      }
+
+      // u/\rho_0
+      uorho=MACP0A1(prim,i,j,k,UU)/(fabs(MACP0A1(prim,i,j,k,RHO))+SMALL);
+
+      if(uorho>UORHOLIMIT){
+	dualfprintf(fail_file,"RENORMDEN3: %d %d %d %21.15g %21.15g %21.15g\n",i,j,k,uorho,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+	MACP0A1(prim,i,j,k,RHO)*=uorho/UORHOLIMIT;
+      }
+
+      // old, stupid, maybe:
+      //      MACP0A1(prim,i,j,k,RHO)*=normglobal*normglobal;
+      //      MACP0A1(prim,i,j,k,UU)*=normglobal*normglobal;
+
+    }
+  }
+
+  return(0);
+
+
+}
+
+
+
+
+
+
+// get \sigma at pole of NS
+int user1_get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma_pole, FTYPE *bsq_pole)
+{
+  int i,j,k;
+  FTYPE bsq_ij,sigma_ij;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE r,th;
+  int gotnormal;
+  FTYPE rin;
+  int loc;
+
+  
+  
+
+  sigma_pole[0] = SMALL;
+  bsq_pole[0] = SMALL;
+  gotnormal=0; // to check if ever was in location where wanted to normalize
+  loc=CENT;
+
+
+  FTYPE R;
+
+
+  // LOOP
+  ZLOOP {
+    get_geometry(i, j, k, loc, ptrgeom);
+
+    bl_coord_ijk_2(i, j, k, loc, X, V);
+    r=V[1];
+    th=V[2];
+    R=r*sin(th);
+
+
+    if(1){
+
+      gotnormal=1;
+      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+
+      // \sigma \sim \mu \sim b^2/(2\rho_0)
+      sigma_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,RHO))+SMALL);
+
+      //      dualfprintf(fail_file,"SIGMA: %d %d %d : sigma_ij=%21.15g\n",i,j,k,sigma_ij);
+
+      // if multiple positions found, keep getting maximum
+      if (sigma_ij > sigma_pole[0])      sigma_pole[0] = sigma_ij;
+      if (bsq_ij > bsq_pole[0])      bsq_pole[0] = bsq_ij;
+    }
+  }
+
+
+  mpiisum(&gotnormal);
+
+  if(gotnormal==0){
+    dualfprintf(fail_file,"Never found place to normalize field for NS\n");
+    if(N2==1 && N3==1){
+      ZLOOP {
+	bl_coord_ijk_2(i, j, k, loc, X, V);
+	dxdxprim_ijk(i, j, k, loc, dxdxp);
+	r=V[1];
+	th=V[2];
+
+	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+      }
+    }
+    myexit(111);
+  }
+
+  mpimax(sigma_pole);
+  mpimax(bsq_pole);
+
+  return(0);
+
+}
+
 
 
 

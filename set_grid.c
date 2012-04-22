@@ -14,6 +14,7 @@ static void set_grid_metrics_others(void);
 static void symmetrize_X_V_dxdxp_idxdxp(void);
 
 
+// not necessary to symmetrize except for testing/debugging asymmetries
 #define ATTEMPTSYMMETRIZATION 0
 
 // translate compgeom to some local quantities at loc,i,j,k

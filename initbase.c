@@ -12,6 +12,7 @@ int init(int *argc, char **argv[])
   extern int init_defgrid(void);
   extern int init_defglobal(void);
   extern int init_defconsts(void);
+  extern int init_arrays_before_set_pu(void);
   extern int post_par_set(void);
   extern void filterffde(int i, int j, int k, FTYPE *pr);
   extern void filter_coldgrmhd(int i, int j, int k, FTYPE *pr);
@@ -24,7 +25,6 @@ int init(int *argc, char **argv[])
   int set_box_grid_parameters(void);
   int gotnan;
   int faketimeorder,fakenumtimeorders;
-  int finalstepbackup;
 
 
 
@@ -79,7 +79,18 @@ int init(int *argc, char **argv[])
     init_defgrid(); // init default grid
     init_grid(); // request choices for grid/coordinate/metric parameters
 
+
     set_coord_parms_deps(defcoord); // requires correct defcoord at least
+
+    // requires special3dspc, periodicx?, and dofull2pi and other things defining grid type already be set
+    // after the below call, can then call boundary functions and MPI decomposition will be ready
+    init_placeongrid_griddecomposition();
+    
+
+    // set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
+    init_arrays_before_set_pu();
+  
+
 
   }
 
@@ -93,10 +104,12 @@ int init(int *argc, char **argv[])
   //
   ///////////////
   if(RESTARTMODE==1){
+    trifprintf("start restart_init: proc=%04d\n",myid);
     if (restart_init(WHICHFILE) >= 1) {
       dualfprintf(fail_file, "main:restart_init: failure\n");
       return(1);
     }
+    trifprintf("end restart_init: proc=%04d\n",myid);
 
     // don't bound read-in data yet since need grid and other things
 
@@ -190,7 +203,7 @@ int init(int *argc, char **argv[])
 	if(DOSELFGRAVVSR){
 	  trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
 	  // if box_grid needs to change, is done inside below function
-	  compute_new_metric_and_prims(0,MBH, a, QBH, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 	  trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
 	}
       }
@@ -261,11 +274,12 @@ int init(int *argc, char **argv[])
 	FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
 
-      finalstepbackup=finalstepglobal;
-      finalstepglobal=1;
-      if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
-	FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
-      finalstepglobal=finalstepbackup;
+      
+      {
+	int finalstep=1; // assume user wants to know if initial conserved quants changed
+	if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
+	  FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+      }
 
 
       // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
@@ -360,18 +374,39 @@ int init(int *argc, char **argv[])
   else if(RESTARTMODE==1){
 
 
+    restart_init_simple_checks(2);
+
+
 #if(FIXUPAFTERINIT)
-    if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
-      FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
+    trifprintf("before fixup() during restart: proc=%04d\n",myid);
+    if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)  FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
+    trifprintf("after fixup() during restart: proc=%04d\n",myid);
 #endif
-    finalstepbackup=finalstepglobal;
-    finalstepglobal=1;
-    if (bound_allprim(STAGEM1,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), 1, USEMPI) >= 1)
-      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
-    finalstepglobal=finalstepbackup;
-    
-    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
-      FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+
+    trifprintf("before bound_prim() during restart: proc=%04d\n",myid);
+
+    {
+      // pstag not computed from unewglobal yet, so don't bound it.  It'll get self-consistently bounded when ucons2upointppoint() is called below
+      int finalstep=1; // assume user wants to know if initial conserved quants changed
+      if (bound_prim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)      FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+    }
+
+    trifprintf("after bound_prim() during restart: proc=%04d\n",myid);
+
+
+      
+    trifprintf("before pre_fixup() during restart: proc=%04d\n",myid);
+    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+    trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
+
+
+    restart_init_simple_checks(3);
+
+
+    // before can interpolate inside ucons2upointppoint(), need to compute things needed by interpolation, including for STORESHOCKINDICATOR==1
+    if(STORESHOCKINDICATOR==1){
+      pre_interpolate_and_advance(GLOBALPOINT(pglobal));
+    }
 
 
     ////////////////
@@ -379,28 +414,57 @@ int init(int *argc, char **argv[])
     // Note there is no need to convert average or quasi-deaveraged field to staggered field (see comments in ucons2upointppoint())
     // However, divb diagnostics at first won't be right at t=0 since set to use primitive for lower-order method, but just assume diagnostic won't likely be immediately after restart
     // For RESTARTMODE==0 the pstag quantity is set by user or during vector potential conversion to u and p, but during restart we only read-in p and unew while we need also pstagscratch
+    // so after ucons2upointppoint() call, pcent as in boundaries will not be updated but not required.  And it will not be Nan since did bound above.
     //
     /////////////////
+    trifprintf("before ucons2upointppoint during restart: proc=%04d\n",myid);
     ucons2upointppoint(t, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(ulastglobal),GLOBALPOINT(pglobal)); // this regenerates pcentered for B1,B2,B3
+    trifprintf("after ucons2upointppoint during restart: proc=%04d\n",myid);
+
+    
+    // now bound unewglobal and vpot's
+  if(FLUXB==FLUXCTSTAG){
+    int boundvartype=BOUNDPRIMTYPE;
+    int finalstep=1; // assume user wants to know if initial conserved quants changed
+    int doboundmpi=1;
+    bound_anypstag(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), doboundmpi);
+  }
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    int boundvartype=BOUNDVPOTTYPE;
+    int finalstep=1; // assume user wants to know if initial conserved quants changed
+    int doboundmpi=1;
+    bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi);
+  }
+
+
+    restart_init_simple_checks(4);
 
 
     // after all parameters and primitives are set, then can set these items
+    trifprintf("before post_init and post_init_specific_init during restart: proc=%04d\n",myid);
     post_init(GLOBALPOINT(pglobal),GLOBALPOINT(cfaraday));
     // user post_init function
     post_init_specific_init();
+    trifprintf("after post_init and post_init_specific_init during restart: proc=%04d\n",myid);
+
+
+    restart_init_simple_checks(5);
+
 
     // don't want conservatives or primitives to change, just compute metric
     if(DOSELFGRAVVSR){
       trifprintf("new metric with self-gravity\n");
-	  compute_new_metric_and_prims(0,MBH, a, QBH, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
       trifprintf("done with computing new metric with self-gravity dt=%21.15g\n",dt);
     }
 
 
+    trifprintf("before restart_init_checks() during restart: proc=%04d\n",myid);
     if (restart_init_checks(WHICHFILE, GLOBALPOINT(pglobal), GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal)) >= 1) {
       dualfprintf(fail_file, "main:restart_init_checks: failure\n");
       return(1);
     }
+    trifprintf("after restart_init_checks() during restart: proc=%04d\n",myid);
 
 
     trifprintf( "proc: %d restart completed: failed=%d\n", myid, failed);
@@ -448,35 +512,10 @@ int init(int *argc, char **argv[])
 
 
 #if(PRODUCTION==0)
-  //////////////
-  //
-  // make sure all zones are not nan before ending init
-  //
-  /////////////
-  gotnan=0;
-  FULLLOOP{ // diagnostic check
-    PINTERPLOOP(pliter,pl){ // only check those things that will be interpolated since rest of things assumed to be not necessary as primitive and generated as conserved/flux from other primitives
-      if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl))){
-	dualfprintf(fail_file,"init/restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	gotnan=1;
-      }
-    }
-  }
-  if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753487);
 
+  // final checks
+  restart_init_simple_checks(6);
 
-  if(FLUXB==FLUXCTSTAG){
-    gotnan=0;
-    FULLLOOP{ // diagnostic check
-      PLOOPBONLY(pl){ // only check those things that will be interpolated since rest of things assumed to be not necessary as primitive and generated as conserved/flux from other primitives
-	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl))){
-	  dualfprintf(fail_file,"init/restart data has pstag NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	  gotnan=1;
-	}
-      }
-    }
-    if(gotnan) myexit(ERRORCODEBELOWCLEANFINISH+82753488);
-  }
 #endif
 
 
@@ -856,8 +895,6 @@ int pre_init(int *argc, char **argv[])
 
 
 
-
-
   // must do in MPI mode or not MPI mode  
   init_MPI_GRMHD(argc, argv);
 
@@ -970,21 +1007,7 @@ int pre_init(int *argc, char **argv[])
 #endif
 
 
-  ///////////////
-  // 0 out these things so dump files are readable by SM under any cases
-  ///////////////
-  FULLLOOP{
-    PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
-#if(CALCFARADAYANDCURRENTS)
-    DLOOPA(jj) GLOBALMACP0A1(jcon,i,j,k,jj)=0.0;
-    for(pl=0;pl<NUMFARADAY;pl++) GLOBALMACP0A1(fcon,i,j,k,pl)=0.0;
-#endif
-  }
-
-
-
-
-
+  
 
   return(0);
 }
@@ -1011,6 +1034,7 @@ int init_defgrid(void)
   a=a0;
   MBH=MBH0;
   QBH=QBH0;
+  EP3=EP30;
 
 
   return(0);
@@ -1227,6 +1251,13 @@ int init_defglobal(void)
   GLOBALBCMOVEDWITHACTIVESECTION= 0;
 
 
+
+  // special3dspc assignment must come after dofull2pi and periodicx? are set in prepre_init()
+  // must come before any use of special3dspc such as by init_placeongrid_griddecomposition()
+  special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
+  trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
+
+
   return(0);
 }
 
@@ -1327,6 +1358,7 @@ int init_defconsts(void)
   a0=0.0;
   MBH0=1.0;
   QBH0=0.0;
+  EP30=0.0;
   Mfactor=1.0;
   Jfactor=1.0;
   rhofactor=1.0;
@@ -1400,7 +1432,7 @@ int set_box_grid_parameters(void)
   // need to recompute horizon-related quantities if horizon is growing due to accretion
   if(ISBLACKHOLEMCOORD(MCOORD)){
     find_horizon(0);
-    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g\n",Rhor,Risco,MBH,a,QBH);
+    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3);
   }
   else{
     horizoni=horizoncpupos1=0;
@@ -1451,10 +1483,50 @@ int compute_currents_t0(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[N
 #endif
 
 
-    return(0);
+  return(0);
 
 }
 
+
+
+// set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
+int init_arrays_before_set_pu(void)
+{
+  int i,j,k,pliter,pl;
+  int jj;
+
+  ///////////////
+  // 0 out these things so dump files are readable by SM under any cases
+  ///////////////
+  FULLLOOP{
+
+    if(FLUXB==FLUXCTSTAG){
+      // then pl=B1,B2,B3 actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+      PLOOP(pliter,pl){
+	if(! (pl==B1 || pl==B2 || pl==B3) ){
+	  GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+	}
+      }
+    }
+    else if(DOENOFLUX != NOENOFLUX){
+      // then all pl actually should be correct (i.e. not NaN), so don't reset those so nan-check works
+    }
+    else{
+      PLOOP(pliter,pl) GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+    }
+
+
+#if(CALCFARADAYANDCURRENTS)
+    DLOOPA(jj) GLOBALMACP0A1(jcon,i,j,k,jj)=0.0;
+    for(pl=0;pl<NUMFARADAY;pl++) GLOBALMACP0A1(fcon,i,j,k,pl)=0.0;
+#endif
+
+  }
+
+
+  return(0);
+
+}
 
 
 
@@ -1507,9 +1579,6 @@ int post_par_set(void)
 
   trifprintf("useghostplusactive=%d extrazones4emf=%d\n",useghostplusactive,extrazones4emf);
 
-  special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
-
-  trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
 
   trifprintf("Setting orders\n");
   orders_set();
@@ -1613,7 +1682,7 @@ void check_bnd_num(void)
   }
 
   if(GDETVOLDIFF){
-    if(     (MCOORD==BLCOORDS || MCOORD==KSCOORDS || MCOORD==HTMETRIC || MCOORD==HTMETRICACCURATE || MCOORD==SPCMINKMETRIC) ){
+    if(ISSPCMCOORDNATIVE(MCOORD)){
       // then fine
     }
     else{
@@ -1631,7 +1700,7 @@ void check_bnd_num(void)
   
 
   if(HIGHERORDERMEM==0 && DOENOFLUX != NOENOFLUX){
-    dualfprintf(fail_file,"Need to turn on HIGHERORDERMEM when doing higher order methods (i.e. DOENOFLUX!=NOENOFLUX\n");
+    dualfprintf(fail_file,"Need to turn on HIGHERORDERMEM when doing higher order methods (i.e. DOENOFLUX(=%d)!=NOENOFLUX)\n",DOENOFLUX);
     myexit(ERRORCODEBELOWCLEANFINISH+204);
   }
 
@@ -2007,6 +2076,12 @@ void check_bnd_num(void)
   if(EOMTYPE==EOMCOLDGRMHD && DOENTROPY == DOEVOLVEENTROPY && WHICHEOS!=COLDEOS){
     dualfprintf(fail_file,"For COLD GRMHD with fake entropy tracking, ensure WHICHEOS==COLDEOS\n");
     myexit(872762211);
+  }
+
+
+  if(TRACKVPOT==0 && EVOLVEWITHVPOT==1){
+    dualfprintf(fail_file,"Must turn on TRACKVPOT if EVOLVEWITHVPOT==1\n");
+    myexit(38974632);
   }
 
 

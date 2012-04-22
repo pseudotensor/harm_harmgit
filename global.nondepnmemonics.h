@@ -117,6 +117,9 @@
 // for longer file names
 #define MAXFILENAMELONG 2000
 
+// return code used to indicate failure of dump_gen() was file not found instead of any other error
+#define FILENOTFOUND 2490834
+
 // for WHICHVEL
 // 0: 4-velocity (leads to ambiguous u^t +- discr part)
 // 1: 3-velocity (unambiguous u^t but interpolation is not constrained to be a good 3-velocity)
@@ -279,6 +282,9 @@
 #define QUADRATICTYPE 2 // includes limiters to ovoid overshoots and new extremums within 3 point domain
 
 
+// for MODIFYEMFORVPOT
+#define MODIFYEMF 0
+#define MODIFYVPOT 1
 
 ////////////////////////////////////////////////
 //
@@ -312,6 +318,7 @@
 #define ENOSMOOTHCONSERVED  6
 
 
+// for DOENOFLUX:
 #define NOENOFLUX 0
 #define ENOFLUXRECON 1
 #define ENOFLUXSPLIT 2
@@ -678,7 +685,7 @@
 // PURE mnemonics
 //
 ///////////////////////////////////
-#define NUMBOUNDTYPES 7
+#define NUMBOUNDTYPES 9
 //
 #define BOUNDPRIMTYPE 0
 #define BOUNDPRIMSIMPLETYPE 1
@@ -687,6 +694,13 @@
 #define BOUNDINTTYPE 4 // always simple
 #define BOUNDFLUXTYPE 5
 #define BOUNDFLUXSIMPLETYPE 6
+#define BOUNDVPOTTYPE 7
+#define BOUNDVPOTSIMPLETYPE 8
+
+
+// ispstag:
+#define BOUNDPRIMLOC 0
+#define BOUNDPSTAGLOC 1
 
 
 // -------------> r
@@ -795,7 +809,7 @@
 
 
 // see failfloorcount counter
-#define NUMFAILFLOORFLAGS 12
+#define NUMFAILFLOORFLAGS 15
 //  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -809,6 +823,10 @@
 #define COUNTENTROPY 9
 #define COUNTCOLD 10
 #define COUNTEOSLOOKUPFAIL 11
+#define COUNTBOUND1 12 // see bounds.tools.c (used when boundary code actually affects active zone values)
+#define COUNTBOUND2 13
+#define COUNTONESTEP 14
+
 
 // below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
 #define AVOIDI -100
@@ -818,6 +836,9 @@
 // failure codes for utoprim failures
 // NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
 #define NANPFLAG -100 // bad pflag
+#define UTOPRIMFAILFIXEDONESTEP -6
+#define UTOPRIMFAILFIXEDBOUND2 -5
+#define UTOPRIMFAILFIXEDBOUND1 -4
 #define UTOPRIMFAILFIXEDCOLD -3
 #define UTOPRIMFAILFIXEDENTROPY -2
 #define UTOPRIMFAILFIXEDUTOPRIM -1
@@ -1050,28 +1071,29 @@
 
 // these dump types also control period of output
 // Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "DUMPTYPE"
-#define NUMDUMPTYPES 18 // number of dump types listed below
+#define NUMDUMPTYPES 19 // number of dump types listed below
 
 #define IMAGEDUMPTYPE 0
 #define RESTARTDUMPTYPE 1
-#define RESTARTMETRICDUMPTYPE 2
-#define MAINDUMPTYPE 3
-#define GRIDDUMPTYPE 4
-#define AVG1DUMPTYPE 5
-#define AVG2DUMPTYPE 6 // used when needing AVG2DUMPTYPE to avoid too large a file size for avgdump
-#define DEBUGDUMPTYPE 7
-#define FIELDLINEDUMPTYPE 8
-#define ENODEBUGDUMPTYPE 9
-#define DISSDUMPTYPE 10
-#define OTHERDUMPTYPE 11
-#define FLUXDUMPTYPE 12
-#define EOSDUMPTYPE 13
-#define VPOTDUMPTYPE 14
-#define FAILFLOORDUDUMPTYPE 15
-#define ENERDUMPTYPE 16
-#define FAKEDUMPTYPE 17
+#define RESTARTUPPERPOLEDUMPTYPE 2
+#define RESTARTMETRICDUMPTYPE 3
+#define MAINDUMPTYPE 4
+#define GRIDDUMPTYPE 5
+#define AVG1DUMPTYPE 6
+#define AVG2DUMPTYPE 7 // used when needing AVG2DUMPTYPE to avoid too large a file size for avgdump
+#define DEBUGDUMPTYPE 8
+#define FIELDLINEDUMPTYPE 9
+#define ENODEBUGDUMPTYPE 10
+#define DISSDUMPTYPE 11
+#define OTHERDUMPTYPE 12
+#define FLUXDUMPTYPE 13
+#define EOSDUMPTYPE 14
+#define VPOTDUMPTYPE 15
+#define FAILFLOORDUDUMPTYPE 16
+#define ENERDUMPTYPE 17
+#define FAKEDUMPTYPE 18
 
-#define MYDUMPNAMELIST {"IMAGEDUMPTYPE","RESTARTDUMPTYPE","RESTARTMETRICDUMPTYPE","MAINDUMPTYPE","GRIDDUMPTYPE","AVG1DUMPTYPE","AVG2DUMPTYPE","DEBUGDUMPTYPE","FIELDLINEDUMPTYPE","ENODEBUGDUMPTYPE","DISSDUMPTYPE","OTHERDUMPTYPE","FLUXDUMPTYPE","EOSDUMPTYPE","VPOTDUMPTYPE","FAILFLOORDUDUMPTYPE","ENERDUMPTYPE","FAKEDUMPTYPE"}
+#define MYDUMPNAMELIST {"IMAGEDUMPTYPE","RESTARTDUMPTYPE","RESTARTUPPERPOLEDUMPTYPE","RESTARTMETRICDUMPTYPE","MAINDUMPTYPE","GRIDDUMPTYPE","AVG1DUMPTYPE","AVG2DUMPTYPE","DEBUGDUMPTYPE","FIELDLINEDUMPTYPE","ENODEBUGDUMPTYPE","DISSDUMPTYPE","OTHERDUMPTYPE","FLUXDUMPTYPE","EOSDUMPTYPE","VPOTDUMPTYPE","FAILFLOORDUDUMPTYPE","ENERDUMPTYPE","FAKEDUMPTYPE"}
 
 
 #define NUMIMAGEPARMS 3
@@ -1086,7 +1108,6 @@
 
 
 
-#define DO_ASSERTS 0
 
 #define FIELDLINEGDETB 0
 #define FIELDLINEFLUX 0
@@ -1096,3 +1117,6 @@
 #define DOFREEZETORUS 0
 #define FREEZETORUSTIME (0)
 #define NORMALIZEBCCELLS (0)
+
+
+

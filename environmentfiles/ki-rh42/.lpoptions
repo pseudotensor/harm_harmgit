@@ -1,0 +1,10 @@
+Dest LaserJet_9050
+Dest LaserJet_90501 InputSlot=Tray3
+Dest LaserJet_90502(3rdfloorbw)
+Dest color_LaserJet_5550(2ndfloorcolor)
+Dest color_LaserJet_5550(3rdfloorcolor)
+Special Advanced%20Faxing%20Tool%20(ksendfax)
+Special Mail%20PDF%20File
+Special Print%20to%20File%20(PDF)
+Special Print%20to%20File%20(PostScript)
+Special Send%20to%20Fax

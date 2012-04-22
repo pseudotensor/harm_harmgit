@@ -67,7 +67,7 @@ int init_MPI_GRMHD(int *argc, char **argv[])
   // for file names
   sprintf(myidtxt, ".grmhd.%04d", MPIid[myid]);
 
-  // rest of initialization
+  // rest of initialization (still shouldn't include domain decomposition setup --  just other most basic setups)
   init_MPI_setupfilesandgrid(*argc, *argv);
 
   // report MPIid[myid] ordering

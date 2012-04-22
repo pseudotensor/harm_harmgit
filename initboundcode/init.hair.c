@@ -1,3 +1,5 @@
+// uses init.fishmon.h and bounds.fishmon.c
+
 
 /* 
  *
@@ -22,6 +24,9 @@ static FTYPE rhodisk;
 
 static FTYPE nz_func(FTYPE R) ;
 
+FTYPE normglobal;
+int inittypeglobal; // for bounds to communicate detail of what doing
+
 
 
 int prepre_init_specific_init(void)
@@ -39,9 +44,9 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
   // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
-  h_over_r=1.0;
+  h_over_r=0.3;
   // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
-  h_over_r_jet=M_PI*0.4;
+  h_over_r_jet=2.0*h_over_r;
 
   rhodisk=1.0;
 
@@ -85,7 +90,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
-  cour=0.8;
+  // assume ok to use cour=0.5 for now
+  //  cour=0.8;
   //  fluxmethod= HLLFLUX;
 
   return(0);
@@ -152,7 +158,6 @@ Spin parameter study in 2D axisymmetry at 256^2:
  
 
 1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
-
 H/R parameter study in 2D axisymmetry at 256^2:
 
 1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
@@ -176,7 +181,7 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM 0 // choice
+#define WHICHPROBLEM NORMALTORUS // choice
 
 
 int init_defcoord(void)
@@ -185,7 +190,10 @@ int init_defcoord(void)
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // define coordinate type
   //  defcoord = JET3COORDS;
-  defcoord = JET6COORDS;
+  defcoord = LOGRSINTH;
+  //  defcoord = JET6COORDS;
+  // GODMARK: also set rbr in coord.c to 1E3 if Rout=1E4 and using JET6COORDS
+
 #elif(WHICHPROBLEM==GRBJET)
   // define coordinate type
   defcoord = JET4COORDS;
@@ -197,19 +205,27 @@ int init_defcoord(void)
 
 int init_grid(void)
 {
+
   
   // metric stuff first
-  a = 0.9375 ;
+  a = 0.0 ;
+  //  a = 0.99 ;
+  //  a = 0.9375 ;
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = 0.0;
-  //  Rout = 1E3;
-  Rout = 1.3*2*1E4;
+  // R0=0.5 used to help high spin case
+  R0 = 0.5;
+  Rout = 40.0;
+  //R0 = 0.0;
+  //Rout = 40;
+
+  //Rout = 1.3*2*1E4; // for JET6COORDS
+
 #elif(WHICHPROBLEM==GRBJET)
-  R0 = -3.0;
-  Rout = 1E5;
+  R0 = 0.2;
+  Rout = 1E3;
 #endif
 
  
@@ -253,9 +269,9 @@ int init_global(void)
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=50.0; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=50.0;
+  UORHOLIMIT=1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #elif(WHICHPROBLEM==GRBJET)
@@ -275,11 +291,13 @@ int init_global(void)
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
-  tf = 1.3E4*2.0;
+  tf = 2000.0;
+  
+  //  tf = 1.3E4*2.0; // for JET6COORDS case
 
-  /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
+  // default dumping period
+  for(int idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;
   /* image file frequ., in units of M */
@@ -287,8 +305,6 @@ int init_global(void)
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
-  /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 50.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 1000;
@@ -336,16 +352,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
-  //  beta = 1.e2 ;
-  //  beta = 20.0;
-  beta = 10.0*4.0; // 256x128x256
-  //  randfact = 4.e-2;
-  randfact = 0.1;
+  beta = 1.e2 ;
+  randfact = 4.e-2;
 
 #if(WHICHPROBLEM==NORMALTORUS)
   //rin = Risco;
-  //  rin = 15.0 ;
-  rin = 10.0 ;
+  rin = 6. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -354,10 +366,43 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
   
 
+  if(RESTARTMODE==1){
+    dualfprintf(fail_file,"WARNING: On lonestar4 with zakamskabig restart (first restart attempt), reaching inside below conditional eventually leads to core dump on several tasks.  Some core dumps are good, and show i index inside transform_primitive_pstag() called by transform_primitive_vB called in user1_init_primitives() for the first exposed loop -- leads to crazy i index (very negative or positive).  So memory segfault occurs.  No idea where that i is being changed.  Maybe memory leak, but all cores that had good core dump looked ok.  So maybe something odd going on.  Note pglobal and panalytic and other arrays have funny or NULL-like address, but aren't used so probably just an optimization thing.\n");
+
+
+    /*
+(gdb) bt
+#0  transform_primitive_pstag (whichvel=0, whichcoord=1, i=-1534771426, j=-4, k=11,
+    p=0x130b79f0, pstag=0x130ba300) at fluxvpot.c:1196
+#1  0x0000000000408989 in transform_primitive_vB (whichvel=0, whichcoord=1, i=-1534771426,
+    j=-4, k=11, p=0x130b79f0, pstag=0x130ba300) at initbase.c:2718
+#2  0x0000000000405826 in user1_init_primitives (prim=0x0, pstag=0x1,
+    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.tools.c:340
+#3  0x000000000040466e in init_grid_post_set_grid (prim=0x0, pstag=0x1,
+    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.c:367
+#4  0x000000000040b8bd in init (argc=0x0, argv=0x1) at initbase.c:143
+#5  0x00000000004bd96a in main (argc=6, argv=0x7fffd5b2ec08) at main.c:30
+(gdb) print myid
+$4 = 1380
+(gdb) print startpos
+$5 = {0, 136, 64, 112}
+(gdb) print mycpux1
+No symbol "mycpux1" in current context.
+(gdb) print numprocs
+$6 = 1536
+
+
+     */
+
+  }
 
 
   //SASMARK restart: need to populate panalytic with IC's
-  if( RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
+  if(0&& RESTARTMODE==1 ) { //restarting -> set panalytic to initital conditions
     // user function that should fill p with primitives (but use ulast so don't overwrite unew read-in from file)
     //    MYFUN(init_primitives(prim,pstag,ucons,vpot,Bhat,panalytic,pstaganalytic,vpotanalytic,Bhatanalytic,F1,F2,F3,Atemp),"initbase.c:init()", "init_primitives()", 0);
 
@@ -383,8 +428,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int funreturn;
+  int inittype;
 
-  funreturn=user1_init_primitives(prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
+
+  inittype=1;
+
+  funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -394,10 +443,12 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+
+  // assume inittype not used, pos==CENT, and time doesn't matter (e.g. only used at t=0)
 
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
@@ -431,9 +482,7 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
   kappa = 1.e-3 ;
-  //  rmax = 1E2 ;
-  rmax = 1E2 ;
-  //  rmax = 60 ;
+  rmax = 12. ;
   l = lfish_calc(rmax) ;
   
 
@@ -488,7 +537,8 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   /* regions outside torus */
   // this region is already in Kerr Schild prime in proper primitive quantity for velocity
-  if (lnh < 0. || r < rin) {
+  if (1 || lnh < 0. || r < rin) { //  NO DISK
+  //if (lnh < 0. || r < rin) {
 
 
     get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
@@ -622,9 +672,11 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 #define DISKVERT 2
 #define BLANDFORDQUAD 3
 #define TOROIDALFIELD 4
+#define NSFIELD 6
 
-//#define FIELDTYPE TOROIDALFIELD
-#define FIELDTYPE DISKFIELD
+//#define FIELDTYPE VERTFIELD
+//#define FIELDTYPE DISKFIELD
+#define FIELDTYPE NSFIELD
 
 
 FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower)
@@ -687,75 +739,34 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 
 
 
+
+
 // assumes normal field in pr
 // SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
-int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
+int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
-  SFTYPE rho_av, u_av,q;
-  FTYPE r,th;
+  SFTYPE rho_av, q;
+  FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
+  FTYPE x,y,z;
 
 
-#define FRACAPHICUT 0.2
-      //#define FRACAPHICUT 0.1
+  r=V[1];
+  th=V[2];
+  ph=V[3];
 
+  // Cartesian position
+  x = r*cos(ph)*sin(th);
+  y = r*sin(ph)*sin(th);
+  z = r*cos(th);
 
 
   vpot=0.0;
 
 
-
-  // since init_vpot() is called for all i,j,k, can't use
-  // non-existence values, so limit averaging:
-  if((i==-N1BND)&&(j==-N2BND)){
-    rho_av = MACP0A1(prim,i,j,k,RHO);
-    u_av = MACP0A1(prim,i,j,k,UU);
-  }
-  else if(i==-N1BND){
-    rho_av = AVGN_2(prim,i,j,k,RHO);
-    u_av = AVGN_2(prim,i,j,k,UU);
-  }
-  else if(j==-N2BND){
-    rho_av = AVGN_1(prim,i,j,k,RHO);
-    u_av = AVGN_1(prim,i,j,k,UU);
-  }
-  else{ // normal cells
-    rho_av = AVGN_for3(prim,i,j,k,RHO);
-    u_av = AVGN_for3(prim,i,j,k,UU);
-  }
-
-
-
-
-
-  if(FIELDTYPE==TOROIDALFIELD){
-    
-    if(l==2){// A_\theta (MCOORD)
-      
-      r=V[1];
-      th=V[2];
-
-      //      q = r*r*r*fabs(sin(th)) * 1.0 ; // constant B^\phi
-      q = r*r*r;
-
-      q=q/(r); // makes more uniform in radius
-
-      q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
-      //      q = (rho_av / rhomax - FRACAPHICUT);
-
-      if(q<0.0) q=0.0;
-
-      vpot += q;
-      
-    }
-  }
-
-
   if(l==3){// A_\phi
 
-    r=V[1];
-    th=V[2];
 
 
 
@@ -778,29 +789,39 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // average of density that lives on CORN3
 
 
-#define FRACAPHICUT 0.2
-      //#define FRACAPHICUT 0.1
+      // since init_vpot() is called for all i,j,k, can't use
+      // non-existence values, so limit averaging:
+      if((i==-N1BND)&&(j==-N2BND)){
+	rho_av = MACP0A1(prim,i,j,k,RHO);
+      }
+      else if(i==-N1BND){
+	rho_av = AVGN_2(prim,i,j,k,RHO);
+      }
+      else if(j==-N2BND){
+	rho_av = AVGN_1(prim,i,j,k,RHO);
+      }
+      else{ // normal cells
+	rho_av = AVGN_for3(prim,i,j,k,RHO);
+      }
 
-      //      q = (rho_av / rhomax - FRACAPHICUT);
-      q = (u_av / umax - FRACAPHICUT);
+      q = rho_av / rhomax - 0.2;
 
-      //#define QPOWER 0.5
-#define QPOWER (1.0)
-
-#define POWERNU (2.0)
-      //#define POWERNU (4.0)
-
-	//      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
-      FTYPE fact1,fact2,SSS,TTT;
-      fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
-      SSS=rin*0.5;
-      TTT=0.28;
-      fact2=sin(log(r/SSS)/TTT);
-
-      if (q > 0.)      vpot += fact1*fact2;
-      //      if (q > 0.)      vpot += q*q;
-
+      if (q > 0.)      vpot += q;
     }
+  }
+
+
+  if(FIELDTYPE==NSFIELD){
+
+    if(l==3){
+      FTYPE xns=0.0;
+      FTYPE absrdiff=fabs(r-0.0);
+      FTYPE Rsoft=1.0; // so geometry doesn't vary with $a$
+      //    vpot += 0.5*Rin*Rin*Rin*(xns-x)*pow(xns-x,1.0)/pow(absrdiff+Rsoft,3.0) ;
+      vpot += 0.5*Rsoft*Rsoft*Rsoft*sin(th)*sin(th)/r ;
+    }
+
+
   }
 
   //////////////////////////////////
@@ -819,12 +840,12 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
 
 
-int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
   int fieldfrompotential[NDIM];
 
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
  
 
@@ -891,18 +912,32 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 }
 
 
+
 // assumes normal field definition
 int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int funreturn;
+  int normalize_field_sigma(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+  int normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
  
-  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  if(funreturn!=0) return(funreturn);
+  if(0){ // not doig beta normalization for disk-less IC
+    funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+    if(funreturn!=0) return(funreturn);
+  }
+  else{
+    // initialize right at the limit near pole
+    funreturn=user1_normalize_field_sigma(BSQORHOLIMIT,1.0,prim, pstag, ucons, vpot, Bhat); // t is ok here
+    if(EOMTYPE!=EOMFFDE) user1_normalize_densities_postnormalizefield(t, prim); // t is ok here
+
+    if(funreturn!=0) return(funreturn);    
+  }
  
   return(0);
 
 }
+
+
 
 
 
@@ -955,7 +990,22 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   }
  
   funreturn=user1_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
+
+  // override
+  FTYPE r,th;
+  bl_coord_ijk_2(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, V);
+  r=V[1];
+  th=V[2];
+
+  
+  if(DOEVOLVERHO) pr[RHO] = RHOMIN*pow(r,-5.5);
+  if(DOEVOLVEUU) prlocal[UU]  = UUMIN*pow(r,-2.5);
+
   if(funreturn!=0) return(funreturn);
+
+
+
+
  
   return(0);
 
@@ -1060,4 +1110,26 @@ int theproblem_set_myid(void)
 
 }
 
+
+
+void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+void adjust_fluxcttoth_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+{
+  // not used
+}
+
+
+void adjust_fluxcttoth_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
+{
+  // not used
+}
+
+void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+{
+  // not used
+}
 

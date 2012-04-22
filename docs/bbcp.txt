@@ -1,0 +1,367 @@
+####################
+#
+# File transfer notes:
+#
+####################
+
+
+
+
+##################
+http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+
+
+##################
+use:
+http://www.iozone.org/
+or FDT to benchmark disk performance to see what can get
+
+
+######################
+Lonestar + Ranger -> Ranch for data storage:
+http://services.tacc.utexas.edu/index.php/ranch-user-guide/
+tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
+
+
+######################
+Lonestar4 (found has issues with taring to ranch for big files -- and consulting was little help by just suggesting it was expected --- even though lonestar3 didn't do this)
+
+Do on lonestar:
+cd $SCRATCH
+~/bin/bbcp -z -s 20 -b +200 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' thickdisk7nextnexte tg802609@ranch.tacc.utexas.edu:
+
+##############################
+With ssh (according to TACC):
+cat myfile.tar | ssh target_machine "cd /target_dir/; tar xvf - "
+
+#for many files, do (e.g.):
+
+for fil in `ls thickdisk7*.tar` ; do echo $fil ; cat $fil | ssh jmckinne@ki-jmck "cd /data2/jmckinne/thickdisk7/ ; tar xvf -" ; done
+
+#OR with patterns (http://www.gnu.org/s/automake/manual/tar/extracting-files.html):
+
+for fil in `ls thickdisk7*.tar` ; do echo $fil ; cat $fil | ssh jmckinne@ki-jmck "cd /data2/jmckinne/thickdisk7/ ; tar -xvf - --wildcards --no-anchored '*fieldline*' " ; done
+
+# To copy tar contents over from ki-rh39:~/superdrive to (say) ki-jmck do:
+
+ls > allbutthickdisk7_dirs.txt
+
+# then pick out directories from tar files and then once have directory file allbutthickdisk7_tar.txt, do:
+
+for fil in `cat allbutthickdisk7_tar.txt` ; do echo $fil ; cat $fil | ssh jmckinne@ki-jmck "cd /data2/jmckinne/ ; tar -xvf - --wildcards --no-anchored '*coordpa*' '*nprlist*' '*fieldline*' '*dump0000.bin*' '*gdump.bin*' " ; done
+
+
+################
+# To copy directories of only certain files in those directories but also copy directory structure, do:
+
+ls > allbutthickdisk7_dirs.txt
+
+# then pick out directories from tar files and then once have directory file allbutthickdisk7_dirs.txt, do:
+
+for fil in `cat allbutthickdisk7_dirs.txt` ; do find $fil | grep fieldline ; done > dirsfilelist.txt
+
+for fil in `cat allbutthickdisk7_dirs.txt` ; do echo $fil ; ssh jmckinne@ki-jmck "mkdir -p /data2/jmckinne/$fil/dumps/" ; export dirorig=`pwd` ; cd $fil/dumps/ ; ls --color=never | grep --color=never -E 'fieldline.*\.bin|dump0000\.bin|gdump\.bin' > fieldlinepluslist.txt ;  ~/bin/bbcp -a -k -f -p -r -z -b +200 -I fieldlinepluslist.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+########################
+
+#on ranch (getting new QB toroidal runs (nothing from kraken yet)):
+
+echo "thickdisk3.lmn thickdisk17.ijk thickdiskr3.stuv thickdisk15r.abc thickdisk10.pqrs thickdisk10.tuv thickdisk3.opq thickdisk17.lmn thickdiskr3.xyz thickdisk15r.def" > dirs.txt
+
+rm -rf fieldlinepluslistdirs.txt
+for thedir in `cat dirs.txt` ; do echo $thedir ; find $thedir \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" -o -name "coordparms" -o -name "nprlist" \) -print >> fieldlinepluslistdirs.txt ; done
+
+for fil in fieldlinepluslistdirs.txt ; do stage $fil ; done
+
+~/bin/bbcp -a -k -f -p -r -s 20 -z -b +500 -I fieldlinepluslistdirs.txt -P 5 -V -T 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/
+
+
+
+########################
+
+
+
+Or, for transfers between TACC systems, you could use the version of
+gsissh that we have installed, which allows you to do the handshake
+encrypted but send the data unencrypted:
+cat myfile.tar | gsissh -oNoneEnabled=yes -oNoneSwitch=yes target_machine "cd target_dir; tar xvf - "
+The overall consensus here is that the fastest way to do what you want
+is to expand the files to $SCRATCH in Ranger and then bbcp them down
+to your machine. This should be faster than using the ssh/cat/tar that
+you are using now.
+
+other options:
+http://moo.nac.uci.edu/~hjm/HOWTO_move_data.html
+
+##################################
+
+Old bbcp notes:
+
+
+bbcp much faster:
+http://www.slac.stanford.edu/~abh/bbcp/
+http://pcbunn.cithep.caltech.edu/bbcp/using_bbcp.htm
+bbcp -P 5 -k -a ....
+
+On jdexter@@luigi : getting files from ki-rh42:
+~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
+
+On QB to ranch (problem with -a into ranch -- have to manually  make directories used for recovering -- stupid):
+~/bin/bbcp -r -P 5 thickdisk5fghij tg802609@ranch.tacc.utexas.edu:
+
+If copy failed for whatever reason (QB went down), then have to copy per directory since -a -k don't work properly with -r.  So one has to complete:
+~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/
+cd dumps/
+~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/dumps/
+cd ../images/
+~/bin/bbcp -a -k -P 5 * tg802609@ranch.tacc.utexas.edu:thickdisk5fghij/images/
+If get message of append couldn't be completed, delete that file on ranch
+If get message that not enough space to copy files, then contact TACC.
+
+bbcp -a will not copy if prior copy failed in some way that bbcp thinks the file is changed.  The file will be skipped!
+Can create a file list:
+
+ls > filelist.txt
+OR to ignore some files:
+ls --ignore=dumps --ignore=images --ignore=thickdiskr3 --ignore=filelist.txt --ignore=err.txt > filelist.txt
+
+
+and copy and check err.txt file for such messages "append not poosible":
+~/bin/bbcp -a -k -P 5 -I filelist.txt -l err.txt tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+
+OR to avoid time-out issues with large file lists:
+ensure -b value is at least twice -s value
+can make s up to (say) 32 or 64 on LAN, but keep to order 4-10 on WAN
+
+~/bin/bbcp -s 4 -b 8 -w 2m -a -k -P 5 -I filelist.txt -l err.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+
+~/bin/bbcp -s 4 -b 8 -w 2m -a -k -P 5 -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr2/dumps/
+
+OLD: Best not use bbcp's -r for recursive since won't recover properly after using -a -k when copy failed.
+
+
+
+
+Edited the bbcp code in bbcp_FileSpec.C to overwrite file if append not (sic) poosible, but on ranch can't compile.
+
+Note that if use -l err.txt, then may not tell you if completed successfully or not!  Just stops.  While NOT using -l err.txt means don't know if had any "poosible" problems.
+
+
+
+###################################
+
+To compile bbcp on ranch, do: make OPT=-DSUN6 Sungcc  
+
+
+In the end, this worked to ensure complete and correct copy:
+
+
+1) use bbcp as below.  Note that bbcp is the only program I've found that resumes.  For example, for one directory do:
+
+ls --ignore=err.txt --ignore=filelist.txt grmhd > filelist.txt
+[grmhd included above because otherwise might have * in name and bbcp doesn't like that]
+-b + 100 helps avoid stalls with ranch and tape processing on ranch side.
+
+~/bin/bbcp -a -k -f -b +100 -P 5 -V -I filelist.txt -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' tg802609@ranch.tacc.utexas.edu:thickdiskr3.abcdefgh/dumps/ &> err.txt
+
+Can also try without -I filelist.txt and use recursive copy in new version:
+Add: -r  and give path name(s) just before destination
+E.g.:
+
+~/bin/bbcp -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H bbcp' thickdisk14.ab thickdiskrr2.ab tg802609@ranch.tacc.utexas.edu: &> err.txt
+
+
+2) Copy each directory (the root data, dumps, images).  Can be done at the same time in different shells.  Don't use recursive copy in bbcp since won't resume correctly.
+
+3) Once copy "done", need to check if really copied and if all files copied and if correctly copied.
+
+4) Repeat copy and ensure stderr (stored in err.txt) never outputs "poosible" or stops copying certain files.  This checks that append and all things are making sense to bbcp.  bbcp can append incorrectly and make files too short and even too long!
+
+5) Repeat copy and output stderr to file so can:
+   grep "already been copied" err.txt | wc
+   This checks number of actual files copied.  bbcp can skip files in the list provided, or even if looping on shell, or if using shell expansion.  So unreliable.
+
+6) Check result on remote machine per directory:
+
+ls --ignore=dumps --ignore=images --ignore=filelist.txt --ignore=err.txt |wc
+
+OR (if used recursive bbcp)
+
+ls -R | wc
+(on ranch: and subtract 7=1+2 for 1 . and 2 blank lines and 2*2 directories (or subtract 2 from # of words)  ls -R won't include hidden dirs on some systems depending upon alias definition)
+
+6.5) Check filelist.txt to ensure actually copied all files:
+
+wc filelist.txt
+
+OR for a single recursive directory:
+
+ls -R | wc
+(should be same as on, e.g., ranch, even though not true # of files)
+
+OR for multiple recursive folders:
+
+find <list of space separated folders> > filelist.txt | wc
+E.g.:
+find thickdiskrr2.ab thickdisk14.ab > postfilelist.txt
+(and subtract #dirs * (1 + 2) ) = 3,6,9,etc.
+
+
+7) If numbers match, then likely have copied everything properly.  Should be correct size too, but can check manually that files have uniform looking sizes.  du -s doesn't help much since on ranch the sizes are measured oddly.  Rerunning bbcp repeatedly until "already been copied" appears for all files should be a good check on file size and a lack of corruption.
+
+
+###########################################
+
+
+New type of command allowed (overwrites correctly if failed copy, and less failed copies, but overwrites instead of appending for some reason):
+On ranch, -s 20 required to get 20MB/s since only given 1MB/sec per stream by ranch.
+
+nohup ~/bin/bbcp -s 20 -b +100 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' tg802609@ranch.tacc.utexas.edu:"thickdisk3abcdefgh thickdisk3.ijk" . >err3again.txt & 
+
+
+
+#######################################
+On Kraken to ki-jmck:
+#http://www.nics.tennessee.edu/computing-resources/access
+
+
+From t = 0 out to t ~ 22500
+/lustre/scratch/atchekho/run/rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0
+
+From t = 22500 out to t ~ 31500 (with correct floor accounting)
+/lustre/scratch/atchekho/run/rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0_faildufix2
+
+# don't use below:
+#~/bin/bbcp -s 20 -b +200 -a -k -f -r -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/
+
+# do below:
+echo "rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0" > ~/dirs1.txt
+echo "rtf2_15r34_2pi_a0.99gg500rbr1e3_0_0_0_faildufix2" > ~/dirs2.txt
+
+# for other window since on Kraken, can't do passwordless ssh
+# -> change dirs1 -> dirs2 and back
+
+# Kraken barfs on: ls --color=never | grep --color=never -E 'fieldline.*\.bin|dump0000\.bin|gdump\.bin'
+# replace with: find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print
+
+for fil in `cat ~/dirs2.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs2.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  ~/bin/bbcp -a -k -f -p -r -z -b +200 -I ~/fieldlinepluslistdirs2.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+# for every 100th file do:
+# replace with: find . \( -name "fieldline??00.bin" -o -name "fieldline0000.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print
+
+
+for fil in `cat ~/dirs2.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline??00.bin" -o -name "fieldline0000.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs2frac.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  ~/bin/bbcp -a -k -f -p -r -z -b +200 -I ~/fieldlinepluslistdirs2frac.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
+
+
+
+#######################################
+
+Tried uberftp and globus-url-copy, but problems
+
+uberftp -binary -cksum on -keepalive 60 -parallel 10 -resume thickdiskr2 ranch.tacc.utexas.edu
+then enter and do:
+resume thickdiskr2
+put -r thickdiskr2
+for recursive copy.  Not sure how failure resume works if at all.
+
+Problem is that certificate expires very soon and kills copy, so useless to copy large files.
+
+Also tried:
+globus-url-copy -b -r -restart -p 5 file://thickdiskr2  gsiftp://ranch.tacc.utexas.edu:
+
+But failed to figure out how to get it's special certificate using that other program with a similar name.
+
+
+############################################
+
+Setting up ssh tunnel (e.g. to get out of orange.slac.stanford.edu to portal through ki-rh42):
+On orange do:
+1) ssh -N -f -L 2134:portal.astro.washington.edu:22 jon@ki-rh42.slac.stanford.edu  
+then still on orange do to ssh to jdexter@portal.astro.washington.edu through ki-rh42:
+2) ssh -p 2134 jdexter@localhost
+OR to scp
+3) scp -P 2134 dump???? jdexter@localhost:/astro/net/scratch1/jdexter/mb09/quadrupole_rout40/
+In either case you'll need to enter the jdexter password on portal.astro.washington.edu.
+
+
+###############################################
+
+Couldn't get this to work:
+
+Setting up ssh tunnel (e.g. to get data from queenbee to ranch through lonestar)
+On queenbee do (lonestar password):
+1) ssh -N -f -L 2134:ranch.tacc.utexas.edu:22 tg802609@lonestar.tacc.utexas.edu
+then still on queenbee do to ssh to tg802609@ranch.tacc.utexas.edu through lonestar:
+2) ssh -p 2134 tg802609@localhost
+OR to scp
+3) scp -P 2134 dump???? tg802609@localhost:
+OR to bbcp
+4) bbcp -k -a -r -P 5 -S 'ssh -p 2134 -x -a %I -l %U %H bbcp' dump???? tg802609@localhost:
+
+OR to bbcp w/ tarification
+5) ??????????tar cvf - thickdisk3 | bbcp -P 5 -k -a -T 'ssh -x -a %I -l %U %H bbcp' tg802609@localhost:
+In latter cases you'll need to enter the tg802609 password on ranch
+
+
+####################################################
+
+This works:
+
+or directly:
+bbcp -r -k -a -P 5 thickdisk3_qb.tgz tg802609@ranch.tacc.utexas.edu:
+
+
+############################################################
+Scratch:
+tar cvf - thickdisk1 | ssh ${ARCHIVER} "cat > ${ARCHIVE}/thickdisk1.tar"
+~/bin/bbcp -r -P 5 -a -k -T 'ssh -x -a %I -l %U %H bbcp' jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/fieldline* jon@ki-rh42.slac.stanford.edu:/media/disk/jon/thickdisk1/dumps/dump0000* .
+
+
+
+
+
+
+#######
+# to clean stderr files:
+# find . -maxdepth 1 -name 'stderr_ranch*' -exec rm {} \; ; find . -maxdepth 1 -name 'stdout_ranch*' -exec rm {} \;  ;  find . -maxdepth 1 -name 'stdfull_ranch*' -exec rm {} \;  ;  find . -maxdepth 1 -name 'filestocopy.txt.*' -exec rm {} \;
+
+
+dirorig=`pwd`
+streams=2
+buffers=2000
+thesubdirname="dumps"
+counterbad=0
+
+#~/bin/bbcp -z -s $streams -b +$buffers -a -k -f -P 5 -V -l $dirorig/stderr_ranch.$thedir.$thesubdirname.$counterbad -T 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -I $dirorig/filestocopy.txt.$thedir.$thesubdirname tg802609@ranch.tacc.utexas.edu:$thedir/$thesubdirname/ &> $dirorig/stdfull_ranch.$thedir.$thesubdirname.$counterbad
+
+
+
+
+
+# bbcp.orig with recursive
+bbcp_CONFIGFN="~/.bbcp.cf"
+cd /lustre/scratch/jmckinne/
+dirorig=`pwd`
+thedir="thickdiskr3nextv"
+thesubdirname="dumps"
+cd $thedir/$thesubdirname/
+fulllist="$dirorig/files.test"
+#ls * > $fulllist
+#bufferoptions="-b +800"
+bufferoptions=""
+#streamoptions="-s 20"
+streamoptions=""
+options="-a -k -z -r -f -P 5 -V -C $dirorig/.bbcp.cf $bufferoptions $streamoptions"
+erroptions="-l $dirorig/stderr.test"
+#whichbbcp="bbcp.orig"
+whichbbcp="bbcp.v5"
+#connectoptions="-T 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/$whichbbcp -C ~/.bbcp.cf' -S 'ssh -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/$whichbbcp -C ~/.bbcp.cf'"
+connectoptions=""
+destination="tg802609@ranch.tacc.utexas.edu:$thedir/$thesubdirname/"
+~/bin/$whichbbcp $options $erroptions $connectoptions * $destination
+#~/bin/$whichbbcp $options $erroptions $connectoptions -I $fulllist $destination
+cd $dirorig
+
+
+

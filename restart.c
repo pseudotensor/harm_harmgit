@@ -127,6 +127,9 @@ int restart_init(int which)
   trifprintf("proc: %d t=%21.15g failed=%d\n", myid, t, failed);
 
 
+  // very basic checks on primary grid-based quantities read from restart dump
+  restart_init_simple_checks(1);
+
 
   trifprintf("end restart_init\n");
 
@@ -169,6 +172,12 @@ int restart_write(long dump_cnt)
   char fileformat[MAXFILENAME];
   long truedump_cnt;
 
+
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_write(dump_cnt);
+
+
+
   trifprintf("begin dumping rdump# %ld ... ",dump_cnt);
 
   whichdump=RESTARTDUMPTYPE;
@@ -200,10 +209,22 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // always NPR
-  *numcolumns=NPR*2; // primitives and conservatives
+  //  *numcolumns=NPR*2; // primitives and conservatives
   //  *numcolumns=NPR; // primitives only
 
-  *numversion=0;
+
+  // counters not crucial
+  //  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] + dnumcolumns[DEBUGDUMPTYPE] ;
+
+  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
+
+  
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
+    *numcolumns += dnumcolumns[VPOTDUMPTYPE];
+  }
+
+  *numversion=1;
 }
 
 
@@ -216,6 +237,32 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(pglobal,i,j,k),0,NPR,writebuf);
   myset(datatype,GLOBALMAC(unewglobal,i,j,k),0,NPR,writebuf);
 
+  // NOTEMARK: see also dump.c
+
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+  if(dnumcolumns[DISSDUMPTYPE]>0){
+    myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
+  }
+
+
+  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
+    myset(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
+  }
+
+  // too many of these and not crucial since just counters
+  //  if(dnumcolumns[DEBUGDUMPTYPE]>0){
+  //    myset(datatype,GLOBALMAC(failfloorcount,i,j,k),0,dnumcolumns[DEBUGDUMPTYPE],writebuf);
+  //  }
+
+
   return(0);
 }
 
@@ -226,7 +273,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+// read restart file
 int restart_read(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -235,6 +282,10 @@ int restart_read(long dump_cnt)
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
   int bintxt;
+
+
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_read(dump_cnt);
 
 
   trifprintf("begin reading rdump# %ld ... ",dump_cnt);
@@ -246,9 +297,21 @@ int restart_read(long dump_cnt)
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
  
-  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content)>=1) return(1);
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+  
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"restart file not found\n");
+    myexit(87343363);
+  }
+  else if(failreturn>0){
+    dualfprintf(fail_file,"restart file: other read error\n");
+    myexit(7165766);
+  }
 
 
+
+  // NOTE: for FLUXB==FLUXCTSTAG, unewglobal and vpot are bounded in initbase.c for boundary edges and inter-MPI edges
 
   trifprintf("end reading rdump# %ld ... ",dump_cnt);
 
@@ -258,6 +321,7 @@ int restart_read(long dump_cnt)
 }
 
 
+// read-restart content
 int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -265,9 +329,292 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
   myget(datatype,GLOBALMAC(pglobal,i,j,k),0,NPR,writebuf);
   myget(datatype,GLOBALMAC(unewglobal,i,j,k),0,NPR,writebuf);
 
+  // NOTEMARK: see also dump.c
+
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+  if(dnumcolumns[DISSDUMPTYPE]>0){
+    myget(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
+  }
+
+
+  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
+    myget(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
+  }
+
+  // counters not crucial
+  //  if(dnumcolumns[DEBUGDUMPTYPE]>0){
+  //    myget(datatype,GLOBALMAC(failfloorcount,i,j,k),0,dnumcolumns[DEBUGDUMPTYPE],writebuf);
+  //  }
+
+
+  
 
   return(0);
 }
+
+
+
+
+
+
+
+
+
+
+
+// read-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+// Since both write *and* read full 3D file with j shifted up, read-in puts quantities in correct location, so no remapping needed.
+// All j=N2 values will be overwritten by normal MPI calls, except the last one for mycpupos[2]==ncpux2-1 that will use the read-in values
+// Note that order of normal restart read/write and upperpole read/write doesn't matter since all values are correctly positioned during read-write.
+
+// This is all done because normal MPI fileio routines assume standard j=0..N-1 or j=1..N block, but staggered stuff has j=0..N block for spherical polar coordinates.  No other directions (i.e. i or k) require this.
+// For simplicity, we just output two full 3D files with j shifted.
+int restartupperpole_read(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+  int bintxt;
+
+
+  trifprintf("begin reading rdumpupperpole# %ld ... ",dump_cnt);
+
+  whichdump=RESTARTUPPERPOLEDUMPTYPE;
+  datatype=MPI_FTYPE;
+  bintxt=binaryoutput;
+  strcpy(fileprefix,"dumps/rdumpupperpole");
+  strcpy(fileformat,"-%01ld");
+  strcpy(filesuffix,"");
+ 
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartupperpole_header,rupperpoledump_read_content);
+
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"SUPERWARNING: resetting upperpole to zero since no restart file for upperpole is available\n");
+
+    if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
+      // then assume user knows what they are doing and just set array to zero
+      int i,j,k,jshifted;
+      DUMPGENLOOP{ // same loop as dump_gen() uses
+	if(j!=N2-1) continue; // force only assignment right at j==N2 so still doesn't matter what order the normal and upperpole restart calls are made
+	jshifted=j+SHIFT2;
+	GLOBALMACP0A1(unewglobal,i,jshifted,k,B2)=0.0;
+
+	if(EVOLVEWITHVPOT||TRACKVPOT){
+	  if(dnumcolumns[VPOTDUMPTYPE]>0){
+	    int jj;
+	    for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	      if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	      GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
+	    }
+	  }
+	}
+      }// end FULLLOOP
+    }// end if true upper pole
+  }
+  else if(failreturn>0) return(1);
+    
+
+
+#if(0)
+  // NOT USED ANYMORE, but, if did remapping, it would look something like the below.
+  {
+    // SPECIAL CASE:
+    // now that have read-in shifted values, must assign them to correct locations
+    
+    int i,j,k,pliter,pl;
+    jshifted=j+SHIFT2;
+    LOOPF1 LOOPF3{
+      PLOOP(pliter,pl){
+	//	if(pl==B1 || pl==B2 || pl==B3){
+	if(pl==B2){
+	  GLOBALMACP0A1(unewglobal,i,jshifted-SHIFT2,k,pl)=GLOBALMACP0A1(unewglobal,i,jshifted,k,pl);
+	}
+      }
+    }
+  }
+#endif
+
+
+  trifprintf("end reading rdumpupperpole# %ld ... ",dump_cnt);
+
+
+  return(0);
+
+}
+
+
+// read-restart upperpole header
+int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+{
+
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
+
+  return(0);
+}
+
+// write-restart upperpole header
+int write_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+{
+
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
+
+  return(0);
+}
+
+
+// read-restart upperpole content
+int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+
+  int jshifted;
+
+  // j+SHIFT2 so that fake 3D read-in fills j=N2 for mycpupos[2]==ncpux2-1 (tj=totalsize[2]) when MPI routines think they are accessing j=N2-SHIFT2
+  jshifted=j+SHIFT2;
+
+  // Just B2 is on pole
+  myget(datatype,GLOBALMAC(unewglobal,i,jshifted,k),B2,1,writebuf);
+
+  // NOTEMARK: see also dump.c
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+ 
+
+  return(0);
+}
+
+
+
+
+
+// write-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+int restartupperpole_write(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+  long truedump_cnt;
+
+  trifprintf("begin dumping rdumpupperpole# %ld ... ",dump_cnt);
+
+  whichdump=RESTARTUPPERPOLEDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/rdumpupperpole");
+  if(dump_cnt>=0) {
+    strcpy(fileformat,"-%01ld"); // very quick restart
+    truedump_cnt=dump_cnt;
+  }
+  else {
+    strcpy(fileformat,"--%04ld"); // assumed at some longer cycle and never overwritten .. must rename this to normal format to use as real rdump.
+    truedump_cnt=-dump_cnt-1;
+  }
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,truedump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,write_restartupperpole_header,rupperpoledump_content)>=1) return(1);
+
+  trifprintf("end dumping rdumpupperpole# %ld ... ",dump_cnt);
+
+
+  return(0);
+
+}
+
+
+
+
+// read-restart upperpole numcolumns
+// number of columns for restart
+void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+
+  // Just B2 is on pole
+  *numcolumns=1;
+
+  
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
+    *numcolumns += NDIM-1; // only A_0, A_1, and A_3 are on pole
+  }
+
+  *numversion=0;
+}
+
+// write-restart upperpole numcolumns
+void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+  extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+
+  // same as read:
+  set_rupperpoledump_read_content_dnumcolumns_dnumversion(numcolumns,numversion);
+
+}
+
+
+
+// write-restart upperpole content
+int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+
+  int jshifted;
+
+  // j+SHIFT2 so that fake 3D read-in fills j=N2 for mycpupos[2]==ncpux2-1 (tj=totalsize[2]) when MPI routines think they are accessing j=N2-SHIFT2
+  jshifted=j+SHIFT2;
+
+  // Only B2 is on pole
+  myset(datatype,GLOBALMAC(unewglobal,i,jshifted,k),B2,1,writebuf);
+
+  // NOTEMARK: see also dump.c
+  if(EVOLVEWITHVPOT||TRACKVPOT){
+    if(dnumcolumns[VPOTDUMPTYPE]>0){
+      int jj;
+      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+      }
+    }
+  }
+
+
+  return(0);
+}
+
+
+
+
+
+
 
 
 
@@ -393,7 +740,13 @@ int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebu
 int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -401,7 +754,13 @@ int write_restartmetric_header(int whichdump, int whichdumpversion, int numcolum
 int read_restartmetric_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
-  // nothing so far
+  if(bintxt==BINARYOUTPUT){
+  }
+  else{
+    // nothing so far, but must have new line if not NULL function
+    fprintf(headerptr,"\n");
+    fflush(headerptr);
+  }
 
   return(0);
 }
@@ -429,7 +788,19 @@ int restartmetric_read(long dump_cnt)
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
  
-  if(dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartmetric_header,rmetricdump_read_content)>=1) return(1);
+  int failreturn;
+  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restartmetric_header,rmetricdump_read_content);
+  
+  if(failreturn==FILENOTFOUND){
+    dualfprintf(fail_file,"restartmetric file not found\n");
+    myexit(26525667);
+  }
+  else if(failreturn>0){
+    dualfprintf(fail_file,"restartmetric file: other read error\n");
+    myexit(71857346);
+  }
+
+
 
 
 
@@ -527,7 +898,6 @@ int rmetricdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *wr
 
 
 
-  return(0);
 }
 
 
@@ -644,6 +1014,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&a, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&QBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gam, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gamideal, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&cour, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
@@ -664,7 +1035,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UTOPRIMVERSION, sizeof(int), "%d", 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failed, sizeof(int), "%d", 1, MPI_INT, headerptr);
   
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcoord, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcoord, sizeof(int), headerone, 1, MPI_INT, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&R0, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rin, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rout, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
@@ -771,7 +1142,12 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 
   header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
   //FAILFLOORLOOP(indexfinalstep,tscale,floor)
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+  if(1){// FUCKMARK (temp mod to allow read-in of prior restart files)
+    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*(NUMFAILFLOORFLAGS-2),MPI_CTYPE,headerptr);
+  }
+  else{ //new format
+    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+  }
 
   // end new June 6,2003
 
