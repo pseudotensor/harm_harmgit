@@ -214,10 +214,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
 
 
-<<<<<<< HEAD
-=======
 // choose whether within correctable/diagnosticable region
->>>>>>> jon
 int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 {
   int is_within_correctable_region;
@@ -255,20 +252,6 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 }
->>>>>>> jon
-
-  return(docorrectuconslocal);
-
-
-}
-
-
-
-
-int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
-{
-  int tscale;
-
 
 // record who called the diag_fixup routine
 int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
