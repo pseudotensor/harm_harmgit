@@ -403,3 +403,6 @@ struct Ccoordparams {
 
 #undef NORMALIZEBCCELLS
 #define NORMALIZEBCCELLS 1
+
+#undef PERCELLDT
+#define PERCELLDT 0

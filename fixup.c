@@ -433,7 +433,7 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
     struct of_geom *ptrgeom;
     struct of_geom geomdontuse;
 
-    if(NOENOFLUX==0){
+    if(DOENOFLUX != NOENOFLUX){
       dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with NOENOFLUX==0\n");
       myexit(3487622211);
     }

@@ -202,7 +202,7 @@ int fluxcalc(int stage,
     //
     /////////////////////////////
     if(DOADJUSTEMFS){
-      adjust_fluxctstag_emfs(pr,Nvec,ptrfluxvec);
+      adjust_fluxctstag_emfs(fluxtime,pr,Nvec,ptrfluxvec);
     }
 
   }// end if staggered method where can update A_i directly

@@ -1113,7 +1113,7 @@
 #define FIELDLINEFLUX 0
 #define DOADJUSTEMFS 0
 #define DOAVGFLUX 0
-#define CONNAXISYMM 0
+//#define CONNAXISYMM 0 -- commented out since already defined in definit.h
 #define DOFREEZETORUS 0
 #define FREEZETORUSTIME (0)
 #define NORMALIZEBCCELLS (0)

@@ -85,7 +85,10 @@ FTYPE PTRDEFGLOBALMACP0A1(global_uconstorus,N1M,N2M,N3M,NPR);
 #include "init.torus.h"
 
 #undef SLOWFAC
-             
+
+FTYPE normglobal;
+int inittypeglobal; // for bounds to communicate detail of what doing
+
 int prepre_init_specific_init(void)
 {
   int funreturn;
@@ -898,7 +901,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   FTYPE rhomax, umax, amax;
 
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
   
 #if(DO_OPTIMIZE_DISK_FLUX) //if optimizing disk flux
@@ -964,7 +967,7 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
       loc = CORN1 - 1 + userdir; //CORRECT?
       bl_coord_ijk_2(i, j, k, loc, X, V); 
       //note minus sign: -userdir; this indicates to only init bh field
-      init_vpot_user(&whichcoord, -userdir, i,j,k, loc, prim, V, &vpotuser[userdir]);
+      init_vpot_user(&whichcoord, -userdir, t, i,j,k, loc, prim, V, &vpotuser[userdir]);
     }
     // convert from user coordinate to PRIMECOORDS
     ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
@@ -993,6 +996,9 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   FTYPE gdetnosing;
   FTYPE igdetgnosing[NDIM];
   int dir;
+  int finalstep;
+  
+  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
   
   if(FLUXB!=FLUXCTSTAG) {
     dualfprintf( fail_file, "compute_vpot_from_gdetB1 only works for FLUXB = FLUXCTSTAG\n" );
@@ -1002,7 +1008,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
 
   //first, bound to ensure consistency of magnetic fields across tiles
-  bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+  bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
 
   if( ncpux2 == 1 ) {
     //1-cpu version
@@ -1085,7 +1091,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     MPI_Barrier(MPI_COMM_GRMHD);
 #endif
     //bound here
-    bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+    bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
       for (i=0; i<N1+SHIFT1; i++) {
@@ -1151,7 +1157,7 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
       //just in case, wait until all CPUs get here
       MPI_Barrier(MPI_COMM_GRMHD);
       //bound here
-      bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI); 
+      bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI); 
     }
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
@@ -1182,6 +1188,9 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
   int i,j,k;
   FTYPE ratc_ij, ratc_im1j, ratc_ijm1;
   FTYPE ratf1_ij, ratf2_ij;
+  int finalstep;
+  
+  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
   
   //FULLLOOP{
     //THIS CHANGES IC's!
@@ -1190,7 +1199,7 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
     //only need to do so on centered fields that bsq depends on
   //}
   
-  bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+  bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
   //Now rescale staggered field components (ucons)
   //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
