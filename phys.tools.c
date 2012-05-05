@@ -2928,39 +2928,12 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 }
 
-int compute_vpar_poloidal(FTYPE *pr, struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
-{
-  FTYPE Bccov[NDIM],Bccon[NPR],vcon[NDIM],ucon[NDIM];
-  FTYPE Bsq_poloidal;
-  FTYPE absB_poloidal;
-  int j;
-  
-  Bccon[0] = 0;
-  Bccon[1] = pr[B1];
-  Bccon[2] = pr[B2];
-  Bccon[3] = pr[B3];
-  
-  lower_vec(Bccon,geom,Bccov);
-  //obtain coordinate 4-velocity
-  pr2ucon(WHICHVEL, pr, geom, ucon);
-  //obtain coordinate 3-velocity
-  DLOOPA(j) vcon[j] = ucon[j]/ucon[TT];
-  
-  Bsq_poloidal=0.0+SMALL;
-  SLOOPA(j) if( j <= 2 ) Bsq_poloidal+=Bccon[j]*Bccov[j];  //only poloidal components
-  
-  absB_poloidal=sqrt(Bsq_poloidal);
-  
-  *vpar = (Bccov[1]*vcon[1]+Bccov[2]*vcon[2])/absB_poloidal;
-  
-  return(0);
-}
-
-int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
+int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
 {
   FTYPE Bccov[NDIM],Bccon[NPR],vcon[NDIM],ucon[NDIM];
   FTYPE Bsq;
   FTYPE absB;
+  FTYPE Bdotv;
   int j;
   
   Bccon[0] = 0;
@@ -2977,18 +2950,96 @@ int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
   Bsq=0.0+SMALL;
   SLOOPA(j) Bsq+=Bccon[j]*Bccov[j];
   
+  //|B|
   absB=sqrt(Bsq);
   
-  *vpar = (Bccov[1]*vcon[1]+Bccov[2]*vcon[2])/absB;
-  *omegaf = vcon[3] - (*vpar) * Bccon[3]/absB;
+  //B_mu v^mu
+  Bdotv = 0.0;
+  SLOOPA(j) Bdotv+=Bccov[j]*vcon[j];
+  
+  //vpar = v^mu B_mu / |B|
+  *vpar = Bdotv/absB;
   
   return(0);
 }
 
-int set_vpar(FTYPE omegaf, FTYPE vpar, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr)
+int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
 {
-  int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
-  OBtopr_general3(omegaf, vpar, Bccon, geom, pr);
+  FTYPE Bccov[NDIM],Bccon[NPR];
+  FTYPE vcon[NDIM],ucon[NDIM];
+  FTYPE Bdotv;
+  FTYPE vpar_old_vec[NDIM], vperp_old_vec[NDIM];
+  FTYPE vpar_old;
+  FTYPE Bsq;
+  FTYPE absB;
+  int j;
+  
+  //////////////////////
+  //
+  // Obtain B^mu, B_mu, and |B|
+  //
+  //////////////////////
+  
+  Bccon[0] = 0;
+  Bccon[1] = pr[B1];
+  Bccon[2] = pr[B2];
+  Bccon[3] = pr[B3];
+  
+  lower_vec(Bccon,geom,Bccov);
+  
+  //Obtain |B|
+  Bsq=0.0+SMALL;
+  SLOOPA(j) Bsq+=Bccon[j]*Bccov[j];
+  absB=sqrt(Bsq);
+
+  //////////////////////
+  //
+  // Obtain u^mu (4-vel) and v^mu (3-vel)
+  //
+  //////////////////////
+ 
+  //obtain coordinate 4-velocity
+  pr2ucon(WHICHVEL, pr, geom, ucon);
+  //obtain coordinate 3-velocity
+  DLOOPA(j) vcon[j] = ucon[j]/ucon[TT];
+  
+  //////////////////////
+  //
+  // Obtain dot-product, (B,v)
+  //
+  //////////////////////
+  
+  //B_mu v^mu
+  Bdotv = 0.0;
+  SLOOPA(j) Bdotv+=Bccov[j]*vcon[j];
+
+  //////////////////////
+  //
+  // Compute old parallel and perpendicular component of velocity, i.e.,
+  // vpar_old_vec^mu = k B^mu
+  // vperp_old_vec^\mu B_mu = 0
+  //
+  //////////////////////
+  
+  //vpar_old = v^mu B_mu / |B|
+  vpar_old = Bdotv/absB;
+  //vpar_old_vec^mu = vpar_old B^mu/|B|
+  SLOOPA(j) vpar_old_vec[j]  = vpar_old * Bccon[j] / absB;
+  //vperp_old_vec^mu = v^mu - vpar_old_vec^mu  
+  SLOOPA(j) vperp_old_vec[j] = vcon[j] - vpar_old_vec[j];
+  
+  //////////////////////
+  //
+  // Replace the old parallel velocity with the supplied one
+  //
+  //////////////////////
+
+  //new v^mu with the supplied vpar: v^mu = vperp_old_vec^mu + vpar B^mu/|B|
+  SLOOPA(j) vcon[j] = vperp_old_vec[j] + vpar * Bccon[j] / absB;
+
+  //put the velocity back into pr
+  MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+  
   return(0);
 }
 

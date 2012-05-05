@@ -705,7 +705,7 @@ FTYPE f_trans(FTYPE r)
 {
   FTYPE f, rs;
   
-  rs = 1 / a;
+  rs = 1.0 / a;
   
   f = (r<rs)?((rs-r)/(rs-Rin)):(0);
   
@@ -754,11 +754,11 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
       pr[UU] += du;
     }
     //compute parallel velocity component (along full B)
-    compute_vpar(Bcon, ptrgeom, &vpar, &omegaf);
+    compute_vpar(pr, ptrgeom, &vpar);
     //damp parallel velocity component
     dvpar = - dt * b1 * vpar;
     //set parallel velocity component
-    set_vpar(omegaf, vpar, Bcon, ptrgeom, pr);
+    set_vpar(vpar, ptrgeom, pr);
   }
   return(0);
 }
