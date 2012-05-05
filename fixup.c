@@ -737,7 +737,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   th=V[2];
   
   //only do so on final step
-  if(finalstep && (EVOLVERHO||EVOLVEUU)) {
+  if(finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
     omegastar = a;
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
@@ -745,20 +745,20 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     b0 = 1./(0.1*tau);
     b1 = b0 * f_trans(r);
     b2 = b1 * fabs(cos(th));
-    if( EVOLVERHO ){
+    if( DOEVOLVERHO ){
       drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
       pr[RHO] += drho;
     }
-    if( EVOLVEUU ){
+    if( DOEVOLVEUU ){
       du = - dt * b2 * (pr[UU] - prfloor[UU]);
       pr[UU] += du;
     }
     //compute parallel velocity component (along full B)
-    compute_vpar(Bcon, ptrgeom, &vpar, &omegaf)
+    compute_vpar(Bcon, ptrgeom, &vpar, &omegaf);
     //damp parallel velocity component
     dvpar = - dt * b1 * vpar;
     //set parallel velocity component
-    set_vpar(omegaf, vpar, Bccon, geom, pr);
+    set_vpar(omegaf, vpar, Bcon, ptrgeom, pr);
   }
   return(0);
 }

@@ -2928,13 +2928,23 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 }
 
-int compute_vpar_poloidal(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar)
+int compute_vpar_poloidal(FTYPE *pr, struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
 {
-  FTYPE Bccov[NDIM];
+  FTYPE Bccov[NDIM],Bccon[NPR],vcon[NDIM],ucon[NDIM];
   FTYPE Bsq_poloidal;
   FTYPE absB_poloidal;
+  int j;
+  
+  Bccon[0] = 0;
+  Bccon[1] = pr[B1];
+  Bccon[2] = pr[B2];
+  Bccon[3] = pr[B3];
   
   lower_vec(Bccon,geom,Bccov);
+  //obtain coordinate 4-velocity
+  pr2ucon(WHICHVEL, pr, geom, ucon);
+  //obtain coordinate 3-velocity
+  DLOOPA(j) vcon[j] = ucon[j]/ucon[TT];
   
   Bsq_poloidal=0.0+SMALL;
   SLOOPA(j) if( j <= 2 ) Bsq_poloidal+=Bccon[j]*Bccov[j];  //only poloidal components
@@ -2946,13 +2956,18 @@ int compute_vpar_poloidal(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar)
   return(0);
 }
 
-int compute_vpar(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
+int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
 {
-  FTYPE Bccov[NDIM],vcon[NDIM],ucon[NDIM];
+  FTYPE Bccov[NDIM],Bccon[NPR],vcon[NDIM],ucon[NDIM];
   FTYPE Bsq;
   FTYPE absB;
   int j;
   
+  Bccon[0] = 0;
+  Bccon[1] = pr[B1];
+  Bccon[2] = pr[B2];
+  Bccon[3] = pr[B3];
+
   lower_vec(Bccon,geom,Bccov);
   //obtain coordinate 4-velocity
   pr2ucon(WHICHVEL, pr, geom, ucon);
@@ -2972,7 +2987,8 @@ int compute_vpar(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
 
 int set_vpar(FTYPE omegaf, FTYPE vpar, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr)
 {
-  OBtopr_general3(omegaf, vpar, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr);
+  int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  OBtopr_general3(omegaf, vpar, Bccon, geom, pr);
   return(0);
 }
 
