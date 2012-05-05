@@ -2928,6 +2928,54 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 }
 
+int compute_vpar_poloidal(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar)
+{
+  FTYPE Bccov[NDIM];
+  FTYPE Bsq_poloidal;
+  FTYPE absB_poloidal;
+  
+  lower_vec(Bccon,geom,Bccov);
+  
+  Bsq_poloidal=0.0+SMALL;
+  SLOOPA(j) if( j <= 2 ) Bsq_poloidal+=Bccon[j]*Bccov[j];  //only poloidal components
+  
+  absB_poloidal=sqrt(Bsq_poloidal);
+  
+  *vpar = (Bccov[1]*vcon[1]+Bccov[2]*vcon[2])/absB_poloidal;
+  
+  return(0);
+}
+
+int compute_vpar(FTYPE *Bccon,struct of_geom *geom, FTYPE *vpar, FTYPE *omegaf)
+{
+  FTYPE Bccov[NDIM],vcon[NDIM],ucon[NDIM];
+  FTYPE Bsq;
+  FTYPE absB;
+  int j;
+  
+  lower_vec(Bccon,geom,Bccov);
+  //obtain coordinate 4-velocity
+  pr2ucon(WHICHVEL, pr, geom, ucon);
+  //obtain coordinate 3-velocity
+  DLOOPA(j) vcon[j] = ucon[j]/ucon[TT];
+  
+  Bsq=0.0+SMALL;
+  SLOOPA(j) Bsq+=Bccon[j]*Bccov[j];
+  
+  absB=sqrt(Bsq);
+  
+  *vpar = (Bccov[1]*vcon[1]+Bccov[2]*vcon[2])/absB;
+  *omegaf = vcon[3] - (*vpar) * Bccon[3]/absB;
+  
+  return(0);
+}
+
+int set_vpar(FTYPE omegaf, FTYPE vpar, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr)
+{
+  OBtopr_general3(omegaf, vpar, FTYPE *Bccon, struct of_geom *geom, FTYPE *pr);
+  return(0);
+}
+
 // input \Omega_F, extra 3-vel along field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 {
@@ -2940,6 +2988,10 @@ int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
   FTYPE vcon[NDIM];
   FTYPE v0oB;
 
+  //ensure outflow
+  if (Bccon[1]<0) {
+    v0 *= -1.;
+  }
   lower_vec(Bccon,geom,Bccov);
 
   Bsq=0.0+SMALL;

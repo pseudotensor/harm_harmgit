@@ -701,7 +701,67 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
   return(0);
 }
 
+FTYPE f_trans(FTYPE r)
+{
+  FTYPE f, rs;
+  
+  rs = 1 / a;
+  
+  f = (r<rs)?((rs-r)/(rs-Rin)):(0);
+  
+  return(f);
+}
 
+int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
+{
+  extern int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  FTYPE b0, b1, b2;
+  FTYPE r, th;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE omegastar;
+  FTYPE tau;
+  FTYPE drho, du;
+  FTYPE Bcon[NDIM];
+  FTYPE vpar, dvpar;
+  FTYPE omegaf;
+  
+  Bcon[0]=0;
+  Bcon[1]=pr[B1];
+  Bcon[2]=pr[B2];
+  Bcon[3]=pr[B3];
+  
+  
+  coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X);
+  bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
+  r=V[1];
+  th=V[2];
+  
+  //only do so on final step
+  if(finalstep && (EVOLVERHO||EVOLVEUU)) {
+    omegastar = a;
+    //pulsar rotational period
+    tau = 2*M_PIl/omegastar;
+    //inverse timescale over which motion is damped, let's try 10% of period
+    b0 = 1./(0.1*tau);
+    b1 = b0 * f_trans(r);
+    b2 = b1 * fabs(cos(th));
+    if( EVOLVERHO ){
+      drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
+      pr[RHO] += drho;
+    }
+    if( EVOLVEUU ){
+      du = - dt * b2 * (pr[UU] - prfloor[UU]);
+      pr[UU] += du;
+    }
+    //compute parallel velocity component (along full B)
+    compute_vpar(Bcon, ptrgeom, &vpar, &omegaf)
+    //damp parallel velocity component
+    dvpar = - dt * b1 * vpar;
+    //set parallel velocity component
+    set_vpar(omegaf, vpar, Bccon, geom, pr);
+  }
+  return(0);
+}
 
 // 0 = primitive (adds rho,u in comoving frame)
 // 1 = conserved but rho,u added in ZAMO frame
@@ -797,7 +857,13 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       }
     }
     
+    /////////////////////////////
+    //
+    // Here apply Komissarov's freezing
+    //
+    /////////////////////////////
 
+    freeze_motion(prfloor, pr, ucons, ptrgeom, finalstep);
 
     /////////////////////////////
     //
