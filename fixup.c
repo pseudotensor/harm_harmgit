@@ -724,6 +724,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE Bcon[NDIM];
   FTYPE vpar, dvpar;
   FTYPE omegaf;
+  FTYPE frac = 0.01;  //fraction of rotation over which to force densities to target values
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -742,7 +743,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     //inverse timescale over which motion is damped, let's try 10% of period
-    b0 = 1./(0.1*tau);
+    b0 = 1./(frac*tau);
     b1 = b0 * f_trans(r);
     b2 = b1 * fabs(cos(th));
     if( DOEVOLVERHO ){
