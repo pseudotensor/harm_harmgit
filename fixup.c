@@ -704,8 +704,12 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 FTYPE f_trans(FTYPE r)
 {
   FTYPE f, rs;
+  //fraction of Rlc over which to carry out Komissarov's swindle
+  FTYPE fracRlc = 0.5;
+  //radius of light cylinder
+  FTYPE Rlc = 1.0 / a;
   
-  rs = 1.0 / a;
+  rs = fracRlc * Rlc;
   
   f = (r<rs)?((rs-r)/(rs-Rin)):(0);
   
