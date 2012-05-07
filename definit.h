@@ -843,3 +843,5 @@
 
 #define DO_ASSERTS 0
 
+#define USERESTARTFORPANALYTIC 1  //=1: original behavior by Jon: save restart prims as panalytic
+

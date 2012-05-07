@@ -406,3 +406,6 @@ struct Ccoordparams {
 
 #undef PERCELLDT
 #define PERCELLDT 0
+
+#undef USERESTARTFORPANALYTIC
+#define USERESTARTFORPANALYTIC 0 //Sasha's behavior: when restarting, don't use the restarted prims for analytic solution since computing panalytic separately
