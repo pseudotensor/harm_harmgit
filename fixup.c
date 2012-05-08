@@ -705,7 +705,7 @@ FTYPE f_trans(FTYPE r)
 {
   FTYPE f, rs;
   //fraction of Rlc over which to carry out Komissarov's swindle
-  FTYPE fracRlc = 1.0;
+  FTYPE fracRlc = 0.5;
   //radius of light cylinder
   FTYPE Rlc = 1.0 / a;
   
@@ -728,7 +728,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE Bcon[NDIM];
   FTYPE vpar, dvpar;
   FTYPE omegaf;
-  FTYPE frac = 0.0005;  //fraction of rotation over which to force densities to target values
+  FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
