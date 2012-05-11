@@ -232,7 +232,7 @@ int bound_x1dn_nssurface(
 		  //In dipole, radial component scales exactly as 1/r^3, hence
 		  //scale radial field as Bur ~ 1/r^3 using the innermost active Bstag[1] as a reference value
 		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
-		  bl_coord_ijk_2(i, j, k, dirprim[pl], X, V);
+		  bl_coord_ijk(i, j, k, dirprim[pl], V);
 		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
 		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
 		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
@@ -256,7 +256,7 @@ int bound_x1dn_nssurface(
 #if( NSBC_ASSUME_DIPOLE_FIELD )
 		  //scale radial field as Bur ~ 1/r^3
 		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
-		  bl_coord_ijk_2(i, j, k, dirprim[pl], X, V);
+		  bl_coord_ijk(i, j, k, dirprim[pl], V);
 		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
 		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
 		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
