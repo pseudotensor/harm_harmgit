@@ -14,7 +14,7 @@
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
 #define N1 64
 #define N2 64
-#define N3 1
+#define N3 4
 
 // atch adjusts
 #undef MAXWELL
