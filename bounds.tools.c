@@ -3209,6 +3209,10 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
   int dir;
   int dimen;
   int dirsign;
+#if( N3 > 1 )
+  int km1;
+  FTYPE myB1;
+#endif
   
   if(ADJUSTFLUXCT==0 && DOADJUSTEMFS==0){
     // then no need to set EMF's to zero to maintain divb=0, although can choose to still set EMF's to constant along appropriate directions to maintain stationarity all the way up to including the boundary. Not sure why that would be important to maintain.
@@ -3275,7 +3279,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	  // EMF[2]:
   #if(N3>1)
 	  km1 = km1mac(k);
-	  km1 = max(kval, INFULL3);
+	  km1 = max(km1, INFULL3);
 	  myB1 = 0.5 * ( GLOBALMACP0A1(pstaganalytic,i,j,k,B1)+GLOBALMACP0A1(pstaganalytic,i,j,km1,B1) );
 	  MACP1A1(fluxvec,3,i,j,k,B1) = - get_omegaf(t,dt,steppart) * myB1;   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
 	  MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
