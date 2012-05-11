@@ -231,7 +231,7 @@ int bound_x1dn_nssurface(
 		}
 		else if( pl == B1 ){
 		  //centered field; need to reconstruct from gdetB1:
-		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl); //0.5*(GLOBALMACP0A1(pstaganalytic,i,j,k,pl)+GLOBALMACP0A1(pstaganalytic,i+1,j,k,pl));
+		  MACP0A1(prim,i,j,k,pl) = 0.5*(GLOBALMACP0A1(pstaganalytic,i,j,k,pl)+GLOBALMACP0A1(pstaganalytic,i+1,j,k,pl)); //GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
 		}
 		pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 		//set velocity to stationary axisymmetry
