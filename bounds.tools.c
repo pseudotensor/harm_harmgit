@@ -169,6 +169,7 @@ int bound_x1dn_nssurface(
     struct of_geom *ptrrgeom[NPR];
     FTYPE X[NDIM], rX[NDIM];
     FTYPE V[NDIM], rV[NDIM];
+    FTYPE rV2[NDIM], rV3[NDIM];
     FTYPE bsq;
     FTYPE dxdxp[NDIM][NDIM];
     FTYPE rdxdxp[NDIM][NDIM];
@@ -201,14 +202,21 @@ int bound_x1dn_nssurface(
 	  rk=k;
 	  
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
-	  pl=B3; bl_coord_ijk(ri,rj,rk,dirprim[pl],rV);
+	  pl=B2; bl_coord_ijk(ri,rj,rk,dirprim[pl],rV2);
+	  pl=B3; bl_coord_ijk(ri,rj,rk,dirprim[pl],rV3);
 	  
 	  //outflow everything first
 	  LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 	    PBOUNDLOOP(pliter,pl) {
-	      if (pl==B3) {
+	      //treat B2 and B3 symmetrically since for a tilted dipole in 3D they become intermixed
+	      if (pl==B2) {
+		//SASMARK: works accurately only for radial grid
 		bl_coord_ijk(i,j,k,dirprim[pl],V);
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (rV[1]*rV[1])/(V[1]*V[1]);
+		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (rV2[1]*rV2[1])/(V[1]*V[1]);
+	      }
+	      else if (pl==B3) {
+		bl_coord_ijk(i,j,k,dirprim[pl],V);
+		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (rV3[1]*rV3[1])/(V[1]*V[1]);
 	      }
 	      else {
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
