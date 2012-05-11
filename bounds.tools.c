@@ -227,6 +227,7 @@ int bound_x1dn_nssurface(
 	  //location of reference staggered radial magnetic field
 	  dxdxprim_ijk(ri, rj, rk, FACE1, rdxdxp);
 	  bl_coord_ijk(ri, rj, rk, FACE1, rV);
+	  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,B1)*rdxdxp[1][1];
 	  
 	  //fix things: rho, u, B^1, Omega_F
 	  if(ispstag){
@@ -241,7 +242,6 @@ int bound_x1dn_nssurface(
 		  //scale radial field as Bur ~ 1/r^3 using the innermost active Bstag[1] as a reference value
 		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
 		  bl_coord_ijk(i, j, k, dirprim[pl], V);
-		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
 		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
 		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
 #else
@@ -265,7 +265,6 @@ int bound_x1dn_nssurface(
 		  //scale radial field as Bur ~ 1/r^3
 		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
 		  bl_coord_ijk(i, j, k, dirprim[pl], V);
-		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
 		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
 		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
 #else
