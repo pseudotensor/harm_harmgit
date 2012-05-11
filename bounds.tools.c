@@ -167,7 +167,13 @@ int bound_x1dn_nssurface(
     struct of_geom *ptrgeom[NPR];
     struct of_geom rgeomdontuse[NPR];
     struct of_geom *ptrrgeom[NPR];
+    FTYPE X[NDIM], rX[NDIM];
     FTYPE V[NDIM], rV[NDIM];
+    FTYPE bsq;
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE rdxdxp[NDIM][NDIM];
+    FTYPE rBur, Bur;
+    
     
     
     // assign memory
@@ -216,7 +222,22 @@ int bound_x1dn_nssurface(
 	    LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 	      PBOUNDLOOP(pliter,pl) {
 		if(pl==B1) {
+#if( NSBC_ASSUME_DIPOLE_FIELD )
+		  //This way of setting ghost B[1] relies on the innermost active Bstag[1], which is
+		  //evolved according to prescribed emfs (that correspond to rotation with omegaf).
+		  //In dipole, radial component scales exactly as 1/r^3, hence
+		  //scale radial field as Bur ~ 1/r^3 using the innermost active Bstag[1] as a reference value
+		  dxdxprim_ijk(ri, rj, rk, FACE1, rdxdxp);
+		  bl_coord_ijk_2(ri, rj, rk, FACE1, rX, rV);
+		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
+		  bl_coord_ijk_2(i, j, k, dirprim[pl], X, V);
+		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
+		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
+		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
+#else
+		  //THIS ONLY WORKS IN AXISYMMETRY or if pstaganalytic is updated on every substep
 		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+#endif
 		}
 	      }
 	    }
@@ -230,13 +251,32 @@ int bound_x1dn_nssurface(
 		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
 		}
 		else if( pl == B1 ){
-		  //centered field; need to reconstruct from gdetB1:
+#if( NSBC_ASSUME_DIPOLE_FIELD )
+		  //scale radial field as Bur ~ 1/r^3
+		  dxdxprim_ijk(ri, rj, rk, FACE1, rdxdxp);
+		  bl_coord_ijk_2(ri, rj, rk, FACE1, rX, rV);
+		  dxdxprim_ijk(i, j, k, dirprim[pl], dxdxp);
+		  bl_coord_ijk_2(i, j, k, dirprim[pl], X, V);
+		  rBur = GLOBALMACP0A1(pstagglobal,ri,rj,rk,pl)*rdxdxp[1][1];
+		  Bur = rBur*rV[1]*rV[1]*rV[1]/(V[1]*V[1]*V[1]);
+		  MACP0A1(prim,i,j,k,pl) = Bur/dxdxp[1][1];
+#else
+		  //THIS ONLY WORKS IN AXISYMMETRY or if pstaganalytic is updated on every substep
+		  //prim[B1] is centered field; need to interpolate from pstaganalytic[B1]:
 		  MACP0A1(prim,i,j,k,pl) = 0.5*(GLOBALMACP0A1(pstaganalytic,i,j,k,pl)+GLOBALMACP0A1(pstaganalytic,i+1,j,k,pl)); //GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+#endif
 		}
-		pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-		//set velocity to stationary axisymmetry
-		set_vel_stataxi( ptrgeom[U1], get_omegaf(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
 	      }
+	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+	      //set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
+	      set_vel_stataxi( ptrgeom[pl], get_omegaf(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
+	      //now that velocity is set, can compute bsq
+	      if( bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1 ) { 
+		FAILSTATEMENT("bounds.tools.c:bound_x1nd_nssurface()", "bsq_calc()", 2);
+	      }
+	      //set rho and u consistent with density floor
+	      MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOLIMIT;
+	      MACP0A1(prim,i,j,k,UU) = bsq/BSQOULIMIT;
 	    }
 	  }//end else ispstag
 	  
