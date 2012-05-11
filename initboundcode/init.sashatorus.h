@@ -409,3 +409,6 @@ struct Ccoordparams {
 
 #undef USERESTARTFORPANALYTIC
 #define USERESTARTFORPANALYTIC 0 //Sasha's behavior: when restarting, don't use the restarted prims for analytic solution since computing panalytic separately
+
+#undef USEKOMISWINDLE
+#define USEKOMISWINDLE 1

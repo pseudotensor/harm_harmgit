@@ -869,9 +869,9 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     // Here apply Komissarov's freezing
     //
     /////////////////////////////
-
+#if(USEKOMISWINDLE)
     freeze_motion(prfloor, pr, ucons, ptrgeom, finalstep);
-
+#endif
     /////////////////////////////
     //
     // Get new primitive if went beyond floow
