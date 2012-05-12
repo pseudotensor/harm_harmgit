@@ -113,7 +113,7 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // AKMARK: do full phi
+  dofull2pi = 1;   // AKMARK: do full phi
   
   global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
@@ -731,13 +731,27 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   return(vpotbh);
 }
 
-FTYPE vpotns_normalized( FTYPE r, FTYPE th )
+FTYPE vpotns_normalized( FTYPE r, FTYPE th, FTYPE ph )
 {
   FTYPE vpot;
+  FTYPE ang = 35*M_PI/180.;
   //normalized vector potential: total vpot through NS equals some constant order unity
   //vpot = 1 - fabs(cos(th));  //split-monopole
   //vpot = 1 - cos(th);        //monopole
+#if(0)
   vpot = sin(th)*sin(th)/r;        //dipole
+#elif(1)
+  FTYPE x, y, z;
+  FTYPE xp, yp, zp;
+  x = r*sin(th)*cos(ph);
+  y = r*sin(th)*sin(ph);
+  z = r*cos(th);
+  //rotate it
+  xp = x*cos(ang) - z*sin(ang);
+  yp = y;
+  zp = x*sin(ang) + z*cos(ang);
+  vpot = (x*x+y*y)/pow(x*x+y*y+z*z,1.5);
+#endif
   return(vpot);
 }
 
@@ -758,9 +772,9 @@ FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
 int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
-  FTYPE vpotns_normalized( FTYPE r, FTYPE th );
+  FTYPE vpotns_normalized( FTYPE r, FTYPE th, FTYPE ph );
   SFTYPE rho_av, u_av, q;
-  FTYPE r,th;
+  FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
@@ -791,6 +805,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     r=V[1];
     th=V[2];
+    ph=V[3];
 
 
 
@@ -808,7 +823,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     //NS field
     if( FIELDTYPE==NSFIELD ) {
-      vpotns = vpotns_normalized(r, th);
+      vpotns = vpotns_normalized(r, th, ph);
       vpot += NSFIELDVAL * vpotns;
     }
 
