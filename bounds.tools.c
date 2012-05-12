@@ -3288,7 +3288,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	//the boundary is on the processor, so reset emf's to zero at the boundary
 	COMPFULLLOOPP1_23{
 	  // EMF[2]:
-#if(N3>1)
+#if(N3>1&&0)
 	  if( j >= -N1BND && j < N2+N1BND && k >= 0 && k <= N3 ){
 	    get_geometry(i, j, k, CORN2, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
 	    //get_geometry(i, j, k, FACE1, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
