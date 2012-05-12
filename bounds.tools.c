@@ -3242,10 +3242,14 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	  if( i < -MAXBND ) continue;
 	  if( i > N1-1+MAXBND) continue;
 	}
-	else if( totalsize[1] > 0 && mycpupos[1] != 0 ) {
-	  continue;
+	else if( totalsize[1] > 0 && mycpupos[1] == 0 && dir == X1DN ) {
+	  i = 0;
+	}
+	else {
+	  break;
 	}
 
+	
 	//the boundary is on the processor, so reset emf's to zero at the boundary
 	COMPFULLLOOPP1_23{
 	  // EMF[3]:
