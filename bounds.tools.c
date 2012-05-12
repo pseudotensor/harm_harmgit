@@ -3209,6 +3209,8 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
   int dir;
   int dimen;
   int dirsign;
+  struct of_geom geom;
+  struct of_geom *ptrgeom = &geom;
 #if( N3 > 1 )
   int km1;
   FTYPE myB1;
@@ -3274,23 +3276,32 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	  if( i < -MAXBND ) continue;
 	  if( i > N1-1+MAXBND) continue;
 	}
-	else if( totalsize[1] > 0 && mycpupos[1] != 0 ) {
-	  continue;
+	else if( totalsize[1] > 0 && mycpupos[1] == 0 ) {
+	  //work with the inner radial boundary
+	  i = 0;
 	}
+	else {
+	  break;
+	}
+
 	
 	//the boundary is on the processor, so reset emf's to zero at the boundary
 	COMPFULLLOOPP1_23{
 	  // EMF[2]:
-  #if(N3>1)
-	  km1 = km1mac(k);
-	  km1 = max(km1, INFULL3);
-	  myB1 = 0.5 * ( GLOBALMACP0A1(pstaganalytic,i,j,k,B1)+GLOBALMACP0A1(pstaganalytic,i,j,km1,B1) );
-	  MACP1A1(fluxvec,3,i,j,k,B1) = - get_omegaf(t,dt,steppart) * myB1;   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
-	  MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
-  #endif
+#if(N3>1)
+	  if( j >= -N1BND && j < N2+N1BND && k >= 0 && k <= N3 ){
+	    get_geometry(i, j, k, CORN2, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
+	    //get_geometry(i, j, k, FACE1, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
+	    km1 = km1mac(k);
+	    km1 = max(km1, INFULL3);
+	    myB1 = 0.5 * ( GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,km1,B1) );
+	    MACP1A1(fluxvec,3,i,j,k,B1) = ptrgeom->gdet * get_omegaf(t,dt,steppart) * myB1;   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
+	  }
+#endif
 	}
       }
-	
+
       if(dir==X1UP && BCtype[dir]==FIXEDUSEPANALYTIC){ // i.e. don't reset EMF2=0 for lower boundary since that corresponds to rotation
 
 	//if boundary is not on this processor, do not modify emf's
