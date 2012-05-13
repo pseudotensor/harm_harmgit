@@ -731,26 +731,39 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
   return(vpotbh);
 }
 
-FTYPE vpotns_normalized( FTYPE r, FTYPE th, FTYPE ph )
+FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
   FTYPE vpot;
-  FTYPE ang = 35*M_PI/180.;
+  FTYPE alpha = 35*M_PI/180.;  //dipole tilt angle
+  FTYPE r = V[1], th = V[2], ph = V[3];
+#if(0)
   //normalized vector potential: total vpot through NS equals some constant order unity
   //vpot = 1 - fabs(cos(th));  //split-monopole
   //vpot = 1 - cos(th);        //monopole
-#if(0)
   vpot = sin(th)*sin(th)/r;        //dipole
 #elif(1)
-  FTYPE x, y, z;
-  FTYPE xp, yp, zp;
-  x = r*sin(th)*cos(ph);
-  y = r*sin(th)*sin(ph);
-  z = r*cos(th);
-  //rotate it
-  xp = x*cos(ang) - z*sin(ang);
-  yp = y;
-  zp = x*sin(ang) + z*cos(ang);
-  vpot = (x*x+y*y)/pow(x*x+y*y+z*z,1.5);
+  //tilted dipole
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE Adtheta, Adphi;
+  FTYPE Ad1, Ad2, Ad3;
+
+  dxdxprim_ijk( i, j, k, loc, dxdxp );
+  
+  Adtheta = -sin(alpha)*sin(ph)/r;
+  Ad2 = dxdxp[2][2] * Adtheta;
+
+  if( 1 == l ){
+    Ad1 = dxdxp[2][1] * Adtheta;
+    return(Ad1);
+  }
+  else if( 2 == l ){
+    return( Ad2 );
+  }
+  else if( 3 == l ){
+    Adphi = sin(th)*( -cos(th)*cos(ph)*sin(alpha) + cos(alpha)*sin(th) ) / r;
+    Ad3 = dxdxp[3][3] * Adphi;
+    return( Ad3 );
+  }
 #endif
   return(vpot);
 }
@@ -772,7 +785,7 @@ FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
 int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   FTYPE vpotbh_normalized( FTYPE r, FTYPE th );
-  FTYPE vpotns_normalized( FTYPE r, FTYPE th, FTYPE ph );
+  FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l );
   SFTYPE rho_av, u_av, q;
   FTYPE r,th,ph;
   FTYPE vpot;
@@ -791,7 +804,12 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
   vpot=0.0;
-
+  r=V[1];
+  th=V[2];
+  ph=V[3];
+  
+  
+  
   if(l==-3){// A_\phi for bh field
     r=V[1];
     th=V[2];
@@ -801,12 +819,13 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
   }
   
+  //NS field
+  if( FIELDTYPE==NSFIELD && l >= 1 && l <= 3 ) {
+    vpotns = vpotns_normalized(i, j, k, loc, V, l);
+    vpot += NSFIELDVAL * vpotns;
+  }
+
   if(l==3){// A_\phi for disk
-
-    r=V[1];
-    th=V[2];
-    ph=V[3];
-
 
 
     // Blandford quadrapole field version
@@ -821,11 +840,6 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
     }
 
-    //NS field
-    if( FIELDTYPE==NSFIELD ) {
-      vpotns = vpotns_normalized(r, th, ph);
-      vpot += NSFIELDVAL * vpotns;
-    }
 
     /* field-in-disk version */
     
