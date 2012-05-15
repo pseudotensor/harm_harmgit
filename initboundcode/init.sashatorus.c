@@ -108,7 +108,7 @@ int prepre_init_specific_init(void)
 
   dofull2pi = 0;   // AKMARK: do full phi
   
-  global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
@@ -315,7 +315,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 34.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -329,7 +329,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
-  rin = 10. ;
+  rin = 15. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -419,7 +419,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 3.;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
@@ -524,9 +524,9 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 10.0;
+  DTdumpgen[ENERDUMPTYPE] = 100.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 10.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 5.0;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
@@ -534,7 +534,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 20000;
+  DTr = 60000;
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
@@ -570,6 +570,10 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
+
+  DOCOLSPLIT[GRIDDUMPTYPE]=1;
+  DOCOLSPLIT[AVG1DUMPTYPE]=1;
+  DOCOLSPLIT[AVG2DUMPTYPE]=1;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);

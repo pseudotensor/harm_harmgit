@@ -1115,7 +1115,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 
 
     // fail if MPI functions below can't handle buffer size
-    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2*1024*1024*1024) && sizeof(int)<=4){
+    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2L*1024L*1024L*1024L) && sizeof(int)<=4){
       dualfprintf(fail_file,"JCM couldn't figure out how to modify ROMIO so would work when sizeof(int)==4 and buffer size is >2GB\n");
       myexit(867546243);
     }
