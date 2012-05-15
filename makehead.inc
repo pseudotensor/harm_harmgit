@@ -24,10 +24,19 @@ USECCC=0
 USEORANGE=0
 USENERSC=0
 USEKRAKEN=0
-USEKRAKENICC=1
+USEKRAKENICC=0
 USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
+USEPFESGIMPT=0
+USENAU=1
+
+#####################
+#
+# GSL CHOICE (needed for limotorus)
+#
+#####################
+USEGSL=0
 
 
 ########################
@@ -38,7 +47,7 @@ USEPFE=0
 # default should be 0 since has large performance hit.
 USEGPROF=0
 
- 
+
 ########################
 #
 # Debug information in binary

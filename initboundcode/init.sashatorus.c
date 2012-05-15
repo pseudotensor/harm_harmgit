@@ -193,9 +193,9 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
 
   TIMEORDER = 2;
-  DTr = 3000;
+  DTr = 2000;
   tf = 1e5;
-  DOENERDIAG=0;
+  //DOENERDIAG=0;
   //DOAVGDIAG=0;  //set here to override after restart
   //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
 
@@ -299,7 +299,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
-  a = -0.9;
+  a = 0.9;
 #elif(WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   a = 0.;
 #else
@@ -319,7 +319,7 @@ int init_grid(void)
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 37.1; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusrmax = 34.1; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
   beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -364,7 +364,7 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.7 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.0;
   Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
@@ -381,7 +381,7 @@ int init_grid(void)
   //radial hyperexponential grid
   global_npow2=4.0; //power exponent
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
-  global_rbr = 1000.;  //radius at which hyperexponentiation kicks in
+  global_rbr = 100.;  //radius at which hyperexponentiation kicks in
   
   /////////////////////
   //ANGULAR GRID SETUP
@@ -423,7 +423,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 3.;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
@@ -528,7 +528,7 @@ int init_global(void)
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 100.0;
+  DTdumpgen[ENERDUMPTYPE] = 10.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 5.0;
   // fieldline locked to images so can overlay
@@ -538,7 +538,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = 100.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 6000;  //also see post_init_specific_init()
+  DTr = 2000;  //also see post_init_specific_init()
 
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */

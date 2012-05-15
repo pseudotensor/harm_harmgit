@@ -107,6 +107,17 @@ USESPECIAL4GENERATE=1
 USELAPACK=0
 endif
 
+ifeq ($(USEPFESGIMPT),1)
+# override again
+USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
+AVOIDFORK=1
+MCC=icc
+CCGENERATE=icc
+USESPECIAL4GENERATE=1
+USELAPACK=0
+endif
+
 ifeq ($(USEICCGENERIC),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
@@ -118,6 +129,14 @@ ifeq ($(USEICCINTEL),1)
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
 MCC=mpicc
 COMP=icc
+endif
+ 
+ifeq ($(USENAU),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC=icc -lmpi
+COMP=icc -lmpi
+USELAPACK=0
 endif
 
 ifeq ($(USETACCRANGER),1)
@@ -140,7 +159,7 @@ endif
 
 ifeq ($(USEPGCC),1)
 MCC=mpicc
-endif    
+endif
 
 ifeq ($(USEUB),1)
 MCC=/usr/bin/mpicc.mpich
@@ -156,7 +175,7 @@ ECHOSWITCH=
 USELAPACK=0
 endif
 
-endif    
+endif
 #################### DONE IF USEMPI
 
 
@@ -201,7 +220,7 @@ ifeq ($(USEGCC),1)
 endif
 
 ifeq ($(USEPGCC),1)
-endif    
+endif
 
 ifeq ($(USEUB),1)
 USEGCC=1
@@ -209,7 +228,7 @@ ECHOSWITCH=
 USELAPACK=0
 endif
 
-endif    
+endif
 #################### DONE IF USEMPI
 
 
@@ -266,6 +285,15 @@ ifeq ($(USELAPACK),1)
 	LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
 else
 	LAPACKLDFLAGS=
+endif
+
+ifeq ($(USEGSL),1)
+#	below gives GSL support
+	GSLCFLAGS=`gsl-config --cflags`
+	GSLLDFLAGS=`gsl-config --libs`
+else
+	GSLCFLAGS=
+	GSLLDFLAGS=
 endif
 
 ifeq ($(USEOPENMP),1)
@@ -336,7 +364,7 @@ CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
 #CFLAGS = -O6 -g
 #CFLAGS = -O0 -pg -g
 LDFLAGS = -lm $(LAPACKLDFLAGS)
-# -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB) 
+# -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB)
 
 #CC = cc
 #AR	=	ar r
@@ -462,6 +490,28 @@ LDFLAGSOTHER=
 endif
 
 
+ifeq ($(USENAU),1)
+
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+LONGDOUBLECOMMAND=-long_double
+
+
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
+
+CFLAGSPRENONPRECISE=-O2 -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+
+
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+
+LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGSOTHER=
+
+
+
+
+endif
 
 
 
@@ -574,9 +624,12 @@ endif
 
 ifeq ($(USEKRAKENICC),1)
 LONGDOUBLECOMMAND=
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLCFLAGS)
+# AKMARK: added -no-ipo following Bob's discovery that -ipo is the cause of holes appearing in disk
+# AKMARK: related suggestion by Sasha to disable -msse3 in CFLAGSPRE
 COMP=cc $(DFLAGS)
-CFLAGSPRE = -fast -msse3 $(DFLAGS)
+#CFLAGSPRE = -fast -msse3 $(DFLAGS)
+CFLAGSPRE = -fast $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
 LDFLAGS = -lm  $(LAPACKLDFLAGS)
@@ -584,13 +637,24 @@ endif
 
 ifeq ($(USEPFE),1)
 LONGDOUBLECOMMAND=-m128bit-long-double
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA) $(GSLCFLAGS)
 COMP=mpicc $(DFLAGS)
 CFLAGSPRE= -O3 -funroll-loops $(DFLAGS)
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 $(DFLAGS)
 #LDFLAGS= -lm  $(LAPACKLDFLAGS)
 LDFLAGS= $(LAPACKLDFLAGS)
+endif
+
+ifeq ($(USEPFESGIMPT),1)
+LONGDOUBLECOMMAND=-m128bit-long-double
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas $(EXTRA) $(GSLCFLAGS)
+COMP=icc $(DFLAGS)
+CFLAGSPRE= -O3 -funroll-loops $(DFLAGS)
+CFLAGSPRENONPRECISE= $(CFLAGSPRE)
+GCCCFLAGSPRE= -O3 $(DFLAGS)
+#LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= -lmpi $(LAPACKLDFLAGS)
 endif
 
 
@@ -611,9 +675,10 @@ CFLAGSNONPRECISE=$(LONGDOUBLECOMMAND) $(CFLAGSPRENONPRECISE)
 CFLAGS=$(LONGDOUBLECOMMAND) $(CFLAGSPRE)
 GCCCFLAGS=$(LONGDOUBLECOMMAND) $(GCCCFLAGSPRE)
 else
-CFLAGS=$(CFLAGSPRE)
-CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE)
-GCCCFLAGS=$(GCCCFLAGSPRE)
+CFLAGS=$(CFLAGSPRE) $(GSLCFLAGS)
+CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE) $(GSLCFLAGS)
+GCCCFLAGS=$(GCCCFLAGSPRE) $(GSLCFLAGS)
+LDFLAGS+=$(GSLLDFLAGS)
 endif
 
 # for for normal installation of v5d and hdf
