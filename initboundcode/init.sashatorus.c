@@ -518,20 +518,23 @@ int init_global(void)
 
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   /* output choices */
-  tf = 20000.;
+  tf = 50000.;
 
   /* dumping frequency, in units of M */
   DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 200.0;
+
+  DTdumpgen[FAILFLOORDUDUMPTYPE] = 100.0;
+
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 100.0;
+  DTdumpgen[ENERDUMPTYPE] = 200.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 5.0;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  DTdumpgen[DEBUGDUMPTYPE] = 200.0;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 60000;
