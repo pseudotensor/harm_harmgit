@@ -21,7 +21,8 @@
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
-#define THETAROTMETRIC (0.5*0.7)
+//#define THETAROTMETRIC (0.5*0.7)
+#define THETAROTMETRIC (0.0)
 
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -97,7 +98,7 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM THICKDISK // NORMALTORUS // choice
+#define WHICHPROBLEM NORMALTORUS //THICKDISK // NORMALTORUS // choice
 
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct

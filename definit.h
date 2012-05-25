@@ -349,6 +349,16 @@
 // * SET RESET THETAROT for IC so IC uses normal metric?
 
 
+// whether metric mixes r-\phi or \theta-\phi.  Alows for optimizations since not often mixing with \phi
+#if(ALLOWMETRICROT)
+#define DOMIXTHETAPHI 1 // for g_{\theta\phi} // no choice
+#else
+#define DOMIXTHETAPHI 0 // choice
+#endif
+
+
+
+
 // whether to evolve metric value of M and a and Q
 #define DOEVOLVEMETRIC 0
 
