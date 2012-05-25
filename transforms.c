@@ -465,7 +465,7 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 
 
 
-// transformation of metric written in V[X]-type coordinates with dV differentials to one written in Vmetric old/original coordinates with dVmetric original/old differentials
+// transformation of metric written in Vmetric-type coordinates with dVmetric differentials to one written in V[X] coordinates with dVdifferentials
 //
 // This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
 void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
