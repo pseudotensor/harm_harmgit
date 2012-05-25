@@ -8,7 +8,14 @@ extern int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, i
 extern int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk);
 extern int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc);
 extern int pr2ucon(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE*ucon);
+
 extern int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE*ucon);
+
+extern void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
+extern void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
+
+
+
 extern void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon);
 extern void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon);
 extern void mettometp(int ii, int jj, int kk, FTYPE*ucon);

@@ -8,7 +8,7 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
 #if(USEMPI)
-  fprintf(stderr, "begin: init_MPI_GRMHD\n");
+  fprintf(stderr, "Begin: init_MPI_GRMHD\n");
   fflush(stderr);
   // init MPI (assumes nothing in set_arrays.c used here) : always done
   // non-blocking:

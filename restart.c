@@ -209,8 +209,8 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // always NPR
-  //  *numcolumns=NPR*2; // primitives and conservatives
-  //  *numcolumns=NPR; // primitives only
+  //*numcolumns=NPR*2; // primitives and conservatives
+  //*numcolumns=NPR; // primitives only
 
 
   // counters not crucial
@@ -247,7 +247,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
       }
     }
   }
-
+  
   if(dnumcolumns[DISSDUMPTYPE]>0){
     myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
   }
@@ -286,6 +286,7 @@ int restart_read(long dump_cnt)
 
   // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
   if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_read(dump_cnt);
+  else restartupperpole_set();
 
 
   trifprintf("begin reading rdump# %ld ... ",dump_cnt);
@@ -385,6 +386,7 @@ int restartupperpole_read(long dump_cnt)
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
   int bintxt;
+  int restartupperpole_set(void);
 
 
   trifprintf("begin reading rdumpupperpole# %ld ... ",dump_cnt);
@@ -401,26 +403,7 @@ int restartupperpole_read(long dump_cnt)
 
   if(failreturn==FILENOTFOUND){
     dualfprintf(fail_file,"SUPERWARNING: resetting upperpole to zero since no restart file for upperpole is available\n");
-
-    if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
-      // then assume user knows what they are doing and just set array to zero
-      int i,j,k,jshifted;
-      DUMPGENLOOP{ // same loop as dump_gen() uses
-	if(j!=N2-1) continue; // force only assignment right at j==N2 so still doesn't matter what order the normal and upperpole restart calls are made
-	jshifted=j+SHIFT2;
-	GLOBALMACP0A1(unewglobal,i,jshifted,k,B2)=0.0;
-
-	if(EVOLVEWITHVPOT||TRACKVPOT){
-	  if(dnumcolumns[VPOTDUMPTYPE]>0){
-	    int jj;
-	    for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	      if(jj==2) continue; // skip A_2 that is not on pole, so not needed
-	      GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
-	    }
-	  }
-	}
-      }// end FULLLOOP
-    }// end if true upper pole
+    restartupperpole_set();
   }
   else if(failreturn>0) return(1);
     
@@ -451,6 +434,36 @@ int restartupperpole_read(long dump_cnt)
 
   return(0);
 
+}
+
+
+
+
+// restart needs to set B2=0 along outer pole if not being used.
+int restartupperpole_set(void)
+{
+
+  if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
+    // then assume user knows what they are doing and just set array to zero
+    int i,j,k,jshifted;
+    DUMPGENLOOP{ // same loop as dump_gen() uses
+      if(j!=N2-1) continue; // force only assignment right at j==N2 so still doesn't matter what order the normal and upperpole restart calls are made
+      jshifted=j+SHIFT2;
+      GLOBALMACP0A1(unewglobal,i,jshifted,k,B2)=0.0;
+
+      if(EVOLVEWITHVPOT||TRACKVPOT){
+	if(dnumcolumns[VPOTDUMPTYPE]>0){
+	  int jj;
+	  for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+	    if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+	    GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
+	  }
+	}
+      }
+    }// end FULLLOOP
+  }// end if true upper pole
+
+  return(0);
 }
 
 
@@ -1002,171 +1015,217 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   // START HEADER read/write list
   //
   /////////////////
+  int headercount=0;
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum1,sizeof(int),"%d",1,MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum2,sizeof(int),"%d",1,MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum3,sizeof(int),"%d",1,MPI_INT,headerptr); // 3D thing
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum1,sizeof(int),"%d",1,MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum2,sizeof(int),"%d",1,MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&idum3,sizeof(int),"%d",1,MPI_INT,headerptr); // 3D thing
 
   // all cpus read the rest of header the same
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&t, sizeof(SFTYPE), headerone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&tf, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&nstep, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&a, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&QBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gam, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gamideal, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&cour, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&t, sizeof(SFTYPE), headerone, 1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&tf, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&nstep, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&a, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&QBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  if(readwrite!=READHEAD||1){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&THETAROT, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  }
+  else{
+    EP3=0.0;
+    
+    // radians
+    THETAROT=1.5708; // as if restarted with this set
+  }
+
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gam, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gamideal, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&cour, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
 
 
   // for metric evolution
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Xmetricold, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Xmetricnew, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Xmetricold, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Xmetricnew, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
 
       
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dt, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[1], sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[2], sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[3], sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&TIMEORDER, sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fluxmethod, sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&FLUXB, sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UTOPRIMVERSION, sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failed, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dt, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[1], sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[2], sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&lim[3], sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&TIMEORDER, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fluxmethod, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&FLUXB, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UTOPRIMVERSION, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failed, sizeof(int), "%d", 1, MPI_INT, headerptr);
   
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcoord, sizeof(int), headerone, 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&R0, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rin, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rout, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&hslope, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Zin, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Zout, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rin_array, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rout_array, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcoord, sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&R0, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rin, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rout, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&hslope, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Zin, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Zout, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rin_array, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Rout_array, sizeof(FTYPE), headerone, NDIM, MPI_FTYPE, headerptr);
   
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BCtype[0],sizeof(int), "%d", COMPDIM*2, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BCtype[0],sizeof(int), "%d", COMPDIM*2, MPI_INT, headerptr);
 
   // new May 6, 2003
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&realnstep, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&debugfail,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&whichrestart,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&cooling,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&restartsteps[0],sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&restartsteps[1],sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&realnstep, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&debugfail,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&whichrestart,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&cooling,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&restartsteps[0],sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&restartsteps[1],sizeof(long), "%ld", 1, MPI_LONG, headerptr);
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEDUMP,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEIMAGE,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEENER,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODIAGS,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENERDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOGDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DORDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOAVGDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOIMAGEDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOAREAMAPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEDUMP,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEIMAGE,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEENER,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODIAGS,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENERDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOGDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DORDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOAVGDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOIMAGEDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOAREAMAPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODIAGEVERYSUBSTEP,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENODEBUGEVERYSUBSTEP,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOCOLSPLIT,sizeof(int), "%d", NUMDUMPTYPES, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODIAGEVERYSUBSTEP,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENODEBUGEVERYSUBSTEP,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  if(readwrite==READHEAD&&0){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOCOLSPLIT,sizeof(int), "%d", NUMDUMPTYPES-1, MPI_INT, headerptr);
+    int l5,inputl5=NUMDUMPTYPES-2;
+    for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
+      if(l5!=RESTARTUPPERPOLEDUMPTYPE){
+	DOCOLSPLIT[l5]=DOCOLSPLIT[inputl5];
+	inputl5--;
+      }
+    }
+  }
+  else headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOCOLSPLIT,sizeof(int), "%d", NUMDUMPTYPES, MPI_INT, headerptr);
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&POSDEFMETRIC,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx1,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx2,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx3,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dofull2pi,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&binaryoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sortedoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcon,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&SAFE,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&RHOMIN,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMIN,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&RHOMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQOULIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMAMAX,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMADAMP,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMAFAIL,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);      
+
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&POSDEFMETRIC,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx1,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx2,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&periodicx3,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dofull2pi,sizeof(int), "%d", 1, MPI_INT, headerptr); // 3D thing
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&binaryoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sortedoutput,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcon,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&SAFE,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&RHOMIN,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMIN,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&RHOMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQOULIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMAMAX,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMADAMP,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMAFAIL,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);      
   // end new May 6, 2003
   
   // reorganized order for DT related stuff
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTr, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTdumpgen[0], sizeof(SFTYPE), sheaderone, NUMDUMPTYPES, MPI_SFTYPE, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&rdump_cnt, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDUMPTYPES, MPI_LONG, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTr, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  if(readwrite==READHEAD&&0){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTdumpgen[0], sizeof(SFTYPE), sheaderone, NUMDUMPTYPES-1, MPI_SFTYPE, headerptr);
+    int l5,inputl5=NUMDUMPTYPES-2;
+    for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
+      if(l5!=RESTARTUPPERPOLEDUMPTYPE){
+	DTdumpgen[l5]=DTdumpgen[inputl5];
+	inputl5--;
+      }
+    }
+  }
+  else headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DTdumpgen[0], sizeof(SFTYPE), sheaderone, NUMDUMPTYPES, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&rdump_cnt, sizeof(long), "%ld", 1, MPI_LONG, headerptr);
+  if(readwrite==READHEAD&&0){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDUMPTYPES-1, MPI_LONG, headerptr);
+    int l5,inputl5=NUMDUMPTYPES-2;
+    for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
+      if(l5!=RESTARTUPPERPOLEDUMPTYPE){
+	dumpcntgen[l5]=dumpcntgen[inputl5];
+	inputl5--;
+      }
+    }
+  }
+  else headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDUMPTYPES, MPI_LONG, headerptr);
+
   
   
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prMAX[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prfloorcoef[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&rescaletype,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prMAX[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prfloorcoef[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&rescaletype,sizeof(int), "%d", 1, MPI_INT,headerptr);
   
   // Nov 11, 2006 : post-Sasha-WENO code WENO stuff
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[1],sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[2],sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[3],sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dofluxreconevolvepointfield,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[1],sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[2],sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&avgscheme[3],sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dofluxreconevolvepointfield,sizeof(int), "%d", 1, MPI_INT,headerptr);
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_transverse_flux_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_source_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_conserved_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&INVERTFROMAVERAGEIFFAILED,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&LIMIT_AC_PRIM_FRAC_CHANGE,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&LIMIT_AC_FRAC_CHANGE,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MAX_AC_PRIM_FRAC_CHANGE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MAX_AC_FRAC_CHANGE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENOFLUX,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&PARAMODWENO,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_transverse_flux_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_source_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&do_conserved_integration[0],sizeof(int), "%d", NPR, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&INVERTFROMAVERAGEIFFAILED,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&LIMIT_AC_PRIM_FRAC_CHANGE,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&LIMIT_AC_FRAC_CHANGE,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MAX_AC_PRIM_FRAC_CHANGE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MAX_AC_FRAC_CHANGE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENOFLUX,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&PARAMODWENO,sizeof(int), "%d", 1, MPI_INT,headerptr);
 
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&CHECKCONT,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOTSTEPDIAG,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOLOGSTEP,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOLOGPERF,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NDTCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NZCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NDTDOTCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NGOCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NTIMECHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&PERFWALLTIME,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&ZCPSESTIMATE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&CHECKCONT,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOTSTEPDIAG,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOLOGSTEP,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOLOGPERF,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NDTCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NZCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NDTDOTCCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NGOCHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&NTIMECHECK,sizeof(int), "%d", 1, MPI_INT,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&PERFWALLTIME,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&ZCPSESTIMATE,sizeof(FTYPE), headerone, 1, MPI_FTYPE,headerptr);
 
 
   // new June 6, 2003 (cumulatives)
   // always NPR
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&pcumreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*(COMPDIM*2)*NPR, MPI_SFTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fladdreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sourceaddreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&pcumreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*(COMPDIM*2)*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fladdreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sourceaddreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
 
-  header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
   //FAILFLOORLOOP(indexfinalstep,tscale,floor)
-  if(1){// FUCKMARK (temp mod to allow read-in of prior restart files)
-    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*(NUMFAILFLOORFLAGS-2),MPI_CTYPE,headerptr);
+  if(readwrite==READHEAD&&0){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*(NUMFAILFLOORFLAGS-3),MPI_CTYPE,headerptr);
   }
   else{ //new format
-    header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failfloorcountlocal_tot[0][0][0],sizeof(CTYPE),ctypeheaderone,2*NUMTSCALES*NUMFAILFLOORFLAGS,MPI_CTYPE,headerptr);
   }
 
   // end new June 6,2003
 
-  header1_gen(DODISS,readwrite,bintxt,bcasthead,&dissreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NUMDISSVERSIONS, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(DODISS,readwrite,bintxt,bcasthead,&dissreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NUMDISSVERSIONS, MPI_SFTYPE,headerptr);
     
-  header1_gen(DOLUMVSR,readwrite,bintxt,bcasthead,&lumvsr_tot[0],sizeof(SFTYPE),sheaderone, ncpux1*N1, MPI_SFTYPE, headerptr);
+  headercount+=header1_gen(DOLUMVSR,readwrite,bintxt,bcasthead,&lumvsr_tot[0],sizeof(SFTYPE),sheaderone, ncpux1*N1, MPI_SFTYPE, headerptr);
 
   // for consistent restart file, assume NUMDISSVERSIONS doesn't change
   for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++){// this loop is over pointers, not a continuous memory space!
-    header1_gen(DODISSVSR,readwrite,bintxt,bcasthead,&dissvsr_tot[dissloop][0],sizeof(SFTYPE),sheaderone, ncpux1*N1, MPI_SFTYPE, headerptr);
+    headercount+=header1_gen(DODISSVSR,readwrite,bintxt,bcasthead,&dissvsr_tot[dissloop][0],sizeof(SFTYPE),sheaderone, ncpux1*N1, MPI_SFTYPE, headerptr);
   }
 
  
   // Aug 16, 2007 -- active region parameters (updated by JCM 07/24/08)
-  header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&global_enerregiondef,sizeof(int), "%d", NUMENERREGIONS*NUMUPDOWN*NDIM, MPI_INT,headerptr);
-  header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&t_transition_in,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
-  header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&t_transition_out,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&global_enerregiondef,sizeof(int), "%d", NUMENERREGIONS*NUMUPDOWN*NDIM, MPI_INT,headerptr);
+  headercount+=header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&t_transition_in,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(DOGRIDSECTIONING,readwrite,bintxt,bcasthead,&t_transition_out,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   //end Aug 16, 2007 (updated by JCM 07/24/08)
  
+
+  dualfprintf(fail_file,"\nheadercount=%d\n",headercount);
+
 
   // BELOW moved to dump_gen
   // now read of tail is controlled by dump_gen()

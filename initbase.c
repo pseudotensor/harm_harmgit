@@ -136,6 +136,8 @@ int init(int *argc, char **argv[])
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
 
+    //THETAROT = 0.5*0.7; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
+
     // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
     // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
     post_par_set();
@@ -203,7 +205,7 @@ int init(int *argc, char **argv[])
 	if(DOSELFGRAVVSR){
 	  trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
 	  // if box_grid needs to change, is done inside below function
-	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 	  trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
 	}
       }
@@ -454,7 +456,7 @@ int init(int *argc, char **argv[])
     // don't want conservatives or primitives to change, just compute metric
     if(DOSELFGRAVVSR){
       trifprintf("new metric with self-gravity\n");
-      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
       trifprintf("done with computing new metric with self-gravity dt=%21.15g\n",dt);
     }
 
@@ -473,6 +475,48 @@ int init(int *argc, char **argv[])
 
   }// done if RESTARTMODE==1
 
+
+
+#if(0) // SUPERGODMARK: Deal with initial tilt
+  ///////////////////
+  //
+  // Both normal and restart mode need to setup grid
+  //
+  //////////////////
+  if(RESTARTMODE==0 || RESTARTMODE==1){
+
+    //    THETAROT = 0.5*0.7; // reset grid with rotation
+
+    // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
+    // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
+    post_par_set();
+
+    if(RESTARTMODE==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
+
+    // get grid
+    // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
+    set_grid(0,0,0);
+
+    if(RESTARTMODE==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
+
+    // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
+    set_box_grid_parameters();
+
+    if(RESTARTMODE==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
+
+    // user post_set_grid function
+    init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
+
+    if(RESTARTMODE==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
+  
+
+    trifprintf("MCOORD=%d\n",MCOORD);
+    trifprintf("COMPDIM=%d\n",COMPDIM);
+    trifprintf("MAXBND=%d\n",MAXBND);
+    trifprintf("FLUXB=%d\n",FLUXB);
+
+  }
+#endif
 
 
 
@@ -668,7 +712,8 @@ int prepre_init(void)
   }
   else{
     // choice
-    binaryoutput=TEXTOUTPUT;
+    //    binaryoutput=TEXTOUTPUT;
+    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
     sortedoutput=SORTED;
   }
 
@@ -1033,6 +1078,7 @@ int init_defgrid(void)
   MBH=MBH0;
   QBH=QBH0;
   EP3=EP30;
+  THETAROT=THETAROT0;
 
 
   return(0);
@@ -1357,6 +1403,7 @@ int init_defconsts(void)
   MBH0=1.0;
   QBH0=0.0;
   EP30=0.0;
+  THETAROT0=0.0;
   Mfactor=1.0;
   Jfactor=1.0;
   rhofactor=1.0;
@@ -1430,7 +1477,7 @@ int set_box_grid_parameters(void)
   // need to recompute horizon-related quantities if horizon is growing due to accretion
   if(ISBLACKHOLEMCOORD(MCOORD)){
     find_horizon(0);
-    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3);
+    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g THETAROT=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3,THETAROT);
   }
   else{
     horizoni=horizoncpupos1=0;

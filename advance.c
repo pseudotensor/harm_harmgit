@@ -2211,6 +2211,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   FTYPE tempwavedt,tempaccdt,tempgravitydt;
   FTYPE dtij[NDIM], wavedt, accdt, gravitydt;
   FTYPE wavendt[NDIM];
+  FTYPE wavedt_1,wavedt_2,wavedttemp;
   FTYPE ndtfinal;
   FTYPE dUgeom[NPR],dUcomp[NUMSOURCES][NPR];
   int enerregion;
@@ -2218,12 +2219,11 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   FTYPE X[NDIM],V[NDIM],Vp1[NDIM];
   FTYPE dUriemann[NPR];
   FTYPE Ugeomfree[NPR],U[NPR];
-  
 
 
 
 
-  wavedt=accdt=gravitydt=ndtfinal=BIG;
+  wavedt_1=wavedt_2=wavedt=accdt=gravitydt=ndtfinal=BIG;
   wavendt[1]=wavendt[2]=wavendt[3]=BIG;
   wavendti[1]=wavendtj[1]=wavendtk[1]=-100;
   wavendti[2]=wavendtj[2]=wavendtk[2]=-100;
@@ -2234,7 +2234,8 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   enerregion=OUTSIDEHORIZONENERREGION; // consistent with flux update (except when doing WHAM)
   sourceenerpos=enerposreg[enerregion];
 
-  COMPFULLLOOP{ // want to use boundary cells as well to limit dt (otherwise boundary-induced changes not treated)
+  //  COMPFULLLOOP{ // want to use boundary cells as well to limit dt (otherwise boundary-induced changes not treated)
+  LOOPWITHINACTIVESECTIONEXPAND1(i,j,k){ // only 1 grid cell within boundary.  Don't need to use extrapolated cells deep inside boundary because those cells are not evolved.  More consistent with how flux.c sets dt.
 
     // includes "ghost" zones in case boundary drives solution
     get_geometry(i, j, k, CENT, ptrgeom);
@@ -2281,6 +2282,18 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
 
+    // also get PERCELLDT==1 version
+    wavedttemp = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]);
+    if(wavedttemp<wavedt_2) wavedt_2=wavedttemp;
+
+
+
+
+    ////////////////////
+    //
+    // deal with source terms
+    //
+    //////////////////////
     if(WITHINENERREGION(sourceenerpos,i,j,k)){
 
 
@@ -2340,13 +2353,25 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   } // end of loop
 
 
-  // GODMARK: note that in normal advance, wavendt[i] is over each CPU region and wavedt computed for each CPU and then minimized over all CPUs -- so not perfectly consistent with MPI
-  // here we preserve perfect MPI domain decomposition
+
+
+
+
+    // GODMARK: note that in normal advance, wavendt[i] is over each CPU region and wavedt computed for each CPU and then minimized over all CPUs -- so not perfectly consistent with MPI
+    // here we preserve perfect MPI domain decomposition
   mpifmin(&wavendt[1]);
   mpifmin(&wavendt[2]);
   mpifmin(&wavendt[3]);
-  // single all-CPU wavedt
-  wavedt = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); // wavendt[i] is over entire region for each i
+  // single all-CPU wavedt for PERCELLDT==0 version
+  wavedt_1 = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); // wavendt[i] is over entire region for each i
+
+  // minimize per-cell dt over all CPUs for PERCELLDT==1 version
+  mpifmin(&wavedt_2);
+
+
+  // get actual version to use
+  if(PERCELLDT==0) wavedt=wavedt_1;
+  else wavedt=wavedt_2;
 
   // single all-CPU accdt and gravitydt
   mpifmin(&accdt);
@@ -2363,6 +2388,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 #if(1)
   // below single line only right if 1-CPU
   SLOOPA(jj) dualfprintf(log_file,"dtij[%d]=%21.15g wavendti=%d wavendtj=%d wavendtk=%d\n",jj,wavendt[jj],wavendti[jj],wavendtj[jj],wavendtk[jj]);
+  dualfprintf(log_file,"wavedt_1=%21.15g wavedt_2=%21.15g\n",wavedt_1,wavedt_2); // report this so can compare PERCELLDT==0 vs. 1 at least when starting or restarting runs
   dualfprintf(log_file,"ndtfinal=%21.15g wavedt=%21.15g accdt=%21.15g gravitydt=%21.15g\n",ndtfinal,wavedt,accdt,gravitydt); 
   dualfprintf(log_file,"accdti=%d accdtj=%d accdtk=%d :: gravitydti=%d  gravitydtj=%d  gravitydtk=%d\n",accdti,accdtj,accdtk,gravitydti,gravitydtj,gravitydtk);
 #endif

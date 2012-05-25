@@ -634,7 +634,8 @@ int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void
 
 
 
-  return(0); // indicates no failure
+  //  return(0); // indicates no failure
+  return(nmemb);
 
 }
 

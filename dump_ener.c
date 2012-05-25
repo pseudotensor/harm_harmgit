@@ -429,7 +429,7 @@ int dump_ener(int doener, int dordump, int call_code)
 
 	  // by this time of the diagnostics, dE, dJ include horizon flux but MBH and a aren't yet updated.
 	  // however, horizoncum_tot IS updated so that for this enerregion u0-horizoncum_tot[0] is conserved exactly
-	  myfprintf(metricparmsener_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d ",dE,dJ,MBH0+dE,a0+dabh,(a0+dabh)/(SMALL+MBH0+dE),MBH0,MBH,a0,a0/(SMALL+MBH0),a,a/(SMALL+MBH),QBH0,QBH0/(SMALL+MBH0),QBH,QBH/(SMALL+MBH),EP30,EP30/(SMALL+MBH0),EP3,EP3/(SMALL+MBH),Rhor,Risco,horizoni+N1*horizoncpupos1);
+	  myfprintf(metricparmsener_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d ",dE,dJ,MBH0+dE,a0+dabh,(a0+dabh)/(SMALL+MBH0+dE),MBH0,MBH,a0,a0/(SMALL+MBH0),a,a/(SMALL+MBH),QBH0,QBH0/(SMALL+MBH0),QBH,QBH/(SMALL+MBH),EP30,EP30/(SMALL+MBH0),EP3,EP3/(SMALL+MBH),THETAROT0,THETAROT0/(SMALL+MBH0),THETAROT,THETAROT/(SMALL+MBH),Rhor,Risco,horizoni+N1*horizoncpupos1);
 	}
 
 	if(DOSELFGRAVVSR){

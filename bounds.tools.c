@@ -80,6 +80,25 @@
 #endif
 
 
+// whether if doing full special 3d (i.e. special3dspc==1) that should only do poledeath for inflow
+// 0 : no limit
+// 1 : limit to poledeath acting if radial inflow
+// 2 : limit to poledeath acting on flow within r=RADIUSLIMITPOLEDEATHIN
+// 3 : limit if inflow OR out to r=RADIUSLIMITPOLEDEATHIN (in case inflow only starts near horizon, still poledeath out to that radius
+#define IFLIMITPOLEDEATH 0
+
+// radius within which to use poledeath if have IFLIMITPOLEDEATH==3
+#define RADIUSLIMITPOLEDEATHIN (3.0) // choose r=3M since always close to BH but always slightly outside horizon to help control stability.
+
+// how many zones to use poledeath at outer *physical* edge
+#define IFLIMITPOLEDEATHIOUT (-100)
+
+
+
+
+
+
+
 // X1DN FIXEDUSINGPANALYTIC
 //
 ///////////////////////////
@@ -2035,6 +2054,15 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
 }
 #endif
 
+
+
+
+
+
+
+
+
+
 // interpolate across pole to remove numerical errors there
 // Note that this function is done over all zones
 int poledeath(int whichx2,
@@ -2066,6 +2094,7 @@ int poledeath(int whichx2,
   int rjstag;
   int rjtest,rjstag0,deathstagjs0,deathstagje0,rjstagtest,deathstagjstest,deathstagjetest;
   int poleloc;
+  int poleloccent;
   int deathjs0,deathje0;
   int deathjs,deathje;
   int deathstagjs,deathstagje;
@@ -2091,6 +2120,8 @@ int poledeath(int whichx2,
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE prdiag[NPR],pr[NPR];
   int jstep;
+  struct of_geom geompoledontuse;
+  struct of_geom *ptrgeompole=&geompoledontuse;
 
 
 
@@ -2104,12 +2135,23 @@ int poledeath(int whichx2,
   //#endif
 
 
+  //////////////////
+  //
   // assign memory
+  //
+  //////////////////
   PALLLOOP(pl){
     ptrgeom[pl]=&(geomdontuse[pl]);
     ptrrgeom[pl]=&(rgeomdontuse[pl]);
   }
 
+
+
+  //////////////////
+  //
+  // setup loop ranges
+  //
+  //////////////////
 
   // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
   if(whichx2==X2DN){
@@ -2119,6 +2161,7 @@ int poledeath(int whichx2,
     rj0 = POLEDEATH;
     rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
     poleloc = 0;
+    poleloccent = 0;
     // for POLEDEATH==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
     deathjs0 = 0-POLEDEATH;
     deathje0 = 0+POLEDEATH-1;
@@ -2161,6 +2204,7 @@ int poledeath(int whichx2,
     rj0=N2-1-POLEDEATH;
     rjtest = rj0-DEATHEXPANDAMOUNT;
     poleloc=N2;
+    poleloccent=N2-1;
     // if POLEDEATH==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
     deathjs0 = N2-1+1-POLEDEATH;
     deathje0 = N2-1+POLEDEATH;
@@ -2204,10 +2248,17 @@ int poledeath(int whichx2,
 
 
 
+
+
+
+
+
+
   /////////////////////
   //
   // Loop over i,k
-
+  //
+  /////////////////////
 
   if(POLEDEATH){
 
@@ -2216,6 +2267,69 @@ int poledeath(int whichx2,
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMPBCLOOPBLOCK{
       OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+
+
+
+      //////////////
+      //
+      // Skip this i,k if doing limited poledeath()
+      //
+      //////////////
+
+      int dontskippoledeath;
+      dontskippoledeath=0;
+      if(IFLIMITPOLEDEATHIOUT>0){
+	if(mycpupos[1]==ncpux1-1){
+	  if(i>N1-1-IFLIMITPOLEDEATHIOUT){
+	    // then force use of poledeath (no skip allowed)
+	    dontskippoledeath=1;
+	    //dualfprintf(fail_file,"OUTERDONTSKIP: %d %d %d\n",i,j,k);
+	  }
+	}
+      }
+      
+
+      if(IFLIMITPOLEDEATH>0 && ispstag==0 && dontskippoledeath==0){ // only go here if still possible to skip poledeath
+	// assume only can skip if centered primitives (staggered are field, and nominally don't change them)
+
+	FTYPE Vpole[NDIM];
+	
+	// use centered cell value (i.e. pl=RHO) to determine radius, and skip rest of this "j" if radius outside
+	bl_coord_ijk(i,poleloc,k,FACE2,Vpole); // FACE2 at CENT for radius, but using FACE2 allows us to use j=poleloc
+
+	// get u^\mu
+	j=poleloccent;
+	get_geometry(i, j, k, CENT, ptrgeompole);
+	ucon_calc(MAC(prim,i,j,k),ptrgeompole,ucon, others);
+
+
+	if(IFLIMITPOLEDEATH==1){
+	  if(ucon[RR]>=0.0){
+	    //dualfprintf(fail_file,"SKIP1: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+	    continue;
+	  }
+	}
+	else if(IFLIMITPOLEDEATH==2){
+	  if(Vpole[1]>=RADIUSLIMITPOLEDEATHIN){
+	    //dualfprintf(fail_file,"SKIP2: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+	    continue;
+	  }
+	}
+	else if(IFLIMITPOLEDEATH==3){
+	  if(ucon[RR]>=0.0 && Vpole[1]>=RADIUSLIMITPOLEDEATHIN){ // i.e., do poledeath unless *both* u^r>0 *and* beyond given radius
+	    //dualfprintf(fail_file,"SKIP3: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+	    continue;
+	  }
+	}
+
+
+	//dualfprintf(fail_file,"NOTSKIP: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+	
+      }
+
+
+
 
 
       // set reference positions in i,k
@@ -2360,7 +2474,9 @@ int poledeath(int whichx2,
 
       ////////////////////////////////
       //
-      // Loop over points to be modified (prim's are only modifed here)
+      // For RHO,UU,U1,U3,B(1,2,3), and other primitives assumed to be like density
+      //
+      // Loop over points to be modified (prim's are only modifed HERE!)
       //
       ////////////////////////////////
 
@@ -2397,6 +2513,11 @@ int poledeath(int whichx2,
 
 
 
+	/////////////
+	//
+	// DENSITY (rho,u) POLEDATH
+	//
+	/////////////
 	if(ispstag==0){
 	  // symmetric (if reflecting BC at pole) quantities
 	  if(j>=deathjs && j<=deathje){
@@ -2454,13 +2575,23 @@ int poledeath(int whichx2,
 
 
 
-	// symmetric (if reflecting BC at pole) quantities
+
+	//////////////
+	//
+	// symmetric (if reflecting BC at pole) quantities (e.g. B1)
+	//
+	//////////////
 	if(j>=deathjs && j<=deathje){
 	  // B1 left alone
 	}
 
 
 
+	/////////////
+	//
+	// antisymmetric quantities (e.g. B2)
+	//
+	/////////////
 	if(
 	   dirprim[B2]==FACE2 && j>=deathstagjs && j<=deathstagje || 
 	   dirprim[B2]==CENT && j>=deathjs && j<=deathje
@@ -2498,7 +2629,11 @@ int poledeath(int whichx2,
 
 
 
-	// symmetric quantity:      
+	/////////////
+	//
+	// other symmetric quantities (e.g. B3)
+	//
+	/////////////
 	if(j>=deathjs && j<=deathje){
 
 	  ////////////////
@@ -2535,13 +2670,14 @@ int poledeath(int whichx2,
 	  }
 
 
-	  if(ispstag==0){
 
-	    ///////////////////////////////////
-	    //
-	    // do rest if any -- assumed at CENT
-	    //
-	    ///////////////////////////////////
+
+	  ///////////////////////////////////
+	  //
+	  // do rest if any -- assumed at CENT
+	  //
+	  ///////////////////////////////////
+	  if(ispstag==0){
 	    for(pl=B3+1;pl<NPRBOUND;pl++){
 	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
 	      else ftemp=MACP0A1(prim,ri,rj,rk,pl);
@@ -2581,11 +2717,15 @@ int poledeath(int whichx2,
 
 
 
+
+
       ////////////////////////////////
       //
-      // Loop over points to be modified (prim's are only modifed here)
+      // FOR U2 alone!
       //
-      // independent loop over j from above density loop since U2 changes may required RHO and those must already all be changed for all j
+      // Loop over points to be modified (prim's are only modifed HERE!)
+      //
+      // independent loop over j from above density loop because U2 changes may required RHO and those must already all be changed for all j
       //
       ////////////////////////////////
 
@@ -2902,10 +3042,11 @@ int poledeath(int whichx2,
 	    // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
 	    // in general, not sure which pl2 really exists at this point, so pick first in PBOUNDLOOP loop
 	    struct of_geom *fixupptrgeom;
-	    PBOUNDLOOP(pliter,pl2) {
-	      fixupptrgeom=ptrgeom[pl2];
-	      break;
-	    }
+	    //	    PBOUNDLOOP(pliter,pl2) {
+	    pl2=pl;  // only 1 ptrgeom defined
+	    fixupptrgeom=ptrgeom[pl2];
+	    //	      break;
+	    //	    }
 	    
 	    PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
 	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
@@ -2925,6 +3066,9 @@ int poledeath(int whichx2,
 
 
 }
+
+
+
 
 
 

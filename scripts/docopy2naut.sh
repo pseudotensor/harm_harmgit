@@ -25,15 +25,17 @@ for fil in `cat $fildirs`
     find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "rdump-0.bin" -o -name "gdump.bin" \) -print > $bdir/listcopy$fil.txt
     #
     rm -rf $bdir/listcopy$fil.globuslist.txt
+    numfiles=0
     for realfile in `cat $bdir/listcopy$fil.txt`
     do
 	veryrealfile=`basename $realfile`
-	echo "xsede#kraken:/lustre/scratch/rblandfo/$fil/dumps/$veryrealfile xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/dumps/" >> $bdir/listcopy$fil.globuslist.txt
+	echo "xsede#kraken/lustre/scratch/rblandfo/$fil/dumps/$veryrealfile xsede#nautilus/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/dumps/$veryrealfile" >> $bdir/listcopy$fil.globuslist.txt
         # give permission for jmckinne to access files
 	chmod a+x /lustre/scratch/rblandfo
 	chmod a+rx /lustre/scratch/rblandfo/$fil
 	chmod a+rx /lustre/scratch/rblandfo/$fil/dumps
 	chmod a+rx /lustre/scratch/rblandfo/$fil/dumps/$veryrealfile
+	numfiles=$(($numfiles+1))
     done
     chmod a+rx /lustre/scratch/rblandfo/$fil/nprlistinfo.dat
     chmod a+rx /lustre/scratch/rblandfo/$fil/coordparms.dat
@@ -43,25 +45,38 @@ for fil in `cat $fildirs`
     ssh pseudotensor@cli.globusonline.org mkdir xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/dumps/
     #
     #
-    ssh pseudotensor@cli.globusonline.org scp xsede#kraken:/lustre/scratch/rblandfo/$fil/nprlistinfo.dat xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/
-    ssh pseudotensor@cli.globusonline.org scp xsede#kraken:/lustre/scratch/rblandfo/$fil/coordparms.dat xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/
+    if [ -e /lustre/scratch/rblandfo/$fil/nprlistinfo.dat ]
+    then
+	ssh pseudotensor@cli.globusonline.org scp xsede#kraken:/lustre/scratch/rblandfo/$fil/nprlistinfo.dat xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/
+    fi
+    if [ -e /lustre/scratch/rblandfo/$fil/coordparms.dat ]
+	then
+	ssh pseudotensor@cli.globusonline.org scp xsede#kraken:/lustre/scratch/rblandfo/$fil/coordparms.dat xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/$fil/
+    fi
     #
     # perform transfer
     #
-    ssh pseudotensor@cli.globusonline.org transfer -s 1 < $bdir/listcopy$fil.globuslist.txt
+    if [ $numfiles -gt 0 ]
+    then
+	ssh pseudotensor@cli.globusonline.org transfer -s 1 < $bdir/listcopy$fil.globuslist.txt
+    fi
     #
     #
     # now that done, take away permission for jmckinne to access files
-    for realfile in `cat $bdir/listcopy$fil.txt`
-    do
-	veryrealfile=`basename $realfile`
-	chmod og-x /lustre/scratch/rblandfo
-	chmod og-rx /lustre/scratch/rblandfo/$fil
-	chmod og-rx /lustre/scratch/rblandfo/$fil/dumps
-	chmod og-rx /lustre/scratch/rblandfo/$fil/dumps/$veryrealfile
-    done
-    chmod og-rx /lustre/scratch/rblandfo/$fil/nprlistinfo.dat
-    chmod og-rx /lustre/scratch/rblandfo/$fil/coordparms.dat
+    # no, above exits immediately, so can't remove access.  Also, other copies for all files to ranch may need access
+    if [ 1 -eq 0 ]
+    then
+	for realfile in `cat $bdir/listcopy$fil.txt`
+	do
+	    veryrealfile=`basename $realfile`
+	    chmod og-x /lustre/scratch/rblandfo
+	    chmod og-rx /lustre/scratch/rblandfo/$fil
+	    chmod og-rx /lustre/scratch/rblandfo/$fil/dumps
+	    chmod og-rx /lustre/scratch/rblandfo/$fil/dumps/$veryrealfile
+	done
+	chmod og-rx /lustre/scratch/rblandfo/$fil/nprlistinfo.dat
+	chmod og-rx /lustre/scratch/rblandfo/$fil/coordparms.dat
+    fi
     #
     #
     #

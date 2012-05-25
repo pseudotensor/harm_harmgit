@@ -340,6 +340,15 @@
 // 0: don't output super debug output
 // 1: do
 
+// whether to allow metric rotations
+// 0: don't
+// 1: do
+#define ALLOWMETRICROT 0
+// TODO:
+// * coordinate transformations still valid?
+// * SET RESET THETAROT for IC so IC uses normal metric?
+
+
 // whether to evolve metric value of M and a and Q
 #define DOEVOLVEMETRIC 0
 

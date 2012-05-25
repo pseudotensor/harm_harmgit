@@ -247,7 +247,7 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
 // whichcoordin -> whichcoordout
 int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE *ucon)
 {
-  // GODMARK: need transformation from BL to KS_JP1 for EP3!=0
+  // GODMARK: need transformation from BL to KS_JP1 for EP3!=0 or THETAROT!=0
   if(whichcoordin==whichcoordout){// then no transformation
     return(0);
   }
@@ -275,8 +275,14 @@ void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon)
   FTYPE V[NDIM], r, th;
   int j,k;
 
+
   bl_coord_ijk(ii,jj,kk,loc,V) ;
   r=V[1]; th=V[2];
+
+  // don't rotate, because assume bltoks() only called to make local transformation of u^i from BL to KS with same alignment, and notice no angle factors in transformation -- so nothing to transform anyways!
+  //  FTYPE Vmetric[NDIM];
+  //  rotate_V(BLCOORD,V,Vmetric);
+  //  r=Vmetric[1]; th=Vmetric[2];
 
 
 // bl2ks for contravariant components
@@ -338,6 +344,11 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
   bl_coord_ijk(ii,jj,kk,loc,V) ;
   r=V[1]; th=V[2];
 
+  // don't rotate, because assume kstobl() only called to make local transformation of u^i from BL to KS with same alignment, and notice no angle factors in transformation -- so nothing to transform anyways!
+  //  FTYPE Vmetric[NDIM];
+  //  rotate_V(KSCOORD,V,Vmetric);
+  //  r=Vmetric[1]; th=Vmetric[2];
+
 
 // just inverse (no transpose) of above
 #define ks2bl_trans00   (1)
@@ -388,6 +399,135 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
 
   /* done! */
 }
+
+
+
+// transformation of metric written in V[X]-type coordinates with dV differentials to one written in Vmetric old/original coordinates with dVmetric original/old differentials
+//
+// This is *not* used in metric.c to rotate metric
+// This would only be used to transform V[X] metric to old/original Vmetric=rold,hold,phold
+void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
+{
+
+  if(THETAROT!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
+
+#if(0)// if input X,V,Xmetric,Vmetric, no longer need to duplicate doing below.
+    FTYPE V[NDIM];
+    bl_coord_ijk(ii,jj,kk,loc,V) ;
+
+    // V[X] is not same as Vmetric (used in set_gcov), so get it.
+    FTYPE Vmetric[NDIM];
+    rotate_VtoVmetric(MCOORD,V,Vmetric);
+#endif
+
+    FTYPE told, r, h, ph;
+    told=Vmetric[0]; r=Vmetric[1]; h=Vmetric[2]; ph=Vmetric[3];
+    // now have Vmetric and can put into trans below
+
+    /* make transform matrix */
+    // order for trans is [ourmetric][bl]
+    // DLOOP(j,k) trans[j][k] = 0. ;
+    // DLOOPA(j) trans[j][j] = 1. ;
+
+    FTYPE b0=THETAROT;
+
+
+    FTYPE trans[NDIM][NDIM];
+    trans[0][0]=1.;
+    trans[0][1]=0.;
+    trans[0][2]=0.;
+    trans[0][3]=0.;
+    trans[1][0]=0.;
+    trans[1][1]=1.;
+    trans[1][2]=0.;
+    trans[1][3]=0.;
+    trans[2][0]=0.;
+    trans[2][1]=0.;
+    trans[2][2]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-0.5)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
+    trans[2][3]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-0.5)*sin (b0)*sin (h)*sin (ph);
+    trans[3][0]=0.;
+    trans[3][1]=0.;
+    trans[3][2]=-1.*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-1.)*sin (b0)*sin (ph);
+    trans[3][3]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-1.)*sin (h)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
+
+
+    // now perform transformation
+    transgcovgcovpertself(gcov,gcovpert,trans);
+  }
+  else{
+    // then no change, and given function format gcov is just not changed.
+  }
+
+  /* done! */
+}
+
+
+
+
+
+// transformation of metric written in V[X]-type coordinates with dV differentials to one written in Vmetric old/original coordinates with dVmetric original/old differentials
+//
+// This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
+void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
+{
+
+  if(THETAROT!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
+
+#if(0)
+    // gets V[X]
+    FTYPE V[NDIM];
+    bl_coord_ijk(ii,jj,kk,loc,V) ;
+
+    // V[X] is not same as Vmetric (used in set_gcov)
+    // trans needs Vmetric to keep expression simple, so get it.
+    FTYPE Vmetric[NDIM];
+    rotate_VtoVmetric(MCOORD,V,Vmetric);
+    // now have Vmetric and can put into trans below
+#endif
+    FTYPE told, r, h, ph;
+    told=Vmetric[0]; r=Vmetric[1]; h=Vmetric[2]; ph=Vmetric[3];
+
+    /* make transform matrix */
+    // order for trans is [ourmetric][bl]
+    // DLOOP(j,k) trans[j][k] = 0. ;
+    // DLOOPA(j) trans[j][j] = 1. ;
+
+    FTYPE b0=THETAROT;
+
+    FTYPE trans[NDIM][NDIM];
+    extern FTYPE csc(FTYPE arg);
+    extern FTYPE cot(FTYPE arg);
+
+    trans[0][0]=1.;
+    trans[0][1]=0.;
+    trans[0][2]=0.;
+    trans[0][3]=0.;
+    trans[1][0]=0.;
+    trans[1][1]=1.;
+    trans[1][2]=0.;
+    trans[1][3]=0.;
+    trans[2][0]=0.;
+    trans[2][1]=0.;
+    trans[2][2]=pow (pow (cos (h)*cos (ph)*sin (b0) - 1.*cos (b0)*sin (h),2.) + pow (sin (b0),2.)*pow (sin (ph),2.),-1.)*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),0.5)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
+    trans[2][3]=-1.*sin (b0)*sin (ph);
+    trans[3][0]=0.;
+    trans[3][1]=0.;
+    trans[3][2]=csc (h)*pow (pow (cos (h)*cos (ph)*sin (b0) - 1.*cos (b0)*sin (h),2.) + pow (sin (b0),2.)*pow (sin (ph),2.),-1.)*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),0.5)*sin (b0)*sin (ph);
+    trans[3][3]=cos (b0) - 1.*cos (ph)*cot (h)*sin (b0);
+
+
+  
+    // now perform transformation
+    transgcovgcovpertself(gcov,gcovpert,trans);
+  }
+  else{
+    // then no change, and given function format gcov is just not changed.
+  }
+
+
+  /* done! */
+}
+
 
 
 

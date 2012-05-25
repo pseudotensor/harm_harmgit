@@ -468,31 +468,48 @@ FTYPE mycos(FTYPE th)
 // cot = 1/tan = cos/sin
 FTYPE cot(FTYPE arg)
 {
+
+  if(fabs(fmod(arg,M_PI))<1E-14){
+    return(0.0); // avoid singularity - assume handled elsewhere
+  }
+  else{
 #if(ACCURATESINCOS)
-  return(mycos(arg)/mysin(arg));
+    return(mycos(arg)/mysin(arg));
 #else
-  return(1.0/tan(arg));
+    return(1.0/tan(arg));
 #endif
+  }
+
 }
 //#endif 
 
 FTYPE csc(FTYPE arg)
 {
+  if(fabs(fmod(arg,M_PI))<1E-14){
+    return(0.0); // avoid singularity - assume handled elsewhere
+  }
+  else{
 #if(ACCURATESINCOS)
-  return(1.0/mysin(arg));
+    return(1.0/mysin(arg));
 #else
-  return(1.0/sin(arg));
+    return(1.0/sin(arg));
 #endif
+  }
 }
 
 
 FTYPE sec(FTYPE arg)
 {
+  if(fabs(fmod(arg,0.5*M_PI))<1E-14){
+    return(0.0); // avoid singularity - assume handled elsewhere
+  }
+  else{
 #if(ACCURATESINCOS)
-  return(1.0/mycos(arg));
+    return(1.0/mycos(arg));
 #else
-  return(1.0/cos(arg));
+    return(1.0/cos(arg));
 #endif
+  }
 }
 
 
@@ -1390,7 +1407,8 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
   FTYPE tmpgcov[SYMMATRIXNDIM];
   FTYPE ftemp1,ftemp2;
   int q;
-  void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim);
+
+
   
 
   // now take term by term:
@@ -1420,6 +1438,20 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
   //  DLOOP(j,k) dualfprintf(fail_file,"prim gcov[%d][%d]=%21.15g\n",j,k,gcov[GIND(j,k)]);
   //  DLOOP(j,k) dualfprintf(fail_file,"prim gcovprim[%d][%d]=%21.15g\n",j,k,gcovprim[GIND(j,k)]);
   //  DLOOP(j,k) dualfprintf(fail_file,"prim dxdxp[%d][%d]=%21.15g\n",j,k,dxdxp[j][k]);
+
+  get_gcovpert(gcovprim,gcovpert,gcovpertprim);
+ 
+
+}
+
+
+
+// get perturbed part of gcov
+void get_gcovpert(FTYPE *gcovprim, FTYPE *gcovpert, FTYPE *gcovpertprim)
+{
+  int j, k, l, m;
+  FTYPE ftemp1,ftemp2;
+  int q;
 
   ///////////////////////////////
   //
@@ -1474,9 +1506,8 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
   gcovpertprim[PH]=gcovprim[GIND(PH,PH)]-1.0;
 #endif
 
- 
-
 }
+
 
 void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
 {
@@ -1496,9 +1527,42 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
 
 }
 
+
+
+// used to transform gcov and put back into gcov
+void transgcovself(FTYPE *gcov, FTYPE (*trans)[NDIM])
+{
+  FTYPE gcovprim[SYMMATRIXNDIM];
+  int j,k;
+
+  transgcov(gcov,trans,gcovprim);
+  DLOOP(j,k) gcov[GIND(j,k)] = gcovprim[GIND(j,k)];
+
+}
+
+
+// used to transform gcov&gcovprim and put back into gcov&gcovprim
+void transgcovgcovpertself(FTYPE *gcov, FTYPE *gcovpert, FTYPE (*trans)[NDIM])
+{
+  FTYPE gcovprim[SYMMATRIXNDIM];
+  FTYPE gcovpertprim[NDIM];
+  int j,k;
+
+  transgcov(gcov,trans,gcovprim);
+  DLOOP(j,k) gcov[GIND(j,k)] = gcovprim[GIND(j,k)];
+
+  get_gcovpert(gcovprim, gcovpert, gcovpertprim);
+  DLOOPA(j) gcovpert[j] = gcovpertprim[j];
+
+
+}
+
+
+
+
 // gcov might be same memory address as gcovprim, so use tmp
 // assumes metric is symmetric 2nd rank tensor
-void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
+void transgcov(FTYPE *gcov, FTYPE (*trans)[NDIM], FTYPE *gcovprim)
 {
   int j, k, l, m;
   FTYPE tmp[NDIM][NDIM];
@@ -1508,44 +1572,44 @@ void transgcov(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
 
   /*
   // 4 along diagonal and 6 off-diagonal with 6 other identical values
-  #define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)\
-  gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]\
-  +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]\
-  +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]\
-  +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]\
-  + 2.0*gcov[GIND(0,1)] * dxdxp[0][a]* dxdxp[1][b]\
-  + 2.0*gcov[GIND(0,2)] * dxdxp[0][a]* dxdxp[2][b]\
-  + 2.0*gcov[GIND(0,3)] * dxdxp[0][a]* dxdxp[3][b]\
-  + 2.0*gcov[GIND(1,2)] * dxdxp[1][a]* dxdxp[2][b]\
-  + 2.0*gcov[GIND(1,3)] * dxdxp[1][a]* dxdxp[3][b]\
-  + 2.0*gcov[GIND(2,3)] * dxdxp[2][a]* dxdxp[3][b]
+  #define GCOV_DOT_TRANS_DOT_TRANS(a,b)\
+  gcov[GIND(0,0)] * trans[0][a]* trans[0][b]\
+  +     gcov[GIND(1,1)] * trans[1][a]* trans[1][b]\
+  +     gcov[GIND(2,2)] * trans[2][a]* trans[2][b]\
+  +     gcov[GIND(3,3)] * trans[3][a]* trans[3][b]\
+  + 2.0*gcov[GIND(0,1)] * trans[0][a]* trans[1][b]\
+  + 2.0*gcov[GIND(0,2)] * trans[0][a]* trans[2][b]\
+  + 2.0*gcov[GIND(0,3)] * trans[0][a]* trans[3][b]\
+  + 2.0*gcov[GIND(1,2)] * trans[1][a]* trans[2][b]\
+  + 2.0*gcov[GIND(1,3)] * trans[1][a]* trans[3][b]\
+  + 2.0*gcov[GIND(2,3)] * trans[2][a]* trans[3][b]
   */
 
 
   // 4 along diagonal and 6 off-diagonal with 6 other identical values
-#define GCOV_DOT_DXDXP_DOT_DXDXP(a,b)					\
-  gcov[GIND(0,0)] * dxdxp[0][a]* dxdxp[0][b]				\
-    +     gcov[GIND(1,1)] * dxdxp[1][a]* dxdxp[1][b]			\
-    +     gcov[GIND(2,2)] * dxdxp[2][a]* dxdxp[2][b]			\
-    +     gcov[GIND(3,3)] * dxdxp[3][a]* dxdxp[3][b]			\
-    +     gcov[GIND(0,1)] * (dxdxp[0][a]* dxdxp[1][b] + dxdxp[1][a]* dxdxp[0][b]) \
-    +     gcov[GIND(0,2)] * (dxdxp[0][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[0][b]) \
-    +     gcov[GIND(0,3)] * (dxdxp[0][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[0][b]) \
-    +     gcov[GIND(1,2)] * (dxdxp[1][a]* dxdxp[2][b] + dxdxp[2][a]* dxdxp[1][b]) \
-    +     gcov[GIND(1,3)] * (dxdxp[1][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[1][b]) \
-    +     gcov[GIND(2,3)] * (dxdxp[2][a]* dxdxp[3][b] + dxdxp[3][a]* dxdxp[2][b])
+#define GCOV_DOT_TRANS_DOT_TRANS(a,b)					\
+  gcov[GIND(0,0)] * trans[0][a]* trans[0][b]				\
+    +     gcov[GIND(1,1)] * trans[1][a]* trans[1][b]			\
+    +     gcov[GIND(2,2)] * trans[2][a]* trans[2][b]			\
+    +     gcov[GIND(3,3)] * trans[3][a]* trans[3][b]			\
+    +     gcov[GIND(0,1)] * (trans[0][a]* trans[1][b] + trans[1][a]* trans[0][b]) \
+    +     gcov[GIND(0,2)] * (trans[0][a]* trans[2][b] + trans[2][a]* trans[0][b]) \
+    +     gcov[GIND(0,3)] * (trans[0][a]* trans[3][b] + trans[3][a]* trans[0][b]) \
+    +     gcov[GIND(1,2)] * (trans[1][a]* trans[2][b] + trans[2][a]* trans[1][b]) \
+    +     gcov[GIND(1,3)] * (trans[1][a]* trans[3][b] + trans[3][a]* trans[1][b]) \
+    +     gcov[GIND(2,3)] * (trans[2][a]* trans[3][b] + trans[3][a]* trans[2][b])
 
 
   // first do 4 along diagonal
-  DLOOPA(j) tmp[j][j] = GCOV_DOT_DXDXP_DOT_DXDXP(j,j);
+  DLOOPA(j) tmp[j][j] = GCOV_DOT_TRANS_DOT_TRANS(j,j);
 
   // now do 6 others off-diagonal
-  j=0; k=1; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
-  j=0; k=2; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
-  j=0; k=3; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
-  j=1; k=2; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
-  j=1; k=3; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
-  j=2; k=3; tmp[j][k] = GCOV_DOT_DXDXP_DOT_DXDXP(j,k);
+  j=0; k=1; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
+  j=0; k=2; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
+  j=0; k=3; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
+  j=1; k=2; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
+  j=1; k=3; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
+  j=2; k=3; tmp[j][k] = GCOV_DOT_TRANS_DOT_TRANS(j,k);
     
 
   // copy over result assuming tmp on upper-diagonal only, but filling gcovprim fully
@@ -2446,7 +2510,7 @@ int metric_checks(struct of_geom *ptrgeom)
 void check_rmin(void)
 {
   int i,j,k;
-  FTYPE X[NDIM],V[NDIM],r,th;
+  FTYPE X[NDIM],V[NDIM],r;
 
 
   // diagnostic
@@ -2457,7 +2521,6 @@ void check_rmin(void)
     coord(i,j,k, FACE1, X);
     bl_coord(X, V);
     r=V[1];
-    th=V[2];
     trifprintf("rmin(i=%d,X=%21.15g) = %21.15g\n", i,X[1],r);
     trifprintf("r=%21.15g Rhor=%21.15g :: rmin/rh: %21.15g\n",r,Rhor, r / (fabs(Rhor)+SMALL) );
     //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));

@@ -124,8 +124,7 @@ extern int extrapfunc(int boundary, int j,int k,
 	       int *localenerpos
 		      );
 extern int poledeath(int whichx2,
-		     int finalstep,
-	       int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 	       int *inboundloop,
 	       int *outboundloop,
 	       int *innormalloop,

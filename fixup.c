@@ -88,7 +88,7 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
 
     // check solution changed pflag, so have to bound again
     if(stage<STAGE2){
-      bound_pflag(boundstage, boundtime, pflag, USEMPI);
+      bound_pflag(boundstage, finalstep, boundtime, pflag, USEMPI);
       if(stage!=STAGEM1) boundstage++;
     }
 
@@ -103,7 +103,7 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     // GODMARK: I don't see why need to bound pflag since already done with using pflag
     if(stage<STAGE2){
       if(stage!=STAGEM1){
-	bound_pflag(boundstage, boundtime, pflag, USEMPI);
+	bound_pflag(boundstage, finalstep, boundtime, pflag, USEMPI);
 	boundstage++;
       }
     }
@@ -3710,7 +3710,7 @@ void diag_eosfaillookup(int i, int j, int k)
     }
     else if(i<-N1BND || i>N1-1+N1BND ||j<-N2BND || j>N2-1+N2BND ||k<-N3BND || k>N3-1+N3BND ){
       dualfprintf(fail_file,"In diag_eosfaillookup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,i,j,k);
-      myexit(24683463);
+      myexit(3472762356);
     }
     int indexfinalstep;
     FINALSTEPLOOP(indexfinalstep) TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;

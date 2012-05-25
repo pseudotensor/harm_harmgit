@@ -241,20 +241,24 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   //
   ////////////////////////////////////
   if(onemorestep){
+    dualfprintf(fail_file,"Got onemorestep dt=%g\n",dt);
     // check if previous step was onemorestep==1
     reallaststep=1;
     dt=SMALL;
   }
   else{
     if (t + dt > tf){
+      dualfprintf(fail_file,"Got t+dt>tf : %g %g %g\n",t,dt,tf);
       dt = tf - t;
       onemorestep=1;
     }
     else if (t + dt == tf){
+      dualfprintf(fail_file,"Got t+dt==tf : %g %g %g\n",t,dt,tf);
       reallaststep=1;
     }
     // make sure don't get pathological case of dt=0 on last step
     if(dt<SMALL){
+      dualfprintf(fail_file,"Got dt<SMALL : %g\n",dt);
       reallaststep=1;
       dt=SMALL;
     }

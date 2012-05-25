@@ -22,7 +22,9 @@ int init_MPI_general(int *argc, char **argv[])
   ierr=MPI_Init_thread(argc, argv,required,&provided);
   fprintf(stderr,"Using MPI_Init_thread with required=%d and provided=%d\n",required,provided);
 #else
+  fprintf(stderr, "Begin: MPI_Init\n"); fflush(stderr);
   ierr=MPI_Init(argc, argv);
+  fprintf(stderr, "End: MPI_Init\n"); fflush(stderr);
 #endif
 
 

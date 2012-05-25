@@ -445,7 +445,7 @@ void get_stellar_data(void)
     
     // read in first row (parameters)
     // NOTE: a0 not right since no rotation in stellar model.  Need to determine that later
-    fscanf(indata,"%d %lf %lf %lf %lf",&NRADIAL,&MBH0,&a0,&QBH0,EP30);
+    fscanf(indata,"%d %lf %lf %lf %lf %lf",&NRADIAL,&MBH0,&a0,&QBH0,&EP30,&THETAROT0);
     
     if(NRADIAL>=NRADIALMAX){
       dualfprintf(fail_file,"NRADIAL=%d and NRADIALMAX=%d\n",NRADIAL,NRADIALMAX);
@@ -468,7 +468,7 @@ void get_stellar_data(void)
 
     
     // report parameters
-    trifprintf("Stellar parameters: %d :: %g %g %g %g\n",NRADIAL,MBH0,a0,QBH0,EP30);
+    trifprintf("Stellar parameters: %d :: %g %g %g %g %g\n",NRADIAL,MBH0,a0,QBH0,EP30,THETAROT0);
     
     // 18 values
     // read in 1-D data
@@ -518,6 +518,7 @@ void get_stellar_data(void)
   MPI_Bcast(&a0,1,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&QBH0,1,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&EP30,1,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&THETAROT0,1,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
 
   MPI_Bcast(&(radius[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(rho[0]),NRADIAL,MPI_FTYPE,MPIid[0], MPI_COMM_GRMHD);

@@ -715,6 +715,8 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
     doingdimen[2]=N2NOT1;
     doingdimen[3]=N3NOT1;
 
+    int dimenorig=1;
+
 #pragma omp parallel
     {
       int i,j,k;
@@ -736,7 +738,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
 	wavedt = 1. / (1. / ndtveclocal[1] + 1. / ndtveclocal[2] + 1. / ndtveclocal[3]);
 	
 	// use dimen=1 to store result
-	dimen=1;
+	dimen=dimenorig;
 #pragma omp critical
 	{
 	  if (wavedt < *(ndtvec[dimen]) ){
@@ -755,10 +757,10 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       int dimen;
       DIMENLOOP(dimen){
 	if(doingdimen[dimen]){
-	  *ndtvec[dimen]=*ndtvec[1];
-	  waveglobaldti[dimen]=waveglobaldti[1];
-	  waveglobaldtj[dimen]=waveglobaldtj[1];
-	  waveglobaldtk[dimen]=waveglobaldtk[1];
+	  *ndtvec[dimen]=*ndtvec[dimenorig];
+	  waveglobaldti[dimen]=waveglobaldti[dimenorig];
+	  waveglobaldtj[dimen]=waveglobaldtj[dimenorig];
+	  waveglobaldtk[dimen]=waveglobaldtk[dimenorig];
 	}
       }
     }

@@ -11,9 +11,9 @@
 #undef N3
 #endif
 
-#define N1 64
-#define N2 64
-#define N3 1
+#define N1 34
+#define N2 8
+#define N3 8
 
 // atch adjusts
 #undef MAXWELL
@@ -35,6 +35,8 @@
 #undef HIGHERORDERMEM
 #undef MAXBND
 #undef MCOORD
+#undef ALLOWMETRICROT
+#undef PERCELLDT
 #undef PRODUCTION
 #undef FULLOUTPUT
 #undef MAILWHENDONE
@@ -145,7 +147,7 @@
 #define MAXWELL PRIMMAXWELL
 
 
-#define TRACKVPOT 1 // now on by default
+#define TRACKVPOT 0 // now on by default
 #define EVOLVEWITHVPOT 0 // not on by default
 
 #define DOGRIDSECTIONING 0 // not on by default
@@ -165,12 +167,23 @@
 
 
 #define MCOORD KSCOORDS
+#define ALLOWMETRICROT 1
+#if(ALLOWMETRICROT==1)
+#undef CONNAXISYMM
+#define CONNAXISYMM 0 //required to be 0 if really rotating metric
+#endif
+#undef IF3DSPCTHENMPITRANSFERATPOLE
+#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working perfectly yet
+
+#define PERCELLDT 0
+
+
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
-#define PRODUCTION 0
+#define PRODUCTION 1
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 
@@ -188,11 +201,11 @@
 #define DOENODEBUG 0
 #define DOEVOLVEMETRIC 0
 #define EVOLVEMETRICSUBSTEP 1 // evolve metric every substep
-#define LIMITSOURCES 1
+#define LIMITSOURCES 0
 #define LIMITDTWITHSOURCETERM 0 // causes problems, drops dt too low
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
-#define DODISS 0
+#define DODISS 1
 #define DOLUMVSR 0
 #define DODISSVSR 0
 #define DOSELFGRAVVSR 0
@@ -353,5 +366,5 @@ struct Ccoordparams {
 
 // problem-dependent code activation
 #undef USERRESETREGION
-#define USERRESETREGION 1
+#define USERRESETREGION 0
 

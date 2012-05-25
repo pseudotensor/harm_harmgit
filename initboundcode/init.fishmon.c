@@ -21,6 +21,7 @@
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
+#define THETAROTMETRIC (0.5*0.7)
 
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -96,7 +97,7 @@ Questions for Roger:
 */
 
 
-#define WHICHPROBLEM NORMALTORUS // choice
+#define WHICHPROBLEM THICKDISK // NORMALTORUS // choice
 
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
@@ -229,6 +230,13 @@ int init_grid(void)
   
   // metric stuff first
   a = 0.9375 ;
+
+  if(ALLOWMETRICROT){
+    THETAROT = THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROT = 0.0;
+  }
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -377,6 +385,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
+
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
   Rhor=rhor_calc(0);
   Risco=rmso_calc(PROGRADERISCO);
@@ -473,10 +482,16 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   int inittype;
 
 
+  THETAROT = 0.0; // define rho,u,v,B as if no rotation
+
+
   inittype=1;
 
   funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
+
+  THETAROT = THETAROTMETRIC; // back to metric version
+
 
   return(0);
 
@@ -723,8 +738,15 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
 
+
+#if(WHICHPROBLEM==THICKDISK)
 //#define FIELDTYPE TOROIDALFIELD
 #define FIELDTYPE DISK2FIELD
+#else
+#define FIELDTYPE DISK1FIELD
+#endif
+
+
 
 
 FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower)
