@@ -734,7 +734,7 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
   FTYPE vpot;
-  FTYPE alpha = 60*M_PI/180.;  //dipole tilt angle
+  FTYPE alpha = 0*M_PI/180.;  //dipole tilt angle
   FTYPE r = V[1], th = V[2], ph = V[3];
 #if(0)
   //normalized vector potential: total vpot through NS equals some constant order unity
@@ -744,23 +744,35 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 #elif(1)
   //tilted dipole
   FTYPE dxdxp[NDIM][NDIM];
-  FTYPE Adtheta, Adphi;
   FTYPE Ad1, Ad2, Ad3;
+  FTYPE Adr, Adtheta, Adphi;
 
   dxdxprim_ijk( i, j, k, loc, dxdxp );
-  
-  Adtheta = -sin(alpha)*sin(ph)/r;
-  Ad2 = dxdxp[2][2] * Adtheta;
 
+//incorrect:
+//  Adr = pow(r,-2)*(-(r*cos(ph)*pow(cos(th),2)*sin(alpha)) + 
+//		  pow(sin(th),2)*sin(ph)*(-(cos(alpha)*cos(ph)) + r*sin(alpha)*sin(ph)) + 
+//		  r*cos(alpha)*cos(th)*pow(cos(ph),2)*sin(th));
+//  
+//  Adtheta = -(pow(r,-2)*sin(ph)*(r*pow(cos(th),2)*sin(alpha) + 
+//			     sin(th)*(-(r*cos(ph)*cos(alpha + th)) + cos(alpha)*sin(ph)*sin(th))));
+//  
+//  Adphi = -(pow(r,-2)*sin(th)*(cos(th)*(-(r*sin(alpha)) + cos(alpha)*sin(ph)) + r*cos(alpha)*cos(ph)*sin(th)));
+
+  Adr = 0;
+  Adtheta = cos(ph)*pow(r,-1)*sin(alpha);
+  Adphi = pow(r,-1)*sin(th)*(-(cos(th)*sin(alpha)*sin(ph)) + 
+			     cos(alpha)*sin(th));
+  
   if( 1 == l ){
-    Ad1 = dxdxp[2][1] * Adtheta;
+    Ad1 = dxdxp[1][1] * Adr + dxdxp[2][1] * Adtheta;
     return(Ad1);
   }
   else if( 2 == l ){
+    Ad2 = dxdxp[1][2] * Adr + dxdxp[2][2] * Adtheta;
     return( Ad2 );
   }
   else if( 3 == l ){
-    Adphi = sin(th)*( -cos(th)*cos(ph)*sin(alpha) + cos(alpha)*sin(th) ) / r;
     Ad3 = dxdxp[3][3] * Adphi;
     return( Ad3 );
   }
