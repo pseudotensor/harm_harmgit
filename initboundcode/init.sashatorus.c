@@ -765,15 +765,18 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 			     cos(alpha)*sin(th));
   
   if( 1 == l ){
-    Ad1 = dxdxp[1][1] * Adr + dxdxp[2][1] * Adtheta;
+    //Ad1 = dxdxp[1][1] * Adr + dxdxp[2][1] * Adtheta;
+    Ad1 = Adr;
     return(Ad1);
   }
   else if( 2 == l ){
-    Ad2 = dxdxp[1][2] * Adr + dxdxp[2][2] * Adtheta;
+    //Ad2 = dxdxp[1][2] * Adr + dxdxp[2][2] * Adtheta;
+    Ad2 = Adtheta;
     return( Ad2 );
   }
   else if( 3 == l ){
-    Ad3 = dxdxp[3][3] * Adphi;
+    //Ad3 = dxdxp[3][3] * Adphi;
+    Ad3 = Adphi;
     return( Ad3 );
   }
 #endif
