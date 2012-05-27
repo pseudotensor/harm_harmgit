@@ -1107,6 +1107,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
+  int i, j, k;
 
 
 
@@ -1147,7 +1148,15 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     p2interp=pstag; // it's itself
   }
 
-
+  dualfprintf(fail_file, "\nB2 stag:\n");
+  for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
+    dualfprintf(fail_file, "%g ", MACP0A1(pstag,i,j,k,B2) );
+  }
+  
+  dualfprintf(fail_file, "\nB2 rescaled:\n");
+  for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
+    dualfprintf(fail_file, "%g ", MACP0A1(p2interp,i,j,k,B2) );
+  }
 
 
   //////////////////////////
@@ -1362,7 +1371,11 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     }// end DIMENLOOP
   }// end parallel region (with implicit barrier)  
 
-
+  dualfprintf(fail_file, "\nB2 cent:\n");
+  for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
+    dualfprintf(fail_file, "%g ", MACP0A1(pcent,i,j,k,B2) );
+  }
+  
 
 
 
