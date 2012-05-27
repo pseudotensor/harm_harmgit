@@ -734,7 +734,7 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
   FTYPE vpot;
-  FTYPE alpha = 30.*M_PI/180.;  //dipole tilt angle
+  FTYPE alpha = 60.*M_PI/180.;  //dipole tilt angle
   FTYPE r = V[1], th = V[2], ph = V[3];
 #if(0)
   //normalized vector potential: total vpot through NS equals some constant order unity
