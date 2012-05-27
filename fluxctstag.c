@@ -1150,13 +1150,14 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
   dualfprintf(fail_file, "\nB2 stag:\n");
   for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
-    dualfprintf(fail_file, "%g ", MACP0A1(pstag,i,j,k,B2) );
+    dualfprintf(fail_file, "%g, ", MACP0A1(pstag,i,j,k,B2) );
   }
   
   dualfprintf(fail_file, "\nB2 rescaled:\n");
   for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
-    dualfprintf(fail_file, "%g ", MACP0A1(p2interp,i,j,k,B2) );
+    dualfprintf(fail_file, "%g, ", MACP0A1(p2interp,i,j,k,B2) );
   }
+  dualfprintf(fail_file, "\n igdetnosing:\n");
 
 
   //////////////////////////
@@ -1337,6 +1338,10 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	  set_igdetsimple(ptrgdetgeomc);
 	  igdetgnosing=ptrgdetgeomc->igdetnosing;
 
+	  if (i==21 && k==7+32/2 && dir == 2) {
+	    dualfprintf(fail_file, "%g, ", igdetgnosing );
+	  }
+	  
 	  // Assign \detg B^i
 	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl]); // go ahead and assign ucent if this method
 
@@ -1373,7 +1378,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
   dualfprintf(fail_file, "\nB2 cent:\n");
   for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
-    dualfprintf(fail_file, "%g ", MACP0A1(pcent,i,j,k,B2) );
+    dualfprintf(fail_file, "%g, ", MACP0A1(pcent,i,j,k,B2) );
   }
   
 
