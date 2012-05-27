@@ -271,7 +271,7 @@
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
 //#define SINGSMALL (1E-13) // must be larger than machine precision to work for outer M_PI boundary!
-#define SINGSMALL (1E-10) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (1E-7) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
