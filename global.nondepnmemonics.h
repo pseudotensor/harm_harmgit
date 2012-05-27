@@ -1119,6 +1119,7 @@
 #define NORMALIZEBCCELLS (0)
 #define USEKOMISWINDLE (0)
 #define NSBC_ASSUME_DIPOLE_FIELD (0)
+#define DORESCALEINTERPFLUXCTSTAG (1)  //automatically enable rescale interp when itnerpolating pstag if RESCALEINTERP==1
 
 
 

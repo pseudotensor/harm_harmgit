@@ -998,7 +998,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 // if not rescaling, then default is to interpolate \detg B^i rather than B^i -- more accurate for field-aligned flows (e.g. monopole)
 #define IFNOTRESCALETHENUSEGDET 1 // should be 1
-#define RESCALEINTERPPSTAG 0
+#define RESCALEINTERPPSTAG (DORESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
 
 // wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
