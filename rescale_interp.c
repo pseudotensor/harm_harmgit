@@ -617,9 +617,15 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     //copies ONLY vars to be interpolated
     PINTERPLOOP(pliter,pl) newpr[pl]=pr[pl];
     
-    newpr[B1] = (r*r*r*dxdxp[1][1])*pr[B1];
-    newpr[B3] = (r*r)*pr[B3];
-    
+    if (ptrgeom->p >= FACE1 && ptrgeom->p <= FACE3) {
+      // get geometry for face pre-interpolated values
+      PLOOPBONLY(pl) newpr[pl] = (ptrgeom->gdet)*pr[pl];
+    }
+    else {
+      newpr[B1] = (r*r*r*dxdxp[1][1])*pr[B1];
+      newpr[B3] = (r*r)*pr[B3];
+    }
+
     // interpolate relative 3-velocity
     for(pl=U1;pl<=U3;pl++) newpr[pl]= uconrel[pl-U1+1]/gamma;
     
@@ -661,8 +667,15 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     SLOOPA(j) newpr[UU+j]=uconrel[j];
 #endif
     
-    newpr[B1] = p2interp[B1]/(r*r*r*dxdxp[1][1]);
-    newpr[B3] = p2interp[B3]/(r*r);
+    if (ptrgeom->p == CENT) {
+      set_igdetsimple(ptrgeom);
+      // get geometry for face pre-interpolated values
+      PLOOPBONLY(pl) newpr[pl] = pr[pl]*ptrgeom->igdetnosing;
+    }
+    else {
+      newpr[B1] = p2interp[B1]/(r*r*r*dxdxp[1][1]);
+      newpr[B3] = p2interp[B3]/(r*r);
+    }
     
     //Finally copy from newpr[] to p2interp[], HOWEVER:
     //make sure only change only those elements of p2interp
