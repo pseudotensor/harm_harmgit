@@ -998,6 +998,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 // if not rescaling, then default is to interpolate \detg B^i rather than B^i -- more accurate for field-aligned flows (e.g. monopole)
 #define IFNOTRESCALETHENUSEGDET 1 // should be 1
+#define RESCALEINTERPPSTAG 0
 
 // wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
@@ -1043,7 +1044,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-#if(RESCALEINTERP)
+#if(RESCALEINTERPPSTAG)
 	// get geometry for face pre-interpolated values
 	get_geometry(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
 	rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
@@ -1100,6 +1101,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 // We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
 // 
 //
+
 int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
@@ -1136,7 +1138,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
   // rescale before interpolation
   //
   ////////////////////////////
-  if(RESCALEINTERP || IFNOTRESCALETHENUSEGDET){
+  if(RESCALEINTERPPSTAG || IFNOTRESCALETHENUSEGDET){
     p2interp=prc; // it's different
     // rescale or multiply by \sqrt{-g}
     rescale_calc_stagfield_full(Nvec, pstag,p2interp);
@@ -1190,7 +1192,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
     // Setup rescale pointer reference
-#if(RESCALEINTERP)
+#if(RESCALEINTERPPSTAG)
     p2interp_l=pstore_l; // then need separate storage
     p2interp_r=pstore_r;
 #else
@@ -1312,7 +1314,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	
 
 
-#if(RESCALEINTERP)
+#if(RESCALEINTERPPSTAG)
 	  /////////////////////////////////////
 	  // after interpolation, unrescale from p2interp to normal primitive 
 	  get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT

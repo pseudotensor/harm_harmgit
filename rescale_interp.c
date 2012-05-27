@@ -617,7 +617,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     //copies ONLY vars to be interpolated
     PINTERPLOOP(pliter,pl) newpr[pl]=pr[pl];
     
-    if (ptrgeom->p >= FACE1 && ptrgeom->p <= FACE3) {
+    if (0 && ptrgeom->p >= FACE1 && ptrgeom->p <= FACE3) {
       // get geometry for face pre-interpolated values
       PLOOPBONLY(pl) newpr[pl] = (ptrgeom->gdet)*pr[pl];
     }
@@ -667,7 +667,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     SLOOPA(j) newpr[UU+j]=uconrel[j];
 #endif
     
-    if (ptrgeom->p == CENT) {
+    if (0 && ptrgeom->p == CENT) {
       set_igdetsimple(ptrgeom);
       // get geometry for face pre-interpolated values
       PLOOPBONLY(pl) newpr[pl] = pr[pl]*ptrgeom->igdetnosing;
