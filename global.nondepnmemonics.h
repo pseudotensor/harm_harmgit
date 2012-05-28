@@ -1122,5 +1122,6 @@
 #define DORESCALEINTERPFLUXCTSTAG (1)  //automatically enable rescale interp when itnerpolating pstag if RESCALEINTERP==1
 #define DOPOLEDEATH (1)
 #define DOPOLEGAMMADEATH (1)
+#define DOPOLESMOOTH (0)
 
 

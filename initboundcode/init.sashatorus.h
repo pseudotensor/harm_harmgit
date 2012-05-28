@@ -420,8 +420,11 @@ struct Ccoordparams {
 #define DORESCALEINTERPFLUXCTSTAG 0  //use gdet rescaling for pstag interpolation instead of the standard rescale
 
 #undef DOPOLEDEATH
-#define DOPOLEDEATH 1
+#define DOPOLEDEATH 0
 
 #undef DOPOLEGAMMADEATH
 #define DOPOLEGAMMADEATH 0
+
+#undef DOPOLESMOOTH
+#define DOPOLESMOOTH 1
 

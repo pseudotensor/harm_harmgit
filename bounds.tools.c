@@ -76,6 +76,8 @@
 #define POLEGAMMADEATH 0
 #endif
 
+#define POLESMOOTH DOPOLESMOOTH
+
 // whether to average in radius for poledeath
 #define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
 #define RADIUSTOSTARTAVERAGING 7 // should be beyond horizon so doesn't diffuse across horizon
@@ -912,6 +914,7 @@ int bound_x2dn_polaraxis_full3d(
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
 	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  else if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
 
@@ -1038,6 +1041,7 @@ int bound_x2dn_polaraxis(
 
 	if(BCtype[X2DN]==POLARAXIS){
 	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  else if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 	
       }// end if inner CPU wall
@@ -1169,6 +1173,7 @@ int bound_x2up_polaraxis_full3d(
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
 	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  else if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
       }// end if outer CPU wall
@@ -1286,6 +1291,7 @@ int bound_x2up_polaraxis(
 
 	if(BCtype[X2UP]==POLARAXIS){
 	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  else if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
       
       }// end if mycpupos[2]==ncpux2-1
@@ -2218,6 +2224,133 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
     return( MACP0A1(prim,ri,rj,rk,pl) * dxdxp[dir][dir] );   
 }
 #endif
+
+#define POLEOFFSET (POLESMOOTH)
+
+int polesmooth(int whichx2,
+	      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	      int *inboundloop,
+	      int *outboundloop,
+	      int *innormalloop,
+	      int *outnormalloop,
+	      int (*inoutlohi)[NUMUPDOWN][NDIM],
+	      int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+	      int *dosetbc,
+	      int enerregion,
+	      int *localenerpos)
+{
+  
+  int i, j, k, pl, j0, dj;
+  int ri, rj, rk;
+  FTYPE ucon[NDIM], uconspc[NDIM], uconxyz[NDIM], uconspcavg[NDIM], uconxyzavg[NDIM];
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom = &geomdontuse;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE *pr, newpr[NPR], r, th, ph;
+  FTYPE rho, ug;
+
+  if( ncpux3 != 1 ){
+    dualfprintf(fail_file, "polesmooth() is currently designed to work only for 1 cpu in the phi-direction\n" );
+    myexit(2323);
+  }
+  
+  /////////////////////
+  //
+  // Loop over i
+  if (whichx2==X2DN) {
+    j0 = 0; //starting from this j
+    rj = POLEOFFSET;  //until this j
+    dj = 1;
+  }
+  else{
+    j0 = N2-1;  //starting from this j
+    rj = N2-1-POLEOFFSET; //until this j
+    dj = -1;
+  }
+  for (i=-N1BND; i<N1+N1BND; i++) {
+    //zero out velocities
+    DLOOPA(pl) {
+      uconspcavg[pl] = 0;
+      uconxyzavg[pl] = 0;
+    }
+    rho = 0;
+    ug = 0;
+    ri = i;
+    for (k=0; k<N3; k++) {
+      rk = k;
+      bl_coord_ijk_2(ri,rj,rk,CENT,X,V);
+      r = V[1];
+      th = V[2];
+      ph = V[3];
+      get_geometry(ri, rj, rk, CENT, ptrgeom);
+      dxdxprim_ijk(ri, rj, rk, CENT, dxdxp);
+
+      pr = MAC(prim,ri,rj,rk);
+      //obtain coordinate 4-velocity
+      pr2ucon(WHICHVEL, pr, ptrgeom, ucon);
+      //4-vel in spherical polar
+      uconspc[TT] = 0;
+      uconspc[RR] = dxdxp[RR][RR]*ucon[RR];
+      uconspc[TH] = dxdxp[TH][RR]*ucon[RR] + dxdxp[TH][TH]*ucon[TH];
+      uconspc[PH] = dxdxp[PH][PH]*ucon[PH];
+      //4-vel in Cartesian, x, y, z (see tiltedAphi.m)
+      uconxyz[0]  = 0;
+      uconxyz[1]  = -(r*sin(ph)*sin(th)*uconspc[PH]) + cos(ph)*sin(th)*uconspc[RR] + r*cos(ph)*cos(th)*uconspc[TH];
+      uconxyz[2]  = r*cos(ph)*sin(th)*uconspc[PH] + sin(ph)*sin(th)*uconspc[RR] + r*cos(th)*sin(ph)*uconspc[TH];
+      uconxyz[3]  = cos(th)*uconspc[RR] - r*sin(th)*uconspc[TH];
+      DLOOPA(pl) {
+	uconspcavg[pl] += uconspc[pl];
+	uconxyzavg[pl] += uconxyz[pl];
+      }
+      rho += pr[RHO];
+      ug += pr[UU];
+    }
+    //divide by numer of terms (assume single CPU)
+    SLOOPA(pl) {
+      uconspcavg[pl] /= (FTYPE)N3;
+      uconxyzavg[pl] /= (FTYPE)N3;
+    }
+    rho /= (FTYPE)N3;
+    ug /= (FTYPE)N3;
+    
+    //now populate the affected cells with averaged rho, ug, and velocities
+    for (k=0; k<N3; k++) {
+      for (j=j0; j != rj; j+=dj) {
+	//NOTE below uses j (as opposed to rj)
+	bl_coord_ijk_2(i,j,k,CENT,X,V);
+	r = V[1];
+	th = V[2];
+	ph = V[3];
+	get_geometry(i, j, k, CENT, ptrgeom);
+	dxdxprim_ijk(i, j, k, CENT, dxdxp);
+	
+	//obtain the spherical polar velocities from Cartesian (x,y,z) velocities
+	uconspc[RR] = cos(ph)*sin(th)*uconxyzavg[1] + sin(ph)*sin(th)*uconxyzavg[2] + cos(th)*uconxyzavg[3];
+	uconspc[TH] = pow(r,-1)*pow(pow(sin(th),2),0.5)*(cos(ph)*1./tan(th)*uconxyzavg[1] + 1./tan(th)*sin(ph)*uconxyzavg[2] - uconxyzavg[3]);
+	uconspc[PH] = cos(ph)*1./sin(th)*pow(r,-1)*(-(tan(ph)*uconxyzavg[1]) + uconxyzavg[2]);
+	
+	//add in average rotational velocity to account for any rotation around the polar axis, if any
+	uconspc[PH] += uconspcavg[PH];
+	
+	//convert back to code coordinates
+	//first, get coordinate 4-velocity
+	ucon[RR] = uconspc[RR]/dxdxp[RR][RR];
+	ucon[TH] = (uconspc[TH] - dxdxp[TH][RR]*ucon[RR]) / dxdxp[TH][TH];
+	ucon[PH] = uconspc[PH]/dxdxp[PH][PH];
+	
+	//convert coordinate 4-velocity into into internal coordinate velocity (usually VELREL4 velocity)
+	ucon2pr(WHICHVEL,ucon,ptrgeom,newpr);
+	//put the updated velocity back into pr
+	pr = MAC(prim,i,j,k);
+	SLOOPA(pl) pr[UU+pl] = newpr[UU+pl];
+      }
+    }      
+  }
+  
+  return(0);
+  
+}
 
 // interpolate across pole to remove numerical errors there
 // Note that this function is done over all zones
