@@ -2255,16 +2255,18 @@ int polesmooth(int whichx2,
     myexit(2323);
   }
   
+  if(ispstag) return(0);
+  
   /////////////////////
   //
   // Loop over i
   if (whichx2==X2DN) {
-    j0 = 0; //starting from this j
+    j0 = -POLEOFFSET; //starting from this j
     rj = POLEOFFSET;  //until this j
     dj = 1;
   }
   else{
-    j0 = N2-1;  //starting from this j
+    j0 = N2-1+POLEOFFSET;  //starting from this j
     rj = N2-1-POLEOFFSET; //until this j
     dj = -1;
   }
