@@ -2329,7 +2329,7 @@ int polesmooth(int whichx2,
 	
 	//obtain the spherical polar velocities from Cartesian (x,y,z) velocities
 	uconspc[RR] = cos(ph)*sin(th)*uconxyzavg[1] + sin(ph)*sin(th)*uconxyzavg[2] + cos(th)*uconxyzavg[3];
-	uconspc[TH] = pow(r,-1)*pow(pow(sin(th),2),0.5)*(cos(ph)*1./tan(th)*uconxyzavg[1] + 1./tan(th)*sin(ph)*uconxyzavg[2] - uconxyzavg[3]);
+	uconspc[TH] = pow(r,-1)*sin(th)*(cos(ph)*1./tan(th)*uconxyzavg[1] + 1./tan(th)*sin(ph)*uconxyzavg[2] - uconxyzavg[3]);
 	uconspc[PH] = cos(ph)*1./sin(th)*pow(r,-1)*(-(tan(ph)*uconxyzavg[1]) + uconxyzavg[2]);
 	
 	//add in average rotational velocity to account for any rotation around the polar axis, if any
