@@ -2264,11 +2264,13 @@ int polesmooth(int whichx2,
     j0 = -POLEOFFSET; //starting from this j
     rj = POLEOFFSET;  //until this j
     dj = 1;
+    if(mycpupos[2]!=0) return(0); //not on pole cpu
   }
   else{
     j0 = N2-1+POLEOFFSET;  //starting from this j
     rj = N2-1-POLEOFFSET; //until this j
     dj = -1;
+    if(mycpupos[2]!=ncpux2-1) return(0); //not on pole cpu
   }
   for (i=-N1BND; i<N1+N1BND; i++) {
     //zero out velocities
