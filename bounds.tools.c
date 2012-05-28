@@ -33,10 +33,10 @@
 #if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEDEATH0 (N2BND==0 ? 0 : MIN(2,N2BND)) 
 #else
-#define POLEDEATH0 (N2BND==0 ? 0 : MIN(0,N2BND)) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
+#define POLEDEATH0 (N2BND==0 ? 0 : MIN(1,N2BND)) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
 #endif
 //#define MAXPOLEDEATH N2BND // can't be larger than N2BND
-#define MAXPOLEDEATH (N2BND==0 ? 0 : MIN(0,N2BND)) // can't be larger than N2BND
+#define MAXPOLEDEATH (N2BND==0 ? 0 : MIN(2,N2BND)) // can't be larger than N2BND
 #define DEATHEXPANDAMOUNT 0
 
 #define POLEINTERPTYPE 3 // 0=set uu2=bu2=0, 1=linearly interpolate uu2,bu2  2=interpolate B_\phi into pole  3 =linearly for uu2 unless sucking on pole
@@ -47,10 +47,11 @@
 #if(PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP==VARTOINTERP)
 #define POLEGAMMADEATH0 0
 #else
-#define POLEGAMMADEATH0 0
+#define POLEGAMMADEATH0 1
 #endif
 // maximum allowed Lorentz factor near the pole (set to something large that should be allowed by solution -- problem and grid dependent)
 //#define GAMMAPOLE (2.0)
+
 
 #define GAMMAPOLEOUTGOING 1.1 // keep low
 #define GAMMAPOLEOUTGOINGPOWER 1.0
@@ -62,9 +63,18 @@
 #define POLEDENSITYDROPFACTOR 5.0
 #define POLEGAMMAJUMPFACTOR 2.0
 
+#if(DOPOLEDEATH)
 // avoid such things if N2==1
 #define POLEDEATH (N2==1 ? 0 : POLEDEATH0)
+#else
+#define POLEDEATH 0
+#endif
+
+#if(DOPOLEGAMMADEATH)
 #define POLEGAMMADEATH (N2==1 ? 0 : POLEGAMMADEATH0)
+#else
+#define POLEGAMMADEATH 0
+#endif
 
 // whether to average in radius for poledeath
 #define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
