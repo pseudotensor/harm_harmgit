@@ -1191,7 +1191,7 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
   ///////////////////////////
   //DLOOPA(jj){
   // only loop over non-diagonal terms, doing diagonal term last outside loop (done to avoid conditional inside loop)
-  for(iter=0;iter<=NDIM-1;iter++){
+  for(iter=0;iter<NDIM-1;iter++){
     jj=myloop[iter];
 
 
@@ -1336,7 +1336,7 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 
     // iterate only over spatial EOMs that are not along dir (\nu==dir has flux=0 identically)
     // loop here is differently used than above since here start with iter=1
-    for(iter=1;iter<=NDIM-1;iter++){
+    for(iter=1;iter<NDIM-1;iter++){
       jj=myloop[iter]; // term is jj-EOM, not flux in jj direction
 
 #if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
