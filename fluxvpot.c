@@ -684,8 +684,8 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
 	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
 	    // Notice that both fluxes are assigned a value in some cases, as required
 	    // e.g. F1[B2]=A3 and F2[B1]=-A3
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-MACP1A0(A,dir,i,j,k); // opposite ordering
+	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
 
 
 	  }
@@ -781,8 +781,8 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
 	    // then using F1/F2/F3
 	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
 	    // Notice that both fluxes are assigned a value in some cases, as required
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-MACP1A0(A,dir,i,j,k); // opposite ordering
+	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
 
 	  }// end for loop over otherdirs
 	}// end over A_i
