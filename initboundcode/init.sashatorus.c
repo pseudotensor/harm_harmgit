@@ -735,7 +735,7 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
   FTYPE vpot;
   FTYPE alpha = 60.*M_PI/180.;  //dipole tilt angle
-  FTYPE r = V[1], th = V[2], ph = V[3];
+  FTYPE r = V[1], th = V[2], ph = V[3], phi = V[3], theta = V[2];  //the latter two to avoid typos
 #if(0)
   //normalized vector potential: total vpot through NS equals some constant order unity
   //vpot = 1 - fabs(cos(th));  //split-monopole
@@ -759,10 +759,18 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 //  
 //  Adphi = -(pow(r,-2)*sin(th)*(cos(th)*(-(r*sin(alpha)) + cos(alpha)*sin(ph)) + r*cos(alpha)*cos(ph)*sin(th)));
 
+#if(0)
+  //mu-Omega plane at phi = pi/2 (along y-axis) at t = 0
   Adr = 0;
   Adtheta = cos(ph)*pow(r,-1)*sin(alpha);
   Adphi = pow(r,-1)*sin(th)*(-(cos(th)*sin(alpha)*sin(ph)) + 
 			     cos(alpha)*sin(th));
+#elif(1)  
+  //mu-Omega plane at phi = 0 (along x-axis) at t = 0
+  Adr = 0;
+  Adtheta = -sin(alpha)*sin(ph) / r;
+  Adphi = sin(th) * ( -cos(th)*cos(ph)*sin(alpha) + cos(alpha)*sin(th) ) / r; 
+#endif
   
   if( 1 == l ){
     //Ad1 = dxdxp[1][1] * Adr + dxdxp[2][1] * Adtheta;
@@ -781,6 +789,27 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
   }
 #endif
   return(vpot);
+}
+
+//returns enclosed flux between ph1, ph2 and th1, th2
+//flux = \int_phi1^phi2 A_phi dphi|_th1^th2 - \int_th1^th2 A_th dth|_ph1^ph2
+FTYPE vpotns_flux( FTYPE r, FTYPE th1, FTYPE th2, FTYPE ph1, FTYPE ph2)
+{
+  FTYPE sinth1 = sin(th1);
+  FTYPE sinth2 = sin(th2);
+  FTYPE sinth1sq = sinth1*sinth1;
+  FTYPE sinth2sq = sinth2*sinth2;
+  FTYPE int_rAth_dth = - ( (th2-th1)*(sin(ph2)-sin(ph1))*sin(alpha) );
+  FTYPE int_rAph_dph =   ( (ph2-ph1)*(sinth2sq-sinth1sq)*cos(alpha) 
+			  -(sin(2*th2)-sin(2*th1))*(sin(ph2)-sin(ph1))*sin(alpha)*0.5 );
+  return( (int_Ath_dth + int_Aph_dph)/r );
+}
+
+FTYPE dfluxns( FTYPE r, FTYPE Omega, FTYPE phi, FTYPE th1, FTYPE th2, FTYPE t, FTYPE dt )
+{
+  FTYPE phi0up = phi - Omega*t;
+  FTYPE phi0dn = phi0up - Omega*dt;
+  return( vpotns_flux(r, th1, th2, phi0dn, phi0up) );
 }
 
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )
