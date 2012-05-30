@@ -812,7 +812,7 @@ FTYPE vpotns_flux( FTYPE r, FTYPE th1, FTYPE th2, FTYPE ph1, FTYPE ph2)
   FTYPE int_Ath_dth = - ( (th2-th1)*(sin(ph2)-sin(ph1))*sin(alpha) );
   FTYPE int_Aph_dph =   ( (ph2-ph1)*(sinth2sq-sinth1sq)*cos(alpha) 
 			  -(sin(2*th2)-sin(2*th1))*(sin(ph2)-sin(ph1))*sin(alpha)*0.5 );
-  return( (int_Ath_dth + int_Aph_dph)/r );
+  return( (-int_Ath_dth + int_Aph_dph)/r );
 }
 
 FTYPE dfluxns( FTYPE r, FTYPE Omega, FTYPE phi, FTYPE th1, FTYPE th2, FTYPE t, FTYPE dt )
