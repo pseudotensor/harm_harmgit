@@ -3509,10 +3509,13 @@ FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart)
 
 FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart )
 {
+  return(1.);
+
+#if(0)  //too hard to keep track of varying omega, so keep it constant
+  
   FTYPE sin1st, sin2nd, sin4th;
   FTYPE tsteppart;
   FTYPE prefact = 1.;     //no prefactor by default
-  
   
   if(TIMEORDER==2){ 
     tsteppart = t + 0.5 * dt; //tsteppartf;  //time of the end of the current substep so that the boundaries are OK
@@ -3549,6 +3552,7 @@ FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppar
   }
   
   return( prefact );
+#endif
   
 }
 
