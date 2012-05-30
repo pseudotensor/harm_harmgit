@@ -677,7 +677,7 @@ static void input_header(void)
   // print header from file
   fprintf(stderr,"PRINTSCANHEADER\n");
   fprintf(stderr, PRINTSCANHEADER,
-	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns); // 32 -- should be same as dump_header_general() in dump.c
 
 
 

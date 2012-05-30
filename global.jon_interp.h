@@ -194,7 +194,7 @@
 #define SCANHEADER "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %Lf %Lf %d %d %d %d %d %d %d %d %d"
 #endif
 
-#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g %g %g %g %d %d %d %d %d %d %d %d %d\n"
+#define PRINTSCANHEADER "%g %d %d %d %g %g %g %g %g %g %g %g %g %g %g %g %d %g %g %g %g %g %g %d %d %d %d %d %d %d %d %d\n" // 32
 
 
 
