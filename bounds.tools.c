@@ -3451,7 +3451,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    bl_coord_ijk(i, j+1, k, CORN3, V_th2);
 	    //km1 = km1mac(k);
 	    //km1 = max(km1, INFULL3);
-	    omega = get_omegaf(time,dt,steppart);
+	    omega = a; //get_omegaf(time,dt,steppart);
 	    dflux = -dfluxns(V_ph1[1], omega, V_ph1[3], V_th1[2], V_th2[2], time, dt);
 	    //myB1 = 0.5 * ( GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,km1,B1) );
 	    //d(gdet*B1)/dt = -dF3(B1)/dx3
