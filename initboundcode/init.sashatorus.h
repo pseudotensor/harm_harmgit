@@ -14,7 +14,7 @@
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
 #define N1 16
 #define N2 16
-#define N3 32
+#define N3 16
 
 // atch adjusts
 #undef MAXWELL
@@ -429,4 +429,4 @@ struct Ccoordparams {
 #define DOPOLESMOOTH 1
 
 #undef DONSEMFS
-#define DONSEMFS 0
+#define DONSEMFS 1

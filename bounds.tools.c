@@ -3457,7 +3457,11 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    //d(gdet*B1)/dt = -dF3(B1)/dx3
 	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt
 	    //F3(B1) = dflux / (dx2*dt) <-- make sure sign correct
-	    MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+	    if( j == 1 && k == 1 ){
+		dualfprintf(fail_file, "nstep = %ld, fluxvec[3][%d][%d][%d][B1] = %g, emf = %g\n",
+			    nstep, i, j, k, MACP1A1(fluxvec,3,i,j,k,B1), dflux / (dx[2] * dt));
+	    }
+	    //MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
 	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 	  }
 #endif
