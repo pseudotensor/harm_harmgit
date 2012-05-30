@@ -429,4 +429,4 @@ struct Ccoordparams {
 #define DOPOLESMOOTH 1
 
 #undef DONSEMFS
-#define DONSEMFS 1
+#define DONSEMFS 0

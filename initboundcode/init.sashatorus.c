@@ -736,6 +736,7 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 
 FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
+  FTYPE get_ns_alpha();
   FTYPE alpha = get_ns_alpha();
   FTYPE vpot;
   FTYPE r = V[1], th = V[2], ph = V[3], phi = V[3], theta = V[2];  //the latter two to avoid typos
