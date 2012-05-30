@@ -779,17 +779,17 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
   if( 1 == l ){
     //Ad1 = dxdxp[1][1] * Adr + dxdxp[2][1] * Adtheta;
     Ad1 = Adr;
-    return(Ad1);
+    return(NSFIELDVAL*Ad1);
   }
   else if( 2 == l ){
     //Ad2 = dxdxp[1][2] * Adr + dxdxp[2][2] * Adtheta;
     Ad2 = Adtheta;
-    return( Ad2 );
+    return(NSFIELDVAL*Ad2);
   }
   else if( 3 == l ){
     //Ad3 = dxdxp[3][3] * Adphi;
     Ad3 = Adphi;
-    return( Ad3 );
+    return(NSFIELDVAL*Ad3);
   }
 #endif
   return(vpot);
@@ -812,7 +812,7 @@ FTYPE vpotns_flux( FTYPE r, FTYPE th1, FTYPE th2, FTYPE ph1, FTYPE ph2)
   FTYPE int_Ath_dth = - ( (th2-th1)*(sin(ph2)-sin(ph1))*sin(alpha) );
   FTYPE int_Aph_dph =   ( (ph2-ph1)*(sinth2sq-sinth1sq)*cos(alpha) 
 			  -(sin(2*th2)-sin(2*th1))*(sin(ph2)-sin(ph1))*sin(alpha)*0.5 );
-  return( (-int_Ath_dth + int_Aph_dph)/r );
+  return( NSFIELDVAL*(-int_Ath_dth + int_Aph_dph)/r );
 }
 
 FTYPE dfluxns( FTYPE r, FTYPE Omega, FTYPE phi, FTYPE th1, FTYPE th2, FTYPE t, FTYPE dt )
@@ -877,7 +877,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //NS field
   if( FIELDTYPE==NSFIELD && l >= 1 && l <= 3 ) {
     vpotns = vpotns_normalized(i, j, k, loc, V, l);
-    vpot += NSFIELDVAL * vpotns;
+    vpot += vpotns;
   }
 
   if(l==3){// A_\phi for disk

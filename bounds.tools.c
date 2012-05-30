@@ -3456,17 +3456,21 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    omega = a; //get_omegaf(time,dt,steppart);
 	    aflux = vpotns_flux(V_ph1[1],V_th1[2],V_th2[2],V_ph1[3]-omega*time,V_ph2[3]-omega*time);
 	    nflux = ptrgeom->gdet * GLOBALMACP0A1(pstagglobal,i,j,k,B1)*dx[2]*dx[3]; //MACP0A1(prim,i,j,k,B1)
-	    dflux = -dfluxns(V_ph1[1], omega, V_ph1[3], V_th1[2], V_th2[2], time, dt);
+	    dflux = dfluxns(V_ph1[1], omega, V_ph1[3], V_th1[2], V_th2[2], time, dt);
 	    //myB1 = 0.5 * ( GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,km1,B1) );
 	    //d(gdet*B1)/dt = -dF3(B1)/dx3
-	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt
+	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt  
 	    //F3(B1) = dflux / (dx2*dt) <-- make sure sign correct
-	    if( j == 1 && k == 1 ){
+#if(0)
+	    if( j == -2 && k == 1 ){
 		dualfprintf(fail_file, "nstep = %ld, fluxvec[3][%d][%d][%d][B1] = %g, emf = %g, aflux = %g, nflux = %g\n",
 			    nstep, i, j, k, MACP1A1(fluxvec,3,i,j,k,B1), dflux / (dx[2] * dt),
 			    aflux, nflux);
+		dualfprintf(fail_file,"r=%g, th1=%g, th2=%g, ph1=%g, ph2=%g\n", V_ph1[1], V_th1[2], V_th2[2], V_ph1[3], V_ph2[3]);
+	      
 	    }
-	    //MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+#endif
+	    MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
 	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 	  }
 #endif
