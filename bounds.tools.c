@@ -3442,7 +3442,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	COMPFULLLOOPP1_23{
 	  // EMF[2]:
 #if(N3>1 && DONSEMFS)
-	  if( j >= -N1BND && j < N2+N1BND-1 && k >= 0 && k <= N3 ){
+	  if( j >= 0 && j < N2 && k >= 0 && k <= N3 ){
 	    get_geometry(i, j, k  , FACE1, ptrgeom); //CORN2 -- "corner" in 1-3 	    //get_geometry(i, j, k  , CORN2, ptrgeom_ph1); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is   located
 	    //get_geometry(i, j, k+1, CORN2, ptrgeom_ph2); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
 	    bl_coord_ijk(i, j, k  , CORN2, V_ph1);
@@ -3462,7 +3462,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt  
 	    //F3(B1) = dflux / (dx2*dt) <-- make sure sign correct
 #if(0)
-	    if( j == -2 && k == 1 ){
+	    if( j == 1 && k == 1 ){
 		dualfprintf(fail_file, "nstep = %ld, fluxvec[3][%d][%d][%d][B1] = %g, emf = %g, aflux = %g, nflux = %g\n",
 			    nstep, i, j, k, MACP1A1(fluxvec,3,i,j,k,B1), dflux / (dx[2] * dt),
 			    aflux, nflux);
