@@ -61,6 +61,7 @@ static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DH
 FTYPE torusrmax;   // AKMARK: torus pressure max
 FTYPE t_transition;
 FTYPE global_vpar0;
+FTYPE dipole_alpha;
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
@@ -121,6 +122,8 @@ int prepre_init_specific_init(void)
    
   t_transition = 1.;
   global_vpar0 = 0.;
+  
+  dipole_alpha = 60 * M_PI / 180.;
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -733,8 +736,8 @@ FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 
 FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 {
+  FTYPE alpha = get_ns_alpha();
   FTYPE vpot;
-  FTYPE alpha = 60.*M_PI/180.;  //dipole tilt angle
   FTYPE r = V[1], th = V[2], ph = V[3], phi = V[3], theta = V[2];  //the latter two to avoid typos
 #if(0)
   //normalized vector potential: total vpot through NS equals some constant order unity
@@ -791,25 +794,32 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
   return(vpot);
 }
 
+FTYPE get_ns_alpha()
+{
+  return(dipole_alpha);
+}
 //returns enclosed flux between ph1, ph2 and th1, th2
 //flux = \int_phi1^phi2 A_phi dphi|_th1^th2 - \int_th1^th2 A_th dth|_ph1^ph2
 FTYPE vpotns_flux( FTYPE r, FTYPE th1, FTYPE th2, FTYPE ph1, FTYPE ph2)
 {
+  FTYPE get_ns_alpha();
+  FTYPE alpha = get_ns_alpha();
   FTYPE sinth1 = sin(th1);
   FTYPE sinth2 = sin(th2);
   FTYPE sinth1sq = sinth1*sinth1;
   FTYPE sinth2sq = sinth2*sinth2;
-  FTYPE int_rAth_dth = - ( (th2-th1)*(sin(ph2)-sin(ph1))*sin(alpha) );
-  FTYPE int_rAph_dph =   ( (ph2-ph1)*(sinth2sq-sinth1sq)*cos(alpha) 
+  FTYPE int_Ath_dth = - ( (th2-th1)*(sin(ph2)-sin(ph1))*sin(alpha) );
+  FTYPE int_Aph_dph =   ( (ph2-ph1)*(sinth2sq-sinth1sq)*cos(alpha) 
 			  -(sin(2*th2)-sin(2*th1))*(sin(ph2)-sin(ph1))*sin(alpha)*0.5 );
   return( (int_Ath_dth + int_Aph_dph)/r );
 }
 
 FTYPE dfluxns( FTYPE r, FTYPE Omega, FTYPE phi, FTYPE th1, FTYPE th2, FTYPE t, FTYPE dt )
 {
-  FTYPE phi0up = phi - Omega*t;
-  FTYPE phi0dn = phi0up - Omega*dt;
-  return( vpotns_flux(r, th1, th2, phi0dn, phi0up) );
+  FTYPE vpotns_flux( FTYPE r, FTYPE th1, FTYPE th2, FTYPE ph1, FTYPE ph2);
+  FTYPE phi2 = phi - Omega*t;
+  FTYPE phi1 = phi2 - Omega*dt;
+  return( vpotns_flux(r, th1, th2, phi1, phi2) );
 }
 
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th )

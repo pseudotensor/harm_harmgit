@@ -1124,4 +1124,5 @@
 #define DOPOLEGAMMADEATH (1)
 #define DOPOLESMOOTH (0)
 
+#define DONSEMFS (0)
 

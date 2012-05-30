@@ -3358,9 +3358,13 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
   int dirsign;
   struct of_geom geom;
   struct of_geom *ptrgeom = &geom;
-#if( N3 > 1 )
-  int km1;
-  FTYPE myB1;
+#if( N3 > 1 && DONSEMFS )
+  FTYPE V_ph1[NDIM];
+  //FTYPE V_ph2[NDIM];
+  FTYPE V_th1[NDIM];
+  FTYPE V_th2[NDIM];
+  FTYPE omega;
+  FTYPE dflux;
 #endif
   
   if(ADJUSTFLUXCT==0 && DOADJUSTEMFS==0){
@@ -3435,14 +3439,25 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	//the boundary is on the processor, so reset emf's to zero at the boundary
 	COMPFULLLOOPP1_23{
 	  // EMF[2]:
-#if(N3>1&&0)
-	  if( j >= -N1BND && j < N2+N1BND && k >= 0 && k <= N3 ){
-	    get_geometry(i, j, k, CORN2, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
-	    //get_geometry(i, j, k, FACE1, ptrgeom); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
-	    km1 = km1mac(k);
-	    km1 = max(km1, INFULL3);
-	    myB1 = 0.5 * ( GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,km1,B1) );
-	    MACP1A1(fluxvec,3,i,j,k,B1) = ptrgeom->gdet * get_omegaf(t,dt,steppart) * myB1;   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+#if(N3>1 && DONSEMFS)
+	  if( j >= -N1BND && j < N2+N1BND-1 && k >= 0 && k <= N3 ){
+	    //get_geometry(i, j, k  , CORN2, ptrgeom_ph1); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is   located
+	    //get_geometry(i, j, k+1, CORN2, ptrgeom_ph2); //CORN2 -- "corner" in 1-3 plane, think this is where E_theta is located
+	    bl_coord_ijk(i, j, k  , CORN2, V_ph1);
+	    //bl_coord_ijk(i, j, k+1, CORN2, V_ph2);
+	    //get_geometry(i, j  , k, CORN3, ptrgeom_th1);
+            //get_geometry(i, j+1, k, CORN3, ptrgeom_th2);
+	    bl_coord_ijk(i, j,   k, CORN3, V_th1);
+	    bl_coord_ijk(i, j+1, k, CORN3, V_th2);
+	    //km1 = km1mac(k);
+	    //km1 = max(km1, INFULL3);
+	    omega = get_omegaf(time,dt,steppart);
+	    dflux = -dfluxns(V_ph1[1], omega, V_ph1[3], V_th1[2], V_th2[2], time, dt);
+	    //myB1 = 0.5 * ( GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,km1,B1) );
+	    //d(gdet*B1)/dt = -dF3(B1)/dx3
+	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt
+	    //F3(B1) = dflux / (dx2*dt) <-- make sure sign correct
+	    MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
 	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 	  }
 #endif
