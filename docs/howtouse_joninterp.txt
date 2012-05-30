@@ -60,6 +60,14 @@ whichoutput=1008
 # interpolate to get orthonormal B^z
 whichoutput=1009
 ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bz.bin
+#
+# interpolate to get radial energy flux per unit sin(\theta)
+whichoutput=1011
+~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.FE.bin
+#
+# interpolate to get poloidal current density (B_\phi)
+whichoutput=1012
+~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bphi.bin
 
 # merge interpolation results
 
