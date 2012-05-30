@@ -37,7 +37,7 @@ void gaussian_filter(int filter,FTYPE sigma, int nt, int nx, int ny, int nz, uns
   }
   for(j=filter;j<ny-filter;j++) for(i=filter;i<nx-filter;i++){
     if(DATATYPE==0) oldimage[0][i][j][0]=(unsigned char)ftemp[i][j]; // only overwrites filtered parts, assumes rest still there // GODMARK3D
-    else if(DATATYPE==1) olddata[0][i][j][0]=ftemp[i][j]; // GODMARK3D
+    else olddata[0][i][j][0]=ftemp[i][j]; // GODMARK3D
   }
 
   free_fmatrix(ftemp,0,nx-1,0,ny-1);

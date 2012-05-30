@@ -55,7 +55,7 @@ void copy_old2new(void)
   int h,i,j,k;
 
   if(DATATYPE==0) LOOPINTERP newimage[h][i][j][k]=oldimage[h][i][j][k];
-  else if(DATATYPE==1) LOOPINTERP newdata[h][i][j][k]=olddata[h][i][j][k];
+  else LOOPINTERP newdata[h][i][j][k]=olddata[h][i][j][k];
 
 
 }
@@ -87,7 +87,7 @@ int compute_spatial_interpolation(void)
 
   
   if(DATATYPE==0)   fprintf(stderr,"start to interpolate image (in 3D, each . is each k from %d to %d)\n",0,nN3);
-  else if(DATATYPE==1)   fprintf(stderr,"start to interpolate data (in 3D, each . is each k from %d to %d)\n",0,nN3);
+  else fprintf(stderr,"start to interpolate data (in 3D, each . is each k from %d to %d)\n",0,nN3);
   fflush(stderr);
 
 
@@ -188,7 +188,7 @@ int compute_spatial_interpolation(void)
 	interptypetodo=INTERPTYPE;
       }
     }
-    else if(DATATYPE==1){
+    else{
       // make defaultvalue only if no solution
       if(nosolution) {
 	newdata[h][i][j][k]=defaultvalue;
@@ -319,7 +319,7 @@ int compute_spatial_interpolation(void)
 
   // report that done
   if(DATATYPE==0)   fprintf(stderr,"done interpolating image\n");
-  else if(DATATYPE==1)   fprintf(stderr,"done interpolating data\n");
+  else fprintf(stderr,"done interpolating data\n");
   fflush(stderr);
 
 
@@ -2660,7 +2660,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   for(il=0;il<nxlow;il++){
     for(jl=0;jl<nylow;jl++){
       if(DATATYPE==0) Ilowc[il][jl]=oldimage[0][il][jl][0];// GODMARK3D
-      else if(DATATYPE==1) Ilowf[il][jl]=olddata[0][il][jl][0]; // GODMARK3D
+      else Ilowf[il][jl]=olddata[0][il][jl][0]; // GODMARK3D
     }
   }
 
@@ -2837,7 +2837,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   }
   if(0){// debug (need to setup this memory stuff -- segfaults for data currently
     // in principle could output in different order if wanted
-    if(DATATYPE==1){
+    if(DATATYPE!=0){
       if(1){ // needs to be set
 	for(jh=0;jh<nyhigh;jh++)      for(ih=0;ih<nxhigh;ih++) {
 	    ftemp=olddata[0][ih][jh][0];// GODMARK3D
@@ -2856,7 +2856,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   if(DATATYPE==0){
     free_cmatrix(Ilowc,0,nxlow-1,0,nylow-1) ;
   }
-  else if(DATATYPE==1){
+  else{
     free_fmatrix(Ilowf,0,nxlow-1,0,nylow-1) ;
   }
   //  exit(0);

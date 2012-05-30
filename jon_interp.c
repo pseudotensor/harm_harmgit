@@ -295,10 +295,12 @@ static void readdata_preprocessdata(void)
       exit(1);
     }
     else{
-      // skip first line assuming it's a header line
-      while(fgetc(gdumpin)!='\n'); // go past end of line
+      // skip first line assuming it's a header line if READHEADERGDUMP=1
+      if(READHEADERGDUMP) while(fgetc(gdumpin)!='\n'); // go past end of line
     }
   }
+
+
 
 
   ///////////////////////////////////
@@ -454,10 +456,10 @@ static void readdata_preprocessdata(void)
   }
   ///////////////////////////////////
   //
-  // DATATYPE==1
+  // DATATYPE>=1
   //
   ///////////////////////////////////
-  else if(DATATYPE==1){
+  else{
     imagedata=1; // says treat as data
 
 
@@ -476,17 +478,25 @@ static void readdata_preprocessdata(void)
       totalmin=BIG;
       totalmax=-BIG;
       // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
+      int kprior,firsttimecompute=1;
       LOOPOLDDATA{
-
 	if(outputvartype==0){ // only 1 thing in (e.g. for scalar image or data)
-	  readelement(stdin,&olddata0[h][i][j][k]);
+	  readelement(binaryinput,inFTYPE,stdin,&olddata0[h][i][j][k]);
 	}
 	else{// for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
+	  if(firsttimecompute==1){
+	    fprintf(stderr,"compute_preprocess(oN3=%d dots to appear):",oN3); fflush(stderr);
+	  }
+	  if(k!=kprior){
+	    fprintf(stderr,"."); fflush(stderr);
+	    kprior=k;
+	  }
 	  compute_preprocess(outputvartype,gdumpin, &olddata0[h][i][j][k]);
 	}
 	if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
 	if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
 	
+	firsttimecompute=0;
       }// end LOOPOLDDATA
       
 
@@ -594,46 +604,46 @@ static void readdata_preprocessdata(void)
 
 
 // read single element from file in text or binary format and any element C type
-void readelement(FILE *input, FTYPE *datain)
+void readelement(int binaryinputlocal, char* inFTYPElocal, FILE *input, FTYPE *datain)
 {
   
-  if     (binaryinput==0 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fscanf(input,"%ld",&dumli);   *datain=(FTYPE)dumli;      }
-  else if(binaryinput==0 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fscanf(input,"%lld",&dumlli); *datain=(FTYPE)dumlli;     }
-  else if(binaryinput==0 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fscanf(input,"%f",&dumf) ;    *datain=(FTYPE)dumf;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fscanf(input,"%lf",&dumd);    *datain=(FTYPE)dumd;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fscanf(input,"%Lf",&dumld);   *datain=(FTYPE)dumld;      }
+  if     (binaryinputlocal==0 && strcmp(inFTYPElocal,"b")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"i")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       fscanf(input,"%ld",&dumli);   *datain=(FTYPE)dumli;      }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; fscanf(input,"%lld",&dumlli); *datain=(FTYPE)dumlli;     }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"f")==0   ){ float dumf;           fscanf(input,"%f",&dumf) ;    *datain=(FTYPE)dumf;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"d")==0   ){ double dumd;          fscanf(input,"%lf",&dumd);    *datain=(FTYPE)dumd;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    fscanf(input,"%Lf",&dumld);   *datain=(FTYPE)dumld;      }
 
-  if     (binaryinput==1 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fread(&dumi,bytesize,1,input);          *datain=(FTYPE)dumi;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fread(&dumi,intsize,1,input);           *datain=(FTYPE)dumi;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fread(&dumli,longintsize,1,input);      *datain=(FTYPE)dumli;      }
-  else if(binaryinput==1 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fread(&dumlli,longlongintsize,1,input); *datain=(FTYPE)dumlli;     }
-  else if(binaryinput==1 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fread(&dumf,floatsize,1,input);         *datain=(FTYPE)dumf;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fread(&dumd,doublesize,1,input);        *datain=(FTYPE)dumd;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fread(&dumld,longdoublesize,1,input);   *datain=(FTYPE)dumld;      }
+  if     (binaryinputlocal==1 && strcmp(inFTYPElocal,"b")==0   ){ int dumi;             fread(&dumi,bytesize,1,input);          *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"i")==0   ){ int dumi;             fread(&dumi,intsize,1,input);           *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       fread(&dumli,longintsize,1,input);      *datain=(FTYPE)dumli;      }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; fread(&dumlli,longlongintsize,1,input); *datain=(FTYPE)dumlli;     }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"f")==0   ){ float dumf;           fread(&dumf,floatsize,1,input);         *datain=(FTYPE)dumf;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"d")==0   ){ double dumd;          fread(&dumd,doublesize,1,input);        *datain=(FTYPE)dumd;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    fread(&dumld,longdoublesize,1,input);   *datain=(FTYPE)dumld;      }
 
 }
 
 // write single element to file in text or binary format and any element C type
-void writeelement(FILE *output, FTYPE dataout)
+void writeelement(int binaryoutputlocal, char* outFTYPElocal, FILE *output, FTYPE dataout)
 {
   
-  if     (binaryoutput==0 && strcmp(outFTYPE,"b")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"i")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"li")==0  ){ long int dumli=(long int)dataout;            fprintf(output,"%ld",dumli);     }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"lli")==0 ){ long long int dumlli=(long long int)dataout; fprintf(output,"%lld",dumlli);   }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"f")==0   ){ float dumf=(float)dataout;                   fprintf(output,"%15.7g",dumf) ;  }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"d")==0   ){ double dumd=(double)dataout;                 fprintf(output,"%22.16g",dumd);  }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"ld")==0  ){ long double dumld=(long double)dataout;      fprintf(output,"%26.21Lg",dumld); }
+  if     (binaryoutputlocal==0 && strcmp(outFTYPElocal,"b")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"i")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"li")==0  ){ long int dumli=(long int)dataout;            fprintf(output,"%ld",dumli);     }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"lli")==0 ){ long long int dumlli=(long long int)dataout; fprintf(output,"%lld",dumlli);   }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"f")==0   ){ float dumf=(float)dataout;                   fprintf(output,"%15.7g",dumf) ;  }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"d")==0   ){ double dumd=(double)dataout;                 fprintf(output,"%22.16g",dumd);  }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"ld")==0  ){ long double dumld=(long double)dataout;      fprintf(output,"%26.21Lg",dumld); }
 
-  if     (binaryoutput==1 && strcmp(outFTYPE,"b")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,bytesize,1,output);          }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"i")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,intsize,1,output);           }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"li")==0  ){ long int dumli=(long int)dataout;            fwrite(&dumli,longintsize,1,output);      }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"lli")==0 ){ long long int dumlli=(long long int)dataout; fwrite(&dumlli,longlongintsize,1,output); }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"f")==0   ){ float dumf=(float)dataout;                   fwrite(&dumf,floatsize,1,output);         }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"d")==0   ){ double dumd=(double)dataout;                 fwrite(&dumd,doublesize,1,output);        }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"ld")==0  ){ long double dumld=(long double)dataout;      fwrite(&dumld,longdoublesize,1,output);   }
+  if     (binaryoutputlocal==1 && strcmp(outFTYPElocal,"b")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,bytesize,1,output);          }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"i")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,intsize,1,output);           }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"li")==0  ){ long int dumli=(long int)dataout;            fwrite(&dumli,longintsize,1,output);      }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"lli")==0 ){ long long int dumlli=(long long int)dataout; fwrite(&dumlli,longlongintsize,1,output); }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"f")==0   ){ float dumf=(float)dataout;                   fwrite(&dumf,floatsize,1,output);         }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"d")==0   ){ double dumd=(double)dataout;                 fwrite(&dumd,doublesize,1,output);        }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"ld")==0  ){ long double dumld=(long double)dataout;      fwrite(&dumld,longdoublesize,1,output);   }
 
 }
 
@@ -655,8 +665,7 @@ static void input_header(void)
     // assumes header really has ALL this info (could tell user how many entries on header with wc and compare against desired.
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
-    fscanf(stdin, SCANHEADER,
-	   &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&EP3,&THETAROT,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns);
+    fscanf(stdin, SCANHEADER,SCANHEADERARGS);
 
 
     // set other things not set by header, but not really used right now
@@ -676,9 +685,8 @@ static void input_header(void)
 
   // print header from file
   fprintf(stderr,"PRINTSCANHEADER\n");
-  fprintf(stderr, PRINTSCANHEADER,
-	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns); // 32 -- should be same as dump_header_general() in dump.c
-
+  fprintf(stderr, PRINTSCANHEADER,PRINTHEADERARGS);
+	  
 
 
 }
@@ -698,18 +706,16 @@ static void output_header(void)
   //
   //////////////////////////
   fprintf(stderr,"header:\n");
-  fprintf(stderr, "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	  tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+  fprintf(stderr, PRINTHEADERSTDERR,PRINTHEADERSTDERRARGS);
   fprintf(stderr, "NEW: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g\n",nN1,nN2,nN3,Xmax[1],Xmax[2],Xmax[3],fakedxc,fakedyc,fakedzc);
   fprintf(stderr, "OTHER: %22.16g %22.16g %22.16g %22.16g\n",fakeRin,dxc,dyc,dzc);
    
 
   if(WRITEHEADER){
-    if(DATATYPE==1){
+    if(DATATYPE>=1){
       // print out a header
       ftemp=0.0;
-      fprintf(stdout, "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	      tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+      fprintf(stdout, PRINTHEADERSTDOUT,PRINTHEADERSTDOUTARGS);
     }
   }
 
@@ -758,7 +764,7 @@ static void output2file_postinterpolation(void)
       fwrite(&newimage[h][i][j][k], sizeof(unsigned char), 1, stdout) ;
     }
   }
-  else if(DATATYPE==1){
+  else{
     if(imagedata==0){
       for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
 	ftemp=newdata[h][i][j][k];
@@ -772,14 +778,16 @@ static void output2file_postinterpolation(void)
     else{
       if(sizeof(FTYPE)==sizeof(double)){
 	for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  //fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[h][i][j][k]); fflush(stderr);
-	  fprintf(stdout,"%22.16g\n",newdata[h][i][j][k]) ;
-	}
+		//fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[h][i][j][k]); fflush(stderr);
+		//fprintf(stdout,"%22.16g\n",newdata[h][i][j][k]) ;
+		writeelement(binaryoutput,outFTYPE,stdout,newdata[h][i][j][k]) ;
+	      }
       }
       else if(sizeof(FTYPE)==sizeof(float)){
-	for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  fprintf(stdout,"%15.7g\n",newdata[h][i][j][k]) ;
-	}
+       	for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
+		//  fprintf(stdout,"%15.7g\n",newdata[h][i][j][k]) ;
+		writeelement(binaryoutput,outFTYPE,stdout,newdata[h][i][j][k]) ;
+	      }
       }
     }
   }
@@ -882,7 +890,9 @@ void old_usage(int argc, int basicargcnum)
 	  "6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
 	  "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "12=output lower component (inputting all 4 columns of data: u^i)\n"
+	  "13=fulldiag\n"
 	  "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
+	  "1000+x=input fieldline file and generate certain outputs for each x=0,1,2,...\n"
 	  );
   fprintf(stderr,"INTERPTYPE: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
   fprintf(stderr,"READHEADER: 0=false 1=true\n");
@@ -932,7 +942,7 @@ void old_usage(int argc, int basicargcnum)
   fprintf(stderr,"extrapolate: 0 = no, 1 = yes\n");
   fprintf(stderr,"defaultvaluetype: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
   // below is optional but requires above 2 to be read-in
-  fprintf(stderr,"gdumpfilepathname : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,100...\n");
+  fprintf(stderr,"gdumpfilepathname : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,100+x,1000+x...\n");
 
   fprintf(stderr,"e.g.\n");
   fprintf(stderr,"~/sm/iinterp 0 0 1 1 456 456 1  1 0 0  1 0 256 512 1  1.321 40 0 40 40 0.3 0 < im0p0s0l0000.r8 > ../iimages/iim0p0s0l0000.r8\n");
@@ -966,8 +976,11 @@ void parse_commandline(int argc, char *argv[])
   int totalgoodargs=0;
   int argcheckstart=1;
   int setbinaryinput=0,setbinaryoutput=0;
+  int setbinaryinputgdump=0;
   int setinFTYPE=0,setoutFTYPE=0;
+  int setinFTYPEgdump=0;
   int setreadheader=0,setwriteheader=0;
+  int setreadheadergdump=0,setwriteheadergdump=0;
   char **argvnew;
 
   if(argc>1){
@@ -1219,8 +1232,9 @@ void parse_commandline(int argc, char *argv[])
 	  "\t6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
 	  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
+	  "\t13=Full Diag\n"
 	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
-	  "\t1001=Full Diag\n"
+	  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
 	  );
 	}
       }
@@ -1426,11 +1440,35 @@ void parse_commandline(int argc, char *argv[])
 	  goodarg++;
 	  if(i+1<argc) getgdump=1;
 	  if(i+1<argc) sscanf(argv[++i],"%s",&gdumpfilename[0]);
+	  if(setreadheadergdump==0){ setreadheadergdump=1; READHEADERGDUMP=1; }
+	  if(setwriteheadergdump==0){ setwriteheadergdump=1; WRITEHEADERGDUMP=1; }
 	}
 	else{
 	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
 	  // below is optional but requires above 2 to be read-in
-	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,100...\n");
+	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,100+x,1000+x...\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-gdumphead")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){ setreadheadergdump=1; sscanf(argv[++i],"%d",&READHEADERGDUMP); } // 0 or 1
+	  if(i+1<argc){ setwriteheadergdump=1; sscanf(argv[++i],"%d",&WRITEHEADERGDUMP); } // 0 or 1
+	}
+	else{
+	  fprintf(stderr,"-gdumphead <DOREADHEADERGDUMP> <DOWRITEHEADERGDUMP>\n");
+	  fprintf(stderr,"\t<DOREADHEADERGDUMP> or <DOWRITEHEADERGDUMP>: 0 or 1 for each\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-binaryinputgdump")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryinputgdump) ;
+	  setbinaryinputgdump=1;
+	}
+	else{
+	  fprintf(stderr,"-binaryinputgdump <binaryinputgdump>\n");
+	  fprintf(stderr,"\t<binaryinputgdump>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
 	}
       }
       if (usage || strcmp(argv[i],"-verbose")==0) {
@@ -1441,6 +1479,44 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-verbose <VERBOSITY>\n");
 	  fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-inFTYPEgdump")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    i++;
+	    if(strcmp(argv[i],"byte")==0){
+	      strcpy(inFTYPEgdump,"b"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"int")==0){
+	      strcpy(inFTYPEgdump,"i"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longint")==0){
+	      strcpy(inFTYPEgdump,"li"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longlongint")==0){
+	      strcpy(inFTYPEgdump,"lli"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"float")==0){
+	      strcpy(inFTYPEgdump,"f"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"double")==0){
+	      strcpy(inFTYPEgdump,"d"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longdouble")==0){
+	      strcpy(inFTYPEgdump,"ld"); setinFTYPEgdump=1;
+	    }
+	    else{
+	      fprintf(stderr,"Unknown inFTYPEgdump\n");
+	      exit(1);
+	    }
+
+	  }
+	}
+	else{
+	  fprintf(stderr,"-inFTYPEgdump <inFTYPEgdumpstring>\n");
+	  fprintf(stderr,"\t<inFTYPEgdumpstring>: byte, int, longint, longlongint, float, double, longdouble\n");
 	}
       }
       if (usage || strcmp(argv[i],"-debug")==0){
@@ -1671,7 +1747,8 @@ void interpret_commandlineresults_subpart1(void)
   //        \Delta_\thetahat \Omega vahat
   //        rho0 -u_t u^t A_\phi B^ihat v^ihat
   //        use gdump to get Connection that relates to radial gravity force that would balance magnetic force: Here need: T^x3_\nu , [ [rho0*1 + (u+p+b^2)/rho0] u^{t or phi} u_{t or phi} + ptot delta^lambda_kappa - b^lambda_kappa ] Gamma^kappa_{nu lambda} (24 things)
-
+  // 100+x : x number of 4-vectors
+  // 1000+x: fieldline input file and output x-type file
 
   // integrationtype:
   // [for \Upsilon, get normalization when doing next step of integrating]
@@ -1715,6 +1792,14 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=12; // Compute B_\\phi [conserved current]
       fprintf(stderr,"Computing B_\\phi\n");
     }
+    else if(DATATYPE==13){
+      fprintf(stderr,"Full Diagnostics for this data file (all except time derivative stuff)\n");
+      // force input and output grid types to be the same
+      outputvartype=13; // Full Diag
+      immediateoutput=1; // Immediate computation of many quantities without interpolation
+      vectorcomponent=-1; // indicates to output all components
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;
       fprintf(stderr,"Transforming %d contravariant 4-vectors to orthonormal basis\n",num4vectors);
@@ -1724,20 +1809,43 @@ void interpret_commandlineresults_subpart1(void)
       vectorcomponent=-1; // indicates to output all components
       // only valid for DATATYPE=1 type of data (i.e. not images)
     }
-    else if(DATATYPE>=1001 && DATATYPE<10000){
-      fprintf(stderr,"Full Diagnostics for this data file (all except time derivative stuff)\n");
+    else if(DATATYPE>=1000 && DATATYPE<9999){
+      fprintf(stderr,"Input fieldline type file\n");
       // force input and output grid types to be the same
-      outputvartype=13; // Full Diag
-      immediateoutput=1; // Immediate computation of many quantities without interpolation
-      vectorcomponent=-1; // indicates to output all components
-      // only valid for DATATYPE=1 type of data (i.e. not images)
+      int xdatatype=DATATYPE-1000;
+      if(xdatatype==0) outputvartype=0; // rho
+      else if(xdatatype==1) outputvartype=0; // u
+      else if(xdatatype>=2 && xdatatype<=5){
+	immediateoutput=0;
+	vectorcomponent=xdatatype-2;// v^x0
+	num4vectors=1;
+	outputvartype=1; 
+	fprintf(stderr,"Output v-vector=%d type file\n",vectorcomponent);
+      }
+      else if(xdatatype>=6 && xdatatype<=9){
+	immediateoutput=0;
+	vectorcomponent=xdatatype-6;// B^x0
+	num4vectors=1;
+	outputvartype=1; 
+	fprintf(stderr,"Output B-vector=%d type file\n",vectorcomponent);
+      }
+      else if(xdatatype==11){
+	outputvartype=11; // energy flux
+	vectorcomponent=1;
+	fprintf(stderr,"Output energy flux\n");
+      }
+      else if(xdatatype==12){
+	outputvartype=12; // Current
+	vectorcomponent=3;
+	fprintf(stderr,"Output current\n");
+      }
     }
     else{
       dualfprintf(fail_file,"No such DATATYPE=%d\n",DATATYPE);
     }
 
     // finally set to normal data type from now on using vectorcomponent or outputvartype
-    DATATYPE=1;
+    //    DATATYPE=1; // no, leave as original DATATYPE so know file input format as well
   }
   else{
     fprintf(stderr,"Processing scalar\n");

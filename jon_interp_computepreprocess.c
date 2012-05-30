@@ -48,9 +48,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
   // no need to recompute X,V if reading in gdump
   // assumes input data at CENT
-  //  coord(i,j,k,CENT,X);
+  // coord(i,j,k,CENT,X);
   // use bl_coord()
-  //bl_coord(X,V);
+  // bl_coord(X,V);
 
 
 
@@ -61,16 +61,46 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
-
-
     // convert coordinate basis vector compnents to single orthonormal basis component desired
-    fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+
+    // scan-in appropriate file type
+    if(DATATYPE<=10){
+      //      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+      readelement(binaryinput,inFTYPE,stdin,&vec[0]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[1]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[2]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[3]);
+    }
+    else if(DATATYPE>=1002 && DATATYPE<=1009){
+      // fieldline file type input
+      FTYPE val[20];
+      int coli;
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      
+      if(DATATYPE>=1002 && DATATYPE<=1005){
+	// now assign to vector
+	vec[0]=val[4];
+	vec[1]=val[4]*val[5];
+	vec[2]=val[4]*val[6];
+	vec[3]=val[4]*val[7];
+      }
+      else if(DATATYPE>=1006 && DATATYPE<=1009){
+	// now assign to vect
+	vec[0]=0.0;
+	vec[1]=val[8];
+	vec[2]=val[9];
+	vec[3]=val[10];
+      }
+      else dualfprintf(fail_file,"BAD1 DATATYPE=%d\n",DATATYPE);
+    }
+    else dualfprintf(fail_file,"BAD2 DATATYPE=%d\n",DATATYPE);
+      
     
     // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
     vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(stdout,vecortho[jj]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,vecortho[jj]);
     }
     else{ // else store (can only store 1 of them)
       fvar[0]=vecortho[vectorcomponent];
@@ -82,17 +112,43 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
-    // input uu0 vu1 vu2 vu3
-    fscanf(stdin,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
-    SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
-    // input B^1 B^2 B^3
-    vecB[0]=0.0;
-    fscanf(stdin,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
+    if(DATATYPE==11){
+      // input uu0 vu1 vu2 vu3
+      //fscanf(stdin,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
+      readelement(binaryinput,inFTYPE,stdin,&vecv[0]);
+      readelement(binaryinput,inFTYPE,stdin,&vecv[1]);
+      readelement(binaryinput,inFTYPE,stdin,&vecv[2]);
+      readelement(binaryinput,inFTYPE,stdin,&vecv[3]);
+      SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
+      // input B^1 B^2 B^3
+      vecB[0]=0.0;
+      //      fscanf(stdin,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
+      readelement(binaryinput,inFTYPE,stdin,&vecB[1]);
+      readelement(binaryinput,inFTYPE,stdin,&vecB[2]);
+      readelement(binaryinput,inFTYPE,stdin,&vecB[3]);
+    }
+    else if(DATATYPE==1011){
+      // fieldline file type input
+      FTYPE val[20];
+      int coli;
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      // now assign to vector
+      vecv[0]=val[4];
+      vecv[1]=val[4]*val[5];
+      vecv[2]=val[4]*val[6];
+      vecv[3]=val[4]*val[7];
+      vecB[0]=0.0;
+      vecB[1]=val[8];
+      vecB[2]=val[9];
+      vecB[3]=val[10];
+    }
+    else dualfprintf(fail_file,"BAD3 DATATYPE=%d\n",DATATYPE);
+
     // compute
     vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vecv, vecB, &fvar[0]);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(stdout,fvar[0]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,fvar[0]);
     }
     // already stored in fvar[0]
 
@@ -102,18 +158,38 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
-    // input
-    fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+    if(DATATYPE==12){
+      // input
+      //      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+      readelement(binaryinput,inFTYPE,stdin,&vec[0]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[1]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[2]);
+      readelement(binaryinput,inFTYPE,stdin,&vec[3]);
+    }
+    else if(DATATYPE==1012){
+      // fieldline file type input
+      FTYPE val[20];
+      int coli;
+      //      for(coli=0;coli<numcolumns;coli++) fscanf(stdin,SCANARG,&val[coli]);
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      // now assign to vector
+      vec[0]=0.0;
+      vec[1]=val[8];
+      vec[2]=val[9];
+      vec[3]=val[10];
+    }
+    else dualfprintf(fail_file,"BAD4 DATATYPE=%d\n",DATATYPE);
+    
     // compute
     vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vec, &fvar[0]);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(stdout,fvar[0]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,fvar[0]);
     }
     // already stored in fvar[0]
 
   }
-  else if(outputvartypelocal==13){
+  else if(outputvartypelocal==13){ // full diag output (GODMARK: NOT DONE)
 
     if(immediateoutput!=1){
       dualfprintf(fail_file,"outputvartype==%d should have immediateoutput==1\n",outputvartypelocal);
@@ -153,7 +229,18 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
   
 
     // scan-in FIELDLINE content
-    fscanf(stdin,SCANFIELDLINE,&pr[RHO],&pr[UU],&negud0,&muconst,&uu0,&pr[U1],&pr[U2],&pr[U3],&pr[B1],&pr[B2],&pr[B3]);
+    //    fscanf(stdin,SCANFIELDLINE,&pr[RHO],&pr[UU],&negud0,&muconst,&uu0,&pr[U1],&pr[U2],&pr[U3],&pr[B1],&pr[B2],&pr[B3]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[RHO]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[UU]);
+    readelement(binaryinput,inFTYPE,stdin,&negud0);
+    readelement(binaryinput,inFTYPE,stdin,&muconst);
+    readelement(binaryinput,inFTYPE,stdin,&uu0);
+    readelement(binaryinput,inFTYPE,stdin,&pr[U1]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[U2]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[U3]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[B1]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[B2]);
+    readelement(binaryinput,inFTYPE,stdin,&pr[B3]);
 
 
     ////////////////////
@@ -310,7 +397,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     ////////////////////
 
 
-    DLOOPA(jj) writeelement(stdout,vecortho[jj]);
+    DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,vecortho[jj]);
 
 
 
@@ -679,15 +766,31 @@ static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*
   int jj,kk,ll,pp;
 
   // see HARM's dump.c and SM's gammie.m grid3d
-  SLOOPA(jj) fscanf(in,"%d",&ti[jj]);
-  SLOOPA(jj) fscanf(in,SCANARG,&X[jj]);
-  SLOOPA(jj) fscanf(in,SCANARG,&V[jj]);
-  DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) fscanf(in,SCANARG,&conn[jj][kk][ll]);
-  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[GIND(jj,kk)]);
-  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[GIND(jj,kk)]);
-  fscanf(in,SCANARG,gdet); // gdet already pointer
-  DLOOPA(jj) fscanf(in,SCANARG,&ck[jj]);
-  DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&dxdxp[jj][kk]);
+  if(0){
+    SLOOPA(jj) fscanf(in,"%d",&ti[jj]);
+    SLOOPA(jj) fscanf(in,SCANARG,&X[jj]);
+    SLOOPA(jj) fscanf(in,SCANARG,&V[jj]);
+    DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) fscanf(in,SCANARG,&conn[jj][kk][ll]);
+    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[GIND(jj,kk)]);
+    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[GIND(jj,kk)]);
+    fscanf(in,SCANARG,gdet); // gdet already pointer
+    DLOOPA(jj) fscanf(in,SCANARG,&ck[jj]);
+    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&dxdxp[jj][kk]);
+  }
+  else{
+    FTYPE tiFTYPE[NDIM];
+    SLOOPA(jj){ readelement(binaryinputgdump,inFTYPEgdump,in,&tiFTYPE[jj]); ti[jj]=(int)tiFTYPE[jj];} // file stores gdump columns as FTYPE when binary format, and ok to read as float if text format.
+    
+    SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&X[jj]);
+    SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&V[jj]);
+    DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) readelement(binaryinputgdump,inFTYPEgdump,in,&conn[jj][kk][ll]);
+    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcon[GIND(jj,kk)]);
+    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcov[GIND(jj,kk)]);
+    readelement(binaryinputgdump,inFTYPEgdump,in,gdet); // gdet already pointer
+    DLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&ck[jj]);
+    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&dxdxp[jj][kk]);
+  }
+
 
 
   // for debug:

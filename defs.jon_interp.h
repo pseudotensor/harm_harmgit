@@ -5,9 +5,11 @@
 int doinginterpolation;
 int oldparse;
 char inFTYPE[4];
+char inFTYPEgdump[4];
 char outFTYPE[4];
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
+int binaryinputgdump;
 
 int calledranc;
 FTYPE NUMEPSILONPOW23;
@@ -102,6 +104,8 @@ int imagedata;
 // file stuff
 int READHEADER;
 int WRITEHEADER;
+int READHEADERGDUMP;
+int WRITEHEADERGDUMP;
 int jonheader;
 int getgdump;
 char gdumpfilename[200];
