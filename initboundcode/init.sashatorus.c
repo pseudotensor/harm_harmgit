@@ -123,7 +123,7 @@ int prepre_init_specific_init(void)
   t_transition = 1.;
   global_vpar0 = 0.;
   
-  dipole_alpha = 60 * M_PI / 180.;
+  dipole_alpha = 0 * M_PI / 180.;
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
