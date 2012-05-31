@@ -348,6 +348,11 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
     // -1 means no file number on filename
     gdump(-1);
+    // NOTEMARK: if want to, e.g., stop right after gdump, then have to add MPI barrier.  If forcing gdump output, then put 1|| in conditional above
+    // #if(USEMPI)
+    // MPI_Barrier(MPI_COMM_WORLD);
+    // #endif
+    // myexit(0); // stop after gdump.bin created
   }
 
 

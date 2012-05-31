@@ -30,10 +30,12 @@
 
 #define FLOAT2IMAGE1(x) ( (x<0.0) ? 0.0 : (x>255.0 ? 255.0 : x) )
 
-#define FLOAT2IMAGE(x) ((unsigned char)(round(FLOAT2IMAGE1(ftemp))))
+#define FLOAT2IMAGE(x) ((unsigned char)(round(FLOAT2IMAGE1(x))))
 
 #define sign(a) (copysign(1.0,a))
 
+// maximum number of columns for memory allocation of some things
+#define MAXCOLS 20
 
 #define MAXBC 2
 // whether to treat \phi direction as periodic (used when N3>1 and oldgridtype==1)
@@ -212,7 +214,7 @@
 #if(OLDERHEADER==1)
 #define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %d %d %d %d %d %d %d %d %d\n" // 30
 #define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
-#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
 #define PRINTHEADERSTDERR "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
 
@@ -220,7 +222,7 @@
 
 #define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
 
-#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
 
 #else //ELSE
@@ -228,7 +230,7 @@
 #define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %g  %g  %d %d %d %d %d %d %d %d %d\n" // 32
 #define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&EP3,&THETAROT,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
 
-#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 // 32 -- should be same as dump_header_general() in dump.c
 
 #define PRINTHEADERSTDERR "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
@@ -237,7 +239,7 @@
 
 #define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
 
-#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
 #endif
 
@@ -295,10 +297,10 @@ extern void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME);
 extern void copy_old2new(void);
 extern int compute_spatial_interpolation(void);
 
-extern void gaussian_filter(int filter,FTYPE sigma, int nt, int nx, int ny, int nz, unsigned char****oldimage,FTYPE****olddata);
+extern void gaussian_filter(int filter,FTYPE sigma, int nt, int nx, int ny, int nz, unsigned char*****oldimage,FTYPE*****olddata);
 
 
-extern void writeimage(char * name, unsigned char ****image,int nt, int nx, int ny, int nz);
+extern void writeimage(char * name, unsigned char *****image,int nt, int nx, int ny, int nz);
 
 extern void refine_data(void);
 

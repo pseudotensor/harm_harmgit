@@ -7,6 +7,7 @@ int oldparse;
 char inFTYPE[4];
 char inFTYPEgdump[4];
 char outFTYPE[4];
+int numoutputcols;
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
 int binaryinputgdump;
@@ -93,8 +94,8 @@ int outputvartype;
 // vector component: 0=scalar, 1,2,3 
 int vectorcomponent;
 int defaultvaluetype,EXTRAPOLATE;
-FTYPE totalmin,totalmax;
-FTYPE defaultvalue;
+FTYPE totalmin[MAXCOLS],totalmax[MAXCOLS];
+FTYPE defaultvalue[MAXCOLS];
 int didrefine;
 int filter;
 FTYPE sigma;
@@ -169,9 +170,9 @@ FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTOR
 // Note these below memory things are not affected by global.storage.h since created instead of as global arrays
 // So this code presumes [h][i][j][k] format always and is not optimized for arbitrary storage mapping
 // That is, matrix() is always (0,1,2,3) and access is always [h][i][j][k] associated with t(h), r(i), theta(j), phi(k)
-unsigned char ****oldimage,****oldimage0,****newimage;
-FTYPE ****olddata,****olddata0;
-FTYPE ****newdata;
+unsigned char *****oldimage,*****oldimage0,*****newimage;
+FTYPE *****olddata,*****olddata0;
+FTYPE *****newdata;
 
 
 

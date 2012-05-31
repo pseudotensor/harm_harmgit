@@ -33,19 +33,24 @@ extern FTYPE **matrix(long nrl, long nrh, long ncl, long nch);
 extern unsigned char **cmatrix(int nrl,int nrh,int ncl,int nch);
 extern unsigned char ***c3matrix(int a, int b, int c, int d, int e, int f);
 extern unsigned char ****c4matrix(int a, int b, int c, int d, int e, int f, int g, int h);
+extern unsigned char *****c5matrix(int a, int b, int c, int d, int e, int f, int g, int h, int i, int j);
 extern FTYPE **fmatrix(int nrl,int nrh,int ncl,int nch);
 extern FTYPE ***f3matrix(int nzl, int nzh, int nrl, int nrh, int ncl, int nch);
 extern FTYPE ****f4matrix(int nql, int nqh, int nzl, int nzh, int nrl, int nrh, int ncl, int nch);
+extern FTYPE *****f5matrix(int ncoll, int ncolh, int nql, int nqh, int nzl, int nzh, int nrl, int nrh, int ncl, int nch);
+
+extern void free_matrix(FTYPE **m, long nrl, long nrh, long ncl, long nch);
 
 extern void free_cmatrix(unsigned char **m, long nrl, long nrh, long ncl, long nch);
 extern void free_c3matrix(unsigned char ***m, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
 extern void free_c4matrix(unsigned char ****m, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
+extern void free_c5matrix(unsigned char *****m, long ncoll, long ncolh, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
+
 
 extern void free_fmatrix(FTYPE **m, long nrl, long nrh, long ncl, long nch);
-
 extern void free_f3matrix(FTYPE ***m, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
 extern void free_f4matrix(FTYPE ****m, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
-extern void free_matrix(FTYPE **m, long nrl, long nrh, long ncl, long nch);
+extern void free_f5matrix(FTYPE *****m, long ncoll, long ncolh, long nql, long nqh, long nzl, long nzh, long nrl, long nrh, long ncl, long nch);
 
 
 extern void qrdcmp(FTYPE **a, int n, FTYPE *c, FTYPE *d, int *sing);

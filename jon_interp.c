@@ -284,7 +284,8 @@ static void setup_zones(void)
 // read and process input data
 static void readdata_preprocessdata(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
+  int colini;
   unsigned char tempuc;
 
 
@@ -321,12 +322,12 @@ static void readdata_preprocessdata(void)
 
     /* make arrays for images */
     if(!DOUBLEWORK){
-      oldimage0 = c4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
-      newimage  = c4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+      oldimage0 = c5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
+      newimage  = c5matrix(0,0,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
     }
     else{
-      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
-      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
+      olddata0 = f5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[col][h][i][j][k]
+      newdata  = f5matrix(0,0,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[col][h][i][j][k]
     }
     /* read in old image */
     if(jonheader){
@@ -337,22 +338,23 @@ static void readdata_preprocessdata(void)
 
     
     // read order and write order same, so good image output
-    totalmin=BIG;
-    totalmax=-BIG;
+    coli=0; // only 1 column
+    totalmin[coli]=BIG;
+    totalmax[coli]=-BIG;
     for(h=0;h<oN0;h++){ // for files (reading-writing), time is slowest index
       for(k=0;k<oN3;k++){
 	for(j=0;j<oN2;j++){
 	  for(i=0;i<oN1;i++){
 	    if(DOUBLEWORK){
 	      fread(&tempuc, sizeof(unsigned char), 1, stdin) ;
-	      olddata0[h][i][j][k]=(FTYPE)tempuc;
-	      if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
-	      if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
+	      olddata0[coli][h][i][j][k]=(FTYPE)tempuc;
+	      if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+	      if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
 	    }
 	    else{
-	      fread(&oldimage0[h][i][j][k], sizeof(unsigned char), 1, stdin) ;
-	      if(oldimage0[h][i][j][k]>totalmax) totalmax=oldimage0[h][i][j][k];
-	      if(oldimage0[h][i][j][k]<totalmin) totalmin=oldimage0[h][i][j][k];
+	      fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, stdin) ;
+	      if(oldimage0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=oldimage0[coli][h][i][j][k];
+	      if(oldimage0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=oldimage0[coli][h][i][j][k];
 	    }
 	  }
 	}
@@ -371,88 +373,91 @@ static void readdata_preprocessdata(void)
     // set boundary conditions (as if scalars)
     //
     ///////////// 
-    if(BOUNDARYEXTRAP==1){
-      // lower and upper h
-      for(i=0;i<oN1;i++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(h=-numbc[0];h<0;h++) olddata0[h][i][j][k]=olddata0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) olddata0[h][i][j][k]=olddata0[oN0-1][i][j][k];
-	    }
-	    else{
-	      for(h=-numbc[0];h<0;h++) oldimage0[h][i][j][k]=oldimage0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) oldimage0[h][i][j][k]=oldimage0[oN0-1][i][j][k];
-	    }
-	  }
-	}
-      }
-      // lower and upper i
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(i=-numbc[1];i<0;i++) olddata0[h][i][j][k]=olddata0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) olddata0[h][i][j][k]=olddata0[h][oN1-1][j][k];
-	    }
-	    else{
-	      for(i=-numbc[1];i<0;i++) oldimage0[h][i][j][k]=oldimage0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) oldimage0[h][i][j][k]=oldimage0[h][oN1-1][j][k];
-	    }
-	  }
-	}
-      }
-      // lower and upper j
-      for(h=0;h<oN0;h++){
+    for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+      
+      if(BOUNDARYEXTRAP==1){
+	// lower and upper h
 	for(i=0;i<oN1;i++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(j=-numbc[2];j<0;j++) olddata0[h][i][j][k]=olddata0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) olddata0[h][i][j][k]=olddata0[h][i][oN2-1][k];
-	    }
-	    else{
-	      for(j=-numbc[2];j<0;j++) oldimage0[h][i][j][k]=oldimage0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) oldimage0[h][i][j][k]=oldimage0[h][i][oN2-1][k];
+	  for(j=0;j<oN2;j++){
+	    for(k=0;k<oN3;k++){
+	      if(DOUBLEWORK){
+		for(h=-numbc[0];h<0;h++) olddata0[coli][h][i][j][k]=olddata0[coli][0][i][j][k];
+		for(h=oN0;h<oN0+numbc[0];h++) olddata0[coli][h][i][j][k]=olddata0[coli][oN0-1][i][j][k];
+	      }
+	      else{
+		for(h=-numbc[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
+		for(h=oN0;h<oN0+numbc[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0-1][i][j][k];
+	      }
 	    }
 	  }
 	}
-      }
-      // lower and upper k
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
+	// lower and upper i
+	for(h=0;h<oN0;h++){
+	  for(j=0;j<oN2;j++){
+	    for(k=0;k<oN3;k++){
+	      if(DOUBLEWORK){
+		for(i=-numbc[1];i<0;i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][0][j][k];
+		for(i=oN1;i<oN1+numbc[1];i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][oN1-1][j][k];
+	      }
+	      else{
+		for(i=-numbc[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
+		for(i=oN1;i<oN1+numbc[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
+	      }
+	    }
+	  }
+	}
+	// lower and upper j
+	for(h=0;h<oN0;h++){
 	  for(i=0;i<oN1;i++){
-	    if(DOUBLEWORK){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][oN3-1];
-	    }
-	    else{
-	      for(k=-numbc[3];k<0;k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][oN3-1];
-	    }
-	  }
-	}
-      }
-    }
-
-
-    if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-      // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(DOUBLEWORK){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
-	    }
-	    else{
-	      for(k=-numbc[3];k<0;k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k-oN3];
+	    for(k=0;k<oN3;k++){
+	      if(DOUBLEWORK){
+		for(j=-numbc[2];j<0;j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][0][k];
+		for(j=oN2;j<oN2+numbc[2];j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][oN2-1][k];
+	      }
+	      else{
+		for(j=-numbc[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
+		for(j=oN2;j<oN2+numbc[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
+	      }
 	    }
 	  }
 	}
-      }
-    }// end if periodic
-    
+	// lower and upper k
+	for(h=0;h<oN0;h++){
+	  for(j=0;j<oN2;j++){
+	    for(i=0;i<oN1;i++){
+	      if(DOUBLEWORK){
+		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][0];
+		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][oN3-1];
+	      }
+	      else{
+		for(k=-numbc[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
+		for(k=oN3;k<oN3+numbc[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
+	      }
+	    }
+	  }
+	}
+      }// end if BOUNDARYEXTRAP=1
+      
+      
+      if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
+	// then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
+	for(h=0;h<oN0;h++){
+	  for(j=0;j<oN2;j++){
+	    for(i=0;i<oN1;i++){
+	      if(DOUBLEWORK){
+		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k+oN3];
+		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k-oN3];
+	      }
+	      else{
+		for(k=-numbc[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
+		for(k=oN3;k<oN3+numbc[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
+	      }
+	    }
+	  }
+	}
+      }// end if periodic
+
+    }// end over coli
   }
   ///////////////////////////////////
   //
@@ -469,19 +474,49 @@ static void readdata_preprocessdata(void)
     }
     else{ // case where need to process more than 1 grid point at a time (i.e. integrals or averages or interpolations or whatever)
 
-
-      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
-      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
-
+      olddata0 = f5matrix(0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[coli][h][i][j][k]
+      newdata  = f5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[coli][h][i][j][k]
 
 
-      totalmin=BIG;
-      totalmax=-BIG;
+
+      // initialize totalmin and totalmax
+      for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	totalmin[coli]=BIG;
+	totalmax[coli]=-BIG;
+      }
       // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
       int kprior,firsttimecompute=1;
-      LOOPOLDDATA{
+
+
+      // setup temp old column space
+      FTYPE *olddata0temp=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+      if(olddata0temp==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0temp\n");
+	exit(1);
+      }
+
+      // setup temp column space
+      FTYPE *olddata0tempnew=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
+      if(olddata0tempnew==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0tempnew\n");
+	exit(1);
+      }
+
+
+      LOOPOLDDATA{// no iteration over coli -- multiple input columns handled by outputvartype>0
 	if(outputvartype==0){ // only 1 thing in (e.g. for scalar image or data)
-	  readelement(binaryinput,inFTYPE,stdin,&olddata0[h][i][j][k]);
+	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,stdin,&olddata0temp[colini]);
+
+	  // if multiple input columns, choose 0th column, unless selecting part of field line file
+	  if(DATATYPE==1000){
+	    colini=0;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // rho_0
+	  }
+	  else if(DATATYPE==1001){
+	    colini=1;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // u_g
+	  }
+	  else{
+	    colini=0;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // first or only column
+	  }
 	}
 	else{// for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
 	  if(firsttimecompute==1){
@@ -491,14 +526,25 @@ static void readdata_preprocessdata(void)
 	    fprintf(stderr,"."); fflush(stderr);
 	    kprior=k;
 	  }
-	  compute_preprocess(outputvartype,gdumpin, &olddata0[h][i][j][k]);
+
+	  // get new columns
+	  compute_preprocess(outputvartype,gdumpin, olddata0temp);
+
+	  // copy from temp space
+	  for(coli=0;coli<numoutputcols;coli++)  olddata0[coli][h][i][j][k]=olddata0temp[coli];
+
 	}
-	if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
-	if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
+	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	  if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+	  if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
+	}
 	
 	firsttimecompute=0;
       }// end LOOPOLDDATA
-      
+
+      // free temp column space
+      free(olddata0temp);
+
 
       if(filter){
 	// filter not setup for periodic bc
@@ -511,60 +557,64 @@ static void readdata_preprocessdata(void)
       // set boundary conditions (as if scalars)
       //
       ///////////// 
-      if(BOUNDARYEXTRAP==1){
-	// lower and upper h
-	for(i=0;i<oN1;i++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      for(h=-numbc[0];h<0;h++) olddata0[h][i][j][k]=olddata0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) olddata0[h][i][j][k]=olddata0[oN0-1][i][j][k];
-	    }
-	  }
-	}
-	// lower and upper i
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      for(i=-numbc[1];i<0;i++) olddata0[h][i][j][k]=olddata0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) olddata0[h][i][j][k]=olddata0[h][oN1-1][j][k];
-	    }
-	  }
-	}
-	// lower and upper j
-	for(h=0;h<oN0;h++){
+      for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	
+	if(BOUNDARYEXTRAP==1){
+	  // lower and upper h
 	  for(i=0;i<oN1;i++){
-	    for(k=0;k<oN3;k++){
-	      for(j=-numbc[2];j<0;j++) olddata0[h][i][j][k]=olddata0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) olddata0[h][i][j][k]=olddata0[h][i][oN2-1][k];
+	    for(j=0;j<oN2;j++){
+	      for(k=0;k<oN3;k++){
+		for(h=-numbc[0];h<0;h++) olddata0[coli][h][i][j][k]=olddata0[coli][0][i][j][k];
+		for(h=oN0;h<oN0+numbc[0];h++) olddata0[coli][h][i][j][k]=olddata0[coli][oN0-1][i][j][k];
+	      }
 	    }
 	  }
-	}
-	// lower and upper k
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
+	  // lower and upper i
+	  for(h=0;h<oN0;h++){
+	    for(j=0;j<oN2;j++){
+	      for(k=0;k<oN3;k++){
+		for(i=-numbc[1];i<0;i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][0][j][k];
+		for(i=oN1;i<oN1+numbc[1];i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][oN1-1][j][k];
+	      }
+	    }
+	  }
+	  // lower and upper j
+	  for(h=0;h<oN0;h++){
 	    for(i=0;i<oN1;i++){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][oN3-1];
+	      for(k=0;k<oN3;k++){
+		for(j=-numbc[2];j<0;j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][0][k];
+		for(j=oN2;j<oN2+numbc[2];j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][oN2-1][k];
+	      }
 	    }
 	  }
-	}
-      }
-
-      // override and always have boundary cells if periodic in x3
-      if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-	// then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(i=0;i<oN1;i++){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
+	  // lower and upper k
+	  for(h=0;h<oN0;h++){
+	    for(j=0;j<oN2;j++){
+	      for(i=0;i<oN1;i++){
+		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][0];
+		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][oN3-1];
+	      }
 	    }
 	  }
-	}
-      }// end if PERIODIC
-    }
+	}// end if BOUNDARYEXTRAP==1
+	
+	
+	// override and always have boundary cells if periodic in x3
+	if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
+	  // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
+	  for(h=0;h<oN0;h++){
+	    for(j=0;j<oN2;j++){
+	      for(i=0;i<oN1;i++){
+		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k+oN3];
+		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k-oN3];
+	      }
+	    }
+	  }
+	}// end if PERIODIC
+      }// end over coli
+    }// end else
 
-  }
+  }// end else
 
 
 
@@ -577,26 +627,46 @@ static void readdata_preprocessdata(void)
     ///////////////
 
     if(defaultvaluetype==0){
-      if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue=totalmin;
-      else defaultvalue=0.0; // vector-like things otherwise around 0
+      if(DATATYPE==14){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=0.0; // vx
+	defaultvalue[3]=0.0; // vy
+	defaultvalue[4]=0.0; // vz
+	defaultvalue[5]=0.0; // Bx
+	defaultvalue[6]=0.0; // By
+	defaultvalue[7]=0.0; // Bz
+	defaultvalue[8]=0.0; // FEMrad
+	defaultvalue[9]=0.0; // Bphi
+      }
+      else{
+	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
+	  else defaultvalue[coli]=0.0; // vector-like things otherwise around 0
+	}
+      }
     }
     else if(defaultvaluetype==1){
-      defaultvalue=totalmin;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=totalmin[coli];
     }
     else if(defaultvaluetype==2){
-      defaultvalue=totalmax;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=totalmax[coli];
     }
     else if(defaultvaluetype==3){
-      defaultvalue=0.0;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0;
     }
     else if(defaultvaluetype==4){
-      defaultvalue=1E35; // for V5D missing data
-      fprintf(stderr,"Using V5D missing data for defaultvalue=%g\n",defaultvalue);
+      for(coli=0;coli<numoutputcols;coli++){
+	defaultvalue[coli]=1E35; // for V5D missing data
+	fprintf(stderr,"Using V5D missing data for defaultvalue[coli=%d]=%g\n",coli,defaultvalue[coli]);
+      }
     }
 
 
     if(VERBOSITY>=1){
-      fprintf(stderr,"defaultvalue=%21.15g\n",defaultvalue);
+      for(coli=0;coli<numoutputcols;coli++) fprintf(stderr,"defaultvalue[coli=%d]=%21.15g\n",coli,defaultvalue[coli]);
     }
 
   }
@@ -748,7 +818,7 @@ void post_coordsetup(void)
 // output newgrid data to file
 static void output2file_postinterpolation(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
   unsigned char uctemp;
   FTYPE ftemp;
 
@@ -757,17 +827,22 @@ static void output2file_postinterpolation(void)
   fprintf(stderr,"Output to file\n"); fflush(stderr);
 
 
+  ///////
+  // COLMARK: When finally writing the file, we place columns as fastest index, i next, j next, k next, and time next
+  ///////
+
+#define OUTPUTLOOP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++) for(i=0;i<nN1;i++) for(coli=0;coli<numoutputcols;coli++)
 
   // in principle could output in different order if wanted
   if(DATATYPE==0){
-    for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-      fwrite(&newimage[h][i][j][k], sizeof(unsigned char), 1, stdout) ;
+    OUTPUTLOOP{
+      fwrite(&newimage[coli][h][i][j][k], sizeof(unsigned char), 1, stdout) ;
     }
   }
   else{
     if(imagedata==0){
-      for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	ftemp=newdata[h][i][j][k];
+      OUTPUTLOOP{
+	ftemp=newdata[coli][h][i][j][k];
 	//	if(ftemp<0.0) ftemp=0.0;
 	//if(ftemp>255.0) ftemp=255.0;
 	//uctemp=(unsigned char)ftemp;
@@ -776,43 +851,35 @@ static void output2file_postinterpolation(void)
       }
     }
     else{
-      if(sizeof(FTYPE)==sizeof(double)){
-	for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-		//fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[h][i][j][k]); fflush(stderr);
-		//fprintf(stdout,"%22.16g\n",newdata[h][i][j][k]) ;
-		writeelement(binaryoutput,outFTYPE,stdout,newdata[h][i][j][k]) ;
-	      }
-      }
-      else if(sizeof(FTYPE)==sizeof(float)){
-       	for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-		//  fprintf(stdout,"%15.7g\n",newdata[h][i][j][k]) ;
-		writeelement(binaryoutput,outFTYPE,stdout,newdata[h][i][j][k]) ;
-	      }
+      OUTPUTLOOP{
+	writeelement(binaryoutput,outFTYPE,stdout,newdata[coli][h][i][j][k]) ;
       }
     }
   }
+
 }
 
 
 
 
 // IMAGE WRITE FUNCTION
-void writeimage(char * name, unsigned char ****image, int nt, int nx, int ny, int nz)
+void writeimage(char * name, unsigned char *****image, int nt, int nx, int ny, int nz)
 {
   FILE * out;
-  int h,i,j,k;
+  int coli,h,i,j,k;
 
   if((out=fopen(name,"wb"))==NULL){
     fprintf(stderr,"Cannot open %s\n",name);
     exit(1);
   }
 
+  coli=0;
   for(h=0;h<nt;h++){
     for(k=0;k<nz;k++){
       for(j=0;j<ny;j++){
 	for(i=0;i<nx;i++){
-	  fwrite(&image[h][i][j][k], sizeof(unsigned char), 1, out) ;
-	  //      fprintf(out, "%c",(unsigned char)((int)image[h][i][j][k]));
+	  fwrite(&image[coli][h][i][j][k], sizeof(unsigned char), 1, out) ;
+	  //      fprintf(out, "%c",(unsigned char)((int)image[coli][h][i][j][k]));
 	}
       }
     }
@@ -1233,6 +1300,7 @@ void parse_commandline(int argc, char *argv[])
 	  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
 	  "\t13=Full Diag\n"
+	  "\t14=Input fieldline file and output rho, ug, vortho123, Borth123, FEMradial, Bphi all in 1 file and interpolate all at once using more memory\n"
 	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
 	  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
 	  );
@@ -1446,7 +1514,7 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
 	  // below is optional but requires above 2 to be read-in
-	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,100+x,1000+x...\n");
+	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,100+x,1000+x...\n");
 	}
       }
       if (usage || strcmp(argv[i],"-gdumphead")==0) {
@@ -1469,16 +1537,6 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-binaryinputgdump <binaryinputgdump>\n");
 	  fprintf(stderr,"\t<binaryinputgdump>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
-	}
-      }
-      if (usage || strcmp(argv[i],"-verbose")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&VERBOSITY) ;
-	}
-	else{
-	  fprintf(stderr,"-verbose <VERBOSITY>\n");
-	  fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
 	}
       }
       if (usage || strcmp(argv[i],"-inFTYPEgdump")==0) {
@@ -1517,6 +1575,16 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-inFTYPEgdump <inFTYPEgdumpstring>\n");
 	  fprintf(stderr,"\t<inFTYPEgdumpstring>: byte, int, longint, longlongint, float, double, longdouble\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-verbose")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&VERBOSITY) ;
+	}
+	else{
+	  fprintf(stderr,"-verbose <VERBOSITY>\n");
+	  fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
 	}
       }
       if (usage || strcmp(argv[i],"-debug")==0){
@@ -1747,6 +1815,7 @@ void interpret_commandlineresults_subpart1(void)
   //        \Delta_\thetahat \Omega vahat
   //        rho0 -u_t u^t A_\phi B^ihat v^ihat
   //        use gdump to get Connection that relates to radial gravity force that would balance magnetic force: Here need: T^x3_\nu , [ [rho0*1 + (u+p+b^2)/rho0] u^{t or phi} u_{t or phi} + ptot delta^lambda_kappa - b^lambda_kappa ] Gamma^kappa_{nu lambda} (24 things)
+  // 14 : input field line and output things
   // 100+x : x number of 4-vectors
   // 1000+x: fieldline input file and output x-type file
 
@@ -1769,6 +1838,7 @@ void interpret_commandlineresults_subpart1(void)
     num4vectors=1; // default
     outputvartype=0; // scalar
     vectorcomponent=0; // scalar
+    numoutputcols=1; // normally old style is 1 output column since was interpolating 1 thing at a time.
 
 
     // assume always want to transform vectors correctly
@@ -1798,6 +1868,14 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=13; // Full Diag
       immediateoutput=1; // Immediate computation of many quantities without interpolation
       vectorcomponent=-1; // indicates to output all components
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else if(DATATYPE==14){
+      fprintf(stderr,"input field line file and output things\n");
+      outputvartype=14;
+      immediateoutput=0; // Immediate computation of many quantities without interpolation
+      vectorcomponent=-1; // indicates to output all components
+      numoutputcols=10; // create, interpolate, and output all 10 things at once
       // only valid for DATATYPE=1 type of data (i.e. not images)
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
@@ -1853,7 +1931,16 @@ void interpret_commandlineresults_subpart1(void)
     outputvartype=0; // scalar
     vectorcomponent=0; // scalar
   }
+
+
+  if(numoutputcols>MAXCOLS){
+    fprintf(stderr,"Not enough MAXCOLS=%d for numoutputcols=%d\n",MAXCOLS,numoutputcols);
+    exit(1);
+  }
+
+
 }
+
 
 
 
@@ -2091,9 +2178,16 @@ void defaultoptions(void)
   outputvartype=0; // scalar
   vectorcomponent=0; // scalar
 
+  READHEADERGDUMP=1;
+  WRITEHEADERGDUMP=1;
+  binaryinputgdump=1;
+  strcpy(inFTYPEgdump,"d");
+
   DEBUGINTERP=0;
   SIMPLEDEBUGINTERP=0;
   VERBOSITY=1; // default to moderate verbosity
   
+
+
 
 }

@@ -402,7 +402,88 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
 
   }
+  else if(outputvartypelocal==14){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
+    FTYPE val[20];
+    int colini;
+    int coli;
+    int concovtype;
 
+    // first get gdump data (only once per call to compute_preprocess() !!)
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+
+
+    // fieldline file type input
+    for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,stdin,&val[colini]); // numcolumns is input number of columns
+      
+    // now assign to vector
+    vecv[0]=val[4];
+    vecv[1]=val[5];
+    vecv[2]=val[6];
+    vecv[3]=val[7];
+
+    SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
+
+    vecB[0]=0.0;
+    vecB[1]=val[8];
+    vecB[2]=val[9];
+    vecB[3]=val[10];
+
+    //    SLOOPA(jj) dualfprintf(fail_file,"jj=%d vecv=%g vecB=%g\n",jj,vecv[jj],vecB[jj]);
+
+    // convert coordinate basis vector compnents to single orthonormal basis component desired
+
+    // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
+
+    // do vecv
+    FTYPE vecvortho[NDIM];
+    concovtype=1; // contravariant
+    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecv, vecvortho);
+
+    // do vecB
+    FTYPE vecBortho[NDIM];
+    concovtype=1; // contravariant
+    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecB, vecBortho);
+
+    int vectorcomponentlocal;
+
+    // compute FEMrad
+    FTYPE FEMrad;
+    vectorcomponentlocal=1; // radial component
+    vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, &FEMrad);
+
+    // compute B_{\phi}
+    vectorcomponentlocal=3; // \phi component
+    FTYPE Bphi;
+    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
+   
+
+    // assign to coli type with numoutputcols data values
+    fvar[0]=val[0]; // rho0
+    fvar[1]=val[1]; // ug
+    fvar[2]=vecvortho[1]; // vx
+    fvar[3]=vecvortho[2]; // vy
+    fvar[4]=vecvortho[3]; // vz
+    fvar[5]=vecBortho[1]; // Bx
+    fvar[6]=vecBortho[2]; // By
+    fvar[7]=vecBortho[3]; // Bz
+    fvar[8]=FEMrad; // FEMrad = radial energy flux per unit sin(\theta)
+    fvar[9]=Bphi; // B_{\phi} == poloidal current
+
+
+    //for(coli=0;coli<numoutputcols;coli++) dualfprintf(fail_file,"coli=%d fvar=%g\n",coli,fvar[coli]);
+
+
+    if(immediateoutput==1){ // then immediately write to output
+      for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,stdout,fvar[coli]);
+    }
+    else{
+      // already stored in fvar
+    }
+  }
+  else{
+    fprintf(stderr,"No such outputvartypelocal=%d\n",outputvartypelocal);
+    exit(1);
+  }
 
 
 
@@ -410,7 +491,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
   if(immediateoutput==1){
     // output return after entire row is done
-    fprintf(stdout,"\n") ;
+    if(binaryoutput==0) fprintf(stdout,"\n") ;
   }
 
 
@@ -505,6 +586,10 @@ static void vec2vecortho(int concovtype, int ti[],  FTYPE X[],  FTYPE V[],  FTYP
     DLOOP(jj,kk){
       tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
     }
+  }
+  else{
+    dualfprintf(fail_file,"No such concovtype=%d\n",concovtype);
+    myexit(1);
   }
   DLOOPA(jj) finalvec[jj]=tempcomp[jj];
 

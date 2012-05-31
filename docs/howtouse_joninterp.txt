@@ -3,18 +3,29 @@
 
 #
 # 1) make program
+
 cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/
+# setup for reduced code set
+rm -rf init.c init.h
+touch init.h
+
 
 # 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)
 # Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.
 
-# 3) make program itself
+# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)
+
 make superclean ; make prepiinterp ; make iinterp &> make.log
+
 # ensure no errors during compile or link (need lapack!)
 
-4) cp iinterp ~/bin/iinterp.orange.thickdisk7
+##############
+4) copy program to your path
 
-# 5) do interpolation (directly read-in binary fieldline file)
+cp iinterp ~/bin/iinterp.orange.thickdisk7
+
+###############
+# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
 dumpnum=5437
 boxnx=20
@@ -28,6 +39,80 @@ IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/
 # ensure coordparms.dat exists here -- required to read in harm internal grid parameters
 mkdir $IDUMPDIR
 #
+whichoutput=14
+#
+~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.bin
+
+
+# This results in a file with 1 line text header, line break, then data
+# The binary data block of *floats* (4 bytes) is ordered as:
+# fastest index: column
+# next index: i
+# next index: j
+# next index: k
+# next index: h (time, but only single time here)
+
+# the columns are ordered as:
+# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi
+# the latter 2 are the radial energy flux and the poloidal enclosed current density.
+# We can add other things, like the actual local current density, which would show where dissipation could be occuring.
+
+
+# can check how looks in text by doing:
+
+cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/
+make superclean ; make prepbin2txt ; make bin2txt
+# check makefile and setup for ki-rh39/orange/etc.
+cp bin2txt ~/bin/bin2txt.orange
+cd $IDUMPDIR
+bin2txt.orange 1 2 0 -1 3 20 20 20 1 fieldline5437.cart.bin fieldline5437.cart.txt f 10
+less -S fieldline5437.cart.txt
+
+# should look reasonable.
+
+
+
+
+
+
+
+#
+################################### DONE!
+
+
+
+
+
+
+
+
+
+
+
+
+###########
+# NOTES:
+
+# note that files needed by iinterp and bin2txt are only:
+
+CFILES1="jon_interp.c jon_interp_computepreprocess.c jon_interp_filter.c jon_interp_interpolationitself.c jon_interp_mnewt.c jon_interp_newt.c nrutil2.c coord.c nrutil.c ludcmp.c lubksb.c lnsrch.c fdjac.c fmin.c broydn.c qrdcmp.c rsolv.c qrupdt.c rotate.c ranc.c bcucof.c bcuint.c metric.tools.c mpi_fprintfs.c gaussj.c tetrad.c"
+CFILES2="tensor.c smcalc.c generatenprs.c bin2txt.c initbase.defaultnprlists.c"
+
+CFILES="$CFILES1 $CFILES2"
+
+# create grep -v command:
+GREPCOMMAND=""
+for fil in $CFILES ; do GREPCOMMAND=$GREPCOMMAND"|grep -v $fil " ; done
+
+
+ls -art *.c <PASTE echo $GREPCOMMAND here>
+
+
+
+
+#######################################
+# OLDER THINGS -- don't use -- just use above if reading in field lines
+
 # interpolate to get rest-mass density
 whichoutput=1000
 ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.rho.bin
@@ -70,11 +155,6 @@ whichoutput=1012
 ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bphi.bin
 
 # merge interpolation results
-
-
-
-
-
 
 
 
