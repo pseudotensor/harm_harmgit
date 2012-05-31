@@ -417,7 +417,7 @@ struct Ccoordparams {
 #define NSBC_ASSUME_DIPOLE_FIELD 1  //assumes dipolar field on the neutron star to simplify BC setting
 
 #undef DORESCALEINTERPFLUXCTSTAG
-#define DORESCALEINTERPFLUXCTSTAG 0  //use gdet rescaling for pstag interpolation instead of the standard rescale
+#define DORESCALEINTERPFLUXCTSTAG 0  //=0 means use gdet rescaling for pstag interpolation instead of the standard rescale
 
 #undef DOPOLEDEATH
 #define DOPOLEDEATH 0
