@@ -330,6 +330,10 @@ FTYPE global_fracphi;   //phi-extent measured in units of 2*PI, i.e. 0.25 means 
 //DISK INFO
 /////////////////////
 FTYPE global_toruskappafinal;
+/////////////////////
+//NEUTRON STAR INFO
+/////////////////////
+FTYPE global_dipole_alpha, global_OmegaNS;
 
 int numbercpu[ 3+1 ];
 

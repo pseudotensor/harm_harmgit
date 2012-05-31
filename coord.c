@@ -491,6 +491,9 @@ void set_coord_parms_deps(int defcoordlocal)
       fracphi = global_fracphi;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
     }
     
+    OmegaNS = global_OmegaNS;
+    dipole_alpha = global_dipole_alpha;
+    
   }
   else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {   // AKMARK
     /////////////////////
