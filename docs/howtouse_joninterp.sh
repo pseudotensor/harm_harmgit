@@ -17,31 +17,71 @@ touch init.h
 
 make superclean ; make prepiinterp ; make iinterp &> make.log
 
+# also make bin2txt program:
+
+make superclean ; make prepbin2txt ; make bin2txt
+# check makefile and setup for ki-rh39/orange/etc.
+
 # ensure no errors during compile or link (need lapack!)
 
 ##############
-4) copy program to your path
+4) copy programs to your path
 
 cp iinterp ~/bin/iinterp.orange.thickdisk7
+cp bin2txt ~/bin/bin2txt.orange
 
 ###############
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
+# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump
 dumpnum=5437
-boxnx=20
-boxny=20
-boxnz=20
-boxx=100
-boxy=100
-boxz=100
+dumpnumm1=$(($dumpnum-1))
+if [ -e "dumps/fieldline$dumpnumm1.bin" ]
+then
+    dumpnumm1=$(($dumpnum-1))
+else
+    dumpnumm1=$(($dumpnum))
+fi
+dumpnump1=$(($dumpnum+1))
+if [ -e "dumps/fieldline$dumpnump1.bin" ]
+then
+    dumpnump1=$(($dumpnum+1))
+else
+    dumpnump1=$(($dumpnum))
+fi	
+#
+# get times of dumps
+time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`
+timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`
+timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`
+#
+# get original resolution
+nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`
+ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`
+nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`
+numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`
+R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`
+Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`
+Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`
+hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`
+defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
+#
+boxnx=100
+boxny=100
+boxnz=100
+boxx=10
+boxy=10
+boxz=10
 cd /lustre/ki/pfs/jmckinne/thickdisk7/
 IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/
 # ensure coordparms.dat exists here -- required to read in harm internal grid parameters
 mkdir $IDUMPDIR
 #
-whichoutput=14
 #
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.bin
+#
+whichoutput=14
+~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox $time0 $time0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $IDUMPDIR/fieldline$dumpnum.cart.bin
+
 
 
 # This results in a file with 1 line text header, line break, then data
@@ -60,13 +100,12 @@ whichoutput=14
 
 # can check how looks in text by doing:
 
-cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/
-make superclean ; make prepbin2txt ; make bin2txt
-# check makefile and setup for ki-rh39/orange/etc.
-cp bin2txt ~/bin/bin2txt.orange
-cd $IDUMPDIR
-bin2txt.orange 1 2 0 -1 3 20 20 20 1 fieldline5437.cart.bin fieldline5437.cart.txt f 10
-less -S fieldline5437.cart.txt
+numoutputcols=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $30}'`
+newnx=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $2}'`
+newny=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $3}'`
+newnz=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $4}'`
+bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $IDUMPDIR/fieldline$dumpnum.cart.bin $IDUMPDIR/fieldline$dumpnum.cart.txt f $numoutputcols
+less -S $IDUMPDIR/fieldline$dumpnum.cart.txt
 
 # should look reasonable.
 
@@ -87,6 +126,30 @@ less -S fieldline5437.cart.txt
 
 
 
+
+############
+# bad way to create 3-time file (too slow for read-in to seek all over the place)
+
+
+# another beginning of slow way:
+# setup new compact 3-time file read-in as 1-time file
+bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnum.bin $IDUMPDIR/fieldline$dumpnum.txt f $numcolumns
+bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnumm1.bin $IDUMPDIR/fieldline$dumpnumm1.txt f $numcolumns
+bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnump1.bin $IDUMPDIR/fieldline$dumpnump1.txt f $numcolumns
+#... using "join" or "pr" or similar -- but too slow to create text files and pointless.
+
+
+
+
+# setup new 3-time file:
+if [ 1 -eq 0 ]
+then
+    head -1 ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.bin.head
+    tail -n +2 ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.bin.data
+    tail -n +2 ./dumps/fieldline$dumpnumm1.bin > $IDUMPDIR/fieldline$dumpnumm1.bin.data
+    tail -n +2 ./dumps/fieldline$dumpnump1.bin > $IDUMPDIR/fieldline$dumpnump1.bin.data
+    cat $IDUMPDIR/fieldline$dumpnum.bin.head $IDUMPDIR/fieldline$dumpnumm1.bin.data $IDUMPDIR/fieldline$dumpnum.bin.data $IDUMPDIR/fieldline$dumpnump1.bin.data > $IDUMPDIR/fieldline$dumpnum.bin.3time
+fi
 
 
 

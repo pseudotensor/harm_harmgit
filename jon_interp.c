@@ -16,6 +16,7 @@ static void interp_init(void);
 static void setup_zones(void);
 static void interp_readcommandlineargs(int argc, char *argv[]);
 static void readdata_preprocessdata(void);
+static void gdump_tostartofdata(FILE *gdumpin);
 static void input_header(void);
 static void output_header(void);
 static void output2file_postinterpolation(void);
@@ -33,7 +34,7 @@ static void defaultoptions(void);
 
 static void post_coordsetup(void);
 
-
+static void print_out_example_usage(void);
 
 
 
@@ -72,6 +73,7 @@ int main(int argc, char *argv[])
     // flush outputs
     fflush(stderr);
     fflush(stdout);
+    if(outfile!=NULL) fflush(outfile);
     return(0);
   }
 
@@ -114,6 +116,7 @@ int main(int argc, char *argv[])
   // flush outputs
   fflush(stderr);
   fflush(stdout);
+  if(outfile!=NULL) fflush(outfile);
   return(0);
 }
 
@@ -279,6 +282,15 @@ static void setup_zones(void)
 }
 
 
+static void gdump_tostartofdata(FILE* gdumpin)
+{
+
+  rewind(gdumpin);
+  // skip first line assuming it's a header line if READHEADERGDUMP=1
+  if(READHEADERGDUMP) while(fgetc(gdumpin)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  
+
+}
 
 
 // read and process input data
@@ -296,8 +308,7 @@ static void readdata_preprocessdata(void)
       exit(1);
     }
     else{
-      // skip first line assuming it's a header line if READHEADERGDUMP=1
-      if(READHEADERGDUMP) while(fgetc(gdumpin)!='\n'); // go past end of line
+      gdump_tostartofdata(gdumpin);
     }
   }
 
@@ -332,7 +343,7 @@ static void readdata_preprocessdata(void)
     /* read in old image */
     if(jonheader){
       // skip 4 lines
-      for(i=1;i<=4;i++) while(fgetc(stdin)!='\n');
+      for(i=1;i<=4;i++) while(fgetc(infile)!='\n');
     }
     fprintf(stderr,"reading image\n"); fflush(stderr);
 
@@ -346,13 +357,13 @@ static void readdata_preprocessdata(void)
 	for(j=0;j<oN2;j++){
 	  for(i=0;i<oN1;i++){
 	    if(DOUBLEWORK){
-	      fread(&tempuc, sizeof(unsigned char), 1, stdin) ;
+	      fread(&tempuc, sizeof(unsigned char), 1, infile) ;
 	      olddata0[coli][h][i][j][k]=(FTYPE)tempuc;
 	      if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
 	      if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
 	    }
 	    else{
-	      fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, stdin) ;
+	      fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, infile) ;
 	      if(oldimage0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=oldimage0[coli][h][i][j][k];
 	      if(oldimage0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=oldimage0[coli][h][i][j][k];
 	    }
@@ -502,10 +513,14 @@ static void readdata_preprocessdata(void)
 	exit(1);
       }
 
-
+      int hprior=-1000;
+      int seth=1;
       LOOPOLDDATA{// no iteration over coli -- multiple input columns handled by outputvartype>0
-	if(outputvartype==0){ // only 1 thing in (e.g. for scalar image or data)
-	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,stdin,&olddata0temp[colini]);
+
+	
+	// only 1 thing in (e.g. for scalar image or data)
+	if(outputvartype==0){
+	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temp[colini]);
 
 	  // if multiple input columns, choose 0th column, unless selecting part of field line file
 	  if(DATATYPE==1000){
@@ -519,12 +534,30 @@ static void readdata_preprocessdata(void)
 	  }
 	}
 	else{// for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
-	  if(firsttimecompute==1){
-	    fprintf(stderr,"compute_preprocess(oN3=%d dots to appear):",oN3); fflush(stderr);
+
+	  int dotstoappear;
+	  dotstoappear=oN0*oN3;
+#if(0)
+	  if(oN0==3 && DATATYPE==14){ // then assume have 3 times, so don't fully process other times, just using for temporal derivatives
+	    dotstoappear=oN3;
+	    if(h!=seth) continue; // skip if not h==seth
+	    
+	  }
+#endif
+
+
+ 	  if(firsttimecompute==1){
+	    fprintf(stderr,"compute_preprocess(%d dots to appear):",dotstoappear); fflush(stderr);
 	  }
 	  if(k!=kprior){
 	    fprintf(stderr,"."); fflush(stderr);
 	    kprior=k;
+	  }
+
+	  // reset gdump if changed time -- assumes gdump same for each time so don't have to create multi-time gdump
+	  if(h!=hprior && oN0!=1){
+	    gdump_tostartofdata(gdumpin);
+	    hprior=h;
 	  }
 
 	  // get new columns
@@ -541,6 +574,17 @@ static void readdata_preprocessdata(void)
 	
 	firsttimecompute=0;
       }// end LOOPOLDDATA
+
+      
+#if(0)
+      // now duplicate result to other times if doing special 3-time input
+      if(oN0==3 && DATATYPE==14){
+	LOOPOLDDATA{
+	  if(h!=seth) olddata0[coli][h][i][j][k]=olddata0[coli][seth][i][j][k];
+	}
+      }
+#endif
+
 
       // free temp column space
       free(olddata0temp);
@@ -718,7 +762,22 @@ void writeelement(int binaryoutputlocal, char* outFTYPElocal, FILE *output, FTYP
 }
 
 
-
+// read single element from file in text or binary format and any element C type
+long sizeelement(char* inFTYPElocal)
+{
+  
+  if     ( strcmp(inFTYPElocal,"b")==0   ){ int dumi;             return(sizeof(dumi));       }
+  else if( strcmp(inFTYPElocal,"i")==0   ){ int dumi;             return(sizeof(dumi));       }
+  else if( strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       return(sizeof(dumli));      }
+  else if( strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; return(sizeof(dumlli));     }
+  else if( strcmp(inFTYPElocal,"f")==0   ){ float dumf;           return(sizeof(dumf));       }
+  else if( strcmp(inFTYPElocal,"d")==0   ){ double dumd;          return(sizeof(dumd));       }
+  else if( strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    return(sizeof(dumld));      }
+  else{
+    fprintf(stderr,"No such inFTYPE=%s\n",inFTYPElocal);
+    exit(1);
+  }
+}
 
 
 
@@ -735,7 +794,7 @@ static void input_header(void)
     // assumes header really has ALL this info (could tell user how many entries on header with wc and compare against desired.
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
-    fscanf(stdin, SCANHEADER,SCANHEADERARGS);
+    fscanf(infile, SCANHEADER,SCANHEADERARGS);
 
 
     // set other things not set by header, but not really used right now
@@ -750,7 +809,7 @@ static void input_header(void)
 	fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
       }
     }
-    while(fgetc(stdin)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
+    while(fgetc(infile)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
   }
 
   // print header from file
@@ -785,7 +844,7 @@ static void output_header(void)
     if(DATATYPE>=1){
       // print out a header
       ftemp=0.0;
-      fprintf(stdout, PRINTHEADERSTDOUT,PRINTHEADERSTDOUTARGS);
+      fprintf(outfile, PRINTHEADERSTDOUT,PRINTHEADERSTDOUTARGS);
     }
   }
 
@@ -836,7 +895,7 @@ static void output2file_postinterpolation(void)
   // in principle could output in different order if wanted
   if(DATATYPE==0){
     OUTPUTLOOP{
-      fwrite(&newimage[coli][h][i][j][k], sizeof(unsigned char), 1, stdout) ;
+      fwrite(&newimage[coli][h][i][j][k], sizeof(unsigned char), 1, outfile) ;
     }
   }
   else{
@@ -847,12 +906,12 @@ static void output2file_postinterpolation(void)
 	//if(ftemp>255.0) ftemp=255.0;
 	//uctemp=(unsigned char)ftemp;
 	uctemp = FLOAT2IMAGE(ftemp);
-	fwrite(&uctemp, sizeof(unsigned char), 1, stdout) ;
+	fwrite(&uctemp, sizeof(unsigned char), 1, outfile) ;
       }
     }
     else{
       OUTPUTLOOP{
-	writeelement(binaryoutput,outFTYPE,stdout,newdata[coli][h][i][j][k]) ;
+	writeelement(binaryoutput,outFTYPE,outfile,newdata[coli][h][i][j][k]) ;
       }
     }
   }
@@ -1044,6 +1103,8 @@ void parse_commandline(int argc, char *argv[])
   int argcheckstart=1;
   int setbinaryinput=0,setbinaryoutput=0;
   int setbinaryinputgdump=0;
+  int setinfile=0,setoutfile=0;
+  int setinfilem1=0,setinfilep1=0;
   int setinFTYPE=0,setoutFTYPE=0;
   int setinFTYPEgdump=0;
   int setreadheader=0,setwriteheader=0;
@@ -1082,14 +1143,15 @@ void parse_commandline(int argc, char *argv[])
       }
     }
 
+
+
+
+
     if(usage){
       fprintf(stderr,"Usage (argc=%d): \n\n",argc);
 
       fprintf(stderr,"iinterp <args> < inputfile2stdin > outputfile2stdout\n");
-
-      fprintf(stderr,"E.g. Normal Data Interpolation:\n iinterp -dtype 1 -itype 1 -head 1 1 -oN 1 128 64 128 -grids 1 0 -nN 1 128 128 1 -ibox 0 0 -40 40 -40 40 0 0 -dofull2pi 1 -defaultvaluetype 0 < infile > outfile \n\n");
-      fprintf(stderr,"E.g. Full Diag:\n iinterp -binaryinput 1 -dtype 1001 -head 1 0 -dofull2pi 1 -gdump gdump < infile > outfile \n\n");
-      fprintf(stderr,"E.g. Old args:\n iinterp -oldargs <alloldargs or nothing for usage information> \n\n");
+      fprintf(stderr,"iinterp <args> -infile inputfile -outfile outputfile\n");
 
       fprintf(stderr,"<args> is any of the below:\n\n");
       fprintf(stderr,"-usage (or no args): Gives Usage Information and exit (don't actually do anything with rest of args)\n");
@@ -1109,6 +1171,19 @@ void parse_commandline(int argc, char *argv[])
       if(argc>1 && strcmp(argv[i],"-usage")==0){
 	goodarg++;
       }
+
+      
+
+
+
+
+
+
+
+
+
+
+
 
       //////////////////
       //
@@ -1136,6 +1211,16 @@ void parse_commandline(int argc, char *argv[])
 	}
 	else{
 	  fprintf(stderr,"-version -ver --version --ver -v --v : Gives Version Information\n");
+	}
+      }  
+      if(usage || strcmp(argv[i],"-examples")==0) {
+	if(usage==0){
+	  goodarg++;
+	  print_out_example_usage();
+	  exit(0);
+	}
+	else{
+	  fprintf(stderr,"-examples : Gives Example Usage Forms/Points\n");
 	}
       }  
       if(usage || strcmp(argv[i],"-compile")==0) {
@@ -1181,6 +1266,72 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-binaryoutput <binaryoutput>\n");
 	  fprintf(stderr,"\t<binaryoutput>: 0=text 1=binary\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infile")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infile=fopen(argv[++i],"rt");
+	  }
+	  setinfile=1;
+	  // set defaults
+	  if(setinfile==0){
+	    setoutfile=1;
+	    outfile=stdout;
+	  }
+	}
+	else{
+	  fprintf(stderr,"-infile <inputfilename>\n");
+	  fprintf(stderr,"\t<inputfilename>: Name of input file (used instead of stdin)\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infilem1")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infilem1=fopen(argv[++i],"rt");
+	  }
+	  setinfilem1=1;
+	}
+	else{
+	  fprintf(stderr,"-infilem1 <inputfilenamem1>\n");
+	  fprintf(stderr,"\t<inputfilenamem1>: Name of input file for m1 of 3-time DATATYPE==14 case\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infilep1")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infilep1=fopen(argv[++i],"rt");
+	  }
+	  setinfilep1=1;
+	}
+	else{
+	  fprintf(stderr,"-infilep1 <inputfilenamep1>\n");
+	  fprintf(stderr,"\t<inputfilenamep1>: Name of input file for p1 of 3-time DATATYPE==14 case\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-outfile")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) outfile=fopen(argv[++i],"wb"); // b for binary not relevant for unix
+	    else outfile=fopen(argv[++i],"wt");
+	  }
+	  setoutfile=1;
+	  // set defaults
+	  if(setoutfile==0){
+	    setinfile=1;
+	    infile=stdin;
+	  }
+	}
+	else{
+	  fprintf(stderr,"-outfile <outputfilename>\n");
+	  fprintf(stderr,"\t<outputfilename>: Name of output file (used instead of stdout)\n");
 	}
       }
       if (usage || strcmp(argv[i],"-inFTYPE")==0) {
@@ -1657,6 +1808,140 @@ void parse_commandline(int argc, char *argv[])
 
 
 
+
+
+
+
+void print_out_example_usage(void)
+{
+
+
+  fprintf(stderr,"E.g. Normal Data Interpolation:\n iinterp -dtype 1 -itype 1 -head 1 1 -oN 1 128 64 128 -grids 1 0 -nN 1 128 128 1 -ibox 0 0 -40 40 -40 40 0 0 -dofull2pi 1 -defaultvaluetype 0 < infile > outfile \n\n");
+  fprintf(stderr,"E.g. Full Diag:\n iinterp -binaryinput 1 -dtype 1001 -head 1 0 -dofull2pi 1 -gdump gdump < infile > outfile \n\n");
+  fprintf(stderr,"E.g. Old args:\n iinterp -oldargs <alloldargs or nothing for usage information> \n\n");
+
+
+
+  fprintf(stderr,
+	  "##################\n"
+	  "# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
+	  "\n"
+	  "#\n"
+	  "# 1) make program\n"
+	  "\n"
+	  "cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
+	  "# setup for reduced code set\n"
+	  "rm -rf init.c init.h\n"
+	  "touch init.h\n"
+	  "\n"
+	  "\n"
+	  "# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
+	  "# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
+	  "\n"
+	  "# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
+	  "\n"
+	  "make superclean ; make prepiinterp ; make iinterp &> make.log\n"
+	  "\n"
+	  "# also make bin2txt program:\n"
+	  "\n"
+	  "make superclean ; make prepbin2txt ; make bin2txt\n"
+	  "# check makefile and setup for ki-rh39/orange/etc.\n"
+	  "\n"
+	  "# ensure no errors during compile or link (need lapack!)\n"
+	  "\n"
+	  "##############\n"
+	  "4) copy programs to your path\n"
+	  "\n"
+	  "cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
+	  "cp bin2txt ~/bin/bin2txt.orange\n"
+	  "\n"
+	  "###############\n"
+	  "# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
+	  "\n"
+	  "# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
+	  "dumpnum=5437\n"
+	  "dumpnumm1=$(($dumpnum-1))\n"
+	  "if [ -e \"dumps/fieldline$dumpnumm1.bin\" ]\n"
+	  "then\n"
+	  "    dumpnumm1=$(($dumpnum-1))\n"
+	  "else\n"
+	  "    dumpnumm1=$(($dumpnum))\n"
+	  "fi\n"
+	  "dumpnump1=$(($dumpnum+1))\n"
+	  "if [ -e \"dumps/fieldline$dumpnump1.bin\" ]\n"
+	  "then\n"
+	  "    dumpnump1=$(($dumpnum+1))\n"
+	  "else\n"
+	  "    dumpnump1=$(($dumpnum))\n"
+	  "fi	\n"
+	  "#\n"
+	  "# get times of dumps\n"
+	  "time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
+	  "timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
+	  "timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
+	  "#\n"
+	  "# get original resolution\n"
+	  "nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
+	  "ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
+	  "nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
+	  "numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
+	  "R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
+	  "Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
+	  "Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
+	  "hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
+	  "defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
+	  "#\n"
+	  "boxnx=100\n"
+	  "boxny=100\n"
+	  "boxnz=100\n"
+	  "boxx=10\n"
+	  "boxy=10\n"
+	  "boxz=10\n"
+	  "cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
+	  "IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
+	  "# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
+	  "mkdir $IDUMPDIR\n"
+	  "#\n"
+	  "#\n"
+	  "#\n"
+	  "whichoutput=14\n"
+	  "~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox $time0 $time0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $IDUMPDIR/fieldline$dumpnum.cart.bin\n"
+	  "\n"
+	  "\n"
+	  "\n"
+	  "# This results in a file with 1 line text header, line break, then data\n"
+	  "# The binary data block of *floats* (4 bytes) is ordered as:\n"
+	  "# fastest index: column\n"
+	  "# next index: i\n"
+	  "# next index: j\n"
+	  "# next index: k\n"
+	  "# next index: h (time, but only single time here)\n"
+	  "\n"
+	  "# the columns are ordered as:\n"
+	  "# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi\n"
+	  "# the latter 2 are the radial energy flux and the poloidal enclosed current density.\n"
+	  "# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
+	  "\n"
+	  "\n"
+	  "# can check how looks in text by doing:\n"
+	  "\n"
+	  "numoutputcols=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $30}'`\n"
+	  "newnx=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $2}'`\n"
+	  "newny=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $3}'`\n"
+	  "newnz=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $4}'`\n"
+	  "bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $IDUMPDIR/fieldline$dumpnum.cart.bin $IDUMPDIR/fieldline$dumpnum.cart.txt f $numoutputcols\n"
+	  "less -S $IDUMPDIR/fieldline$dumpnum.cart.txt\n"
+	  "\n"
+	  "# should look reasonable.\n"
+	  );
+
+  fflush(stderr);
+}
+
+
+
+
+
 // Parse command line options as a string of input variables
 void old_parse_commandline(int argc, char *argv[])
 {
@@ -2118,6 +2403,11 @@ void defaultoptions(void)
 
   // These are dumb defaults.  Bit smarter defaults set when doing new parsing, so user doesn't have to give all options always.
 
+  infile=stdin;
+  outfile=stdout;
+
+  infilem1=NULL;
+  infilep1=NULL;
 
   DATATYPE=1; binaryinput=0; strcpy(inFTYPE,"d");
 

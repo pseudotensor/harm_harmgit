@@ -65,17 +65,17 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
     // scan-in appropriate file type
     if(DATATYPE<=10){
-      //      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
-      readelement(binaryinput,inFTYPE,stdin,&vec[0]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[1]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[2]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[3]);
+      //      fscanf(infile,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+      readelement(binaryinput,inFTYPE,infile,&vec[0]);
+      readelement(binaryinput,inFTYPE,infile,&vec[1]);
+      readelement(binaryinput,inFTYPE,infile,&vec[2]);
+      readelement(binaryinput,inFTYPE,infile,&vec[3]);
     }
     else if(DATATYPE>=1002 && DATATYPE<=1009){
       // fieldline file type input
       FTYPE val[20];
       int coli;
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
       
       if(DATATYPE>=1002 && DATATYPE<=1005){
 	// now assign to vector
@@ -100,7 +100,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,vecortho[jj]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,vecortho[jj]);
     }
     else{ // else store (can only store 1 of them)
       fvar[0]=vecortho[vectorcomponent];
@@ -114,24 +114,24 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
     if(DATATYPE==11){
       // input uu0 vu1 vu2 vu3
-      //fscanf(stdin,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
-      readelement(binaryinput,inFTYPE,stdin,&vecv[0]);
-      readelement(binaryinput,inFTYPE,stdin,&vecv[1]);
-      readelement(binaryinput,inFTYPE,stdin,&vecv[2]);
-      readelement(binaryinput,inFTYPE,stdin,&vecv[3]);
+      //fscanf(infile,SCANARG4VEC,&vecv[0],&vecv[1],&vecv[2],&vecv[3]) ; // vu^i=uu^i/uu0 (i.e. not uu^i as maybe expected)
+      readelement(binaryinput,inFTYPE,infile,&vecv[0]);
+      readelement(binaryinput,inFTYPE,infile,&vecv[1]);
+      readelement(binaryinput,inFTYPE,infile,&vecv[2]);
+      readelement(binaryinput,inFTYPE,infile,&vecv[3]);
       SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
       // input B^1 B^2 B^3
       vecB[0]=0.0;
-      //      fscanf(stdin,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
-      readelement(binaryinput,inFTYPE,stdin,&vecB[1]);
-      readelement(binaryinput,inFTYPE,stdin,&vecB[2]);
-      readelement(binaryinput,inFTYPE,stdin,&vecB[3]);
+      //      fscanf(infile,SCANARGVEC,&vecB[1],&vecB[2],&vecB[3]) ;
+      readelement(binaryinput,inFTYPE,infile,&vecB[1]);
+      readelement(binaryinput,inFTYPE,infile,&vecB[2]);
+      readelement(binaryinput,inFTYPE,infile,&vecB[3]);
     }
     else if(DATATYPE==1011){
       // fieldline file type input
       FTYPE val[20];
       int coli;
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
       // now assign to vector
       vecv[0]=val[4];
       vecv[1]=val[4]*val[5];
@@ -148,7 +148,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vecv, vecB, &fvar[0]);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,fvar[0]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,fvar[0]);
     }
     // already stored in fvar[0]
 
@@ -160,18 +160,18 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
     if(DATATYPE==12){
       // input
-      //      fscanf(stdin,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
-      readelement(binaryinput,inFTYPE,stdin,&vec[0]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[1]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[2]);
-      readelement(binaryinput,inFTYPE,stdin,&vec[3]);
+      //      fscanf(infile,SCANARG4VEC,&vec[0],&vec[1],&vec[2],&vec[3]) ;
+      readelement(binaryinput,inFTYPE,infile,&vec[0]);
+      readelement(binaryinput,inFTYPE,infile,&vec[1]);
+      readelement(binaryinput,inFTYPE,infile,&vec[2]);
+      readelement(binaryinput,inFTYPE,infile,&vec[3]);
     }
     else if(DATATYPE==1012){
       // fieldline file type input
       FTYPE val[20];
       int coli;
-      //      for(coli=0;coli<numcolumns;coli++) fscanf(stdin,SCANARG,&val[coli]);
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,stdin,&val[coli]); // fscanf(stdin,SCANARG,&val[coli]);
+      //      for(coli=0;coli<numcolumns;coli++) fscanf(infile,SCANARG,&val[coli]);
+      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
       // now assign to vector
       vec[0]=0.0;
       vec[1]=val[8];
@@ -184,7 +184,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vec, &fvar[0]);
     
     if(immediateoutput==1){ // then immediately write to output
-      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,fvar[0]);
+      DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,fvar[0]);
     }
     // already stored in fvar[0]
 
@@ -229,18 +229,18 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
   
 
     // scan-in FIELDLINE content
-    //    fscanf(stdin,SCANFIELDLINE,&pr[RHO],&pr[UU],&negud0,&muconst,&uu0,&pr[U1],&pr[U2],&pr[U3],&pr[B1],&pr[B2],&pr[B3]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[RHO]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[UU]);
-    readelement(binaryinput,inFTYPE,stdin,&negud0);
-    readelement(binaryinput,inFTYPE,stdin,&muconst);
-    readelement(binaryinput,inFTYPE,stdin,&uu0);
-    readelement(binaryinput,inFTYPE,stdin,&pr[U1]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[U2]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[U3]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[B1]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[B2]);
-    readelement(binaryinput,inFTYPE,stdin,&pr[B3]);
+    //    fscanf(infile,SCANFIELDLINE,&pr[RHO],&pr[UU],&negud0,&muconst,&uu0,&pr[U1],&pr[U2],&pr[U3],&pr[B1],&pr[B2],&pr[B3]);
+    readelement(binaryinput,inFTYPE,infile,&pr[RHO]);
+    readelement(binaryinput,inFTYPE,infile,&pr[UU]);
+    readelement(binaryinput,inFTYPE,infile,&negud0);
+    readelement(binaryinput,inFTYPE,infile,&muconst);
+    readelement(binaryinput,inFTYPE,infile,&uu0);
+    readelement(binaryinput,inFTYPE,infile,&pr[U1]);
+    readelement(binaryinput,inFTYPE,infile,&pr[U2]);
+    readelement(binaryinput,inFTYPE,infile,&pr[U3]);
+    readelement(binaryinput,inFTYPE,infile,&pr[B1]);
+    readelement(binaryinput,inFTYPE,infile,&pr[B2]);
+    readelement(binaryinput,inFTYPE,infile,&pr[B3]);
 
 
     ////////////////////
@@ -397,7 +397,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     ////////////////////
 
 
-    DLOOPA(jj) writeelement(binaryoutput,outFTYPE,stdout,vecortho[jj]);
+    DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,vecortho[jj]);
 
 
 
@@ -408,27 +408,96 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     int coli;
     int concovtype;
 
+    FTYPE vecvm1[NDIM],vecBm1[NDIM];
+    FTYPE vecvp1[NDIM],vecBp1[NDIM];
+    // 3-time read-in (without processing the other times)
+    FTYPE valm1[20];
+    FTYPE valp1[20];
+
+
     // first get gdump data (only once per call to compute_preprocess() !!)
     read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
 
 
+    int doing3time=0;
+#if(0)
     // fieldline file type input
-    for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,stdin,&val[colini]); // numcolumns is input number of columns
+    if(oN0==3){
+      doing3time=1;
       
-    // now assign to vector
-    vecv[0]=val[4];
-    vecv[1]=val[5];
-    vecv[2]=val[6];
-    vecv[3]=val[7];
+      // get m1
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&valm1[colini]);
 
-    SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
+      // get position in file just after first read-in of file
+      fpos_t pos1;
+      fgetpos(infile,&pos1);
 
-    vecB[0]=0.0;
-    vecB[1]=val[8];
-    vecB[2]=val[9];
-    vecB[3]=val[10];
+      // go to next time block
+      fseek(infile,oN1*oN2*oN3*numcolumns*sizeelement(inFTYPE),SEEK_CUR);
 
+      // get normal middle time value
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]);
+
+      // get position in file just after first read-in of file
+      fpos_t pos2;
+      fgetpos(infile,&pos2);
+
+      // go to next time block
+      fseek(infile,oN1*oN2*oN3*numcolumns*sizeelement(inFTYPE),SEEK_CUR);
+
+      // get p1
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&valp1[colini]);
+
+      // finally go back to just after original m1 read-in so can start over again for next t,i,j,k
+      fsetpos(infile,&pos1);
+
+
+    }
+    else{
+      // normal read-in
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
+    }
+#else
+    if(infilem1!=NULL && infilep1!=NULL){
+      doing3time=1;
+
+      // get m1
+      for(colini=0;colini<numcolumns;colini++){
+	readelement(binaryinput,inFTYPE,infilem1,&valm1[colini]);
+	// get normal middle time value
+	readelement(binaryinput,inFTYPE,infile,&val[colini]);
+	// get p1
+	readelement(binaryinput,inFTYPE,infilep1,&valp1[colini]);
+      }
+    
+    }
+    else{
+      // normal read-in
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
+    }
+
+
+#endif
+
+    if(doing3time==1){
+      // m1
+      vecvm1[0]=valm1[4]; vecvm1[1]=valm1[5]; vecvm1[2]=valm1[6]; vecvm1[3]=valm1[7]; SLOOPA(jj) vecvm1[jj]*=vecvm1[0];
+      vecBm1[0]=0.0;    vecBm1[1]=valm1[8]; vecBm1[2]=valm1[9]; vecBm1[3]=valm1[10];
+      
+      // p1
+      vecvp1[0]=valp1[4]; vecvp1[1]=valp1[5]; vecvp1[2]=valp1[6]; vecvp1[3]=valp1[7]; SLOOPA(jj) vecvp1[jj]*=vecvp1[0];
+      vecBp1[0]=0.0;    vecBp1[1]=valp1[8]; vecBp1[2]=valp1[9]; vecBp1[3]=valp1[10];
+    }
+
+
+    // now do normal assign to vector (for middle time if doing3time==1)
+    vecv[0]=val[4]; vecv[1]=val[5]; vecv[2]=val[6]; vecv[3]=val[7]; SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
+    vecB[0]=0.0;    vecB[1]=val[8]; vecB[2]=val[9]; vecB[3]=val[10];
+
+
+    // DEBUG:
     //    SLOOPA(jj) dualfprintf(fail_file,"jj=%d vecv=%g vecB=%g\n",jj,vecv[jj],vecB[jj]);
+
 
     // convert coordinate basis vector compnents to single orthonormal basis component desired
 
@@ -474,7 +543,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
 
     if(immediateoutput==1){ // then immediately write to output
-      for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,stdout,fvar[coli]);
+      for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,outfile,fvar[coli]);
     }
     else{
       // already stored in fvar
@@ -491,7 +560,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
 
   if(immediateoutput==1){
     // output return after entire row is done
-    if(binaryoutput==0) fprintf(stdout,"\n") ;
+    if(binaryoutput==0) fprintf(outfile,"\n") ;
   }
 
 

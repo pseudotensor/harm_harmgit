@@ -11,6 +11,12 @@ int numoutputcols;
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
 int binaryinputgdump;
+FILE *infile;
+FILE *infilem1;
+FILE *infilep1;
+FILE *outfile;
+
+int compact3time;
 
 int calledranc;
 FTYPE NUMEPSILONPOW23;

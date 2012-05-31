@@ -317,5 +317,4 @@ extern void interp_bl_coord(FTYPE *X, FTYPE *V);
 extern void readelement(int binaryinputlocal, char* inFTYPElocal, FILE *input, FTYPE *datain);
 extern void writeelement(int binaryoutputlocal, char* outFTYPElocal, FILE *output, FTYPE dataout);
 
-
-
+extern long sizeelement(char* inFTYPElocal);
