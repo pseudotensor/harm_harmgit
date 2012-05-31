@@ -115,7 +115,7 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 1;   // AKMARK: do full phi
+  dofull2pi = 0;   // AKMARK: do full phi
   
   global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
@@ -124,7 +124,7 @@ int prepre_init_specific_init(void)
   t_transition = 1.;
   global_vpar0 = 0.;
   
-  dipole_alpha = 0 * M_PI / 180.;
+  global_dipole_alpha = 0 * M_PI / 180.;
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
