@@ -61,7 +61,8 @@ static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DH
 FTYPE torusrmax;   // AKMARK: torus pressure max
 FTYPE t_transition;
 FTYPE global_vpar0;
-FTYPE dipole_alpha;
+FTYPE global_dipole_alpha;
+FTYPE global_OmegaNS;
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 FTYPE is_inside_torus_freeze_region( FTYPE r, FTYPE th );
@@ -281,7 +282,8 @@ int init_grid(void)
   a = 0.;
 #elif(WHICHPROBLEM==NSTAR)
   //flat metric so use this instead of Omega_F
-  a = 0.2;  //Omega_F = a; phi-velocity: v^\phi = a
+  a = 0.0;  //Omega_F = a; phi-velocity: v^\phi = a
+  global_OmegaNS = 0.2;
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
@@ -797,7 +799,7 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
 
 FTYPE get_ns_alpha()
 {
-  return(dipole_alpha);
+  return(global_dipole_alpha);
 }
 //returns enclosed flux between ph1, ph2 and th1, th2
 //flux = \int_phi1^phi2 A_phi dphi|_th1^th2 - \int_th1^th2 A_th dth|_ph1^ph2
@@ -1731,5 +1733,28 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   user1_adjust_fluxctstag_emfs(fluxtime, prim, Nvec, fluxvec);
 
 }
+
+FTYPE get_omegaf_phys(FTYPE t, FTYPE dt, FTYPE steppart)
+{
+  extern FTYPE t_transition;
+  FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart );
+  
+  return( global_OmegaNS * get_omegaf_prefactor( t_transition, t, dt, steppart ) );
+  
+}
+
+FTYPE get_omegaf_code(FTYPE t, FTYPE dt, FTYPE steppart)
+{
+  extern FTYPE t_transition;
+  FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart );
+  FTYPE dxdxp[NDIM][NDIM];
+  
+  //assume dxdxp[3][3] is independent of location
+  dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
+  
+  return( get_omegaf_phys( t, dt, steppart ) / dxdxp[3][3] );
+  
+}
+
 
 

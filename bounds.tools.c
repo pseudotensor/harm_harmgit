@@ -155,7 +155,7 @@ int bound_x1dn_nssurface(
 		       )
 {
   int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
-  FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart);
+  FTYPE get_omegaf_code(FTYPE t, FTYPE dt, FTYPE steppart);
   extern FTYPE global_vpar0;
   
   
@@ -288,7 +288,7 @@ int bound_x1dn_nssurface(
 	      }
 	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 	      //set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
-	      set_vel_stataxi( ptrgeom[pl], get_omegaf(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
+	      set_vel_stataxi( ptrgeom[pl], get_omegaf_code(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
 	      //now that velocity is set, can compute bsq
 	      if( bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1 ) { 
 		FAILSTATEMENT("bounds.tools.c:bound_x1nd_nssurface()", "bsq_calc()", 2);
@@ -3453,7 +3453,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    bl_coord_ijk(i, j+1, k, CORN3, V_th2);
 	    //km1 = km1mac(k);
 	    //km1 = max(km1, INFULL3);
-	    omega = a; //get_omegaf(time,dt,steppart);
+	    omega = get_omegaf_phys(t, dt, steppart);
 	    aflux = vpotns_flux(V_ph1[1],V_th1[2],V_th2[2],V_ph1[3]-omega*t,V_ph2[3]-omega*t);
 	    nflux = ptrgeom->gdet * GLOBALMACP0A1(pstagglobal,i,j,k,B1)*dx[2]*dx[3]; //MACP0A1(prim,i,j,k,B1)
 	    dflux = dfluxns(V_ph1[1], omega, V_ph1[3], V_th1[2], V_th2[2], t, dt);
@@ -3510,19 +3510,6 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
   
 }
 
-
-FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart)
-{
-  extern FTYPE t_transition;
-  FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart );
-  FTYPE dxdxp[NDIM][NDIM];
-
-  //assume dxdxp[3][3] is independent of location
-  dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
-  
-  return( a * get_omegaf_prefactor( t_transition, t, dt, steppart ) / dxdxp[3][3] );
-  
-}
 
 FTYPE get_omegaf_prefactor( FTYPE t_transition, FTYPE t, FTYPE dt, FTYPE steppart )
 {

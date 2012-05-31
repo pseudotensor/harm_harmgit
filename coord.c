@@ -64,6 +64,8 @@ static FTYPE x20;
 extern FTYPE torusrmax;
 static FTYPE torusrmax_loc;
 #endif
+static FTYPE OmegaNS;
+static FTYPE dipole_alpha;
 
 // for defcoord=JET6COORDS
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
@@ -664,8 +666,8 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SNSCOORDS ) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
-		npow,fracphi,npow2,cpow2,rbr,x1br,x10,x20);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+		npow,fracphi,npow2,cpow2,rbr,x1br,x10,x20,OmegaNS,dipole_alpha);
       }
       else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend);
@@ -770,6 +772,7 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == SNSCOORDS ) {
 	fscanf(in,HEADER8IN,&npow,&fracphi,&npow2,&cpow2,&rbr,&x1br,&x10,&x20);
+	fscanf(in, HEADER2IN,&OmegaNS,&dipole_alpha);
       }
       else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
@@ -884,6 +887,8 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x10, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x20, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&OmegaNS, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&dipole_alpha, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == SJETCOORDS || defcoordlocal == SJETCOORDS_BOB) {
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);

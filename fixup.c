@@ -707,7 +707,7 @@ FTYPE f_trans(FTYPE r)
   //fraction of Rlc over which to carry out Komissarov's swindle
   FTYPE fracRlc = 0.7;
   //radius of light cylinder
-  FTYPE Rlc = 1.0 / a;
+  FTYPE Rlc = 1.0 / get_omegaf_phys(t, dt, steppart);
   
   rs = fracRlc * Rlc;
   
@@ -743,7 +743,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   
   //only do so on final step
   if(finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
-    omegastar = a;
+    omegastar = get_omegaf_phys(t, dt, steppart);
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     //inverse timescale over which motion is damped, let's try 10% of period

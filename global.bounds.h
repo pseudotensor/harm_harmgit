@@ -171,5 +171,6 @@ extern void adjust_fluxctstag_vpot(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][
 
 extern void check_spc_singularities_user(void);
 
-extern FTYPE get_omegaf(FTYPE t, FTYPE dt, FTYPE steppart);
+extern FTYPE get_omegaf_code(FTYPE t, FTYPE dt, FTYPE steppart);
+extern FTYPE get_omegaf_phys(FTYPE t, FTYPE dt, FTYPE steppart);
 
