@@ -3461,7 +3461,7 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    //d(gdet*B1)/dt = -dF3(B1)/dx3
 	    //dflux = d(gdet*B1*dx2*dx3) = -dF3(B1)*dx2*dt  
 	    //F3(B1) = dflux / (dx2*dt) <-- make sure sign correct
-#if(1)
+#if(0)
 	    if( 1 || j == 1 && k == 1 ){
 		dualfprintf(fail_file, "t = %21.15g, nstep = %ld, sp = %d, fluxvec[3][%d][%d][%d][B1] = %g, emf = %g, aflux = %g, nflux = %g\n",
 			    t, nstep, steppart, i, j, k, MACP1A1(fluxvec,3,i,j,k,B1), dflux / (dx[2] * dt),
@@ -3471,6 +3471,10 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    }
 #endif
 	    MACP1A1(fluxvec,3,i,j,k,B1) = dflux / (dx[2] * dt);   // rotation, E_2 = (-[v x B])_2 = - v^3 B^1
+#if(N1>1)
+	    //adjust "symmetric" flux F1[B3] = - F3[B1] (see fluxvpot.c:set_emfflux())
+	    MACP1A1(fluxvec,1,i,j,k,B3) = -MACP1A1(fluxvec,3,i,j,k,B1);
+#endif
 	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 	  }
 #endif
