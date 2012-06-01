@@ -741,7 +741,8 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
   pr[U1]=global_vpar0; //set up non-zero radial velocity
   
   *whichvel=VEL3;
-  *whichcoord=SPCMINKMETRIC; //PRIMECOORDS;
+  //*whichcoord=SPCMINKMETRIC; //PRIMECOORDS;
+  *whichcoord=MCOORD; //PRIMECOORDS;
   return(0);
   
 }
