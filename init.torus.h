@@ -738,9 +738,11 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
     PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
   }
   
-  pr[U1]=global_vpar0; //set up non-zero radial velocity
+  //pr[U1]=global_vpar0; //set up non-zero radial velocity
   
-  *whichvel=VEL3;
+  set_vpar(global_vpar0, ptrgeom, pr);
+  
+  *whichvel=WHICHVEL;
   //*whichcoord=SPCMINKMETRIC; //PRIMECOORDS;
   *whichcoord=MCOORD; //PRIMECOORDS;
   return(0);
