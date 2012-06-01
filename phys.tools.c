@@ -2963,6 +2963,7 @@ int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
   return(0);
 }
 
+//assumes pr contains WHICHVEL velocity
 int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
 {
   FTYPE Bccov[NDIM],Bccon[NPR];
