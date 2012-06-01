@@ -327,7 +327,7 @@ int init_grid(void)
   rin = Risco;
 #endif
 
-#else
+#endif
 
 #if(WHICHPROBLEM==NSTAR)
   rin = 1.;
@@ -335,7 +335,6 @@ int init_grid(void)
 
   Rhor = rin;
   Risco = rin;
-#endif
  
   // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
