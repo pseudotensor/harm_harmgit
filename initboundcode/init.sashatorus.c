@@ -750,6 +750,7 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
   //vpot = 1 - fabs(cos(th));  //split-monopole
   //vpot = 1 - cos(th);        //monopole
   vpot = sin(th)*sin(th)/r;        //dipole
+  return(vpot);
 #elif(1)
   //tilted dipole
   FTYPE dxdxp[NDIM][NDIM];
@@ -797,7 +798,6 @@ FTYPE vpotns_normalized( int i, int j, int k, int loc, FTYPE *V, int l )
     return(NSFIELDVAL*Ad3);
   }
 #endif
-  return(vpot);
 }
 
 FTYPE get_ns_alpha()
