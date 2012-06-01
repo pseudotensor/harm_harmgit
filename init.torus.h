@@ -718,6 +718,8 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
   int pl;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE vpar;
+  FTYPE ucon[NDIM];
   
   
   coord(ti, tj, tk, CENT, X);
@@ -740,7 +742,17 @@ int init_dsandvels_nstar(int *whichvel, int*whichcoord, int ti, int tj, int tk, 
   
   //pr[U1]=global_vpar0; //set up non-zero radial velocity
   
-  set_vpar(global_vpar0, ptrgeom, pr);
+  //compute parallel velocity of a ZAMO
+  compute_vpar(pr, ptrgeom, &vpar);
+  //set_vpar(global_vpar0, ptrgeom, pr);
+  
+  //set field velocity to zero
+  //for this, first, reset full 4-velocity (VEL4) to zero
+  DLOOPA(pl) ucon[pl] = 0.0;
+  ucon2pr(WHICHVEL, ucon, ptrgeom, pr);  //this does not use t-component of ucon, so no need to set it
+  
+  //then reinstate the ZAMO velocity along field lines
+  set_vpar(vpar, ptrgeom, pr);
   
   *whichvel=WHICHVEL;
   //*whichcoord=SPCMINKMETRIC; //PRIMECOORDS;
