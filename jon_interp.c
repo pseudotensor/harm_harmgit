@@ -16,6 +16,7 @@ static void interp_init(void);
 static void setup_zones(void);
 static void interp_readcommandlineargs(int argc, char *argv[]);
 static void readdata_preprocessdata(void);
+static void apply_boundaryconditions_olddata(int numcols, int oN0local, FTYPE numbc0local, int doubleworklocal, char *****oldimagelocal, FTYPE *****olddatalocal);
 static void gdump_tostartofdata(FILE *gdumpin);
 static void input_header(void);
 static void output_header(void);
@@ -379,96 +380,9 @@ static void readdata_preprocessdata(void)
       gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);      
     }
 
-    /////////////
-    //
-    // set boundary conditions (as if scalars)
-    //
-    ///////////// 
-    for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-      
-      if(BOUNDARYEXTRAP==1){
-	// lower and upper h
-	for(i=0;i<oN1;i++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      if(DOUBLEWORK){
-		for(h=-numbc[0];h<0;h++) olddata0[coli][h][i][j][k]=olddata0[coli][0][i][j][k];
-		for(h=oN0;h<oN0+numbc[0];h++) olddata0[coli][h][i][j][k]=olddata0[coli][oN0-1][i][j][k];
-	      }
-	      else{
-		for(h=-numbc[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
-		for(h=oN0;h<oN0+numbc[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0-1][i][j][k];
-	      }
-	    }
-	  }
-	}
-	// lower and upper i
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      if(DOUBLEWORK){
-		for(i=-numbc[1];i<0;i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][0][j][k];
-		for(i=oN1;i<oN1+numbc[1];i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][oN1-1][j][k];
-	      }
-	      else{
-		for(i=-numbc[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
-		for(i=oN1;i<oN1+numbc[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
-	      }
-	    }
-	  }
-	}
-	// lower and upper j
-	for(h=0;h<oN0;h++){
-	  for(i=0;i<oN1;i++){
-	    for(k=0;k<oN3;k++){
-	      if(DOUBLEWORK){
-		for(j=-numbc[2];j<0;j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][0][k];
-		for(j=oN2;j<oN2+numbc[2];j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][oN2-1][k];
-	      }
-	      else{
-		for(j=-numbc[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
-		for(j=oN2;j<oN2+numbc[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
-	      }
-	    }
-	  }
-	}
-	// lower and upper k
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(i=0;i<oN1;i++){
-	      if(DOUBLEWORK){
-		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][0];
-		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][oN3-1];
-	      }
-	      else{
-		for(k=-numbc[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
-		for(k=oN3;k<oN3+numbc[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
-	      }
-	    }
-	  }
-	}
-      }// end if BOUNDARYEXTRAP=1
-      
-      
-      if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-	// then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(i=0;i<oN1;i++){
-	      if(DOUBLEWORK){
-		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k+oN3];
-		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k-oN3];
-	      }
-	      else{
-		for(k=-numbc[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
-		for(k=oN3;k<oN3+numbc[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
-	      }
-	    }
-	  }
-	}
-      }// end if periodic
+    // apply boundary conditions
+    apply_boundaryconditions_olddata(numoutputcols, oN0, numbc[0], DOUBLEWORK, oldimage0, olddata0);
 
-    }// end over coli
   }
   ///////////////////////////////////
   //
@@ -481,15 +395,58 @@ static void readdata_preprocessdata(void)
 
     if(immediateoutput==1){
       // only ever inputting and outputting at once and don't interpolate and don't need to store more than 1 grid point
-      compute_preprocess(outputvartype,gdumpin, NULL);
-    }
-    else{ // case where need to process more than 1 grid point at a time (i.e. integrals or averages or interpolations or whatever)
+      compute_preprocess(outputvartype,gdumpin, NULL, NULL);
 
+
+    }
+    else{
+      // case where need to process more than 1 grid point at a time (i.e. integrals or averages or interpolations or whatever)
+
+
+      ////////////////
+      // ALLOCATE MEMORY
       olddata0 = f5matrix(0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[coli][h][i][j][k]
       newdata  = f5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[coli][h][i][j][k]
 
 
 
+      /////////////
+      // SETUP 3-TIME DATA READ
+      int open3time=0;
+      if(infilem1!=NULL && infilep1!=NULL && DATATYPE==14 && outputvartype!=0){
+	open3time=1;
+	// then store full data for 3 times at once
+	int oN0fake=3; // 3-time
+	int numbc0fake=0; // no boundary conditions
+	olddata3time = f5matrix(0,numcolumns-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata3time[colini][h][i][j][k]
+
+	//for(i=1;i<=4;i++) while(fgetc(infilem1)!='\n'); // asume at this point that all 3 files have had header read if header exists
+	LOOPOLDDATASPATIAL{
+	  // read-in such that columns are fastest index, then i, then j, then k as in data files
+	  for(colini=0;colini<numcolumns;colini++){
+	    // get m1
+	    h=0;
+	    readelement(binaryinput,inFTYPE,infilem1,&olddata3time[colini][h][i][j][k]);
+	    // get normal middle time value
+	    h=1;
+	    readelement(binaryinput,inFTYPE,infile,&olddata3time[colini][h][i][j][k]);
+	    // get p1
+	    h=2;
+	    readelement(binaryinput,inFTYPE,infilep1,&olddata3time[colini][h][i][j][k]);
+	  }
+	}
+
+	// apply boundary conditions on this 3-time data
+	int doubleworkfake=1; // just forces use of olddata3time
+	apply_boundaryconditions_olddata(numcolumns,oN0fake,numbc0fake,doubleworkfake,oldimage0,olddata3time);
+
+      }// end if reading-in special 3-time data set
+
+
+
+      //////////////////
+      // PREPARE FOR LOOP
+      //
       // initialize totalmin and totalmax
       for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
 	totalmin[coli]=BIG;
@@ -506,17 +463,14 @@ static void readdata_preprocessdata(void)
 	exit(1);
       }
 
-      // setup temp column space
-      FTYPE *olddata0tempnew=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
-      if(olddata0tempnew==NULL){
-	fprintf(stderr,"Couldn't allocate olddata0tempnew\n");
-	exit(1);
-      }
 
+      ////////////
+      // LOOP over HARM data and get use multiple values to get (e.g.) Cartesian orthonormal result
+      //
+      // no iteration over coli -- multiple input columns handled by outputvartype>0
       int hprior=-1000;
       int seth=1;
-      LOOPOLDDATA{// no iteration over coli -- multiple input columns handled by outputvartype>0
-
+      LOOPOLDDATA{
 	
 	// only 1 thing in (e.g. for scalar image or data)
 	if(outputvartype==0){
@@ -532,18 +486,14 @@ static void readdata_preprocessdata(void)
 	  else{
 	    colini=0;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // first or only column
 	  }
+
+
 	}
-	else{// for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
+	else{
+	  // for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
 
 	  int dotstoappear;
 	  dotstoappear=oN0*oN3;
-#if(0)
-	  if(oN0==3 && DATATYPE==14){ // then assume have 3 times, so don't fully process other times, just using for temporal derivatives
-	    dotstoappear=oN3;
-	    if(h!=seth) continue; // skip if not h==seth
-	    
-	  }
-#endif
 
 
  	  if(firsttimecompute==1){
@@ -560,13 +510,19 @@ static void readdata_preprocessdata(void)
 	    hprior=h;
 	  }
 
-	  // get new columns
-	  compute_preprocess(outputvartype,gdumpin, olddata0temp);
+
+
+	  // get new columns by processing data
+	  compute_preprocess(outputvartype, gdumpin, olddata3time, olddata0temp);
+
+
 
 	  // copy from temp space
 	  for(coli=0;coli<numoutputcols;coli++)  olddata0[coli][h][i][j][k]=olddata0temp[coli];
 
 	}
+
+	// determine min/max of data
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
 	  if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
 	  if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
@@ -575,19 +531,20 @@ static void readdata_preprocessdata(void)
 	firsttimecompute=0;
       }// end LOOPOLDDATA
 
-      
-#if(0)
-      // now duplicate result to other times if doing special 3-time input
-      if(oN0==3 && DATATYPE==14){
-	LOOPOLDDATA{
-	  if(h!=seth) olddata0[coli][h][i][j][k]=olddata0[coli][seth][i][j][k];
-	}
+
+
+
+      /////////////////////////
+      // free temp space
+      //
+      // free 3-time data storage since how have final (e.g.) Cartesian orthonormal result in olddata0
+      if(open3time==1){
+	free_f5matrix(olddata3time,0,numcolumns-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
       }
-#endif
-
-
       // free temp column space
       free(olddata0temp);
+
+
 
 
       if(filter){
@@ -596,69 +553,21 @@ static void readdata_preprocessdata(void)
 	gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);
       }
 
-      /////////////
-      //
-      // set boundary conditions (as if scalars)
-      //
-      ///////////// 
-      for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	
-	if(BOUNDARYEXTRAP==1){
-	  // lower and upper h
-	  for(i=0;i<oN1;i++){
-	    for(j=0;j<oN2;j++){
-	      for(k=0;k<oN3;k++){
-		for(h=-numbc[0];h<0;h++) olddata0[coli][h][i][j][k]=olddata0[coli][0][i][j][k];
-		for(h=oN0;h<oN0+numbc[0];h++) olddata0[coli][h][i][j][k]=olddata0[coli][oN0-1][i][j][k];
-	      }
-	    }
-	  }
-	  // lower and upper i
-	  for(h=0;h<oN0;h++){
-	    for(j=0;j<oN2;j++){
-	      for(k=0;k<oN3;k++){
-		for(i=-numbc[1];i<0;i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][0][j][k];
-		for(i=oN1;i<oN1+numbc[1];i++) olddata0[coli][h][i][j][k]=olddata0[coli][h][oN1-1][j][k];
-	      }
-	    }
-	  }
-	  // lower and upper j
-	  for(h=0;h<oN0;h++){
-	    for(i=0;i<oN1;i++){
-	      for(k=0;k<oN3;k++){
-		for(j=-numbc[2];j<0;j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][0][k];
-		for(j=oN2;j<oN2+numbc[2];j++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][oN2-1][k];
-	      }
-	    }
-	  }
-	  // lower and upper k
-	  for(h=0;h<oN0;h++){
-	    for(j=0;j<oN2;j++){
-	      for(i=0;i<oN1;i++){
-		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][0];
-		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][oN3-1];
-	      }
-	    }
-	  }
-	}// end if BOUNDARYEXTRAP==1
-	
-	
-	// override and always have boundary cells if periodic in x3
-	if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-	  // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-	  for(h=0;h<oN0;h++){
-	    for(j=0;j<oN2;j++){
-	      for(i=0;i<oN1;i++){
-		for(k=-numbc[3];k<0;k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k+oN3];
-		for(k=oN3;k<oN3+numbc[3];k++) olddata0[coli][h][i][j][k]=olddata0[coli][h][i][j][k-oN3];
-	      }
-	    }
-	  }
-	}// end if PERIODIC
-      }// end over coli
-    }// end else
 
-  }// end else
+
+      // apply boundary conditions (spatial and temporal) on HARM-grid data
+      doubleworkfake=1; // force use of olddata0
+      apply_boundaryconditions_olddata(numoutputcols,oN0,numbc[0],doubleworkfakeoldimage0,olddata0);
+
+
+
+    }// end else if immediateoutput!=1
+
+  }// end else if DATATYPE>=1
+
+
+
+
 
 
 
@@ -715,6 +624,135 @@ static void readdata_preprocessdata(void)
 
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////
+//
+// set boundary conditions (as if scalars) to original HARM-grid data
+//
+///////////// 
+static void apply_boundaryconditions_olddata(int numcols, int oN0local, FTYPE numbc0local, int doubleworklocal, char *****oldimagelocal, FTYPE *****olddatalocal)
+{
+  int coli,h,i,j,k;
+  int numbclocal[NDIM];
+  int jj;
+
+  DLOOPA(jj) numbclocal[jj]=numbc[jj];
+  // now override if user wants (e.g. if doing DATATYPE==14 with 3-time data and don't want additional temporal boundary conditions -- would only waste space)
+  numbclocal[TT]=numbc0local;
+
+
+  /////////////
+  //
+  // set boundary conditions (as if scalars)
+  //
+  ///////////// 
+  for(coli=0;coli<numcols;coli++){ // over all independent columsn of data
+      
+    if(BOUNDARYEXTRAP==1){
+      // lower and upper h
+      for(i=0;i<oN1;i++){
+	for(j=0;j<oN2;j++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(h=-numbclocal[0];h<0;h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][0][i][j][k];
+	      for(h=oN0local;h<oN0local+numbclocal[0];h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][oN0local-1][i][j][k];
+	    }
+	    else{
+	      for(h=-numbclocal[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
+	      for(h=oN0local;h<oN0local+numbclocal[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0local-1][i][j][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper i
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(i=-numbclocal[1];i<0;i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][0][j][k];
+	      for(i=oN1;i<oN1+numbclocal[1];i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][oN1-1][j][k];
+	    }
+	    else{
+	      for(i=-numbclocal[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
+	      for(i=oN1;i<oN1+numbclocal[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper j
+      for(h=0;h<oN0local;h++){
+	for(i=0;i<oN1;i++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(j=-numbclocal[2];j<0;j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][0][k];
+	      for(j=oN2;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][oN2-1][k];
+	    }
+	    else{
+	      for(j=-numbclocal[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
+	      for(j=oN2;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper k
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(doubleworklocal){
+	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][0];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][oN3-1];
+	    }
+	    else{
+	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
+	    }
+	  }
+	}
+      }
+    }// end if BOUNDARYEXTRAP=1
+      
+      
+    if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
+      // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(doubleworklocal){
+	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k-oN3];
+	    }
+	    else{
+	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
+	    }
+	  }
+	}
+      }
+    }// end if periodic
+
+  }// end over coli
+
+
+
+}
+
+
+
+
+
 
 
 // read single element from file in text or binary format and any element C type
@@ -1274,6 +1312,7 @@ void parse_commandline(int argc, char *argv[])
 	  if(i+1<argc){
 	    if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infile=fopen(argv[++i],"rt");
+	    //for(i=1;i<=4;i++) while(fgetc(infile)!='\n');
 	  }
 	  setinfile=1;
 	  // set defaults
@@ -1293,6 +1332,11 @@ void parse_commandline(int argc, char *argv[])
 	  if(i+1<argc){
 	    if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infilem1=fopen(argv[++i],"rt");
+	    if(infilem1==NULL){
+	      fprintf(stderr,"Can't open infilem1\n");
+	      myexit(1);
+	    }
+	    for(i=1;i<=4;i++) while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
 	  }
 	  setinfilem1=1;
 	}
@@ -1307,6 +1351,11 @@ void parse_commandline(int argc, char *argv[])
 	  if(i+1<argc){
 	    if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infilep1=fopen(argv[++i],"rt");
+	    if(infilep1==NULL){
+	      fprintf(stderr,"Can't open infilep1\n");
+	      myexit(1);
+	    }
+	    for(i=1;i<=4;i++) while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
 	  }
 	  setinfilep1=1;
 	}

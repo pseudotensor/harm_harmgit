@@ -153,6 +153,63 @@ ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist.txt
 
 
 
+################
+# from Kraken (rblandfo) to Nautilus (jmckinne) for sashaa* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/scratch/rblandfo/
+cd $mydir
+rm -rf $mydir/globuslist335.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist=`lssdir2 | grep sashaa`
+for fil in $dirlist
+do
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump'`
+    for realfile in $filelist
+    do
+        echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist335.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist335.txt
+
+
+
+################
+# from Kraken (jmckinne) to Nautilus (jmckinne) for *3d7* and *hr3tilt* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/scratch/jmckinne/
+cd $mydir
+rm -rf $mydir/globuslist336.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep 3d7`
+dirlist2=`lssdir2 | grep hr3tilt`
+dirlist="$dirlist1 $dirlist2"
+for fil in $dirlist
+do
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump'`
+    for realfile in $filelist
+    do
+        echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist336.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist336.txt
+
+
+
+
 
 
 

@@ -16,6 +16,7 @@
 
 // Note: Due to how generally create data as multiple time dumps, easier to read and write time as slowest index even if by N? it's before i
 #define LOOPOLDDATA for(h=0;h<oN0;h++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)    for(i=0;i<oN1;i++)
+#define LOOPOLDDATASPATIAL for(k=0;k<oN3;k++) for(j=0;j<oN2;j++) for(i=0;i<oN1;i++)
 #define LOOPINTERP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)    for(i=0;i<nN1;i++)
 
 // oldgridtype: 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R)// V in GRMHD code 4 = log for radius (used in Sashas monopole paper) 5=Cartesian, but time is mixed with space to approximate light travel time effects [only makes sense if doing 4D input with oN0>1]
@@ -304,7 +305,8 @@ extern void writeimage(char * name, unsigned char *****image,int nt, int nx, int
 
 extern void refine_data(void);
 
-extern void compute_preprocess(int outputvartype, FILE *gdumpin, FTYPE *finaloutput);
+extern void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****olddatalocal, FTYPE *finaloutput);
+
 
 
 extern void setup_newgrid(void);

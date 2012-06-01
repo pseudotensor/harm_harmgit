@@ -17,7 +17,7 @@ static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
 
 // process inputted data
-void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finaloutput)
+void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****olddatalocal, FTYPE *finaloutput)
 {
   FTYPE vec[NDIM],vecv[NDIM],vecB[NDIM];
   FTYPE vecortho[NDIM];
@@ -461,8 +461,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE *finalout
     if(infilem1!=NULL && infilep1!=NULL){
       doing3time=1;
 
-      // get m1
       for(colini=0;colini<numcolumns;colini++){
+	// get m1
 	readelement(binaryinput,inFTYPE,infilem1,&valm1[colini]);
 	// get normal middle time value
 	readelement(binaryinput,inFTYPE,infile,&val[colini]);
