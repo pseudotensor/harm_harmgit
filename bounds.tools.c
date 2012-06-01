@@ -186,7 +186,8 @@ int bound_x1dn_nssurface(
     FTYPE dxdxp[NDIM][NDIM];
     FTYPE rdxdxp[NDIM][NDIM];
     FTYPE rBur, Bur;
-    
+    FTYPE vpar;
+    FTYPE rucon[NDIM];
     
     
     // assign memory
@@ -287,15 +288,40 @@ int bound_x1dn_nssurface(
 		}
 	      }
 	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+	      
+	      //compute parallel velocity in reference cell
+	      compute_vpar(MAC(prim,ri,rj,rk), ptrrgeom[pl], &vpar);
+	      
+	      //compute radial 4-velocity in reference cell
+	      pr2ucon(WHICHVEL, MAC(prim,ri,rj,rk), ptrrgeom[pl], rucon);
+	      
+	      //if u^r > 0, fix vpar in ghost cells to preselected value
+	      if(rucon[1] > 0){
+		vpar = global_vpar0;
+	      } //else leave it as it is
+
 	      //set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
-	      set_vel_stataxi( ptrgeom[pl], get_omegaf_code(t,dt,steppart), global_vpar0, MACP0A0(prim,i,j,k) );
-	      //now that velocity is set, can compute bsq
-	      if( bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1 ) { 
-		FAILSTATEMENT("bounds.tools.c:bound_x1nd_nssurface()", "bsq_calc()", 2);
+	      set_vel_stataxi( ptrgeom[pl], get_omegaf_code(t,dt,steppart), vpar, MACP0A0(prim,i,j,k) );
+	      
+	      //set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
+	      set_vpar(vpar, ptrgeom[pl], MAC(prim,i,j,k));
+	      
+	      if( rucon[1] > 0 ) {
+		//now that velocity is set, can compute bsq
+		if( bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1 ) { 
+		  FAILSTATEMENT("bounds.tools.c:bound_x1nd_nssurface()", "bsq_calc()", 2);
+		}
+		
+		//set rho and u consistent with density floor
+		MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOLIMIT;
+		MACP0A1(prim,i,j,k,UU) = bsq/BSQOULIMIT;
 	      }
-	      //set rho and u consistent with density floor
-	      MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOLIMIT;
-	      MACP0A1(prim,i,j,k,UU) = bsq/BSQOULIMIT;
+	      else {
+		//if velocity points into the star, outflow density and internal energy
+		MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
+		MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
+	      }
+
 	    }
 	  }//end else ispstag
 	  
