@@ -1038,6 +1038,21 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   if(funreturn!=0) return(funreturn);
 #endif
   
+  
+#if( PROBLEMTYPE == NSTAR )
+  //compute parallel velocity (to the poloidal field) of a ZAMO
+  compute_vpar(pr, ptrgeom, &vpar);
+  //set_vpar(global_vpar0, ptrgeom, pr);
+  
+  //set field velocity to zero
+  //for this, first, reset full 4-velocity (VEL4) to zero
+  DLOOPA(pl) ucon[pl] = 0.0;
+  ucon2pr(WHICHVEL, ucon, ptrgeom, pr);  //this does not use t-component of ucon, so no need to set it
+  
+  //then reinstate the ZAMO velocity along field lines
+  set_vpar(vpar, ptrgeom, pr);
+#endif
+    
   return(0);
 
 
