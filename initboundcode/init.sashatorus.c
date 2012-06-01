@@ -124,8 +124,10 @@ int prepre_init_specific_init(void)
   t_transition = 1.;
   global_vpar0 = 0.;
   
+#if(WHICHPROBLEM==NSTAR)
   global_dipole_alpha = 0 * M_PI / 180.;
-
+  global_OmegaNS = 0.2;
+#endif
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -283,7 +285,6 @@ int init_grid(void)
 #elif(WHICHPROBLEM==NSTAR)
   //flat metric so use this instead of Omega_F
   a = 0.0;  //Omega_F = a; phi-velocity: v^\phi = a
-  global_OmegaNS = 0.2;
 #else
   a = 0.95;   //so that Risco ~ 2
 #endif
