@@ -236,7 +236,10 @@ int init_consts(void)
 
   // units can be used for user to read in data, but otherwise for rest of code all that matters is Mfactor and Jfactor
   Mfactor=Jfactor=1.0;
-
+  
+#if(WHICHPROBLEM==NSTAR)
+  MBH=0.2;
+#endif  
   return(0);
 
 }
