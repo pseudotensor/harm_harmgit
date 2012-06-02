@@ -294,6 +294,8 @@ int bound_x1dn_nssurface(
 	      
 	      //dualfprintf(fail_file, "bval = %21.15g\n", bval);
 	      
+	      
+	      //always do this to avoid noise on switching
 	      if( 1 || rucon[1] > 0 ){
 		//compute parallel velocity in reference cell
 		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
@@ -310,6 +312,7 @@ int bound_x1dn_nssurface(
 		set_vel_stataxi( ptrgeom[pl], get_omegaf_code(t,dt,steppart), vpar, MACP0A0(prim,i,j,k) );
 		
 		//set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
+		//SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
 		set_vpar(vpar, ptrgeom[pl], MAC(prim,i,j,k));
 		
 		if( rucon[1] > 0 ) {
