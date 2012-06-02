@@ -218,9 +218,9 @@ int post_init_specific_init(void)
   t_transition = 1.;
   global_vpar0 = 0.;
   
-  BSQORHOLIMIT=4*0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=4*5*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=4*5*1E2;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E2;
 
   
   if(funreturn!=0) return(funreturn);
@@ -492,9 +492,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=4*0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=4*5*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=4*5*1E2;
+  BSQORHOLIMIT=0.5*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E2;
   RHOMIN = 1E-4;
   UUMIN = 1E-4;
 #elif(WHICHPROBLEM==GRBJET)
@@ -608,9 +608,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
-  BSQORHOLIMIT=4*0.5E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=4*5*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=4*5*1E2;
+  BSQORHOLIMIT=0.5E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=5*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=5*1E2;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
 #if(MCOORD==KSCOORDS)
