@@ -2930,7 +2930,7 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
 {
-  FTYPE Bccov[NDIM],Bccon[NPR],vcon[NDIM],ucon[NDIM];
+  FTYPE Bccov[NDIM],Bccon[NDIM],vcon[NDIM],ucon[NDIM];
   FTYPE Bsq;
   FTYPE absB;
   FTYPE Bdotv;
