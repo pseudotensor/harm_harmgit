@@ -271,8 +271,8 @@ int bound_x1dn_nssurface(
 	      PBOUNDLOOP(pliter,pl) {
 		if( pl==RHO 
 		    || pl==UU || pl==U1 
-		    || pl==U2 || pl==U3) { //XXX for now fix everything, worry about velocity later
-		  MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+		    || pl==U2 || pl==U3) { //XXX for now outflow everything, worry about velocity later
+		  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl); //GLOBALMACP0A1(panalytic,i,j,k,pl);
 		}
 		else if( pl == B1 ){
 #if( NSBC_ASSUME_DIPOLE_FIELD )
@@ -290,13 +290,13 @@ int bound_x1dn_nssurface(
 	      }
 	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 	      
-	      bval = MAC(prim,ri,rj,rk)[B1];
+	      bval = MACP0A1(prim,i,j,k,B1);
 	      
-	      dualfprintf(fail_file, "bval = %21.15g\n", bval);
+	      //dualfprintf(fail_file, "bval = %21.15g\n", bval);
 	      
 	      if( bval != 0 ){
 		//compute parallel velocity in reference cell
-		compute_vpar(MAC(prim,ri,rj,rk), ptrrgeom[pl], &vpar);
+		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
 		
 		//compute radial 4-velocity in reference cell
 		pr2ucon(WHICHVEL, MAC(prim,ri,rj,rk), ptrrgeom[pl], rucon);
@@ -322,11 +322,12 @@ int bound_x1dn_nssurface(
 		  MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOLIMIT;
 		  MACP0A1(prim,i,j,k,UU) = bsq/BSQOULIMIT;
 		}
-		else {
-		  //if velocity points into the star, outflow density and internal energy
-		  MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
-		  MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
-		}
+		//*** the below already done ***
+		//else {
+		//  //if velocity points into the star, outflow density and internal energy
+		//  MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
+		//  MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
+		//}
 	      }
 	    }
 	  }//end else ispstag
