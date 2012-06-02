@@ -188,7 +188,7 @@ int bound_x1dn_nssurface(
     FTYPE rBur, Bur;
     FTYPE vpar;
     FTYPE rucon[NDIM];
-    FTYPE bval;
+    //FTYPE bval;
     
     
     // assign memory
@@ -290,11 +290,11 @@ int bound_x1dn_nssurface(
 	      }
 	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 	      
-	      bval = MACP0A1(prim,i,j,k,B1);
+	      //bval = MACP0A1(prim,i,j,k,B1);
 	      
 	      //dualfprintf(fail_file, "bval = %21.15g\n", bval);
 	      
-	      if( bval != 0 ){
+	      if( 1 || rucon[1] > 0 ){
 		//compute parallel velocity in reference cell
 		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
 		
