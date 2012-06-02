@@ -3,21 +3,26 @@
 
 
 // local declarations of local functions
-static void vec2vecortho(int outputvartypelocal, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
+static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
+
+
 static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
 static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);
-static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
 static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTYPE (*lambdacoord)[NDIM]);
 static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
 
 
+static int compute_datatype14(int which, FTYPE *val, FTYPE *fvar, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
 
 
+
+static FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda);
+static void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*faraday)[NDIM]);
 
 
 // process inputted data
-void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****olddatalocal, FTYPE *finaloutput)
+void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, int j, int k, FTYPE*****olddatalocal, FTYPE *finaloutput)
 {
   FTYPE vec[NDIM],vecv[NDIM],vecB[NDIM];
   FTYPE vecortho[NDIM];
@@ -73,9 +78,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
     }
     else if(DATATYPE>=1002 && DATATYPE<=1009){
       // fieldline file type input
-      FTYPE val[20];
-      int coli;
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
+      FTYPE val[MAXINCOLS];
+      int colini;
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // fscanf(infile,SCANARG,&val[colini]);
       
       if(DATATYPE>=1002 && DATATYPE<=1005){
 	// now assign to vector
@@ -97,7 +102,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
       
     
     // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
-    vec2vecortho(outputvartypelocal,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecortho);
+    vec2vecortho(outputvartypelocal,V,gcov,dxdxp,oldgridtype, newgridtype, vec, vecortho);
+
     
     if(immediateoutput==1){ // then immediately write to output
       DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,vecortho[jj]);
@@ -129,9 +135,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
     }
     else if(DATATYPE==1011){
       // fieldline file type input
-      FTYPE val[20];
-      int coli;
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
+      FTYPE val[MAXINCOLS];
+      int colini;
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // fscanf(infile,SCANARG,&val[colini]);
       // now assign to vector
       vecv[0]=val[4];
       vecv[1]=val[4]*val[5];
@@ -168,10 +174,10 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
     }
     else if(DATATYPE==1012){
       // fieldline file type input
-      FTYPE val[20];
-      int coli;
-      //      for(coli=0;coli<numcolumns;coli++) fscanf(infile,SCANARG,&val[coli]);
-      for(coli=0;coli<numcolumns;coli++) readelement(binaryinput,inFTYPE,infile,&val[coli]); // fscanf(infile,SCANARG,&val[coli]);
+      FTYPE val[MAXINCOLS];
+      int colini;
+      //      for(colini=0;colini<numcolumns;colini++) fscanf(infile,SCANARG,&val[colini]);
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // fscanf(infile,SCANARG,&val[colini]);
       // now assign to vector
       vec[0]=0.0;
       vec[1]=val[8];
@@ -361,9 +367,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
 
     // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
     concovtype=1; // means inputting u^\mu
-    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, ucon, uortho);
-    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, bcon, bortho);
-    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, Bcon, Bortho);
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, ucon, uortho);
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, bcon, bortho);
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, Bcon, Bortho);
 
 
     ////////////////////
@@ -403,147 +409,50 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
 
   }
   else if(outputvartypelocal==14){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
-    FTYPE val[20];
-    int colini;
-    int coli;
-    int concovtype;
-
-    FTYPE vecvm1[NDIM],vecBm1[NDIM];
-    FTYPE vecvp1[NDIM],vecBp1[NDIM];
-    // 3-time read-in (without processing the other times)
-    FTYPE valm1[20];
-    FTYPE valp1[20];
 
 
-    // first get gdump data (only once per call to compute_preprocess() !!)
-    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+    if(docurrent==0){ // then not computing current, so do normal procedure
 
-
-    int doing3time=0;
-#if(0)
-    // fieldline file type input
-    if(oN0==3){
-      doing3time=1;
-      
-      // get m1
-      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&valm1[colini]);
-
-      // get position in file just after first read-in of file
-      fpos_t pos1;
-      fgetpos(infile,&pos1);
-
-      // go to next time block
-      fseek(infile,oN1*oN2*oN3*numcolumns*sizeelement(inFTYPE),SEEK_CUR);
-
-      // get normal middle time value
-      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]);
-
-      // get position in file just after first read-in of file
-      fpos_t pos2;
-      fgetpos(infile,&pos2);
-
-      // go to next time block
-      fseek(infile,oN1*oN2*oN3*numcolumns*sizeelement(inFTYPE),SEEK_CUR);
-
-      // get p1
-      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&valp1[colini]);
-
-      // finally go back to just after original m1 read-in so can start over again for next t,i,j,k
-      fsetpos(infile,&pos1);
-
-
-    }
-    else{
-      // normal read-in
-      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
-    }
-#else
-    if(infilem1!=NULL && infilep1!=NULL){
-      doing3time=1;
-
-      for(colini=0;colini<numcolumns;colini++){
-	// get m1
-	readelement(binaryinput,inFTYPE,infilem1,&valm1[colini]);
-	// get normal middle time value
-	readelement(binaryinput,inFTYPE,infile,&val[colini]);
-	// get p1
-	readelement(binaryinput,inFTYPE,infilep1,&valp1[colini]);
+      if(numoutputcols!=10){
+	fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,10,docurrent);
+	myexit(1);
       }
-    
+
+
+      // first get gdump data (only once per call to compute_preprocess() !!)
+      read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+
+
+      // normal read-in
+      int colini;
+      FTYPE val[MAXINCOLS];
+      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
+
+      // 1 means compute all things except current
+      compute_datatype14(1, val, fvar, ti,  X,  V,  conn,  gcon,  gcov,  gdet,  ck,  dxdxp, &geom);
+
     }
     else{
-      // normal read-in
-      for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
+
+      if(numoutputcols!=14){
+	fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,14,docurrent);
+	myexit(1);
+      }
+
+
+      // compute_additionls() already computed per-point stuff and put it in olddata0[]
+      // just do assignment from olddata0 to fvar (this just flips back to oldata0 after out of this function)
+      int coli; for(coli=0;coli<numoutputcols;coli++) fvar[coli]=olddata0[coli][h][i][j][k];
+
     }
 
 
-#endif
-
-    if(doing3time==1){
-      // m1
-      vecvm1[0]=valm1[4]; vecvm1[1]=valm1[5]; vecvm1[2]=valm1[6]; vecvm1[3]=valm1[7]; SLOOPA(jj) vecvm1[jj]*=vecvm1[0];
-      vecBm1[0]=0.0;    vecBm1[1]=valm1[8]; vecBm1[2]=valm1[9]; vecBm1[3]=valm1[10];
-      
-      // p1
-      vecvp1[0]=valp1[4]; vecvp1[1]=valp1[5]; vecvp1[2]=valp1[6]; vecvp1[3]=valp1[7]; SLOOPA(jj) vecvp1[jj]*=vecvp1[0];
-      vecBp1[0]=0.0;    vecBp1[1]=valp1[8]; vecBp1[2]=valp1[9]; vecBp1[3]=valp1[10];
-    }
-
-
-    // now do normal assign to vector (for middle time if doing3time==1)
-    vecv[0]=val[4]; vecv[1]=val[5]; vecv[2]=val[6]; vecv[3]=val[7]; SLOOPA(jj) vecv[jj]*=vecv[0]; // now uu[jj]
-    vecB[0]=0.0;    vecB[1]=val[8]; vecB[2]=val[9]; vecB[3]=val[10];
-
-
-    // DEBUG:
-    //    SLOOPA(jj) dualfprintf(fail_file,"jj=%d vecv=%g vecB=%g\n",jj,vecv[jj],vecB[jj]);
-
-
-    // convert coordinate basis vector compnents to single orthonormal basis component desired
-
-    // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
-
-    // do vecv
-    FTYPE vecvortho[NDIM];
-    concovtype=1; // contravariant
-    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecv, vecvortho);
-
-    // do vecB
-    FTYPE vecBortho[NDIM];
-    concovtype=1; // contravariant
-    vec2vecortho(concovtype,ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecB, vecBortho);
-
-    int vectorcomponentlocal;
-
-    // compute FEMrad
-    FTYPE FEMrad;
-    vectorcomponentlocal=1; // radial component
-    vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, &FEMrad);
-
-    // compute B_{\phi}
-    vectorcomponentlocal=3; // \phi component
-    FTYPE Bphi;
-    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
-   
-
-    // assign to coli type with numoutputcols data values
-    fvar[0]=val[0]; // rho0
-    fvar[1]=val[1]; // ug
-    fvar[2]=vecvortho[1]; // vx
-    fvar[3]=vecvortho[2]; // vy
-    fvar[4]=vecvortho[3]; // vz
-    fvar[5]=vecBortho[1]; // Bx
-    fvar[6]=vecBortho[2]; // By
-    fvar[7]=vecBortho[3]; // Bz
-    fvar[8]=FEMrad; // FEMrad = radial energy flux per unit sin(\theta)
-    fvar[9]=Bphi; // B_{\phi} == poloidal current
-
-
+    //DEBUG
     //for(coli=0;coli<numoutputcols;coli++) dualfprintf(fail_file,"coli=%d fvar=%g\n",coli,fvar[coli]);
 
 
     if(immediateoutput==1){ // then immediately write to output
-      for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,outfile,fvar[coli]);
+      int coli; for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,outfile,fvar[coli]);
     }
     else{
       // already stored in fvar
@@ -565,6 +474,724 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// compute datatype==14 stuff
+// val is input stuff from fieldline file (colini - numcolumns)
+// fvar is final stuff (coli - numoutputcols)
+static int compute_datatype14(int which, FTYPE *val, FTYPE *fvar, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom)
+{
+  int concovtype;
+  int jj;
+
+
+
+
+  /////////////////////
+  // also assign to coli type with numoutputcols data values
+  int coli;
+
+
+
+
+  if(which==0 || which==2){
+    // recover this position's 4-current (J^\mu) from 3D storage in "olddatacurrent" (same as olddatalocal passed to this function, but just access global)
+    FTYPE Jcon[NDIM];
+    FTYPE Jortho[NDIM];
+    if(olddatacurrent!=NULL){
+      int href=0;
+      DLOOPA(jj) Jcon[jj]=olddatacurrent[jj][href][ti[RR]][ti[TH]][ti[PH]];
+      
+      // get orthonormal J^\mu
+      concovtype=1; // contravariant
+      vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, Jcon, Jortho);
+    }
+
+
+    if(olddatacurrent!=NULL){
+      fvar[OUTJX0]=Jortho[TT];
+      fvar[OUTJX1]=Jortho[RR];
+      fvar[OUTJX2]=Jortho[TH];
+      fvar[OUTJX3]=Jortho[PH];
+    }
+    else if(numoutputcols==14){ // assume this is a testing/debug mode or disabled current calculation
+      fvar[OUTJX0]=0.0;
+      fvar[OUTJX1]=0.0;
+      fvar[OUTJX2]=0.0;
+      fvar[OUTJX3]=0.0;
+    }
+
+
+  }
+
+
+
+  if(which==0 || which==1){
+    // now do normal assign to vector (for middle time if doing3time==1)
+    FTYPE vecv[NDIM],vecB[NDIM];
+    vecv[0]=val[FLU0]; vecv[1]=val[FLV1]; vecv[2]=val[FLV2]; vecv[3]=val[FLV3];
+    SLOOPA(jj) vecv[jj]*=vecv[TT]; // now uu[jj]
+    vecB[TT]=0.0; SLOOPA(jj) vecB[jj]=val[FLB1+jj-1];
+
+  
+
+
+    // DEBUG:
+    //    SLOOPA(jj) dualfprintf(fail_file,"jj=%d vecv=%g vecB=%g\n",jj,vecv[jj],vecB[jj]);
+
+
+    // convert coordinate basis vector compnents to single orthonormal basis component desired
+
+    // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
+
+    // do vecv
+    FTYPE vecvortho[NDIM];
+    concovtype=1; // contravariant
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecv, vecvortho);
+
+    // do vecB
+    FTYPE vecBortho[NDIM];
+    concovtype=1; // contravariant
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecB, vecBortho);
+
+    int vectorcomponentlocal;
+
+    // compute FEMrad
+    FTYPE FEMrad;
+    vectorcomponentlocal=1; // radial component
+    vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, &FEMrad);
+
+    // compute B_{\phi}
+    vectorcomponentlocal=3; // \phi component
+    FTYPE Bphi;
+    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
+
+
+    fvar[OUTRHO]=val[FLRHO]; // rho0
+    fvar[OUTU]=val[FLU]; // ug
+    fvar[OUTV1]=vecvortho[RR]; // vx
+    fvar[OUTV2]=vecvortho[TH]; // vy
+    fvar[OUTV3]=vecvortho[PH]; // vz
+    fvar[OUTB1]=vecBortho[RR]; // Bx
+    fvar[OUTB2]=vecBortho[TH]; // By
+    fvar[OUTB3]=vecBortho[PH]; // Bz
+    fvar[OUTFEMRAD]=FEMrad; // FEMrad = radial energy flux per unit sin(\theta)
+    fvar[OUTBPHI]=Bphi; // B_{\phi} == poloidal current
+
+
+  }
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+// compute additional (or all) things in cases when need full temporal-spatial information to compute somthing.  In that case, often just compute everything here.
+int compute_additionals(void)
+{
+  int colini,h,i,j,k;
+  int jj; // for tensor indices
+  int kprior;
+  int colstorei;
+
+
+
+
+
+  // default to indicate nothing done
+  olddata3time=olddatagdump=olddatacurrent=NULL;
+
+
+  /////////////
+  // SETUP 3-TIME DATA READ
+  int doing3time=0;
+  if(infilem1!=NULL && infilep1!=NULL && DATATYPE==14 && outputvartype!=0 && docurrent==1){
+    doing3time=1;
+  }
+
+
+
+  if(doing3time){
+    fprintf(stderr,"BEGIN Computing additionals (currently only Jcon, which requires spatio-temporal derivatives)\n"); fflush(stderr);
+
+    int doubleworkfake;
+
+
+
+
+    //////////////
+    //
+    // SETUP MEMORY
+    //
+    ///////////////
+
+    // then store full data for 3 times at once
+    int oN0fake=3; // 3-time
+    int numbc0fake=0; // no boundary conditions
+    // for storing (only required) fieldline quantities
+    // only require rho0,ug,u^\mu,B^i
+    // olddata3time NUMCOLUMNSSTORE related to colstorei loops
+    //
+    olddata3time = f5matrix(0,NUMCOLUMNSSTORE-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata3time[colini][h][i][j][k]
+    if(olddata3time==NULL){
+      fprintf(stderr,"Couldn't allocate olddata3time\n"); fflush(stderr);
+      myexit(1);
+    }
+
+    // only for storing gcov(SYMMATRIXNDIM) + gdet(1) + V(NDIM-1) + dxdxp((NDIM-2)*(NDIM-2))
+    // NOTEMARK: only store V[spatial] since V[0] fixed for now.  Also only store dxdxp[1,2] since dxdx[0,3] are fixed.
+    int numgdumps=SYMMATRIXNDIM  + 1 + (NDIM-1) + (NDIM-2)*(NDIM-2);
+    olddatagdump = f5matrix(0,numgdumps-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ; // no temporal gdump
+    if(olddatagdump==NULL){
+      fprintf(stderr,"Couldn't allocate olddatagdump\n"); fflush(stderr);
+      myexit(1);
+    }
+
+    olddatacurrent = f5matrix(0,NDIM-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ; // no temporal info required
+    if(olddatacurrent==NULL){
+      fprintf(stderr,"Couldn't allocate olddatacurrent\n"); fflush(stderr);
+      myexit(1);
+    }
+
+
+
+    // old column space (i.e numcolumns with colini loops)
+    FTYPE *dataorigin=NULL;
+    dataorigin=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+    if(dataorigin==NULL){
+      fprintf(stderr,"Couldn't allocate dataorigin\n");
+      exit(1);
+    }
+    
+
+    // temp vars for gdump
+    int ti[NDIM];
+    FTYPE X[NDIM];
+    FTYPE V[NDIM];
+    FTYPE conn[NDIM][NDIM][NDIM];
+    FTYPE gcon[SYMMATRIXNDIM];
+    FTYPE gcov[SYMMATRIXNDIM];
+    FTYPE gdet;
+    FTYPE ck[NDIM];
+    FTYPE dxdxp[NDIM][NDIM];
+    struct of_geom geom;
+    FTYPE val[MAXINCOLS]; // to hold numcolumns - coli type data (even if have to set a value to zero if not used, keep in fieldline file format)
+
+
+    if(MAXINCOLS<numcolumns || MAXINCOLS<NUMCOLUMNSSTORE){
+      dualfprintf(fail_file,"Not enough MAXINCOLS=%d for given numcolumns=%d or NUMCOLUMNSSTORE=%d\n",MAXINCOLS,numcolumns,NUMCOLUMNSSTORE);
+      myexit(1);
+    }
+
+
+    // fvar holds coli -- numoutputcols data (i.e. results of preprocessing)
+    FTYPE *fvar=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
+    if(fvar==NULL){
+      fprintf(stderr,"Couldn't allocate fvar\n");
+      exit(1);
+    }
+
+
+    if(olddata0==NULL){
+      fprintf(stderr,"olddata0 should be allocated before calling compute_additionals() for DATATYPE==14\n");
+      myexit(1);
+    }
+
+
+
+
+
+
+
+    //////////////
+    //
+    // LOOP OVER fieldline file data for each of the 3 times
+    //
+    ///////////////
+
+    //for(i=1;i<=4;i++) while(fgetc(infilem1)!='\n'); // asume at this point that all 3 files have had header read if header exists
+    kprior=-1000;
+    fprintf(stderr,"BEGIN Reading(numcolumns=%d)/Storing (and Computing local datatype==14 stuff) 3-time data and gdump data with oN3=%d dots produced\n",numcolumns,oN3);fflush(stderr);
+    //
+    LOOPOLDDATASPATIAL{
+      if(k!=kprior){ fprintf(stderr,"."); fflush(stderr); kprior=k; }
+
+      // READ-IN such that columns are fastest index, then i, then j, then k as in data files
+      colstorei=0;
+      for(colini=0;colini<numcolumns;colini++){
+
+	// get m1
+	h=0; readelement(binaryinput,inFTYPE,infilem1,&dataorigin[colini]);
+	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+
+	// get normal middle time value
+	h=1; readelement(binaryinput,inFTYPE,infile,&dataorigin[colini]);
+	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+	val[colini]=dataorigin[colini]; // full store for compute_datatype14(1) to use (store middle time)
+
+	// get p1
+	h=2; readelement(binaryinput,inFTYPE,infilep1,&dataorigin[colini]);
+	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+
+
+	// only store required information, so only iterate colstorei if storing this quantity
+	if(!SKIPFL2STORE(colini)) colstorei++;
+      }
+
+      // check that stored correct number of things
+      if(colstorei!=NUMCOLUMNSSTORE){
+	fprintf(stderr,"Didn't properly store olddata3time: %d %d\n",colstorei,NUMCOLUMNSSTORE);
+	myexit(1);
+      }
+
+      //DEBUG
+      //      fprintf(stderr,"PRECOMPUTE0: %d %d %d\n",i,j,k);
+      //      for(colstorei=0;colstorei<NUMCOLUMNSSTORE;colstorei++) fprintf(stderr,"PRECOMPUTE1: %d : %g %g %g\n",colstorei,olddata3time[colstorei][0][i][j][k],olddata3time[colstorei][1][i][j][k],olddata3time[colstorei][2][i][j][k]);
+
+      //////////////
+      //
+      // GET gdump data for "normal" time (same for all times currently)
+      //
+      //////////////
+      read_gdumpline(gdumpin, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+
+
+
+
+      // SUPERGODMARK: TODOMARK OPTMARK: Can speed things up alot if know interpolation box won't use portion of original data, which can then be skipped.  Can use r,\theta,\phi to detect (e.g. for Cart output) if need certain data.  Just compute x,y,z and see if inside new box.  If not, skip.  Will only generally exclude radial parts, and so maybe save factor of 2-4 or so.  Should do it!
+
+
+
+      ///////////////////
+      //
+      // COMPUTE PER-POINT DATATYPE==14
+      //
+      ///////////////////
+      // so that don't have to reload data or gdump file for better speed
+      ///////////////	
+      // 1 means compute everything but Jconortho
+      compute_datatype14(1, val, fvar, ti,  X,  V,  conn,  gcon,  gcov,  gdet,  ck,  dxdxp, &geom);
+      // store ONLY non-current results
+      h=0; int coli; for(coli=OUTRHO;coli<=OUTBPHI;coli++) olddata0[coli][h][i][j][k]=fvar[coli];
+      
+
+      // put required elements into storage for J^\mu computation
+      h=0; int gdumpjj=0;
+      for(jj=0;jj<SYMMATRIXNDIM;jj++){ olddatagdump[gdumpjj][h][i][j][k]=gcov[jj]; gdumpjj++;}
+      olddatagdump[gdumpjj][h][i][j][k]=gdet; gdumpjj++;
+      SLOOPA(jj){ olddatagdump[gdumpjj][h][i][j][k]=V[jj]; gdumpjj++; }
+      int lll,mmm; SLOOP12(lll,mmm){ olddatagdump[gdumpjj][h][i][j][k]=dxdxp[lll][mmm];  gdumpjj++;}
+      if(gdumpjj!=numgdumps){
+	fprintf(stderr,"Memory issue with olddatagdump assignment\n");
+	myexit(1);
+      }
+      // now have all that's required to compute F^{\mu\nu} locally for this grid point
+      // and also have enough to compute orthonormal versions of things (e.g. for J^\mu later)
+    }
+    fprintf(stderr,"\nEND Reading/Storing 3-time data and gdump data with oN3=%d dots produced\n",oN3);fflush(stderr);
+
+
+
+    //////////////
+    //
+    // Apply boundary conditions
+    //
+    ///////////////
+
+    // apply boundary conditions on this 3-time data
+    doubleworkfake=1; // just forces use of olddata3time
+    apply_boundaryconditions_olddata(NUMCOLUMNSSTORE,oN0fake,numbc0fake,doubleworkfake,oldimage0,olddata3time);
+
+    // apply boundary conditions to gdump data
+    doubleworkfake=1; // just forces use of olddatagdump
+    apply_boundaryconditions_olddata(numgdumps,1,0,doubleworkfake,oldimage0,olddatagdump);
+
+
+
+    //////////////
+    //
+    // Store cubical data and then compute space-time derivatives to get current
+    //
+    ///////////////
+    
+
+    // compute F^{\mu\nu} with only local cube of memory
+    FTYPE uconcube[3][3][3][3][NDIM];
+    FTYPE Bconcube[3][3][3][3][NDIM];
+    FTYPE gcovcube[3][3][3][3][SYMMATRIXNDIM];
+    FTYPE gdetcube[3][3][3][3];
+    FTYPE gdetFuucube[3][3][3][3][NDIM][NDIM];
+    FTYPE Jcon[NDIM];
+
+    // can order sub-loop however one wants, as long as memory access to arrays is correct.  Order for faster memory access (k fastest index)
+    //#define SUBLOOPOLDDATA for(hhh=0;hhh<3;hhh++)  for(iii=0;iii<3;iii++) for(jjj=0;jjj<3;jjj++) for(kkk=0;kkk<3;kkk++)
+    // limit to only required positions
+#define SUBLOOPOLDDATA for(hhh=0;hhh<3;hhh++)  for(iii=0;iii<3;iii++) for(jjj=0;jjj<3;jjj++) for(kkk=0;kkk<3;kkk++)
+
+    kprior=-1000;
+    fprintf(stderr,"BEGIN Computing Jcon with oN3=%d dots produced\n",oN3);fflush(stderr);
+    //
+    int hhh,iii,jjj,kkk;
+    h=1; // middle time from 3-time data is reference position where current is eventually located effectively
+    int hgdump=0; // gdump has no temporal information (yet)
+    LOOPOLDDATASPATIAL{ // 3D loop. In the end, don't need temporal information and just use +-1 values offset from normal dataset
+
+
+      // SUPERGODMARK: TODOMARK OPTMARK: Can speed things up alot if know interpolation box won't use portion of original data, which can then be skipped.  Can use r,\theta,\phi to detect (e.g. for Cart output) if need certain data.  Just compute x,y,z and see if inside new box.  If not, skip.  Will only generally exclude radial parts, and so maybe save factor of 2-4 or so.  Should do it!
+
+
+      if(k!=kprior){ fprintf(stderr,"."); fflush(stderr); kprior=k; }
+
+      SUBLOOPOLDDATA{ // full 4D loop
+	
+	// restrict loop to only required points for computing derivatives
+	if(abs(hhh-1)+abs(iii-1)+abs(jjj-1)+abs(kkk-1)>1) continue; // i.e. only 1 direction offset at a time.
+
+	
+	// u^\mu
+	DLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREU0+jj][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
+	SLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]*=uconcube[hhh][iii][jjj][kkk][TT];
+	// B^\mu
+	Bconcube[hhh][iii][jjj][kkk][TT]=0.0;
+	SLOOPA(jj) Bconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREB1+jj-1][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
+	// g_{\mu\nu} for SYMMATRIXNDIM unique elements
+	int gdumpjj=0;
+	for(jj=0;jj<SYMMATRIXNDIM;jj++){ gcovcube[hhh][iii][jjj][kkk][jj]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;}
+	// \detg = \sqrt{-g}
+	gdetcube[hhh][iii][jjj][kkk]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;
+
+	// DEBUG:
+	//fprintf(stderr,"Before compute_gdetFuu: %d %d %d %d : %d %d %d %d\n",h,i,j,k,hhh,iii,jjj,kkk);fflush(stderr);
+
+	// \detg F^{\mu\nu}
+	compute_simple_gdetFuu(gdetcube[hhh][iii][jjj][kkk], gcovcube[hhh][iii][jjj][kkk], uconcube[hhh][iii][jjj][kkk], Bconcube[hhh][iii][jjj][kkk], gdetFuucube[hhh][iii][jjj][kkk]);
+
+
+	// DEBUG:
+#if(0)
+	fprintf(stderr,"COMPUTE0: %d %d %d %d : %d %d %d %d \n",h,i,j,k,hhh,iii,jjj,kkk);
+	for(jj=0;jj<SYMMATRIXNDIM;jj++) fprintf(stderr,"COMPUTE1: %d %g\n",jj,gcovcube[hhh][iii][jjj][kkk][jj]);
+	fprintf(stderr,"COMPUTE2:  %g\n",gdetcube[hhh][iii][jjj][kkk]);
+	DLOOPA(jj) fprintf(stderr,"COMPUTE3: %d  %g\n",jj,uconcube[hhh][iii][jjj][kkk][jj]);
+	DLOOPA(jj) fprintf(stderr,"COMPUTE4: %d  %g\n",jj,Bconcube[hhh][iii][jjj][kkk][jj]);
+	int kk; DLOOP(jj,kk) fprintf(stderr,"COMPUTE5: %d %d %g\n",jj,kk,gdetFuucube[hhh][iii][jjj][kkk][jj][kk]);
+#endif
+
+
+	// DEBUG:
+	//fprintf(stderr,"After compute_gdetFuu\n");fflush(stderr);
+
+      }// over hhh,iii,jjj,kkk
+
+      // now have \detg F^{\mu\nu} over spatio-temporal cube
+      // So can compute J^\mu = (1/\detg) (\detg F^{\mu\nu})_{,\nu}  (sign won't matter in the end when get J^2)
+      // note that only using grid-aligned derivatives using centered difference, which is as accurate as parabolae because that term cancels.
+      FTYPE fakeDT = endtdata0 - starttdata0; // because dX[TT]=dt=1 when oN0=1 and avoid using endtdata and starttdata that get modified since used for another purpose (true 4D data)
+      
+      Jcon[TT] =
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TT][RR] - gdetFuucube[1][0][1][1][TT][RR])/dX[RR]
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][TT][TH] - gdetFuucube[1][1][0][1][TT][TH])/dX[TH]
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TT][PH] - gdetFuucube[1][1][1][0][TT][PH])/dX[PH]
+	;
+
+      Jcon[RR] =
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][RR][TT] - gdetFuucube[0][1][1][1][RR][TT])/fakeDT
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][RR][TH] - gdetFuucube[1][1][0][1][RR][TH])/dX[TH]
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][RR][PH] - gdetFuucube[1][1][1][0][RR][PH])/dX[PH]
+	;
+
+      Jcon[TH] =
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][TH][TT] - gdetFuucube[0][1][1][1][TH][TT])/fakeDT
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TH][RR] - gdetFuucube[1][0][1][1][TH][RR])/dX[RR]
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TH][PH] - gdetFuucube[1][1][1][0][TH][PH])/dX[PH]
+	;
+
+      Jcon[PH] =
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][PH][TT] - gdetFuucube[0][1][1][1][PH][TT])/fakeDT
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][PH][RR] - gdetFuucube[1][0][1][1][PH][RR])/dX[RR]
+	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][PH][TH] - gdetFuucube[1][1][0][1][PH][TH])/dX[TH]
+	;
+
+
+      // DEBUG:
+      //      DLOOPA(jj) fprintf(stderr,"Jcon[%d]=%g : Dx=%g fakeDT=%g gdet=%g\n",jj,Jcon[jj],dX[jj],fakeDT,gdetcube[1][1][1][1]); fflush(stderr);
+      			 
+
+
+      int href=0;
+      DLOOPA(jj) olddatacurrent[jj][href][i][j][k]=Jcon[jj];
+      // now have current stored in global "olddatacurrent" location.  This data can be used just like other single-point versions of data.
+
+      // V^i (assume V^t=t didn't change from older assignment during gdump read-in since constant)
+      int gdumpjj=SYMMATRIXNDIM+1;
+      SLOOPA(jj){ V[jj]=olddatagdump[gdumpjj][href][i][j][k]; gdumpjj++; }
+      // dx^\mu/dxp^\nu (only modify 1-2 components, since rest didn't change from assignment of constant from gdump read-in in prior loop)
+      int lll,mmm; SLOOP12(lll,mmm){ dxdxp[lll][mmm]=olddatagdump[gdumpjj][href][i][j][k]; gdumpjj++; }
+      if(gdumpjj!=numgdumps){
+	fprintf(stderr,"Memory issue with olddatagdump assignment\n");
+	myexit(1);
+      }
+
+
+      // setup ti (no need to store, so just regenerate from loop)
+      ti[TT]=0;ti[RR]=i;ti[TH]=j;ti[PH]=k;
+      // 2 means compute Jconortho
+      // "val" below is not filled but not used.
+      compute_datatype14(2, val, fvar, ti,  NULL,  V,  NULL,  NULL,  gcovcube[1][1][1][1],  gdetcube[1][1][1][1],  NULL,  dxdxp, NULL); // don't really need gdet
+      // store ONLY current results (so don't overwrite non-current results with non-computed fvar)
+      int coli; for(coli=OUTJX0;coli<=OUTJX3;coli++) olddata0[coli][href][i][j][k]=fvar[coli];
+
+
+      
+    } // over h,k,j,i
+    fprintf(stderr,"\nEND Computing Jcon with oN3=%d dots produced\n",oN3);fflush(stderr);
+
+
+    // for thickdisk7 using DATATYPE==14, without current calculation, takes only 750MB
+    // with currents, after reducing to only needed things, now 4.4GB resident.
+    // with DATATYPE==14 and docurrent==1, code takes 5 minutes for Phase1 (reading/storing), then taking 16 minutes (5:00 - 21:00) for Phease 2 (computing Jcon), then quickly does Phase 3 (re-storing data) in <1 minute (21:00 - 21:30), and then interpolation at 100^3 takes 2 more minutes (21:30 - 22:45):  Total time: 23 minutes
+    // So since computing Jcon is so expensive, might as well do 512^3 that takes about 20 minutes so total time is about 40 minutes.
+    //
+    // density only 100^3: 2 minutes
+    // no current 100^3:  4minutes preprocess + 2 minutes interp = 6  minutes total
+    // no current 512^3:  4minutes preprocess +   minutes interp =    minutes total
+    //    current 100^3: 22minutes preprocess + 1 minutes interp = 23 minutes total
+    //    current 512^3: 22minutes preprocess +   minutes interp =    minutes total
+
+
+    /////////////////////////
+    // free temp space
+    //
+    fprintf(stderr,"Freeing space used by computing additionals\n"); fflush(stderr);
+    
+    free_f5matrix(olddata3time,0,NUMCOLUMNSSTORE-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
+    free_f5matrix(olddatagdump,0,numgdumps-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
+  
+
+
+    // now rewind fieldline files and gdump files and pass header if exists, so starting at normal starting point as if this routine were never called
+    infile_tostartofdata(infile);
+    // no need to rewind infilem1 and infilep1
+    gdump_tostartofdata(gdumpin);
+
+
+    fprintf(stderr,"END Computing additionals\n"); fflush(stderr);
+  }// end if reading-in special 3-time data set
+
+
+
+ 
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+// compute \detg F^{\mu\nu}
+void compute_gdetFuu(FTYPE gdet, FTYPE *gcov, FTYPE *ucon, FTYPE *Bcon, FTYPE (*Fuu)[NDIM])
+{
+  FTYPE ucov[NDIM];
+  FTYPE bcon[NDIM],bcov[NDIM],bsq;
+  FTYPE Bcov[NDIM];
+  struct of_geom geom;
+  int jj,kk;
+
+
+  /// assign gdet
+  geom.gdet=gdet;
+
+  // compute lower components
+  DLOOPA(jj) ucov[jj]=0.0;
+  DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[GIND(jj,kk)];
+  
+  // make primitive u^i
+  FTYPE pr[NPR];
+  pr[U1]=ucon[RR];
+  pr[U2]=ucon[TH];
+  pr[U3]=ucon[PH];
+  pr[B1]=Bcon[RR];
+  pr[B2]=Bcon[TH];
+  pr[B3]=Bcon[PH];
+
+  // compute b^\mu[pr,ucon,ucov]
+  bcon_calc(pr, ucon, ucov, bcon);
+  
+  // compute b_\mu
+  DLOOPA(jj) bcov[jj]=0.0;
+  DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[GIND(jj,kk)];
+  
+  // compute "fake" B_\mu (i.e. didn't lower upper t in *F^{t\mu} )
+  DLOOPA(jj) Bcov[jj]=0.0;
+  DLOOP(jj,kk) Bcov[jj] += Bcon[kk]*gcov[GIND(jj,kk)];
+  
+  // compute b^2 (not used yet)
+  bsq = dot(bcon,bcov);
+
+  // now get F^{\mu\nu}
+  int updown=1;
+  faraday_calc(updown,bcov,ucov,&geom,Fuu);
+
+
+  DLOOP(jj,kk) Fuu[jj][kk]*=gdet;
+
+
+
+}
+
+
+
+// compute \detg F^{\mu\nu}
+void compute_simple_gdetFuu(FTYPE gdet, FTYPE *gcov, FTYPE *ucon, FTYPE *Bcon, FTYPE (*Fuu)[NDIM])
+{
+  FTYPE ucov[NDIM];
+  FTYPE bcon[NDIM],bcov[NDIM],bsq;
+  FTYPE Bcov[NDIM];
+  struct of_geom geom;
+  int jj,kk;
+
+
+  /// assign gdet
+  geom.gdet=gdet;
+
+  // compute lower components
+  DLOOPA(jj) ucov[jj]=0.0;
+  DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[GIND(jj,kk)];
+  
+  // make primitive u^i
+  FTYPE pr[NPR];
+  pr[U1]=ucon[RR];
+  pr[U2]=ucon[TH];
+  pr[U3]=ucon[PH];
+  pr[B1]=Bcon[RR];
+  pr[B2]=Bcon[TH];
+  pr[B3]=Bcon[PH];
+
+  // compute b^\mu[pr,ucon,ucov]
+  bcon_calc(pr, ucon, ucov, bcon);
+
+  // compute b_\mu
+  DLOOPA(jj) bcov[jj]=0.0;
+  DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[GIND(jj,kk)];
+  
+  // now get F^{\mu\nu}
+  int updown=1; // this uses bcov and ucov
+  faraday_calc(updown,bcov,ucov,&geom,Fuu);
+
+
+  DLOOP(jj,kk) Fuu[jj][kk]*=gdet;
+
+
+
+}
+
+
+
+
+/////////////////////////////////////////////////////
+// lc4() and faraday_calc() COPIED FROM phys.tools.c
+/////////////////////////////////////////////////////
+
+// used Mathematica's MinimumChangePermutations and Signature
+// updown refers to whether \epsilon^{\mu\nu\kappa\lambda} was fully up or fully down (it does not refer to the faraday)
+// updown = 0 : down (i.e. \epsilon_{\alpha\beta\delta\gamma} = \sqrt{-g} [\alpha\beta\gamma\delta]
+// updown = 1 : up (i.e. \epsilon^{\alpha\beta\delta\gamma} = (-1/\sqrt{-g}) [\alpha\beta\gamma\delta]
+static FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda)
+{
+  int i;
+  FTYPE lc4sign; // 1,-1,1,-1... for all 24 entires
+  int l1[24]={1, 2, 3, 1, 2, 3, 4, 2, 1, 4, 2, 1, 1, 3, 4, 1, 3, 4, 4, 3, 2, 4, 3, 2};
+  int l2[24]={2, 1, 1, 3, 3, 2, 2, 4, 4, 1, 1, 2, 3, 1, 1, 4, 4, 3, 3, 4, 4, 2, 2, 3};
+  int l3[24]={3, 3, 2, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 4, 3, 3, 1, 1, 2, 2, 3, 3, 4, 4};
+  int l4[24]={4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1};
+
+  for(i=0;i<24;i++){
+    if((1+mu==l1[i])&&(1+nu==l2[i])&&(1+kappa==l3[i])&&(1+lambda==l4[i])){
+      lc4sign=(i%2) ? -1 : 1;
+      if(updown==1) return(-1.0/detg*lc4sign); // upper epsilon
+      else if(updown==0) return(detg*lc4sign); // lower epsilon
+    }
+  }
+  // if didn't get here, then 0
+  return(0.0);
+}
+
+// assume anti-symmetric
+// assumes b and u are inputted as bcov&ucov for F^{\mu\nu} and bcon&ucon for F_{\mu\nu}
+static void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*faraday)[NDIM])
+{
+  int nu,mu,kappa,lambda;
+
+  // initialize
+  for(nu=0;nu<NDIM;nu++){
+    for(mu=0;mu<NDIM;mu++){
+      faraday[mu][nu]=0.0;
+    }
+  }
+
+  // get unique part (nu=0 mu=1,2,3  then nu=1 mu=2,3  then nu=2 mu=3)
+  for(nu=0;nu<NDIM;nu++){
+    for(mu=nu+1;mu<NDIM;mu++){
+   
+      faraday[mu][nu]=0.0;
+      for(kappa=0;kappa<NDIM;kappa++){
+	for(lambda=0;lambda<NDIM;lambda++){
+	
+	  // faraday_calc(which) refers to whether faraday is fully up or down, and lc4(updown) refers to updown being \epsilon fully up or down.  And these are the same.
+	  // F^{\alpha\beta} = -b_\gamma u_\delta \epsilon^{\alpha\beta\gamma\delta}
+	  // F^{\mu\nu} = \epsilon^{\mu\nu\kappa\lambda} u_\kappa b_\lambda
+	  // So sign below is correct.
+	  faraday[mu][nu] += lc4(which,geom->gdet,mu,nu,kappa,lambda)*u[kappa]*b[lambda];
+	  
+	  // DEBUG:
+	  //fprintf(stderr,"faraday[%d][%d]=%g : lc4=%g : %d %g %d %d %g %g\n",mu,nu,faraday[mu][nu],lc4(which,geom->gdet,mu,nu,kappa,lambda),which,geom->gdet,kappa,lambda,u[kappa],b[lambda]); fflush(stderr);
+	}
+      }
+    }
+  }
+
+  // assign anti-symmetric part that's non-zero
+  // nu=1 mu=0  then nu=2 mu=0,1  then nu=3 mu=0,1,2)
+  for(nu=0;nu<NDIM;nu++){
+    for(mu=0;mu<nu;mu++){
+      faraday[mu][nu]=-faraday[nu][mu];
+    }
+  }
+
+  // DEBUG:
+  //  DLOOP(mu,nu) fprintf(stderr,"faraday[%d][%d]=%g\n",mu,nu,faraday[mu][nu]); fflush(stderr);
+
+
+}
+
+
+
+
+
+
 
 
 
@@ -592,9 +1219,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****oldda
 
 
 // coordinate transform of vector and get single component of result
-//static void vec2vecortho(FILE *gdumpfile, int oldgridtype, int newgridtype, int i, int j, int k, FTYPE *vec, FTYPE *vecortho)
 // concovtype: 1 = inputting u^\mu   2 = inputting u_\mu
-static void vec2vecortho(int concovtype, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
+static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho)
 {
   FTYPE lambdacoord[NDIM][NDIM];
   int jj,kk;
@@ -915,7 +1541,7 @@ static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTY
 // assumed to be used in same order as data and gdump file as looped over in this code
 // and of course only can be done once per data point
 // fastest index is most-right element
-static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom)
+void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom)
 {
   int jj,kk,ll,pp;
 
@@ -925,8 +1551,8 @@ static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*
     SLOOPA(jj) fscanf(in,SCANARG,&X[jj]);
     SLOOPA(jj) fscanf(in,SCANARG,&V[jj]);
     DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) fscanf(in,SCANARG,&conn[jj][kk][ll]);
-    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[GIND(jj,kk)]);
-    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[GIND(jj,kk)]);
+    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcon[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
+    DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&gcov[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
     fscanf(in,SCANARG,gdet); // gdet already pointer
     DLOOPA(jj) fscanf(in,SCANARG,&ck[jj]);
     DLOOPA(jj) DLOOPA(kk) fscanf(in,SCANARG,&dxdxp[jj][kk]);
@@ -938,8 +1564,8 @@ static void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*
     SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&X[jj]);
     SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&V[jj]);
     DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) readelement(binaryinputgdump,inFTYPEgdump,in,&conn[jj][kk][ll]);
-    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcon[GIND(jj,kk)]);
-    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcov[GIND(jj,kk)]);
+    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcon[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
+    DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcov[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
     readelement(binaryinputgdump,inFTYPEgdump,in,gdet); // gdet already pointer
     DLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&ck[jj]);
     DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&dxdxp[jj][kk]);
@@ -1005,3 +1631,11 @@ void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon)
 
   return;
 }
+
+
+
+
+
+
+
+

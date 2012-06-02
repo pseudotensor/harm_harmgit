@@ -16,7 +16,7 @@ FILE *infilem1;
 FILE *infilep1;
 FILE *outfile;
 
-int compact3time;
+int docurrent;
 
 int calledranc;
 FTYPE NUMEPSILONPOW23;
@@ -66,6 +66,7 @@ FTYPE gridAAglobal,gridr0global;
 FTYPE X[NDIM];
 FTYPE Xmetricnew[NDIM],Xmetricold[NDIM]; // used to store time of latest and oldest metric
 FTYPE endtdata,starttdata; // for 4D dump inputs
+FTYPE endtdata0,starttdata0; // for 3-time 4D compute_additionals()
 
 
 FTYPE tdump,gam,spin,MBH,QBH,EP3,THETAROT; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
@@ -179,7 +180,9 @@ FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTOR
 unsigned char *****oldimage,*****oldimage0,*****newimage;
 FTYPE *****olddata,*****olddata0;
 FTYPE *****newdata;
-
+FTYPE *****olddata3time;
+FTYPE *****olddatagdump;
+FTYPE *****olddatacurrent;
 
 
 

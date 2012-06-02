@@ -16,11 +16,13 @@ static void interp_init(void);
 static void setup_zones(void);
 static void interp_readcommandlineargs(int argc, char *argv[]);
 static void readdata_preprocessdata(void);
-static void apply_boundaryconditions_olddata(int numcols, int oN0local, FTYPE numbc0local, int doubleworklocal, char *****oldimagelocal, FTYPE *****olddatalocal);
-static void gdump_tostartofdata(FILE *gdumpin);
+
+static void setup_interpolation_memory(void);
+
 static void input_header(void);
 static void output_header(void);
 static void output2file_postinterpolation(void);
+
 
 static void old_usage(int argc, int basicargcnum);
 static void usage(int argc, int basicargcnum);
@@ -84,6 +86,10 @@ int main(int argc, char *argv[])
 
 
   if(doinginterpolation){
+
+
+    setup_interpolation_memory();
+
     // only refine or setup new grid if doing interpolation
 
     // refine data
@@ -123,6 +129,31 @@ int main(int argc, char *argv[])
 
 
 
+
+// allocate global arrays for interpolation memory
+static void setup_interpolation_memory(void)
+{
+
+  if(ALLOCATENEWIMAGEDATA==0) return; // not allocating newimage or newdata, just outputting directly during interpolation.  Saves huge memory on large interpolations
+
+  fprintf(stderr,"Allocating newdata or newimage\n"); fflush(stderr);
+
+  if(DATATYPE==0){
+    newimage  = c5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+    if(newimage==NULL){
+      fprintf(stderr,"Couldn't allocate newimage\n"); fflush(stderr);
+      myexit(1);
+    }
+  }
+  else{
+    newdata  = f5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[col][h][i][j][k]
+    if(newdata==NULL){
+      fprintf(stderr,"Couldn't allocate newdata\n"); fflush(stderr);
+      myexit(1);
+    }
+  }
+
+}
 
 
 
@@ -283,12 +314,24 @@ static void setup_zones(void)
 }
 
 
-static void gdump_tostartofdata(FILE* gdumpin)
+
+
+void gdump_tostartofdata(FILE* gdumpinlocal)
 {
 
-  rewind(gdumpin);
+  rewind(gdumpinlocal);
   // skip first line assuming it's a header line if READHEADERGDUMP=1
-  if(READHEADERGDUMP) while(fgetc(gdumpin)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  if(READHEADERGDUMP) while(fgetc(gdumpinlocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  
+
+}
+
+void infile_tostartofdata(FILE* infilelocal)
+{
+
+  rewind(infilelocal);
+  // skip first line assuming it's a header line if READHEADER=1
+  if(READHEADER) while(fgetc(infilelocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
   
 
 }
@@ -300,6 +343,7 @@ static void readdata_preprocessdata(void)
   int coli,h,i,j,k;
   int colini;
   unsigned char tempuc;
+  int doubleworkfake;
 
 
   if(getgdump){
@@ -335,11 +379,17 @@ static void readdata_preprocessdata(void)
     /* make arrays for images */
     if(!DOUBLEWORK){
       oldimage0 = c5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
-      newimage  = c5matrix(0,0,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+      if(oldimage0==NULL){
+	fprintf(stderr,"Couldn't allocate oldimage0\n"); fflush(stderr);
+	myexit(1);
+      }
     }
     else{
       olddata0 = f5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[col][h][i][j][k]
-      newdata  = f5matrix(0,0,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[col][h][i][j][k]
+      if(olddata0==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+	myexit(1);
+      }
     }
     /* read in old image */
     if(jonheader){
@@ -384,18 +434,23 @@ static void readdata_preprocessdata(void)
     apply_boundaryconditions_olddata(numoutputcols, oN0, numbc[0], DOUBLEWORK, oldimage0, olddata0);
 
   }
+
+
+
   ///////////////////////////////////
   //
   // DATATYPE>=1
   //
   ///////////////////////////////////
   else{
+
+
     imagedata=1; // says treat as data
 
 
     if(immediateoutput==1){
       // only ever inputting and outputting at once and don't interpolate and don't need to store more than 1 grid point
-      compute_preprocess(outputvartype,gdumpin, NULL, NULL);
+      compute_preprocess(outputvartype,gdumpin, 0,0,0,0,NULL, NULL);
 
 
     }
@@ -404,43 +459,24 @@ static void readdata_preprocessdata(void)
 
 
       ////////////////
-      // ALLOCATE MEMORY
+      fprintf(stderr,"Before allocate olddata0: %d %d %d %d %d %d %d %d %d %d\n",0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]); fflush(stderr);
+      // ALLOCATE MEMORY for storing HARM-based processed data (olddata0)
       olddata0 = f5matrix(0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[coli][h][i][j][k]
-      newdata  = f5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[coli][h][i][j][k]
+      if(olddata0==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+	myexit(1);
+      }
+      fprintf(stderr,"After allocate olddata0\n"); fflush(stderr);
 
 
 
-      /////////////
-      // SETUP 3-TIME DATA READ
-      int open3time=0;
-      if(infilem1!=NULL && infilep1!=NULL && DATATYPE==14 && outputvartype!=0){
-	open3time=1;
-	// then store full data for 3 times at once
-	int oN0fake=3; // 3-time
-	int numbc0fake=0; // no boundary conditions
-	olddata3time = f5matrix(0,numcolumns-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata3time[colini][h][i][j][k]
+      
+      // compute additional quantities that can be transformed, processesed, and/or eventually interpolated
+      // so far creates olddatacurrent globally if doing anything
+      // ensure olddata0 allocated if computing everything in compute_additionals()
+      compute_additionals();
 
-	//for(i=1;i<=4;i++) while(fgetc(infilem1)!='\n'); // asume at this point that all 3 files have had header read if header exists
-	LOOPOLDDATASPATIAL{
-	  // read-in such that columns are fastest index, then i, then j, then k as in data files
-	  for(colini=0;colini<numcolumns;colini++){
-	    // get m1
-	    h=0;
-	    readelement(binaryinput,inFTYPE,infilem1,&olddata3time[colini][h][i][j][k]);
-	    // get normal middle time value
-	    h=1;
-	    readelement(binaryinput,inFTYPE,infile,&olddata3time[colini][h][i][j][k]);
-	    // get p1
-	    h=2;
-	    readelement(binaryinput,inFTYPE,infilep1,&olddata3time[colini][h][i][j][k]);
-	  }
-	}
 
-	// apply boundary conditions on this 3-time data
-	int doubleworkfake=1; // just forces use of olddata3time
-	apply_boundaryconditions_olddata(numcolumns,oN0fake,numbc0fake,doubleworkfake,oldimage0,olddata3time);
-
-      }// end if reading-in special 3-time data set
 
 
 
@@ -456,11 +492,22 @@ static void readdata_preprocessdata(void)
       int kprior,firsttimecompute=1;
 
 
-      // setup temp old column space
-      FTYPE *olddata0temp=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+      // setup temp new column space to avoid passing entire array "olddata0" to functions because "coli" is at the front of array storage function, when only need per space-time point.
+      FTYPE *olddata0temp=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
       if(olddata0temp==NULL){
 	fprintf(stderr,"Couldn't allocate olddata0temp\n");
 	exit(1);
+      }
+
+
+      FTYPE *olddata0temporig=NULL;
+      if(outputvartype==0){
+	// old column space
+	olddata0temporig=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+	if(olddata0temporig==NULL){
+	  fprintf(stderr,"Couldn't allocate olddata0temporig\n");
+	  exit(1);
+	}
       }
 
 
@@ -469,29 +516,27 @@ static void readdata_preprocessdata(void)
       //
       // no iteration over coli -- multiple input columns handled by outputvartype>0
       int hprior=-1000;
-      int seth=1;
       LOOPOLDDATA{
 	
 	// only 1 thing in (e.g. for scalar image or data)
 	if(outputvartype==0){
-	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temp[colini]);
+	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temporig[colini]);
 
 	  // if multiple input columns, choose 0th column, unless selecting part of field line file
 	  if(DATATYPE==1000){
-	    colini=0;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // rho_0
+	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // rho_0
 	  }
 	  else if(DATATYPE==1001){
-	    colini=1;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // u_g
+	    coli=0; colini=1;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // u_g
 	  }
 	  else{
-	    colini=0;  olddata0[colini][h][i][j][k]=olddata0temp[colini]; // first or only column
+	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // first or only column
 	  }
 
 
 	}
 	else{
 	  // for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
-
 	  int dotstoappear;
 	  dotstoappear=oN0*oN3;
 
@@ -511,10 +556,8 @@ static void readdata_preprocessdata(void)
 	  }
 
 
-
 	  // get new columns by processing data
-	  compute_preprocess(outputvartype, gdumpin, olddata3time, olddata0temp);
-
+	  compute_preprocess(outputvartype, gdumpin, h,i,j,k,olddatacurrent, olddata0temp);
 
 
 	  // copy from temp space
@@ -532,19 +575,11 @@ static void readdata_preprocessdata(void)
       }// end LOOPOLDDATA
 
 
-
-
-      /////////////////////////
-      // free temp space
-      //
-      // free 3-time data storage since how have final (e.g.) Cartesian orthonormal result in olddata0
-      if(open3time==1){
-	free_f5matrix(olddata3time,0,numcolumns-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
-      }
       // free temp column space
       free(olddata0temp);
-
-
+      if(outputvartype==0){
+	free(olddata0temporig);
+      }
 
 
       if(filter){
@@ -557,7 +592,7 @@ static void readdata_preprocessdata(void)
 
       // apply boundary conditions (spatial and temporal) on HARM-grid data
       doubleworkfake=1; // force use of olddata0
-      apply_boundaryconditions_olddata(numoutputcols,oN0,numbc[0],doubleworkfakeoldimage0,olddata0);
+      apply_boundaryconditions_olddata(numoutputcols,oN0,numbc[0],doubleworkfake,oldimage0,olddata0);
 
 
 
@@ -593,6 +628,12 @@ static void readdata_preprocessdata(void)
 	defaultvalue[7]=0.0; // Bz
 	defaultvalue[8]=0.0; // FEMrad
 	defaultvalue[9]=0.0; // Bphi
+	if(docurrent==1){
+	  defaultvalue[9]=0.0; // Jt (can be + or -, so choose 0 as default)
+	  defaultvalue[10]=0.0; // Jx
+	  defaultvalue[11]=0.0; // Jy
+	  defaultvalue[12]=0.0; // Jz
+	}
       }
       else{
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
@@ -638,12 +679,17 @@ static void readdata_preprocessdata(void)
 
 
 
+
+
+
+
+
 /////////////
 //
 // set boundary conditions (as if scalars) to original HARM-grid data
 //
 ///////////// 
-static void apply_boundaryconditions_olddata(int numcols, int oN0local, FTYPE numbc0local, int doubleworklocal, char *****oldimagelocal, FTYPE *****olddatalocal)
+void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal)
 {
   int coli,h,i,j,k;
   int numbclocal[NDIM];
@@ -919,41 +965,84 @@ static void output2file_postinterpolation(void)
   unsigned char uctemp;
   FTYPE ftemp;
 
+  if(ALLOCATENEWIMAGEDATA==0){
+    fprintf(stderr,"Nothing to do.  Inside output2file_postinterpolation() when ALLOCATENEWIMAGEDATA==0.  Already wrote data to file.\n");
+    return;
+  }
+
 
   // OUTPUT TO FILE
   fprintf(stderr,"Output to file\n"); fflush(stderr);
 
 
-  ///////
-  // COLMARK: When finally writing the file, we place columns as fastest index, i next, j next, k next, and time next
-  ///////
+  OUTPUTLOOP{
+    output2file_perpointcoli_postinterpolation(newimage[coli][h][i][j][k], newdata[coli][h][i][j][k]);
+  }// end over OUTPUTLOOP
 
-#define OUTPUTLOOP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++) for(i=0;i<nN1;i++) for(coli=0;coli<numoutputcols;coli++)
+}
 
-  // in principle could output in different order if wanted
-  if(DATATYPE==0){
-    OUTPUTLOOP{
-      fwrite(&newimage[coli][h][i][j][k], sizeof(unsigned char), 1, outfile) ;
+
+
+// output single point of newgrid data to file
+// here, assumes input is 1-D array of quantities (i.e. coli's) as used directly by interpolation to avoid having to allocate newdata or newimage arrays
+// which=0: dealing with image output
+// which=1: dealing with data output
+void output2file_perpoint_postinterpolation(int which, int h, int i, int j, int k, unsigned char *newimagelocal, FTYPE *newdatalocal)
+{
+  unsigned char uctemp;
+  FTYPE ftemp;
+  int coli;
+
+
+  if(ALLOCATENEWIMAGEDATA==0){
+    for(coli=0;coli<numoutputcols;coli++){
+      output2file_perpointcoli_postinterpolation(newimagelocal[coli], newdatalocal[coli]);
     }
   }
   else{
-    if(imagedata==0){
-      OUTPUTLOOP{
-	ftemp=newdata[coli][h][i][j][k];
-	//	if(ftemp<0.0) ftemp=0.0;
-	//if(ftemp>255.0) ftemp=255.0;
-	//uctemp=(unsigned char)ftemp;
-	uctemp = FLOAT2IMAGE(ftemp);
-	fwrite(&uctemp, sizeof(unsigned char), 1, outfile) ;
+    
+    if(which==1){
+      // assign (interpolated) old value to new grid position
+      if(DATATYPE==0){
+	for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(newdatalocal[coli]);
+      }
+      else{
+	for(coli=0;coli<numoutputcols;coli++)  newdata[coli][h][i][j][k] = (FTYPE)(newdatalocal[coli]) ;
       }
     }
     else{
-      OUTPUTLOOP{
-	writeelement(binaryoutput,outFTYPE,outfile,newdata[coli][h][i][j][k]) ;
-      }
+
+    }
+
+  }
+  
+}
+
+
+// output single point and per column of newgrid data to file
+// input is actual values
+void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTYPE newdatalocal)
+{
+  unsigned char uctemp;
+  FTYPE ftemp;
+
+
+  if(DATATYPE==0){
+    fwrite(&newimagelocal, sizeof(unsigned char), 1, outfile) ;
+  }
+  else{
+    if(imagedata==0){
+      ftemp=newdatalocal;
+      //	if(ftemp<0.0) ftemp=0.0;
+      //if(ftemp>255.0) ftemp=255.0;
+      //uctemp=(unsigned char)ftemp;
+      uctemp = FLOAT2IMAGE(ftemp);
+      fwrite(&uctemp, sizeof(unsigned char), 1, outfile) ;
+    }
+    else{
+      writeelement(binaryoutput,outFTYPE,outfile,newdatalocal) ;
     }
   }
-
 }
 
 
@@ -1134,6 +1223,7 @@ void old_usage(int argc, int basicargcnum)
 void parse_commandline(int argc, char *argv[])
 {
   int i;
+  int ii;
   int checktdata=0;
   int usage=0;
   int goodarg=0;
@@ -1312,11 +1402,16 @@ void parse_commandline(int argc, char *argv[])
 	  if(i+1<argc){
 	    if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infile=fopen(argv[++i],"rt");
-	    //for(i=1;i<=4;i++) while(fgetc(infile)!='\n');
+	    if(infile==NULL){
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infile\n");
+	      myexit(1);
+	    }
+	    //while(fgetc(infile)!='\n');
 	  }
 	  setinfile=1;
 	  // set defaults
-	  if(setinfile==0){
+	  if(setoutfile==0){
 	    setoutfile=1;
 	    outfile=stdout;
 	  }
@@ -1333,10 +1428,11 @@ void parse_commandline(int argc, char *argv[])
 	    if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infilem1=fopen(argv[++i],"rt");
 	    if(infilem1==NULL){
-	      fprintf(stderr,"Can't open infilem1\n");
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infilem1: %s\n",argv[i]);
 	      myexit(1);
 	    }
-	    for(i=1;i<=4;i++) while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
+	    while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
 	  }
 	  setinfilem1=1;
 	}
@@ -1352,10 +1448,11 @@ void parse_commandline(int argc, char *argv[])
 	    if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
 	    else infilep1=fopen(argv[++i],"rt");
 	    if(infilep1==NULL){
-	      fprintf(stderr,"Can't open infilep1\n");
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infilep1: %s\n",argv[i]);
 	      myexit(1);
 	    }
-	    for(i=1;i<=4;i++) while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
+	    while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
 	  }
 	  setinfilep1=1;
 	}
@@ -1654,13 +1751,24 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<dofull2pi>: whether to do full 2pi or not (see coord.c)\n");
 	}
       }
+      if (usage || strcmp(argv[i],"-docurrent")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&docurrent) ;
+	}
+	else{
+	  fprintf(stderr,"-docurrent <docurrent>\n");
+	  fprintf(stderr,"\t<docurrent>: whether to compute current (slower) if doing datatype==14\n");
+	}
+      }
       if (usage || strcmp(argv[i],"-tdata")==0) {
 	if(usage==0){
 	  goodarg++;
 	  // below 2 for 4D data inputs, specifying start and end times for dumps used
+	  // also store starttdata0 and endtdata0 in case the others are modified since dual-using these variables really for DATATYPE==14
 	  if(i+2<argc) checktdata=1;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&starttdata) ;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endtdata) ;
+	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&starttdata); starttdata0=starttdata;}
+	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&endtdata); endtdata0=endtdata;}
 	}
 	else{
 	  fprintf(stderr,"-tdata <starttdata> <endtdata>\n");
@@ -1668,6 +1776,7 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<starttdata>: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
 	  fprintf(stderr,"\t<endtdata>: time 4D input dumps end\n");
 	  fprintf(stderr,"\tNote: -tdata required if oN0>1 || nN1>1\n");
+	  fprintf(stderr,"\tAlso used to set infilem1 and infilep1 times for 3-time DATATYPE==14 procedure for getting current\n");
 	}
       }
       if (usage || strcmp(argv[i],"-tnrdeg")==0) {
@@ -1851,6 +1960,14 @@ void parse_commandline(int argc, char *argv[])
     fprintf(stderr,"Have nN0>1 || oN0>1 but didn't set tdata, using default!\n");
   }
 
+  // some checks if actually got sufficient args (i.e. when defaults aren't possible or don't make sense or contradict requirements)
+
+  if(DATATYPE==14 && docurrent==1){
+    if(checktdata==0){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -tdata\n"); fflush(stderr); myexit(1); }
+    if(infilem1==NULL || infilep1==NULL){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -infilem1 and -infilep2\n"); fflush(stderr); myexit(1); }
+    if(getgdump==0){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -gdump\n"); fflush(stderr); myexit(1); }
+  }
+
 
 }
 
@@ -1872,116 +1989,174 @@ void print_out_example_usage(void)
 
 
   fprintf(stderr,
-	  "##################\n"
-	  "# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
-	  "\n"
-	  "#\n"
-	  "# 1) make program\n"
-	  "\n"
-	  "cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
-	  "# setup for reduced code set\n"
-	  "rm -rf init.c init.h\n"
-	  "touch init.h\n"
-	  "\n"
-	  "\n"
-	  "# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
-	  "# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
-	  "\n"
-	  "# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
-	  "\n"
-	  "make superclean ; make prepiinterp ; make iinterp &> make.log\n"
-	  "\n"
-	  "# also make bin2txt program:\n"
-	  "\n"
-	  "make superclean ; make prepbin2txt ; make bin2txt\n"
-	  "# check makefile and setup for ki-rh39/orange/etc.\n"
-	  "\n"
-	  "# ensure no errors during compile or link (need lapack!)\n"
-	  "\n"
-	  "##############\n"
-	  "4) copy programs to your path\n"
-	  "\n"
-	  "cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
-	  "cp bin2txt ~/bin/bin2txt.orange\n"
-	  "\n"
-	  "###############\n"
-	  "# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
-	  "\n"
-	  "# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
-	  "dumpnum=5437\n"
-	  "dumpnumm1=$(($dumpnum-1))\n"
-	  "if [ -e \"dumps/fieldline$dumpnumm1.bin\" ]\n"
-	  "then\n"
-	  "    dumpnumm1=$(($dumpnum-1))\n"
-	  "else\n"
-	  "    dumpnumm1=$(($dumpnum))\n"
-	  "fi\n"
-	  "dumpnump1=$(($dumpnum+1))\n"
-	  "if [ -e \"dumps/fieldline$dumpnump1.bin\" ]\n"
-	  "then\n"
-	  "    dumpnump1=$(($dumpnum+1))\n"
-	  "else\n"
-	  "    dumpnump1=$(($dumpnum))\n"
-	  "fi	\n"
-	  "#\n"
-	  "# get times of dumps\n"
-	  "time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
-	  "timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
-	  "timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
-	  "#\n"
-	  "# get original resolution\n"
-	  "nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
-	  "ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
-	  "nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
-	  "numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
-	  "R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
-	  "Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
-	  "Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
-	  "hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
-	  "defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
-	  "#\n"
-	  "boxnx=100\n"
-	  "boxny=100\n"
-	  "boxnz=100\n"
-	  "boxx=10\n"
-	  "boxy=10\n"
-	  "boxz=10\n"
-	  "cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
-	  "IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
-	  "# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
-	  "mkdir $IDUMPDIR\n"
-	  "#\n"
-	  "#\n"
-	  "#\n"
-	  "whichoutput=14\n"
-	  "~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox $time0 $time0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $IDUMPDIR/fieldline$dumpnum.cart.bin\n"
-	  "\n"
-	  "\n"
-	  "\n"
-	  "# This results in a file with 1 line text header, line break, then data\n"
-	  "# The binary data block of *floats* (4 bytes) is ordered as:\n"
-	  "# fastest index: column\n"
-	  "# next index: i\n"
-	  "# next index: j\n"
-	  "# next index: k\n"
-	  "# next index: h (time, but only single time here)\n"
-	  "\n"
-	  "# the columns are ordered as:\n"
-	  "# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi\n"
-	  "# the latter 2 are the radial energy flux and the poloidal enclosed current density.\n"
-	  "# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
-	  "\n"
-	  "\n"
-	  "# can check how looks in text by doing:\n"
-	  "\n"
-	  "numoutputcols=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $30}'`\n"
-	  "newnx=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $2}'`\n"
-	  "newny=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $3}'`\n"
-	  "newnz=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $4}'`\n"
-	  "bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $IDUMPDIR/fieldline$dumpnum.cart.bin $IDUMPDIR/fieldline$dumpnum.cart.txt f $numoutputcols\n"
-	  "less -S $IDUMPDIR/fieldline$dumpnum.cart.txt\n"
-	  "\n"
-	  "# should look reasonable.\n"
+"##################\n"
+"# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
+"\n"
+"#\n"
+"# 1) make program\n"
+"\n"
+"cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
+"# setup for reduced code set\n"
+"rm -rf init.c init.h\n"
+"touch init.h\n"
+"\n"
+"\n"
+"# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
+"# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
+"\n"
+"# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
+"\n"
+"make superclean ; make prepiinterp ; make iinterp &> make.log\n"
+"\n"
+"# also make bin2txt program:\n"
+"\n"
+"make superclean ; make prepbin2txt ; make bin2txt\n"
+"# check makefile and setup for ki-rh39/orange/etc.\n"
+"\n"
+"# ensure no errors during compile or link (need lapack!)\n"
+"\n"
+"##############\n"
+"4) copy programs to your path\n"
+"\n"
+"cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
+"cp bin2txt ~/bin/bin2txt.orange\n"
+"\n"
+"###############\n"
+"# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
+"\n"
+"# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)\n"
+"newheader=0\n"
+"\n"
+"# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
+"dumpnum=5437\n"
+"dumpnumm1=$(($dumpnum-1))\n"
+"if [ -e dumps/fieldline$dumpnumm1.bin ]\n"
+"then\n"
+"    dumpnumm1=$(($dumpnum-1))\n"
+"else\n"
+"    dumpnumm1=$(($dumpnum))\n"
+"fi\n"
+"dumpnump1=$(($dumpnum+1))\n"
+"if [ -e dumps/fieldline$dumpnump1.bin ]\n"
+"then\n"
+"    dumpnump1=$(($dumpnum+1))\n"
+"else\n"
+"    dumpnump1=$(($dumpnum))\n"
+"fi	\n"
+"#\n"
+"# get times of dumps\n"
+"time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
+"timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
+"timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
+"#\n"
+"# get original resolution\n"
+"nt=1\n"
+"nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
+"ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
+"nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
+"if [ $newheader -eq 0 ]\n"
+"then\n"
+"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
+"else\n"
+"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`\n"
+"fi\n"
+"R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
+"Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
+"Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
+"hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
+"defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
+"#\n"
+"# Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z\n"
+"# That is:\n"
+"# So box(n)x refers to true x\n"
+"# So box(n)y refers to true z\n"
+"# So box(n)z refers to true y\n"
+"#\n"
+"# True x is V5D's x and iinterp's x\n"
+"# True z is V5D's y and iinterp's y\n"
+"# True y is V5D's z and iinterp's z\n"
+"#\n"
+"#\n"
+"# Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively\n"
+"#\n"
+"boxnt=1\n"
+"boxnx=100\n"
+"boxny=100\n"
+"boxnz=100\n"
+"boxxl=-10\n"
+"boxyl=-10\n"
+"boxzl=-10\n"
+"boxxh=10\n"
+"boxyh=10\n"
+"boxzh=10\n"
+"\n"
+"# set docurrent=0 if want quick result with no current density\n"
+"# this will change number of output columns\n"
+"docurrent=1\n"
+"\n"
+"cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
+"IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
+"# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
+"mkdir $IDUMPDIR\n"
+"#\n"
+"#\n"
+"#\n"
+"whichoutput=14\n"
+"outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz\n"
+"~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename\n"
+"\n"
+"\n"
+"# as a test, one can do just 1 variable (the density)\n"
+"if [ 1 -eq 0 ]\n"
+"then\n"
+"    outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz\n"
+"    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename\n"
+"fi\n"
+"\n"
+"\n"
+"# The whichoutput==14 case results in a file with 1 line text header, line break, then data\n"
+"# The binary data block of *floats* (4 bytes) is ordered as:\n"
+"# fastest index: column or quantity list\n"
+"# next fastest index: i (associated with true x)\n"
+"# next fastest index: j (associated with true y)\n"
+"# next fastest index: k (associated with true z)\n"
+"# slowest index: h (time, but only single time here)\n"
+"\n"
+"# Note that while array access of quantity is out of order in iinterp result, the 3D spatial grid is still written as a right-handed coordinate system.\n"
+"# So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).\n"
+"\n"
+"# The columns or quantities in the list are ordered as:\n"
+"# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)\n"
+"# FEMrad is the radial energy flux\n"
+"# Bphi is the poloidal enclosed current density\n"
+"# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)\n"
+"# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu\n"
+"# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)\n"
+"# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.\n"
+"# All vectors are orthonormal\n"
+"#\n"
+"# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"# can check how looks in text by doing:\n"
+"\n"
+"file=$outfilename\n"
+"if [ $newheader -eq 0 ]\n"
+"then\n"
+"    numoutputcols=`head -1 $file  |awk '{print $30}'`\n"
+"else\n"
+"    numoutputcols=`head -1 $fil |awk '{print $32}'`\n"
+"fi\n"
+"newnx=`head -1 $file |awk '{print $2}'`\n"
+"newny=`head -1 $file |awk '{print $3}'`\n"
+"newnz=`head -1 $file |awk '{print $4}'`\n"
+"bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols\n"
+"less -S $file.txt\n"
+"\n"
+"# should look reasonable.\n"
+
 	  );
 
   fflush(stderr);
@@ -2163,16 +2338,17 @@ void interpret_commandlineresults_subpart1(void)
   // differencetype: (for d_x3 or whatever)
 
 
+
+  // defaults
+  immediateoutput=0;// default is not immediate in-out
+  num4vectors=1; // default
+  outputvartype=0; // scalar
+  vectorcomponent=0; // scalar
+  numoutputcols=1; // normally old style is 1 output column since was interpolating 1 thing at a time.
+
   
   // set number of columns of data
   if(DATATYPE>1){
-
-    // defaults
-    immediateoutput=0;// default is not immediate in-out
-    num4vectors=1; // default
-    outputvartype=0; // scalar
-    vectorcomponent=0; // scalar
-    numoutputcols=1; // normally old style is 1 output column since was interpolating 1 thing at a time.
 
 
     // assume always want to transform vectors correctly
@@ -2209,7 +2385,9 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=14;
       immediateoutput=0; // Immediate computation of many quantities without interpolation
       vectorcomponent=-1; // indicates to output all components
-      numoutputcols=10; // create, interpolate, and output all 10 things at once
+      // create, interpolate, and output all "numoutputcols" things at once
+      if(docurrent)  numoutputcols=2+3*2+2+NDIM;
+      else numoutputcols=2+3*2+2;
       // only valid for DATATYPE=1 type of data (i.e. not images)
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
@@ -2501,6 +2679,8 @@ void defaultoptions(void)
   defcoord=0;
 
   dofull2pi=1;
+
+  docurrent=0;
 
   starttdata=0;
   endtdata=2000;

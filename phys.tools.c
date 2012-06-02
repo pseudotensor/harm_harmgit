@@ -2412,7 +2412,8 @@ FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda)
   return(0.0);
 }
 
-// below not used currently
+// Compute faraday
+// assumes b and u are inputted as bcov&ucov for F^{\mu\nu} and bcon&ucon for F_{\mu\nu}
 void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*faraday)[NDIM])
 {
   int nu,mu,kappa,lambda;

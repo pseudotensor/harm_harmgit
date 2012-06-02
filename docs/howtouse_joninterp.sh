@@ -33,17 +33,20 @@ cp bin2txt ~/bin/bin2txt.orange
 ###############
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
+# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)
+newheader=0
+
 # get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump
 dumpnum=5437
 dumpnumm1=$(($dumpnum-1))
-if [ -e "dumps/fieldline$dumpnumm1.bin" ]
+if [ -e dumps/fieldline$dumpnumm1.bin ]
 then
     dumpnumm1=$(($dumpnum-1))
 else
     dumpnumm1=$(($dumpnum))
 fi
 dumpnump1=$(($dumpnum+1))
-if [ -e "dumps/fieldline$dumpnump1.bin" ]
+if [ -e dumps/fieldline$dumpnump1.bin ]
 then
     dumpnump1=$(($dumpnum+1))
 else
@@ -56,22 +59,50 @@ timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`
 timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`
 #
 # get original resolution
+nt=1
 nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`
 ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`
 nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`
-numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`
+if [ $newheader -eq 0 ]
+then
+    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`
+else
+    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`
+fi
 R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`
 Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`
 Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`
 hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`
 defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
 #
+# Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z
+# That is:
+# So box(n)x refers to true x
+# So box(n)y refers to true z
+# So box(n)z refers to true y
+#
+# True x is V5D's x and iinterp's x
+# True z is V5D's y and iinterp's y
+# True y is V5D's z and iinterp's z
+#
+#
+# Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively
+#
+boxnt=1
 boxnx=100
 boxny=100
 boxnz=100
-boxx=10
-boxy=10
-boxz=10
+boxxl=-10
+boxyl=-10
+boxzl=-10
+boxxh=10
+boxyh=10
+boxzh=10
+
+# set docurrent=0 if want quick result with no current density
+# this will change number of output columns
+docurrent=1
+
 cd /lustre/ki/pfs/jmckinne/thickdisk7/
 IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/
 # ensure coordparms.dat exists here -- required to read in harm internal grid parameters
@@ -80,32 +111,58 @@ mkdir $IDUMPDIR
 #
 #
 whichoutput=14
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox $time0 $time0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $IDUMPDIR/fieldline$dumpnum.cart.bin
+outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz
+~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
 
 
+# as a test, one can do just 1 variable (the density)
+if [ 1 -eq 0 ]
+then
+    outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz
+    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename
+fi
 
-# This results in a file with 1 line text header, line break, then data
+
+# The whichoutput==14 case results in a file with 1 line text header, line break, then data
 # The binary data block of *floats* (4 bytes) is ordered as:
-# fastest index: column
-# next index: i
-# next index: j
-# next index: k
-# next index: h (time, but only single time here)
+# fastest index: column or quantity list
+# next fastest index: i (associated with true x)
+# next fastest index: j (associated with true y)
+# next fastest index: k (associated with true z)
+# slowest index: h (time, but only single time here)
 
-# the columns are ordered as:
-# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi
-# the latter 2 are the radial energy flux and the poloidal enclosed current density.
+# Note that while array access of quantity is out of order in iinterp result, the 3D spatial grid is still written as a right-handed coordinate system.
+# So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).
+
+# The columns or quantities in the list are ordered as:
+# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
+# FEMrad is the radial energy flux
+# Bphi is the poloidal enclosed current density
+# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)
+# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu
+# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)
+# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.
+# All vectors are orthonormal
+#
 # We can add other things, like the actual local current density, which would show where dissipation could be occuring.
+
+
 
 
 # can check how looks in text by doing:
 
-numoutputcols=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $30}'`
-newnx=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $2}'`
-newny=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $3}'`
-newnz=`head -1 $IDUMPDIR/fieldline$dumpnum.cart.bin |awk '{print $4}'`
-bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $IDUMPDIR/fieldline$dumpnum.cart.bin $IDUMPDIR/fieldline$dumpnum.cart.txt f $numoutputcols
-less -S $IDUMPDIR/fieldline$dumpnum.cart.txt
+file=$outfilename
+if [ $newheader -eq 0 ]
+then
+    numoutputcols=`head -1 $file  |awk '{print $30}'`
+else
+    numoutputcols=`head -1 $fil |awk '{print $32}'`
+fi
+newnx=`head -1 $file |awk '{print $2}'`
+newny=`head -1 $file |awk '{print $3}'`
+newnz=`head -1 $file |awk '{print $4}'`
+bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols
+less -S $file.txt
 
 # should look reasonable.
 
@@ -117,6 +174,14 @@ less -S $IDUMPDIR/fieldline$dumpnum.cart.txt
 
 #
 ################################### DONE!
+
+
+
+
+
+
+
+
 
 
 

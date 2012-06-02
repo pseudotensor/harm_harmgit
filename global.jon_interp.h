@@ -14,10 +14,33 @@
 // 0: shift points so still interpolate
 #define BILINEARREDUCE2NEARESTATBOUNDARY 0
 
+// whether to:
+// 1= allocate memory for newimage or newdata
+// or 0 = just output to file the interpolation results directly (can save huge on memory if doing large interpolations)
+#define ALLOCATENEWIMAGEDATA 0
+
+
 // Note: Due to how generally create data as multiple time dumps, easier to read and write time as slowest index even if by N? it's before i
 #define LOOPOLDDATA for(h=0;h<oN0;h++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)    for(i=0;i<oN1;i++)
 #define LOOPOLDDATASPATIAL for(k=0;k<oN3;k++) for(j=0;j<oN2;j++) for(i=0;i<oN1;i++)
+
+///////
+// COLMARK: When finally writing the file, we place columns as fastest index, i next, j next, k next, and time next
+///////
+#define OUTPUTSPACETIMELOOP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++) for(i=0;i<nN1;i++)
+#define OUTPUTLOOP OUTPUTSPACETIMELOOP for(coli=0;coli<numoutputcols;coli++)
+
+#if(ALLOCATENEWIMAGEDATA==1)
+// choice
 #define LOOPINTERP for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)    for(i=0;i<nN1;i++)
+#else
+// NO choice since have to loop during interpolation just as would output to file so can avoid allocating memory but write to file correctly.
+#define LOOPINTERP OUTPUTSPACETIMELOOP
+#endif
+
+
+
+
 
 // oldgridtype: 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R)// V in GRMHD code 4 = log for radius (used in Sashas monopole paper) 5=Cartesian, but time is mixed with space to approximate light travel time effects [only makes sense if doing 4D input with oN0>1]
 // newgridtype: -1=nochange (else like oldgridtype) // output coordinate system
@@ -38,9 +61,62 @@
 // maximum number of columns for memory allocation of some things
 #define MAXCOLS 20
 
+#define MAXINCOLS 20
+
 #define MAXBC 2
 // whether to treat \phi direction as periodic (used when N3>1 and oldgridtype==1)
 #define PERIODICINPHI 1 // default: 1
+
+#define SLOOP12(j,k) for(j=1;j<NDIM-1;j++)for(k=1;k<NDIM-1;k++)
+
+
+// field line file quantity list for input file (Sasha has more than 10, but not required for present calculations)
+// numcolumns - colini type
+#define FLRHO 0
+#define FLU 1
+#define FLNEGUD0 2
+#define FLMUCONST 3
+#define FLU0 4
+#define FLV1 5
+#define FLV2 6
+#define FLV3 7
+#define FLB1 8
+#define FLB2 9
+#define FLB3 10
+
+// FL's to skip when storing
+#define SKIPFL2STORE(x) (x==FLNEGUD0 || x==FLMUCONST)
+
+// only required quantities list for compute_preprocessing() or compute_additionals()
+// numcolumnsstorage - colstorei type
+#define NUMCOLUMNSSTORE (2+NDIM+(NDIM-1))
+#define STORERHO 0
+#define STOREU 1
+#define STOREU0 2
+#define STOREV1 3
+#define STOREV2 4
+#define STOREV3 5
+#define STOREB1 6
+#define STOREB2 7
+#define STOREB3 8
+
+
+// output to interpolation and eventually written to disk
+// numoutputcols - coli type list
+#define OUTRHO 0
+#define OUTU 1
+#define OUTV1 2
+#define OUTV2 3
+#define OUTV3 4
+#define OUTB1 5
+#define OUTB2 6
+#define OUTB3 7
+#define OUTFEMRAD 8
+#define OUTBPHI 9
+#define OUTJX0  10
+#define OUTJX1  11
+#define OUTJX2  12
+#define OUTJX3  13
 
 
 
@@ -305,7 +381,7 @@ extern void writeimage(char * name, unsigned char *****image,int nt, int nx, int
 
 extern void refine_data(void);
 
-extern void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, FTYPE*****olddatalocal, FTYPE *finaloutput);
+extern void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, int j, int k, FTYPE*****olddatalocal, FTYPE *finaloutput);
 
 
 
@@ -320,3 +396,23 @@ extern void readelement(int binaryinputlocal, char* inFTYPElocal, FILE *input, F
 extern void writeelement(int binaryoutputlocal, char* outFTYPElocal, FILE *output, FTYPE dataout);
 
 extern long sizeelement(char* inFTYPElocal);
+
+
+extern void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE *gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
+
+
+extern void compute_gdetFuu(FTYPE gdet, FTYPE *gcov, FTYPE *ucon, FTYPE *Bcon, FTYPE (*Fuu)[NDIM]);
+
+extern void compute_simple_gdetFuu(FTYPE gdet, FTYPE *gcov, FTYPE *ucon, FTYPE *Bcon, FTYPE (*Fuu)[NDIM]);
+
+
+extern int compute_additionals(void);
+
+extern void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal);
+
+extern void gdump_tostartofdata(FILE *gdumpinlocal);
+extern void infile_tostartofdata(FILE* infilelocal);
+
+extern void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTYPE newdatalocal);
+
+extern void output2file_perpoint_postinterpolation(int which, int h, int i, int j, int k, unsigned char *newimagelocal, FTYPE *newdatalocal);

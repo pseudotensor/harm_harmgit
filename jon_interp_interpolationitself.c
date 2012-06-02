@@ -54,9 +54,16 @@ void copy_old2new(void)
 {
   int coli,h,i,j,k;
 
-
-  if(DATATYPE==0) for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newimage[coli][h][i][j][k]=oldimage[coli][h][i][j][k];
-  else for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newdata[coli][h][i][j][k]=olddata[coli][h][i][j][k];
+  if(ALLOCATENEWIMAGEDATA){
+    if(DATATYPE==0) for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newimage[coli][h][i][j][k]=oldimage[coli][h][i][j][k];
+    else for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newdata[coli][h][i][j][k]=olddata[coli][h][i][j][k];
+  }
+  else{
+    // otherwise write to file directly instead of storing in newimage or newdata
+    OUTPUTLOOP{
+      output2file_perpointcoli_postinterpolation(oldimage[coli][h][i][j][k], olddata[coli][h][i][j][k]);
+    }
+  }
 
 }
 
@@ -90,6 +97,13 @@ int compute_spatial_interpolation(void)
   FTYPE *newdatatemp=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
   if(newdatatemp==NULL){
     fprintf(stderr,"Couldn't allocate newdatatemp\n");
+    exit(1);
+  }
+
+  // setup temp column space
+  unsigned char *newimagetemp=(unsigned char*)malloc((unsigned)(numoutputcols)*sizeof(unsigned char));
+  if(newimagetemp==NULL){
+    fprintf(stderr,"Couldn't allocate newimagetemp\n");
     exit(1);
   }
 
@@ -175,7 +189,7 @@ int compute_spatial_interpolation(void)
     if(DATATYPE==0){
       // make black if no solution or if out of bounds
       if(nosolution){
-	for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(defaultvalue[coli]);
+	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
 	getinterp=0;
       }
       else if(
@@ -190,7 +204,7 @@ int compute_spatial_interpolation(void)
 	  interptypetodo=0;
 	}
 	else{
-	  for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(defaultvalue[coli]);
+	  for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
 	  getinterp=0;
 	  interptypetodo=0;
 	}
@@ -203,7 +217,7 @@ int compute_spatial_interpolation(void)
     else{
       // make defaultvalue only if no solution
       if(nosolution) {
-	for(coli=0;coli<numoutputcols;coli++) newdata[coli][h][i][j][k]=defaultvalue[coli];
+	for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
 	getinterp=0;
       }
       else if(
@@ -217,7 +231,7 @@ int compute_spatial_interpolation(void)
 	  interptypetodo=0;
 	}
 	else{
-	  for(coli=0;coli<numoutputcols;coli++) newdata[coli][h][i][j][k]=defaultvalue[coli];
+	  for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
 	  getinterp=0;
 	  interptypetodo=0;
 	}
@@ -235,7 +249,11 @@ int compute_spatial_interpolation(void)
     }
 
 
-    if(getinterp){
+
+
+    if(getinterp){ // done for both DATATYPE==0 and 1.  Fills newdatatemp with result, so have to copy to newimagetemp at the end
+
+
       // get old grid's h,i,j,k from determined X
       interpicoord(X,CENT,&hold,&iold,&jold,&kold);
 
@@ -291,22 +309,14 @@ int compute_spatial_interpolation(void)
 	fprintf(stderr,"Done interp h=%d i=%d j=%d k=%d\n",h,i,j,k); fflush(stderr);
       }
 
-      // assign (interpolated) old value to new grid position
-      if(DATATYPE==0){
-	for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(newdatatemp[coli]);
-      }
-      else{
-	for(coli=0;coli<numoutputcols;coli++)  newdata[coli][h][i][j][k] = (FTYPE)(newdatatemp[coli]) ;
-      }
-
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"Done set newdata\n"); fflush(stderr);
+	fprintf(stderr,"Done set newdata(temp) or write to file the interpolation result\n"); fflush(stderr);
       }
 
       // test symmetry -- yes!
       //      if(j==nN2/3 && (i==nN1/4 || i==3*nN1/4-1)){
-      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdata[coli][h][i][j][k]);
+      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdatatemp[coli]);
       //      }
 
 
@@ -315,7 +325,7 @@ int compute_spatial_interpolation(void)
       //	fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
       //      }
 
-      //      if(newdata[coli][h][i][j][k]<=0.0){
+      //      if(newdatatemp[coli]<=0.0){
       //      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       //      }
 
@@ -323,25 +333,39 @@ int compute_spatial_interpolation(void)
       if(DEBUGINTERP){
 	fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold);
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	  fprintf(stderr,"coli=%d newdata=%g\n",coli,newdatatemp[coli]);
+	  fprintf(stderr,"coli=%d newdatatemp=%g\n",coli,newdatatemp[coli]);
 	}
 	fflush(stderr);
       }
 
 
-    }
+      // copy over newdatatemp to newimagetemp if doing DATATYPE==0
+      if(DATATYPE==0){
+	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(newdatatemp[coli]) ;
+      }
+
+
+    }// end if getinterp==1
     else{
       for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	if(DATATYPE==0)      newimage[coli][h][i][j][k] = FLOAT2IMAGE(defaultvalue[coli]) ;
-	else newdata[coli][h][i][j][k]=defaultvalue[coli];
+	if(DATATYPE==0)      newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]) ;
+	else newdatatemp[coli]=defaultvalue[coli];
       }
     }// end else
+
+
+    ////////////////
+    // OUTPUT or STORE result (either defaultvalue, interpoled value, or no value)
+    int whichdatatype=DATATYPE; // 1 means using newdatatemp
+    output2file_perpoint_postinterpolation(whichdatatype, h,i,j,k, newimagetemp, newdatatemp);
+
 
   }// end loop over new zones
 
 
   // free temp column space
   free(newdatatemp);
+  free(newimagetemp);
 
 
   // report that done
