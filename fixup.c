@@ -718,9 +718,9 @@ FTYPE f_trans(FTYPE r)
 
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
-  extern int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr);
+  FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
   FTYPE b0, b1, b2;
-  FTYPE r, th;
+  FTYPE r, th, ph;
   FTYPE X[NDIM], V[NDIM];
   FTYPE omegastar;
   FTYPE tau;
@@ -729,6 +729,8 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE vpar, dvpar;
   FTYPE omegaf;
   FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
+  FTYPE tiltangle;
+  FTYPE costhetaprime;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -740,16 +742,19 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
   r=V[1];
   th=V[2];
+  ph=V[3];
   
   //only do so on final step
   if(finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
     omegastar = get_omegaf_phys(t, dt, steppart);
+    tiltangle = get_ns_alpha();
+    costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     //inverse timescale over which motion is damped, let's try 10% of period
     b0 = 1./(frac*tau);
     b1 = b0 * f_trans(r);
-    b2 = b1 * fabs(cos(th));
+    b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
     if( DOEVOLVERHO ){
       drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
       pr[RHO] += drho;
@@ -770,6 +775,13 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   return(0);
 }
 
+FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi)
+{
+  FTYPE alpha = tiltangle;
+  
+  return( cos(theta)*cos(alpha)+sin(theta)*cos(phi)*sin(alpha) );
+}
+		     
 // 0 = primitive (adds rho,u in comoving frame)
 // 1 = conserved but rho,u added in ZAMO frame
 // 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
