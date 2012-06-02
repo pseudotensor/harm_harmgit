@@ -3885,8 +3885,8 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
   }
   else{
     //if(OBtopr_general3p(omegaf,vpar,Bcon,geom,prnew)>=1){  //set poloidal velocity
-    //if(OBtopr_general(omegaf,Bcon,geom,prnew)>=1){ //pure force-free
-    if(OBtopr_general2(omegaf,vpar,Bcon,geom,prnew)>=1){  //pure force-free + vparallel
+    if(OBtopr_general(omegaf,Bcon,geom,prnew)>=1){ //pure force-free
+    //if(OBtopr_general2(omegaf,vpar,Bcon,geom,prnew)>=1){  //pure force-free + vparallel
       dualfprintf(fail_file, "OBtopr(bounds): space-like error in init_postfield()\n");
       dualfprintf(fail_file,"Cannot continue without 4-velocity!\n");
       failed=1;
