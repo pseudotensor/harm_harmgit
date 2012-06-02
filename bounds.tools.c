@@ -295,13 +295,13 @@ int bound_x1dn_nssurface(
 	      //dualfprintf(fail_file, "bval = %21.15g\n", bval);
 	      
 	      
+	      //compute radial 4-velocity in reference cell
+	      pr2ucon(WHICHVEL, MAC(prim,ri,rj,rk), ptrrgeom[pl], rucon);
+	      
 	      //always do this to avoid noise on switching
 	      if( 1 || rucon[1] > 0 ){
 		//compute parallel velocity in reference cell
 		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
-		
-		//compute radial 4-velocity in reference cell
-		pr2ucon(WHICHVEL, MAC(prim,ri,rj,rk), ptrrgeom[pl], rucon);
 		
 		//if u^r > 0, fix vpar in ghost cells to preselected value
 		if(rucon[1] > 0){
