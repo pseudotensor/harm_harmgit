@@ -116,7 +116,7 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // AKMARK: do full phi
+  dofull2pi = 1;   // AKMARK: do full phi
   
   global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
