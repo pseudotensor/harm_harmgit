@@ -1,0 +1,70 @@
+The data is on:
+
+/data2/jmckinne/<modelname>
+
+where <modelname> is one of:
+
+modelname='thickdisk7 thickdisk8 thickdisk11 thickdisk12 thickdisk13 run.like8 thickdiskr7 thickdiskrr2 thickdisk16 thickdisk5 thickdisk14 thickdiskr1 thickdiskr2 thickdisk9 thickdiskr3 thickdisk17 thickdisk10 thickdiskr15 thickdisk3 thickdiskhr3 runlocaldipole3dfiducial blandford3d_new sasham9full2pi sasham5 sasham2 sasha0 sasha1 sasha2 sasha5 sasha9b25 sasha9b50 sasha9b100 sasha9b200 sasha99'
+
+These are the same models (in order) that appear in the MTB12 paper, but here using "internal" names.  Some directories are links to other locations (like /data1/jmckinne), so be careful when changing dirs.
+
+=========
+
+The data files are in <modelname>/dumps/fieldline*.bin and <modelname>/dumps/gdump.bin . They have a 1 line text header with a line break and then a binary data block.
+
+For "thickdisk" and "sasha" models, the gdump and fieldline files have header of:
+
+tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+
+For MB09 (runlocaldipole3dfiducial and blandford3d_new) models, the older header only has:
+
+tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH
+
+=========
+The fieldline binary data block is floats (4 bytes, little endian as on most systems), while the gdump file is doubles (8 bytes, little endian).
+
+The number of columns for the fieldline and gdump files for MB09 models is the same as "thickdisk" models (i.e. 11 fieldline columsna and 126 gdump columns).  "sasha" models have 14 fieldline columns and the same 126 gdump columns.
+
+For the MB09, "thickdisk" and "sasha" models, the gdump data block is the same number of 126 columns and is always doubles.  All models have 11 columns for fieldline files except sasha models have 14 columns for fieldline files (the 3 other columsn are \sqrt{-g} B^i at cell faces).
+
+There's an old datadesc.txt file in jmckinne@ki-jmck:/data1/jmckinne/runlocaldipole3dfiduciala/datadesc.txt .  This talks about the "dump" type file that we aren't using here, but it also shows the header info, gdump data block info again, OLD information about how to convert coordinates, and even the fieldline format a bit lower.
+
+==========
+
+The gdump data block has (written in C-order, so that last index is fastest) "numcolumns" columns of:
+
+{kji}^i X^i V^i \Gamma^\mu_{\nu\tau}     g^{\mu\nu} g_{\mu\nu}  \sqrt{-g} \gamma_\mu dV^\mu/dX^\nu
+
+where {kji} are indices for internal uniform coordinates X^i (going from realstartx[1,2,3] to realtotalsize[1,2,3]*dx[1,2,3]) that map onto spherical polar coordinates V^i with transformation dV^\mu/dX^\nu.
+
+More C-style description:
+
+The columns (126 of them) correspond to:
+
+1-3) ti tj tk : indices in i,j,k
+4-6) x1 x2 x3 : MKS-coord positions
+7-9) r h ph : BL/KS-coord positions
++NDIM*NDIM*NDIM : \Gamma^p_{qr} where p is slowest, q faster, and r fastest.
++NDIM*NDIM: g^{pq} : p slower, q faster
++NDIM*NDIM: g_{pq} : p slower, q faster
++1 : \sqrt{-g}
++NDIM: \Beta_p : 2nd connection (probably not important or 0)
++NDIM*NDIM: dV^p/dX^q : derivative of V (t,r,\theta,\phi) w.r.t. X (MKS), p slower, q faster
+
+===========
+
+The field line data block is has "numcolumns" columns of:
+
+\rho_0, u_g, -u_t, -T^x1_t/(\rho_0 u^x1), u^t, v^x1, v^x2, v^x3, B^x1, B^x2, B^x3, [3 more things as \detg B^i for sasha models, check "numcolumns" in header]
+
+where u^i = v^i u^t is the lab-frame 4-velocity that satisfies u.u=-1.  B^i are the lab-frame 3-field with fluid 4-field as b^\mu = B^\nu P_\nu^\mu/u^t where P_\nu^\mu = \delta_\nu^\mu + u_\nu u^\mu is a projection tensor.
+
+===========
+
+
+I suggest using the gdump's {ijk}, X, V, \sqrt{-g}, dV/dX in order to take the "fieldline" data and get it into whatever coordinates you like (Cartesian Boyer-Lindquist or whatever).  The coordinates are different for all the models, and it's too hard to create data for you for special cases like we used to do.
+
+The fieldline files have temporal gaps sometimes, so check the time (and fill-in the gap) if you need temporal information.  Note that when doing my full python-based analysis for my MTB12 paper, I only use rho,u,u^i=v^i u^t,B^i from fieldline* and {ijk}, X, V, g_{\mu\nu}, g^{\mu\nu}, \sqrt{-t}, dV/dX from gdump (that is, I don't use the connections, \Gamma...).
+
+Feel free to ask questions.
+

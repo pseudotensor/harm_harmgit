@@ -1,0 +1,223 @@
+The data file for the dipole field model in MB09 is at:
+
+http://www.cfa.harvard.edu/~jmckinney/research/dump0050
+
+The file is aobut 1.6GB in size and from CFA took me 34mins to upload at 800KB/s.
+
+The associated grid dump file is at:
+
+http://www.cfa.harvard.edu/~jmckinney/research/gdump
+
+The file is aobut 2.8GB in size and from CFA took me 61mins to upload at 800KB/s.
+
+---------------------------------------------------------------------
+
+That data file contains a (TN1xTN2xTN3=256x128x32) data block with a
+1-line header that contains (21 items):
+
+1) t : time
+2,3,4) TN1,TN2,TN3 : grid size in r,\theta,\phi
+5,6,7) startx[1,2,3] : start of MKS grid
+8,9,10) dx[1,2,3] : step for MKS grid
+11) nstep: number of steps up to that point
+12) \gamma:  adiabatic index
+13) a (BH spin)
+14,15,16,17) R0, Rin, Rout, hslope : MKS grid parameters
+18) dt : timestep
+19) defcoord : which MKS grid used
+20,21) MBH, QBH : always MBH=1 and QBH=0 for Kerr for us
+
+After the header comes a text line break and the data cube follows in
+C-order such that the columns of data indexed fastest, r(i) index is next fastest, \theta(j) index is slower, and \phi(k) is slowest index.
+All quantities are at the cell center.
+Below NDIM=4 is the number of dimensions.
+
+The columns correspond to (72 of them):
+
+1-3) ti tj tk : indices in i,j,k
+4-6) x1 x2 x3 : MKS-coord positions
+7-9) r h ph : BL/KS-coord positions
+10-17) rho,u,v1,v2,v3,B1,B2,B3 : Here v^i is relative 4-velocity defined in MG04 and B^i=*F^{it} as in MG04, both are in MKS coordinates
+18-20) p,cs2,Sden: pressure,c_s^2,entropy density
+21-28) U0 U1 U2 U3 U4 U5 U6 U7 : conserved quantities in MKS coordinates
+29) divb : \nabla\cdot B : don't worry that non-zero on outer radial edge
+30-37) uu0 uu1 uu2 uu3 ud0 ud1 ud2 ud3 : u^\mu and u_\mu in MKS
+38-45) bu0 bu1 bu2 bu3 bd0 bd1 bd2 bd3 : b^\mu and b_\mu in MKS
+46-51) v1m v1p v2m v2p v3m v3p : characteristic vels in 1,2,3 directions in MKS
+52) gdet : \sqrt{(-g)}
+53-60) ju0 ju1 ju2 ju3 jd0 jd1 jd2 jd3 : j^\mu and j_\mu in MKS
+61-72) fu0 fu1 fu2 fu3 fu4 fu5 fd0 fd1 fd2 fd3 fd4 fd5 : F^{\mu\nu}
+where (e.g.) fd0=F_{01}, fd1 = F_{02}, fd2 = F_{03}, fd3 = F_{12}, fd4 = F_{13}, fd5 = F_{23}
+
+
+---------------------------------------------------------------------
+
+That grid file has the same structure as the data file but with
+a different number of columns and different functions for each column.
+
+The columns (126 of them) correspond to:
+
+1-3) ti tj tk : indices in i,j,k
+4-6) x1 x2 x3 : MKS-coord positions
+7-9) r h ph : BL/KS-coord positions
++NDIM*NDIM*NDIM : \Gamma^p_{qr} where p is slowest, q faster, and r fastest.
++NDIM*NDIM: g^{pq} : p slower, q faster
++NDIM*NDIM: g_{pq} : p slower, q faster
++1 : \sqrt{-g}
++NDIM: \Beta_p : 2nd connection (probably not important or 0)
++NDIM*NDIM: dV^p/dX^q : derivative of V (t,r,\theta,\phi) w.r.t. X (MKS), p slower, q faster
+
+---------------------------------------------------------------------
+
+
+Explicit coords are defcoord=JET3COORDS=9 and corresponds to (where V[1,2,3]={r,\theta,\phi}):
+
+
+    npow=1.0;
+    r1jet=2.8;
+    njet=0.3;
+    r0jet=20.0;
+    rsjet=80.0;
+    Qjet=1.3;
+
+    V[1] = R0+exp(pow(X[1],npow)) ;
+
+    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+
+    if(X[2]<0.5){
+      V[2] = M_PI * X[2] + ((1. - myhslope) / 2.) * mysin(2. * M_PI * X[2]);
+    }
+    else{
+      V[2] = M_PI - (M_PI * (1.0-X[2])) + ((1. - myhslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+    }
+
+    V[3]=2.0*M_PI*X[3];
+
+    startx[1] = pow(log(Rin-R0),1.0/npow);
+    startx[2] = 0.;
+    startx[3] = 0.;
+    dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
+    dx[2] = 1. / totalsize[2];
+    dx[3] = 1.0/totalsize[3];
+
+---------------------------------------------------------------------
+To convert from MKS to KS one would do:
+
+u^j[KS] = T^j_k u^k[MKS]  where T^j_k = dV^j/dX^k as is obvious once you note that u^k = dx^k/d\tau
+
+u_j[KS] = [(T)^{-1}]^k_j u_k[MKS] where [(T)^{-1}]^k_j is the matrix inverse of T^j_k (no additional transpose)
+
+The presence of the transpose or not can be determined by ensuring you always match the indices to the correct component type (MKS or KS).
+
+Note that I use numerical recipes (NR) to do the inverse.  You can use whatever you like.  I don't have a separate code that does that -- I've integrated NR into my code too much.
+
+
+Explicit code snippets, where below dxdxp[j][k]=dV^j/dX^k
+
+#define DLOOPA(j) for(j=0;j<NDIM;j++)
+#define DLOOP(j,k) for(j=0;j<NDIM;j++)for(k=0;k<NDIM;k++)
+
+// prime MCOORD -> MCOORD for u^\mu
+void metptomet_ucon_simple(FTYPE dxdxp[][NDIM], FTYPE*ucon)
+{
+  int j,k;
+  FTYPE tmp[NDIM];
+
+  /* transform ucon */
+  DLOOPA(j) tmp[j] = 0.;
+  DLOOP(j,k) tmp[j] += dxdxp[j][k] * ucon[k];
+  DLOOPA(j) ucon[j] = tmp[j];
+}
+
+// prime MCOORD -> MCOORD for u_\mu
+void metptomet_ucov_simple(FTYPE idxdxp[][NDIM], FTYPE*ucov)
+{
+  int j,k;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE tmp[NDIM];
+
+  /* transform ucov */
+  DLOOPA(j) tmp[j] = 0.;
+  DLOOP(j,k) tmp[j] += idxdxp[k][j] * ucov[k];
+  DLOOPA(j) ucov[j] = tmp[j];
+}
+
+
+------------------------
+
+To convert from MKS to KS to BL, here's a semi-latex write-up:
+
+u^\mu[MKS] = {uu0,uu1,uu2,uu3}
+u_\mu[MKS] = {ud0,ud1,ud2,ud3}
+
+so that:
+
+u^t[KS] = uu0
+u^r[BL]=u^r[KS] = uu1*dxdxp11 + uu2*dxdxp12
+u^\theta[BL]=u^\theta[KS] = uu1*dxdxp21 + uu2*dxdxp22
+u^\phi[KS] = uu3
+
+and:
+
+u_t[KS] = ud0
+u_r[KS] = ud1*idxdxp11 + ud2*idxdxp21
+u_\theta[KS] = ud1*idxdxp12+ud2*idxdxp22
+u_\phi[KS] = ud3
+
+where:
+
+# inverse of dx^{ks}/dx^{mks}
+idxdxp11=dxdxp22/(dxdxp22*dxdxp11-dxdxp21*dxdxp12)
+idxdxp12=dxdxp12/(dxdxp21*dxdxp12-dxdxp22*dxdxp11)
+idxdxp21=dxdxp21/(dxdxp21*dxdxp12-dxdxp22*dxdxp11)
+idxdxp22=dxdxp11/(dxdxp22*dxdxp11-dxdxp21*dxdxp12)
+
+The transformation to BL is:
+
+u^t[BL] = u^t[KS] - (2r/\Delta) u^r[KS]
+u^r[BL] = u^r[KS]
+u^\theta[BL] = u^\theta[KS]
+u^\phi[BL] = u^\phi[KS] - (a/\Delta) u^r[KS]
+
+where $\Delta = r^2 - 2r + a^2$.
+
+and also:
+
+u_t[BL] = u_t[KS]
+u_r[BL] = (2r u_t[KS] + \Delta u_r[KS] + a u_\phi[KS])/\Delta
+u_\theta[BL] = u_\theta[KS]
+u_\phi[BL] = u_\phi[KS]
+
+
+---------------------------------------------------------------------
+
+I should also point out that in addition to normal complete dumps, I have high time-resolution data that happens to include the data you require.  Both my dipolar and quadrupolar simulations have high time-resolution data for several quantities.  These are the "fieldline" binaries that are dumped on the same time cycle as dumps, which is a period of dt=2M.  These "fieldline" dumps contain:
+
+rho
+u
+-u_t
+-T^r_t/(\rho_0 u^r)
+u^t
+v^r
+v^\theta
+v^\phi
+B^r
+B^\theta
+B^\phi
+
+So if you need higher time-resolution, we can use those.  They are in binary "float" format rather than "double" in order to save space.  The columns of data given above are the fastest index, followed by i, then j, then k is slowest index.
+
+Here both v^i and B^i are the 3-vectors in the KS grid frame, but there is enough information to convert to any coordinate system.
+
+
+---------------------------------------------------------------------
+
+
+
+Other Notes:
+
+1) Very near the outer radial boundary things are messy due to partial reflection.  Just ignore that region.
+2) I'm in the process of doing higher resolution simulations over larger radii.  We can use those once they are done.
+3) I have the dipole field and quadrupolar field models.  We can try the quadrupolar field as well.
+4) In some points in the jet the solution may be poor due to being somewhat unresolved.  Let me know if you have issues.
+5) Realize that the solution starts with an initial torus.  This may not be optimal for a long-term solution.  Instead injecting mass may be optimal.  We can discuss this.

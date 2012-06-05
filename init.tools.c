@@ -418,6 +418,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #if(ANALYTICMEMORY)
   // copy over initial solution as analytic solution
   // NEEDED FOR BOUND in case uses panalytic
+  // NOTEMARK: Sasha: I also noticed that when using analytic solution, the default code behavior upon restart is to save the prims at the time of restart into panalytic array.  It might be better instead to save the actual initial conditions into panalytic, which is what I do in my version of the code.  I left the original default behavior unchanged.
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
 

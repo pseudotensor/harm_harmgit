@@ -88,7 +88,7 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
 
     // check solution changed pflag, so have to bound again
     if(stage<STAGE2){
-      bound_pflag(boundstage, boundtime, pflag, USEMPI);
+      bound_pflag(boundstage, finalstep, boundtime, pflag, USEMPI);
       if(stage!=STAGEM1) boundstage++;
     }
 
@@ -103,7 +103,7 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     // GODMARK: I don't see why need to bound pflag since already done with using pflag
     if(stage<STAGE2){
       if(stage!=STAGEM1){
-	bound_pflag(boundstage, boundtime, pflag, USEMPI);
+	bound_pflag(boundstage, finalstep, boundtime, pflag, USEMPI);
 	boundstage++;
       }
     }
@@ -220,7 +220,6 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
   int is_within_correctable_region;
   int docorrectuconslocal;
 
-
   if(DOONESTEPDUACCOUNTING){
     docorrectuconslocal=docorrectucons;
   }
@@ -252,6 +251,8 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 }
+
+
 
 // record who called the diag_fixup routine
 int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
@@ -356,7 +357,7 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
     //
     //////////////////
     PALLLOOP(pl){
-	      
+	    
       // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
       // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
       dUincell[pl]=dVF * deltaUavg[pl];
@@ -402,14 +403,14 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
       if(is_within_diagnostic_region){
 
 	PALLLOOP(pl){
-	      
+	    
 	  // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
 	  // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
 	  dUincell[pl]=dVF * deltaUavg[pl];
 
 	  fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
 	  fladd[pl] += dUincell[pl];
-	      
+	    
 
 	}// end over pl's
       }// end if within diagnostic region
@@ -1570,7 +1571,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	// ACCOUNTING (static or average)
 	//
 	/////////////////////////////////
-	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);  //WRONG since measures delta w.r.t. fake prims
+	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
 
       }
@@ -4017,7 +4018,7 @@ void diag_eosfaillookup(int i, int j, int k)
     }
     else if(i<-N1BND || i>N1-1+N1BND ||j<-N2BND || j>N2-1+N2BND ||k<-N3BND || k>N3-1+N3BND ){
       dualfprintf(fail_file,"In diag_eosfaillookup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,i,j,k);
-      myexit(24683463);
+      myexit(3472762356);
     }
     int indexfinalstep;
     FINALSTEPLOOP(indexfinalstep) TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
