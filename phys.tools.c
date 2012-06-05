@@ -2941,6 +2941,13 @@ int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
   FTYPE vcon[NDIM];
   FTYPE v0oB;
 
+
+  //ensure outflow
+  if (Bccon[1]<0) {
+    v0 *= -1.;
+  }
+
+
   lower_vec(Bccon,geom,Bccov);
 
   Bsq=0.0+SMALL;

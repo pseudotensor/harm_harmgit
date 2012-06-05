@@ -307,6 +307,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   //
   ///////////////////////
   
+  long int dumpcntmain;
   int dumptypeiter;
   for(dumptypeiter=0;dumptypeiter<NUMDUMPTYPES;dumptypeiter++){
     
@@ -319,23 +320,33 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 	dualfprintf(fail_file,"unable to print %s file\n",dumpnamelist[dumptypeiter]);
 	return (1);
       }
-      
-      // special cases
-      if(dumptypeiter==MAINDUMPTYPE){
-	// MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
-	// so can restart at a dump without reconstructing the rdump from a dump.
-	// Also, if run out of disk space then normal rdump's can be corrupted
 
-	// avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
-	//	if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
-	restart_write(-(long)dumpcntgen[dumptypeiter]-1);
-	if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntgen[dumptypeiter]-1);
-      }
+      // get main dump count for additional types below
+      if(dodumpgen[dumptypeiter] && dumptypeiter==MAINDUMPTYPE) dumpcntmain=dumpcntgen[dumptypeiter];
       
       // post_dump:
       post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart);
     }
   }
+
+
+  ///////////////////
+  // additional types of dumps linked to normal sequence of dump types
+  ///////////////////
+
+  dumptypeiter=MAINDUMPTYPE;
+  if(dodumpgen[dumptypeiter]){
+    // MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
+    // so can restart at a dump without reconstructing the rdump from a dump.
+    // Also, if run out of disk space then normal rdump's can be corrupted
+    
+    // avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
+    //	if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
+    // NOTEMARK: This maindump-type-restart file is done after all other dump types are done so the dump type file numbers are fully updated for this dumping time.
+    restart_write(-(long)dumpcntmain-1);
+    if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntmain-1);
+  }
+
 
 
   ///////////////////
@@ -348,11 +359,14 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
     // -1 means no file number on filename
     gdump(-1);
-    // NOTEMARK: if want to, e.g., stop right after gdump, then have to add MPI barrier.  If forcing gdump output, then put 1|| in conditional above
+    // NOTEMARK: if want to, e.g., stop right after gdump, then have to add MPI barrier.  If forcing gdump output, then put 1|| in conditional above .
     // #if(USEMPI)
     // MPI_Barrier(MPI_COMM_WORLD);
     // #endif
     // myexit(0); // stop after gdump.bin created
+    //
+    // If want to create gdump and continue computing even after having previously restarted...
+    // Then add a static int firsttimegdump=1; before conditional  and a firsttimegdump=0 inside conditional at the end of the conditional.
   }
 
 

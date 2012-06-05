@@ -165,10 +165,12 @@ alias ls='ls'
 alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
 otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
 dirlist=`lssdir2 | grep sashaa`
+
 for fil in $dirlist
 do
+    echo "xsede#kraken$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist335.txt
     cd $mydir/$fil/dumps/
-    filelist=`ls | egrep 'fieldline|gdump'`
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
     for realfile in $filelist
     do
         echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist335.txt
@@ -196,8 +198,9 @@ dirlist2=`lssdir2 | grep hr3tilt`
 dirlist="$dirlist1 $dirlist2"
 for fil in $dirlist
 do
+    echo "xsede#kraken$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist336.txt
     cd $mydir/$fil/dumps/
-    filelist=`ls | egrep 'fieldline|gdump'`
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
     for realfile in $filelist
     do
         echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist336.txt
