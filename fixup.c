@@ -745,7 +745,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   ph=V[3];
   
   //only do so on final step
-  if(finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
+  if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
     omegastar = get_omegaf_phys(t, dt, steppart);
     tiltangle = get_ns_alpha();
     costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
