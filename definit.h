@@ -714,7 +714,8 @@
 #define IF3DSPCTHENMPITRANSFERATPOLE 1
 
 // whether to flip gdet sign over coordinate singularities
-#define FLIPGDETAXIS 0
+// completely generally, this should be 1 so that \detg is smooth across the axis.  So then standard boundary conditions on primitives give correct non-kinked behavior through polar axis (including for ram pressure flux term).
+#define FLIPGDETAXIS 1
 
 
 
