@@ -113,6 +113,9 @@
 #endif
 
 
+//used by mpi_init.c for some bound types to set sign of copy for polar BCs
+#define SIGNFLIPGDET (FLIPGDETAXIS==0 ? 1.0 : -1.0)
+
 
 // setup for various boundary situations
 // so doesn't produce differences in irrelevant directions, whether boundary zones or not
