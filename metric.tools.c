@@ -2301,7 +2301,7 @@ FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j)
   if(gdet_func_metric(MCOORD,V,gcovmcoord,&gdet)!=0){
     if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() issue in lngdet_func_mcoord()\n");
   }
-  toreturn=log(EOMFUNCMAC(RHO)/gdet);
+  toreturn=log(fabs(EOMFUNCMAC(RHO)/gdet)); // can't take log of negative (FLIPGDETAXIS note about how this method wouldn't work)
 
   return(toreturn);
 }

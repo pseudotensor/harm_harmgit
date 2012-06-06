@@ -1113,18 +1113,28 @@ void init_placeongrid_griddecomposition(void)
 		primfactor[bti][dir][gridpos][PACK][U2]=primfactor[bti][dir][gridpos][PACK][B2]=-1.0;
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
-		// Here we flip upon packing (assumes FLIPGDETAXIS==0 so that \detg is always positive)
-		PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0;
-		// override for symmetric quantities
-		primfactor[bti][dir][gridpos][PACK][U2]=1.0; // \detg T^2_2 is symmetric.
-		primfactor[bti][dir][gridpos][PACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		// process sign while packing
+		if(FLIPGDETAXIS==0){ // gdet is always positive
+		  PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=1.0; // (e.g. gdet T^2_1. Assuming primitives are correct on active domain, then T^2_1 would be opposite signs for continuous flow through pole, but gdet has kink, so product has no kink)
+		  primfactor[bti][dir][gridpos][PACK][U2]=-1.0; // \detg T^2_2
+		  primfactor[bti][dir][gridpos][PACK][B2]=-1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		}
+		else{// assume gdet changes sign across axis, so gdet has no kink.  Then opposite above
+		  PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0;
+		  primfactor[bti][dir][gridpos][PACK][U2]=1.0;
+		  primfactor[bti][dir][gridpos][PACK][B2]=1.0;
+		}
 	      }
 	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
-		// Here we flip upon packing (assumes FLIPGDETAXIS==0 so that \detg is always positive)
-		DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0;
-		// override for symmetric quantities
-		primfactor[bti][dir][gridpos][PACK][0]=1.0; // A_0
-		primfactor[bti][dir][gridpos][PACK][2]=1.0; // A_2
+		// flip while packing
+		if(FLIPGDETAXIS==0){// gdet positive
+		  DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=-1.0; // A_1 A_3 : These point in 1 and 3 directions like scalars, but gdet-compressed at pole with kink, so need to unkink
+		  primfactor[bti][dir][gridpos][PACK][2]=1.0; // A_2 (points into axis but with gdet, so as if gdet*B2)
+		}
+		else{ // gdet changes sign across axis, so opposite above
+		  DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=1.0;
+		  primfactor[bti][dir][gridpos][PACK][2]=-1.0;
+		}
 	      }
 	    }// end over gridpos
 	  }
@@ -1302,18 +1312,29 @@ void init_placeongrid_griddecomposition(void)
 		primfactor[bti][dir][gridpos][UNPACK][U2]=primfactor[bti][dir][gridpos][UNPACK][B2]=-1.0;
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
-		// Here we flip upon unpacking (assumes FLIPGDETAXIS==0 so that \detg is always positive)
-		PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0;
-		// override for symmetric quantities
-		primfactor[bti][dir][gridpos][UNPACK][U2]=1.0; // \detg T^2_2 is symmetric.
-		primfactor[bti][dir][gridpos][UNPACK][B2]=1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		// Here we flip upon unpacking
+		if(FLIPGDETAXIS==0){// gdet positive everywhere
+		  PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=1.0; // gdet T^2_1, so like gdet*B2, and kink avoided if don't flip sign since B2 standard in active domains with sign change itself in active domains.
+		  // override for symmetric quantities
+		  primfactor[bti][dir][gridpos][UNPACK][U2]=-1.0; // \detg T^2_2 , avoid kink must flip sign
+		  primfactor[bti][dir][gridpos][UNPACK][B2]=-1.0; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		}
+		else{ // gdet flips sign, opposite above
+		  PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0;
+		  primfactor[bti][dir][gridpos][UNPACK][U2]=1.0;
+		  primfactor[bti][dir][gridpos][UNPACK][B2]=1.0;
+		}
 	      }
 	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
-		// Here we flip upon unpacking (assumes FLIPGDETAXIS==0 so that \detg is always positive)
-		DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0;
-		// override for symmetric quantities
-		primfactor[bti][dir][gridpos][UNPACK][0]=1.0; // A_0
-		primfactor[bti][dir][gridpos][UNPACK][2]=1.0; // A_2
+		// Here we flip upon unpacking
+		if(FLIPGDETAXIS==0){ // gdet positive everywhere
+		  DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-1.0; // A_0 A_1 A_3 like scalars, but compressed by gdet.  So flip sign so no kink
+		  primfactor[bti][dir][gridpos][UNPACK][2]=1.0; // A_2 like gdet B2.  A_2 will have opposite sign across pole in active domains, but gdet + in both, so avoid flipping so that A_2 has no kink at pole.
+		}
+		else{
+		  DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=1.0;
+		  primfactor[bti][dir][gridpos][UNPACK][2]=-1.0;
+		}
 	      }
 	    }// end over gridpos
 

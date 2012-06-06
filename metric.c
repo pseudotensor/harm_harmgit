@@ -11,7 +11,7 @@
 
 ///////////////////
 //
-//  SUPERNOTE: Set DOMIXTHETAPHI to 0 or 1 in metric.h!!
+//  SUPERNOTE: Set DOMIXTHETAPHI to 0 or 1 in definit.h!!
 //
 ///////////////////
 
