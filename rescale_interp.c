@@ -623,6 +623,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     }
     else {
       newpr[B1] = (r*r*r*dxdxp[1][1])*pr[B1];
+      newpr[B2] = (r*r)*pr[B2];
       newpr[B3] = (r*r)*pr[B3];
     }
 
@@ -674,6 +675,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     }
     else {
       newpr[B1] = p2interp[B1]/(r*r*r*dxdxp[1][1]);
+      newpr[B2] = p2interp[B2]/(r*r);
       newpr[B3] = p2interp[B3]/(r*r);
     }
     
