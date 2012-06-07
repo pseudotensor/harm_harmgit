@@ -49,7 +49,7 @@
 
 #define TORUSHASBREAKS 0   // AKMARK: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
 
-#define DO_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
+#define D_REMAP_MPI_TASKS (0)  //remap cores for performance (currently only on 8-core-per-node machines)
 
 static const FTYPE aphipow = 2.5;
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
@@ -117,7 +117,7 @@ int prepre_init_specific_init(void)
   
   global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
-  binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
+  binaryoutput=TEXTOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
   t_transition = 1.;
   global_vpar0 = 0.;
@@ -207,7 +207,7 @@ int post_init_specific_init(void)
   tf = 1e5;
   DOENERDIAG=0;
   //DOAVGDIAG=0;  //set here to override after restart
-  //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
+  DODUMPDIAG=1; //=0 switches off all dumps (including floor dumps)
   
   t_transition = 1.;
   global_vpar0 = 0.;
@@ -510,17 +510,17 @@ int init_global(void)
   tf = 1e4;
 
   /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 1E-5;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 1E-5;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 2.0;
+  DTdumpgen[ENERDUMPTYPE] = 1E-5;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 2.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 1E-5;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 50.0;
+  DTdumpgen[DEBUGDUMPTYPE] = 1E-5;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 2000;
@@ -530,17 +530,17 @@ int init_global(void)
   tf = 1e5; //also check post_init_specific_init()
 
   /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 10.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 10.0;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 1E-5;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 1E-5;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 100.0;
+  DTdumpgen[ENERDUMPTYPE] = 1E-5;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 5.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 1E-5;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  DTdumpgen[DEBUGDUMPTYPE] = 1E-5;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 6000;  //also see post_init_specific_init()
@@ -550,17 +550,17 @@ int init_global(void)
   tf = 10.; //also check post_init_specific_init()
   
   /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 1E-5;
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 1E-5;
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 100.0;
+  DTdumpgen[ENERDUMPTYPE] = 1E-5;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 1.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 1E-5;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
   
   /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  DTdumpgen[DEBUGDUMPTYPE] = 1E-5;
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 6000;  //also see post_init_specific_init()

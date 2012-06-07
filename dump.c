@@ -438,6 +438,8 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   }
 
 
+  *numcolumns+=3;
+
   // Version number:
   *numversion=0;
 
@@ -601,6 +603,9 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
   myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
 #endif
+
+  myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf); // 3 more
+
 
   if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
     // uses jrdp3dudebug in gtwod.m that assumes CALCFARADAYANDCURRENTS==0

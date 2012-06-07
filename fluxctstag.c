@@ -1053,12 +1053,14 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	// get geometry for face pre-interpolated values
 	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
 	signedgdet = ptrgdetgeomf[dir]->gdet;
+#if(FLIPGDETAXIS==0)
 	//flip sign of gdet across the polar axis, make distinction between FACE2 and non-FACE2 location
 	//(since FACE2 is located exactly at the polar axis)
 	if( mycpupos[2] == 0 && j < 0
-	 || mycpupos[2] == ncpux2 - 1 && j >= N2 + (dir==2) ){
+	 || mycpupos[2] == ncpux2 - 1 && j > N2-1 + (dir==2) ){
 	  signedgdet *= -1.;
 	}
+#endif
 	MACP0A1(p2interp,i,j,k,pl) = signedgdet*MACP0A1(pstag,i,j,k,pl);
 #endif
 	
@@ -1537,7 +1539,7 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 //
 
 // LEAVE AS 0 since makes no sense to have as 1
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 1
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
 // OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
@@ -1803,13 +1805,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #else
 
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	myexit(968276);
-#endif
-
 	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1
-	//	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 	ptrgeomf->i=i;
 	ptrgeomf->j=j;
 	ptrgeomf->k=k;
@@ -1817,6 +1813,10 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
 
 #endif
 
@@ -1826,7 +1826,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	// BAD IDEA:
 	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgeomf->gdet);
+	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
 #else
 	// BFACE: compute and store B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that for the interpolation in transverse direction of the field it makes no sense to use gdet.  Example is B1 near pole.  B1 is roughly constant typically near pole.
@@ -2094,10 +2094,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
 	    MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
 #else
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	    dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	    myexit(968277);
-#endif
+
 	    ptrgeomf->i=i;
 	    ptrgeomf->j=j;
 	    ptrgeomf->k=k;
@@ -2105,12 +2102,17 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
+
 #endif
 
 	    // now copy over values
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir] * (ptrgeomf->gdet);
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir] * (ptrgeomf->gdet);
+	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir]*(ptrgdetgeomf->gdet);
+	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir]*(ptrgdetgeomf->gdet);
 #else
 	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
 	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];

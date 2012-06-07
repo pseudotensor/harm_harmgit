@@ -105,8 +105,8 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
   //
   ///////////////////
   if(USEMPI){
-    mpicombine = 1;    // choice
-    //mpicombine=0;
+    //mpicombine = 1;    // choice
+    mpicombine=0;
 
     // 
     if(mpicombine){
