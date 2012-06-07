@@ -1808,7 +1808,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	// BAD IDEA:
 	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgeomf->gdet);
+	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
 #else
 	// BFACE: compute and store B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that for the interpolation in transverse direction of the field it makes no sense to use gdet.  Example is B1 near pole.  B1 is roughly constant typically near pole.
@@ -2091,8 +2091,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	    // now copy over values
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir] * (ptrgeomf->gdet);
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir] * (ptrgeomf->gdet);
+	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir]*(ptrgdetgeomf->gdet);
+	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir]*(ptrgdetgeomf->gdet);
 #else
 	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
 	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];
