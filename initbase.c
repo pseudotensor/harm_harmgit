@@ -665,7 +665,7 @@ int prepre_init(void)
   dofull2pi=1;
 
   if(USEMPI&&USEROMIO){
-    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
+    binaryoutput=TEXTOUTPUT; // choice: mixed or binary
     sortedoutput=SORTED; // no choice
   }
   else{
