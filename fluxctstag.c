@@ -1052,6 +1052,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 #elif(IFNOTRESCALETHENUSEGDET)
 	// get geometry for face pre-interpolated values
 	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+#if(0)
 	signedgdet = ptrgdetgeomf[dir]->gdet;
 	//flip sign of gdet across the polar axis, make distinction between FACE2 and non-FACE2 location
 	//(since FACE2 is located exactly at the polar axis)
@@ -1060,6 +1061,11 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	  signedgdet *= -1.;
 	}
 	MACP0A1(p2interp,i,j,k,pl) = signedgdet*MACP0A1(pstag,i,j,k,pl);
+#else
+	signedgdet = ptrgdetgeomf[dir]->gdet;
+	MACP0A1(p2interp,i,j,k,pl) = signedgdet*MACP0A1(pstag,i,j,k,pl);
+#endif
+
 #endif
 	
       }// end COMPFULLLOOP
@@ -1154,6 +1160,23 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
   else{
     p2interp=pstag; // it's itself
   }
+
+
+  {
+    int i,j,k;
+    dualfprintf(fail_file, "\nB2 stag:\n");
+    for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
+      dualfprintf(fail_file, "%g, ", MACP0A1(pstag,i,j,k,B2) );
+    }
+    
+    dualfprintf(fail_file, "\nB2 rescaled:\n");
+    for (i=21,j=-N2BND,k=7+32/2; j<N2+N2BND; j++) {
+      dualfprintf(fail_file, "%g, ", MACP0A1(p2interp,i,j,k,B2) );
+    }
+    dualfprintf(fail_file, "\n igdetnosing:\n");
+  }
+
+
 
 
 

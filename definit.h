@@ -693,6 +693,7 @@
 
 // if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
 #define IF3DSPCTHENMPITRANSFERATPOLE 1
+//#define IF3DSPCTHENMPITRANSFERATPOLE 0
 
 // whether to flip gdet sign over coordinate singularities
 #define FLIPGDETAXIS 0

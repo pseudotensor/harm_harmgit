@@ -3775,9 +3775,9 @@ void check_spc_singularities_user(void)
 #endif
 
 	nonsingfound=0;
-	nonsingfound+=(localgdet[0]<=0.0);
+	nonsingfound+=(fabs(localgdet[0])<=NUMEPSILON);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) nonsingfound+=(LOCALEOMFUNCMAC(pl)<=0.0);
+	PLOOP(pliter,pl) nonsingfound+=(fabs(LOCALEOMFUNCMAC(pl))<=NUMEPSILON);
 #endif
 
 	if(needzero && singfound){
@@ -3788,7 +3788,7 @@ void check_spc_singularities_user(void)
 #endif
 	}
 	else if(needzero==0 && nonsingfound){
-	  dualfprintf(fail_file,"Detected \\detg<=0 at i=%d j=%d k=%d loc=%d with gdet=%21.15g: Must be non-zero\n",i,j,k,loc,localgdet[0]);
+	  dualfprintf(fail_file,"Detected |\\detg|<=NUMEPSILON at i=%d j=%d k=%d loc=%d with gdet=%21.15g: Must be non-zero\n",i,j,k,loc,localgdet[0]);
 	  myexit(9813523);
 	}
       }// end over indloc

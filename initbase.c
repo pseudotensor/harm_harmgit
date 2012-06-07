@@ -675,6 +675,8 @@ int prepre_init(void)
   }
 
 
+  binaryoutput=TEXTOUTPUT;
+
   /////////////////////
   //
   // Initialize global EOS pointers and initial repeated array values (originally static)
@@ -1256,6 +1258,7 @@ int init_defglobal(void)
   // must come before any use of special3dspc such as by init_placeongrid_griddecomposition()
   special3dspc=dofull2pi && N3>1 && IF3DSPCTHENMPITRANSFERATPOLE&&periodicx3&&ISSPCMCOORDNATIVE(MCOORD);
   trifprintf("Using %s 3D polar boundary conditions\n", (special3dspc)?("full"):("limited") );
+  trifprintf("stuff: %d %d %d %d %d\n",dofull2pi,N3,IF3DSPCTHENMPITRANSFERATPOLE,periodicx3,ISSPCMCOORDNATIVE(MCOORD));
 
 
   return(0);
@@ -1665,8 +1668,8 @@ void check_bnd_num(void)
 
   
   // checks on parameters so user doesn't do something stupid
-  if(FULLOUTPUT&&USEMPI){
-    dualfprintf(fail_file,"Cannot use FULLOUTPUT!=0 when USEMPI=1\n");
+  if(FULLOUTPUT&&USEMPI&&numprocs>1){
+    dualfprintf(fail_file,"Cannot use FULLOUTPUT!=0 when USEMPI=1 and numprocs>1\n");
     myexit(ERRORCODEBELOWCLEANFINISH+200);
   }
 
@@ -1965,10 +1968,6 @@ void check_bnd_num(void)
   }
 
 
-  if(IF3DSPCTHENMPITRANSFERATPOLE && FLIPGDETAXIS){
-    dualfprintf(fail_file,"Cannot have IF3DSPCTHENMPITRANSFERATPOLE && FLIPGDETAXIS -- code not setup for that situation\n");
-    myexit(ERRORCODEBELOWCLEANFINISH+83746836);
-  }
 
   if(special3dspc && ncpux3==1 && (N3%2)){
     dualfprintf(fail_file,"Must have even N3 (N3=%d) if special3dspc==1 && ncpux3=1\n",N3);

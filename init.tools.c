@@ -49,7 +49,7 @@ int user1_prepre_init_specific_init(void)
   // choice// GODMARK: not convenient location, but needed for init_mpi()
   periodicx1=0;
   periodicx2=0;
-#if(USEMPI&&N3!=1)
+#if(N3!=1)
   periodicx3=1;// GODMARK: periodic in \phi for 3D spherical polar
 #else
   periodicx3=0;
@@ -58,12 +58,14 @@ int user1_prepre_init_specific_init(void)
 
   if(PRODUCTION){
     // assume if production always want binary data with text header
+    //    binaryoutput=TEXTOUTPUT;
     binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
   }
 
 
-  return(0);
+  binaryoutput=TEXTOUTPUT; // choice: mixed or binary
 
+  return(0);
 }
 
 

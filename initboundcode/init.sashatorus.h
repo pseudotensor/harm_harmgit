@@ -12,8 +12,8 @@
 #endif
 
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
-#define N1 16
-#define N2 16
+#define N1 64
+#define N2 32
 #define N3 16
 
 // atch adjusts
@@ -178,8 +178,8 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 1
-//#define FULLOUTPUT MAXBND
-#define FULLOUTPUT 0
+#define FULLOUTPUT MAXBND
+//#define FULLOUTPUT 0
 
 #define MAILWHENDONE 0
 #define MAILFROMREMOTE 0
@@ -339,8 +339,8 @@
 #define ACCURATESINCOS 1
 
 #undef FLIPGDETAXIS
-//#define FLIPGDETAXIS 1
-#define FLIPGDETAXIS 0
+#define FLIPGDETAXIS 1
+//#define FLIPGDETAXIS 0
 
 #undef BOUNDPLPR
 #define BOUNDPLPR 0
