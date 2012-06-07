@@ -1787,13 +1787,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #else
 
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	myexit(968276);
-#endif
-
 	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1
-	//	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 	ptrgeomf->i=i;
 	ptrgeomf->j=j;
 	ptrgeomf->k=k;
@@ -1801,6 +1795,10 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
 
 #endif
 
@@ -2078,10 +2076,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
 	    MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
 #else
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	    dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	    myexit(968277);
-#endif
+
 	    ptrgeomf->i=i;
 	    ptrgeomf->j=j;
 	    ptrgeomf->k=k;
@@ -2089,6 +2084,11 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
+
 #endif
 
 	    // now copy over values
