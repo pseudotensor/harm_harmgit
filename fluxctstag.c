@@ -1539,7 +1539,7 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 //
 
 // LEAVE AS 0 since makes no sense to have as 1
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 1
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
 // OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
