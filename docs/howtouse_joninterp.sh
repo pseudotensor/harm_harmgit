@@ -138,14 +138,20 @@ fi
 # rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
 # FEMrad is the radial energy flux
 # Bphi is the poloidal enclosed current density
-# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)
-# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu
-# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)
-# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.
-# All vectors are orthonormal
+# J\\mu=J^\\mu is the current density.
 #
-# We can add other things, like the actual local current density, which would show where dissipation could be occuring.
-
+#
+# Derived quantities:
+#
+# 3-velocity magnitude: v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)
+# Lorentz factor: ut = 1/sqrt(1-v^2)
+# 4-velocity: u={ut,ut*vx,ut*vy,ut*vz)
+# Lab current squared: J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)
+# Comoving current density: j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu
+# Comoving square current density: j^2 = j^\\nu j_\\nu = J^2 + (J.u)^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)
+# field along flow: u.B = ux*Bx + uy*By + uz*Bz (i.e. Bt=0)
+# comoving magnetic field: b^\mu = (B^\mu + (u.B)u^\mu)/ut
+# comoving mag energy: b^2/2 = 0.5*(B^2 + (u.B)^2)/ut^2
 
 
 

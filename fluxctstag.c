@@ -998,7 +998,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 
 // if not rescaling, then default is to interpolate \detg B^i rather than B^i -- more accurate for field-aligned flows (e.g. monopole)
-#define IFNOTRESCALETHENUSEGDET 1 // should be 1
+#define IFNOTRESCALETHENUSEGDET 1
 
 // wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
@@ -1509,8 +1509,11 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 //
 
-// LEAVE AS 0 since makes no sense to have as 1
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
+// JCM: I originally thought the below as 1 would make little sense, because then one would interpolate (e.g.) \detg B1 through the axis when B1 for a non-tilted dipolar field would be constant.  One would be making B1(\theta)\propto \theta near the pole, which requires higher-order interpolation.
+// However, for tilted dipolar fields, B1 and B3 across the pole will necessarily depend upon resolution (see tilteddipole.nb), and B1 can be flat across the pole looking like a bug even if correct.  The interpolation for B1stag -> B1 across the pole will then be poor and reduce near the flat part.
+// But, interpolating \detg B1 avoids this because it relies on A_\phi,\theta that has no glitch.  The \detg smooths it out.
+// This isn't just a numerical issue, it's about how the field is represented.  The flat B1 across the pole is innaccurate to the continuous solution, but one can still have a robust/accurate discrete method.  The flat part can be just fine in general if viewed correctly and treated optimally.
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 1
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
 // OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
@@ -1776,13 +1779,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #else
 
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	myexit(968276);
-#endif
-
 	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1
-	//	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 	ptrgeomf->i=i;
 	ptrgeomf->j=j;
 	ptrgeomf->k=k;
@@ -1791,15 +1788,19 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
+
+
 #endif
 
 
 
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	// BAD IDEA:
 	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgeomf->gdet);
+	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
 #else
 	// BFACE: compute and store B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that for the interpolation in transverse direction of the field it makes no sense to use gdet.  Example is B1 near pole.  B1 is roughly constant typically near pole.
@@ -2067,10 +2068,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
 	    MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
 #else
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	    dualfprintf(fail_file,"Shouldn't be here with INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1\n");
-	    myexit(968277);
-#endif
+
 	    ptrgeomf->i=i;
 	    ptrgeomf->j=j;
 	    ptrgeomf->k=k;
@@ -2078,12 +2076,18 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+
+#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
+	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+#endif
+
+
 #endif
 
 	    // now copy over values
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir] * (ptrgeomf->gdet);
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir] * (ptrgeomf->gdet);
+	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
+	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir] * (ptrgdetgeomf->gdet);
 #else
 	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
 	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];
