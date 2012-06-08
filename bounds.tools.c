@@ -2384,6 +2384,8 @@ int polesmooth(int whichx2,
 	//put the updated velocity back into pr
 	pr = MAC(prim,i,j,k);
 	SLOOPA(pl) pr[UU+pl] = newpr[UU+pl];
+	pr[RHO] = rho;
+	pr[UU] = ug;
       }
     }      
   }
