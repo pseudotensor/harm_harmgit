@@ -1529,24 +1529,38 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
   }
 
+
 #if( COORDSINGFIXCYL )   //SUPERSASMARK fix the singularity for the cylinrical coordinates
-  if (fabs(V[1]) < SINGSMALL){
-    if(V[1]>=0) V[1]=SINGSMALL;
-    if(V[1]<0) V[1]=-SINGSMALL;
-  }
+    // NOTEMARK: just shifting (e.g.) i=0 cell up a bit, nothing else to do. Assume only 1 grid cell (in "i") is there within such tolerance of SINGSMALL
+  if(fabs(V[1]-SINGSMALL)<100*NUMEPSILON) V[1]+=SINGSMALL;
 #endif
 
 
-  if(COORDSINGFIX){
-    // GODMARK: Should one use X[2] instead of V[2] in case super collimation of grid toward pole?
-    if (fabs(V[2]) < SINGSMALL){
-      if(V[2]>=0) V[2]=SINGSMALL;
-      if(V[2]<0) V[2]=-SINGSMALL;
+  if(ISSPCMCOORDNATIVE(MCOORD) && COORDSINGFIX){
+    // avoid polar axis if SPC.  Also used for CTSTAG approach so can evolve B2
+#if(1)
+    // So use X[2] only -- closer to using j itself that we don't have available.
+    if(fabs(startx[TH]-X[TH])<100*NUMEPSILON) V[TH]+=SINGSMALL;
+    FTYPE endx2=startx[TH]+N2*dx[TH];
+    if(fabs(endx2-X[TH])<100*NUMEPSILON) V[TH]-=SINGSMALL;
+#endif
+#if(0)
+    // OK, but worry about large radii where \theta is small towards axis
+    if (fabs(V[TH]) < SINGSMALL) V[TH]+=SINGSMALL;
+    else if (fabs(M_PI-V[TH]) < SINGSMALL)  V[TH]-=SINGSMALL;
+#endif
+#if(0)
+    // WRONG!
+    if (fabs(V[TH]) < SINGSMALL){
+      if(V[TH]>=0) V[TH]=SINGSMALL;
+      if(V[TH]<0) V[TH]=-SINGSMALL;
     }
-    if (fabs(M_PI-V[2]) < SINGSMALL){
-      if(V[2]>=M_PI) V[2]=M_PI+SINGSMALL;
-      if(V[2]<M_PI) V[2]=M_PI-SINGSMALL;
+    if (fabs(M_PI-V[TH]) < SINGSMALL){
+      if(V[TH]>=M_PI) V[TH]=M_PI+SINGSMALL;
+      if(V[TH]<M_PI) V[TH]=M_PI-SINGSMALL;
     }
+#endif
+
   }
 
 

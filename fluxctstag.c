@@ -691,7 +691,8 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   int pl,pliter;
 
 
-
+  // TODOMARK: Can take discrete derivative so edge quantity at center, then c2e fully correct, and correctly interpolates as continuous.
+  // TODOMARK: Then after interpolation, just sum-up from left-most-edge-value using derivative at edge to get centered quantities
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     get_loop(INTERPLINETYPE, ENOINTERPTYPE, dir, face2centloop);
@@ -1051,7 +1052,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 #elif(IFNOTRESCALETHENUSEGDET)
 	// get geometry for face pre-interpolated values
 	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	MACP0A1(p2interp,i,j,k,pl) = (ptrgdetgeomf[dir]->gdet)*MACP0A1(pstag,i,j,k,pl);	
+	MACP0A1(p2interp,i,j,k,pl) = (ptrgdetgeomf[dir]->gdet)*MACP0A1(pstag,i,j,k,pl);
 #endif
 	
       }// end COMPFULLLOOP
@@ -1101,7 +1102,6 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 // We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
 // 
 //
-
 int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
@@ -1790,12 +1790,12 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 #endif
 
+
 #endif
 
 
 
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	// BAD IDEA:
 	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
 	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
@@ -2079,12 +2079,13 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 #endif
 
+
 #endif
 
 	    // now copy over values
 #if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir]*(ptrgdetgeomf->gdet);
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir]*(ptrgdetgeomf->gdet);
+	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
+	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir] * (ptrgdetgeomf->gdet);
 #else
 	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
 	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];
