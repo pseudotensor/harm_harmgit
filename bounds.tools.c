@@ -2355,7 +2355,7 @@ int polesmooth(int whichx2,
     ug /= (FTYPE)N3;
     
     //now populate the affected cells with averaged rho, ug, and velocities
-    for (k=0; k<N3; k++) {
+    for (k=-N3BND; k<N3+N3BND; k++) {
       for (j=j0; j != rj; j+=dj) {
 	//NOTE below uses j (as opposed to rj)
 	bl_coord_ijk_2(i,j,k,CENT,X,V);
