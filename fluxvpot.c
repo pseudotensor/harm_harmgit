@@ -559,8 +559,16 @@ int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
 	    init_vpot_user(&whichcoord, userdir, time, i,j,k, loc, prim, V, &vpotuser[userdir]);
 	  }
 
+	  if((i==0||i==1) && k==0 && (j==0 || j==N2)&&(loc==CORN3)){
+	    dualfprintf(fail_file,"i=%d j=%d Aphi=%21.15g\n",i,j,vpotuser[3]);
+	  }
+
 	  // convert from user coordinate to PRIMECOORDS
 	  ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
+
+	  //	  if((i==0||i==1) && k==0 && (j==0 || j==N2) && loc==CORN3){
+	  //	    dualfprintf(fail_file,"i=%d j=%d A3=%21.15g\n",i,j,vpotuser[3]);
+	  //	  }
 
 	  // for numdirs=anything (used for input for 2Flux and for 2Flux required if doing TRACKVPOT
 	  MACP1A0(A,dir,i,j,k) = vpotuser[dir];
