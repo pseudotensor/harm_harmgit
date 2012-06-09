@@ -18,6 +18,7 @@
 
 
 // wrapper for choosing to get state by computing it or from global array
+// notice that ptrgeom->p inputted not used
 int get_stateforfluxcalc(int dimen, int isleftright, FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr)
 {
   int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);

@@ -1436,7 +1436,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #if( COORDSINGFIXCYL )   //SUPERSASMARK fix the singularity for the cylinrical coordinates
     // NOTEMARK: just shifting (e.g.) i=0 cell up a bit, nothing else to do. Assume only 1 grid cell (in "i") is there within such tolerance of SINGSMALL
-  if(fabs(V[1]-SINGSMALL)<100*NUMEPSILON) V[1]+=SINGSMALL;
+  if(fabs(V[1]-0.0)<SINGSMALL) V[1]=SINGSMALL;
 #endif
 
 
@@ -1444,9 +1444,9 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // avoid polar axis if SPC.  Also used for CTSTAG approach so can evolve B2
 #if(1)
     // So use X[2] only -- closer to using j itself that we don't have available.
-    if(fabs(startx[TH]-X[TH])<100*NUMEPSILON) V[TH]+=SINGSMALL;
-    FTYPE endx2=startx[TH]+N2*dx[TH];
-    if(fabs(endx2-X[TH])<100*NUMEPSILON) V[TH]-=SINGSMALL;
+    if(fabs(startx[TH]-X[TH])<SINGSMALL) V[TH]=SINGSMALL;
+    FTYPE endx2=startx[TH]+totalsize[2]*dx[TH];
+    if(fabs(endx2-X[TH])<SINGSMALL) V[TH]=M_PI-SINGSMALL;
 #endif
 #if(0)
     // OK, but worry about large radii where \theta is small towards axis
