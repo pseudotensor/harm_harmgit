@@ -3896,9 +3896,9 @@ void check_spc_singularities_user(void)
 #endif
 
 	nonsingfound=0;
-	nonsingfound+=(fabs(localgdet[0])<=NUMEPSILON);
+	nonsingfound+=(fabs(localgdet[0])<100*NUMEPSILON);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) nonsingfound+=(fabs(LOCALEOMFUNCMAC(pl))<=NUMEPSILON);
+	PLOOP(pliter,pl) nonsingfound+=(fabs(LOCALEOMFUNCMAC(pl))<100*NUMEPSILON);
 #endif
 
 	if(needzero && singfound){

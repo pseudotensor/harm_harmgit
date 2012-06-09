@@ -20,6 +20,34 @@ For MB09 (runlocaldipole3dfiducial and blandford3d_new) models, the older header
 
 tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH
 
+These header quantities are:
+
+tsteppartf .......... Current time
+realtotalsize[] ..... Number of grid cells in each direction
+realstartx[] ........ Starting points of internal grid cell FACE[]
+dx[] ................ Grid cell widths across FACE[]'s
+localrealnstep ...... Step number
+gam ................. Adiabatic index for the equation of state
+a ................... Black hole spin
+R0 .................  Internal (often used) r(X[1]) coordinate mapping parameter
+Rin ..................Inner FACE[1]=inner radial edge of grid
+Rout .................Outer FACE[1]=outer radial edge of grid
+hslope .............. Internal (often used) \theta(X[2]) coordinate mapping parameter
+localdt ..............Timestep right when dump is taken
+defcoord ............ Mapping type for V(X)={t,r,\theta,\phi)(X[0,1,2,3])
+MBH ................. BH mass
+QBH ................. BH charge
+is .................. Beginning i on active domain (for V[1] and X[1])
+ie .................. Ending i on active domain (for V[1] and X[1])
+js .................. Beginning i on active domain (for V[1] and X[1])
+je .................. Ending i on active domain (for V[1] and X[1])
+ks .................. Beginning i on active domain (for V[1] and X[1])
+ke .................. Ending i on active domain (for V[1] and X[1])
+whichdump ........... Internal value of this dump file type
+whichdumpversion .... Version number of this file
+numcolumns .......... Number of columns in the file
+
+
 =========
 The fieldline binary data block is floats (4 bytes, little endian as on most systems), while the gdump file is doubles (8 bytes, little endian).
 
@@ -36,6 +64,9 @@ The gdump data block has (written in C-order, so that last index is fastest) "nu
 {kji}^i X^i V^i \Gamma^\mu_{\nu\tau}     g^{\mu\nu} g_{\mu\nu}  \sqrt{-g} \gamma_\mu dV^\mu/dX^\nu
 
 where {kji} are indices for internal uniform coordinates X^i (going from realstartx[1,2,3] to realtotalsize[1,2,3]*dx[1,2,3]) that map onto spherical polar coordinates V^i with transformation dV^\mu/dX^\nu.
+
+\gamma_\mu =d_\mu(\log(\sqrt{-g}}} .  In the past, this cell-centered quantity was used to help achieve force balance for constant pressure cases where flux differencing wouldn't exactly cancel with source terms.  That term is still kinda involved, but not directly used anymore.
+
 
 More C-style description:
 
@@ -58,6 +89,22 @@ The field line data block is has "numcolumns" columns of:
 \rho_0, u_g, -u_t, -T^x1_t/(\rho_0 u^x1), u^t, v^x1, v^x2, v^x3, B^x1, B^x2, B^x3, [3 more things as \detg B^i for sasha models, check "numcolumns" in header]
 
 where u^i = v^i u^t is the lab-frame 4-velocity that satisfies u.u=-1.  B^i are the lab-frame 3-field with fluid 4-field as b^\mu = B^\nu P_\nu^\mu/u^t where P_\nu^\mu = \delta_\nu^\mu + u_\nu u^\mu is a projection tensor.
+
+All quantities are at cell centers (where r,\theta,\phi in gdump is located) except the last 3 in sasha models:
+
+\rho_0 .................... Comoving rest-mass density
+u_g ....................... Comoving thermal gas pressure
+-u_t ...................... Covariant time-component of the 4-velocity (in X-units, but for now X0=t)
+-T^X1_t/(\rho_0 u^X1) ..... Outwardly directed radial energy flux per unit mass flux
+u^t ....................... Contravariant X0=t time-component of the 4-velocity
+v^X1, v^X2, v^X3 .......... u^Xi/u^t = lab-frame 3-velocities
+B^X1, B^X2, B^X3 .......... Lab-frame magnetic 3-fields
+\sqrt{-g}<B^X1, B^X2, B^X3> Lab-frame magnetic 3-field fluxes at cell faces at FACE[1,2,3] respectively
+
+The last set of magnetic 3-field fluxes is only in sasha model fieldline files.  Check "numcolumns" to be sure.
+
+where the comoving magnetic 4-field is given by: b^\mu = h^\mu_\nu B^\nu/\gamma with \gamma = -u^\mu \eta_\mu = u^t [with \eta_\mu \equiv {-1,0,0,0} (NOT {-\alpha,0,0,0})]  with  h^\mu_\nu = \delta^\mu_\nu + u^\mu u_\nu .
+
 
 ===========
 

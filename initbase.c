@@ -1665,8 +1665,8 @@ void check_bnd_num(void)
 
   
   // checks on parameters so user doesn't do something stupid
-  if(FULLOUTPUT&&USEMPI&&numprocs>1){
-    dualfprintf(fail_file,"Cannot use FULLOUTPUT!=0 when USEMPI=1 and numprocs>1\n");
+  if(FULLOUTPUT&&USEMPI&&(numprocs>1 || mpicombine==1)){
+    dualfprintf(fail_file,"Cannot use FULLOUTPUT!=0 when USEMPI=1 and (numprocs>1 || mpicombine==1)\n");
     myexit(ERRORCODEBELOWCLEANFINISH+200);
   }
 

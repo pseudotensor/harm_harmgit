@@ -525,7 +525,7 @@
 
 //#define SINGSMALL (1E-3)
 //#define SINGSMALL (1E-20)
-#define SINGSMALL (1E-13) // must be larger than machine precision to work for outer M_PI boundary!.  1E-14 works, but need some insurance so use 1E-13
+#define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!.  1E-14 works, but need some insurance so use 1E-13
 
 // Hawley uses 0.06283 (0.02Pi)
 
@@ -704,6 +704,10 @@
 
 // whether to rescale interpolation
 #define RESCALEINTERP 0
+// 0: don't rescale
+// 1: do rescale
+
+#define RESCALEINTERPFLUXCTSTAG 0
 // 0: don't rescale
 // 1: do rescale
 
