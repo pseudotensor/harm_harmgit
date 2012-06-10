@@ -107,6 +107,8 @@ void mpiio_combine(int bintxt, int sorted,
   logsfprintf("mpiio start combine\n");
 
   if(USEROMIO){
+    logsfprintf("mpiio start combine -- using ROMIO\n");
+
     // doesn't use jonioptr or bintxt or sorted or fpptr
     // address not used, just value of writebuf
     // headerbytesize no longer needed
@@ -860,6 +862,8 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
   logsfprintf("mpiio begin seperate\n");
 
   if(truempicombinetype==MPICOMBINEROMIO){
+    logsfprintf("mpiio start separate -- using ROMIO\n");
+
     // doesn't use jonioptr or bintxt or sorted
     // headerbytesize no longer needed
     if(stage==STAGE1) mpiioromio_init_combine(READROMIO, READFILE,  0, "", numcolumns, datatype,&writebuf,writebuf);

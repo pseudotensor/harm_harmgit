@@ -21,7 +21,7 @@
 
 #if(MERGEDC2EA2CMETHOD)
 #define LINETYPEDEFINESOTHER FTYPE a_youtpolycoef[NPR2INTERP][MAXSPACEORDER][NBIGM];
-#error "SUPERGODMARK: Should only need this if doing more than 3 point stencil -- fix"
+//#error "SUPERGODMARK: Should only need this if doing more than 3 point stencil -- fix"
 #else
 #define LINETYPEDEFINESOTHER FTYPE a_youtpolycoef[1][1][1]; //VS complained about defining zero-size object
 #endif

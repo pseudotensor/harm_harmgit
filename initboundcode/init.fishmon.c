@@ -468,7 +468,7 @@ $6 = 1536
 
 
   // check that singularities are properly represented by code
-  check_spc_singularities_user();
+  //  check_spc_singularities_user(); // takes too long for testing
 
   
   return(0);
