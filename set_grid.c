@@ -133,7 +133,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
 
 
   /* set up boundaries, steps in coordinate grid */
-  if(whichtime==0 && DOEVOLVEMETRIC){
+  if(whichtime==0 && dt==0){
     dt=1.0; // dummy value that should lead to 0 connection coefficient for derivatives in time
     // just avoids 0/0 that should really be 0
   }
