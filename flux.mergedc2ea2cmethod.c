@@ -1502,16 +1502,20 @@ static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *N
   // in 1D, factor is 1/2 since implicitly sum of 0.25+0.25 for LAXF (HLL more complicated in general)
   
   // correct left (-doingodir direction) flux
-  MACP1A1(fluxvec,doingodir,ileft,jleft,kleft,B1-1+notdoingodir) += 0.5*Fleft[B1-1+doingodir];
-
+  if(doingodir==1 || doingodir==2){
+    MACP1A1(fluxvec,doingodir,ileft,jleft,kleft,B1-1+notdoingodir) += 0.5*Fleft[B1-1+doingodir];
+  }
+  
   // right-flux position for doingodir direction
   iright=i+(1==doingodir)*NNOT1vec[1];
   jright=j+(2==doingodir)*NNOT1vec[2];
   kright=k+(3==doingodir)*NNOT1vec[3];
   
   // correct left (+doingodir direction) flux
-  MACP1A1(fluxvec,doingodir,iright,jright,kright,B1-1+notdoingodir) += 0.5*Fright[B1-1+doingodir];
-
+  if(doingodir==1 || doingodir==2){
+      MACP1A1(fluxvec,doingodir,iright,jright,kright,B1-1+notdoingodir) += 0.5*Fright[B1-1+doingodir];
+  }
+  
   // Do not correct fluxvec[notdoingodir][B1-1+doingodir] since that flux doesn't exist (or implicitly the EMF cancels itself across the box in the dimension that is not studied)
 
 
