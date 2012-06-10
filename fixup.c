@@ -757,7 +757,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
     if( DOEVOLVERHO ){
       drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
-      pr[RHO] += drho;
+      //pr[RHO] += drho;
     }
     if( DOEVOLVEUU ){
       du = - dt * b2 * (pr[UU] - prfloor[UU]);
