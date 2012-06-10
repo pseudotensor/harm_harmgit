@@ -768,7 +768,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     //damp parallel velocity component
     dvpar = - dt * b1 * vpar;
     //update parallel velocity component
-    vpar += dvpar;
+    //vpar += dvpar;
     //update parallel velocity component
     set_vpar(vpar, ptrgeom, pr);
   }
