@@ -18,7 +18,7 @@ USEUB=0
 USEOSX=0
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
-USEICCINTEL=1
+USEICCINTEL=0
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -29,6 +29,16 @@ USETACCLONESTAR4=0
 USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
+USEPFESGIMPT=0
+USEORB=0
+USENAU=1
+
+#####################
+#
+# GSL CHOICE (needed for limotorus)
+#
+#####################
+USEGSL=0
 
 
 ########################
@@ -39,7 +49,7 @@ USEPFE=0
 # default should be 0 since has large performance hit.
 USEGPROF=0
 
- 
+
 ########################
 #
 # Debug information in binary
