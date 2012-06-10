@@ -757,20 +757,20 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
     if( DOEVOLVERHO ){
       drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
-      //pr[RHO] += drho;
+      pr[RHO] += drho;
     }
     if( DOEVOLVEUU ){
       du = - dt * b2 * (pr[UU] - prfloor[UU]);
       pr[UU] += du;
     }
     //compute parallel velocity component (along full B)
-    compute_vpar(pr, ptrgeom, &vpar);
+    //compute_vpar(pr, ptrgeom, &vpar);
     //damp parallel velocity component
-    dvpar = - dt * b1 * vpar;
+    //dvpar = - dt * b1 * vpar;
     //update parallel velocity component
     //vpar += dvpar;
     //update parallel velocity component
-    set_vpar(vpar, ptrgeom, pr);
+    //set_vpar(vpar, ptrgeom, pr);
   }
   return(0);
 }
