@@ -3470,6 +3470,8 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   kk=ptrgeom->k;
   loc=ptrgeom->p;
 
+  //  trifprintf("GODXM1: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
 
   //ucon_calc(pr, ptrgeom, ucon,others) ;
 
@@ -3541,6 +3543,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     return(1); // uh
   }
 
+  //  trifprintf("GODX0: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
 
   if(dofix){
@@ -3602,6 +3605,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     pr[U3] *= gamma ;
 
     // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
+    //    trifprintf("GODX1: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 

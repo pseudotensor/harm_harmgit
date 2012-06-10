@@ -227,8 +227,16 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
   }
   else if(numdirs==2){
 
+
+    //    trifprintf("POOPGOD1: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+
+    //    trifprintf("GODC1\n");
+
     // use of F1/F2/F3
     vpot2field_useflux(fieldloc,pfield,ucons,F1,F2,F3);
+
+    //    trifprintf("GODC2\n");
 
     // FLUXCTHLL is just for testing how behaves without divb=0 control
     // with fluxcthll always numdirs==2 so uses flux instead of A
@@ -262,6 +270,7 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
     // from now on, pfield is assumed to be at CENT
   }
 
+  //  trifprintf("GODC3\n");
 
 
   ////////////////
@@ -271,16 +280,22 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
   //
   /////////////////
 
+  //  trifprintf("POOPGOD2: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+
   ucons2upointppoint(time,pfield,pstag,ucons,uconstemp,pfield);
 
 
+  //  trifprintf("GODC4\n");
 
+  //  trifprintf("POOPGOD3: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
   // Since above procedures changed pfield that is probably pcent that is p, we need to rebound p since pfield was reset to undefined values in ghost cells since A_i isn't determined everywhere
   // alternatively for evolve_withvpot() could have inputted not the true p or some copy of it so wouldn't have to bound (except up to machine error difference when recomputed field using A_i)
   int finalstep=1; // assume user wants to know that conserved quants changed
   bound_prim(STAGEM1,finalstep, time,pfield,pstag,ucons, USEMPI);
 
+  //  trifprintf("GODC5\n");
 
 
   return(0);
@@ -387,14 +402,22 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
   // prim -> A using user function init_vpot_user()
   init_vpot_justAcov(t, prim, A);  // t is ok since always t=tstart
 
+  //  trifprintf("GODA1\n");
+
+  //  trifprintf("POOPYAP0: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
   // A->Flux if required
   init_vpot_toF(A, F1, F2, F3);
+
+  //  trifprintf("POOPYAP1: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+  //  trifprintf("GODA2\n");
 
   // assigns value to p and pstagscratch and unew (uses F1/F2/F3 if doing FLUXCTHLL)
   // often user just uses init_vpot2field() unless not always using vector potential
   init_vpot2field_user(t, A,prim,pstag,ucons,Bhat);  // t is ok since always t=tstart
 
-
+  //trifprintf("GODA3\n");
 
 
   return(0);
@@ -608,6 +631,8 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
     //    get_fluxpldirs(Nvec, dir, &fluxdirlist[dir], &pldirlist[dir], &plforfluxlist[dir], &signforfluxlist[dir]);
   }
 
+  //  trifprintf("POOPQQ0: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
 
   if(numdirs==2){
     // then fill F1/F2/F3 instead of A[]
@@ -625,6 +650,8 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
     
 
   trifprintf("Initialize field from vector potential assign\n");
+
+  //  trifprintf("POOPQQ1: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
 
 
@@ -684,8 +711,10 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
 	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
 	    // Notice that both fluxes are assigned a value in some cases, as required
 	    // e.g. F1[B2]=A3 and F2[B1]=-A3
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-MACP1A0(A,dir,i,j,k); // opposite ordering
+	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
+
+	    //	    trifprintf("%d %d : %d %d : otherdir=%d dir=%d i=%d j=%d k=%d POOPQQ0: %d %d %d\n",odir1[dir],B1-1+odir2[dir],odir2[dir],B1-1+odir1[dir],otherdir,dir,i,j,k,GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
 
 	  }
@@ -696,12 +725,14 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
       }// end over A_i
 
 
+
     }// end over i,j,k
 
   }// end parallel region
 
 
 
+  //  trifprintf("POOPQQ2: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
 
   return(0);
@@ -781,8 +812,8 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
 	    // then using F1/F2/F3
 	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
 	    // Notice that both fluxes are assigned a value in some cases, as required
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) fluxvec[odir1[dir]][i][j][k][B1-1+odir2[dir]]=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) fluxvec[odir2[dir]][i][j][k][B1-1+odir1[dir]]=-MACP1A0(A,dir,i,j,k); // opposite ordering
+	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
 
 	  }// end for loop over otherdirs
 	}// end over A_i

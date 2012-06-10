@@ -330,6 +330,7 @@ int bound_x1dn_outflow(
 #endif
 #elif(WHICHVEL==VELREL4)
 		get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
+		trifprintf("GODG1: %d %d\n",i,j);
 		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
 		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
 		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
@@ -376,6 +377,8 @@ int bound_x1up_outflow(
 		       )
 {
 
+
+  //  trifprintf("POOP: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
 
 
@@ -494,6 +497,7 @@ int bound_x1up_outflow(
 		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
 		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
 		//	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
+		//		trifprintf("GODG2: %d %d dir=%d : %d %d\n",i,j,dirprim[U1],ptrgeom[U1]->i,ptrgeom[U1]->j);
 		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
 		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
 		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
@@ -743,7 +747,7 @@ int bound_x2dn_polaraxis_full3d(
 	  }// end over i,k
 	}// end if ncpux3==1
 
-	// SUPERGODMARK: continue to use for now
+	// SUPERGODARK: continue to use for now
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
 	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -2704,9 +2708,11 @@ int poledeath(int whichx2,
 	  struct of_geom *fixupptrgeom;
 	  PBOUNDLOOP(pliter,pl) {
 	    fixupptrgeom=ptrgeom[pl];
+	    //	    trifprintf("GODD1: pliter=%d pl=%d\n",pliter,pl);
 	    break;
 	  }
 	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+	  //	  trifprintf("GODD2:got here\n");
 	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
 	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 	}
@@ -2935,9 +2941,11 @@ int poledeath(int whichx2,
 	  struct of_geom *fixupptrgeom;
 	  PBOUNDLOOP(pliter,pl) {
 	    fixupptrgeom=ptrgeom[pl];
+	    //	    trifprintf("GODE1: pliter=%d pl=%d\n",pliter,pl);
 	    break;
 	  }
 
+	  //	  trifprintf("GODD2: got here\n");
 	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
 	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
 	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
@@ -3045,6 +3053,7 @@ int poledeath(int whichx2,
 	    //	    PBOUNDLOOP(pliter,pl2) {
 	    pl2=pl;  // only 1 ptrgeom defined
 	    fixupptrgeom=ptrgeom[pl2];
+	    //	    trifprintf("GODF1: pliter=%d pl=%d pl2=%d\n",pliter,pl,pl2);
 	    //	      break;
 	    //	    }
 	    

@@ -106,6 +106,8 @@ int fluxcalc(int stage,
   if(splitmaem) ptrfluxvec=fluxvecEM;
   else ptrfluxvec=fluxvec;
 
+  //  trifprintf("GODF1: nprstart=%d nprend=%d\n",nprstart,nprend);
+
 
   ///////////////////////////////////////////////
   //
@@ -122,6 +124,8 @@ int fluxcalc(int stage,
     zero_out_emf_fluxes(Nvec,ptrfluxvec);
   }
 
+  //  trifprintf("GODF2: nprstart=%d nprend=%d\n",nprstart,nprend);
+
   ///////////////////////////////////////////////
   //
   // some pre-interplation flux averaging setups
@@ -129,6 +133,7 @@ int fluxcalc(int stage,
   ///////////////////////////////////////////////
   preinterp_flux_point2avg();
 
+  //  trifprintf("GODF3: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   ///////////////////////////////////////////////
@@ -147,6 +152,7 @@ int fluxcalc(int stage,
   fluxcalc_flux(stage, pr, pstag, pl_ct, pr_ct, Nvec, dqvec, fluxvec, fluxvecEM, CUf[2], fluxtime, ndtvec, cent2faceloop);
 
 
+  //  trifprintf("GODF4: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
 
@@ -176,6 +182,7 @@ int fluxcalc(int stage,
   }
 
 
+  //  trifprintf("GODF5: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   //////////////////////////////
@@ -197,6 +204,8 @@ int fluxcalc(int stage,
     MYFUN(fluxcalc_fluxctstag(stage, initialstep, finalstep, pr, pstag, pl_ct, pr_ct, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(wspeed), GLOBALPOINT(prc), GLOBALPOINT(pleft), GLOBALPOINT(pright), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), Nvec, dqvec, ptrfluxvec, vpot, CUf, CUnew, fluxdt, fluxtime, cent2faceloop, face2cornloop),"flux.c:fluxcalc()", "fluxcalc_fluxctstag", 0);
 
   }// end if staggered method where can update A_i directly
+
+  //  trifprintf("GODF6: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
 
@@ -246,6 +255,7 @@ int fluxcalc(int stage,
   }
 
 
+  //  trifprintf("GODF7: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
 
@@ -270,6 +280,8 @@ int fluxcalc(int stage,
   }
 
 
+  //  trifprintf("GODF8: nprstart=%d nprend=%d\n",nprstart,nprend);
+
   //////////////////////
   //
   // sum up MA+EM
@@ -284,6 +296,7 @@ int fluxcalc(int stage,
   //
   //////////////////
 
+  //  trifprintf("GODF9: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   //////////////////////////////
@@ -296,6 +309,7 @@ int fluxcalc(int stage,
   }
 
 
+  //  trifprintf("GODF10: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
 
@@ -306,6 +320,8 @@ int fluxcalc(int stage,
   //
   /////////////////////////////
   cleanup_fluxes(Nvec,ptrfluxvec);
+
+  //  trifprintf("GODF11: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   //////////////////////////////
@@ -336,6 +352,7 @@ int fluxcalc(int stage,
   // DEBUG: // also helped!
   //bound_flux(-1,F1,F2,F3);
 
+  //  trifprintf("GODF12: nprstart=%d nprend=%d\n",nprstart,nprend);
 
   return(0);
   

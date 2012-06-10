@@ -289,6 +289,7 @@ int init_global(void)
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
+  //FLUXB=FLUXCTHLL;
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   BCtype[X1UP]=OUTFLOW;
@@ -468,7 +469,7 @@ $6 = 1536
 
 
   // check that singularities are properly represented by code
-  check_spc_singularities_user();
+  //  check_spc_singularities_user(); // takes too long for testing
 
   
   return(0);

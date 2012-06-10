@@ -184,6 +184,7 @@ static int advance_standard(
   int doingextrashiftforstag;
 
 
+  //  trifprintf("GODBM1: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
 
@@ -202,6 +203,8 @@ static int advance_standard(
 
   ucumformetric=GLOBALPOINT(ucumformetric);// temporary space for ucum for metric that is same time as "pb", so not updated yet or is ui
 
+
+  //  trifprintf("GODB0: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   /////////////////////////////////////////////
@@ -273,6 +276,7 @@ static int advance_standard(
     dt4diag=-1.0;
   }
 
+  //  trifprintf("GODB1: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   /////////////////////////////////////////////
@@ -282,6 +286,8 @@ static int advance_standard(
   ////////////////////////////////////////////
   get_flux_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 
+
+  //  trifprintf("GODB2: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   /////////////////////////////////////////////
@@ -312,7 +318,7 @@ static int advance_standard(
   trifprintf( "#0f");
 #endif
 
-
+  //  trifprintf("GODB3: nprstart=%d nprend=%d\n",nprstart,nprend);
 
 
   if(truestep){ // only do if not just passing through
@@ -410,8 +416,12 @@ static int advance_standard(
   /////////////////////////////////////////////////////
 
 
+  //  trifprintf("GOD1: nprstart=%d nprend=%d\n",nprstart,nprend);
+
 
   if(truestep){
+
+
 
 
     // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]

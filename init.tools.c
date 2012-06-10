@@ -137,6 +137,7 @@ int user1_init_global(void)
     //avgscheme[1]=avgscheme[2]=avgscheme[3]=WENO5BND;
     //  lim[1] = lim[2] = lim[3] = WENO5BND;
     lim[1] = lim[2] = lim[3] = PARALINE;
+    //lim[1] = lim[2] = lim[3] = MC;
 
     avgscheme[1]=avgscheme[2]=avgscheme[3]=DONOR; // CHANGINGMARK
     //lim[1] = lim[2] = lim[3] = MC; // CHANGINGMARK
@@ -425,6 +426,9 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   /////////////////////////////// 
   trifprintf("Fixup and Bound #1\n");
 
+  //  trifprintf("POOPA: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+  
+
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
@@ -439,11 +443,14 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
 
+  //  trifprintf("POOPB: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
 
 
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
 
+  //  trifprintf("POOPC: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
   
   /////////////////////////////
@@ -452,8 +459,18 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 #if(1)
+  //  trifprintf("GOD1\n");
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
+
+  //  trifprintf("POOPD: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+  //  trifprintf("GOD2\n");
   normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
+
+  //  trifprintf("POOPE: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+
+  //  trifprintf("GOD3\n");
 #else
   // no field
   init_zero_field(prim,pstag,ucons,vpot,Bhat);
@@ -464,8 +481,10 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #if(ANALYTICMEMORY)
   // copy over initial solution as analytic solution
   // NEEDED FOR BOUND in case uses panalytic
+  //  trifprintf("GOD4\n");
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
+  //  trifprintf("GOD5\n");
 
 
 
@@ -533,18 +552,33 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
   int i,j,k,pl,pliter;
   int toreturn;
   extern int set_fieldfrompotential(int *fieldfrompotential);
+
+  //  trifprintf("POOPSUP0: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
    
 
   // uses ptemparray as temporary variable
   // use PLOOP (not PLOOPBONLY) since rho,u,etc. used for interpolation in some cases
   copy_3dnpr_fullloop(prim,GLOBALPOINT(ptemparray));
 
+  //  trifprintf("GODB1\n");
+
+  //  trifprintf("POOPSUP1: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+
   set_fieldfrompotential(fieldfrompotential);
+
+  //  trifprintf("GODB2\n");
+
+  //  trifprintf("POOPSUP2: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
 
   // obtain primitive magnetic field from vector potential
   // uses ptemparray as temporary variable.  Uses emf as temporary variable.
   toreturn=vpot2field(time, A,GLOBALPOINT(ptemparray),pstag,ucons,Bhat,GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 
+
+  //  trifprintf("POOPSUP3: %d %d %d\n",GLOBALMETMACP1A0(compgeom,0,64,58,0).i,GLOBALMETMACP1A0(compgeom,0,64,58,0).j,GLOBALMETMACP1A0(compgeom,0,64,58,0).k);
+
+  //  trifprintf("GODB3\n");
 
   // Can override vector potential choice for some field components, like B3 in axisymmetry
   // see init.sasha.c
@@ -556,6 +590,9 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
   //
   ////////////////////
   copy_3d_fieldonly_fullloop(GLOBALPOINT(ptemparray),prim);
+
+  //  trifprintf("GODB4\n");
+
 
   return(toreturn);
 

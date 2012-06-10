@@ -18,8 +18,8 @@ USEUB=0
 USEOSX=0
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
-USEICCINTEL=1
-USEGCC=0
+USEICCINTEL=0
+USEGCC=1
 USECCC=0
 USEORANGE=0
 USENERSC=0
@@ -145,7 +145,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=1
+USEOPENMP=0
 
 
 
@@ -186,9 +186,9 @@ ENFORCEPRECISION=0
 #
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
-USELAPACK=1
+USELAPACK=0
 # below is for new form of library -l line
-USELAPACKNEW=1
+USELAPACKNEW=0
 else
 # NO choice for below
 USELAPACK=0

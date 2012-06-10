@@ -713,6 +713,10 @@ void copy_3dvpot_fullloopp1(FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTST
 void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR])
 {
 
+  //  trifprintf("nprstart=%d nprend=%d\n",nprstart,nprend);
+  //  int pliter; for(pliter=nprstart;pliter<=nprend;pliter++) trifprintf("nprstart=%d nprend=%d nprlist[pliter=%d]=%d",nprstart,nprend,pliter,nprlist[pliter]);
+
+
 #pragma omp parallel 
   {
     int i,j,k,pl,pliter;
