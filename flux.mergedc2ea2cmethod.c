@@ -1413,8 +1413,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     // correct left-down corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at left-down CORN3 at i,j
     // NEWMARK: signature!
-    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) += 0.25*Fld;
-    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) += -0.25*Fld;
+    if(odir1!=3) MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) += 0.25*Fld;
+    if(odir2!=3) MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) += -0.25*Fld;
   
     // correct right-down corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at right-down CORN3 at i+1,j
@@ -1422,8 +1422,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir1)*NNOT1vec[2];
     kk=k+(3==odir1)*NNOT1vec[3];
     // NEWMARK: signature!
-    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Frd;
-    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Frd;
+    if(odir1!=3) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Frd;
+    if(odir2!=3) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Frd;
 
     // correct left-up corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at left-up CORN3 at i,j+1
@@ -1431,8 +1431,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir2)*NNOT1vec[2];
     kk=k+(3==odir2)*NNOT1vec[3];
     // NEWMARK: signature!
-    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Flu;
-    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Flu;
+    if(odir1!=3) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Flu;
+    if(odir2!=3) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Flu;
 
     // correct right-up corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at right-up CORN3 at i+1,j+1
@@ -1441,8 +1441,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir1+(2==odir2))*NNOT1vec[2];
     kk=k+(3==odir1+(3==odir2))*NNOT1vec[3];
     // NEWMARK: signature!
-    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Fru;
-    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Fru;
+    if(odir1!=3) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Fru;
+    if(odir2!=3) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Fru;
 
   }  
   
