@@ -716,10 +716,6 @@ FTYPE f_trans(FTYPE r)
   return(f);
 }
 
-#define FREEZE_BSQORHO (50.)
-#define FREEZE_BSQOU (50.)
-
-
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
@@ -735,6 +731,8 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
   FTYPE tiltangle;
   FTYPE costhetaprime;
+  FTYPE FREEZE_BSQORHO = 50.;
+  FTYPE FREEZE_BSQOU = BSQOULIMIT;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
