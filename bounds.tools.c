@@ -188,6 +188,7 @@ int bound_x1dn_nssurface(
     FTYPE rBur, Bur;
     FTYPE vpar;
     FTYPE rucon[NDIM];
+    FTYPE thetapc;
     //FTYPE bval;
     
     
@@ -289,6 +290,7 @@ int bound_x1dn_nssurface(
 		}
 	      }
 	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+	      bl_coord_ijk(i, j, k, dirprim[pl], V);
 	      
 	      //bval = MACP0A1(prim,i,j,k,B1);
 	      
@@ -304,6 +306,12 @@ int bound_x1dn_nssurface(
 		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
 		
 		//if u^r > 0, fix vpar in ghost cells to preselected value
+		
+		thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
+		
+		if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
+		  vpar = 0.5;
+		}
 		if(rucon[1] > 0){
 		  vpar = global_vpar0;
 		} //else leave it as it is
