@@ -716,7 +716,7 @@ FTYPE f_trans(FTYPE r)
   return(f);
 }
 
-#define FREEZE_BSQORHO (10.)
+#define FREEZE_BSQORHO (50.)
 #define FREEZE_BSQOU (50.)
 
 
