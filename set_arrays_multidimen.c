@@ -249,6 +249,37 @@ void set_arrays_multidimen()
   }
 #endif
 
+
+
+
+#if(N1>1)
+  GLOBALPOINT(F1fake) = (FTYPE PTRMACP0A1(F1fake,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(F1fake,SHIFT1+N1BND,SHIFT2+N2BND,SHIFT3+N3BND,0)));
+  FULLLOOP PLOOP(pliter,pl){
+    GLOBALMACP0A1(F1fake,i,j,k,pl) = valueinit;
+  }
+#endif
+#if(N2>1)
+  GLOBALPOINT(F2fake) = (FTYPE PTRMACP0A1(F2fake,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(F2fake,SHIFT1+N1BND,SHIFT2+N2BND,SHIFT3+N3BND,0)));
+  FULLLOOP PLOOP(pliter,pl){
+    GLOBALMACP0A1(F2fake,i,j,k,pl) = valueinit;
+  }
+#endif
+#if(N3>1)
+  GLOBALPOINT(F3fake) = (FTYPE PTRMACP0A1(F3fake,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(F3fake,SHIFT1+N1BND,SHIFT2+N2BND,SHIFT3+N3BND,0)));
+  FULLLOOP PLOOP(pliter,pl){
+    GLOBALMACP0A1(F3fake,i,j,k,pl) = valueinit;
+  }
+#endif
+
+
+
+
+
+
+
+
+
+
 #if(SPLITMAEMMEM)
 #if(N1>1)
   GLOBALPOINT(F1EM) = (FTYPE PTRMACP0A1(F1EM,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(F1EM,SHIFT1+N1BND,SHIFT2+N2BND,SHIFT3+N3BND,0)));

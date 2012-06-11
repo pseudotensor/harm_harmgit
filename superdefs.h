@@ -163,6 +163,19 @@ FTYPE BASEMACP0A1(F2,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);
 FTYPE BASEMACP0A1(F3,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
 #endif
 
+#if(N1>1)
+// below is used within substeps but not across if doing ACCURATEDIAG
+FTYPE BASEMACP0A1(F1fake,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+#endif
+#if(N2>1)
+// below is used within substeps but not across if doing ACCURATEDIAG
+FTYPE BASEMACP0A1(F2fake,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+#endif
+#if(N3>1)
+// below is used within substeps but not across if doing ACCURATEDIAG
+FTYPE BASEMACP0A1(F3fake,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+#endif
+
 #if(SPLITMAEMMEM)
 #if(N1>1)
 // below is used within substeps but not across if doing ACCURATEDIAG

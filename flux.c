@@ -57,6 +57,7 @@ int fluxcalc(int stage,
   void fix_flux(FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]) ;
   FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP];
   FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvecfake[NDIM])[NSTORE2][NSTORE3][NPR];
   FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR];
   FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR];
   FTYPE *ndtvec[NDIM];
@@ -292,8 +293,18 @@ int fluxcalc(int stage,
   //
   /////////////////////////////
   if(MERGEDC2EA2CMETHOD){
-    mergedc2ea2cmethod_compute(Nvec,fluxvec);
+    int dimen;
+    //    mergedc2ea2cmethod_compute(Nvec,fluxvec);
+    fluxvecfake[1]=GLOBALPOINT(F1fake);
+    fluxvecfake[2]=GLOBALPOINT(F2fake);
+    fluxvecfake[3]=GLOBALPOINT(F3fake);
+    DIMENLOOP(dimen) FULLLOOP PLOOP(pliter,pl) MACP1A1(fluxvecfake,dimen,i,j,k,pl) = MACP1A1(fluxvec,dimen,i,j,k,pl);
+    mergedc2ea2cmethod_compute(Nvec,fluxvecfake);
+    //    DIMENLOOP(dimen) FULLLOOP pl=RHO; MACP1A1(fluxvec,dimen,i,j,k,pl) = MACP1A1(fluxvecfake,dimen,i,j,k,pl);
   }
+
+
+
 
 
 
