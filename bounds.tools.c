@@ -140,6 +140,9 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
   return(0);
 }
 
+#define FRACBSQORHO (0.5)
+#define FRACBSQOU (0.05)
+#define VPARBND (0.9)
 
 // X1 inner NSSURFACE (created from OUTFLOW/FIXEDOUTFLOW)
 int bound_x1dn_nssurface(
@@ -191,8 +194,8 @@ int bound_x1dn_nssurface(
     FTYPE rucon[NDIM];
     FTYPE thetapc;
     //FTYPE bval;
-    FTYPE BSQORHOBND = 0.5*BSQORHOLIMIT;
-    FTYPE BSQOUBND = 0.5*BSQORHOLIMIT;
+    FTYPE BSQORHOBND = FRACBSQORHO*BSQORHOLIMIT;
+    FTYPE BSQOUBND = FRACBSQOU*BSQOULIMIT;
     
     
     // assign memory
