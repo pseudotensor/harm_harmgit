@@ -189,7 +189,7 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
   set_interppoint_loop_ranges_geomcorn_formerged(ENOINTERPTYPE, corner, odir1, odir2, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
   // loop over all i,j,k
-  COMPZSLOOP(is,ie,js,je,ks,ke){
+  FULLLOOP{
       
     // assume ptrgeom->g all that's needed, not ptrgeom->EOMFUNCMAC(pl) since for field ptrgeom->EOMFUNCMAC's must be consistent!
     get_geometry_gdetonly(i, j, k, CORN1-1+corner, ptrgeomcorn); // at CORN[dir]
@@ -555,7 +555,7 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
       set_interppoint_loop_ranges(ENOINTERPTYPE, dimen, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
       // loop over all i,j,k
-      COMPZSLOOP(is,ie,js,je,ks,ke){
+      FULLLOOP{
 
 	// initialize Fleft and Fright updates
 	PLOOP(pliter,pl){
@@ -650,7 +650,7 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 	  // e.g. cont. In this limit, deconvolution is 1D and takes place using values at FACE1(i), CENT(i), FACE1(i+1) since no offset in odir1=3 direction as would be true if N3>1
 	  //
 	  // loop over all i,j,k
-	  COMPZSLOOP(is,ie,js,je,ks,ke){
+	  FULLLOOP{
 	    deconvolve_emf_1d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
 	  }
 	}
@@ -658,7 +658,7 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 	  // full 2D deconvolution
 	  // correction done inside
 	  // loop over all i,j,k
-	  COMPZSLOOP(is,ie,js,je,ks,ke){
+	  FULLLOOP{
 	    deconvolve_emf_2d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
 	  }
 	}
