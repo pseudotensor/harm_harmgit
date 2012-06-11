@@ -731,7 +731,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
   FTYPE tiltangle;
   FTYPE costhetaprime;
-  FTYPE FREEZE_BSQORHO = 50.;
+  FTYPE FREEZE_BSQORHO;
   FTYPE FREEZE_BSQOU = BSQOULIMIT;
   
   Bcon[0]=0;
@@ -745,6 +745,8 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   r=V[1];
   th=V[2];
   ph=V[3];
+  
+  FREEZE_BSQORHO = 0.5*BSQORHOLIMIT/pow(r,1.5);
   
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
