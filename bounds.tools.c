@@ -313,7 +313,7 @@ int bound_x1dn_nssurface(
 		thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
 		
 		if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
-		  vpar = 0.5;
+		  vpar = 0.9;
 		}
 		if(rucon[1] > 0){
 		  vpar = global_vpar0;
