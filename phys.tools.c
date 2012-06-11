@@ -2960,6 +2960,11 @@ int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
   //vpar = v^mu B_mu / |B|
   *vpar = Bdotv/absB;
   
+  //define positive parallel velocity to be directed away from star
+  if (Bccon[1]<0) {
+    *vpar *= -1;
+  }
+  
   return(0);
 }
 
@@ -2986,6 +2991,11 @@ int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
   Bccon[2] = pr[B2];
   Bccon[3] = pr[B3];
   
+  //define positive parallel velocity to be directed away from star
+  if (Bccon[1]<0) {
+    vpar *= -1;
+  }
+
   lower_vec(Bccon,geom,Bccov);
   
   //Obtain |B|
