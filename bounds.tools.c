@@ -140,6 +140,7 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
   return(0);
 }
 
+
 // X1 inner NSSURFACE (created from OUTFLOW/FIXEDOUTFLOW)
 int bound_x1dn_nssurface(
 		       int finalstep, int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -190,6 +191,8 @@ int bound_x1dn_nssurface(
     FTYPE rucon[NDIM];
     FTYPE thetapc;
     //FTYPE bval;
+    FTYPE BSQORHOBND = 0.5*BSQORHOLIMIT;
+    FTYPE BSQOUBND = 0.5*BSQORHOLIMIT;
     
     
     // assign memory
@@ -310,7 +313,7 @@ int bound_x1dn_nssurface(
 		thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
 		
 		if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
-		  vpar = 0.5;
+		  vpar = -0.5;
 		}
 		if(rucon[1] > 0){
 		  vpar = global_vpar0;
@@ -330,8 +333,8 @@ int bound_x1dn_nssurface(
 		  }
 		  
 		  //set rho and u consistent with density floor
-		  MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOLIMIT;
-		  MACP0A1(prim,i,j,k,UU) = bsq/BSQOULIMIT;
+		  MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOBND;
+		  MACP0A1(prim,i,j,k,UU) = bsq/BSQOUBND;
 		}
 		//*** the below already done ***
 		//else {
