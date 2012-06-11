@@ -11,7 +11,7 @@
 #undef N3
 #endif
 
-#define N1 16
+#define N1 24
 #define N2 16
 #define N3 16
 
