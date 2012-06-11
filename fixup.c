@@ -716,8 +716,8 @@ FTYPE f_trans(FTYPE r)
   return(f);
 }
 
-#define FREEZE_BSQORHO (5.)
-#define FREEZE_BSQOU (10.)
+#define FREEZE_BSQORHO (10.)
+#define FREEZE_BSQOU (50.)
 
 
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
