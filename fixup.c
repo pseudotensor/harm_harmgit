@@ -716,6 +716,10 @@ FTYPE f_trans(FTYPE r)
   return(f);
 }
 
+#define FREEZE_BSQORHO (5.)
+#define FREEZE_BSQOU (10.)
+
+
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
@@ -756,12 +760,16 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     b1 = b0 * f_trans(r);
     b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
     if( DOEVOLVERHO ){
-      drho = - dt * b2 * (pr[RHO] - prfloor[RHO]);
-      pr[RHO] += drho;
+      drho = - dt * b2 * (pr[RHO] - BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO);
+      if( drho < 0 ) {
+	pr[RHO] += drho;
+      }
     }
     if( DOEVOLVEUU ){
-      du = - dt * b2 * (pr[UU] - prfloor[UU]);
-      pr[UU] += du;
+      du = - dt * b2 * (pr[UU] - BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU);
+      if( du < 0 ){
+	pr[UU] += du;
+      }
     }
     //compute parallel velocity component (along full B)
     //compute_vpar(pr, ptrgeom, &vpar);
