@@ -894,7 +894,7 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
 
 // NICS Nautilus hints:
 // http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
-
+// http://www.nics.tennessee.edu/io-tips
 
 // filename only needed for INITROMIO
 // operationtype=INITROMIO or WRITECLOSEROMIO
