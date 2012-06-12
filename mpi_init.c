@@ -1583,7 +1583,7 @@ int myexit(int call_code)
     ////////////////////////////////
 #if(USEMPI)
     if(cleanfinish && USEROMIO==1 && MPIVERSION==2 ){
-      fakedump();
+      fakedump(0);
     }
 #endif
 

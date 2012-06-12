@@ -1108,6 +1108,8 @@ int init_defglobal(void)
   whichrestart = 0;
   restartsteps[0] = 0;
   restartsteps[1] = 0;
+  fakesteps[0] = 0;
+  fakesteps[1] = 0;
   nstep = realnstep = 0;
   failed = 0;
   cour = 0.5;  //atch: modified the courant factor from 0.9
@@ -1192,6 +1194,7 @@ int init_defglobal(void)
   //  DTener=1.0;
   //  DTi=1.0;
   DTr=1;
+  DTfake=MAX(1,DTr/10);
 
 
 

@@ -269,6 +269,7 @@ int user1_init_global(void)
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 3000;
+  DTfake=MAX(1,DTr/10);
 
 
   tf=2E3; // very problem dependent, should override

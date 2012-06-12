@@ -1666,7 +1666,7 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 // fake dump so can push out data in case still in MPI=2 delayed writing buffer
-int fakedump(void)
+int fakedump(long dump_cnt)// arg not used
 {
   MPI_Datatype datatype;
   int whichdump;

@@ -8,6 +8,7 @@
 
 static int restart_process_extra_variables(void);
 
+static int restartupperpole_set(void);
 
 
 int extrarestartfunction_new(void)
@@ -440,7 +441,7 @@ int restartupperpole_read(long dump_cnt)
 
 
 // restart needs to set B2=0 along outer pole if not being used.
-int restartupperpole_set(void)
+static int restartupperpole_set(void)
 {
 
   if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
@@ -1277,6 +1278,23 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 
   if(readwrite==READHEAD) trifprintf("end reading header of restart file\n");
   else if(readwrite==WRITEHEAD) trifprintf("end writing header of restart file\n");
+
+
+
+
+  // final things need to set but lock to rdump header content since don't want to add new header entry.  GODMARK: Eventually should add to restart header.
+  if(readwrite==READHEAD){
+    fakesteps[0]=restartsteps[0];
+    fakesteps[1]=restartsteps[1];
+    whichfake=whichrestart;
+    DTfake=MAX(1,DTr/10); // only thing that matters currently.
+  }
+
+
+
+
+
+
 
 
   return(0);

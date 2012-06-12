@@ -101,6 +101,7 @@ long dumpcntgen[NUMDUMPTYPES];
 //SFTYPE DTi;
 //SFTYPE DTdebug;
 long DTr;
+long DTfake;
 //long dump_cnt;
 //long avg_cnt;
 //long debug_cnt;
@@ -204,11 +205,13 @@ int mpicombine;
 int mpicombinetype;
 int truempicombinetype;
 int halftimep;
-int whichrestart;
 int appendold;
 int whocalleducon; // OPENMPNOTE: Ensure those are set as threadprivate [noted only called outside parallel regions]
 // global flags
+int whichrestart;
+int whichfake;
 long restartsteps[2];
+long fakesteps[2];
 int binaryoutput,sortedoutput;
 int CHECKCONT,DOTSTEPDIAG,DOLOGSTEP,DOLOGPERF;
 int NDTCCHECK,NZCCHECK,NDTDOTCCHECK,NGOCHECK,NTIMECHECK,NDTPERFDUMPCHECK;

@@ -338,7 +338,7 @@ int init_global(void)
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 1000;
-
+  DTfake=MAX(1,DTr/10);
 
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -360,6 +360,7 @@ int init_global(void)
   DTdebug = 250.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
   DTr = 1000;                  /* restart file period in steps */
+  DTfake=MAX(1,DTr/10);
 #endif
 
 
