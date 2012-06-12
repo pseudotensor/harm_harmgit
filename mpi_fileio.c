@@ -107,8 +107,6 @@ void mpiio_combine(int bintxt, int sorted,
   logsfprintf("mpiio start combine\n");
 
   if(USEROMIO){
-    logsfprintf("mpiio start combine -- using ROMIO\n");
-
     // doesn't use jonioptr or bintxt or sorted or fpptr
     // address not used, just value of writebuf
     // headerbytesize no longer needed
@@ -862,8 +860,6 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
   logsfprintf("mpiio begin seperate\n");
 
   if(truempicombinetype==MPICOMBINEROMIO){
-    logsfprintf("mpiio start separate -- using ROMIO\n");
-
     // doesn't use jonioptr or bintxt or sorted
     // headerbytesize no longer needed
     if(stage==STAGE1) mpiioromio_init_combine(READROMIO, READFILE,  0, "", numcolumns, datatype,&writebuf,writebuf);
@@ -892,6 +888,13 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
   logsfprintf("mpiio end seperate\n");
 
 }
+
+
+
+
+// NICS Nautilus hints:
+// http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
+
 
 // filename only needed for INITROMIO
 // operationtype=INITROMIO or WRITECLOSEROMIO
@@ -964,7 +967,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[3] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
@@ -990,7 +993,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1012,7 +1015,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = romiocolumns;
       array_of_gsizes[0] = totalsize[1];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1033,7 +1036,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3];
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3;
       
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1055,7 +1058,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2];
+      sizeofmemory = (long long int)N1*(long long int)N2;
       
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1073,7 +1076,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[0] = totalsize[1];
 
-      sizeofmemory = (long long int)totalsize[1];
+      sizeofmemory = (long long int)N1;
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
@@ -1119,7 +1122,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 
 
     // fail if MPI functions below can't handle buffer size
-    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2L*1024L*1024L*1024L) && sizeof(int)<=4){
+    if((long long int)N1*(long long int)N2*(long long int)N3*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2L*1024L*1024L*1024L) && sizeof(int)<=4){
       dualfprintf(fail_file,"JCM couldn't figure out how to modify ROMIO so would work when sizeof(int)==4 and buffer size is >2GB\n");
       myexit(867546243);
     }
