@@ -1105,12 +1105,13 @@ int init_defglobal(void)
   defcon = 1.0;
   /* maximum increase in timestep */
   SAFE=1.3;
+  nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;
   restartsteps[1] = 0;
-  fakesteps[0] = 0;
-  fakesteps[1] = 0;
-  nstep = realnstep = 0;
+  whichfake = whichrestart;
+  fakesteps[0] = restartsteps[0];
+  fakesteps[1] = restartsteps[1];
   failed = 0;
   cour = 0.5;  //atch: modified the courant factor from 0.9
   doevolvemetricsubsteps=0; // default is to evolve on long steps (only applicable if DOEVOLVEMETRIC==1 && EVOLVEMETRICSUBSTEP==2)

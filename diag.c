@@ -7,7 +7,10 @@
 
 
 
-static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen);
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap
+		       ,long long int nlastrestart, long long int nrestart
+		       ,long long int nlastfake, long long int nfake
+		       ,int *doareamap, int *dodumpgen);
 static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
 		    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
 		    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
@@ -173,7 +176,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // setup what we will dump this call to diag()
   //
   ////////////////////////
-  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, &doareamap, dodumpgen);
+  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, nlastfake, nfake, &doareamap, dodumpgen);
 
 
   //////////////////
@@ -610,7 +613,7 @@ int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int
 }
 
 
-static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen)
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, long long int nlastfake, long long int nfake, int *doareamap, int *dodumpgen)
 {
 
 
@@ -759,7 +762,11 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   else dodumpgen[ENERDUMPTYPE]=0;
   
   
-  // FAKEDUMPTYPE is fake dump controlled in other code
+  // FAKEDUMPTYPE
+  if((USEMPI && USEROMIO==1 && MPIVERSION==2)&&( ((nlastfake!=nfake)&&(failed == 0) && (localrealnstep >= nfake ))||(call_code==FINAL_OUT) ) ){
+    dodumpgen[FAKEDUMPTYPE]=1;
+  }
+  else dodumpgen[FAKEDUMPTYPE]=0;
 
 
 

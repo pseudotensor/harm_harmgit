@@ -1084,6 +1084,21 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_psizes[0]=ncpux1;
     }
+    else if(romiocolumns==0){
+      // write nothing actually
+      ndims=1;
+      order = MPI_ORDER_C;
+      
+      array_of_gsizes[0] = 1;
+
+      sizeofmemory = 1;
+      
+      array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
+      
+      array_of_dargs[0] = MPI_DISTRIBUTE_DFLT_DARG;
+      
+      array_of_psizes[0]=1;
+    }
     else{
       dualfprintf(fail_file,"Shouldn't reach to end of ROMIO selection\n");
       myexit(17872);

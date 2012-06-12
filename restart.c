@@ -1276,11 +1276,6 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   }
 
 
-  if(readwrite==READHEAD) trifprintf("end reading header of restart file\n");
-  else if(readwrite==WRITEHEAD) trifprintf("end writing header of restart file\n");
-
-
-
 
   // final things need to set but lock to rdump header content since don't want to add new header entry.  GODMARK: Eventually should add to restart header.
   if(readwrite==READHEAD){
@@ -1289,6 +1284,15 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     whichfake=whichrestart;
     DTfake=MAX(1,DTr/10); // only thing that matters currently.
   }
+
+
+
+  if(readwrite==READHEAD) trifprintf("end reading header of restart file\n");
+  else if(readwrite==WRITEHEAD) trifprintf("end writing header of restart file\n");
+
+
+
+
 
 
 
