@@ -417,27 +417,32 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
 // number of columns for dump file
 void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
-
-
-  // always NPRDUMP
-  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + NDIM * NDIM + 6 + 1
+  if(DODUMPDIAG){
+    
+    // always NPRDUMP
+    if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + NDIM * NDIM + 6 + 1
 #if(CALCFARADAYANDCURRENTS)
-		    + NDIM*2
-		    + 2*6
+      + NDIM*2
+      + 2*6
 #endif
-		    ;
-  else{
-    *numcolumns=3*3 + NPRDUMP+(nprend+1) + 3 + 1 + NDIM * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
+      ;
+    else{
+      *numcolumns=3*3 + NPRDUMP+(nprend+1) + 3 + 1 + NDIM * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
 #if(CALCFARADAYANDCURRENTS)
       + NDIM*2
       + 2*6
 #endif
       ;    // 61 total if also doing currents and faraday, 41 otherwise
-
-    if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
-      *numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
+      
+      if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
+	*numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
+      }
     }
   }
+  else {
+    *numcolumns=0;
+  }
+
 
 
   // Version number:
@@ -779,26 +784,31 @@ int avgdump(long dump_cnt)
 void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
-  // 36+29+8*2+4*2+2+12*2+96*2=339
-  *numcolumns=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
-    + NUMNORMDUMP // |normal terms| (29)
-#if(CALCFARADAYANDCURRENTS)
-    + NDIM*2 // jcon/jcov (8)
-    + NDIM*2 // |jcon|/|jcov| (8)
-#endif
-    + NDIM*2 // massflux/|massflux|
-    + NUMOTHER*2 // other stuff and fabs of each
-#if(CALCFARADAYANDCURRENTS)
-    +6*2 // fcon/fcov (12)
-    +6*2 // |fcon|,|fcov| (12)
-#endif
-    +7*16 // Tud all 7 parts, all 4x4 terms (112)
-    +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
-    ;
+  if(DOAVGDIAG) {
+    // 36+29+8*2+4*2+2+12*2+96*2=339
+    *numcolumns=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
+      + NUMNORMDUMP // |normal terms| (29)
+  #if(CALCFARADAYANDCURRENTS)
+      + NDIM*2 // jcon/jcov (8)
+      + NDIM*2 // |jcon|/|jcov| (8)
+  #endif
+      + NDIM*2 // massflux/|massflux|
+      + NUMOTHER*2 // other stuff and fabs of each
+  #if(CALCFARADAYANDCURRENTS)
+      +6*2 // fcon/fcov (12)
+      +6*2 // |fcon|,|fcov| (12)
+  #endif
+      +7*16 // Tud all 7 parts, all 4x4 terms (112)
+      +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
+      ;
 
 
-  if(DOAVG2){
-    *numcolumns-=224;
+    if(DOAVG2){
+      *numcolumns-=224;
+    }
+  }
+  else {
+    *numcolumns=0;
   }
 
   // Version number:
@@ -980,12 +990,16 @@ int gdump(long dump_cnt)
 extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
-
-  // 205+4+4*4 currently
-  //*numcolumns=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
-  //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
-  *numcolumns=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
-  //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
+  if( DOGDUMPDIAG ) {
+    // 205+4+4*4 currently
+    //*numcolumns=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
+    //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
+    *numcolumns=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
+    //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
+  }
+  else {
+    *numcolumns=0;
+  }
 
   // Version number:
   *numversion=0;
@@ -1475,15 +1489,18 @@ int eosdump(long dump_cnt)
 
 void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
-
-  //#if(WHICHEOS==KAZFULL)
-  // all EOSs output same size data so uniform format
-  // otherwise have to also put this condition in dump.c when outputting so don't overwrite memory!
-  *numcolumns=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
-  //#else
-  //  *numcolumns=0;
-  //#endif
-
+  if (DODUMPDIAG) {
+    //#if(WHICHEOS==KAZFULL)
+    // all EOSs output same size data so uniform format
+    // otherwise have to also put this condition in dump.c when outputting so don't overwrite memory!
+    *numcolumns=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
+    //#else
+    //  *numcolumns=0;
+    //#endif
+  }
+  else{
+    *numcolumns=0;
+  }
   // Version number:
   *numversion=0;
 

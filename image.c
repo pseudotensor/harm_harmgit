@@ -457,9 +457,14 @@ int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt
 
 extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
+  if(DOIMAGEDIAG){
+    // now setup the data output/input organization for chunking method for each number of columns
+    *numcolumns=1;
+  }
+  else {
+    *numcolumns=0;
+  }
 
-  // now setup the data output/input organization for chunking method for each number of columns
-  *numcolumns=1;
 
 
   *numversion=0;
