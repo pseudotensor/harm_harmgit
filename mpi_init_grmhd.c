@@ -73,15 +73,15 @@ int init_MPI_GRMHD(int *argc, char **argv[])
   // report MPIid[myid] ordering
   //  MPI_Barrier(MPI_COMM_GRMHD);
   fprintf(stderr, "Begin report_myid()\n");
-  if(myid==0) report_myid(logfull_file);
-  report_myid(log_file);
+  if(myid==0&&logfull_file) report_myid(logfull_file);
+  if(log_file) report_myid(log_file);
   fprintf(stderr, "End report_myid()\n");
 
 
 #if(USEOPENMP)
   // output to logfull_file
-  if(myid==0) get_report_openmp_thread_info(logfull_file);
-  get_report_openmp_thread_info(log_file);
+  if(myid==0&&logfull_file) get_report_openmp_thread_info(logfull_file);
+  if(log_file) get_report_openmp_thread_info(log_file);
 #endif
 
 

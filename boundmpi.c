@@ -99,7 +99,7 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
     }
     ZLOOP {
       MACP0A1(prim,i,j,k,pl)=myid-pl*100; // differentiates but clear per pr
-      //      fprintf(log_file,"%d %d %d %d %21.15g\n",i,j,k,pl,MACP0A1(prim,i,j,k,pl));
+      //      logfprintf("%d %d %d %d %21.15g\n",i,j,k,pl,MACP0A1(prim,i,j,k,pl));
     }
   }
 #endif
@@ -223,10 +223,10 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
   }
 
 #if(DEBUG)
-    fprintf(log_file,"\n\nafter\n\n");
+    logfprintf("\n\nafter\n\n");
     FULLLOOP{
       PBOUNDLOOP(pliter,pl){
-        fprintf(log_file,"%d %d %d %d %21.15g\n",i,j,k,pl,MACP0A1(prim,i,j,k,pl));
+        logfprintf("%d %d %d %d %21.15g\n",i,j,k,pl,MACP0A1(prim,i,j,k,pl));
       }
     }
     myexit(0);

@@ -2701,17 +2701,17 @@ int init_linklists(void)
   // check link lists
   for(i=0;i<NUMDUMPTYPES;i++){
     if(dnumcolumns[i]>0){
-      fprintf(log_file,"i=%d\n",i); fflush(log_file);
+      logfprintf("i=%d\n",i);
       blinkptr=blinkptr0[i];
       numlists=0;
       numcells=0;
       while(blinkptr!=NULL){
 	numcells+=blinkptr->num;
-	//      fprintf(log_file,"i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells); fflush(log_file);
+	//      logfprintf("i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells);
 	numlists++;
 	blinkptr=blinkptr->np; // next one
       }
-      fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
+      logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
       numlists=0;
     }
   }
@@ -2721,17 +2721,17 @@ int init_linklists(void)
     trifprintf("start cpu==0 lists\n");
     for(i=0;i<NUMDUMPTYPES;i++){
       if(dnumcolumns[i]>0){
-	fprintf(log_file,"i=%d\n",i); fflush(log_file);
+	logfprintf("i=%d\n",i);
 	cpulinkptr=cpulinkptr0[i];
 	numlists=0;
 	numcells=0;
 	while(cpulinkptr!=NULL){
 	  numcells+=cpulinkptr->num;
-	  //	fprintf(log_file,"i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells); fflush(log_file);
+	  //	logfprintf("i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells);
 	  numlists++;
 	  cpulinkptr=cpulinkptr->np; // next one
 	}
-	fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
+	logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
 	numlists=0;
       }
     }
@@ -2867,7 +2867,7 @@ int setuplinklist(int numcolumns,int which)
     //    if(myid==0){
     //  fprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
     // }
-    //    fprintf(log_file,"%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount); fflush(log_file);
+    //    logfprintf("%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount);
     // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
     // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
     // chunk in minimum size of numcolumns
@@ -2916,7 +2916,7 @@ int setuplinklist(int numcolumns,int which)
 	numcpusinlist0=0; // reset list of cpus for this list
       }
       if(lcount>0){
-	fprintf(log_file,"numcolumns=%d lcount=%lld\n",numcolumns,lcount); fflush(log_file);
+	logfprintf("numcolumns=%d lcount=%lld\n",numcolumns,lcount); 
         // initialize another structure
         // set previous structure value to this structure, set this next one to NULL
         if(firstlink){

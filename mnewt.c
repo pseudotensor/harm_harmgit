@@ -361,18 +361,18 @@ int mnewt(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primtoU
   // some counting on this run of mnewt, failed or not
 #if(DEBUG)
   if (lastnstep < nstep) {
-    fprintf(log_file,"#1 count/zone: %21.15g calls: %21.15g\n",
+    logfprintf("#1 count/zone: %21.15g calls: %21.15g\n",
 	    ((FTYPE) count) / ((FTYPE) (N1 * N2)),
-	    ((FTYPE)calls) / ((FTYPE)(N1 * N2))); fflush(log_file);
-    fprintf(log_file,"count: %ld zones: %d calls: %ld\n",
-	    count,N1 * N2,calls); fflush(log_file);
+	    ((FTYPE)calls) / ((FTYPE)(N1 * N2)));
+    logfprintf("count: %ld zones: %d calls: %ld\n",
+	    count,N1 * N2,calls);
 
     if(0){// can't assume all CPUs get here, since may use different inversions
       mpildsum0(&count,0);
       mpildsum0(&calls,0);
       /*
 	myfprintf(stderr,"count: %ld zones: %d calls: %d\n",
-	count,totalzones,calls); fflush(log_file);
+	count,totalzones,calls);
       */
       myfprintf(logfull_file,"#1 count/zone: %21.15g calls: %21.15g\n",
 		((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
