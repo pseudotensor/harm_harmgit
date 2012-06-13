@@ -1202,9 +1202,9 @@ int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
     // set r=4+i set h=j set ph=k gsetup gammienew
     //
     FULLLOOP{
-      fprintf(log_file,"%d %d %d ",i,j,k);
-      PLOOP(pliter,pl) fprintf(log_file,"%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
-      fprintf(log_file,"\n");
+      logfprintf("%d %d %d ",i,j,k);
+      PLOOP(pliter,pl) logfprintf("%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
+      logfprintf("\n");
     }
     myexit(0);
   }

@@ -31,7 +31,7 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 
   va_start (arglist, format);
 
-  if(PRODUCTION<=1){
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
     if(fileptr==NULL){
       fprintf(stderr,"tried to print to null file pointer: %s\n",format);
       fflush(stderr);
@@ -62,7 +62,7 @@ void logsfprintf(char *format, ...)
 
   va_start (arglist, format);
 
-  if(PRODUCTION<=1){
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
     if(log_file){
       va_copy(arglistcopy,arglist);
       vfprintf (log_file, format, arglistcopy);
@@ -79,21 +79,39 @@ void logsfprintf(char *format, ...)
   va_end(arglist);
 }
 
+
+// prints to log_file(all cpus)
+void logfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+  
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
+  }
+  va_end(arglist);
+}
+
 // prints to logfull_file, log_file, and stderr (but only using cpu=0)
 void trifprintf(char *format, ...)
 {
   va_list arglist, arglistcopy;
 
 
-  if(PRODUCTION>=3){
-    return;
-  }
 
-  
 
   va_start (arglist, format);
 
-  if(PRODUCTION<=1){
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
     if(log_file){
       va_copy(arglistcopy,arglist);
       vfprintf (log_file, format, arglistcopy);

@@ -170,7 +170,7 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
 #endif
 
 
-  trifprintf("done with init_MPI_setupfilesandgrid()\n");  fflush(log_file);
+  trifprintf("done with init_MPI_setupfilesandgrid()\n");
 
 }
 
@@ -344,24 +344,27 @@ void init_genfiles(int gopp)
   }
   // always have fail and general log open
 
-  sprintf(temps, "%s0_fail%s%s", DATADIR, extension, myidtxt);
-  if ((fail_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "fail: Cannot open: %s\n", temps);
-    exit(1);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    sprintf(temps, "%s0_fail%s%s", DATADIR, extension, myidtxt);
+    if ((fail_file = fopen(temps, "at")) == NULL) {
+      fprintf(stderr, "fail: Cannot open: %s\n", temps);
+      exit(1);
+    }
+    fprintf(stderr, "opened: %s\n", temps);
   }
-  fprintf(stderr, "opened: %s\n", temps);
 
 
-
-  sprintf(temps, "%s0_log%s%s", DATADIR, extension, myidtxt);
-  if ((log_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "log: Cannot open: %s\n", temps);
-    exit(1);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    sprintf(temps, "%s0_log%s%s", DATADIR, extension, myidtxt);
+    if ((log_file = fopen(temps, "at")) == NULL) {
+      fprintf(stderr, "log: Cannot open: %s\n", temps);
+      exit(1);
+    }
+    fprintf(stderr, "opened: %s\n", temps);
+    fprintf(log_file, "fail_file: %d log_file: %d\n", (int)fail_file,
+	    (int)log_file);
+    fflush(log_file);
   }
-  fprintf(stderr, "opened: %s\n", temps);
-  fprintf(log_file, "fail_file: %d log_file: %d\n", (int)fail_file,
-	  (int)log_file);
-  fflush(log_file);
 
 
   sprintf(temps, "%s0_logdt%s%s", DATADIR, extension, myidtxt);
@@ -521,7 +524,6 @@ void init_placeongrid_gridlocation(void)
   mycpupos[2]=(int)((myid%(ncpux1*ncpux2))/ncpux1);
   mycpupos[3]=(int)(myid/(ncpux1*ncpux2));
 
-  //  SLOOPA(j) dualfprintf(log_file,"mycpupos[%d]=%d",j,mycpupos[j]);
 
 
   for (m = 1; m <= COMPDIM; m++) {
@@ -581,23 +583,22 @@ void init_placeongrid_gridlocation(void)
   /////////////////
 
 #if(USEMPI)
-  fprintf(log_file,"myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
+  logfprintf("myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
 #endif
   trifprintf("\nnumprocs(MPI)=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d\n",numprocs,ncpux1,ncpux2,ncpux3,numopenmpthreads);
   trifprintf("\n Per MPI Task: N1=%d N2=%d N3=%d\n",N1,N2,N3);
-  fprintf(log_file,"per: %d %d\n", periodicx1, periodicx2);
+  logfprintf("per: %d %d\n", periodicx1, periodicx2);
 
   for (m = 1; m <= COMPDIM; m++) {
-    fprintf(log_file,"mycpupos[%d]: %d\n", m, mycpupos[m]);
-    fprintf(log_file, "startpos[%d]: %d\n", m, startpos[m]);
-    fprintf(log_file, "endpos[%d]: %d\n", m, endpos[m]);
-    fprintf(log_file, "totalsize[%d]: %lld\n", m, totalsize[m]);
+    logfprintf("mycpupos[%d]: %d\n", m, mycpupos[m]);
+    logfprintf( "startpos[%d]: %d\n", m, startpos[m]);
+    logfprintf( "endpos[%d]: %d\n", m, endpos[m]);
+    logfprintf( "totalsize[%d]: %lld\n", m, totalsize[m]);
   }
 
   trifprintf("totalzones: %d\n", totalzones);
 
 
-  fflush(log_file);
 
 
 
@@ -1425,7 +1426,7 @@ void init_placeongrid_griddecomposition(void)
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {
     for (m = 0; m < COMPDIM*2; m++) {
       for(l = 0 ; l < DIRGENNUMVARS ; l++) {
-	fprintf(log_file, "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
+	logfprintf( "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
       }
     }
   }
@@ -1434,7 +1435,7 @@ void init_placeongrid_griddecomposition(void)
     for (m = 0; m < COMPDIM*2; m++) {
       for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++) {
 	for(l = 0 ; l < DIRLOOPNUMVARS ; l++) {
-	  fprintf(log_file, "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
+	  logfprintf( "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
 	}
       }
     }
@@ -1462,28 +1463,28 @@ void init_placeongrid_griddecomposition(void)
     if(SIMULBCCALC>=1){
       for(stage=stagei;stage<=stagef;stage++){
 	STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
-	fprintf(log_file,"CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,-1,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-1,N1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,0,N2-1,isc,iec,jsc,jec);
-	fprintf(log_file,"F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1-1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-1,N1,-1,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-2,N1+1,-2,N2+1,isc,iec,jsc,jec);
-	fprintf(log_file,"PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	fprintf(log_file,"\n");
+	logfprintf("PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("\n");
       }
     }
   }
 #endif
 
-  fflush(log_file);
+  
 
 
 

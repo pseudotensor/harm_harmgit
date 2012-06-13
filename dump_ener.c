@@ -701,7 +701,7 @@ void divbmaxavg(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrd
   }
 
   // PER CPU
-  fprintf(log_file,"  proc: %04d : divbmax: %d %d %d : %21.15g divbavg: %21.15g\n", myid, imax, jmax, kmax, divbmax, divbavg / ((FTYPE) (N1*N2*N3))); fflush(log_file);
+  logfprintf("  proc: %04d : divbmax: %d %d %d : %21.15g divbavg: %21.15g\n", myid, imax, jmax, kmax, divbmax, divbavg / ((FTYPE) (N1*N2*N3)));
 
 #if(USEMPI)			// give CPU=0 total
   divbmaxsend = divbmax;

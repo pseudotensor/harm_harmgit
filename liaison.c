@@ -188,8 +188,8 @@ int init(int *argc, char **argv[])
 
   // report system information
   report_systeminfo(stderr);
-  report_systeminfo(log_file);
-  if(myid==0) report_systeminfo(logfull_file);
+  if(log_file) report_systeminfo(log_file);
+  if(myid==0&&logfull_file) report_systeminfo(logfull_file);
 
 
 

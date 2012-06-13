@@ -227,14 +227,14 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
   // some counting on this run of mnewt, failed or not
 #if(DEBUG)
   if (lastnstep < nstep) {
-    fprintf(log_file,"#1 count/zone: %g calls: %g\n",
+    logfprintf("#1 count/zone: %g calls: %g\n",
 	    ((FTYPE) count) / ((FTYPE) (N1 * N2)),
-	    ((FTYPE)calls) / ((FTYPE)(N1 * N2))); fflush(log_file);
-    fprintf(log_file,"count: %ld zones: %d calls: %ld\n",
-	    count,N1 * N2,calls); fflush(log_file);
+	    ((FTYPE)calls) / ((FTYPE)(N1 * N2)));
+    logfprintf("count: %ld zones: %d calls: %ld\n",
+	    count,N1 * N2,calls);
     /*
       myfprintf(stderr,"count: %ld zones: %d calls: %d\n",
-      count,totalzones,calls); fflush(log_file);
+      count,totalzones,calls); 
     */
     myfprintf(logfull_file,"#1 count/zone: %g calls: %g\n",
 	      ((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
