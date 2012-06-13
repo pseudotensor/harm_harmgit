@@ -284,7 +284,7 @@
 
 // GODMARK: only setup for full Pi theta grid, not Pi/2 or any other theta grid.
 // e.g. will fail for defcoord=3 Pi/2 grid.  Causes code to crash
-#define DOJETDIAG 1
+#define DOJETDIAG 0
 // 0: don't do jet diagnostics (ener, not flener that is always done)
 // 1: do
 
@@ -292,17 +292,17 @@
 // 0: don't split AVG file
 // 1: do
 
-#define DODEBUG 1
+#define DODEBUG 0
 // 0: don't output debug dump file or ener file(ener is based on dump counts)
 // 1: do
 
-#define DOFLOORDIAG 1
+#define DOFLOORDIAG 0
 // 0: don't output file with diag_fixup() activated changes in conserved quantities
 // 1: do
 
 
 // whether to dump vector potential
-#define DOVPOTDUMP (1 && TRACKVPOT)
+#define DOVPOTDUMP (0 && TRACKVPOT)
 
 #define DOENODEBUG 0
 // whether to do ENO debug

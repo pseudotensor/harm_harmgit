@@ -21,7 +21,7 @@
 #endif
 
 // maximum number of MPI CPUs used for some size information
-#define MAXCPUS 10000
+#define MAXCPUS 32769
 
 // maximum number of OpenMP threads
 #define MAXOPENMPTHREADS MAXCPUS

@@ -1218,15 +1218,15 @@ int init_defglobal(void)
 
   DODIAGS=1; // whether to do diagnostics
   // specify individual diagnostics to be done
-  DOENERDIAG=1;
-  DOGDUMPDIAG=1;
+  DOENERDIAG=0;
+  DOGDUMPDIAG=0;
   DORDUMPDIAG=1;
   DODUMPDIAG=1;
   if(DOAVG){
-    DOAVGDIAG=1; // choice
+    DOAVGDIAG=0; // choice
   }
   else DOAVGDIAG=0; // no choice
-  DOIMAGEDIAG=1;
+  DOIMAGEDIAG=0;
   DOAREAMAPDIAG=1;
 
   POSDEFMETRIC=0; // see metric.c, bounds.c, and coord.c
