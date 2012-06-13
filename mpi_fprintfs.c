@@ -31,15 +31,17 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 
   va_start (arglist, format);
 
-  if(fileptr==NULL){
-    fprintf(stderr,"tried to print to null file pointer: %s\n",format);
-    fflush(stderr);
-  }
-  else{
-    va_copy(arglistcopy,arglist);
-    vfprintf (fileptr, format, arglistcopy);
-    fflush(fileptr);
-    va_end(arglistcopy);
+  if(PRODUCTION<=1){
+    if(fileptr==NULL){
+      fprintf(stderr,"tried to print to null file pointer: %s\n",format);
+      fflush(stderr);
+    }
+    else{
+      va_copy(arglistcopy,arglist);
+      vfprintf (fileptr, format, arglistcopy);
+      fflush(fileptr);
+      va_end(arglistcopy);
+    }
   }
   if(myid==0){
     va_copy(arglistcopy,arglist);
@@ -54,20 +56,24 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 void logsfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
+
+
   
 
   va_start (arglist, format);
 
+  if(PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
+  }
   if  ((myid==0)&&(logfull_file)){
     va_copy(arglistcopy,arglist);
     vfprintf (logfull_file, format, arglistcopy);
     fflush(logfull_file);
-    va_end(arglistcopy);
-  }
-  if(log_file){
-    va_copy(arglistcopy,arglist);
-    vfprintf (log_file, format, arglistcopy);
-    fflush(log_file);
     va_end(arglistcopy);
   }
   va_end(arglist);
@@ -77,23 +83,31 @@ void logsfprintf(char *format, ...)
 void trifprintf(char *format, ...)
 {
   va_list arglist, arglistcopy;
+
+
+  if(PRODUCTION>=3){
+    return;
+  }
+
   
 
   va_start (arglist, format);
 
-  if  ((myid==0)&&(logfull_file)){
-    va_copy(arglistcopy,arglist);
-    vfprintf (logfull_file, format, arglistcopy);
-    fflush(logfull_file);
-    va_end(arglistcopy);
-  }
-  if(log_file){
-    va_copy(arglistcopy,arglist);
-    vfprintf (log_file, format, arglistcopy);
-    fflush(log_file);
-    va_end(arglistcopy);
+  if(PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
   }
   if(myid==0){
+    if(logfull_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (logfull_file, format, arglistcopy);
+      fflush(logfull_file);
+      va_end(arglistcopy);
+    }
     va_copy(arglistcopy,arglist);
     vfprintf (stderr, format, arglistcopy);
     fflush(stderr);
