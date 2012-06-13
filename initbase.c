@@ -1221,7 +1221,7 @@ int init_defglobal(void)
   DOENERDIAG=0;
   DOGDUMPDIAG=0;
   DORDUMPDIAG=1;
-  DODUMPDIAG=1;
+  DODUMPDIAG=0;
   if(DOAVG){
     DOAVGDIAG=0; // choice
   }

@@ -196,7 +196,7 @@
 #define DOAVG 0
 #define DOJETDIAG 1
 #define DOAVG2 0
-#define DODEBUG 1
+#define DODEBUG 0
 #define DO_WENO_DEBUG 0
 #define DOENODEBUG 0
 #define DOEVOLVEMETRIC 0
