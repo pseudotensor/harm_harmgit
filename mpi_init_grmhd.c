@@ -37,15 +37,22 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
   // currently INIT provides args to rest of processes
+#if(PRODUCTION < 2)
   fprintf(stderr, "Begin myargs(*argc,*argv)\n");
+#endif
   myargs(*argc,*argv);
+#if(PRODUCTION < 2)
   fprintf(stderr, "End myargs(*argc,*argv)\n");
-
+#endif
 
   // set default MPIid (must come after myargs())
+#if(PRODUCTION < 2)
   fprintf(stderr, "Begin init_default_MPI_GRMHD_myid()\n");
+#endif
   init_default_MPI_GRMHD_myid();
+#if(PRODUCTION < 2)
   fprintf(stderr, "End init_default_MPI_GRMHD_myid()\n");
+#endif
   // report MPIid[myid] ordering
   report_myid(stderr);
 
@@ -72,11 +79,14 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
   // report MPIid[myid] ordering
   //  MPI_Barrier(MPI_COMM_GRMHD);
+#if(PRODUCTION < 2)
   fprintf(stderr, "Begin report_myid()\n");
+#endif
   if(myid==0 && logfull_file) report_myid(logfull_file);
   if(log_file) report_myid(log_file);
+#if(PRODUCTION < 2)
   fprintf(stderr, "End report_myid()\n");
-
+#endif
 
 #if(USEOPENMP)
   // output to logfull_file
@@ -251,8 +261,8 @@ int init_MPI_GRMHD_myid(void)
 // report listings of MPIid[myid]
 int report_myid(FILE *out)
 {
+#if(PRODUCTION < 2)
   int ranki,rankj,rankk,origid;
-
   fprintf(out,"BEGIN Rank orders in physical model space\n");
 
   fprintf(out,"\n");
@@ -272,7 +282,7 @@ int report_myid(FILE *out)
   fprintf(out,"\n");
 
   fprintf(out,"END Rank orders in physical model space\n");
-
+#endif
   return(0);
 }
 
