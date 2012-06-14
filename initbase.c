@@ -1222,7 +1222,14 @@ int init_defglobal(void)
 
   DODIAGS=1; // whether to do diagnostics
   // specify individual diagnostics to be done
-  DOENERDIAG=1;
+
+  if(PRODUCTION>=2){ // then disable things not really using
+    DOENERDIAG=0;
+    // still kinda use images to check if looks reasonable, and already limit images to 1 image file if PRODUCTION==1
+  }
+  else{
+    DOENERDIAG=1;
+  }
   DOGDUMPDIAG=1;
   DORDUMPDIAG=1;
   DODUMPDIAG=1;

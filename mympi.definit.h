@@ -20,12 +20,6 @@
 #define MPIAVOIDFORK 0   // always 0, can't have GM without MPI
 #endif
 
-// maximum number of MPI CPUs used for some size information
-#define MAXCPUS 10000
-
-// maximum number of OpenMP threads
-#define MAXOPENMPTHREADS MAXCPUS
-
 
 
 // whether to simultaneously compute and transfer bc (i.e. actually use non-blocking with a purpose).

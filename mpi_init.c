@@ -49,12 +49,11 @@ int init_MPI_general(int *argc, char **argv[])
 #endif
 
 
-
-  if (MAXCPUS < truenumprocs) {
-    fprintf(stderr,
-	    "Must increase MAXCPUS in global.h, %d is too many\n",
-	    truenumprocs);
-    myexit(38743421);
+  // allocate things that are truenumprocs in size
+  MPIid=(int*)malloc(sizeof(int)*truenumprocs);
+  if(MPIid==NULL){
+    fprintf(stderr,"Problem allocating memory for MPIid with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(6794382152);
   }
 
 
@@ -1677,8 +1676,17 @@ int error_check(int wherefrom)
 #if(0)
 void init_MPIgroup(void)
 {
-  int ranks[MAXCPUS] = {0}; 
+  int *ranks;
   int i,j,k,numranks;
+
+
+  // allocate things that are truenumprocs in size
+  ranks=(int*)malloc(sizeof(int)*truenumprocs);
+  if(ranks==NULL){
+    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(915213756);
+  }
+
 
   MPI_Comm_group(MPI_COMM_WORLD, &MPI_GROUP_WORLD);
 
@@ -1791,6 +1799,9 @@ void init_MPIgroup(void)
   // now create group and communicator
   MPI_Group_incl(MPI_GROUP_WORLD, numranks, ranks, &grprem[4]);
   MPI_Comm_create(MPI_COMM_WORLD, grprem[4], &combound[4]); 
+
+
+  free(ranks);
 
   // 0: right 1: up 2: left 3: down 4: out 5: in(as in bound.c)
 

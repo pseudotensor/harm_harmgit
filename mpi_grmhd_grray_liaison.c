@@ -469,10 +469,19 @@ void init_MPI_group_grmhd_grray_liaison(
 					MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
 					MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON)
 {
-  int ranks[MAXCPUS] = {0}; 
+  int *ranks; 
   int i,j,k,numranks;
   int procsdone;
   int sizetemp;
+
+  // allocate things that are truenumprocs in size
+  ranks=(int*)malloc(sizeof(int)*truenumprocs);
+  if(ranks==NULL){
+    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(3876252356);
+  }
+  for(i=0;i<truenumprocs;i++) ranks[i]=0;
+
 
 #if(USEMPILIAISON)  
 
@@ -541,6 +550,8 @@ void init_MPI_group_grmhd_grray_liaison(
 
 #endif // end if USEMPILIAISON
 
+  free(ranks);
+
 }
 
 
@@ -607,9 +618,18 @@ void init_MPI_group_grmhd_liaison_split(
 					MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
 					MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD)
 {
-  int ranks[MAXCPUS] = {0}; 
+  int *ranks;
   int i,j,k,numranks;
   int procsdone;
+
+
+  // allocate things that are truenumprocs in size
+  ranks=(int*)malloc(sizeof(int)*truenumprocs);
+  if(ranks==NULL){
+    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(3876252356);
+  }
+  for(i=0;i<truenumprocs;i++) ranks[i]=0;
 
 
 #if(USEMPILIAISON)
@@ -648,6 +668,7 @@ void init_MPI_group_grmhd_liaison_split(
 
 #endif
 
+  free(ranks);
 
 }
 
@@ -661,9 +682,19 @@ void init_MPI_group_grray_liaison_split(
 					MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
 					MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
 {
-  int ranks[MAXCPUS] = {0}; 
+  int *ranks;
   int i,j,k,numranks;
   int procsdone;
+
+
+  // allocate things that are truenumprocs in size
+  ranks=(int*)malloc(sizeof(int)*truenumprocs);
+  if(ranks==NULL){
+    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(3876252356);
+  }
+  for(i=0;i<truenumprocs;i++) ranks[i]=0;
+
 
 
 #if(USEMPILIAISON)
@@ -701,6 +732,8 @@ void init_MPI_group_grray_liaison_split(
 
 #endif
 
+
+  free(ranks);
 
 }
 

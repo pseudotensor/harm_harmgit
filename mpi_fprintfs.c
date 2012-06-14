@@ -101,6 +101,26 @@ void logfprintf(char *format, ...)
   va_end(arglist);
 }
 
+// prints to stderr if PRODUCTION<=1 for all CPUs but only myid==0 if PRODUCTION>=2
+void stderrfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(stderr){
+      va_copy(arglistcopy,arglist);
+      vfprintf (stderr, format, arglistcopy);
+      fflush(stderr);
+      va_end(arglistcopy);
+    }
+  }
+  va_end(arglist);
+}
+
 // prints to logfull_file, log_file, and stderr (but only using cpu=0)
 void trifprintf(char *format, ...)
 {

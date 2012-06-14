@@ -8,15 +8,15 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
 #if(USEMPI)
-  fprintf(stderr, "Begin: init_MPI_GRMHD\n");
-  fflush(stderr);
+  fprintf(stderr, "Begin: init_MPI_GRMHD\n"); fflush(stderr);
   // init MPI (assumes nothing in set_arrays.c used here) : always done
   // non-blocking:
   init_MPI_general(argc, argv);
+  // NOW CAN USE myid to determine if print-out things
 #else
-  fprintf(stderr, "Did NOT init_MPI_GRMHD\n");
-  fflush(stderr);
+  fprintf(stderr, "Did NOT init_MPI_GRMHD\n"); fflush(stderr);
 #endif
+
 
 
 #if(USEOPENMP)
@@ -25,9 +25,9 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
   // always do below since just sets defaults if not doing liaisonmode
-  fprintf(stderr, "Begin grmhd_init_mpi_liaisonmode_globalset()\n");
+  stderrfprintf( "Begin grmhd_init_mpi_liaisonmode_globalset()\n");
   grmhd_init_mpi_liaisonmode_globalset();
-  fprintf(stderr, "End grmhd_init_mpi_liaisonmode_globalset()\n");
+  stderrfprintf( "End grmhd_init_mpi_liaisonmode_globalset()\n");
 
 
 #if(USEMPI)
@@ -37,17 +37,17 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
   // currently INIT provides args to rest of processes
-  fprintf(stderr, "Begin myargs(*argc,*argv)\n");
+  stderrfprintf( "Begin myargs(*argc,*argv)\n");
   myargs(*argc,*argv);
-  fprintf(stderr, "End myargs(*argc,*argv)\n");
-
+  stderrfprintf( "End myargs(*argc,*argv)\n");
 
   // set default MPIid (must come after myargs())
-  fprintf(stderr, "Begin init_default_MPI_GRMHD_myid()\n");
+  stderrfprintf( "Begin init_default_MPI_GRMHD_myid()\n");
   init_default_MPI_GRMHD_myid();
-  fprintf(stderr, "End init_default_MPI_GRMHD_myid()\n");
+  stderrfprintf( "End init_default_MPI_GRMHD_myid()\n");
   // report MPIid[myid] ordering
-  report_myid(stderr);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1) report_myid(stderr);
+
 
 
 #if(USEOPENMP)
@@ -72,10 +72,10 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
   // report MPIid[myid] ordering
   //  MPI_Barrier(MPI_COMM_GRMHD);
-  fprintf(stderr, "Begin report_myid()\n");
+  stderrfprintf( "Begin report_myid()\n");
   if(myid==0&&logfull_file) report_myid(logfull_file);
   if(log_file) report_myid(log_file);
-  fprintf(stderr, "End report_myid()\n");
+  stderrfprintf( "End report_myid()\n");
 
 
 #if(USEOPENMP)
@@ -127,9 +127,9 @@ int init_default_MPI_GRMHD_myid(void)
 
 
   if(MPIid[myid]!=myid){
-    fprintf(stderr,"Failure to setup default MPIid[myid]=%d: myid=%d numprocs=%d\n",MPIid[myid],myid,numprocs);
+    fprintf(stderr,"Failure to setup default MPIid[myid]=%d: myid=%d numprocs=%d\n",MPIid[myid],myid,numprocs); fflush(stderr);
     for(proc=0;proc<numprocs;proc++){
-      fprintf(stderr,"MPIid[proc=%d]=%d\n",proc,MPIid[proc]);
+      fprintf(stderr,"MPIid[proc=%d]=%d\n",proc,MPIid[proc]); fflush(stderr);
     }
     myexit(1486754);
   }
@@ -239,7 +239,7 @@ int init_MPI_GRMHD_myid(void)
 
 #if(USEMPI)
   // Might have myid==0 setup al CPUs, but not MPIid[0] since unknown by all CPUs at first and might change.  So use myid==0 as broadcast in case myid==0 setup all CPUs.
-  MPI_Bcast(MPIid,MAXCPUS,MPI_INT,0,MPI_COMM_GRMHD);
+  MPI_Bcast(MPIid,truenumprocs,MPI_INT,0,MPI_COMM_GRMHD);
 #endif
 
   return(0);
