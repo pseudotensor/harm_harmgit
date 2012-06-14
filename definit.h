@@ -721,7 +721,7 @@
 
 // control bounds.tools.c for SPC coordinates polar axis fixups
 #define DOPOLEDEATH 0
-#define DOPOLESMOOTH 1
+#define DOPOLESMOOTH 2
 #define DOPOLEGAMMADEATH 0
 
 
