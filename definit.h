@@ -711,9 +711,6 @@
 // REASON: Cannot just set F=0.  The flux of the kinetic energy still has the pressure term even if the velocity into the wall is 0!
 
 
-// if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
-#define IF3DSPCTHENMPITRANSFERATPOLE 1
-
 // whether to flip gdet sign over coordinate singularities
 // completely generally, this should be 1 so that \detg is smooth across the axis.  So then standard boundary conditions on primitives give correct non-kinked behavior through polar axis (including for ram pressure flux term).
 #define FLIPGDETAXIS 1
@@ -723,6 +720,15 @@
 #define DOPOLEDEATH 0
 #define DOPOLESMOOTH 2
 #define DOPOLEGAMMADEATH 0
+
+
+
+// if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
+#if(DOPOLESMOOTH)
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
+#else
+#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working yet, but may be just more sensitive
+#endif
 
 
 

@@ -172,8 +172,6 @@
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
 #endif
-#undef IF3DSPCTHENMPITRANSFERATPOLE
-#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working perfectly yet
 
 
 #undef DOPOLEDEATH
@@ -181,7 +179,16 @@
 #undef DOPOLEGAMMADEATH
 #define DOPOLEDEATH 0
 #define DOPOLESMOOTH 2
-#define DOPOLEGAMMADEATH 2
+#define DOPOLEGAMMADEATH 2 // not sure if this is needed if polesmooth() used.
+
+
+#undef IF3DSPCTHENMPITRANSFERATPOLE
+#if(DOPOLESMOOTH)
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
+#else
+#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working yet, but may be just more sensitive
+#endif
+
 
 
 #define PERCELLDT 0
