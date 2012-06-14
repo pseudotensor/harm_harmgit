@@ -1636,9 +1636,9 @@ static int prepare_globaldt(
 
     // GODMARK: 1 : do always
     if(1|| nstep%DTr==0){
-      fprintf(logdt_file,"nstep=%ld steppart=%d :: dt=%g ndt=%g ndt1=%g ndt2=%g ndt3=%g\n",nstep,steppart,dt,*ndt,ndt1,ndt2,ndt3);
-      SLOOPA(jj) fprintf(logdt_file,"dir=%d wavedti=%d wavedtj=%d wavedtk=%d\n",jj,waveglobaldti[jj],waveglobaldtj[jj],waveglobaldtk[jj]);
-      fprintf(logdt_file,"accdt=%g (accdti=%d accdtj=%d accdtk=%d) :: gravitydt=%g (gravitydti=%d gravitydtj=%d gravitydtk=%d) :: gravityskipstep=%d\n",accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,gravityskipstep);
+      logdtfprintf("nstep=%ld steppart=%d :: dt=%g ndt=%g ndt1=%g ndt2=%g ndt3=%g\n",nstep,steppart,dt,*ndt,ndt1,ndt2,ndt3);
+      SLOOPA(jj) logdtfprintf("dir=%d wavedti=%d wavedtj=%d wavedtk=%d\n",jj,waveglobaldti[jj],waveglobaldtj[jj],waveglobaldtk[jj]);
+      logdtfprintf("accdt=%g (accdti=%d accdtj=%d accdtk=%d) :: gravitydt=%g (gravitydti=%d gravitydtj=%d gravitydtk=%d) :: gravityskipstep=%d\n",accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,gravityskipstep);
     }
   }
 #endif

@@ -366,13 +366,15 @@ void init_genfiles(int gopp)
   }
 
 
-  sprintf(temps, "%s0_logdt%s%s", DATADIR, extension, myidtxt);
-  if ((logdt_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "logdt: Cannot open: %s\n", temps);
-    exit(1);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    sprintf(temps, "%s0_logdt%s%s", DATADIR, extension, myidtxt);
+    if ((logdt_file = fopen(temps, "at")) == NULL) {
+      fprintf(stderr, "logdt: Cannot open: %s\n", temps);
+      exit(1);
+    }
+    fprintf(stderr, "opened: %s\n", temps);
+    fflush(logdt_file);
   }
-  fprintf(stderr, "opened: %s\n", temps);
-  fflush(logdt_file);
 
 
 

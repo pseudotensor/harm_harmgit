@@ -80,6 +80,7 @@ void logsfprintf(char *format, ...)
 }
 
 
+
 // prints to log_file(all cpus)
 void logfprintf(char *format, ...)
 {
@@ -95,6 +96,25 @@ void logfprintf(char *format, ...)
       va_copy(arglistcopy,arglist);
       vfprintf (log_file, format, arglistcopy);
       fflush(log_file);
+      va_end(arglistcopy);
+    }
+  }
+  va_end(arglist);
+}
+
+// prints to logdt_file(all cpus)
+void logdtfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(logdt_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (logdt_file, format, arglistcopy);
+      fflush(logdt_file);
       va_end(arglistcopy);
     }
   }

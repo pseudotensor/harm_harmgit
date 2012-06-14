@@ -187,15 +187,6 @@
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 
-// disable things that are not really needed because they are debugging type things
-#if(PRODUCTION>=2)
-//#undef DOJETDIAG
-#undef DODEBUG
-#undef DOFLOORDIAG
-//#define DOJETDIAG 0
-#define DODEBUG 0
-#define DOFLOORDIAG 0
-#endif
 
 #define MAILWHENDONE 1
 #define MAILFROMREMOTE 0
@@ -378,3 +369,16 @@ struct Ccoordparams {
 #undef USERRESETREGION
 #define USERRESETREGION 0
 
+///////////////////////////////////////
+//
+// disable things that are not really needed because they are debugging type things
+//
+///////////////////////////////////////
+#if(PRODUCTION>=2)
+//#undef DOJETDIAG
+#undef DODEBUG
+#undef DOFLOORDIAG
+//#define DOJETDIAG 0
+#define DODEBUG 0
+#define DOFLOORDIAG 0
+#endif
