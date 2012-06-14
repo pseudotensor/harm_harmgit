@@ -3151,6 +3151,7 @@ int polesmooth(int whichx2,
   }
 
 
+  //  dualfprintf(fail_file,"Got here t=%g\n",t);
 
   /////////////////////
   //
@@ -3183,13 +3184,15 @@ int polesmooth(int whichx2,
     j0 = -POLESMOOTH; //starting from this j
     rj = POLESMOOTH;  //until this j
     dj = 1;
-    stopj=rj+1;
+    //    stopj=rj+1; // can also average-out j=rj
+    stopj=rj;
   }
   else{
     j0 = N2-1+POLESMOOTH;  //starting from this j
     rj = N2-1-POLESMOOTH; //until this j
     dj = -1;
-    stopj=rj-1;
+    //    stopj=rj-1; // can also average-out j=rj
+    stopj=rj;
   }
 
 
@@ -3267,6 +3270,10 @@ int polesmooth(int whichx2,
   //////////////////////
   LOOPF1{ // full i to account for already-assigned real boundary cells
 
+
+    //    dualfprintf(fail_file,"Got here t=%g i=%d\n",t,i);
+
+
     // set reference i -- process per i with no averaging in i-direction
     ri = i;
 
@@ -3285,6 +3292,8 @@ int polesmooth(int whichx2,
     ////////////////
     LOOPN3{ // only over active domain for averaging.
 
+      //      dualfprintf(fail_file,"Got here t=%g i=%d k=%d\n",t,i,k);
+
       // set reference k -- averaging over k
       rk = k;
 
@@ -3298,7 +3307,7 @@ int polesmooth(int whichx2,
       
       // cumulate non-velocities
       PBOUNDLOOP(pliter,pl){
-	if(pl<U1 && pl>U3) cartavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+	if(pl<U1 || pl>U3) cartavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
       }
 
       // cumulate framed 4-vel in quasi-Cart x, y, z (see tiltedAphi.m)
@@ -3330,6 +3339,8 @@ int polesmooth(int whichx2,
       cartavgpr[U2] = 0.0;
     }
 
+    //    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got here t=%g i=%d pl=%d %g %g\n",t,i,pl,cartavgpr[pl],spcavgpr[pl]);
+
 
     //////////////
     //    
@@ -3339,6 +3350,10 @@ int polesmooth(int whichx2,
     LOOPF3{// over full domain for assignment of the average since boundary call for periodic x3 may already be done.
       //      for (j=j0; j != rj; j+=dj) { // over interior j to rj
       for (j=j0; j != stopj; j+=dj) { // over interior j to rj
+
+
+	//	dualfprintf(fail_file,"Got here t=%g i=%d j=%d k=%d\n",t,i,j,k);
+
 
 	// set pr to assign
 	pr = MAC(prim,i,j,k);
@@ -3360,7 +3375,7 @@ int polesmooth(int whichx2,
 
 	// Set other non-velocity, non-field things
 	PBOUNDLOOP(pliter,pl){
-	  if(pl<U1 && pl>B3) pr[pl] = cartavgpr[pl]; // spcavgpr would also be valid for such scalar densitites
+	  if(pl<U1 || pl>B3) pr[pl] = cartavgpr[pl]; // spcavgpr would also be valid for such scalar densitites
 	}
       }// end over each j
     }// end over each k
