@@ -24,8 +24,8 @@
 #define NUMITERVPHI 5
 
 
+//////////////////////////////
 // number of zones to use pole crushing regularizations
-
 // to help protect the pole from death blows to the computational grid
 // a sort of crushing regularization
 // causes problems with stability at just beyond pole
@@ -41,6 +41,10 @@
 
 #define POLEINTERPTYPE 3 // 0=set uu2=bu2=0, 1=linearly interpolate uu2,bu2  2=interpolate B_\phi into pole  3 =linearly for uu2 unless sucking on pole
 
+
+
+
+//////////////////////////////////////////
 // number of zones to enforce Lorentz factor to be small
 // notice that at pole uu1 and uu2 are artificially large and these regions can lead to runaway low densities and so even higher uu1,uu3
 // problem with POLEGAMMADEATH is that at large radius as fluid converges toward pole the fluid stagnates and can fall back at larger angles for no reason -- even for simple torus problem this happens when GAMMAPOLE=1.001
@@ -57,27 +61,9 @@
 #define GAMMAPOLEOUTGOINGRADIUS 10.0 // very model dependent
 #define GAMMAPOLEINGOING GAMMAMAX
 
-
 // factor by which to allow quantities to jump near pole
 #define POLEDENSITYDROPFACTOR 5.0
 #define POLEGAMMAJUMPFACTOR 2.0
-
-// avoid such things if N2==1
-#define POLEDEATH (N2==1 ? 0 : POLEDEATH0)
-#define POLEGAMMADEATH (N2==1 ? 0 : POLEGAMMADEATH0)
-
-// whether to average in radius for poledeath
-#define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
-#define RADIUSTOSTARTAVERAGING 7 // should be beyond horizon so doesn't diffuse across horizon
-#define RADIUSTOAVOIDRADIALSUCK (2.0*Rhor)
-
-#if( POLEDEATH > N2BND )
-#error POLEDEATH should be <= N2BND
-#endif
-
-#if( MAXPOLEDEATH > N2BND )
-#error MAXPOLEDEATH should be <= N2BND
-#endif
 
 
 // whether if doing full special 3d (i.e. special3dspc==1) that should only do poledeath for inflow
@@ -92,6 +78,48 @@
 
 // how many zones to use poledeath at outer *physical* edge
 #define IFLIMITPOLEDEATHIOUT (-100)
+
+
+
+///////////////////////////////////////////
+// number of zones to smooth pole
+#define POLESMOOTH0 (N2BND==0 ? 0 : MIN(2,N2BND)) 
+
+
+
+///////////////////////////////////////////
+// whether to average in radius for poledeath
+#define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
+#define RADIUSTOSTARTAVERAGING 7 // should be beyond horizon so doesn't diffuse across horizon
+#define RADIUSTOAVOIDRADIALSUCK (2.0*Rhor)
+
+
+
+///////////////////////////////////////////
+// avoid such things if N2==1 or no poledeath
+#define POLEDEATH (DOPOLEDEATH==0 || N2==1 ? 0 : POLEDEATH0)
+#define POLEGAMMADEATH (DOPOLEGAMMADEATH==0 || N2==1 ? 0 : POLEGAMMADEATH0)
+#define POLESMOOTH (DOPOLESMOOTH==0 || N2==1 ? 0 : POLESMOOTH0)
+
+
+#if( POLEDEATH > N2BND )
+#error POLEDEATH should be <= N2BND
+#endif
+
+#if( MAXPOLEDEATH > N2BND )
+#error MAXPOLEDEATH should be <= N2BND
+#endif
+
+#if( POLEGAMMADEATH > N2BND )
+#error POLEGAMMADEATH should be <= N2BND
+#endif
+
+#if( POLESMOOTH > N2BND )
+#error POLESMOOTH should be <= N2BND
+#endif
+
+
+
 
 
 
@@ -746,7 +774,8 @@ int bound_x2dn_polaraxis_full3d(
 	// SUPERGODMARK: continue to use for now
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
 
@@ -872,7 +901,8 @@ int bound_x2dn_polaraxis(
 	}// end if polar or asym condition
 
 	if(BCtype[X2DN]==POLARAXIS){
-	  if(POLEDEATH) poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 	
       }// end if inner CPU wall
@@ -1003,7 +1033,8 @@ int bound_x2up_polaraxis_full3d(
 	// SUPERGODMARK: continue to use for now
 	// only do poledeath() after MPI call (i.e. whichcall==2)
 	if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
 
       }// end if outer CPU wall
@@ -1120,7 +1151,8 @@ int bound_x2up_polaraxis(
 
 
 	if(BCtype[X2UP]==POLARAXIS){
-	  if(POLEDEATH) poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLEDEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	  if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	}
       
       }// end if mycpupos[2]==ncpux2-1
@@ -3069,6 +3101,276 @@ int poledeath(int whichx2,
 
 
 
+
+
+
+
+
+
+// Average quasi-Cartesian components around the polar axis
+int polesmooth(int whichx2,
+	      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	      int *inboundloop,
+	      int *outboundloop,
+	      int *innormalloop,
+	      int *outnormalloop,
+	      int (*inoutlohi)[NUMUPDOWN][NDIM],
+	      int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+	      int *dosetbc,
+	      int enerregion,
+	      int *localenerpos)
+{
+  
+  int i, j, k;
+  int j0, dj, stopj;
+  int ri, rj, rk;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE r, th, ph;
+  FTYPE *pr;
+  static FTYPE *fullpr;
+  FTYPE cartavgpr[NPR], spcavgpr[NPR];
+  static int firsttime=1;
+  int pliter,pl;
+
+
+  /////////////////////
+  //
+  // Check some conditions to ensure can allow polesmooth()
+  //
+  /////////////////////
+
+  // no need to process staggered primitive that are currently only field components
+  if(ispstag) return(0);
+
+  if(special3dspc==0 && N3>1){ // not valid use of polesmooth()
+    dualfprintf(fail_file,"SUPERWARNING: Must enable special3dspc==1 for it to be useful when N3>1\n");
+  }
+
+  if(firsttime && dofull2pi==0 && N3>1){
+    dualfprintf(fail_file,"SUPERWARNING: Must enable dofull2pi==1 and have full 2\\pi doain when using polesmooth() for it to be useful when N3>1\n");
+  }
+
+
+
+  /////////////////////
+  //
+  // Allocate full span required for each myid
+  //
+  /////////////////////
+  // need k slowest index so can easily do MPI sends/receives
+#define MAPFULLPR(i,k,pl) (((k)+N3BND)*(N1BND+N1*ncpux1+N1BND)*NPR + ((i)+N1BND)*NPR + (pl))
+  // so access as: fullpr[MAPFULLPR(i,k,pl)]  .  Order of i,k,pl is just to be similar to normal order of i,j,k,pl when removing j.
+#define N3TOTFULLPR (N3BND+N3*ncpux3+N3BND)
+#define N1TOTFULLPR (N1BND+N1*ncpux1+N1BND)
+  if(firsttime){
+    // not necessary if USEMPI==0 or ncpux3==1, but still do since not expensive
+    fullpr=(FTYPE *)malloc(sizeof(FTYPE)*(N3TOTFULLPR*N1TOTFULLPR*NPR));
+    if(fullpr==NULL){
+      dualfprintf(fail_file,"Cannot allocate fullpr\n");
+      myexit(195367346);
+    }
+    // fullpr never freed, but repeatedly used
+    firsttime=0;
+  }
+
+
+  /////////////////////
+  //
+  // Setup j loop
+  //
+  //////////////////////
+  if (whichx2==X2DN) {
+    j0 = -POLESMOOTH; //starting from this j
+    rj = POLESMOOTH;  //until this j
+    dj = 1;
+    stopj=rj+1;
+  }
+  else{
+    j0 = N2-1+POLESMOOTH;  //starting from this j
+    rj = N2-1-POLESMOOTH; //until this j
+    dj = -1;
+    stopj=rj-1;
+  }
+
+
+  ////////////
+  //
+  // fill-in myid portion of fullpr
+  // only a single j=rj
+  //
+  ////////////
+  // do LOOPF1 in case near physical inner-radial or outer-radial boundaries that have already been set otherwise
+  LOOPF1 LOOPN3 PBOUNDLOOP(pliter,pl) fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)] = MACP0A1(prim,i,rj,k,pl);
+
+
+  // if MPI, then send my portion to other posk's and insert portions from all other posk's
+  if(USEMPI && ncpux3>1 && N3>1){
+#if(USEMPI)
+    MPI_Request *srequest;
+    MPI_Request *rrequest;
+    MPI_Status mpistatus;
+
+    srequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+    if(srequest==NULL){
+      dualfprintf(fail_file,"Cannot allocate srequest\n");
+      myexit(19523766);
+    }
+    rrequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+    if(rrequest==NULL){
+      dualfprintf(fail_file,"Cannot allocate rrequest\n");
+      myexit(346962762);
+    }
+
+
+    if(mycpupos[2]==0 || mycpupos[2]==ncpux2-1){ // only done for j=rj near physical poles
+      int posk;
+      
+      // transfer myid mycpupos[3] pr data to all other relevant cores (all other cores at this mycpupos[1],mycpupos[2] for all mycpupos[3])
+      // non-blocking (all sends's occur at once)
+      int count=N3*N1M*NPR;
+      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
+	if(posk!=mycpupos[3]){
+	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+	  int tag=myid + numprocs*posk;
+	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
+	}
+      }
+      
+      
+      // receive all other portions of pr and fill local myid's fullpr data
+      // non-blocking (all recv's occur at once and while sends are already going)
+      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
+	if(posk!=mycpupos[3]){
+	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+	  int tag=originmyid + numprocs*posk; // tag used by other myid
+	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
+	}
+      }
+      
+
+      // wait for all data to be recv'ed before moving to average that uses prfull data and requires all data to be present in prfull
+      for(posk=0;posk<ncpux3;posk++){
+	if(posk!=mycpupos[3]){
+	  MPI_Wait(&rrequest[posk],&mpistatus); // assume successful so don't check mpistatus
+	}
+      }
+
+    }// end if physical polar myid
+#endif
+  }// end if USEMPI and ncpux3>1 so have to transfer to other procs
+
+
+  /////////////////////
+  //
+  // Loop over i
+  //
+  //////////////////////
+  LOOPF1{ // full i to account for already-assigned real boundary cells
+
+    // set reference i -- process per i with no averaging in i-direction
+    ri = i;
+
+    // zero-out cumulating primitives
+    PBOUNDLOOP(pliter,pl){
+      cartavgpr[pl]=0.0;
+      spcavgpr[pl]=0.0;
+    }
+
+   
+
+    ///////////////
+    //
+    // loop over k
+    //
+    ////////////////
+    LOOPN3{ // only over active domain for averaging.
+
+      // set reference k -- averaging over k
+      rk = k;
+
+      // get SPC V=t,r,\theta,\phi
+      bl_coord_ijk_2(ri,rj,rk,CENT,X,V);
+      r = V[1];
+      th = V[2];
+      ph = V[3];
+      // No need to get_geometry() (that would be used to get lab-frame quantities) or to get ucon using pr2ucon().  Just process original frame quantities.
+      // No need to get dxdxp using dxdxpprim_ijk() near pole.  Major issue is twisting of coordinates, and dxdxp[1,2] and dxdxp[2,1] aren't large enough near pole to introduce major twisting.
+      
+      // cumulate non-velocities
+      PBOUNDLOOP(pliter,pl){
+	if(pl<U1 && pl>U3) cartavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+      }
+
+      // cumulate framed 4-vel in quasi-Cart x, y, z (see tiltedAphi.m)
+      cartavgpr[U1] += -(r*sin(ph)*sin(th)*fullpr[MAPFULLPR(i,k,U3)]) + cos(ph)*sin(th)*fullpr[MAPFULLPR(i,k,U1)] + r*cos(ph)*cos(th)*fullpr[MAPFULLPR(i,k,U2)];
+      cartavgpr[U2] += r*cos(ph)*sin(th)*fullpr[MAPFULLPR(i,k,U3)] + sin(ph)*sin(th)*fullpr[MAPFULLPR(i,k,U1)] + r*cos(th)*sin(ph)*fullpr[MAPFULLPR(i,k,U2)];
+      cartavgpr[U3] += cos(th)*fullpr[MAPFULLPR(i,k,U1)] - r*sin(th)*fullpr[MAPFULLPR(i,k,U2)];
+
+      // cumulate original quasi-SPC coordinate quantities (ignores spc->cart for field since not used)
+      PBOUNDLOOP(pliter,pl) spcavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+    }// end cumulation over k at j=rj
+
+
+    /////////////
+    //
+    // Obtain average by dividing by numer of terms (assume use *all* \phi cells per i,j)
+    // for USEMPI==1 && ncpux3>1, assume all CPUs got same average so no need to share average.  Will be same to machine precision, which is sufficient since no inconsistency across MPI boundaries in the end -- these machine errors just make average different for each k, which is perfectly fine.
+    //
+    /////////////
+    PBOUNDLOOP(pliter,pl){
+      cartavgpr[pl] /= (FTYPE)totalsize[3];
+      spcavgpr[pl] /= (FTYPE)totalsize[3];
+    }
+
+    // account for dofull2pi==0 or 2D axisymmetry
+    // in such a case, can't have net flow across axis
+    // (so similar to poledeath() in 2D limit or not-fully-3d dofull2pi=0 limit)
+    if(dofull2pi==0 || totalsize[3]==1){
+      cartavgpr[U1] = 0.0;
+      cartavgpr[U2] = 0.0;
+    }
+
+
+    //////////////
+    //    
+    // Populate the interior (to rj) j cells with averaged primitives
+    //
+    //////////////
+    LOOPF3{// over full domain for assignment of the average since boundary call for periodic x3 may already be done.
+      //      for (j=j0; j != rj; j+=dj) { // over interior j to rj
+      for (j=j0; j != stopj; j+=dj) { // over interior j to rj
+
+	// set pr to assign
+	pr = MAC(prim,i,j,k);
+
+	// Current interior-pole location (j, which is inside previous rj location)
+	bl_coord_ijk_2(i,j,k,CENT,X,V);
+	r = V[1];
+	th = V[2];
+	ph = V[3];
+	
+	// Set quasi-SPC for i,j,k from phi-averaged quasi-Cart from i,j=rj,all k
+	// just inverse transformation of above cartavgpr(pr)
+	pr[U1] = cos(ph)*sin(th)*cartavgpr[U1] + sin(ph)*sin(th)*cartavgpr[U2] + cos(th)*cartavgpr[U3];
+	pr[U2] = pow(r,-1)*(cos(ph)*cos(th)*cartavgpr[U1] + cos(th)*sin(ph)*cartavgpr[U2] - sin(th)*cartavgpr[U3]);
+	pr[U3] = (1./sin(th))*pow(r,-1)*(-sin(ph)*cartavgpr[U1] + cos(ph)*cartavgpr[U2]);
+	
+	// The average of v_x and v_y around axis removes rotation around axis, so add back-in the phi-averaged rotational velocity
+	pr[U3] += spcavgpr[U3];
+
+	// Set other non-velocity, non-field things
+	PBOUNDLOOP(pliter,pl){
+	  if(pl<U1 && pl>B3) pr[pl] = cartavgpr[pl]; // spcavgpr would also be valid for such scalar densitites
+	}
+      }// end over each j
+    }// end over each k
+
+
+  }// end over each i
+  
+  return(0);
+  
+}
 
 
 

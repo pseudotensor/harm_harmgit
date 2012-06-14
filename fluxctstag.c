@@ -337,6 +337,16 @@ int fluxcalc_fluxctstag(int stage,
   }
 
 
+  int fluxvpot_modifyemfsuser=0;
+  fluxvpot_modifyemfsuser=(EVOLVEWITHVPOT>0 ||  TRACKVPOT>0)&&(MODIFYEMFORVPOT==MODIFYEMF || MODIFYEMFORVPOT==MODIFYVPOT);
+
+  if(fluxvpot_modifyemfsuser==0){// if didn't already call adjust_emfs() in fluxvpot above, have to allow user to be able to still modify emfs calling function directly
+    // User "boundary conditions" to modify EMFs/FLUXes
+    adjust_fluxctstag_emfs(fluxtime,pr,Nvec,fluxvec);
+  }
+
+
+
 
   //  firsttime=0;
   return(0);

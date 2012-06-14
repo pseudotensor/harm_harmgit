@@ -133,6 +133,16 @@ extern int poledeath(int whichx2,
 	       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
 		     int enerregion,
 		     int *localenerpos);
+extern int polesmooth(int whichx2,
+	       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+	       int *inboundloop,
+	       int *outboundloop,
+	       int *innormalloop,
+	       int *outnormalloop,
+	       int (*inoutlohi)[NUMUPDOWN][NDIM],
+	       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		     int enerregion,
+		     int *localenerpos);
 
 extern void user1_adjust_fluxcttoth_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );
 extern void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);

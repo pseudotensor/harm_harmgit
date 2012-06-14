@@ -704,6 +704,7 @@
 // 0: don't do anything special
 // 1: zero polar theta flux since should be 0
 
+
 // seems to cause problems at 0 and pi boundaries with FFDE, or even just one boundary???
 // GODMARK
 
@@ -717,6 +718,11 @@
 // completely generally, this should be 1 so that \detg is smooth across the axis.  So then standard boundary conditions on primitives give correct non-kinked behavior through polar axis (including for ram pressure flux term).
 #define FLIPGDETAXIS 1
 
+
+// control bounds.tools.c for SPC coordinates polar axis fixups
+#define DOPOLEDEATH 0
+#define DOPOLESMOOTH 1
+#define DOPOLEGAMMADEATH 0
 
 
 
