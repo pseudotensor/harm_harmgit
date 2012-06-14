@@ -280,7 +280,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // need integratd quantities for restart dump, but don't write them to ener file.
   // (not part of standard NUMDUMPTYPES array)
   /////////////////////
-  if(dodumpgen[ENERDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE]){
+  if(DOENERDIAG&&(dodumpgen[ENERDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE])){
     // get integrated quantities and possiblly dump them to files
     dump_ener(dodumpgen[ENERDUMPTYPE],dodumpgen[RESTARTDUMPTYPE],call_code);
   }
@@ -293,7 +293,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // (not part of standard NUMDUMPTYPES array)
   ///////////////////
 
-  if(dodumpgen[ENERDUMPTYPE]){
+  if(DOENERDIAG&&dodumpgen[ENERDUMPTYPE]){
     if(COMPUTEFRDOT){
       frdotout(); // need to include all terms and theta fluxes on horizon/outer edge at some point GODMARK
     }
