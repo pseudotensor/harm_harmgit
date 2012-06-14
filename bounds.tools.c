@@ -140,10 +140,6 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
   return(0);
 }
 
-#define FRACBSQORHO (0.5)
-#define FRACBSQOU (0.05)
-#define VPARBND (0.9)
-
 // X1 inner NSSURFACE (created from OUTFLOW/FIXEDOUTFLOW)
 int bound_x1dn_nssurface(
 		       int finalstep, int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],

@@ -430,3 +430,13 @@ struct Ccoordparams {
 
 #undef DONSEMFS
 #define DONSEMFS 1
+
+#undef FRACBSQORHO
+#define FRACBSQORHO (0.5)
+
+#undef FRACBSQOU
+#define FRACBSQOU (0.05)
+
+#undef VPARBND
+#define VPARBND (0.9)
+

@@ -1359,7 +1359,9 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   ////////////////////////////
   interpolate_prim_cent2face(stage, realisinterp, pr, pstag, pl_ct, pr_ct, dir, time, is, ie, js, je, ks, ke, idel, jdel, kdel, face, dq, cent2faceloop);
 
-
+  //1. compute bsq/rho, bsq/u @ interface
+  //2. 
+  
   //SASMARK: put new OPENMP loop here that resets L/R states to no wall BC's
 
 #if( 0 && DOFREEZETORUS )

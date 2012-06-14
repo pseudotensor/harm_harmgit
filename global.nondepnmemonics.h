@@ -1126,3 +1126,7 @@
 
 #define DONSEMFS (0)
 
+#define FRACBSQORHO (1)
+#define FRACBSQOU (1)
+#define VPARBND (0.5)
+
