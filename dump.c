@@ -70,12 +70,15 @@ int init_dumps(void)
   ///////////////////////////
   init_dnumcolumns_dnumversion();
 
-  ///////////////////////////
-  //
-  // setup link list
-  //
-  ///////////////////////////
-  init_linklists();
+
+  if(mpicombine==1 && mpicombinetype==MPICOMBINEMINMEM){
+    ///////////////////////////
+    //
+    // setup link list (only used for MINMEM method)
+    //
+    ///////////////////////////
+    init_linklists();
+  }
 
   trifprintf("end: init_dumps\n");
 
