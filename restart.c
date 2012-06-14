@@ -1225,7 +1225,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   //end Aug 16, 2007 (updated by JCM 07/24/08)
  
 
-  dualfprintf(fail_file,"\nheadercount=%d\n",headercount);
+  trifprintf(fail_file,"\nheadercount=%d\n",headercount);
 
 
   // BELOW moved to dump_gen
