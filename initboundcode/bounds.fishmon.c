@@ -326,7 +326,7 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
   }
 
 
-  // use post-MPI values to operate poledeath() since otherwise boundary values poledeath uses are not set yet
+  // use post-MPI values to operate poledeath() and/or polesmooth() since otherwise boundary values poledeath uses are not set yet
   if(whichdir==2){
 
     dir=X2DN;
