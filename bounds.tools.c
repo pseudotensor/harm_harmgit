@@ -3229,7 +3229,7 @@ int polesmooth(int whichx2,
     // No need to get_geometry() (that would be used to get lab-frame quantities) or to get ucon using pr2ucon().  Just process original frame quantities.
     // No need to get dxdxp using dxdxpprim_ijk() near pole except to obtain dominant scale.  Major issue is twisting of coordinates, and dxdxp[1,2] and dxdxp[2,1] aren't large enough near pole to introduce major twisting.
     
-    // put these into prfull[B1-B3] for storage
+    // put CART[U1-U3] into prfull[B1-B3] for storage
     fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B1)] = -(r*sin(ph)*sin(th)*spcpr[U3]) + cos(ph)*sin(th)*spcpr[U1] + r*cos(ph)*cos(th)*spcpr[U2];
     fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
     fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
@@ -3273,7 +3273,7 @@ int polesmooth(int whichx2,
       for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
 	if(posk!=mycpupos[3]){
 	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk
+	  int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk (large tag space to ensure no duplicates)
 	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
 #if(DEBUGPOLESMOOTH)
 	  dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,tag);
@@ -3379,7 +3379,7 @@ int polesmooth(int whichx2,
     PBOUNDLOOP(pliter,pl){
       if(pl<B1 || pl>B3){ // skip unused B1-B3
 	cartavgpr[pl] /= (FTYPE)totalsize[3];
-	spcavgpr[pl] /= (FTYPE)totalsize[3];
+	spcavgpr[pl]  /= (FTYPE)totalsize[3];
       }
     }
 
@@ -3387,8 +3387,8 @@ int polesmooth(int whichx2,
     // in such a case, can't have net flow across axis
     // (so similar to poledeath() in 2D limit or not-fully-3d dofull2pi=0 limit)
     if(dofull2pi==0 || totalsize[3]==1){
-      cartavgpr[U1] = 0.0;
-      cartavgpr[U2] = 0.0;
+      cartavgpr[U1] = 0.0; // net vx=0 across axis
+      cartavgpr[U2] = 0.0; // net vy=0 across axis
     }
 
 #if(DEBUGPOLESMOOTH)
@@ -3402,7 +3402,7 @@ int polesmooth(int whichx2,
     // Populate the interior (to stopj) j cells with averaged primitives
     //
     //////////////
-    LOOPF3{// over full domain for assignment of the average since boundary call for periodic x3 may already be done.
+    LOOPF3{// over full domain for assignment of the average since boundary call for periodic x3 may already (as is normal) be done.
       for (j=j0; j != stopj; j+=dj) { // over interior j to stopj that is (typically) rj
 
 
@@ -3415,7 +3415,7 @@ int polesmooth(int whichx2,
 	ph = V[3];
 
 	// Set non-velocity SPC (cartavgpr[B1-B3] has nothing, so avoid)
-	PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) spcpr[pl] = cartavgpr[pl]; // could also use spcavgpr too.  Same results for scalars.
+	PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) spcpr[pl] = spcavgpr[pl]; // could also use cartavgpr too.  Same results for scalars.
 	
 	// Set quasi-SPC for i,j,k from phi-averaged quasi-Cart from i,j=rj,all k
 	// just inverse transformation of above cartavgpr(pr)
@@ -3429,6 +3429,8 @@ int polesmooth(int whichx2,
 	// TODOMARK GODMARK: Why not also add back-in average compression/expansion around axis in \theta direction by doing:
 	// Might be better for shocks near axis
 	// spcpr[U2] += spcavgpr[U2];
+
+	// NOTEMARK: spcpr[U1]=r is just like cartavgpr[U3]=z, so no recovery of net motion required.
 
 
 	//////////////////////////////////////////////////
