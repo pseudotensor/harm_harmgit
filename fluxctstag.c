@@ -1011,7 +1011,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // 0 : don't use gdet rescale.  Use normal rescale or no rescale.
 // 1 : use gdet rescale
 // 2 : use gdet rescale dependent on SPC coordinates.  \detg B1 alone 1-dir, B2 along 2-dir, and B3 along 3-dir (but \detg B3 just as fine)
-#define IFNOTRESCALETHENUSEGDET 1
+#define IFNOTRESCALETHENUSEGDET 2
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
 
@@ -1551,7 +1551,7 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // 0 : just use direct Bi in transverse interpolation
 // 1 : use \detg Bi in transverse directions
 // 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 1
 // 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region)
 
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
