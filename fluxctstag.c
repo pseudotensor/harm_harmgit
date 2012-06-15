@@ -1011,7 +1011,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // 0 : don't use gdet rescale.  Use normal rescale or no rescale.
 // 1 : use gdet rescale
 // 2 : use gdet rescale dependent on SPC coordinates.  \detg B1 alone 1-dir, B2 along 2-dir, and B3 along 3-dir (but \detg B3 just as fine)
-#define IFNOTRESCALETHENUSEGDET 2
+#define IFNOTRESCALETHENUSEGDET 1
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
 
@@ -1361,13 +1361,14 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	    ucentgdet=(ptrgdetgeomc->gdet);
 	  }
 
+	  // Assign \detg B^i (must come before p_{lr} mod since p2interp_{lr} pointer = p_{lr} pointer
+	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl])*ucentgdet; // go ahead and assign ucent if this method
+
 	  // now get B^i from \detg B^i
 	  // remove \detg used during interpolation
 	  p_l[pl] = p2interp_l[pl]*igdetgnosing;
 	  p_r[pl] = p2interp_r[pl]*igdetgnosing;
 
-	  // Assign \detg B^i
-	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl])*ucentgdet; // go ahead and assign ucent if this method
 
 #else
 	  // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
