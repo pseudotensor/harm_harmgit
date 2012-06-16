@@ -196,14 +196,6 @@ int fluxcalc(int stage,
 
     MYFUN(fluxcalc_fluxctstag(stage, initialstep, finalstep, pr, pstag, pl_ct, pr_ct, GLOBALPOINT(pvbcorninterp), GLOBALPOINT(wspeed), GLOBALPOINT(prc), GLOBALPOINT(pleft), GLOBALPOINT(pright), GLOBALPOINT(fluxstatecent), GLOBALPOINT(fluxstate), GLOBALPOINT(geomcornglobal), Nvec, dqvec, ptrfluxvec, vpot, CUf, CUnew, fluxdt, fluxtime, cent2faceloop, face2cornloop),"flux.c:fluxcalc()", "fluxcalc_fluxctstag", 0);
 
-    //////////////////////////////
-    //
-    // User "boundary conditions" to modify EMFs before used
-    //
-    /////////////////////////////
-    if(DOADJUSTEMFS){
-      adjust_fluxctstag_emfs(fluxtime,pr,Nvec,ptrfluxvec);
-    }
 
   }// end if staggered method where can update A_i directly
 

@@ -12,8 +12,8 @@
 #endif
 
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
-#define N1 16
-#define N2 16
+#define N1 64
+#define N2 32
 #define N3 16
 
 // atch adjusts
@@ -178,8 +178,8 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 1
-//#define FULLOUTPUT MAXBND
-#define FULLOUTPUT 0
+#define FULLOUTPUT MAXBND
+//#define FULLOUTPUT 0
 
 #define MAILWHENDONE 0
 #define MAILFROMREMOTE 0
@@ -270,7 +270,7 @@
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
-#define SINGSMALL (1E-13) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (1000.0*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
@@ -318,6 +318,7 @@
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL //(used in Sasha tests)
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP   // AKMARK: requires DOEXTRAINTERP
 #define RESCALEINTERP 1
+#define RESCALEINTERPFLUXCTSTAG 0
 #define DOEXTRAINTERP 1   // AKMARK: 1 produces infinities and NaNs in fieldsvst.dat; check dump format
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
@@ -426,7 +427,7 @@ struct Ccoordparams {
 #define DOPOLEGAMMADEATH 0
 
 #undef DOPOLESMOOTH
-#define DOPOLESMOOTH 0
+#define DOPOLESMOOTH 2
 
 #undef DONSEMFS
 #define DONSEMFS 1

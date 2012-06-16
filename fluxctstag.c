@@ -337,6 +337,16 @@ int fluxcalc_fluxctstag(int stage,
   }
 
 
+  int fluxvpot_modifyemfsuser=0;
+  fluxvpot_modifyemfsuser=(EVOLVEWITHVPOT>0 ||  TRACKVPOT>0)&&(MODIFYEMFORVPOT==MODIFYEMF || MODIFYEMFORVPOT==MODIFYVPOT);
+
+  if(fluxvpot_modifyemfsuser==0){// if didn't already call adjust_emfs() in fluxvpot above, have to allow user to be able to still modify emfs calling function directly
+    // User "boundary conditions" to modify EMFs/FLUXes
+    adjust_fluxctstag_emfs(fluxtime,pr,Nvec,fluxvec);
+  }
+
+
+
 
   //  firsttime=0;
   return(0);
@@ -691,7 +701,8 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   int pl,pliter;
 
 
-
+  // TODOMARK: Can take discrete derivative so edge quantity at center, then c2e fully correct, and correctly interpolates as continuous.
+  // TODOMARK: Then after interpolation, just sum-up from left-most-edge-value using derivative at edge to get centered quantities
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     get_loop(INTERPLINETYPE, ENOINTERPTYPE, dir, face2centloop);
@@ -997,8 +1008,14 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 
 // if not rescaling, then default is to interpolate \detg B^i rather than B^i -- more accurate for field-aligned flows (e.g. monopole)
-#define IFNOTRESCALETHENUSEGDET 1 // should be 1
-#define RESCALEINTERPPSTAG (DORESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
+// 0 : don't use gdet rescale.  Use normal rescale or no rescale.
+// 1 : use gdet rescale
+// 2 : use gdet rescale dependent on SPC coordinates.  \detg B1 alone 1-dir, B2 along 2-dir, and B3 along 3-dir (but \detg B3 just as fine)
+#define IFNOTRESCALETHENUSEGDET 2
+
+#define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
+
+
 
 // wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
@@ -1016,7 +1033,6 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     struct of_gdetgeom gdetgeomfdontuse[NDIM];
     struct of_gdetgeom *ptrgdetgeomf[NDIM];
     extern int rescale(int which, int dir, FTYPE *pr, struct of_geom *geom,FTYPE*newvar);
-    FTYPE signedgdet;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
 
@@ -1045,23 +1061,18 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-#if(RESCALEINTERPPSTAG)
+#if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
 	// get geometry for face pre-interpolated values
 	get_geometry(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
 	rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
-#elif(IFNOTRESCALETHENUSEGDET)
-	// get geometry for face pre-interpolated values
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	signedgdet = ptrgdetgeomf[dir]->gdet;
-#if(FLIPGDETAXIS==0)
-	//flip sign of gdet across the polar axis, make distinction between FACE2 and non-FACE2 location
-	//(since FACE2 is located exactly at the polar axis)
-	if( mycpupos[2] == 0 && j < 0
-	 || mycpupos[2] == ncpux2 - 1 && j > N2-1 + (dir==2) ){
-	  signedgdet *= -1.;
-	}
-#endif
-	MACP0A1(p2interp,i,j,k,pl) = signedgdet*MACP0A1(pstag,i,j,k,pl);
+#else
+	MACP0A1(p2interp,i,j,k,pl) = MACP0A1(pstag,i,j,k,pl);
+
+	if(IFNOTRESCALETHENUSEGDETswitch(dir)){
+	  // get geometry for face pre-interpolated values
+	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+	  MACP0A1(p2interp,i,j,k,pl) *= (ptrgdetgeomf[dir]->gdet);
+	}	  
 #endif
 	
       }// end COMPFULLLOOP
@@ -1111,7 +1122,6 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 // We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
 // 
 //
-
 int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
@@ -1148,7 +1158,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
   // rescale before interpolation
   //
   ////////////////////////////
-  if(RESCALEINTERPPSTAG || IFNOTRESCALETHENUSEGDET){
+  if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP || IFNOTRESCALETHENUSEGDET){
     p2interp=prc; // it's different
     // rescale or multiply by \sqrt{-g}
     rescale_calc_stagfield_full(Nvec, pstag,p2interp);
@@ -1194,6 +1204,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     struct of_gdetgeom gdetgeomfdontuse[NDIM];
     struct of_gdetgeom *ptrgdetgeomf[NDIM];
     int jj;
+    FTYPE ucentgdet;
 
     OPENMP3DLOOPVARSDEFINE;
 
@@ -1202,7 +1213,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     DLOOPA(jj) ptrgdetgeomf[jj]=&(gdetgeomfdontuse[jj]);
 
     // Setup rescale pointer reference
-#if(RESCALEINTERPPSTAG)
+#if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
     p2interp_l=pstore_l; // then need separate storage
     p2interp_r=pstore_r;
 #else
@@ -1324,9 +1335,12 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	
 
 
-#if(RESCALEINTERPPSTAG)
 	  /////////////////////////////////////
+	  //
 	  // after interpolation, unrescale from p2interp to normal primitive 
+	  //
+	  /////////////////////////////////////
+#if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
 	  get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
 	  rescale(-1,dir,p_l,ptrgeomc,p2interp_l);
 	  rescale(-1,dir,p_r,ptrgeomc,p2interp_r);
@@ -1335,20 +1349,30 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 #elif(IFNOTRESCALETHENUSEGDET)
 	  get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
-	  set_igdetsimple(ptrgdetgeomc);
-	  igdetgnosing=ptrgdetgeomc->igdetnosing;
 
-	  // Assign \detg B^i
-	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl]); // go ahead and assign ucent if this method
+	  
+	  if(IFNOTRESCALETHENUSEGDETswitch(dir)){
+	    set_igdetsimple(ptrgdetgeomc);
+	    igdetgnosing=ptrgdetgeomc->igdetnosing;
+	    ucentgdet=1.0;
+	  }
+	  else{
+	    igdetgnosing=1.0;
+	    ucentgdet=(ptrgdetgeomc->gdet);
+	  }
+
+	  // Assign \detg B^i (must come before p_{lr} mod since p2interp_{lr} pointer = p_{lr} pointer
+	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl])*ucentgdet; // go ahead and assign ucent if this method
 
 	  // now get B^i from \detg B^i
 	  // remove \detg used during interpolation
 	  p_l[pl] = p2interp_l[pl]*igdetgnosing;
 	  p_r[pl] = p2interp_r[pl]*igdetgnosing;
 
+
 #else
+	  // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
 	  if(ucent!=NULL){
-	    // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
 	    get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
 	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
 	    MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
@@ -1520,8 +1544,21 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 //
 
-// LEAVE AS 0 since makes no sense to have as 1
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
+// JCM: I originally thought the below as 1 would make little sense, because then one would interpolate (e.g.) \detg B1 through the axis when B1 for a non-tilted dipolar field would be constant.  One would be making B1(\theta)\propto \theta near the pole, which requires higher-order interpolation.
+// However, for tilted dipolar fields, B1 and B3 across the pole will necessarily depend upon resolution (see tilteddipole.nb), and B1 can be flat across the pole looking like a bug even if correct.  The interpolation for B1stag -> B1 across the pole will then be poor and reduce near the flat part.
+// But, interpolating \detg B1 avoids this because it relies on A_\phi,\theta that has no glitch.  The \detg smooths it out.
+// This isn't just a numerical issue, it's about how the field is represented.  The flat B1 across the pole is innaccurate to the continuous solution, but one can still have a robust/accurate discrete method.  The flat part can be just fine in general if viewed correctly and treated optimally.
+// 0 : just use direct Bi in transverse interpolation
+// 1 : use \detg Bi in transverse directions
+// 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 2
+// 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region)
+
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
+
+// since only store 1 thing to interpolate in any direction, has to be uniform use of \detg per Bi, which works-out to be ok.
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
+
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
 // OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
@@ -1787,33 +1824,30 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 #else
 
-	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1
+	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD!=0
 	ptrgeomf->i=i;
 	ptrgeomf->j=j;
 	ptrgeomf->k=k;
-	ptrgeomf->p=FACE1-1+dir;
+	ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stteforfluxcalc(), but ISLEFT/ISRIGHT is w.r.t. just offset from face but located at the position of the face
 
 	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
+	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+	}
+
+
 #endif
 
-#endif
 
-
-
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	// BAD IDEA:
-	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
-	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir] * (ptrgdetgeomf->gdet);
-#else
-	// BFACE: compute and store B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
-	// note that for the interpolation in transverse direction of the field it makes no sense to use gdet.  Example is B1 near pole.  B1 is roughly constant typically near pole.
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir];
-#endif
+	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir]; // note that prface_l[dir]=prface_r[dir] at face[dir]
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
+	  // p2interp located at face[dir] before interpolation, so gdet should be there
+	  // BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
+	  // note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
+	  MACP0A1(p2interp,i,j,k,BFACEINTERP) *= (ptrgdetgeomf->gdet);
+	}
 
 
 	// VELs: note don't use velocity in "dir" direction
@@ -1963,6 +1997,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
 
+
 	//////////////////////
 	// interpolate    
 	//
@@ -1979,6 +2014,9 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  realisinterp=0; // since only ever limited set of quantities
 	  slope_lim_face2corn(realisinterp, interpdir,idel,jdel,kdel,pr,p2interp,dqvec[interpdir],pleft,pright, &(face2cornloop[edgedir][EMFodir1][EMFodir2]));
 	}
+
+
+
   
 
 	///////////////////
@@ -2036,6 +2074,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  //	if(Nvec[interpdir]>1 && (! (Nvec[edgedir]==1 && Nvec[dir]==1) ))
 	  //	if(Nvec[interpdir]>1){
 	  if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
+
 	    if(usedq){
 	      PINTERPLOOP(pliter,pl){
 		// FACE_to_CORN interpolation is same as if doing CENT_to_EDGE from point of view of indicies to use and pleft,pright assignments
@@ -2049,14 +2088,18 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 		p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
 	      }
 	    }
+
 	  }
 	  else if(Nvec[interpdir]==1){
+
 	    // if no interpolation, just copy result from pre-interpolated p2interp[] avoiding,bypassing dq,pleft,pright
 	    PINTERPLOOP(pliter,pl){
 	      p2interp_r[pl] = p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl);
 	    }
+
 	  }
 	  else if(Nvec[dir]==1&&Nvec[interpdir]!=1){
+
 	    // if interpolation already done, just copy over left-right values from cent2face operation
 	    // E.g. If N1==1 and dir==1, then B1,v2 are already interpolated with interpdir==2 to CORN3=FACE2 *and* B1,v3 are already interpolated with interpdir==3 to CORN2=FACE3.
 	    // E.g. If N2==1 and dir==2, then B2,v1 are already interpolated with interpdir==1 to CORN3=FACE1 *and* B2,v3 are already interpolated with interpdir==3 to CORN1=FACE3.
@@ -2080,25 +2123,27 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    ptrgeomf->i=i;
 	    ptrgeomf->j=j;
 	    ptrgeomf->k=k;
-	    ptrgeomf->p=FACE1-1+dir;
+	    ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stateforfluxcalc()
 
 	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1)
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
-#endif
+	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
+	      // as when storing, still at original face locations already interpolated/computed during normal flux calculation
+	      get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+	    }
+
 
 #endif
 
 	    // now copy over values
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD)
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir]*(ptrgdetgeomf->gdet);
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir]*(ptrgdetgeomf->gdet);
-#else
 	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
 	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];
-#endif
+	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
+	      p2interp_l[BFACEINTERP] *= (ptrgdetgeomf->gdet);
+	      p2interp_r[BFACEINTERP] *= (ptrgdetgeomf->gdet);
+	    }
+
 	    // [1,2] are from previous (i.e. face) interpolation.  But if Nvec[dir=facedir]=1, then those are same values
 	    // as above setup has, always dealing with v^{interpdir}
 	    // here, the l,r indicate across interpdir (not dir as otherwise when requiring interpolation)
@@ -2110,30 +2155,30 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    myexit(837434873);
 	  }
 
+
+
+
 	  ////////////////////
 	  //
 	  // Set lab-frame 3-magnetic field at CORN
 	  //
 	  // MACP1A3(pbcorn,corner/emf/edge dir,i,j,k,which field,+-present interpdir)
 
-
-
-
-#if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 && CORNGDETVERSION==1)
-
-	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	  // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
-	  set_igdetsimple(ptrgdetgeomcorn);
-	  igdetgnosing = ptrgdetgeomcorn->igdetnosing;
-
-#elif(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==0 && CORNGDETVERSION==0)
-	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	  // then add gdet now since will not multiply geometry once have final EMF
-	  igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
-#else
-	  // nothing to do
-	  igdetgnosing = 1.0;
-#endif
+	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)==1 && CORNGDETVERSION==1){	    
+	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+	    // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
+	    set_igdetsimple(ptrgdetgeomcorn);
+	    igdetgnosing = ptrgdetgeomcorn->igdetnosing;
+	  }
+	  else if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)==0 && CORNGDETVERSION==0){
+	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+	    // then add gdet now since will not multiply geometry once have final EMF
+	    igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
+	  }
+	  else{
+	    // nothing to do
+	    igdetgnosing = 1.0;
+	  }
 
 
 	  //	  MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k) = p2interp_l[npr2interplist[0]]*igdetgnosing;

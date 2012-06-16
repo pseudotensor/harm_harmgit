@@ -58,9 +58,10 @@ int user1_prepre_init_specific_init(void)
 
   if(PRODUCTION){
     // assume if production always want binary data with text header
-    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
+    binaryoutput=TEXTOUTPUT; // choice: mixed or binary
   }
 
+    binaryoutput=TEXTOUTPUT; // choice: mixed or binary
 
   return(0);
 

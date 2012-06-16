@@ -120,7 +120,7 @@ int prepre_init_specific_init(void)
   
   global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
-  binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
+  binaryoutput=TEXTOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
   t_transition = 1.;
   global_vpar0 = 0.;
@@ -557,19 +557,20 @@ int init_global(void)
 #elif(WHICHPROBLEM == NSTAR)
   /* output choices */
   tf = 10.; //also check post_init_specific_init()
-  
-  /* dumping frequency, in units of M */
-  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 100.;
-  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 100.0;
-  // ener period
-  DTdumpgen[ENERDUMPTYPE] = 100.0;
+
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = (1./30.)*2*M_PI/global_OmegaNS;
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
   
+  /* dumping frequency, in units of M */
+  DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+  DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[IMAGEDUMPTYPE];
+  // ener period
+  DTdumpgen[ENERDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
+  
   /* debug file */  
-  DTdumpgen[DEBUGDUMPTYPE] = 100.0;
+  DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 6000;  //also see post_init_specific_init()

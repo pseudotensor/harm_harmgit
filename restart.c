@@ -7,7 +7,7 @@
 
 
 static int restart_process_extra_variables(void);
-
+static int restartupperpole_read(long dump_cnt);
 
 
 int extrarestartfunction_new(void)
@@ -378,7 +378,7 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
 // This is all done because normal MPI fileio routines assume standard j=0..N-1 or j=1..N block, but staggered stuff has j=0..N block for spherical polar coordinates.  No other directions (i.e. i or k) require this.
 // For simplicity, we just output two full 3D files with j shifted.
-int restartupperpole_read(long dump_cnt)
+static int restartupperpole_read(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
