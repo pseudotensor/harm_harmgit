@@ -1011,6 +1011,12 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // 0 : don't use gdet rescale.  Use normal rescale or no rescale.
 // 1 : use gdet rescale
 // 2 : use gdet rescale dependent on SPC coordinates.  \detg B1 alone 1-dir, B2 along 2-dir, and B3 along 3-dir (but \detg B3 just as fine)
+//
+// \detg B1 alone 1-dir for typical split-monopolar type field.
+// B2 along 2-dir because B2 and B2hat are regular near pole and division by near-zero would be inaccurate at pole. Assumes B2 flips sign across pole in correct sense in boundary cells as viewed by active cells.  Also for EMF_1 or EMF_3 wouldn't make sense unless also interpolated \detg v2 that makes no sense either.
+// B3 or \detg B3 along 3-dir is same.
+//
+///////
 #define IFNOTRESCALETHENUSEGDET 2
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
@@ -1551,13 +1557,21 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // 0 : just use direct Bi in transverse interpolation
 // 1 : use \detg Bi in transverse directions
 // 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 1
-// 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region)
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 2
+// 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region) for nsdipole problem
 
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
+//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
 
 // since only store 1 thing to interpolate in any direction, has to be uniform use of \detg per Bi, which works-out to be ok.
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
+//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
+
+// B1 along 2 and 3-dir.  3-dir isn't issue as \detg B1 same.  But B1 regular at pole and no sign change.  So shouldn't introduce \detg that would make \detg B1\propto \theta and require obtaining B1 at pole by division by small value.  It would also make cancellation for EMF_3: -v1 B2 + v2 B1 terms harder unless also interpolated \detg v1, but that also wouldn't make sense.
+
+// Interpolate \detg B2 along 1-dir and 3-dir.  No singularity issue, but may be more accurate to include \detg.
+
+// Interpolate B3 along 1-dir and 2-dir.  Probably some other interpolation better for 1-dir, but for 2-dir, if interpolate \detg B3 across pole, then would have to interpolate \detg v3 for EMF_1: -v2 B3 + v3 B2 to have consistent cancellation on the polar cut-out.  Otherwise B2 at the pole (which must be regular) would result from wrongly cancelling terms in EMF_1.
+
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
 
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]

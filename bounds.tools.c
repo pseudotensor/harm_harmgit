@@ -643,6 +643,10 @@ int bound_x1dn_sym(
 
 
 // X2 inner POLARAXIS
+// with full3d, flip sign of both B2 and B3
+// Flip B2 because ghost cells will then be same sign if pointing in same physical location, and opposite sign if pointing opposite physical location across the pole.
+// Flip B3 because RBhat3\propto \theta (as growing enclosed current from pole) gives Bhat3\propto constant near pole and so Bhat3\propto \theta B3 and so B3\propto \constant 1/\theta.
+// So can either interpolation (e.g.) \detg B3 and \detg v3 and obtain higher-order accuracy near pole.  Or can flip sign of B3 and v3 and keep more stable but still no diffusive term that otherwise B3 and v3 would have due to their sign change across the pole.
 int bound_x2dn_polaraxis_full3d(
 				int whichcall,
 				int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -701,7 +705,7 @@ int bound_x2dn_polaraxis_full3d(
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 		// flip sign
-		if(pl==U2 || pl==B2){
+		if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
 		  MACP0A1(prim,i,j,k,pl) *= -1.;
 		}
 
@@ -716,7 +720,7 @@ int bound_x2dn_polaraxis_full3d(
 	      }// end over pl
 	    }// end over j
 
-	    // also do j=0
+	    // also do j=0 (this just makes B2 @ FACE2-type location at j=0 at k and rk the same in correct sense)
 	    j=0;
 	    PBOUNDLOOP(pliter,pl){
 	      if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
@@ -961,7 +965,7 @@ int bound_x2up_polaraxis_full3d(
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 		// flip sign
-		if(pl==U2 || pl==B2){
+		if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
 		  MACP0A1(prim,i,j,k,pl) *= -1.;
 		}
 
@@ -976,7 +980,7 @@ int bound_x2up_polaraxis_full3d(
 	      }// end over pl
 	    }// end over j
 
-	    // also do j=N2
+	    // also do j=N2 (this just makes B2 @ FACE2-type location at j=N2 at k and rk the same in correct sense)
 	    j=N2;
 	    PBOUNDLOOP(pliter,pl){
 	      if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
