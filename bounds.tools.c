@@ -3234,6 +3234,9 @@ int polesmooth(int whichx2,
     fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
     fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
 
+#if(DEBUGPOLESMOOTH)
+    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereINITIAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g spc=%g cart=%g i/dxdxp11=%g %g\n",t,i,j,k,pl,pr[pl],spcpr[pl],fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)],idxdxp[RR][RR],dxdxp[RR][RR]);
+#endif
   }
 
 
@@ -3306,17 +3309,17 @@ int polesmooth(int whichx2,
 	}
       }
 
-#if(DEBUGPOLESMOOTH)
-      LOOPF1 for(k=0;k<totalsize[3];k++){
-	PBOUNDLOOP(pliter,pl) if(pl==RHO) dualfprintf(fail_file,"i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,k,pl)]);
-      }
-#endif
 
     }// end if physical polar myid
 #endif
   }// end if USEMPI and ncpux3>1 so have to transfer to other procs
 
 
+#if(DEBUGPOLESMOOTH)
+  LOOPF1 for(k=0;k<totalsize[3];k++){
+    PBOUNDLOOP(pliter,pl) if(pl==RHO || pl==B3) dualfprintf(fail_file,"FULLPRCHECK: i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,k,pl)]);
+  }
+#endif
 
 
 
@@ -3392,7 +3395,7 @@ int polesmooth(int whichx2,
     }
 
 #if(DEBUGPOLESMOOTH)
-    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got here t=%g i=%d pl=%d %g %g\n",t,i,pl,cartavgpr[pl],spcavgpr[pl]);
+    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereCARTSPC: t=%g i=%d pl=%d %g %g\n",t,i,pl,cartavgpr[pl],spcavgpr[pl]);
 #endif
 
 
@@ -3442,8 +3445,9 @@ int polesmooth(int whichx2,
 	// Set other non-velocity, non-field things (DO NOT OVERWRITE FIELD!)
 	PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) pr[pl] = spcpr[pl];
 
+    	// Since using simplified dxdxp above, must use inverse of that for consistency.  Cannot use full idxdxp unless used full dxdxp.
 	//	idxdxprim_ijk(i, j, k, CENT, idxdxp);
-	// Since using simplified dxdxp above, must use inverse of that for consistency.  Cannot use full idxdxp unless used full dxdxp.
+	dxdxprim_ijk(i, j, k, CENT, dxdxp);
 	idxdxp[RR][RR]=dxdxp[TH][TH]/(dxdxp[TH][TH]*dxdxp[RR][RR]-dxdxp[TH][RR]*dxdxp[RR][TH]);
 	idxdxp[RR][TH]=dxdxp[RR][TH]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
 	idxdxp[TH][RR]=dxdxp[TH][RR]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
@@ -3458,7 +3462,7 @@ int polesmooth(int whichx2,
 	// DONE!  Have full pr=prim[] set now
 
 #if(DEBUGPOLESMOOTH)
-	PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got here t=%g i=%d j=%d k=%d : pl=%d pr=%g \n",t,i,j,k,pl,pr[pl]);
+	PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereFINAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g\n",t,i,j,k,pl,pr[pl]);
 #endif
 
 

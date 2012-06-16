@@ -49,6 +49,20 @@ done
 
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
 
+######################################
+# from ki-jmck data2 to ranch (to backup things not properly sent to ranch)
+
+cd /data2/jmckinne/
+rm -rf globuslist.txt
+lssdir2 > list.txt
+###emacs list.txt &
+for realfile in `cat list.txt`
+do
+    echo "pseudotensor#ki-jmck/data2/jmckinne/$realfile/ xsede#ranch/home/01014/tg802609/$realfile/ -r" >> globuslist.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
+
 
 
 
