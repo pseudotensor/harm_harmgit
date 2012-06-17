@@ -181,7 +181,7 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 	if(NDTPERFDUMPCHECK<1) NDTPERFDUMPCHECK=1;
 	
 	// DEBUG:
-	//fprintf(stderr,"WALLTIME: %21.15g :: %d %d %d %d %d\n",walltime,NTIMECHECK,NDTCCHECK,NDTDOTCCHECK,NZCCHECK,NGOCHECK);
+	//stderrfprintf("WALLTIME: %21.15g :: %d %d %d %d %d\n",walltime,NTIMECHECK,NDTCCHECK,NDTDOTCCHECK,NZCCHECK,NGOCHECK);
 
       }
 
@@ -328,7 +328,7 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 	if(itemp<1) itemp=1;
 	// set final time so steps to desired # of steps
 	tf=1.0*(SFTYPE)(itemp)/(SFTYPE)(diffnstep)*t;
-	fprintf(stderr,"PERFTEST: nstep=%ld/%d t=%15.10g/%15.10g wt=%15.10g/%15.10g\n",nstep,itemp,t,tf,walltime,(SFTYPE)itemp*(SFTYPE)walltime/(SFTYPE)nstep); fflush(stderr);
+	stderrfprintf("PERFTEST: nstep=%ld/%d t=%15.10g/%15.10g wt=%15.10g/%15.10g\n",nstep,itemp,t,tf,walltime,(SFTYPE)itemp*(SFTYPE)walltime/(SFTYPE)nstep); fflush(stderr);
       
 	//    if(itemp>1000) itemp=1000;
 	if(diffnstep==itemp) reallaststep=1;
@@ -353,10 +353,10 @@ int timecheck(int whichlocation, SFTYPE comptstart)
       if(PERFTEST){
 	sprintf(temps,"%sfinalperf%s",DATADIR,".txt") ;
 	if(!(perfout=fopen(temps,"at"))){
-	  fprintf(fail_file,"Can't open %s\n",temps);
+	  dualfprintf(fail_file,"Can't open %s\n",temps);
 	  exit(1);
 	}
-	fprintf(stderr, "opened: %s\n", temps);
+	stderrfprintf( "opened: %s\n", temps);
       }
 
 
@@ -369,7 +369,7 @@ int timecheck(int whichlocation, SFTYPE comptstart)
 #ifndef WIN32
       fprintf(logfull_file,"#(sec) walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
 #endif
-      fprintf(stderr,"#(sec) walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
+      stderrfprintf("#(sec) walltime: %21.15g usertime: %21.15g systime: %21.15g\n",diffmicrotime(wttimestop,wttimestart),diffmyustimes(usertmstimestop,usertmstimestart),diffmyustimes(systmstimestop,systmstimestart));
 
       if(DOLOGPERF){
 	myfprintf(logperf_file,"#done: steps: %10ld wtime: %10.2g tzcycles: %10d t: %10.2g tu/hour: %10.5g\n",nstep,walltime*SEC2HOUR,(int)((FTYPE)(realtotalzones)*(FTYPE)diffnstep/walltime),(t-comptstart),(t-comptstart)/(walltime*SEC2HOUR)) ;

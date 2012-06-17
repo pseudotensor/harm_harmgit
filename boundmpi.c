@@ -114,7 +114,7 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
   // would transfers 2X as much data, but corners would transfer very
   // slowly alone, and basically has the same number of operations
   // required as does edge transfers.
-  //  fprintf(fail_file,"innerboundhere1\n"); fflush(fail_file);
+  //  dualfprintf(fail_file,"innerboundhere1\n"); fflush(fail_file);
 
 
 
@@ -170,7 +170,7 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
-    //fprintf(fail_file,"innerboundhere2\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere2\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE1)){
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
       for(dir=X1UP;dir<=X1DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
@@ -183,19 +183,19 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
     // y -dir
     //
     /////////////////
-    //fprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE2)){
       // now dir=0,1(X1UP,X1DN) is done, so can start 2,3(X2UP,X2DN)
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
-    //fprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE3)){
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
       for(dir=X2UP;dir<=X2DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendwait(dir,requests);
     }
-    //fprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
   }
   else if(whichdir==3){
     ///////////////////
@@ -203,19 +203,19 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FT
     // z -dir
     //
     /////////////////
-    //fprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere3\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE4)){
       // now dir=0,1,2,3(X1UP,X1DN,X2UP,X2DN) is done, so can start 4,5(X3UP,X3DN)
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) pack(dir,boundtype,prim2bound[whichdir],vpot2bound[whichdir],workbc);
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendrecv(dir,boundtype,workbc,requests);
     }
-    //fprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere4\n"); fflush(fail_file);
     if((boundstage==STAGEM1)||(boundstage==STAGE5)){
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) recvwait(dir,requests);
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) unpack(dir,boundtype,workbc,prim2bound[whichdir],vpot2bound[whichdir]);
       for(dir=X3UP;dir<=X3DN;dir++) if(dirgenset[boundtype][dir][DIRIF]) sendwait(dir,requests);
     }
-    //fprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
+    //dualfprintf(fail_file,"innerboundhere5\n"); fflush(fail_file);
   }
   else{
     dualfprintf(fail_file,"No such whichdir=%d in boundmpi.c\n",whichdir);

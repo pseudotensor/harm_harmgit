@@ -30,7 +30,7 @@ int init(int *argc, char **argv[])
 
 
 
-  fprintf(stderr,"Start init\n"); fflush(stderr);
+  stderrfprintf("Start init\n"); fflush(stderr);
 
   //////////////
   //
@@ -2732,7 +2732,7 @@ void makedirs(void)
 #if( USINGMPIAVOIDMKDIR ) 
   //AT: for certain systems, neither way works to create dirs, 
   //    so not create them at all
-  //fprintf(stderr,"USEMPIAVOIDMKDIR==1: User must create dumps and images\n");
+  //stderrfprintf("USEMPIAVOIDMKDIR==1: User must create dumps and images\n");
 #else
   if ((mpicombine && (myid == 0)) || (mpicombine == 0)) {
     
@@ -2748,7 +2748,7 @@ void makedirs(void)
       mkdir("dumps",0700);
       mkdir("images",0700);
 #else
-      fprintf(stderr,"WIN32: User must create dumps and images\n");
+      stderrfprintf("WIN32: User must create dumps and images\n");
 #endif
     }
   }
@@ -2878,7 +2878,7 @@ int assert_func( int is_bad_val, char *s, ... )
 
   if( 0 != is_bad_val ) {
     if(fileptr==NULL){
-      fprintf(stderr,"tried to print to null file pointer: %s\n",s);
+      stderrfprintf("tried to print to null file pointer: %s\n",s);
       fflush(stderr);
     }
     else{

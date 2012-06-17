@@ -250,7 +250,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
 
 
 #if( WHICHVEL != VELREL4 ) 
-  fprintf(stderr,"Utoprim_2d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_2d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1); 
 #endif
 

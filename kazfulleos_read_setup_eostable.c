@@ -770,7 +770,7 @@ void read_setup_eostable(void)
       ////////////////////////////
 
       if(whichrnpmethod[tableiter]==0){
-	fprintf(fail_file,"This method is not setup\n");
+	dualfprintf(fail_file,"This method is not setup\n");
 	myexit(3966738);
       }
 

@@ -53,27 +53,27 @@ void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypel
 
   // may already have this, but get again to keep code modular
   MPI_Comm_size(localcomm, sizeproclistlocal);
-  fprintf(stderr,"processtype=%d sizeproclistlocal=%d\n",processtype,*sizeproclistlocal); fflush(stderr);
+  stderrfprintf("processtype=%d sizeproclistlocal=%d\n",processtype,*sizeproclistlocal); fflush(stderr);
 
   //  return;
 
   // allocate processor list 
   *processtypelistlocal=(int*) malloc((*sizeproclistlocal)*sizeof(int));
   if(*processtypelistlocal==NULL){
-    fprintf(stderr,"Could not allocate processtypelistlocal\n");
+    stderrfprintf("Could not allocate processtypelistlocal\n");
     exit(1);
   }
-  fprintf(stderr,"After malloc of processtypelistlocal: %d %d\n",processtype,myid_world); fflush(stderr);
+  stderrfprintf("After malloc of processtypelistlocal: %d %d\n",processtype,myid_world); fflush(stderr);
 
   // Gather process type list
   MPI_Allgather(&processtype,1,MPI_INT,*processtypelistlocal,1,MPI_INT,localcomm);
-  fprintf(stderr,"After MPI_Allgather: %d\n",myid_world); fflush(stderr);
+  stderrfprintf("After MPI_Allgather: %d\n",myid_world); fflush(stderr);
   //  MPI_Barrier(localcomm);
 
   
-  //  fprintf(stderr,"processtype=%d sizeproclistlocal0=%d\n",processtype,*sizeproclistlocal);
+  //  stderrfprintf("processtype=%d sizeproclistlocal0=%d\n",processtype,*sizeproclistlocal);
   //  for(i=0;i<*sizeproclistlocal;i++){
-  //    fprintf(stderr,"it0[%d]=%d\n",i,(*processtypelistlocal)[i]); fflush(stderr);
+  //    stderrfprintf("it0[%d]=%d\n",i,(*processtypelistlocal)[i]); fflush(stderr);
   //  }
 
 
@@ -283,12 +283,12 @@ void liaison_init_mpi_liaisonmode(
 
   // ensure NULL
   if(*MPI_COMM_LOCAL_GRMHD!=MPI_COMM_NULL){
-    fprintf(stderr,"MPI_COMM_LOCAL_GRMHD still has members of LIAISON!\n"); fflush(stderr);
+    stderrfprintf("MPI_COMM_LOCAL_GRMHD still has members of LIAISON!\n"); fflush(stderr);
     exit(1);
   }
   // ensure NULL
   if(*MPI_COMM_LOCAL_GRRAY!=MPI_COMM_NULL){
-    fprintf(stderr,"MPI_COMM_LOCAL_GRRAY still has members of LIAISON!\n"); fflush(stderr);
+    stderrfprintf("MPI_COMM_LOCAL_GRRAY still has members of LIAISON!\n"); fflush(stderr);
     exit(1);
   }
 
@@ -330,7 +330,7 @@ void grmhd_init_mpi_liaisonmode(
 					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
 
 
-  fprintf(stderr,"USEMPILIAISON=%d\n",USEMPILIAISON);
+  stderrfprintf("USEMPILIAISON=%d\n",USEMPILIAISON);
 
 #if(USEMPILIAISON)
 
@@ -349,7 +349,7 @@ void grmhd_init_mpi_liaisonmode(
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_GRRAY_LIAISON!=MPI_COMM_NULL){
-    fprintf(stderr,"GRRAY_LIAISON still has members of GRMHD!\n"); fflush(stderr);
+    stderrfprintf("GRRAY_LIAISON still has members of GRMHD!\n"); fflush(stderr);
     exit(1);
   }
 
@@ -366,7 +366,7 @@ void grmhd_init_mpi_liaisonmode(
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_LIAISON_FROM_GRMHD!=MPI_COMM_NULL){
-    fprintf(stderr,"MPI_COMM_LOCAL_LIAISON_FROM_GRMHD still has members of GRMHD!\n"); fflush(stderr);
+    stderrfprintf("MPI_COMM_LOCAL_LIAISON_FROM_GRMHD still has members of GRMHD!\n"); fflush(stderr);
     exit(1);
   }
 
@@ -418,7 +418,7 @@ void grray_init_mpi_liaisonmode(
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_GRMHD_LIAISON!=MPI_COMM_NULL){
-    fprintf(stderr,"GRMHD_LIAISON still has members of GRRAY!\n"); fflush(stderr);
+    stderrfprintf("GRMHD_LIAISON still has members of GRRAY!\n"); fflush(stderr);
     exit(1);
   }
 
@@ -435,7 +435,7 @@ void grray_init_mpi_liaisonmode(
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_LIAISON_FROM_GRRAY!=MPI_COMM_NULL){
-    fprintf(stderr,"MPI_COMM_LOCAL_LIAISON_FROM_GRRAY still has members of GRRAY!\n"); fflush(stderr);
+    stderrfprintf("MPI_COMM_LOCAL_LIAISON_FROM_GRRAY still has members of GRRAY!\n"); fflush(stderr);
     exit(1);
   }
 
@@ -477,7 +477,7 @@ void init_MPI_group_grmhd_grray_liaison(
   // allocate things that are truenumprocs in size
   ranks=(int*)malloc(sizeof(int)*truenumprocs);
   if(ranks==NULL){
-    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    stderrfprintf("Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
     myexit(3876252356);
   }
   for(i=0;i<truenumprocs;i++) ranks[i]=0;
@@ -490,9 +490,9 @@ void init_MPI_group_grmhd_grray_liaison(
   MPI_Comm_group(MPI_COMM_WORLD, MPI_GROUP_LOCAL_WORLD);
 
 
-  //  fprintf(stderr,"sizeproclistlocal=%d\n",sizeproclistlocal);
+  //  stderrfprintf("sizeproclistlocal=%d\n",sizeproclistlocal);
   //  for(i=0;i<sizeproclistlocal;i++){
-  //    fprintf(stderr,"it[%d]=%d\n",i,processtypelistlocal[i]); fflush(stderr);
+  //    stderrfprintf("it[%d]=%d\n",i,processtypelistlocal[i]); fflush(stderr);
   //  }
 
 
@@ -542,9 +542,9 @@ void init_MPI_group_grmhd_grray_liaison(
   MPI_Group_incl(*MPI_GROUP_LOCAL_WORLD, numranks, ranks, MPI_GROUP_LOCAL_GRRAY_LIAISON);
   MPI_Comm_create(MPI_COMM_WORLD, *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
 
-  //  fprintf(stderr,"numranks=%d\n",numranks);
+  //  stderrfprintf("numranks=%d\n",numranks);
   //  for(i=0;i<numranks;i++){
-  //    fprintf(stderr,"ranks[%d]=%d\n",i,ranks[i]); fflush(stderr);
+  //    stderrfprintf("ranks[%d]=%d\n",i,ranks[i]); fflush(stderr);
   //  }
 
 
@@ -626,7 +626,7 @@ void init_MPI_group_grmhd_liaison_split(
   // allocate things that are truenumprocs in size
   ranks=(int*)malloc(sizeof(int)*truenumprocs);
   if(ranks==NULL){
-    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    stderrfprintf("Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
     myexit(3876252356);
   }
   for(i=0;i<truenumprocs;i++) ranks[i]=0;
@@ -690,7 +690,7 @@ void init_MPI_group_grray_liaison_split(
   // allocate things that are truenumprocs in size
   ranks=(int*)malloc(sizeof(int)*truenumprocs);
   if(ranks==NULL){
-    fprintf(stderr,"Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    stderrfprintf("Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
     myexit(3876252356);
   }
   for(i=0;i<truenumprocs;i++) ranks[i]=0;
@@ -760,7 +760,7 @@ int final_myexit(void)
     MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
 
-    fprintf(stderr, "END\n");
+    stderrfprintf( "END\n");
     fflush(stderr);
     exit(0);
     
@@ -803,7 +803,7 @@ int final_myexit(void)
   MPI_Finalize();
 #endif
   
-  fprintf(stderr, "END\n");
+  stderrfprintf( "END\n");
   fflush(stderr);
   exit(0);
   
@@ -841,7 +841,7 @@ void liaison_init_mpi_liaisonmode_globalset(void)
   processtypelist_world=(int*)malloc(sizeof(int)*1);
   processtypelist_liaison_from_grmhd=(int*)malloc(sizeof(int)*1);
   if(processtypelist_world==NULL || processtypelist_liaison_from_grmhd==NULL){
-    fprintf(stderr,"Couldn't allocate memory for processtypelist_world,liaison_from_grmhd\n");
+    stderrfprintf("Couldn't allocate memory for processtypelist_world,liaison_from_grmhd\n");
     exit(1);
   }
   processtypelist_world[0]=BINARYLIAISONTYPE;
@@ -879,25 +879,25 @@ void grmhd_init_mpi_liaisonmode_globalset(void)
 
   ////////////////////////////////
   // get group for MPI_COMM_WORLD
-  fprintf(stderr,"MPICOMM1\n");
+  stderrfprintf("MPICOMM1\n");
   MPI_Comm_group(MPI_COMM_WORLD, &MPI_GROUP_WORLD);
-  fprintf(stderr,"MPICOMM2\n");
+  stderrfprintf("MPICOMM2\n");
   MPI_COMM_GRMHD=MPI_COMM_WORLD;
-  fprintf(stderr,"MPICOMM3\n");
+  stderrfprintf("MPICOMM3\n");
   MPI_GROUP_GRMHD=MPI_GROUP_WORLD;
 
-  fprintf(stderr,"MPICOMM4\n");
+  stderrfprintf("MPICOMM4\n");
   grmhd_init_mpi_processtypes(MPI_COMM_WORLD, &processtypelist_world, &sizeproclist_world);
-  fprintf(stderr,"MPICOMM5\n");
+  stderrfprintf("MPICOMM5\n");
   grmhd_init_mpi_processtypes(MPI_COMM_GRMHD, &processtypelist_grmhd, &sizeproclist_grmhd);
-  fprintf(stderr,"MPICOMM6\n");
+  stderrfprintf("MPICOMM6\n");
 
 #else
   sizeproclist_world=sizeproclist_grmhd=1;
   processtypelist_world=(int*)malloc(sizeof(int)*1);
   processtypelist_grmhd=(int*)malloc(sizeof(int)*1);
   if(processtypelist_world==NULL || processtypelist_grmhd==NULL){
-    fprintf(stderr,"Couldn't allocate memory for processtypelist_world,grmhd\n");
+    stderrfprintf("Couldn't allocate memory for processtypelist_world,grmhd\n");
     exit(1);
   }
   processtypelist_world[0]=BINARYGRMHDTYPE;
@@ -936,7 +936,7 @@ void grray_init_mpi_liaisonmode_globalset(void)
   processtypelist_world=(int*)malloc(sizeof(int)*1);
   processtypelist_grray=(int*)malloc(sizeof(int)*1);
   if(processtypelist_world==NULL || processtypelist_grray==NULL){
-    fprintf(stderr,"Couldn't allocate memory for processtypelist_world,grray\n");
+    stderrfprintf("Couldn't allocate memory for processtypelist_world,grray\n");
     exit(1);
   }
   processtypelist_world[0]=BINARYGRRAYTYPE;

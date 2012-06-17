@@ -86,7 +86,7 @@ int Utoprim_5d2_final(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  F
 
 
 #if( WHICHVEL != VELREL4 )
-  fprintf(stderr,"Utoprim_5d2() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_5d2() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1);
 #endif
 

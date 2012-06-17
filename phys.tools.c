@@ -2265,17 +2265,17 @@ int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *u
 
   if(discr < 0.) {
     /*
-      fprintf(fail_file,"failure") ;
+      dualfprintf(fail_file,"failure") ;
       ucon[TT] = (-BB - sqrt(-discr))/(2.*AA) ;
       ucon[TT] = -BB/(2.*AA) ;
     */
-    fprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
+    dualfprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
 	    discr) ;
-    fprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
+    dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
     coord(geom->i,geom->j,geom->k,geom->p,X);
-    fprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
 
-    for(k=0;k<NPR;k++) fprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
+    for(k=0;k<NPR;k++) dualfprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
     // GODMARK -- why did we have failed=1?
     //		failed=1;
     return(1);
@@ -2308,17 +2308,17 @@ int ucon_calc_4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 
   if(discr < 0.) {
     /*
-      fprintf(fail_file,"failure\n") ;
+      dualfprintf(fail_file,"failure\n") ;
       ucon[TT] = (-BB - sqrt(-discr))/(2.*AA) ;
       ucon[TT] = -BB/(2.*AA) ;
     */
-    fprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
+    dualfprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
 	    discr) ;
-    fprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
+    dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
     coord(geom->i,geom->j,geom->k,geom->p,X);
-    fprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
 
-    for(k=0;k<NPR;k++) fprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
+    for(k=0;k<NPR;k++) dualfprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
     // GODMARK -- why did we have failed=1?
     //		failed=1;
     return(1);

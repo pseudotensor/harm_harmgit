@@ -15,11 +15,11 @@
 // for debugging
 /*
 #define FREERETURN {fprintf(stderr,"1addr=%d\n",fvec);free_vector(fvec,1,n);fprintf(stderr,"1 n=%d\n",n); \
-    fprintf(stderr,"2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n); \
-    fprintf(stderr,"3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);			\
-    fprintf(stderr,"4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);			\
-    fprintf(stderr,"5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);		\
-    fprintf(stderr,"6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
+    stderrfprintf("2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n); \
+    stderrfprintf("3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);			\
+    stderrfprintf("4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);			\
+    stderrfprintf("5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);		\
+    stderrfprintf("6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
 return;}
 */
 	
@@ -31,11 +31,11 @@ return;}
 
 /*
 #define TESTDEATH {fprintf(stderr,"1addr=%d\n",fvec);free_vector(fvec,1,n);fprintf(stderr,"1 n=%d\n",n); \
-	fprintf(stderr,"2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n);\
-	fprintf(stderr,"3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);\
-	fprintf(stderr,"4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);\
-	fprintf(stderr,"5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);\
-	fprintf(stderr,"6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
+	stderrfprintf("2addr=%ld\n",xold);free_vector(xold,1,n);fprintf(stderr,"2 n=%d\n",n);\
+	stderrfprintf("3addr=%ld\n",p);free_vector(p,1,n);fprintf(stderr,"3 n=%d\n",n);\
+	stderrfprintf("4addr=%ld\n",g);free_vector(g,1,n);fprintf(stderr,"1 n=%d\n",n);\
+	stderrfprintf("5addr=%ld\n",fjac);free_matrix(fjac,1,n,1,n);fprintf(stderr,"1 n=%d\n",n);\
+	stderrfprintf("6addr=%ld\n",indx);free_ivector(indx,1,n);fprintf(stderr,"f n=%d\n",n);\
 	exit(0);}
 */
 
@@ -73,7 +73,7 @@ void newt(int useanalyticjac
 		if (fabs(fvec[i]) > test) test=fabs(fvec[i]);
 	if (test < 0.01*TOLF) {
 		*check=0;
-		//fprintf(stderr,"end tolf0.01\n");
+		//stderrfprintf("end tolf0.01\n");
 		FREERETURN
 	}
 	for (sum=0.0,i=1;i<=n;i++) sum += SQR(x[i]);
@@ -96,7 +96,7 @@ void newt(int useanalyticjac
 		///////////////////////////DEBUG
 	  /*
 		for(qq=1;qq<n+1;qq++) for(pp=1;pp<n+1;pp++){
-		  fprintf(stderr,"fjac[%d][%d]=%g\n",qq,pp,fjac[qq][pp]);
+		  stderrfprintf("fjac[%d][%d]=%g\n",qq,pp,fjac[qq][pp]);
 		}
 		fflush(stderr);
 		//exit(0);
@@ -117,7 +117,7 @@ void newt(int useanalyticjac
 
 		for (i=1;i<=n;i++){
 		  if(indx[i]<1 || indx[i]>n){
-		    fprintf(stderr,"Bad indx[%d]=%d\n",i,indx[i]);
+		    stderrfprintf("Bad indx[%d]=%d\n",i,indx[i]);
 		    exit(1);
 		  }
 		}
@@ -155,7 +155,7 @@ void newt(int useanalyticjac
 			if (fabs(fvec[i]) > test) test=fabs(fvec[i]);
 		if (test < TOLF) {
 			*check=0;
-			//fprintf(stderr,"end tolf\n");
+			//stderrfprintf("end tolf\n");
 			FREERETURN
 		}
 		if (*check) {
@@ -166,7 +166,7 @@ void newt(int useanalyticjac
 				if (temp > test) test=temp;
 			}
 			*check=(test < TOLMIN ? 1 : 0);
-			if(SIMPLEDEBUGINTERP) fprintf(stderr,"end check\n");
+			if(SIMPLEDEBUGINTERP) stderrfprintf("end check\n");
 			FREERETURN
 		}
 		test=0.0;
@@ -175,7 +175,7 @@ void newt(int useanalyticjac
 			if (temp > test) test=temp;
 		}
 		if (test < TOLX){
-		  //		  fprintf(stderr,"end tolx\n");
+		  //		  stderrfprintf("end tolx\n");
 		  FREERETURN
 		    }
 	}

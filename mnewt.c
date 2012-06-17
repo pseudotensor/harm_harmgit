@@ -479,7 +479,7 @@ int mnewt(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primtoU
 	dualfprintf(fail_file,"};\n");
 #else
 	out=fopen("mnewtvaluelist.txt","wt");
-	if(out==NULL){ fprintf(stderr,"cannot open mnewtvaluelist.txt\n"); exit(1);}
+	if(out==NULL){ stderrfprintf("cannot open mnewtvaluelist.txt\n"); exit(1);}
 	for(j=0;j<truetrialnum+1;j++){
 	  for(i=0;i<n;i++) {
 	    fprintf(out,"%21.15g ",trialvalue[j][i]);
@@ -489,7 +489,7 @@ int mnewt(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primtoU
 	fclose(out);
 
 	out=fopen("mnewterrlist.txt","wt");
-	if(out==NULL){ fprintf(stderr,"cannot open mnewterrlist.txt\n"); exit(1);}
+	if(out==NULL){ stderrfprintf("cannot open mnewterrlist.txt\n"); exit(1);}
 	for(j=0;j<truetrialnum;j++){
 	  for(i=0;i<2;i++) {
 	    fprintf(out,"%21.15g ",trialerr[j][i]);

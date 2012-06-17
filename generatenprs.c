@@ -203,7 +203,7 @@ int main(void)
 
   defout=fopen("global.defnprs.h","wt");
   if(defout==NULL){
-    fprintf(stderr,"Can't open global.defnprs.h\n");
+    stderrfprintf("Can't open global.defnprs.h\n");
     return(1);
   }
 
@@ -239,7 +239,7 @@ int main(void)
 
   defout=fopen("initbase.defaultnprlists.c","wt");
   if(defout==NULL){
-    fprintf(stderr,"Can't open initbase.defaultnprlists.c\n");
+    stderrfprintf("Can't open initbase.defaultnprlists.c\n");
     return(1);
   }
 

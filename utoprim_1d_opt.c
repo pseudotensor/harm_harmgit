@@ -45,7 +45,7 @@ int Utoprim_1d_opt(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYP
   glpflag=lpflag;
 
 #if( WHICHVEL != VELREL4 )
-  fprintf(stderr,"Utoprim_1d_opt() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_1d_opt() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1);
 #endif
 
@@ -86,7 +86,7 @@ int Utoprim_1d_opt(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYP
     dualfprintf(fail_file,"gdet = %21.15g \n", ptrgeom->g);fflush(fail_file);
     primtoU_g(ptrgeom, prim_tmp, gcov, gcon, U_tmp2 ); 
     for( i = 0; i < NPR; i++ ) {
-      fprintf(fail_file, "Utoprim_1d_opt(): Utmp1[%d] = %21.15g , Utmp2[%d] = %21.15g , dUtmp[%d] = %21.15g \n", 
+      dualfprintf(fail_file, "Utoprim_1d_opt(): Utmp1[%d] = %21.15g , Utmp2[%d] = %21.15g , dUtmp[%d] = %21.15g \n", 
 	       i, U_tmp[i], i, U_tmp2[i], i, fabs( (U_tmp[i]-U_tmp2[i]) / ( (U_tmp2[i]!=0.) ? U_tmp2[i] : 1. ) )  ); 
     }
   }

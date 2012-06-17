@@ -82,7 +82,7 @@ void broydn(int useanalyticjac
 		    jacdiff+=fabs(rtest[qq][pp]-r[qq][pp]);
 		  }
 		  jacavg/=(n*n);
-		  fprintf(stderr,"x=%g %g fvec=%g %g jacdiff=%g %g\n",x[1],x[2],fvec[1],fvec[2],jacdiff,jacdiff/jacavg);
+		  stderrfprintf("x=%g %g fvec=%g %g jacdiff=%g %g\n",x[1],x[2],fvec[1],fvec[2],jacdiff,jacdiff/jacavg);
 		  */
 		  }
 			qrdcmp(r,n,c,d,&sing);

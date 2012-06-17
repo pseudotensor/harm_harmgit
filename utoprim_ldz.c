@@ -68,7 +68,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
   glpflag=lpflag;
 
 #if( WHICHVEL != VELREL4 )
-  fprintf(stderr,"Utoprim_ldz() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_ldz() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1);
 #endif
 
@@ -376,7 +376,7 @@ int nrunsafeorig(void (*funcd)(FTYPE*,FTYPE*,FTYPE*), FTYPE* guess)
   }
 
   if(n_iter == NITERMAX) {
-    fprintf(stderr,"max iterations exceeded\n") ;
+    stderrfprintf("max iterations exceeded\n") ;
     return(1);
   }
   return(0);
@@ -509,7 +509,7 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
   ee = (Ec - igam1 * glf1 * Dc - 0.5 * Bsq) * cc;
 
   /* 
-     if(ee < 0.) { fprintf(stderr,"ee < 0 in func\n") ; myexit(40) ; } */
+     if(ee < 0.) { stderrfprintf("ee < 0 in func\n") ; myexit(40) ; } */
 
   if (Tsq > 0.) {
     a2 = (2. * Bsq - ee) / 3.;
@@ -563,7 +563,7 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
     }
     th = acos(cosa);
 
-    // fprintf(stderr,">>> %21.15g %21.15g %21.15g\n",q,r/sqrt(-q*q*q),th) ;
+    // stderrfprintf(">>> %21.15g %21.15g %21.15g\n",q,r/sqrt(-q*q*q),th) ;
 
     Wc = 2. * sqrt(-q) * cos(th / 3.) - a2;
     wsq = Wc * Wc;

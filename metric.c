@@ -273,7 +273,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 #endif
 
 
-      //  DLOOP(j,k) { fprintf(stderr,"1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+      //  DLOOP(j,k) { stderrfprintf("1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
 
 
@@ -296,7 +296,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	// all the above are analytic, so have to convert to prim coords.
 	gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
       }
-      //  DLOOP(j,k) { fprintf(stderr,"2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+      //  DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
       //    if(ptrgeom->i==7 && nstep==1084){
       //    //      DLOOP(j,k) dualfprintf(fail_file,"present time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);
@@ -3563,7 +3563,7 @@ void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
   idxvol[TH]=IDXTH(a,R0,r,th,th2[0],th2[1]);
   idxvol[PH]=1.0/dx[3];
 
-  fprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
+  dualfprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
   
   */
 

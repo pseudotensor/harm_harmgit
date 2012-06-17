@@ -8,13 +8,13 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 
 
 #if(USEMPI)
-  fprintf(stderr, "Begin: init_MPI_GRMHD\n"); fflush(stderr);
+  stderrfprintf( "Begin: init_MPI_GRMHD\n"); fflush(stderr);
   // init MPI (assumes nothing in set_arrays.c used here) : always done
   // non-blocking:
   init_MPI_general(argc, argv);
   // NOW CAN USE myid to determine if print-out things
 #else
-  fprintf(stderr, "Did NOT init_MPI_GRMHD\n"); fflush(stderr);
+  stderrfprintf( "Did NOT init_MPI_GRMHD\n"); fflush(stderr);
 #endif
 
 
@@ -127,9 +127,9 @@ int init_default_MPI_GRMHD_myid(void)
 
 
   if(MPIid[myid]!=myid){
-    fprintf(stderr,"Failure to setup default MPIid[myid]=%d: myid=%d numprocs=%d\n",MPIid[myid],myid,numprocs); fflush(stderr);
+    stderrfprintf("Failure to setup default MPIid[myid]=%d: myid=%d numprocs=%d\n",MPIid[myid],myid,numprocs); fflush(stderr);
     for(proc=0;proc<numprocs;proc++){
-      fprintf(stderr,"MPIid[proc=%d]=%d\n",proc,MPIid[proc]); fflush(stderr);
+      stderrfprintf("MPIid[proc=%d]=%d\n",proc,MPIid[proc]); fflush(stderr);
     }
     myexit(1486754);
   }

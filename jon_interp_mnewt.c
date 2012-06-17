@@ -271,7 +271,7 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
 
   // only report if pseudo-bad convergence i.e. not near limits since that produces too much data
   if ((errf >= tolfreport)||(errx >= tolxreport)) {
-    fprintf(stderr,"Couldn't find solution: %g %g\n",errf,errx);
+    stderrfprintf("Couldn't find solution: %g %g\n",errf,errx);
   }
   // assume won't fail if not too bad convergence
   if ((errf <= tolfallowed)&&(errx<=tolxallowed)) {

@@ -182,7 +182,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   sizeofdatatype=getsizeofdatatype(datatype);
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here 0: i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
+  dualfprintf(fail_file,"got here 0: i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
 #endif
 
   if(sorted==UNSORTED){
@@ -239,11 +239,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   if(dolocal){
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.5: %lld %lld %lld %d\n",bfi,datagot+blinkptr->num,blinkptr->num,dolocal); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.5: %lld %lld %lld %d\n",bfi,datagot+blinkptr->num,blinkptr->num,dolocal); fflush(fail_file);
 #endif
     // We are ready to read or write from/to cpu=0
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.6\n"); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.6\n"); fflush(fail_file);
 #endif
 
 
@@ -256,7 +256,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     if(readwrite==WRITEFILE){
       // means we have put what we want into writebuf, now send to cpu=0
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.65 : %lld %lld %d %d\n",writebuf,blinkptr->num,MPIid[0],myid); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.65 : %lld %lld %d %d\n",writebuf,blinkptr->num,MPIid[0],myid); fflush(fail_file);
 #endif
       // must keep myid>0 cpus stalled until cpu=0 needs their data
       // that is, Wait below continues if data copied out of buffer, but we want pseudo-blocking call here
@@ -264,7 +264,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       // can't stall cpu=0 since only below has recv, but ok since cpu=0 stuck below until cpu=0 data needed again
       else MPI_Isend(writebuf,blinkptr->num,datatype,MPIid[0],myid, MPI_COMM_GRMHD,&request);
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.66 : %lld\n",writebuf); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.66 : %lld\n",writebuf); fflush(fail_file);
 #endif
       // adjust offset to keep standard writebuf BUFFERMAP format with just an offset (offset keeps true memory area always as written part)
       bufferoffset -= (long long int)blinkptr->num;// or =-(long long int)datagot+(long long int)blinkptr->num
@@ -283,11 +283,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       // means we need to fill writebuf with what cpu=0 will send us
       // recv's will Wait below until data is coming.
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.65 : %lld\n",writebuf); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.65 : %lld\n",writebuf); fflush(fail_file);
 #endif
       MPI_Irecv(writebuf,blinkptr->num,datatype,MPIid[0],myid, MPI_COMM_GRMHD,&request);      
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.66 : %lld %lld\n",writebuf,blinkptr); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.66 : %lld %lld\n",writebuf,blinkptr); fflush(fail_file);
 #endif
       bufferoffset=(long long int)(-datagot);
     }// end if READFILE
@@ -299,7 +299,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     // now iterate to next node in list
     blinkptr=(blinkptr->np);
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.67 : %lld\n",blinkptr); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.67 : %lld\n",blinkptr); fflush(fail_file);
 #endif
     if(blinkptr==NULL){
       thisslavedone=1;
@@ -314,13 +314,13 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       }
     }
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.7\n"); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.7\n"); fflush(fail_file);
 #endif
 
   }
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here .8\n"); fflush(fail_file);
+  dualfprintf(fail_file,"got here .8\n"); fflush(fail_file);
 #endif
 
 
@@ -389,7 +389,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     joniooffset=(long long int)joniosize/((long long int)2);
 
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 2: joniooffset=%lld\n",joniooffset); fflush(fail_file);
+    dualfprintf(fail_file,"got here 2: joniooffset=%lld\n",joniooffset); fflush(fail_file);
 #endif
 
 
@@ -406,7 +406,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here 3\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here 3\n"); fflush(fail_file);
 #endif
 	/////////
 	// determine amount of data to get from cpu group
@@ -424,17 +424,17 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datatoget0=0;
 	while(doset){
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
 #endif
 	  datatoget0 += (long long int)(cpulinkptr->num);
 	  if(cpulinkptr->cpu==0) doing0=1;
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
-	  fprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
 #endif
 	  MPI_Irecv(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
 #endif
 	  // have myid wait before continuing to make sure receive is complete
 	  MPI_Wait(&request0,&mpichstatus);
@@ -442,11 +442,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  //	  for(sii=0;sii<cpulinkptr->num;sii++){
 
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
 #endif
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
+	    dualfprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
 #endif
 
 
@@ -477,7 +477,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    gk=(long long int)(mypos/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
+	    dualfprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
 #endif
 
 	    if(
@@ -490,7 +490,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	       ){
 
 #if(DEBUGMINMEM)
-	      fprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
+	      dualfprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
 #endif
 
 	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[sii+joniooffset]=jonio1[uii++];
@@ -504,7 +504,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
 #endif
 
 	  /////////////////
@@ -612,7 +612,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       dofull=1;
       while(dofull){
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here 4\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here 4\n"); fflush(fail_file);
 #endif
 	// we read data into 2nd half of jonio (sorted part), then desort for one cpu, then continue for next cpu 
 	
@@ -627,7 +627,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datasofarc0+=datatogetc0;      
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
+	dualfprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
 #endif
 
 	/////////////
@@ -673,7 +673,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  }
 	}// end if TEXTOUTPUT
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here2\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here2\n"); fflush(fail_file);
 #endif
 
 
@@ -693,7 +693,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 	while(doset){
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
 #endif
 
 	  if(cpulinkptr->cpu==0) doing0=1;
@@ -703,7 +703,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  uii=0;
 	  for(sii=0;sii<datatogetc0;sii++){
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
+	    dualfprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
 #endif
 
 	    mypos=(long long int)((long long int)sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + ((long long int)cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
@@ -713,7 +713,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    gk=(long long int)(((long long int)mypos)/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
+	    dualfprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
 #endif
 	    if(
 	       (gi>=startpos0[1][cpulinkptr->cpu])&&
@@ -724,7 +724,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	       (gk<=endpos0[3][cpulinkptr->cpu])
 	       ){
 #if(DEBUGMINMEM)
-	      fprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
+	      dualfprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
 #endif
 
 	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[uii++]=jonio1[sii+joniooffset];
@@ -736,7 +736,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    }// end if within this CPUs data
 	  }// end over sii
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here3\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here3\n"); fflush(fail_file);
 #endif
 
 
@@ -748,7 +748,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    myexit(10006);
 	  }
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here4\n"); fflush(fail_file);	  
+	  dualfprintf(fail_file,"got here4\n"); fflush(fail_file);	  
 #endif
 	  // jonio is the unsorted bit here starting at index=0 (for all cpus)
 	  MPI_Isend(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
@@ -761,7 +761,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  if(cpulinkptr->end) doset=0;
 	  cpulinkptr=cpulinkptr->np;
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here5\n"); fflush(fail_file);	  
+	  dualfprintf(fail_file,"got here5\n"); fflush(fail_file);	  
 #endif
 
 	}// end while doset
@@ -777,7 +777,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	//////////////////
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here6\n"); fflush(fail_file);	  
+	dualfprintf(fail_file,"got here6\n"); fflush(fail_file);	  
 #endif
 
 	datasofar0 += (long long int)datatoget0; // diagnostic
@@ -804,7 +804,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 	// otherwise continue
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here7\n"); fflush(fail_file);	  
+	dualfprintf(fail_file,"got here7\n"); fflush(fail_file);	  
 #endif
 
 
@@ -815,7 +815,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here8\n"); fflush(fail_file);	  
+      dualfprintf(fail_file,"got here8\n"); fflush(fail_file);	  
 #endif
 
 
@@ -831,7 +831,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here 6\n"); fflush(fail_file);
+  dualfprintf(fail_file,"got here 6\n"); fflush(fail_file);
 #endif
 
   // have myid wait before continuing so buffer can be released for more writing to
@@ -839,7 +839,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   //  logsfprintf("end mpiminmem_read\n");
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here9\n"); fflush(fail_file);	  
+  dualfprintf(fail_file,"got here9\n"); fflush(fail_file);	  
 #endif
 
 
@@ -2778,7 +2778,7 @@ int setuplinklist(int numcolumns,int which)
     // cpulist0's size is maximum possible number of cpus in a list due to buffer size
     //    buffersize=(int)(ceil(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns)*(FTYPE)(numcolumns)/(FTYPE)N1));
     buffersize=numprocs;
-    fprintf(stderr,"max cpus in a list=%lld\n",buffersize); fflush(stderr);
+    stderrfprintf("max cpus in a list=%lld\n",buffersize); fflush(stderr);
     if((cpulist0=(long long int*)malloc(sizeof(long long int)*buffersize))==NULL){
       dualfprintf(fail_file,"can't allocate cpulist0\n");
       myexit(10012);
@@ -2865,7 +2865,7 @@ int setuplinklist(int numcolumns,int which)
     }
     gcount++;
     //    if(myid==0){
-    //  fprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
+    //  dualfprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
     // }
     //    logfprintf("%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount);
     // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
@@ -2907,7 +2907,7 @@ int setuplinklist(int numcolumns,int which)
 	    firstlijk[lcpu]=1; // reset starting value
 	  }
 	  else{
-	    fprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
+	    dualfprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
 	    myexit(10020);
 	  }
 	}

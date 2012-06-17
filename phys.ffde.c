@@ -1739,7 +1739,7 @@ void testffdeinversion(void)
 	      // just compare pr in and pr out.
 	      SLOOPA(j) dualfprintf(fail_file,"realtest uu[%d]=%21.15g\n",j,uu[j]);
 	      SLOOPA(j) dualfprintf(fail_file,"realtest Bu[%d]=%21.15g\n",j,Bu[j]);
-	      for(k=U1;k<=B3;k++) fprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
+	      for(k=U1;k<=B3;k++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
 	      fflush(fail_file);
 
 	      //	      myexit(0);
@@ -1798,23 +1798,23 @@ void testffdeinversion(void)
   get_geometry(i,j,k,CENT,ptrgeom);
 
   if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
-  DLOOPA(pl) fprintf(fail_file,"1 uu[%d]=%21.15g\n",k,q.ucon[pl]);
+  DLOOPA(pl) dualfprintf(fail_file,"1 uu[%d]=%21.15g\n",k,q.ucon[pl]);
   if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
 	      
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
-  for(pl=U1;pl<=B3;pl++) fprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
+  for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
 
   PLOOP(pliter,pl) prin[pl]=prout[pl];
 
   // only clean solution to test
   get_state(prin,ptrgeom,&q);
-  DLOOPA(k) fprintf(fail_file,"2 uu[%d]=%21.15g\n",k,q.ucon[pl]);
+  DLOOPA(k) dualfprintf(fail_file,"2 uu[%d]=%21.15g\n",k,q.ucon[pl]);
   primtoU(UNOTHING,prin,&q,ptrgeom,U);
 	      
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
   // just compare pr in and pr out.
-  for(pl=U1;pl<=B3;pl++) fprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
+  for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
   fflush(fail_file);
 
   //	      myexit(0);

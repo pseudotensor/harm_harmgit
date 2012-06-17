@@ -149,7 +149,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
 
   COMPZLOOP{
-    //    fprintf(fail_file,"i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
+    //    dualfprintf(fail_file,"i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
     get_geometry(i,j,k,CENT,ptrgeom);
     if(fixup1zone(MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)
       FAILSTATEMENT("fixup.c:fixup()", "fixup1zone()", 1);
@@ -1153,13 +1153,13 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
       checki=ISGAMMACHECK;
       if(checkcondition[checki] && (vote[checki]>numvotes[checki]*0.5)){
 	// then majority rules
-	//	fprintf(stderr,"caught one-0: %d %d\n",i,j);
+	//	stderrfprintf("caught one-0: %d %d\n",i,j);
 	GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILGAMMAPERC;
       }
       checki=ISUUCHECK;
       if(checkcondition[checki] && (vote[checki]>numvotes[checki]*0.5)){
 	// then majority rules
-	//	fprintf(stderr,"caught one-1: %d %d\n",i,j);
+	//	stderrfprintf("caught one-1: %d %d\n",i,j);
 	GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILUPERC;
       }
 
@@ -3027,7 +3027,7 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // here realgammamax is u^t not u^t\alpha
   if((uu0 > uu0max && (uu0!=1.0))) {    
 
-    //fprintf(fail_file,"gamma=%21.15g realgammamax=%21.15g\n",gamma,gammamax);
+    //dualfprintf(fail_file,"gamma=%21.15g realgammamax=%21.15g\n",gamma,gammamax);
 
     if(debugfail>=2) dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
     // rescale velocities to reduce gamma to realgammamax

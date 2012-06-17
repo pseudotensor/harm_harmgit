@@ -2386,7 +2386,7 @@ void set_points()
   // fabs() used since only ever used as absolute value
   DLOOPA(jj) Diffx[jj] = fabs(endx[jj] - startx[jj]);
 
-  //  DLOOPA(jj) fprintf(stderr,"jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
+  //  DLOOPA(jj) stderrfprintf("jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
 
 
 }
@@ -2423,7 +2423,7 @@ FTYPE setRin(int ihor)
 
   ihoradjust=((FTYPE)ihor)+ADJUSTFRACT; // can't have grid edge exactly on horizon due to ucon_calc()
 
-  //  fprintf(stderr,"ihoradjust = %21.15g\n",ihoradjust);
+  //  stderrfprintf("ihoradjust = %21.15g\n",ihoradjust);
 
   if(defcoord == LOGRSINTH){
     ftemp=ihoradjust/(FTYPE)totalsize[1];

@@ -1,5 +1,6 @@
 #include "decs.h"
 
+// only to myid==0
 void myfprintf(FILE* fileptr, char *format, ...)
 {
   va_list arglist;
@@ -8,7 +9,7 @@ void myfprintf(FILE* fileptr, char *format, ...)
     va_start (arglist, format);
 
     if(fileptr==NULL){
-      fprintf(stderr,"tried to print to null file pointer: %s\n",format);
+      stderrfprintf("tried to print to null file pointer: %s\n",format);
       fflush(stderr);
     }
     else{
@@ -33,7 +34,7 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 
   if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
     if(fileptr==NULL){
-      fprintf(stderr,"tried to print to null file pointer: %s\n",format);
+      stderrfprintf("tried to print to null file pointer: %s\n",format);
       fflush(stderr);
     }
     else{

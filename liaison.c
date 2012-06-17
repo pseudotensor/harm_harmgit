@@ -178,7 +178,7 @@ int init(int *argc, char **argv[])
 
 
 #if(DOINGLIAISON==0)
-  fprintf(stderr,"Are you sure you want to have liaison code with DOINGLIAISON==0?\n");
+  stderrfprintf("Are you sure you want to have liaison code with DOINGLIAISON==0?\n");
 #endif
 
   // init MPI (assumes nothing in set_arrays.c used here)
@@ -216,13 +216,13 @@ int init_MPI_LIAISON(int *argc, char **argv[])
 {
 
 #if(USEMPILIAISON)
-  fprintf(stderr, "begin: init_MPI_LIAISON\n");
+  stderrfprintf( "begin: init_MPI_LIAISON\n");
   fflush(stderr);
   // init MPI (assumes nothing in set_arrays.c used here) : always done
   // non-blocking
   init_MPI_general(argc, argv);
 #else
-  fprintf(stderr, "Did NOT init_MPI_LIAISON\n");
+  stderrfprintf( "Did NOT init_MPI_LIAISON\n");
   fflush(stderr);
 #endif
 

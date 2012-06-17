@@ -265,7 +265,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   /////////////////////
   int finalstep=1; // user would want to know about changes to conserved quants during restart
   if (bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI) >= 1) {
-    fprintf(fail_file, "restart_init:bound_allprim: failure\n");
+    dualfprintf(fail_file, "restart_init:bound_allprim: failure\n");
     fflush(fail_file);
     return (1);
   }
