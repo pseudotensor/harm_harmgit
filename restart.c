@@ -96,7 +96,7 @@ int restart_init(int which)
   ////////////////
   trifprintf("before write_restart_header(TEXTOUTPUT,log_file)\n");
   logfprintf("header contents below\n"); 
-  write_restart_header(RESTARTDUMPTYPE,dnumversion[RESTARTDUMPTYPE],dnumcolumns[RESTARTDUMPTYPE],TEXTOUTPUT,log_file);
+  if(log_file) write_restart_header(RESTARTDUMPTYPE,dnumversion[RESTARTDUMPTYPE],dnumcolumns[RESTARTDUMPTYPE],TEXTOUTPUT,log_file);
 
   ////////////////
   //
