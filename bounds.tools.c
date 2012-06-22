@@ -3837,9 +3837,9 @@ void check_spc_singularities_user(void)
 	GETLOCALMETRIC(loc,i,j,k);
 
 	singfound=0;
-	singfound+=(localgdet[0]!=0.0);
+	singfound+=(fabs(localgdet[0])>0.0);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) singfound+=(LOCALEOMFUNCMAC(pl)!=0.0);
+	PLOOP(pliter,pl) singfound+=(fabs(LOCALEOMFUNCMAC(pl))>0.0);
 #endif
 
 	nonsingfound=0;
