@@ -845,3 +845,4 @@
 
 #define USERESTARTFORPANALYTIC 1  //=1: original behavior by Jon: save restart prims as panalytic
 
+#define SET_FACE1DN 0

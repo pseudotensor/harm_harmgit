@@ -440,3 +440,5 @@ struct Ccoordparams {
 #undef VPARBND
 #define VPARBND (0.9)
 
+#undef SET_FACE1DN
+#define SET_FACE1DN 0

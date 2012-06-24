@@ -1364,6 +1364,10 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   
   //SASMARK: put new OPENMP loop here that resets L/R states to no wall BC's
 
+#if(SET_FACE1DN)
+  set_face1dn( pr, pstag, pl_ct, pr_ct, dir, time );
+#endif
+  
 #if( 0 && DOFREEZETORUS )
   //only if during initial freezing period and only if doing for r or theta fluxes
   if(t < FREEZETORUSTIME && (dir == 1 || dir == 2)) {
