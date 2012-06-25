@@ -385,56 +385,44 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE thetapc;
   FTYPE rucon[NPR];
   FTYPE *rprim = MAC(prim,ri,rj,rk);
-  FTYPE V[NPR];
+  FTYPE V[NPR], Vmag[NPR];
   FTYPE bsq;
+  FTYPE frac;
   extern FTYPE global_vpar0;
+  FTYPE *convert_spc2mag(FTYPE *Vspc, FTYPE *Vmag);
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
   //compute radial 4-velocity in reference cell
   pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
   
-  //always do this to avoid noise on switching
-  if( 1 || rucon[1] > 0 ){
-    //compute parallel velocity in reference cell
-    compute_vpar(rprim, ptrgeom, &vpar);
-    
-    //if u^r > 0, fix vpar in ghost cells to preselected value
-    thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
-    
-    //SASMARK: only aligned dipole!!
-    if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
-      //outflow from the polar cap
-      vpar = global_vpar0;
-    }
-    else if(rucon[1] > 0){
-      vpar = 0.0;
-    } //else leave it as it is
-    
-    //set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
-    set_vel_stataxi( ptrgeom, get_omegaf_code(t,dt,steppart), vpar, pr );
-    
-    //set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
-    //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
-    set_vpar(vpar, ptrgeom, pr);
-    
-    if( rucon[1] > 0 ) {
-      //now that velocity is set, can compute bsq
-      if( bsq_calc(pr, ptrgeom, &bsq) >= 1 ) { 
-	FAILSTATEMENT("bounds.tools.c:set_den_vel()", "bsq_calc()", 2);
-      }
-      
-      //set rho and u consistent with density floor
-      pr[RHO] = bsq/BSQORHOBND;
-      pr[UU]  = bsq/BSQOUBND;
-    }
-    //*** the below already done ***
-    //else {
-    //  //if velocity points into the star, outflow density and internal energy
-    //  MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
-    //  MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
-    //}
+  //compute parallel velocity in reference cell
+  compute_vpar(rprim, ptrgeom, &vpar);
+  
+  //if u^r > 0, fix vpar in ghost cells to preselected value
+  thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
+  
+  convert_spc2mag(V, Vmag);
+  
+  frac  = Ftrgen( fabs(Vmag[2]),       thetapc, 1.1*thetapc, 1, 0 );
+  frac += Ftrgen( fabs(M_PIl-Vmag[2]), thetapc, 1.1*thetapc, 1, 0 ); 
+  vpar  = frac * global_vpar0;
+  
+  //set velocity due to magnetic field rotation + sliding down the field with vpar
+  set_vel_stataxi( ptrgeom, get_omegaf_code(t,dt,steppart), vpar, pr );
+  
+  //set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
+  //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
+  set_vpar(vpar, ptrgeom, pr);
+  
+  //now that velocity is set, can compute bsq
+  if( bsq_calc(pr, ptrgeom, &bsq) >= 1 ) { 
+    FAILSTATEMENT("bounds.tools.c:set_den_vel()", "bsq_calc()", 2);
   }
+  
+  //set rho and u consistent with density floor
+  pr[RHO] = bsq/BSQORHOBND;
+  pr[UU]  = bsq/BSQOUBND;
   
   return(0);
   
