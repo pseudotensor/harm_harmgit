@@ -156,6 +156,7 @@ int bound_x1dn_nssurface(
 {
   int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
   FTYPE get_omegaf_code(FTYPE t, FTYPE dt, FTYPE steppart);
+  int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, struct of_geom *ptrgeom, struct of_geom *ptrrgeom );
   extern FTYPE global_vpar0;
   
   
@@ -190,8 +191,6 @@ int bound_x1dn_nssurface(
     FTYPE rucon[NDIM];
     FTYPE thetapc;
     //FTYPE bval;
-    FTYPE BSQORHOBND = FRACBSQORHO*BSQORHOLIMIT;
-    FTYPE BSQOUBND = FRACBSQOU*BSQOULIMIT;
     
     
     // assign memory
@@ -291,57 +290,9 @@ int bound_x1dn_nssurface(
 #endif
 		}
 	      }
-	      pl=U1; get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-	      bl_coord_ijk(i, j, k, dirprim[pl], V);
-	      
-	      //bval = MACP0A1(prim,i,j,k,B1);
-	      
-	      //dualfprintf(fail_file, "bval = %21.15g\n", bval);
-	      
-	      
-	      //compute radial 4-velocity in reference cell
-	      pr2ucon(WHICHVEL, MAC(prim,ri,rj,rk), ptrrgeom[pl], rucon);
-	      
-	      //always do this to avoid noise on switching
-	      if( 1 || rucon[1] > 0 ){
-		//compute parallel velocity in reference cell
-		compute_vpar(MAC(prim,i,j,k), ptrgeom[pl], &vpar);
-		
-		//if u^r > 0, fix vpar in ghost cells to preselected value
-		
-		thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
-		
-		if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
-		  vpar = 0.9;
-		}
-		if(rucon[1] > 0){
-		  vpar = global_vpar0;
-		} //else leave it as it is
-
-		//set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
-		set_vel_stataxi( ptrgeom[pl], get_omegaf_code(t,dt,steppart), vpar, MACP0A0(prim,i,j,k) );
-		
-		//set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
-		//SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
-		set_vpar(vpar, ptrgeom[pl], MAC(prim,i,j,k));
-		
-		if( rucon[1] > 0 ) {
-		  //now that velocity is set, can compute bsq
-		  if( bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1 ) { 
-		    FAILSTATEMENT("bounds.tools.c:bound_x1nd_nssurface()", "bsq_calc()", 2);
-		  }
-		  
-		  //set rho and u consistent with density floor
-		  MACP0A1(prim,i,j,k,RHO) = bsq/BSQORHOBND;
-		  MACP0A1(prim,i,j,k,UU) = bsq/BSQOUBND;
-		}
-		//*** the below already done ***
-		//else {
-		//  //if velocity points into the star, outflow density and internal energy
-		//  MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
-		//  MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
-		//}
-	      }
+	      pl=U1; 
+	      get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+	      set_den_vel( MAC(prim,i,j,k), MAC(prim,i,j,k), dirprim[pl], ptrgeom[pl], ptrrgeom[pl] );
 	    }
 	  }//end else ispstag
 	  
@@ -360,6 +311,70 @@ int bound_x1dn_nssurface(
   return(0);
 }
 
+int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, struct of_geom *ptrgeom, struct of_geom *ptrrgeom )
+{
+  int i=ptrgeom->i, j=ptrgeom->j, k=ptrgeom->k;
+  int ri=ptrrgeom->i, rj=ptrrgeom->j, rk=ptrrgeom->k;
+  FTYPE vpar;
+  FTYPE BSQORHOBND = FRACBSQORHO*BSQORHOLIMIT;
+  FTYPE BSQOUBND = FRACBSQOU*BSQOULIMIT;
+  FTYPE thetapc;
+  FTYPE rucon[NPR];
+  FTYPE *rprim = MAC(prim,ri,rj,rk);
+  FTYPE V[NPR];
+  FTYPE bsq;
+  extern FTYPE global_vpar0;
+  
+  bl_coord_ijk(i, j, k, dirprim, V);
+  
+  //compute radial 4-velocity in reference cell
+  pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
+  
+  //always do this to avoid noise on switching
+  if( 1 || rucon[1] > 0 ){
+    //compute parallel velocity in reference cell
+    compute_vpar(rprim, ptrgeom, &vpar);
+    
+    //if u^r > 0, fix vpar in ghost cells to preselected value
+    thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
+    
+    //SASMARK: only aligned dipole!!
+    if( fabs(V[2]) < thetapc || fabs(V[2]-M_PI) < thetapc ){
+      //outflow from the polar cap
+      vpar = global_vpar0;
+    }
+    else if(rucon[1] > 0){
+      vpar = 0.0;
+    } //else leave it as it is
+    
+    //set velocity due to magnetic field rotation + sliding down the field with vpar = global_vpar0
+    set_vel_stataxi( ptrgeom, get_omegaf_code(t,dt,steppart), vpar, pr );
+    
+    //set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
+    //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
+    set_vpar(vpar, ptrgeom, pr);
+    
+    if( rucon[1] > 0 ) {
+      //now that velocity is set, can compute bsq
+      if( bsq_calc(pr, ptrgeom, &bsq) >= 1 ) { 
+	FAILSTATEMENT("bounds.tools.c:set_den_vel()", "bsq_calc()", 2);
+      }
+      
+      //set rho and u consistent with density floor
+      pr[RHO] = bsq/BSQORHOBND;
+      pr[UU]  = bsq/BSQOUBND;
+    }
+    //*** the below already done ***
+    //else {
+    //  //if velocity points into the star, outflow density and internal energy
+    //  MACP0A1(prim,i,j,k,RHO) = MACP0A1(prim,ri,rj,rk,RHO);
+    //  MACP0A1(prim,i,j,k,UU) = MACP0A1(prim,ri,rj,rk,UU);
+    //}
+  }
+  
+  return(0);
+  
+}
 
 // X1UP FIXEDUSINGPANALYTIC
 //

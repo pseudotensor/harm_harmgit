@@ -363,9 +363,59 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
-
-
 int set_face1dn( FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time )
 {
+  int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, struct of_geom *ptrgeom, struct of_geom *ptrrgeom );
+  int i, j, k, pl;
+  FTYPE prface[NPR];
+  FTYPE bsq;
+  FTYPE BSQORHOBND = FRACBSQORHO*BSQORHOLIMIT;
+  FTYPE BSQOUBND = FRACBSQOU*BSQOULIMIT;
+  struct of_geom geom;
+  struct of_geom *ptrgeom = &geom;
+  struct of_geom rgeom;
+  struct of_geom *ptrrgeom = &rgeom;
+
+  //only 1st direction (radial) and inner radial boundary
+  if(dir != 1 || totalsize[1] != 0 || mycpupos[1] != 0) {
+    return(0);
+  }
+  
+  i=0;
+  
+  COMPFULLLOOPP1_23{
+    // loop over faces: FACE1
+    // only faces of active cells since only those matter for evolution
+    if( j >= 0 && j <= N2-1 && k >= 0 && k <= N3-1 ){
+      //average left and right interpolated primitives to get a single face primitive
+      PALLLOOP(pl) {
+	prface[pl] = 0.5*(MACP1A0(pl_ct,dir,i,j,k)[pl]+MACP1A0(pr_ct,dir,i,j,k)[pl]);
+      }
+      get_geometry(i, j, k, FACE1, ptrgeom);
+      get_geometry(i, j, k, CENT, ptrrgeom);
+      
+      set_den_vel( prface, pr, FACE1, ptrgeom, ptrrgeom );
+      PALLLOOP(pl) {
+	MACP1A0(pl_ct,dir,i,j,k)[pl] = MACP1A0(pr_ct,dir,i,j,k)[pl] = prface[pl];
+      }
+    }
+  }
   return(0);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
