@@ -341,24 +341,38 @@ FTYPE *rotate_around_z(FTYPE *Vin, FTYPE alpha, FTYPE *Vout)
   return(0);
 }
 
-FTYPE *spc2mag(FTYPE *Vspc, FTYPE *Vmag)
+FTYPE *convert_mag2spc(FTYPE *Vmag, FTYPE *Vspc)
+{
+  FTYPE *convert_mag_spc(FTYPE *Vin, FTYPE *Vout, FTYPE is_forward);
+  return( convert_mag_spc(Vmag, Vspc, 1) );
+}
+
+FTYPE *convert_spc2mag(FTYPE *Vspc, FTYPE *Vmag)
+{
+  FTYPE *convert_mag_spc(FTYPE *Vin, FTYPE *Vout, FTYPE is_forward);
+  return( convert_mag_spc(Vspc, Vmag, 0) );	
+}
+	   
+	 
+FTYPE *convert_mag_spc(FTYPE *Vin, FTYPE *Vout, FTYPE is_forward)
 {
   FTYPE *rotate_around_y(FTYPE *Vin, FTYPE alpha, FTYPE *Vout);
   FTYPE *rotate_around_z(FTYPE *Vin, FTYPE alpha, FTYPE *Vout);
   FTYPE alpha_y, alpha_z;
   FTYPE current_time;
+  FTYPE sign_val = (is_forward)?(1):(-1);
 
   current_time = t + (steppart==1) * dt;
+  
+  //rotate FORWARD/BACK in time first (hence plus/minus sign)
   alpha_z=get_omegaf_phys(t, dt, steppart) * current_time;
+  rotate_around_z(Vin,sign_val*alpha_z,Vout);
+  
+  //then, tilt/UNtilt the dipole (hence plus/minus sign)
   alpha_y=get_ns_alpha();
-  
-  //rotate BACK in time first (hence minus sign)
-  rotate_around_z(Vspc,-alpha_z,Vmag);
-  
-  //then, UNtilt the dipole (hence minus sign)
-  rotate_around_y(Vmag,-alpha_y,Vmag);
+  rotate_around_y(Vout,sign_val * alpha_y,Vout);
 
-  return(Vmag);
+  return(Vout);
 }
 
 int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, struct of_geom *ptrgeom, struct of_geom *ptrrgeom )
