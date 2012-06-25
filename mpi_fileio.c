@@ -1036,7 +1036,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
 
-      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3*(long long int)sizeofdatatype;
       
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1058,7 +1058,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
 
-      sizeofmemory = (long long int)N1*(long long int)N2;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)sizeofdatatype;
       
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1076,7 +1076,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[0] = totalsize[1];
 
-      sizeofmemory = (long long int)N1;
+      sizeofmemory = (long long int)N1*(long long int)sizeofdatatype;
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
@@ -1091,7 +1091,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[0] = 1;
 
-      sizeofmemory = 1;
+      sizeofmemory = 1*(long long int)sizeofdatatype;
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
