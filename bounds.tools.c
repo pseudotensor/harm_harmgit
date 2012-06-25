@@ -311,6 +311,56 @@ int bound_x1dn_nssurface(
   return(0);
 }
 
+
+FTYPE *rotate_around_y(FTYPE *Vin, FTYPE alpha, FTYPE *Vout)
+{
+  ///Returns x, y, z of the rotated vector"""
+  FTYPE r = Vin[1], th = Vin[2], ph = Vin[3];
+  FTYPE xp, yp;
+
+  //flip the sign so tilt in the right direction
+  alpha = -alpha;
+  
+  Vout[0] = Vin[0]; //time is the same
+  Vout[1] = Vin[1]; //radius is the same
+  //theta transform
+  Vout[2] = cos(th)*cos(alpha)+sin(th)*cos(ph)*sin(alpha);
+  xp = r*(-cos(th)*sin(alpha)+sin(th)*cos(ph)*cos(alpha));
+  yp = r*sin(th)*sin(ph);
+  //compute phi
+  Vout[3] = atan2(yp,xp);
+  return(Vout);
+}
+
+FTYPE *rotate_around_z(FTYPE *Vin, FTYPE alpha, FTYPE *Vout)
+{
+  Vout[0] = Vin[0];
+  Vout[1] = Vin[1];
+  Vout[2] = Vin[2];
+  Vout[3] = Vin[3] + alpha;
+  return(0);
+}
+
+FTYPE *spc2mag(FTYPE *Vspc, FTYPE *Vmag)
+{
+  FTYPE *rotate_around_y(FTYPE *Vin, FTYPE alpha, FTYPE *Vout);
+  FTYPE *rotate_around_z(FTYPE *Vin, FTYPE alpha, FTYPE *Vout);
+  FTYPE alpha_y, alpha_z;
+  FTYPE current_time;
+
+  current_time = t + (steppart==1) * dt;
+  alpha_z=get_omegaf_phys(t, dt, steppart) * current_time;
+  alpha_y=get_ns_alpha();
+  
+  //rotate BACK in time first (hence minus sign)
+  rotate_around_z(Vspc,-alpha_z,Vmag);
+  
+  //then, UNtilt the dipole (hence minus sign)
+  rotate_around_y(Vmag,-alpha_y,Vmag);
+
+  return(Vmag);
+}
+
 int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, struct of_geom *ptrgeom, struct of_geom *ptrrgeom )
 {
   int i=ptrgeom->i, j=ptrgeom->j, k=ptrgeom->k;
