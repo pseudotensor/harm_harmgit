@@ -481,12 +481,12 @@ int init(int *argc, char **argv[])
   // Final things done whether fresh run or restart run
   //
   //////////////////
-#if(ANALYTICMEMORY&&(RESTARTMODE==0||USERESTARTFORPANALYTIC==1)) //SASMARK: don't do this when restarting since analytic solution is already computed above inside a call to init_grid_post_set_grid() 
-  // copy over initial solution as analytic solution
-  // NEEDED FOR BOUND in case uses panalytic
-  // Should be done before any changes in grid due to grid sectioning so that analytic variables set over all grid rather than limited range.  Then expansion of grid uses those analytical values.
-  copy_prim2panalytic(GLOBALPOINT(pglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstagglobal),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatglobal),GLOBALPOINT(Bhatanalytic));
-#endif
+  if(ANALYTICMEMORY&&(RESTARTMODE==0||USERESTARTFORPANALYTIC==1)){ //SASMARK: don't do this when restarting since analytic solution is already computed above inside a call to init_grid_post_set_grid() 
+    // copy over initial solution as analytic solution
+    // NEEDED FOR BOUND in case uses panalytic
+    // Should be done before any changes in grid due to grid sectioning so that analytic variables set over all grid rather than limited range.  Then expansion of grid uses those analytical values.
+    copy_prim2panalytic(GLOBALPOINT(pglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstagglobal),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatglobal),GLOBALPOINT(Bhatanalytic));
+  }
 
 
   // redo grid positions using actual gridding (not full grid just because was doing inits before)
