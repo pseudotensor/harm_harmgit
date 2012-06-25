@@ -1040,7 +1040,9 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 #endif
   
   
-#if( PROBLEMTYPE == NSTAR )
+#if( WHICHPROBLEM == NSTAR && 0 )
+  //ensure that VEL4 field velocity is zero (so that the only motion is
+  //parallel to field lines)
   //compute parallel velocity (to the poloidal field) of a ZAMO
   compute_vpar(pr, ptrgeom, &vpar);
   //set_vpar(global_vpar0, ptrgeom, pr);
