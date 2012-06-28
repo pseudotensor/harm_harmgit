@@ -2137,6 +2137,16 @@ void check_bnd_num(void)
   }
 
 
+  if(ALLOWMETRICROT==1 && (CONNAXISYMM==1 || DOMIXTHETAPHI==0)){
+    dualfprintf(fail_file,"Generally must set CONNAXISYMM==0 and DOMIXTHETAPHI==1 if ALLOWMETRICROT==1 -- only special cases would override this.\n");
+    myexit(2467346463);
+  }
+
+
+
+
+
+
 
   // external checks
   parainitchecks();

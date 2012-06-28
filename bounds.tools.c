@@ -3169,15 +3169,15 @@ int polesmooth(int whichx2,
   //
   //////////////////////
   if (whichx2==X2DN) {
-    j0 = -POLESMOOTH; //starting from this j
-    rj = POLESMOOTH;  //until this j
+    j0 = -POLESMOOTH; //starting from this j including this j
+    rj = POLESMOOTH;  //until this j but not including this j
     dj = 1;
     //    stopj=rj+1; // can also average-out j=rj
     stopj=rj;
   }
   else{
-    j0 = N2-1+POLESMOOTH;  //starting from this j
-    rj = N2-1-POLESMOOTH; //until this j
+    j0 = N2-1+POLESMOOTH;  //starting from this j including this j
+    rj = N2-1-POLESMOOTH; //until this j but not including this j
     dj = -1;
     //    stopj=rj-1; // can also average-out j=rj
     stopj=rj;

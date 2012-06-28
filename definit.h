@@ -24,13 +24,13 @@
 #define ACCURATESINCOS 1
 
 // whether to try entropy inversion if hot fails
-#define HOT2ENTROPY 0
+#define HOT2ENTROPY 1
 
 // whether to try cold inversion if hot fails
-#define HOT2COLD 0
+#define HOT2COLD 1
 
 // whether to try cold inversion if entropy fails
-#define ENTROPY2COLD 0
+#define ENTROPY2COLD 1
 
 
 // *NUMBER* OF DIMENSIONS FOR COMPUTATION
@@ -76,7 +76,7 @@
 
 // whether to do a2c during c2e
 // see interpline.c
-#define MERGEDC2EA2CMETHODMA 1
+#define MERGEDC2EA2CMETHODMA 0
 #define MERGEDC2EA2CMETHODEM 0
 #define MERGEDC2EA2CMETHOD (MERGEDC2EA2CMETHODMA || MERGEDC2EA2CMETHODEM)
 
@@ -355,6 +355,7 @@
 #else
 #define DOMIXTHETAPHI 0 // choice
 #endif
+// careful not to use DOMIXTHETAPHI in .h files since init.h might change it.
 
 
 

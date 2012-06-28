@@ -56,6 +56,8 @@ if [ $CUE_HOST_PROMPT = kraken ]; then
     export MPICH_MAX_SHORT_MSG_SIZE=64000
 #[356] MPICH PtlEQPoll error (PTL_EQ_DROPPED): An event was dropped on the UNEX EQ handle.  #Try increasing the value of env var MPICH_PTL_UNEX_EVENTS (cur size is 20480).                                    
     export MPICH_PTL_UNEX_EVENTS=100000
+    export MPICH_PTL_OTHER_EVENTS=400000
+    
     
 fi
 

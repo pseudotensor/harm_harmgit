@@ -60,6 +60,12 @@ static FTYPE rdiskend;
 static FTYPE jetnu;
 static FTYPE x10;
 static FTYPE x20;
+#define USESJETLOGHOVERR 1
+#if(USESJETLOGHOVERR)
+static FTYPE torusrmax; // was extern and original located in init.sashatorus.c, but should be inverted as now is so extern is in init.sashatorus.c.
+#endif
+static FTYPE torusrmax_loc;
+
 
 
 // for defcoord=JET6COORDS
@@ -509,6 +515,12 @@ void set_coord_parms_deps(int defcoordlocal)
     //distance after which the disk grid collimates to merge with the jet grid
     //should be roughly outer edge of the disk
     rdiskend = global_rdiskend;
+#if(USESJETLOGHOVERR)
+    torusrmax_loc = torusrmax;
+#else
+    torusrmax_loc = 0.; //if not used, fill with dummy value
+#endif
+
 
     /////////////////////
     //PHI GRID SETUP
@@ -627,7 +639,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,jetnu,x10,x20);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,torusrmax_loc,jetnu,x10,x20);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
@@ -725,8 +737,8 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == SJETCOORDS) {
 	fscanf(in,HEADER9IN,&npow,&r1jet,&njet,&r0grid,&r0jet,&rjetend,&rsjet,&Qjet,&fracphi);
-	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&jetnu);
-        fscanf(in,HEADER2IN,&x10,&x20);
+	fscanf(in,HEADER9IN,&npow2,&cpow2,&rbr,&x1br,&fracdisk,&fracjet,&r0disk,&rdiskend,&torusrmax_loc);
+        fscanf(in,HEADER3IN,&jetnu,&x10,&x20);
       }
       else if (defcoordlocal == JET6COORDS) {
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
@@ -843,6 +855,7 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&fracjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&r0disk, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rdiskend, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&torusrmax_loc, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&jetnu, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x10, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x20, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1480,9 +1493,16 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
     FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
     FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
     FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df );
+    FTYPE thetaofx2(FTYPE x2, FTYPE ror0nu);
     FTYPE  fac, faker, ror0nu;
     FTYPE fakerdisk, fakerjet;
+    FTYPE rbeforedisk, rinsidedisk, rinsidediskmax, rafterdisk;
     
+#define DOIMPROVEJETCOORDS 1
+#if(DOIMPROVEJETCOORDS)
+    FTYPE ror0nudisk, ror0nujet, thetadisk, thetajet;
+#endif
+
     V[0] = X[0];
 
     theexp = npow*X[1];
@@ -1506,30 +1526,66 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 
     //faker = fac*V[1] + (1 - fac)*limlin(V[1],r0disk,0.5*r0disk,r0disk)*minlin(V[1],rdiskend,0.5*rdiskend,r0disk)/r0disk - rsjet*Rin;
     
-    fakerdisk = mins( V[1], r0disk, 0.5*r0disk ) 
-        * maxs( 1, 1 + (V[1]-rdiskend)*r0jet/(rjetend*r0disk), 0.5*rdiskend*r0jet/(rjetend*r0disk) );
+    rbeforedisk = mins( V[1], r0disk, 0.5*r0disk );
+#if(USESJETLOGHOVERR)
+    //rinsidedisk = 1 for r < torusrmax_loc and increases logarithmically while r <= rdiskend, after which it  
+    //levels off to the value = rinsidediskmax
+    rinsidedisk = pow( 1. + 0.5*log10(mins(maxs(1,V[1]/torusrmax_loc,0.5),rdiskend/torusrmax_loc,0.5*rdiskend/torusrmax_loc)), 2./jetnu );
+    rinsidediskmax = pow( 1. + 0.5*log10(rdiskend/torusrmax_loc), 2./jetnu);
+#else
+    rinsidedisk = 1.;
+    rinsidediskmax = 1.;
+#endif
+    rafterdisk = maxs( 1, 1 + (V[1]-rdiskend)*r0jet/(rjetend*r0disk*rinsidediskmax), 0.5*rdiskend*r0jet/(rjetend*r0disk*rinsidediskmax) );
+    
+    fakerdisk = rbeforedisk * rinsidedisk * rafterdisk;
     
     fakerjet = mins( V[1], r0jet, 0.5*r0jet ) * maxs( 1, V[1]/rjetend, 0.5 );
     
+#if( DOIMPROVEJETCOORDS )
+    ror0nudisk = pow( (fakerdisk - rsjet*Rin)/r0grid, jetnu/2 );
+    ror0nujet = pow( (fakerjet - rsjet*Rin)/r0grid, jetnu/2 );
+    thetadisk = thetaofx2( X[2], ror0nudisk );
+    thetajet = thetaofx2( X[2], ror0nujet );
+    V[2] = fac*thetajet + (1 - fac)*thetadisk; 
+#else
     faker = fac*fakerjet + (1 - fac)*fakerdisk - rsjet*Rin;
-    
     ror0nu = pow( faker/r0grid, jetnu/2 );
+    V[2] = thetaofx2( X[2], ror0nu );
+#endif
+  
+  
+  
 
-    if( X[2] < -0.5 ) {
-      V[2] = 0       + atan( tan((X[2]+1)*M_PI_2l)/ror0nu );
-    }
-    else if( X[2] >  0.5 ) {
-      V[2] = M_PI    + atan( tan((X[2]-1)*M_PI_2l)/ror0nu );
-    }
-    else {
-      V[2] = M_PI_2l + atan( tan(X[2]*M_PI_2l)*ror0nu );
-    }
+#else
+    //if((1+X[2])/2.<0.5){
+    //  V[2] = M_PI * (1+X[2])/2. + ((1. - hslope) / 2.) * mysin(2. * M_PI * (1+X[2])/2.);
+    //}
+    //else{
+    //  //      V[2] = 0.5*M_PI + M_PI * fabs(X[2]-0.5) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-X[2])));
+    //  V[2] = M_PI - (M_PI * (1.0-(1+X[2])/2.)) + ((1. - hslope) / 2.) * (-mysin(2. * M_PI * (1.0-(1+X[2])/2.)));
+    //}
+    V[2] = M_PI_2l * (1.0+ X[2]); 
 #endif
 
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
 }
 
+FTYPE thetaofx2(FTYPE x2, FTYPE ror0nu)
+{
+  FTYPE theta;
+  if( x2 < -0.5 ) {
+    theta = 0       + atan( tan((x2+1)*M_PI_2l)/ror0nu );
+  }
+  else if( x2 >  0.5 ) {
+    theta = M_PI    + atan( tan((x2-1)*M_PI_2l)/ror0nu );
+  }
+  else {
+    theta = M_PI_2l + atan( tan(x2*M_PI_2l)*ror0nu );
+  }
+  return(theta);
+}  
 // Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
 // i.e. Just take d(bl-coord)/d(ksp uniform coord)
 // e.g. dr/dx1 d\theta/dx2
@@ -2386,7 +2442,7 @@ void set_points()
   // fabs() used since only ever used as absolute value
   DLOOPA(jj) Diffx[jj] = fabs(endx[jj] - startx[jj]);
 
-  //  DLOOPA(jj) stderrfprintf("jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
+  //  DLOOPA(jj) fprintf(stderr,"jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
 
 
 }
@@ -2423,7 +2479,7 @@ FTYPE setRin(int ihor)
 
   ihoradjust=((FTYPE)ihor)+ADJUSTFRACT; // can't have grid edge exactly on horizon due to ucon_calc()
 
-  //  stderrfprintf("ihoradjust = %21.15g\n",ihoradjust);
+  //  fprintf(stderr,"ihoradjust = %21.15g\n",ihoradjust);
 
   if(defcoord == LOGRSINTH){
     ftemp=ihoradjust/(FTYPE)totalsize[1];
@@ -3445,19 +3501,16 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   
   *ismirrored = 0;
   
+  if( Xout[2] > 0. ) {
+    Xout[2] = -Xout[2];
+    *ismirrored = 1-*ismirrored;
+  }    
+
   //now force -1 < Xout[2] < 0
   if( Xout[2] < -1. ) {
     Xout[2] = -2. - Xout[2];
-    *ismirrored = 1;
+    *ismirrored = 1-*ismirrored;
   }
-  else if( Xout[2] > 1. ) {
-    Xout[2] -= 2.;
-    *ismirrored = 0;
-  }
-  else if( Xout[2] > 0. ) {
-    Xout[2] = -Xout[2];
-    *ismirrored = 1;
-  }    
 }
 
 FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )

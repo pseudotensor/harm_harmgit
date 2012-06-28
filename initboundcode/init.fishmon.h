@@ -171,6 +171,8 @@
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
+#undef DOMIXTHETAPHI
+#define DOMIXTHETAPHI 1
 #endif
 
 
