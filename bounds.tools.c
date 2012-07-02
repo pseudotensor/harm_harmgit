@@ -292,7 +292,7 @@ int bound_x1dn_nssurface(
 	      }
 	      pl=U1; 
 	      get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-	      set_den_vel( MAC(prim,i,j,k), MAC(prim,i,j,k), dirprim[pl], ptrgeom[pl], ptrrgeom[pl] );
+	      set_den_vel( MAC(prim,i,j,k), prim, dirprim[pl], ptrgeom[pl], ptrrgeom[pl] );
 	    }
 	  }//end else ispstag
 	  
@@ -395,12 +395,12 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   bl_coord_ijk(i, j, k, dirprim, V);
   
   //compute radial 4-velocity in reference cell
-  pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
+  //pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
   
   //compute parallel velocity in reference cell
-  compute_vpar(rprim, ptrgeom, &vpar);
+  //compute_vpar(rprim, ptrgeom, &vpar);
   
-  //if u^r > 0, fix vpar in ghost cells to preselected value
+  //fix vpar in polar cap's ghost cells to preselected value
   thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
   
   convert_spc2mag(V, Vmag);
