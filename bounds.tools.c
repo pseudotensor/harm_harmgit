@@ -385,11 +385,12 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE thetapc;
   FTYPE rucon[NPR];
   FTYPE *rprim = MAC(prim,ri,rj,rk);
-  FTYPE V[NPR], Vmag[NPR];
+  FTYPE V[NDIM], Vmag[NDIM];
   FTYPE bsq;
   FTYPE frac;
   extern FTYPE global_vpar0;
   FTYPE *convert_spc2mag(FTYPE *Vspc, FTYPE *Vmag);
+  FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
