@@ -324,7 +324,7 @@ FTYPE *rotate_around_y(FTYPE *Vin, FTYPE alpha, FTYPE *Vout)
   Vout[0] = Vin[0]; //time is the same
   Vout[1] = Vin[1]; //radius is the same
   //theta transform
-  Vout[2] = cos(th)*cos(alpha)+sin(th)*cos(ph)*sin(alpha);
+  Vout[2] = acos(cos(th)*cos(alpha)+sin(th)*cos(ph)*sin(alpha));
   xp = r*(-cos(th)*sin(alpha)+sin(th)*cos(ph)*cos(alpha));
   yp = r*sin(th)*sin(ph);
   //compute phi
@@ -391,6 +391,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   extern FTYPE global_vpar0;
   FTYPE *convert_spc2mag(FTYPE *Vspc, FTYPE *Vmag);
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
+  int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
