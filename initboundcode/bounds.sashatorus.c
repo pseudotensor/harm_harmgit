@@ -377,7 +377,7 @@ int set_face1dn( FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NST
   struct of_geom *ptrrgeom = &rgeom;
 
   //only 1st direction (radial) and inner radial boundary
-  if(dir != 1 || totalsize[1] != 0 || mycpupos[1] != 0) {
+  if(dir != 1 || totalsize[1] == 0 || mycpupos[1] != 0) {
     return(0);
   }
   
