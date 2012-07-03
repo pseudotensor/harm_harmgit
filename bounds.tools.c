@@ -379,7 +379,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
 {
   int i=ptrgeom->i, j=ptrgeom->j, k=ptrgeom->k;
   int ri=ptrrgeom->i, rj=ptrrgeom->j, rk=ptrrgeom->k;
-  FTYPE vpar;
+  FTYPE vpar, vpar_want, vpar_have;
   FTYPE BSQORHOBND = FRACBSQORHO*BSQORHOLIMIT;
   FTYPE BSQOUBND = FRACBSQOU*BSQOULIMIT;
   FTYPE thetapc;
@@ -392,14 +392,17 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE *convert_spc2mag(FTYPE *Vspc, FTYPE *Vmag);
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
+  int set_bc;
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
+  rprim = MAC(prim,ri,rj,rk);
+  
   //compute radial 4-velocity in reference cell
-  //pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
+  pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
   
   //compute parallel velocity in reference cell
-  //compute_vpar(rprim, ptrgeom, &vpar);
+  compute_vpar(rprim, ptrgeom, &vpar_have);
   
   //fix vpar in polar cap's ghost cells to preselected value
   thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
@@ -408,24 +411,44 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   frac  = Ftrgen( fabs(Vmag[2]),       thetapc, 1.1*thetapc, 1, 0 );
   frac += Ftrgen( fabs(M_PIl-Vmag[2]), thetapc, 1.1*thetapc, 1, 0 ); 
-  vpar  = frac * global_vpar0;
+  vpar_want  = frac * global_vpar0;
   
+  //set boundary conditions on densities (rho, u) and vpar only if 
+  //velocity points away from the star
+  set_bc = (vpar_have>0);
+  
+  if( set_bc ){
+    //if flow away from the surface of star, can force velocity to what we want
+    vpar = vpar_want;
+  }
+  else {
+    //if flow is into the star, cannot force velocity
+    vpar = vpar_have;
+  }
+  
+  //in any case, can force rotation of magnetic fields, so
   //set velocity due to magnetic field rotation + sliding down the field with vpar
   set_vel_stataxi( ptrgeom, get_omegaf_code(t,dt,steppart), vpar, pr );
   
-  //set vpar to what we want -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
+  //set vpar to what we want or have -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
   //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
   set_vpar(vpar, ptrgeom, pr);
   
-  //now that velocity is set, can compute bsq
-  if( bsq_calc(pr, ptrgeom, &bsq) >= 1 ) { 
-    FAILSTATEMENT("bounds.tools.c:set_den_vel()", "bsq_calc()", 2);
+  if( set_bc ){
+    //now that velocity is set, can compute bsq
+    if( bsq_calc(pr, ptrgeom, &bsq) >= 1 ) { 
+      FAILSTATEMENT("bounds.tools.c:set_den_vel()", "bsq_calc()", 2);
+    }
+    
+    //set rho and u consistent with density floor
+    pr[RHO] = bsq/BSQORHOBND;
+    pr[UU]  = bsq/BSQOUBND;
   }
-  
-  //set rho and u consistent with density floor
-  pr[RHO] = bsq/BSQORHOBND;
-  pr[UU]  = bsq/BSQOUBND;
-  
+  else {
+    //outflow rho and u
+    pr[RHO] = rprim[RHO];
+    pr[UU]  = rprim[UU];
+  }
   return(0);
   
 }
