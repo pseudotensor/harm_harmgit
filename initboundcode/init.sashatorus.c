@@ -123,7 +123,7 @@ int prepre_init_specific_init(void)
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
   t_transition = 1.;
-  global_vpar0 = 0.;
+  global_vpar0 = 0.9;
   
 #if(WHICHPROBLEM==NSTAR)
   global_dipole_alpha = 0 * M_PI / 180.;
@@ -217,7 +217,7 @@ int post_init_specific_init(void)
   //DODUMPDIAG=0; //=0 switches off all dumps (including floor dumps)
   
   t_transition = 1.;
-  global_vpar0 = 0.;
+  global_vpar0 = 0.9;
   
   BSQORHOLIMIT=FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=FLOORFACTOR*5*1E2; // was 1E3 but latest BC test had 1E4
