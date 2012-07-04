@@ -772,14 +772,16 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 	pr[UU] += du;
       }
     }
-    //compute parallel velocity component (along full B)
-    //compute_vpar(pr, ptrgeom, &vpar);
-    //damp parallel velocity component
-    //dvpar = - dt * b1 * vpar;
-    //update parallel velocity component
-    //vpar += dvpar;
-    //update parallel velocity component
-    //set_vpar(vpar, GAMMA_MAX, ptrgeom, pr);
+    if(pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
+      //compute parallel velocity component (along full B)
+      compute_vpar(pr, ptrgeom, &vpar);
+      //damp parallel velocity component
+      dvpar = - dt * b1 * vpar;
+      //update parallel velocity component
+      vpar += dvpar;
+      //update parallel velocity component
+      set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
+    }
   }
   return(0);
 }
