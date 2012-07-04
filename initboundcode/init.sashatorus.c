@@ -13,6 +13,7 @@
 
 #define MAXPASSPARMS 10
 #define FLOORFACTOR (4.)
+#define BSQOUPREFACT (5.)
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define GRBJET 1
@@ -220,8 +221,8 @@ int post_init_specific_init(void)
   global_vpar0 = 0.9;
   
   BSQORHOLIMIT=FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=FLOORFACTOR*5*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=FLOORFACTOR*5*1E2;
+  BSQOULIMIT=FLOORFACTOR*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=FLOORFACTOR*BSQOUPREFACT*1E2;
 
   
   if(funreturn!=0) return(funreturn);
@@ -494,8 +495,8 @@ int init_global(void)
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
   BSQORHOLIMIT=FRACBSQORHO*FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=FRACBSQOU*5*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=FRACBSQORHO*5*1E2;
+  BSQOULIMIT=FRACBSQOU*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=FRACBSQORHO*BSQOUPREFACT*1E2;
   RHOMIN = 1E-4;
   UUMIN = 1E-4;
 #elif(WHICHPROBLEM==GRBJET)
@@ -610,8 +611,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   extern void check_spc_singularities_user(void);
 
 //  BSQORHOLIMIT=FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-//  BSQOULIMIT=FLOORFACTOR*5*1E2; // was 1E3 but latest BC test had 1E4
-//  UORHOLIMIT=FLOORFACTOR*5*1E2;
+//  BSQOULIMIT=FLOORFACTOR*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
+//  UORHOLIMIT=FLOORFACTOR*BSQOUPREFACT*1E2;
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
 #if(MCOORD==KSCOORDS)
