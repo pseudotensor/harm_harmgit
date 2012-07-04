@@ -402,7 +402,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
   
   //compute parallel velocity in reference cell
-  compute_vpar(rprim, ptrgeom, &vpar_have);
+  compute_vpar(rprim, ptrrgeom, &vpar_have);
   
   //fix vpar in polar cap's ghost cells to preselected value
   thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
