@@ -428,7 +428,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   }
   else {
     //if flow is into the star, cannot force velocity
-    vpar = vpar_have;
+    vpar = 0; //vpar_have;
   }
   
   //in any case, can force rotation of magnetic fields, so
