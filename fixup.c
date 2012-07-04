@@ -747,7 +747,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   ph=V[3];
   
   FREEZE_BSQORHO = (FRACBSQORHO*FRACBSQORHO) * BSQORHOLIMIT/pow(r,2.);
-  FREEZE_BSQOU = (FRACBSQOU*FRACBSQOU) * BSQOULIMIT/pow(r,2.*gam);
+  FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT; ///pow(r,2.*gam);
   
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
