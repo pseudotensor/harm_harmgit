@@ -3052,7 +3052,7 @@ int set_vpar(FTYPE vpar, FTYPE gamma_max, struct of_geom *geom, FTYPE *pr)
     vpar = 0.0;
   }
   else if(vperp_sq+vpar*vpar>vmax_sq) {
-    vpar = sqrt(vmax_sq - vperp_sq);
+    vpar = sqrt(vmax_sq - vperp_sq) * sign(vpar);
   }
   //else leave vpar as it is
   
