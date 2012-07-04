@@ -421,7 +421,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   //set boundary conditions on densities (rho, u) and vpar only if 
   //velocity points away from the star
-  set_bc = (vpar_have>0);
+  set_bc = (rprim[U1]>0);
 
 //  if( !set_bc && ptrgeom->p == FACE1 ) {
 //    //don't attempt to set face values if flow is into the star
