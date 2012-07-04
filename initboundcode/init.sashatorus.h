@@ -435,7 +435,7 @@ struct Ccoordparams {
 #define FRACBSQORHO (0.5)
 
 #undef FRACBSQOU
-#define FRACBSQOU (0.05)
+#define FRACBSQOU (0.5)
 
 #undef VPARBND
 #define VPARBND (0.9)
