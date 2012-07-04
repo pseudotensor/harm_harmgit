@@ -445,7 +445,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   //set vpar to what we want or have -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
   //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
-  set_vpar(vpar, rgamma, ptrgeom, pr);
+  set_vpar(vpar, gammamax, ptrgeom, pr);
   
   if( set_bc ){
     //now that velocity is set, can compute bsq
