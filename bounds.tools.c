@@ -410,13 +410,14 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   compute_vpar(rprim, ptrrgeom, &vpar_have);
   
   //fix vpar in polar cap's ghost cells to preselected value
-  thetapc = sqrt(Rin * get_omegaf_phys(t,dt,steppart));
+  vphisurf = Rin * get_omegaf_phys(t,dt,steppart);
+  thetapc = sqrt(vphisurf);
   
   convert_spc2mag(V, Vmag);
   
   frac  = Ftrgen( fabs(Vmag[2]),       thetapc, 1.1*thetapc, 1, 0 );
   frac += Ftrgen( fabs(M_PIl-Vmag[2]), thetapc, 1.1*thetapc, 1, 0 ); 
-  vpar_want  = frac * global_vpar0;
+  vpar_want  = frac * global_vpar0 + (1.-frac)*vphisurf;
   
   //set boundary conditions on densities (rho, u) and vpar only if 
   //velocity points away from the star
