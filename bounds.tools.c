@@ -393,7 +393,8 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
   int set_bc;
-  FTYPE rgamma, rqsq;
+  FTYPE rgamma, rqsq, gammamax;
+  FTYPE vphisurf;
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
@@ -429,10 +430,12 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   if( set_bc ){
     //if flow away from the surface of star, can force velocity to what we want
     vpar = vpar_want;
+    gammamax = GAMMAMAX;
   }
   else {
     //if flow is into the star, cannot force velocity
     vpar = vpar_have;
+    gammamax = rgamma;
   }
   
   //in any case, can force rotation of magnetic fields, so
