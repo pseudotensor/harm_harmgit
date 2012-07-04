@@ -20,7 +20,7 @@ extern int dualfullfaraday_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *d
 
 extern int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf);
 
-extern int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr);
+extern int set_vpar(FTYPE vpar, FTYPE gamma_max, struct of_geom *geom, FTYPE *pr);
 extern int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar);
 
 

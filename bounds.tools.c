@@ -393,6 +393,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr);
   int set_bc;
+  FTYPE rgamma, rqsq;
   
   bl_coord_ijk(i, j, k, dirprim, V);
   
@@ -400,6 +401,9 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   //compute radial 4-velocity in reference cell
   pr2ucon(WHICHVEL, rprim, ptrrgeom, rucon);
+  
+  //compute gamma in ref. cell
+  gamma_calc(rprim, ptrrgeom, &rgamma, &rqsq);
   
   //compute parallel velocity in reference cell
   compute_vpar(rprim, ptrrgeom, &vpar_have);
@@ -417,10 +421,10 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   //velocity points away from the star
   set_bc = (vpar_have>0);
 
-  if( !set_bc && ptrgeom->p == FACE1 ) {
-    //don't attempt to set face values if flow is into the star
-    return(0);
-  }
+//  if( !set_bc && ptrgeom->p == FACE1 ) {
+//    //don't attempt to set face values if flow is into the star
+//    return(0);
+//  }
   
   if( set_bc ){
     //if flow away from the surface of star, can force velocity to what we want
@@ -428,7 +432,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   }
   else {
     //if flow is into the star, cannot force velocity
-    vpar = 0; //vpar_have;
+    vpar = vpar_have;
   }
   
   //in any case, can force rotation of magnetic fields, so
@@ -437,7 +441,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   //set vpar to what we want or have -- this is to ensure that the correct version of parallel velocity (w.r.t. drift velocity) is used
   //SASMARK: this sometimes leads to superluminal veloicities and hence code crashes
-  set_vpar(vpar, ptrgeom, pr);
+  set_vpar(vpar, rgamma, ptrgeom, pr);
   
   if( set_bc ){
     //now that velocity is set, can compute bsq

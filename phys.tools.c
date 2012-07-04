@@ -2969,7 +2969,7 @@ int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
 }
 
 //assumes pr contains WHICHVEL velocity
-int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
+int set_vpar(FTYPE vpar, FTYPE gamma_max, struct of_geom *geom, FTYPE *pr)
 {
   FTYPE Bccov[NDIM],Bccon[NPR];
   FTYPE vcon[NDIM],ucon[NDIM];
@@ -2979,6 +2979,8 @@ int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
   FTYPE Bsq;
   FTYPE absB;
   int j;
+  FTYPE gamma_perp, qsq_perp;
+  FTYPE vperp_sq, vmax_sq; 
   
   //////////////////////
   //
@@ -3038,6 +3040,21 @@ int set_vpar(FTYPE vpar, struct of_geom *geom, FTYPE *pr)
   SLOOPA(j) vpar_old_vec[j]  = vpar_old * Bccon[j] / absB;
   //vperp_old_vec^mu = v^mu - vpar_old_vec^mu  
   SLOOPA(j) vperp_old_vec[j] = vcon[j] - vpar_old_vec[j];
+
+  //compute gamma of vperp_old_vec
+  MYFUN(vcon2pr(WHICHVEL, vperp_old_vec, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+  gamma_calc(pr, geom, &gamma_perp, &qsq_perp);
+  
+  vperp_sq = qsq_perp/(1+qsq_perp);
+  vmax_sq = 1.-1./(gamma_max*gamma_max);
+  
+  if(vmax_sq <= vperp_sq){
+    vpar = 0.0;
+  }
+  else if(vperp_sq+vpar*vpar>vmax_sq) {
+    vpar = sqrt(vmax_sq - vperp_sq);
+  }
+  //else leave vpar as it is
   
   //////////////////////
   //
