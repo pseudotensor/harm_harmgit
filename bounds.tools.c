@@ -431,7 +431,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   if( set_bc ){
     //if flow away from the surface of star, can force velocity to what we want
     vpar = vpar_want;
-    gammamax = GAMMAMAX;
+    gammamax = 10;
   }
   else {
     //if flow is into the star, cannot force velocity
