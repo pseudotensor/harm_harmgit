@@ -417,7 +417,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   frac  = Ftrgen( fabs(Vmag[2]),       thetapc, 1.1*thetapc, 1, 0 );
   frac += Ftrgen( fabs(M_PIl-Vmag[2]), thetapc, 1.1*thetapc, 1, 0 ); 
-  vpar_want  = frac * global_vpar0 + (1.-frac)*vphisurf;
+  vpar_want  = frac * global_vpar0 + (1.-frac)*0;
   
   //set boundary conditions on densities (rho, u) and vpar only if 
   //velocity points away from the star
