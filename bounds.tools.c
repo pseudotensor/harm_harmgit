@@ -411,7 +411,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   
   //fix vpar in polar cap's ghost cells to preselected value
   vphisurf = Rin * get_omegaf_phys(t,dt,steppart);
-  thetapc = sqrt(vphisurf)*1.2;
+  thetapc = sqrt(vphisurf)*1.4;
   
   convert_spc2mag(V, Vmag);
   
