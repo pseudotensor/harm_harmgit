@@ -12,8 +12,8 @@
 
 
 #define MAXPASSPARMS 10
-#define FLOORFACTOR (8.)
-#define BSQOUPREFACT (2.5)
+#define FLOORFACTOR (1.)
+#define BSQOUPREFACT (5.)
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define GRBJET 1
