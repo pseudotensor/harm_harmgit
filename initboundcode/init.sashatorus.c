@@ -499,6 +499,15 @@ int init_global(void)
   UORHOLIMIT=FRACBSQORHO*BSQOUPREFACT*1E2;
   RHOMIN = 1E-4;
   UUMIN = 1E-4;
+  GAMMADAMP=50.0;
+  
+  if(DOEVOLVERHO){
+    // GODMARK -- unstable beyond about 25, but can sometimes get away with 1000
+    GAMMAMAX=100.0; // when we think gamma is just too high and may cause unstable flow, but solution is probably accurate.
+  }
+  else{
+    GAMMAMAX=2000.0;
+  }
 #elif(WHICHPROBLEM==GRBJET)
   BCtype[X1UP]=FIXEDOUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
