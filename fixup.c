@@ -796,7 +796,7 @@ FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi)
 // 0 = primitive (adds rho,u in comoving frame)
 // 1 = conserved but rho,u added in ZAMO frame
 // 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
-#define FIXUPTYPE 1
+#define FIXUPTYPE 0
 
 // finalstep==0 is non-accounting, finalstep==1 is accounting
 int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
