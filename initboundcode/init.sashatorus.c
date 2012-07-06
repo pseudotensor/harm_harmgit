@@ -495,8 +495,8 @@ int init_global(void)
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
   BSQORHOLIMIT=FRACBSQORHO*FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=FRACBSQOU*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=FRACBSQORHO*BSQOUPREFACT*1E2;
+  BSQOULIMIT=FRACBSQOU*FLOORFACTOR*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=FRACBSQOU*FLOORFACTOR*BSQOUPREFACT*1E2;
   RHOMIN = 1E-4;
   UUMIN = 1E-4;
   GAMMADAMP=50.0;
