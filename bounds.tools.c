@@ -385,7 +385,7 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE thetapc;
   FTYPE rucon[NPR];
   FTYPE *rprim = MAC(prim,ri,rj,rk);
-  FTYPE V[NDIM], Vmag[NDIM];
+  FTYPE V[NDIM], Vmag[NDIM], rV[NDIM];
   FTYPE bsq;
   FTYPE frac;
   extern FTYPE global_vpar0;
@@ -396,7 +396,8 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
   FTYPE rgamma, rqsq, gammamax;
   FTYPE vphisurf;
   
-  bl_coord_ijk(i, j, k, dirprim, V);
+  bl_coord_ijk(i, j, k, ptrgeom->p, V);
+  bl_coord_ijk(ri, rj, rk, ptrrgeom->p, rV);
   
   rprim = MAC(prim,ri,rj,rk);
   
@@ -454,13 +455,13 @@ int set_den_vel( FTYPE *pr, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int dirprim, s
     }
     
     //set rho and u consistent with density floor
-    pr[RHO] = bsq/BSQORHOBND;
-    pr[UU]  = bsq/BSQOUBND;
+    pr[RHO] = bsq/BSQORHOBND*pow(rV[1]/V[1],4.);
+    pr[UU]  = bsq/BSQOUBND*pow(rV[1]/V[1],4.*gam);
   }
   else {
     //outflow rho and u
-    pr[RHO] = rprim[RHO];
-    pr[UU]  = rprim[UU];
+    pr[RHO] = rprim[RHO]*pow(rV[1]/V[1],4.);
+    pr[UU]  = rprim[UU]*pow(rV[1]/V[1],4.*gam);
   }
   return(0);
   
