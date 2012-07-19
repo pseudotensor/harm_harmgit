@@ -127,17 +127,17 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
       // note we assume "i=0" is boundary cell to be fixed
       // This ensures divb=0, but may be inconsistent with code's treatement of true i=0 if doing OUTFLOW
       if(WITHINACTIVESTAGBNDSECTIONX1DN(i,j,k)){
-	pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX1DN(i,j,k)){
-	PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX1DN(i,j,k)){
-	PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
 	
@@ -175,17 +175,17 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
   if(ispstag){
     COMPFULLLOOP{
       if(WITHINACTIVESTAGBNDSECTIONX1UP(i,j,k)){
-	pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX1UP(i,j,k)){
-	PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX1UP(i,j,k)){
-	PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
 	
@@ -198,17 +198,17 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 
 // X1 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x1dn_outflow(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                       int *inboundloop,
+                       int *outboundloop,
+                       int *innormalloop,
+                       int *outnormalloop,
+                       int (*inoutlohi)[NUMUPDOWN][NDIM],
+                       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                       int *dosetbc,
+                       int enerregion,
+                       int *localenerpos
+                       )
 {
 
 
@@ -245,101 +245,101 @@ int bound_x1dn_outflow(
 
 
       if ( (totalsize[1]>1) && (mycpupos[1] <= horizoncpupos1)) { // now all CPUs inside CPU with horizon will be using this (GODMARK: reference value needs to be chosen somehow for CPUs not on active grid)
-	/* inner r boundary condition: u, just copy */
+        /* inner r boundary condition: u, just copy */
 
-	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	////////	LOOPX1dir{
+        OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+        ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+        OPENMPBCLOOPBLOCK{
+          OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
 
-	  ri=riin;
-	  rj=j;
-	  rk=k;
+          ri=riin;
+          rj=j;
+          rk=k;
 
 
 #if(HORIZONEXTRAP==0)
-	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+          PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
-	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	  }
+          LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
+            PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          }
 #elif(HORIZONEXTRAP==1)
-	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+          PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
+          LOOPBOUND1INSPECIAL{ // bound entire region inside non-evolved portion of grid
 
-	    PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-	    for(pl=RHO;pl<=UU;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
-	    }
-	    pl=U1;	    // treat U1 as special
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-	    for(pl=U2;pl<=U3;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
-	    }
-	    pl=B1; // treat B1 special
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
-	    for(pl=B2;pl<=B3;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
-	    }
-	    for(pl=B3+1;pl<NPRBOUND;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
-	    }
-	  }
+            for(pl=RHO;pl<=UU;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            }
+            pl=U1;	    // treat U1 as special
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+            for(pl=U2;pl<=U3;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+            }
+            pl=B1; // treat B1 special
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
+            for(pl=B2;pl<=B3;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+            }
+            for(pl=B3+1;pl<NPRBOUND;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
+            }
+          }
 #elif(HORIZONEXTRAP==2)
-	  get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
-	  rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
-	  LOOPBOUND1INSPECIAL{
-	    // set guess
-	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,k,pl);
-	    get_geometry(i, j, k, dirprim[0], ptrgeom[0]);	    
-	    rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
-	  }
+          get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
+          rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
+          LOOPBOUND1INSPECIAL{
+            // set guess
+            PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,k,pl);
+            get_geometry(i, j, k, dirprim[0], ptrgeom[0]);	    
+            rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
+          }
 #elif(HORIZONEXTRAP==3)
-	  extrapfunc(X1DN,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          extrapfunc(X1DN,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 #endif
 
 
 
 
-	  if(ispstag==0){
+          if(ispstag==0){
 
-	    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)){
-	      // GODMARK: assume all velocities at same location when doing inflow check
-	      LOOPBOUND1INSPECIAL{
+            if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)){
+              // GODMARK: assume all velocities at same location when doing inflow check
+              LOOPBOUND1INSPECIAL{
 #if(WHICHVEL==VEL4)
-		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
-		inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
+                get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+                inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
 #elif(WHICHVEL==VEL3)
-		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
-		inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
-		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+                get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+                inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
+                // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
-		if(jonchecks){
-		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
-		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
-		  if(failreturn){
-		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
-		  }
-		}
+                if(jonchecks){
+                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
+                  if(failreturn){
+                    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                  }
+                }
 #endif
 #elif(WHICHVEL==VELREL4)
-		get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
-		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
-		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
+                get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
+                inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+                if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
+                  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif	
-	      }
-	    } // end if not allowing inflow
-	  }
+              }
+            } // end if not allowing inflow
+          }
 
 
-	}// end 2 3
+        }// end 2 3
 
       }// end if mycpupos[1]==0
 
@@ -363,17 +363,17 @@ int bound_x1dn_outflow(
 
 // X1 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x1up_outflow(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                       int *inboundloop,
+                       int *outboundloop,
+                       int *innormalloop,
+                       int *outnormalloop,
+                       int (*inoutlohi)[NUMUPDOWN][NDIM],
+                       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                       int *dosetbc,
+                       int enerregion,
+                       int *localenerpos
+                       )
 {
 
 
@@ -413,103 +413,103 @@ int bound_x1up_outflow(
       if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
 
 
-	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	////////	LOOPX1dir{
+        OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+        ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+        OPENMPBCLOOPBLOCK{
+          OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
-	  ri=riout;
-	  rj=j;
-	  rk=k;
+          ri=riout;
+          rj=j;
+          rk=k;
 
 #if(OUTEREXTRAP==0)
-	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+          PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 #elif(OUTEREXTRAP==1)
-	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+          PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  LOOPBOUND1OUT{
-	    PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-	    for(pl=RHO;pl<=UU;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
-	    }
-	    pl=U1; // treat U1 as special
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
-	    for(pl=U2;pl<=U3;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-	    }
-	    pl=B1; // treat B1 special
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
-	    for(pl=B2;pl<=B3;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-	    }
-	    for(pl=B3+1;pl<NPRBOUND;pl++){
-	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
-	    }
-	  }
+          LOOPBOUND1OUT{
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+            for(pl=RHO;pl<=UU;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            }
+            pl=U1; // treat U1 as special
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
+            for(pl=U2;pl<=U3;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+            }
+            pl=B1; // treat B1 special
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            for(pl=B2;pl<=B3;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+            }
+            for(pl=B3+1;pl<NPRBOUND;pl++){
+              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            }
+          }
 #elif(OUTEREXTRAP==2)
-	  get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
-	  rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
-	  LOOPBOUND1OUT{
-	    // set guess
-	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
-	    get_geometry(i, j, k, dirprim[0], ptrgeom[0]);
-	    rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
-	  }
+          get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
+          rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
+          LOOPBOUND1OUT{
+            // set guess
+            PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
+            get_geometry(i, j, k, dirprim[0], ptrgeom[0]);
+            rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
+          }
 #elif(OUTEREXTRAP==3)
-	  extrapfunc(X1UP,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          extrapfunc(X1UP,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 #endif
 
 
 
 
 
-	  if(ispstag==0){
+          if(ispstag==0){
 
-	    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)){
+            if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)){
 
-	      LOOPBOUND1OUT{
+              LOOPBOUND1OUT{
 #if(WHICHVEL==VEL4)
-		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
-		inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+                get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+                inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
 #elif(WHICHVEL==VEL3)
-		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
-		inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+                get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+                inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+                // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
-		if(jonchecks){
-		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
-		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
-		  if(failreturn){
-		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
-		  }
-		}
+                if(jonchecks){
+                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
+                  if(failreturn){
+                    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                  }
+                }
 #endif
 #elif(WHICHVEL==VELREL4)
-		get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
-		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
-		//	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
-		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
-		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
-		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
-		//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-		//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+                get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
+                // 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+                // 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+                //	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
+                inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+                // 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+                // 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+                if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
+                  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
+                //	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+                //	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
 #endif	
-	      }// end over i
-	    }// end if not allowing inflow
+              }// end over i
+            }// end if not allowing inflow
 
-	  }
+          }
 
 
 
-	}// end 2 3
+        }// end 2 3
       }// end if mycpu is correct
 
     }
@@ -529,17 +529,17 @@ int bound_x1up_outflow(
 
 // X1 inner R0SING
 int bound_x1dn_sym(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                   int *inboundloop,
+                   int *outboundloop,
+                   int *innormalloop,
+                   int *outnormalloop,
+                   int (*inoutlohi)[NUMUPDOWN][NDIM],
+                   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                   int *dosetbc,
+                   int enerregion,
+                   int *localenerpos
+                   )
 {
 
 
@@ -566,61 +566,61 @@ int bound_x1dn_sym(
 
       /* inner radial BC (preserves u^t rho and u) */
       if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) {
-	////////	LOOPX1dir{
+        ////////	LOOPX1dir{
 
-	{ // start block
-	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	  ////////	LOOPX1dir{
+        { // start block
+          OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+          ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
-	    rj=j;
-	    rk=k;
-	    LOOPBOUND1IN{
-	      PBOUNDLOOP(pliter,pl){
-		// SECTIONMARK: assume r=0 singularity can't move
-		if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ) ri = -i; // FACE1 values
-		else ri=-i-1; // "CENT" values for purposes of this BC
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	      }// over pl
-	    }// over boundary zones
-	  }
-	}// end block
+            rj=j;
+            rk=k;
+            LOOPBOUND1IN{
+              PBOUNDLOOP(pliter,pl){
+                // SECTIONMARK: assume r=0 singularity can't move
+                if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ) ri = -i; // FACE1 values
+                else ri=-i-1; // "CENT" values for purposes of this BC
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+              }// over pl
+            }// over boundary zones
+          }
+        }// end block
 
 
 
-	if((BCtype[X1DN]==R0SING)||(BCtype[X1DN]==ASYMM) ){
+        if((BCtype[X1DN]==R0SING)||(BCtype[X1DN]==ASYMM) ){
 
-	  /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
-	  ////	LOOPX1dir{
+          /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
+          ////	LOOPX1dir{
 
-	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-	  ////////	LOOPX1dir{
+          OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+          ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
-	    // SECTIONMARK: assume r=0 singularity can't move
-	    i=0;
-	    PBOUNDLOOP(pliter,pl){
-	      if(pl==U1 || pl==B1){
-		if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
-		  MACP0A1(prim,i,j,k,pl) = 0.0;
-		}
-	      }// else don't do this pl
-	    } // end over pl
+            // SECTIONMARK: assume r=0 singularity can't move
+            i=0;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==U1 || pl==B1){
+                if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
+                  MACP0A1(prim,i,j,k,pl) = 0.0;
+                }
+              }// else don't do this pl
+            } // end over pl
 	
-	    LOOPBOUND1IN {
-	      PBOUNDLOOP(pliter,pl){
-		if(pl==U1 || pl==B1){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		}// end if right pl
-	      } // end over pl
-	    } // end over boundary zones
-	  }// end loop 23
-	}
+            LOOPBOUND1IN {
+              PBOUNDLOOP(pliter,pl){
+                if(pl==U1 || pl==B1){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                }// end if right pl
+              } // end over pl
+            } // end over boundary zones
+          }// end loop 23
+        }
       } //end if inner CPU wall
     }
     else{
@@ -648,18 +648,18 @@ int bound_x1dn_sym(
 // Flip B3 because RBhat3\propto \theta (as growing enclosed current from pole) gives Bhat3\propto constant near pole and so Bhat3\propto \theta B3 and so B3\propto \constant 1/\theta.
 // So can either interpolation (e.g.) \detg B3 and \detg v3 and obtain higher-order accuracy near pole.  Or can flip sign of B3 and v3 and keep more stable but still no diffusive term that otherwise B3 and v3 would have due to their sign change across the pole.
 int bound_x2dn_polaraxis_full3d(
-				int whichcall,
-				int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-				int *inboundloop,
-				int *outboundloop,
-				int *innormalloop,
-				int *outnormalloop,
-				int (*inoutlohi)[NUMUPDOWN][NDIM],
-				int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-				int *dosetbc,
-				int enerregion,
-				int *localenerpos
-		       )
+                                int whichcall,
+                                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                                int *inboundloop,
+                                int *outboundloop,
+                                int *innormalloop,
+                                int *outnormalloop,
+                                int (*inoutlohi)[NUMUPDOWN][NDIM],
+                                int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                                int *dosetbc,
+                                int enerregion,
+                                int *localenerpos
+                                )
 {
 
 
@@ -686,73 +686,73 @@ int bound_x2dn_polaraxis_full3d(
       /* inner polar BC (preserves u^t rho and u) */
       if ( (totalsize[2]>1) && (mycpupos[2] == 0) ) {
 
-	if(ncpux3==1){
-	  // if ncpux3>1 then this is handled by MPI
-	  ////////	  LOOPX2dir{
+        if(ncpux3==1){
+          // if ncpux3>1 then this is handled by MPI
+          ////////	  LOOPX2dir{
 
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
-	    ri=i;
-	    rk=(k+(int)N3/2)%N3;
-	    LOOPBOUND2IN{
-	      PBOUNDLOOP(pliter,pl){
-		// assume polar axis can't move SECTIONMARK
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = -j; // FACE2 values
-		else rj=-j-1; // "CENT" values for purposes of this BC
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+            ri=i;
+            rk=(k+(int)N3/2)%N3;
+            LOOPBOUND2IN{
+              PBOUNDLOOP(pliter,pl){
+                // assume polar axis can't move SECTIONMARK
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = -j; // FACE2 values
+                else rj=-j-1; // "CENT" values for purposes of this BC
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
-		// flip sign
-		if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		}
+                // flip sign
+                if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                }
 
 #if(DEBUGINOUTLOOPS)		
-		dualfprintf(fail_file,"INNER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
-		if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
-		  dualfprintf(fail_file,"INNER pole1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-		}
+                dualfprintf(fail_file,"INNER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
+                if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
+                  dualfprintf(fail_file,"INNER pole1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+                }
 #endif
 
 
-	      }// end over pl
-	    }// end over j
+              }// end over pl
+            }// end over j
 
-	    // also do j=0 (this just makes B2 @ FACE2-type location at j=0 at k and rk the same in correct sense)
-	    j=0;
-	    PBOUNDLOOP(pliter,pl){
-	      if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
-		// only do j=0 if at pole exactly
-		rj = -j; // FACE2 values
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+            // also do j=0 (this just makes B2 @ FACE2-type location at j=0 at k and rk the same in correct sense)
+            j=0;
+            PBOUNDLOOP(pliter,pl){
+              if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
+                // only do j=0 if at pole exactly
+                rj = -j; // FACE2 values
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  
-		// flip sign
-		if(pl==U2 || pl==B2){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		}
+                // flip sign
+                if(pl==U2 || pl==B2){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                }
 
 #if(DEBUGINOUTLOOPS)		
-		dualfprintf(fail_file,"INNER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
-		if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
-		  dualfprintf(fail_file,"INNER pole2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-		}
+                dualfprintf(fail_file,"INNER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
+                if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
+                  dualfprintf(fail_file,"INNER pole2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+                }
 #endif
 
 
-	      }
-	    }
+              }
+            }
 
-	  }// end over i,k
-	}// end if ncpux3==1
+          }// end over i,k
+        }// end if ncpux3==1
 
-	// SUPERGODMARK: continue to use for now
-	// only do poledeath() after MPI call (i.e. whichcall==2)
-	if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	  if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	}
+        // SUPERGODMARK: continue to use for now
+        // only do poledeath() after MPI call (i.e. whichcall==2)
+        if(BCtype[X2DN]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
+          if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        }
 
 
       }//end if inner CPU wall
@@ -784,17 +784,17 @@ int bound_x2dn_polaraxis_full3d(
 
 // X2 inner POLARAXIS
 int bound_x2dn_polaraxis(
-			 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-			 int *inboundloop,
-			 int *outboundloop,
-			 int *innormalloop,
-			 int *outnormalloop,
-			 int (*inoutlohi)[NUMUPDOWN][NDIM],
-			 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-			 int *dosetbc,
-			 int enerregion,
-			 int *localenerpos
-		       )
+                         int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                         int *inboundloop,
+                         int *outboundloop,
+                         int *innormalloop,
+                         int *outnormalloop,
+                         int (*inoutlohi)[NUMUPDOWN][NDIM],
+                         int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                         int *dosetbc,
+                         int enerregion,
+                         int *localenerpos
+                         )
 {
 
 
@@ -820,66 +820,66 @@ int bound_x2dn_polaraxis(
 
       if (  (totalsize[2]>1) && (mycpupos[2] == 0) ){
 
-	/////      LOOPX2dir{
+        /////      LOOPX2dir{
 
-	{// block region
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+        {// block region
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 	
-	    ri=i;
-	    rk=k;
-	    LOOPBOUND2IN{
-	      PBOUNDLOOP(pliter,pl){
-		// assume polar axis can't move SECTIONMARK
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = -j; // FACE2 values
-		else rj=-j-1; // "CENT" values for purposes of this BC
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	      }
-	    }
-	  }
-	}// end blocked region
+            ri=i;
+            rk=k;
+            LOOPBOUND2IN{
+              PBOUNDLOOP(pliter,pl){
+                // assume polar axis can't move SECTIONMARK
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = -j; // FACE2 values
+                else rj=-j-1; // "CENT" values for purposes of this BC
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+              }
+            }
+          }
+        }// end blocked region
 
 
-	if((BCtype[X2DN]==POLARAXIS)||(BCtype[X2DN]==ASYMM) ){
+        if((BCtype[X2DN]==POLARAXIS)||(BCtype[X2DN]==ASYMM) ){
 
-	  /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
-	  ////	LOOPX2dir{
+          /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
+          ////	LOOPX2dir{
 
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	    // assume polar axis can't move SECTIONMARK
-	    j=0;
-	    PBOUNDLOOP(pliter,pl){
-	      if(pl==U2 || pl==B2){
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
-		  MACP0A1(prim,i,j,k,pl) = 0.0;
-		}
-	      }// else don't do this pl
-	    } // end over pl
+            // assume polar axis can't move SECTIONMARK
+            j=0;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==U2 || pl==B2){
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
+                  MACP0A1(prim,i,j,k,pl) = 0.0;
+                }
+              }// else don't do this pl
+            } // end over pl
 	
 	
-	    LOOPBOUND2IN {
-	      PBOUNDLOOP(pliter,pl){
-		if(pl==U2 || pl==B2){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		} // end if right pl
-	      } // end over pl
-	    } // end over boundary cells
-	  }// end loop 13
+            LOOPBOUND2IN {
+              PBOUNDLOOP(pliter,pl){
+                if(pl==U2 || pl==B2){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                } // end if right pl
+              } // end over pl
+            } // end over boundary cells
+          }// end loop 13
 
 
-	}// end if polar or asym condition
+        }// end if polar or asym condition
 
-	if(BCtype[X2DN]==POLARAXIS){
-	  if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	  if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	}
+        if(BCtype[X2DN]==POLARAXIS){
+          if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          if(POLESMOOTH) polesmooth(X2DN,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        }
 	
       }// end if inner CPU wall
 
@@ -904,18 +904,18 @@ int bound_x2dn_polaraxis(
 
 // X2 outer POLARAXIS full3d
 int bound_x2up_polaraxis_full3d(
-				int whichcall,
-				int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-				int *inboundloop,
-				int *outboundloop,
-				int *innormalloop,
-				int *outnormalloop,
-				int (*inoutlohi)[NUMUPDOWN][NDIM],
-				int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-				int *dosetbc,
-				int enerregion,
-				int *localenerpos
-		       )
+                                int whichcall,
+                                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                                int *inboundloop,
+                                int *outboundloop,
+                                int *innormalloop,
+                                int *outnormalloop,
+                                int (*inoutlohi)[NUMUPDOWN][NDIM],
+                                int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                                int *dosetbc,
+                                int enerregion,
+                                int *localenerpos
+                                )
 {
 
 
@@ -945,73 +945,73 @@ int bound_x2up_polaraxis_full3d(
       if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
 
-	if(ncpux3==1){
-	  // if ncpux3>1 then this is handled by MPI
+        if(ncpux3==1){
+          // if ncpux3>1 then this is handled by MPI
 
-	  //////	  LOOPX2dir{
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+          //////	  LOOPX2dir{
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	    ri=i;
-	    rk=(k+(int)N3/2)%N3;
-	    LOOPBOUND2OUT{
-	      PBOUNDLOOP(pliter,pl){
-		// assume polar axis can't move SECTIONMARK
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = 2*N2-j; // FACE2 values
-		else rj=2*(N2-1)-j+1; // "CENT" values for purposes of this BC
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+            ri=i;
+            rk=(k+(int)N3/2)%N3;
+            LOOPBOUND2OUT{
+              PBOUNDLOOP(pliter,pl){
+                // assume polar axis can't move SECTIONMARK
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = 2*N2-j; // FACE2 values
+                else rj=2*(N2-1)-j+1; // "CENT" values for purposes of this BC
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
-		// flip sign
-		if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		}
+                // flip sign
+                if(pl==U2 || pl==B2 || pl==U3 || pl==B3){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                }
 
 #if(DEBUGINOUTLOOPS)		
-		dualfprintf(fail_file,"OUTER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
-		if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
-		  dualfprintf(fail_file,"OUTER pole1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-		}
+                dualfprintf(fail_file,"OUTER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
+                if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
+                  dualfprintf(fail_file,"OUTER pole1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+                }
 #endif
 
 
-	      }// end over pl
-	    }// end over j
+              }// end over pl
+            }// end over j
 
-	    // also do j=N2 (this just makes B2 @ FACE2-type location at j=N2 at k and rk the same in correct sense)
-	    j=N2;
-	    PBOUNDLOOP(pliter,pl){
-	      if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
-		// only do j=0 if at pole exactly
-		rj = 2*N2-j; // FACE2 values
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+            // also do j=N2 (this just makes B2 @ FACE2-type location at j=N2 at k and rk the same in correct sense)
+            j=N2;
+            PBOUNDLOOP(pliter,pl){
+              if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
+                // only do j=0 if at pole exactly
+                rj = 2*N2-j; // FACE2 values
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  
-		// flip sign
-		if(pl==U2 || pl==B2){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		}
+                // flip sign
+                if(pl==U2 || pl==B2){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                }
 
 #if(DEBUGINOUTLOOPS)		
-		dualfprintf(fail_file,"OUTER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
-		if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
-		  dualfprintf(fail_file,"OUTER pole2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-		}
+                dualfprintf(fail_file,"OUTER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
+                if(!isfinite(MACP0A1(prim,ri,rj,rk,pl))){
+                  dualfprintf(fail_file,"OUTER pole2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+                }
 #endif
 
-	      }
-	    }
+              }
+            }
 
-	  }// end over i,k
-	}// end if ncpux3==1
+          }// end over i,k
+        }// end if ncpux3==1
 
-	// SUPERGODMARK: continue to use for now
-	// only do poledeath() after MPI call (i.e. whichcall==2)
-	if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
-	  if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	  if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	}
+        // SUPERGODMARK: continue to use for now
+        // only do poledeath() after MPI call (i.e. whichcall==2)
+        if(BCtype[X2UP]==POLARAXIS && (whichcall==2 && ncpux3>1 || whichcall==1 && ncpux3==1) ){
+          if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        }
 
       }// end if outer CPU wall
 
@@ -1033,17 +1033,17 @@ int bound_x2up_polaraxis_full3d(
 
 // X2 outer POLARAXIS
 int bound_x2up_polaraxis(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                         int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                         int *inboundloop,
+                         int *outboundloop,
+                         int *innormalloop,
+                         int *outnormalloop,
+                         int (*inoutlohi)[NUMUPDOWN][NDIM],
+                         int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                         int *dosetbc,
+                         int enerregion,
+                         int *localenerpos
+                         )
 {
 
 
@@ -1074,62 +1074,62 @@ int bound_x2up_polaraxis(
 
       if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
-	//////      LOOPX2dir{
-	{// block region
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+        //////      LOOPX2dir{
+        {// block region
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	    ri=i;
-	    rk=k;
-	    LOOPBOUND2OUT{
-	      PBOUNDLOOP(pliter,pl){
-		// assume polar axis can't move SECTIONMARK
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = 2*N2-j; // FACE2 values
-		else rj=2*(N2-1)-j+1; // "CENT" values for purposes of this BC
-		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	      }
-	    }
-	  }
-	}
+            ri=i;
+            rk=k;
+            LOOPBOUND2OUT{
+              PBOUNDLOOP(pliter,pl){
+                // assume polar axis can't move SECTIONMARK
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ) rj = 2*N2-j; // FACE2 values
+                else rj=2*(N2-1)-j+1; // "CENT" values for purposes of this BC
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+              }
+            }
+          }
+        }
     
-	if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==ASYMM) ){
+        if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==ASYMM) ){
 
-	  /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
-	  //////	LOOPX2dir{
-	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+          /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
+          //////	LOOPX2dir{
+          OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	  OPENMPBCLOOPBLOCK{
-	    OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+          OPENMPBCLOOPBLOCK{
+            OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	    j=N2;
-	    PBOUNDLOOP(pliter,pl){
-	      if(pl==U2 || pl==B2){
-		if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
-		  MACP0A1(prim,i,j,k,pl) = 0.0;
-		}
-	      }// else don't do this pl
-	    } // end over pl
+            j=N2;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==U2 || pl==B2){
+                if(dirprim[pl]==FACE2 || dirprim[pl]==CORN3 || dirprim[pl]==CORN1 || dirprim[pl]==CORNT ){
+                  MACP0A1(prim,i,j,k,pl) = 0.0;
+                }
+              }// else don't do this pl
+            } // end over pl
 
-	    LOOPBOUND2OUT {
-	      PBOUNDLOOP(pliter,pl){
-		if(pl==U2 || pl==B2){
-		  MACP0A1(prim,i,j,k,pl) *= -1.;
-		} // end if right pl
-	      } // end over pl
-	    } // end over bondary cells
-	  }// end loop 13
+            LOOPBOUND2OUT {
+              PBOUNDLOOP(pliter,pl){
+                if(pl==U2 || pl==B2){
+                  MACP0A1(prim,i,j,k,pl) *= -1.;
+                } // end if right pl
+              } // end over pl
+            } // end over bondary cells
+          }// end loop 13
 
-	}// end if reflecting type conditions
+        }// end if reflecting type conditions
 
 
-	if(BCtype[X2UP]==POLARAXIS){
-	  if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	  if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-	}
+        if(BCtype[X2UP]==POLARAXIS){
+          if(POLEDEATH || POLEGAMMADEATH)   poledeath(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+          if(POLESMOOTH) polesmooth(X2UP,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        }
       
       }// end if mycpupos[2]==ncpux2-1
       
@@ -1152,17 +1152,17 @@ int bound_x2up_polaraxis(
 
 // X3 inner periodic
 int bound_x3_periodic(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                      int *inboundloop,
+                      int *outboundloop,
+                      int *innormalloop,
+                      int *outnormalloop,
+                      int (*inoutlohi)[NUMUPDOWN][NDIM],
+                      int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                      int *dosetbc,
+                      int enerregion,
+                      int *localenerpos
+                      )
 {
 
 
@@ -1188,49 +1188,49 @@ int bound_x3_periodic(
 
       // periodic x3
       if ( (totalsize[3]>1) && (mycpupos[3] == 0)&&(mycpupos[3] == ncpux3 - 1) ) {
-	// just copy from one side to another
+        // just copy from one side to another
 
-	////	LOOPX3dir{
+        ////	LOOPX3dir{
 
-	OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
+        OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
+        OPENMPBCLOOPBLOCK{
+          OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
 
-	  // copy from upper side to lower boundary zones
-	  ri=i;
-	  rj=j;
-	  rk=rkout;
-	  LOOPBOUND3IN PBOUNDLOOP(pliter,pl){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+1+k,pl);
+          // copy from upper side to lower boundary zones
+          ri=i;
+          rj=j;
+          rk=rkout;
+          LOOPBOUND3IN PBOUNDLOOP(pliter,pl){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+1+k,pl);
 
 	    
 #if(DEBUGINOUTLOOPS)		
-	    dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+SHIFT3+k,i,j,k);
-	    if(!isfinite(MACP0A1(prim,ri,rj,rk+SHIFT3+k,pl))){
-	      dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-	    }
+            dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+SHIFT3+k,i,j,k);
+            if(!isfinite(MACP0A1(prim,ri,rj,rk+SHIFT3+k,pl))){
+              dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+            }
 #endif
 
-	  }
+          }
 
-	  // copy from lower side to upper boundary zones
-	  ri=i;
-	  rj=j;
-	  rk=rkin;
-	  LOOPBOUND3OUT PBOUNDLOOP(pliter,pl){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
+          // copy from lower side to upper boundary zones
+          ri=i;
+          rj=j;
+          rk=rkin;
+          LOOPBOUND3OUT PBOUNDLOOP(pliter,pl){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
 
 #if(DEBUGINOUTLOOPS)		
-	    dualfprintf(fail_file,"OUTER X3: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+(k-N3),i,j,k);
-	    if(!isfinite(MACP0A1(prim,ri,rj,rk+(k-N3),pl))){
-	      dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
-	    }
+            dualfprintf(fail_file,"OUTER X3: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+(k-N3),i,j,k);
+            if(!isfinite(MACP0A1(prim,ri,rj,rk+(k-N3),pl))){
+              dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+            }
 #endif
 
-	  }
-	}
+          }
+        }
       }
 
 
@@ -1251,17 +1251,17 @@ int bound_x3_periodic(
 
 // X1 inner R0SING
 int bound_x1dn_r0singfixinterior(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                                 int *inboundloop,
+                                 int *outboundloop,
+                                 int *innormalloop,
+                                 int *outnormalloop,
+                                 int (*inoutlohi)[NUMUPDOWN][NDIM],
+                                 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                                 int *dosetbc,
+                                 int enerregion,
+                                 int *localenerpos
+                                 )
 {
   int i,j,k,pl,pliter;
   int locali1,globali1;
@@ -1319,46 +1319,46 @@ int bound_x1dn_r0singfixinterior(
 
       LOOPF{
 
-	rj=j;
-	rk=k;
+        rj=j;
+        rk=k;
       
-	//      if(WITHINENERREGION(enerpos,i,j,k)){
-	// then do nothing
-	//      }
-	//else{
-	// assume horizon on negative side of "i" so don't modify right side of "i" that happens to be in the outer radial boundary
+        //      if(WITHINENERREGION(enerpos,i,j,k)){
+        // then do nothing
+        //      }
+        //else{
+        // assume horizon on negative side of "i" so don't modify right side of "i" that happens to be in the outer radial boundary
 
-	if(i < globali1-startpos[1]){
-	  // then inside horizon
+        if(i < globali1-startpos[1]){
+          // then inside horizon
 	  
-	  // set primitives to be trivialized
+          // set primitives to be trivialized
  
-	  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri1,rj,rk,pl);
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri1,rj,rk,pl);
 
-	  // reset pflag in case old failure inside horizon
+          // reset pflag in case old failure inside horizon
 #if(UTOPRIMADJUST==UTOPRIMAVG)
-	  GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+          GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
 #endif
 
 
-	  if(ispstag==0){
-	    // making it small artificially forces timestep to be small since timestep still limited within fake boundary region
-	    //	  MACP0A1(prim,i,j,k,RHO) = SMALL;
-	    // assumed acting on relative 4-velocity that stays physical no matter what
-	    if(MACP0A1(prim,i,j,k,U1)>0) MACP0A1(prim,i,j,k,U1)=-0.5*(fabs(MACP0A1(prim,ri1,rj,rk,U1))+fabs(MACP0A1(prim,ri1+1,rj,rk,U1)));
-	  }
-	}
+          if(ispstag==0){
+            // making it small artificially forces timestep to be small since timestep still limited within fake boundary region
+            //	  MACP0A1(prim,i,j,k,RHO) = SMALL;
+            // assumed acting on relative 4-velocity that stays physical no matter what
+            if(MACP0A1(prim,i,j,k,U1)>0) MACP0A1(prim,i,j,k,U1)=-0.5*(fabs(MACP0A1(prim,ri1,rj,rk,U1))+fabs(MACP0A1(prim,ri1+1,rj,rk,U1)));
+          }
+        }
 
-	if(0 && i < globali2-startpos[1]){
-	  // then on or inside horizon and inside N1BND more grid cells for interpolation
+        if(0 && i < globali2-startpos[1]){
+          // then on or inside horizon and inside N1BND more grid cells for interpolation
 	  
-	  if(ispstag==0){
-	    // assumed acting on relative 4-velocity that stays physical no matter what
-	    if(MACP0A1(prim,i,j,k,U1)>0) MACP0A1(prim,i,j,k,U1)=-0.5*(fabs(MACP0A1(prim,ri1,rj,rk,U1))+fabs(MACP0A1(prim,ri1+1,rj,rk,U1)));
-	  }
+          if(ispstag==0){
+            // assumed acting on relative 4-velocity that stays physical no matter what
+            if(MACP0A1(prim,i,j,k,U1)>0) MACP0A1(prim,i,j,k,U1)=-0.5*(fabs(MACP0A1(prim,ri1,rj,rk,U1))+fabs(MACP0A1(prim,ri1+1,rj,rk,U1)));
+          }
 
-	}
-	//}
+        }
+        //}
       }
 
 
@@ -1382,17 +1382,17 @@ int bound_x1dn_r0singfixinterior(
 
 // Check that boundary conditions were set properly
 int bound_checks1(
-		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-		       int *inboundloop,
-		       int *outboundloop,
-		       int *innormalloop,
-		       int *outnormalloop,
-		       int (*inoutlohi)[NUMUPDOWN][NDIM],
-		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-		       int *dosetbc,
-		       int enerregion,
-		       int *localenerpos
-		       )
+                  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                  int *inboundloop,
+                  int *outboundloop,
+                  int *innormalloop,
+                  int *outnormalloop,
+                  int (*inoutlohi)[NUMUPDOWN][NDIM],
+                  int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                  int *dosetbc,
+                  int enerregion,
+                  int *localenerpos
+                  )
 {
   int i,j,k,pl,pliter;
   int locali1,globali1;
@@ -1417,13 +1417,13 @@ int bound_checks1(
       // Can't use FULLLOOP since different boundary types go different depths into boundary cells
       //      PALLLOOP(pl){
       PBOUNDLOOP(pliter,pl){
-	// for staggered field, avoid inner-most cell since isn't needed or computed and so can be NaN
-	if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
-	  if(!finite(MACP0A1(prim,i,j,k,pl))){
-	    trigger++;
-	    dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	  }
-	}
+        // for staggered field, avoid inner-most cell since isn't needed or computed and so can be NaN
+        if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
+          if(!finite(MACP0A1(prim,i,j,k,pl))){
+            trigger++;
+            dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+          }
+        }
       }
     }
   }
@@ -1431,10 +1431,10 @@ int bound_checks1(
     ZSLOOP(inoutlohi[POINTDOWN][POINTDOWN][1], inoutlohi[POINTUP][POINTUP][1],inoutlohi[POINTDOWN][POINTDOWN][2], inoutlohi[POINTUP][POINTUP][2],inoutlohi[POINTDOWN][POINTDOWN][3], inoutlohi[POINTUP][POINTUP][3]){
       //      PALLLOOP(pl){
       PBOUNDLOOP(pliter,pl){
-	if(!finite(MACP0A1(prim,i,j,k,pl))){
-	  trigger++;
-	  dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	}
+        if(!finite(MACP0A1(prim,i,j,k,pl))){
+          trigger++;
+          dualfprintf(fail_file,"whichdir=%d ispstag=%d trigger=%d :: BC didn't set properly: #1: i=%d j=%d k=%d ti=%d tj=%d tk=%d pl=%d\n",whichdir,ispstag,trigger,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+        }
       }
     }
   }
@@ -1456,17 +1456,17 @@ int bound_checks1(
 // boundary = X1DN or X1UP
 // assume if ispstag==1 then only doing field part -- otherwise logic would get more complicated
 int extrapfunc(int boundary, int j,int k,
-	       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-	       int *inboundloop,
-	       int *outboundloop,
-	       int *innormalloop,
-	       int *outnormalloop,
-	       int (*inoutlohi)[NUMUPDOWN][NDIM],
-	       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-	       int *dosetbc,
-	       int enerregion,
-	       int *localenerpos
-	       )
+               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+               int *inboundloop,
+               int *outboundloop,
+               int *innormalloop,
+               int *outnormalloop,
+               int (*inoutlohi)[NUMUPDOWN][NDIM],
+               int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+               int *dosetbc,
+               int enerregion,
+               int *localenerpos
+               )
 {
   int i,pl,pliter;
   int ri,rj,rk;
@@ -1757,18 +1757,18 @@ int extrapfunc(int boundary, int j,int k,
     if(ispstag==0){
 
 
-    ///////////////////////////////
-    //
-    // Densities and variables at higher than B3
-    //
-    ///////////////////////////////
+      ///////////////////////////////
+      //
+      // Densities and variables at higher than B3
+      //
+      ///////////////////////////////
 
-    /// did assume densities roughly constant (good for disk, not as good for polar region of mostly radial Bondi-like flow)
-    // now focus on accuracy for polar regions to maintain stability (avoid dissipation terms doing funny things)
+      /// did assume densities roughly constant (good for disk, not as good for polar region of mostly radial Bondi-like flow)
+      // now focus on accuracy for polar regions to maintain stability (avoid dissipation terms doing funny things)
 
-    // using below Bondi-like scaling with Mdot scaling for ucon leads to space-like answers  Near BH densities should become roughly constant, and this doesn't lead to problems, so use instead
-    //	  pl=RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*pow(V[pl][1]/Vr[pl][1],-3.0/2.0);
-    //	  pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*pow(V[pl][1]/Vr[pl][1],-5.0/2.0);
+      // using below Bondi-like scaling with Mdot scaling for ucon leads to space-like answers  Near BH densities should become roughly constant, and this doesn't lead to problems, so use instead
+      //	  pl=RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*pow(V[pl][1]/Vr[pl][1],-3.0/2.0);
+      //	  pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*pow(V[pl][1]/Vr[pl][1],-5.0/2.0);
 
 #define POWEREXTRAFRAC (0.1)
 #define POWERRATIO (1.0+POWEREXTRAFRAC) // ratio of densities not allow to go bigger than this when using dqlogdensity
@@ -1776,36 +1776,36 @@ int extrapfunc(int boundary, int j,int k,
 
 #if(1)
       for(pl=0;pl<NPRBOUND;pl++){
-	if(pl<=UU || pl>B3){
+        if(pl<=UU || pl>B3){
 
-	  // only use linear if exponentiation causes growth of value, not decreasion
-	  ftemp = exp(-signdq*dqlogdensity[pl]) - POWERRATIO;
+          // only use linear if exponentiation causes growth of value, not decreasion
+          ftemp = exp(-signdq*dqlogdensity[pl]) - POWERRATIO;
 
-	  // limit interpolation strength to fixed log-slope
-	  if(ftemp>=0.0) mydqlog=log(POWERRATIO)/(-signdq);
-	  else mydqlog = dqlogdensity[pl];
+          // limit interpolation strength to fixed log-slope
+          if(ftemp>=0.0) mydqlog=log(POWERRATIO)/(-signdq);
+          else mydqlog = dqlogdensity[pl];
 
-	  // log extrap (very speculative and can cause problems if used alone when (say) density is super low on ri+1 and relatively high on ri, then i will be super huge
-	  // should use this when values that go into slope are much different, or equally when dqlogdensity is large
-	  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + mydqlog*(i-ri));
+          // log extrap (very speculative and can cause problems if used alone when (say) density is super low on ri+1 and relatively high on ri, then i will be super huge
+          // should use this when values that go into slope are much different, or equally when dqlogdensity is large
+          MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + mydqlog*(i-ri));
 
-	  // DEBUG:
-	  //	  dualfprintf(fail_file,"i=%d j=%d pl=%d ftemp=%21.15g linearvalue=%21.15g expvalue=%21.15g final=%21.15g\n",i,j,pl,ftemp,linearvalue,expvalue,MACP0A1(prim,i,j,k,pl));
+          // DEBUG:
+          //	  dualfprintf(fail_file,"i=%d j=%d pl=%d ftemp=%21.15g linearvalue=%21.15g expvalue=%21.15g final=%21.15g\n",i,j,pl,ftemp,linearvalue,expvalue,MACP0A1(prim,i,j,k,pl));
 
-	}
+        }
       }
 
 #else
 
       // override using OLD WAY for densities
 #if(0)
-    // linear extrap (leads to negative values, which can cause problems with flux inversions)
-    pl=RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
-    pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      // linear extrap (leads to negative values, which can cause problems with flux inversions)
+      pl=RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
 #else
-    // log extrap
-    pl=RHO; MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
-    pl=UU;  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      // log extrap
+      pl=RHO; MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      pl=UU;  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
 #endif
 
 #endif
@@ -1855,14 +1855,14 @@ int extrapfunc(int boundary, int j,int k,
       /////////////////
 
       for(itervphi=0;itervphi<=NUMITERVPHI;itervphi++){
-	// assume v^\phi \sim \Omega doesn't change much
-	primtemp[U3] = uconref[3]/uconref[TT]*ucontouse[TT];
-	// get real ucon with real u^t
-	ucon_calc_4vel_bothut(primtemp, ptrgeom[U1], ucon, ucon2, others);
-	// now get primitive velocity (choosing 4-velocity branch closest to reference velocity)
-	//	    if(fabs(ucon[TT]-uconref[TT])<fabs(ucon2[TT]-uconref[TT])) ucontouse=ucon;
-	//	    else ucontouse=ucon2;
-	ucontouse=ucon;
+        // assume v^\phi \sim \Omega doesn't change much
+        primtemp[U3] = uconref[3]/uconref[TT]*ucontouse[TT];
+        // get real ucon with real u^t
+        ucon_calc_4vel_bothut(primtemp, ptrgeom[U1], ucon, ucon2, others);
+        // now get primitive velocity (choosing 4-velocity branch closest to reference velocity)
+        //	    if(fabs(ucon[TT]-uconref[TT])<fabs(ucon2[TT]-uconref[TT])) ucontouse=ucon;
+        //	    else ucontouse=ucon2;
+        ucontouse=ucon;
       }
 
       /////////////////////////
@@ -1893,24 +1893,24 @@ int extrapfunc(int boundary, int j,int k,
 
       for(pl=U1;pl<=U3;pl++){
 
-	// switch away from using near-BC value as reference if going bad since don't want to exaggerate it
-	ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri2,rj,rk,pl)*yfrac;
-	// interpolate
-	MACP0A1(prim,i,j,k,pl) = (ftemp + dq[pl]*(i-ri));
+        // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
+        ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri2,rj,rk,pl)*yfrac;
+        // interpolate
+        MACP0A1(prim,i,j,k,pl) = (ftemp + dq[pl]*(i-ri));
 
 
-	//	dualfprintf(fail_file,"i=%d j=%d k=%d pl=%d ftemp=%21.15g yfrac=%21.15g dq[pl]=%21.15g i=%d ri=%d ri2=%d ri3=%d rj=%d rk=%d :: prim=%21.15g pri2=%21.15g pri3=%21.15g\n",i,j,k,pl,ftemp,yfrac,dq[pl],i,ri,ri2,ri3,rj,rk,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,ri2,rj,rk,pl),MACP0A1(prim,ri3,rj,rk,pl)); // CHANGINGMARK
+        //	dualfprintf(fail_file,"i=%d j=%d k=%d pl=%d ftemp=%21.15g yfrac=%21.15g dq[pl]=%21.15g i=%d ri=%d ri2=%d ri3=%d rj=%d rk=%d :: prim=%21.15g pri2=%21.15g pri3=%21.15g\n",i,j,k,pl,ftemp,yfrac,dq[pl],i,ri,ri2,ri3,rj,rk,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,ri2,rj,rk,pl),MACP0A1(prim,ri3,rj,rk,pl)); // CHANGINGMARK
 
 
 
-	if(V[pl][RR]<RADIUSTOAVOIDRADIALSUCK){
-	  // only do this if near a BH
-	  // also use yfrac to reset on-grid value since apparently it's going bad
-	  // this also keeps interpolation scheme passing through to boundary and so avoiding unwanted dissipation that can evolve flow away from sanity
-	  // linear extrap
-	  // GODMARK: Should probably make sure that u^r doesn't change sign?!
-	  MACP0A1(prim,ri,rj,rk,pl) = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + (MACP0A1(prim,ri2,rj,rk,pl) + dq[pl]*(ri-(ri2)))*yfrac;
-	}
+        if(V[pl][RR]<RADIUSTOAVOIDRADIALSUCK){
+          // only do this if near a BH
+          // also use yfrac to reset on-grid value since apparently it's going bad
+          // this also keeps interpolation scheme passing through to boundary and so avoiding unwanted dissipation that can evolve flow away from sanity
+          // linear extrap
+          // GODMARK: Should probably make sure that u^r doesn't change sign?!
+          MACP0A1(prim,ri,rj,rk,pl) = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + (MACP0A1(prim,ri2,rj,rk,pl) + dq[pl]*(ri-(ri2)))*yfrac;
+        }
 
       }// end over velocities
 
@@ -1928,10 +1928,10 @@ int extrapfunc(int boundary, int j,int k,
       // linear extrap
       for(pl=U1;pl<=U3;pl++){
 
-	// switch away from using near-BC value as reference if going bad since don't want to exaggerate it
-	ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri3,rj,rk,pl)*yfrac;
-	// interpolate
-	MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
+        // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
+        ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri3,rj,rk,pl)*yfrac;
+        // interpolate
+        MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
 
       }
 
@@ -1940,9 +1940,9 @@ int extrapfunc(int boundary, int j,int k,
       // linear extrap
       for(pl=U1;pl<=U3;pl++){
 
-	ftemp = MACP0A1(prim,ri,rj,rk,pl);
-	// interpolate
-	MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
+        ftemp = MACP0A1(prim,ri,rj,rk,pl);
+        // interpolate
+        MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
 
       }
 
@@ -2044,21 +2044,21 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
 
 static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, int rk, int pl)
 {
-    FTYPE dxdxp[NDIM][NDIM];
-    int dir;
+  FTYPE dxdxp[NDIM][NDIM];
+  int dir;
 
 #if(PRODUCTION==0)
-    if ( dir < U2 || dir > B3 ) {
+  if ( dir < U2 || dir > B3 ) {
 	dualfprintf( fail_file, "dir cannot be < U2 or > B3 in MACP0A1mod()\n" );
 	exit(3232);
-    }
+  }
 #endif
     
-    dir = 1 + (pl-U1)%3; //direction that corresponds to pl (e.g., 2 for U2 or B2); assumes contiguous ordering of pl: <..>,U1,U2,U3,B1,B2,B3,<..>
+  dir = 1 + (pl-U1)%3; //direction that corresponds to pl (e.g., 2 for U2 or B2); assumes contiguous ordering of pl: <..>,U1,U2,U3,B1,B2,B3,<..>
     
-    dxdxprim_ijk(ri, rj, rk, CENT, dxdxp);
+  dxdxprim_ijk(ri, rj, rk, CENT, dxdxp);
     
-    return( MACP0A1(prim,ri,rj,rk,pl) * dxdxp[dir][dir] );   
+  return( MACP0A1(prim,ri,rj,rk,pl) * dxdxp[dir][dir] );   
 }
 #endif
 
@@ -2074,16 +2074,16 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
 // interpolate across pole to remove numerical errors there
 // Note that this function is done over all zones
 int poledeath(int whichx2,
-	      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-	      int *inboundloop,
-	      int *outboundloop,
-	      int *innormalloop,
-	      int *outnormalloop,
-	      int (*inoutlohi)[NUMUPDOWN][NDIM],
-	      int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-	      int *dosetbc,
-	      int enerregion,
-	      int *localenerpos)
+              int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+              int *inboundloop,
+              int *outboundloop,
+              int *innormalloop,
+              int *outnormalloop,
+              int (*inoutlohi)[NUMUPDOWN][NDIM],
+              int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+              int *dosetbc,
+              int enerregion,
+              int *localenerpos)
 {
 
 
@@ -2131,6 +2131,11 @@ int poledeath(int whichx2,
   struct of_geom geompoledontuse;
   struct of_geom *ptrgeompole=&geompoledontuse;
 
+
+
+
+  if(whichx2==X2DN) return(0);
+  return(0);
 
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
@@ -2288,51 +2293,51 @@ int poledeath(int whichx2,
       int dontskippoledeath;
       dontskippoledeath=0;
       if(IFLIMITPOLEDEATHIOUT>0){
-	if(mycpupos[1]==ncpux1-1){
-	  if(i>N1-1-IFLIMITPOLEDEATHIOUT){
-	    // then force use of poledeath (no skip allowed)
-	    dontskippoledeath=1;
-	    //dualfprintf(fail_file,"OUTERDONTSKIP: %d %d %d\n",i,j,k);
-	  }
-	}
+        if(mycpupos[1]==ncpux1-1){
+          if(i>N1-1-IFLIMITPOLEDEATHIOUT){
+            // then force use of poledeath (no skip allowed)
+            dontskippoledeath=1;
+            //dualfprintf(fail_file,"OUTERDONTSKIP: %d %d %d\n",i,j,k);
+          }
+        }
       }
       
 
       if(IFLIMITPOLEDEATH>0 && ispstag==0 && dontskippoledeath==0){ // only go here if still possible to skip poledeath
-	// assume only can skip if centered primitives (staggered are field, and nominally don't change them)
+        // assume only can skip if centered primitives (staggered are field, and nominally don't change them)
 
-	FTYPE Vpole[NDIM];
+        FTYPE Vpole[NDIM];
 	
-	// use centered cell value (i.e. pl=RHO) to determine radius, and skip rest of this "j" if radius outside
-	bl_coord_ijk(i,poleloc,k,FACE2,Vpole); // FACE2 at CENT for radius, but using FACE2 allows us to use j=poleloc
+        // use centered cell value (i.e. pl=RHO) to determine radius, and skip rest of this "j" if radius outside
+        bl_coord_ijk(i,poleloc,k,FACE2,Vpole); // FACE2 at CENT for radius, but using FACE2 allows us to use j=poleloc
 
-	// get u^\mu
-	j=poleloccent;
-	get_geometry(i, j, k, CENT, ptrgeompole);
-	ucon_calc(MAC(prim,i,j,k),ptrgeompole,ucon, others);
-
-
-	if(IFLIMITPOLEDEATH==1){
-	  if(ucon[RR]>=0.0){
-	    //dualfprintf(fail_file,"SKIP1: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
-	    continue;
-	  }
-	}
-	else if(IFLIMITPOLEDEATH==2){
-	  if(Vpole[1]>=RADIUSLIMITPOLEDEATHIN){
-	    //dualfprintf(fail_file,"SKIP2: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
-	    continue;
-	  }
-	}
-	else if(IFLIMITPOLEDEATH==3){
-	  if(ucon[RR]>=0.0 && Vpole[1]>=RADIUSLIMITPOLEDEATHIN){ // i.e., do poledeath unless *both* u^r>0 *and* beyond given radius
-	    //dualfprintf(fail_file,"SKIP3: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
-	    continue;
-	  }
-	}
+        // get u^\mu
+        j=poleloccent;
+        get_geometry(i, j, k, CENT, ptrgeompole);
+        ucon_calc(MAC(prim,i,j,k),ptrgeompole,ucon, others);
 
 
-	//dualfprintf(fail_file,"NOTSKIP: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+        if(IFLIMITPOLEDEATH==1){
+          if(ucon[RR]>=0.0){
+            //dualfprintf(fail_file,"SKIP1: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+            continue;
+          }
+        }
+        else if(IFLIMITPOLEDEATH==2){
+          if(Vpole[1]>=RADIUSLIMITPOLEDEATHIN){
+            //dualfprintf(fail_file,"SKIP2: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+            continue;
+          }
+        }
+        else if(IFLIMITPOLEDEATH==3){
+          if(ucon[RR]>=0.0 && Vpole[1]>=RADIUSLIMITPOLEDEATHIN){ // i.e., do poledeath unless *both* u^r>0 *and* beyond given radius
+            //dualfprintf(fail_file,"SKIP3: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
+            continue;
+          }
+        }
+
+
+        //dualfprintf(fail_file,"NOTSKIP: %d %d %d : %g %g\n",i,j,k,ucon[RR],Vpole[1]);
 	
       }
 
@@ -2351,19 +2356,19 @@ int poledeath(int whichx2,
       //
       //////////////////
       if(ri==inoutlohi[POINTDOWN][POINTDOWN][1]){
-	// shift up, but not including ri
-	rim1=ri+1;
-	rip1=ri+2;
+        // shift up, but not including ri
+        rim1=ri+1;
+        rip1=ri+2;
       }
       else if(ri==inoutlohi[POINTUP][POINTUP][1]){
-	// shift down, but not including ri
-	rim1=ri-2;
-	rip1=ri-1;
+        // shift down, but not including ri
+        rim1=ri-2;
+        rip1=ri-1;
       }
       else{
-	// around ri
-	rim1=ri-1;
-	rip1=ri+1;
+        // around ri
+        rim1=ri-1;
+        rip1=ri+1;
       }
     
 
@@ -2378,76 +2383,76 @@ int poledeath(int whichx2,
 
       if(0){ // disabled for now
 
-	get_geometry(ri, rj0, rk, dirprim[U1], ptrrgeom[U1]);
-	gamma_calc(MAC(prim,ri,rj0,rk), ptrrgeom[U1],&gammarj0,&qsqrj0);
+        get_geometry(ri, rj0, rk, dirprim[U1], ptrrgeom[U1]);
+        gamma_calc(MAC(prim,ri,rj0,rk), ptrrgeom[U1],&gammarj0,&qsqrj0);
     
-	get_geometry(ri, rjtest, rk, dirprim[U1], ptrrgeom[U1]);
-	gamma_calc(MAC(prim,ri,rjtest,rk), ptrrgeom[U1],&gammarjtest,&qsqrjtest);
+        get_geometry(ri, rjtest, rk, dirprim[U1], ptrrgeom[U1]);
+        gamma_calc(MAC(prim,ri,rjtest,rk), ptrrgeom[U1],&gammarjtest,&qsqrjtest);
 
 
 
-	for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here, so no need for special j loop or diag_fixup)
+        for (j = deathjs0; j <= deathje0; j++) { // (no prims modified here, so no need for special j loop or diag_fixup)
 
-	  //POLEDENSITYDROPFACTOR
-	  //POLEGAMMAJUMPFACTOR
-
-
-	  pl=RHO;
-	  if(fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rj0,rk,pl))/POLEDENSITYDROPFACTOR || fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEDENSITYDROPFACTOR){
-	    lowrho=1;
-	  }
-	  pl=UU;
-	  if(fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rj0,rk,pl)/POLEDENSITYDROPFACTOR) || fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEDENSITYDROPFACTOR){
-	    lowuu=1;
-	  }
+          //POLEDENSITYDROPFACTOR
+          //POLEGAMMAJUMPFACTOR
 
 
-	  // get Lorentz factor
-	  get_geometry(i, j, k, dirprim[U1], ptrrgeom[U1]);
-	  gamma_calc(MAC(prim,i,j,k), ptrrgeom[U1],&gamma,&qsq);
+          pl=RHO;
+          if(fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rj0,rk,pl))/POLEDENSITYDROPFACTOR || fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEDENSITYDROPFACTOR){
+            lowrho=1;
+          }
+          pl=UU;
+          if(fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rj0,rk,pl)/POLEDENSITYDROPFACTOR) || fabs(MACP0A1(prim,i,j,k,pl))< fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEDENSITYDROPFACTOR){
+            lowuu=1;
+          }
 
 
-	  //      pl=U1;
-	  //      if(fabs(MACP0A1(prim,i,j,k,pl))> fabs(MACP0A1(prim,ri,rj0,rk,pl))/POLEJUMPFACTOR || fabs(MACP0A1(prim,i,j,k,pl))> fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEJUMPFACTOR ){
-	  //	highu1=1;
-	  //      }
-
-	  // check variation of Lorentz factor
-	  if(gamma> gammarj0*POLEGAMMAJUMPFACTOR || gamma> gammarjtest*POLEGAMMAJUMPFACTOR ){
-	    highu1=1;
-	  }
+          // get Lorentz factor
+          get_geometry(i, j, k, dirprim[U1], ptrrgeom[U1]);
+          gamma_calc(MAC(prim,i,j,k), ptrrgeom[U1],&gamma,&qsq);
 
 
-	}
+          //      pl=U1;
+          //      if(fabs(MACP0A1(prim,i,j,k,pl))> fabs(MACP0A1(prim,ri,rj0,rk,pl))/POLEJUMPFACTOR || fabs(MACP0A1(prim,i,j,k,pl))> fabs(MACP0A1(prim,ri,rjtest,rk,pl))/POLEJUMPFACTOR ){
+          //	highu1=1;
+          //      }
+
+          // check variation of Lorentz factor
+          if(gamma> gammarj0*POLEGAMMAJUMPFACTOR || gamma> gammarjtest*POLEGAMMAJUMPFACTOR ){
+            highu1=1;
+          }
+
+
+        }
     
-	if(lowuu || lowrho || highu1){
-	  rj=rjtest; // expand copy procedure to use better reference value
-	  deathjs=deathjstest;
-	  deathje=deathjetest;
+        if(lowuu || lowrho || highu1){
+          rj=rjtest; // expand copy procedure to use better reference value
+          deathjs=deathjstest;
+          deathje=deathjetest;
 
-	  rjstag=rjstagtest; // expand copy procedure to use better reference value
-	  deathstagjs=deathstagjstest;
-	  deathstagje=deathstagjetest;
-	}
-	else{
-	  // then use normal reference and range
-	  rj=rj0;
-	  deathjs=deathjs0;
-	  deathje=deathje0;
+          rjstag=rjstagtest; // expand copy procedure to use better reference value
+          deathstagjs=deathstagjstest;
+          deathstagje=deathstagjetest;
+        }
+        else{
+          // then use normal reference and range
+          rj=rj0;
+          deathjs=deathjs0;
+          deathje=deathje0;
 
-	  rjstag=rjstag0;
-	  deathstagjs=deathstagjs0;
-	  deathstagje=deathstagje0;
-	}
+          rjstag=rjstag0;
+          deathstagjs=deathstagjs0;
+          deathstagje=deathstagje0;
+        }
       }
       else{
-	rj=rjtest; // expand copy procedure to use better reference value
-	deathjs=deathjstest;
-	deathje=deathjetest;
+        rj=rjtest; // expand copy procedure to use better reference value
+        deathjs=deathjstest;
+        deathje=deathjetest;
       
-	rjstag=rjstagtest; // expand copy procedure to use better reference value
-	deathstagjs=deathstagjstest;
-	deathstagje=deathstagjetest;
+        rjstag=rjstagtest; // expand copy procedure to use better reference value
+        deathstagjs=deathstagjstest;
+        deathstagje=deathstagjetest;
       }
 
 
@@ -2460,13 +2465,13 @@ int poledeath(int whichx2,
       ////////////////////////////////
 
       PBOUNDLOOP(pliter,pl) {
-	coord_ijk(ri,rj,rk,dirprim[pl],Xr[pl]); // reference locations for B2/U2
-	if(pl==B2 && dirprim[B2]==FACE2){
-	  get_geometry(ri, rjstag, rk, dirprim[pl], ptrrgeom[pl]);
-	}
-	else{
-	  get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
-	}
+        coord_ijk(ri,rj,rk,dirprim[pl],Xr[pl]); // reference locations for B2/U2
+        if(pl==B2 && dirprim[B2]==FACE2){
+          get_geometry(ri, rjstag, rk, dirprim[pl], ptrrgeom[pl]);
+        }
+        else{
+          get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        }
       }
 
 
@@ -2492,232 +2497,232 @@ int poledeath(int whichx2,
 
 
 
-	//////////////
-	//
-	// setup initial pr
-	//
-	//////////////
-	PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
-	int madechange=0;
+        //////////////
+        //
+        // setup initial pr
+        //
+        //////////////
+        PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
+        int madechange=0;
 
 
 
 
-	PBOUNDLOOP(pliter,pl) {
-	  // pole location
-	  coord_ijk(i,poleloc,k,FACE2,X0); // pole locations for B2/U2
+        PBOUNDLOOP(pliter,pl) {
+          // pole location
+          coord_ijk(i,poleloc,k,FACE2,X0); // pole locations for B2/U2
 
-	  // current location
-	  bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
-	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+          // current location
+          bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+          get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-	  if(AVERAGEINRADIUS && (V[pl][RR]>RADIUSTOSTARTAVERAGING)){
-	    doavginradius[pl]=1;
-	  }
-	  else doavginradius[pl]=0;
+          if(AVERAGEINRADIUS && (V[pl][RR]>RADIUSTOSTARTAVERAGING)){
+            doavginradius[pl]=1;
+          }
+          else doavginradius[pl]=0;
 
-	}
-
-
+        }
 
 
-	/////////////
-	//
-	// DENSITY (rho,u) POLEDATH
-	//
-	/////////////
-	if(ispstag==0){
-	  // symmetric (if reflecting BC at pole) quantities
-	  if(j>=deathjs && j<=deathje){
 
 
-	    //////////
-	    // u1, and u3, average in radius too!
-	    // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
-	    for(pl=U1;pl<=U3;pl++){
-	      if(pl==U2) continue;
+        /////////////
+        //
+        // DENSITY (rho,u) POLEDATH
+        //
+        /////////////
+        if(ispstag==0){
+          // symmetric (if reflecting BC at pole) quantities
+          if(j>=deathjs && j<=deathje){
+
+
+            //////////
+            // u1, and u3, average in radius too!
+            // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
+            for(pl=U1;pl<=U3;pl++){
+              if(pl==U2) continue;
 		
-	      if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
-	      else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	      madechange++;
-	    }
+              if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+              else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+              madechange++;
+            }
 
 
 
-	    if(EOMTYPE!=EOMFFDE){
-	      //////////
-	      // for densities
-	      // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
-	      for(pl=RHO;pl<=UU;pl++){
+            if(EOMTYPE!=EOMFFDE){
+              //////////
+              // for densities
+              // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
+              for(pl=RHO;pl<=UU;pl++){
 		
-		if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
-		else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-		madechange++;
-	      }
+                if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+                else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+                madechange++;
+              }
 
 
-	      if(BCSIGMACONSTATPOLE==1){
+              if(BCSIGMACONSTATPOLE==1){
 		
-		pl=RHO;
-		FTYPE bsqr,sigmar;
+                pl=RHO;
+                FTYPE bsqr,sigmar;
 		
-		if (bsq_calc(MAC(prim,ri,rj,rk), ptrrgeom[pl], &bsqr) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 1);
-		sigmar=bsqr/(2.0*fabs(MACP0A1(prim,ri,rj,rk,pl)));
+                if (bsq_calc(MAC(prim,ri,rj,rk), ptrrgeom[pl], &bsqr) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 1);
+                sigmar=bsqr/(2.0*fabs(MACP0A1(prim,ri,rj,rk,pl)));
 		
-		// ensure constant sigma at pole
-		FTYPE bsq,sigma;
-		if (bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 2);
-		sigma=bsq/(2.0*fabs(MACP0A1(prim,i,j,k,pl)));
+                // ensure constant sigma at pole
+                FTYPE bsq,sigma;
+                if (bsq_calc(MAC(prim,i,j,k), ptrgeom[pl], &bsq) >= 1) FAILSTATEMENT("bounds.tools.c:poledeath()", "bsq_calc()", 2);
+                sigma=bsq/(2.0*fabs(MACP0A1(prim,i,j,k,pl)));
 		
-		if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
-		  MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
-		  madechange++;
-		}
-		// do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
-	      }// end if BCSIGMACONSTATPOLE==1
-	    }// end if EOMTYPE!=EOMFFDE
+                if(sigma>BSQORHOLIMIT*0.5 && sigmar<BSQORHOLIMIT*0.5){
+                  MACP0A1(prim,i,j,k,pl) = fabs(MACP0A1(prim,i,j,k,pl)*(sigma/sigmar));
+                  madechange++;
+                }
+                // do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
+              }// end if BCSIGMACONSTATPOLE==1
+            }// end if EOMTYPE!=EOMFFDE
 
 
-	  }// end if correct j
-	}// end if ispstag==0
-
-
-
-
-	//////////////
-	//
-	// symmetric (if reflecting BC at pole) quantities (e.g. B1)
-	//
-	//////////////
-	if(j>=deathjs && j<=deathje){
-	  // B1 left alone
-	}
+          }// end if correct j
+        }// end if ispstag==0
 
 
 
-	/////////////
-	//
-	// antisymmetric quantities (e.g. B2)
-	//
-	/////////////
-	if(
-	   dirprim[B2]==FACE2 && j>=deathstagjs && j<=deathstagje || 
-	   dirprim[B2]==CENT && j>=deathjs && j<=deathje
-	   ){
+
+        //////////////
+        //
+        // symmetric (if reflecting BC at pole) quantities (e.g. B1)
+        //
+        //////////////
+        if(j>=deathjs && j<=deathje){
+          // B1 left alone
+        }
+
+
+
+        /////////////
+        //
+        // antisymmetric quantities (e.g. B2)
+        //
+        /////////////
+        if(
+           dirprim[B2]==FACE2 && j>=deathstagjs && j<=deathstagje || 
+           dirprim[B2]==CENT && j>=deathjs && j<=deathje
+           ){
 	  
-	  if(N2==1){
-	    /////////////////////////////
-	    // B2:
+          if(N2==1){
+            /////////////////////////////
+            // B2:
 #if(POLEINTERPTYPE==0)
-	    // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-	    // anti-symmetric (if reflecting BC at pole) quantities:
-	    MACP0A1(prim,i,j,k,B2) = 0.;
-	    madechange++;
+            // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
+            // anti-symmetric (if reflecting BC at pole) quantities:
+            MACP0A1(prim,i,j,k,B2) = 0.;
+            madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-	    // anti-symmetric (if reflecting BC at pole):
-	    // assume X[2] goes through 0 at the pole and isn't positive definite
-	    pl=B2;
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rjstag,rk,pl) + MACP0A1(prim,ri,rjstag,rk,pl) + MACP0A1(prim,rip1,rjstag,rk,pl));
-	    else  ftemp=MACP0A1(prim,ri,rjstag,rk,pl);
-	    MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	    madechange++;
+            // anti-symmetric (if reflecting BC at pole):
+            // assume X[2] goes through 0 at the pole and isn't positive definite
+            pl=B2;
+            if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rjstag,rk,pl) + MACP0A1(prim,ri,rjstag,rk,pl) + MACP0A1(prim,rip1,rjstag,rk,pl));
+            else  ftemp=MACP0A1(prim,ri,rjstag,rk,pl);
+            MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+            madechange++;
 
 #elif(POLEINTERPTYPE==3)
-	    // then don't modify B2 -- trying to avoid instabilities related to divb=0 violation.  And seems B2 behaves ok
+            // then don't modify B2 -- trying to avoid instabilities related to divb=0 violation.  And seems B2 behaves ok
 #endif
-	  }
-	  else{
-	    // then don't modify B2 to ensure divB=0
-	  }
+          }
+          else{
+            // then don't modify B2 to ensure divB=0
+          }
 
-	}
-
-
+        }
 
 
 
-	/////////////
-	//
-	// other symmetric quantities (e.g. B3)
-	//
-	/////////////
-	if(j>=deathjs && j<=deathje){
 
-	  ////////////////
-	  // B3:
-	  pl=B3;
 
-	  if(N3==1){
+        /////////////
+        //
+        // other symmetric quantities (e.g. B3)
+        //
+        /////////////
+        if(j>=deathjs && j<=deathje){
+
+          ////////////////
+          // B3:
+          pl=B3;
+
+          if(N3==1){
 
 #if(POLEINTERPTYPE==0 || POLEINTERPTYPE==1)
-	    // symmetric:
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	    MACP0A1(prim,i,j,k,B3) = ftemp;
-	    madechange++;
+            // symmetric:
+            if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+            else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+            MACP0A1(prim,i,j,k,B3) = ftemp;
+            madechange++;
 
 #elif(POLEINTERPTYPE==2)
-	    // symmetric:
-	    // approximate B_\phi copy, which (unlike copying B3) can resolve singular currents on axis
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	    MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
-	    madechange++;
+            // symmetric:
+            // approximate B_\phi copy, which (unlike copying B3) can resolve singular currents on axis
+            if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+            else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+            MACP0A1(prim,i,j,k,pl) =  ftemp*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
+            madechange++;
 
 #elif(POLEINTERPTYPE==3)
-	    // symmetric:
-	    if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	    else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	    MACP0A1(prim,i,j,k,B3) = ftemp;
-	    madechange++;
+            // symmetric:
+            if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+            else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+            MACP0A1(prim,i,j,k,B3) = ftemp;
+            madechange++;
 #endif
-	  }// end if N3==1
-	  else{
-	    // then do nothing if in 3D
-	  }
+          }// end if N3==1
+          else{
+            // then do nothing if in 3D
+          }
 
 
 
 
-	  ///////////////////////////////////
-	  //
-	  // do rest if any -- assumed at CENT
-	  //
-	  ///////////////////////////////////
-	  if(ispstag==0){
-	    for(pl=B3+1;pl<NPRBOUND;pl++){
-	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-	      else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-	      MACP0A1(prim,i,j,k,pl)=ftemp;
-	      madechange++;
-	    }
-	  }
+          ///////////////////////////////////
+          //
+          // do rest if any -- assumed at CENT
+          //
+          ///////////////////////////////////
+          if(ispstag==0){
+            for(pl=B3+1;pl<NPRBOUND;pl++){
+              if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+              else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+              MACP0A1(prim,i,j,k,pl)=ftemp;
+              madechange++;
+            }
+          }
 
-	}// end over CENT-type quantities
+        }// end over CENT-type quantities
 
 
 
-	if(madechange){
-	  ///////////
-	  //
-	  // accounting for on-grid changes
-	  //
-	  ////////////
-	  int modcons=1;
-	  FTYPE *ucons;
-	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
-	  // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
-	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
-	  struct of_geom *fixupptrgeom;
-	  PBOUNDLOOP(pliter,pl) {
-	    fixupptrgeom=ptrgeom[pl];
-	    break;
-	  }
-	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
-	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
-	}
+        if(madechange){
+          ///////////
+          //
+          // accounting for on-grid changes
+          //
+          ////////////
+          int modcons=1;
+          FTYPE *ucons;
+          ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+          // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+          // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+          struct of_geom *fixupptrgeom;
+          PBOUNDLOOP(pliter,pl) {
+            fixupptrgeom=ptrgeom[pl];
+            break;
+          }
+          PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+          diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+          PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+        }
 
       
       }// end loop over j
@@ -2741,215 +2746,215 @@ int poledeath(int whichx2,
 
 
 
-	//////////////
-	//
-	// setup initial pr
-	//
-	//////////////
-	PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
-	int madechange=0;
+        //////////////
+        //
+        // setup initial pr
+        //
+        //////////////
+        PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
+        int madechange=0;
 
 
 
 
-	PBOUNDLOOP(pliter,pl) {
-	  // pole location
-	  coord_ijk(i,poleloc,k,FACE2,X0); // pole locations for B2/U2
+        PBOUNDLOOP(pliter,pl) {
+          // pole location
+          coord_ijk(i,poleloc,k,FACE2,X0); // pole locations for B2/U2
 
-	  // current location
-	  bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
-	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+          // current location
+          bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+          get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-	  if(AVERAGEINRADIUS && (V[pl][RR]>RADIUSTOSTARTAVERAGING)){
-	    doavginradius[pl]=1;
-	  }
-	  else doavginradius[pl]=0;
+          if(AVERAGEINRADIUS && (V[pl][RR]>RADIUSTOSTARTAVERAGING)){
+            doavginradius[pl]=1;
+          }
+          else doavginradius[pl]=0;
 
-	}
+        }
 
       
       
-	if(ispstag==0){
+        if(ispstag==0){
 	
-	  if(j>=deathjs && j<=deathje){
-	    //////////////////////////
-	    // U2:
-	    pl=U2;
+          if(j>=deathjs && j<=deathje){
+            //////////////////////////
+            // U2:
+            pl=U2;
 
 
-	    if(special3dspc){
-	      // U2 not necessarily anti-symmetric in this case.
-	      // This will be kinda odd if POLEDEATH>1 due to comparing non-local regions.
-	      // But, for now, POLEDEATH<=1 is set so make sense.
+            if(special3dspc){
+              // U2 not necessarily anti-symmetric in this case.
+              // This will be kinda odd if POLEDEATH>1 due to comparing non-local regions.
+              // But, for now, POLEDEATH<=1 is set so make sense.
 
-	      int jother;
-	      FTYPE signD;
-	      if(j<N2/2){
-		jother=-1-j;
-	      }
-	      else{
-		jother=N2-1+(N2-j);
-	      }
+              int jother;
+              FTYPE signD;
+              if(j<N2/2){
+                jother=-1-j;
+              }
+              else{
+                jother=N2-1+(N2-j);
+              }
 
-	      if(j>=jother) signD=+1.0;
-	      else signD=-1.0;
-
-
-	      // see if sucking on pole
-	      FTYPE rhovjhere,rhovjother,rhovDiff;
-	      rhovjhere =MACP0A1(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
-	      rhovjother=MACP0A1(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
-
-	      rhovDiff=signD*(rhovjhere-rhovjother);
-	      // same gdet, so no need to multiply both by same factor for below test
-	      // make change to both simultaneously so that when other j is hit, rhovDiff condition is no longer hit and all is consistent as if separate memory field for entire poledeath before final copy-over to primitive memory space.
-	      // But do active grid cells first (determined by DEATHLOOPJ) so diag_fixup() occurs on active region for accounting.
-	      if(rhovDiff>0.0){
-		// then sucking on pole
-		// must change active and ghost cells consistently for any number of CPUs
-		// so average-out the suck to zero suck by changing the values equally (as weighted by mass)
-		FTYPE dU2     =-signD*rhovDiff*0.5/MACP0A1(prim,i,j,k,RHO);
-		FTYPE U2jhere = MACP0A1mod(prim,i,j,k,U2);
-		FTYPE U2jother= MACP0A1mod(prim,i,jother,k,U2);
-
-		if( (fabs(U2jhere)>fabs(dU2))&&(fabs(U2jother)>fabs(dU2)) ){
-		  // only change if in both cases we lower the velocity, not increase.
-		  MACP0A1(prim,i,j,k,U2)      += dU2;
-		  MACP0A1(prim,i,jother,k,U2) -= dU2;
-		  madechange++;
-		}
-		else{ // then jhere or jother is changed by an absolute magnitude more than its value, which we want to avoid
-		  // crush a bit only as much as leaves smaller value changed as much as possible without increasing its magnitude
-		  if(fabs(U2jhere)<fabs(U2jother)){
-		    // then drop jhere as closest to fixed value (100% change), and reset jother with same value
-		    MACP0A1(prim,i,j,k,U2) *= -1.0;
-		    MACP0A1(prim,i,jother,k,U2) = MACP0A1(prim,i,j,k,U2);
-		    madechange++;
-		  }
-		  else{
-		    // then drops down to value matching other side so D=0 in the end still, so still no sucking.
-		    MACP0A1(prim,i,jother,k,U2) *= -1.0;
-		    MACP0A1(prim,i,j,k,U2) = MACP0A1(prim,i,jother,k,U2);
-		    madechange++;
-		  }
-		}// end else abs mag of change is larger than 100% for one of the values
-
-		//		  MACP0A1(prim,i,j,k,U2)      =0.0;
-		//		  madechange++;
-		//		MACP0A1(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
-
-		// Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to U2->0
-	      }
-	      else{
-		// then just enforce linear behavior near pole
-		// NOT YET
-	      }
+              if(j>=jother) signD=+1.0;
+              else signD=-1.0;
 
 
-	    }
-	    else{
+              // see if sucking on pole
+              FTYPE rhovjhere,rhovjother,rhovDiff;
+              rhovjhere =MACP0A1(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
+              rhovjother=MACP0A1(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
+
+              rhovDiff=signD*(rhovjhere-rhovjother);
+              // same gdet, so no need to multiply both by same factor for below test
+              // make change to both simultaneously so that when other j is hit, rhovDiff condition is no longer hit and all is consistent as if separate memory field for entire poledeath before final copy-over to primitive memory space.
+              // But do active grid cells first (determined by DEATHLOOPJ) so diag_fixup() occurs on active region for accounting.
+              if(rhovDiff>0.0){
+                // then sucking on pole
+                // must change active and ghost cells consistently for any number of CPUs
+                // so average-out the suck to zero suck by changing the values equally (as weighted by mass)
+                FTYPE dU2     =-signD*rhovDiff*0.5/MACP0A1(prim,i,j,k,RHO);
+                FTYPE U2jhere = MACP0A1mod(prim,i,j,k,U2);
+                FTYPE U2jother= MACP0A1mod(prim,i,jother,k,U2);
+
+                if( (fabs(U2jhere)>fabs(dU2))&&(fabs(U2jother)>fabs(dU2)) ){
+                  // only change if in both cases we lower the velocity, not increase.
+                  MACP0A1(prim,i,j,k,U2)      += dU2;
+                  MACP0A1(prim,i,jother,k,U2) -= dU2;
+                  madechange++;
+                }
+                else{ // then jhere or jother is changed by an absolute magnitude more than its value, which we want to avoid
+                  // crush a bit only as much as leaves smaller value changed as much as possible without increasing its magnitude
+                  if(fabs(U2jhere)<fabs(U2jother)){
+                    // then drop jhere as closest to fixed value (100% change), and reset jother with same value
+                    MACP0A1(prim,i,j,k,U2) *= -1.0;
+                    MACP0A1(prim,i,jother,k,U2) = MACP0A1(prim,i,j,k,U2);
+                    madechange++;
+                  }
+                  else{
+                    // then drops down to value matching other side so D=0 in the end still, so still no sucking.
+                    MACP0A1(prim,i,jother,k,U2) *= -1.0;
+                    MACP0A1(prim,i,j,k,U2) = MACP0A1(prim,i,jother,k,U2);
+                    madechange++;
+                  }
+                }// end else abs mag of change is larger than 100% for one of the values
+
+                //		  MACP0A1(prim,i,j,k,U2)      =0.0;
+                //		  madechange++;
+                //		MACP0A1(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
+
+                // Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to U2->0
+              }
+              else{
+                // then just enforce linear behavior near pole
+                // NOT YET
+              }
+
+
+            }
+            else{
 
 
 #if(POLEINTERPTYPE==0)
-	      // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-	      // anti-symmetric (if reflecting BC at pole) quantities:
-	      MACP0A1(prim,i,j,k,pl) = 0.;
-	      madechange++;
+              // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
+              // anti-symmetric (if reflecting BC at pole) quantities:
+              MACP0A1(prim,i,j,k,pl) = 0.;
+              madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-	      // anti-symmetric (if reflecting BC at pole):
-	      // assume X[2] goes through 0 at the pole and isn't positive definite
-	      if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-	      else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
-	      MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-	      madechange++;
+              // anti-symmetric (if reflecting BC at pole):
+              // assume X[2] goes through 0 at the pole and isn't positive definite
+              if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+              else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+              MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+              madechange++;
 
 #elif(POLEINTERPTYPE==3)
 
-	      // anti-symmetric (if reflecting BC at pole):
+              // anti-symmetric (if reflecting BC at pole):
 
-	      // assume X[2] goes through 0 at the pole and isn't positive definite
+              // assume X[2] goes through 0 at the pole and isn't positive definite
 
-	      // choose reference value
-	      // 	ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-	      ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+              // choose reference value
+              // 	ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+              ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
-	      if(whichx2==X2DN && ftemp>0.0){
-		// then sucking on \theta=0 pole
-		// try to minimize sucking on pole by finding minimum U2 around
-		for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-		if(doavginradius[pl]){
-		  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-		  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
-		}
+              if(whichx2==X2DN && ftemp>0.0){
+                // then sucking on \theta=0 pole
+                // try to minimize sucking on pole by finding minimum U2 around
+                for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+                if(doavginradius[pl]){
+                  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+                  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                }
 
-		ftemp=0.0; // try crushing sucking GODMARK
+                ftemp=0.0; // try crushing sucking GODMARK
 
-		// assume ftemp is at reference location
-		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-		madechange++;
-	      }
-	      else if(whichx2==X2UP && ftemp<0.0){
-		// then sucking on \theta=\pi pole
-		for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-		if(doavginradius[pl]){
-		  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-		  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
-		}
+                // assume ftemp is at reference location
+                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                madechange++;
+              }
+              else if(whichx2==X2UP && ftemp<0.0){
+                // then sucking on \theta=\pi pole
+                for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+                if(doavginradius[pl]){
+                  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+                  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                }
 
-		ftemp=0.0; // try crushing sucking GODMARK
+                ftemp=0.0; // try crushing sucking GODMARK
 
-		// assume ftemp is at reference location (same formula for both poles)
-		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-		madechange++;
-	      }
-	      else{
-		// otherwise enforce natural regular linear behavior on U2
-		if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-		else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+                // assume ftemp is at reference location (same formula for both poles)
+                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                madechange++;
+              }
+              else{
+                // otherwise enforce natural regular linear behavior on U2
+                if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+                else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
-		MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-		madechange++;
-	      }
+                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                madechange++;
+              }
 
 #endif // endif POLEINTERPTYPE==3
-	    }// end if special3dspc==0
+            }// end if special3dspc==0
 
 
 #if( UTHETAPOLEDEATH )
-	    //if interpolated u^\theta, now convert back to u^2
-	    dxdxprim_ijk(i, j, k, CENT, dxdxp);
-	    MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
-	    madechange++;
+            //if interpolated u^\theta, now convert back to u^2
+            dxdxprim_ijk(i, j, k, CENT, dxdxp);
+            MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
+            madechange++;
 #endif
 
 
-	  }// end if correct j range
-	}// end if ispstag==0
+          }// end if correct j range
+        }// end if ispstag==0
 
 
 
-	if(madechange){ // only need accounting if actually made a change
-	  ///////////
-	  //
-	  // accounting for on-grid changes
-	  //
-	  ////////////
-	  int modcons=1;
-	  FTYPE *ucons;
-	  ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
-	  // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
-	  // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
-	  struct of_geom *fixupptrgeom;
-	  PBOUNDLOOP(pliter,pl) {
-	    fixupptrgeom=ptrgeom[pl];
-	    break;
-	  }
+        if(madechange){ // only need accounting if actually made a change
+          ///////////
+          //
+          // accounting for on-grid changes
+          //
+          ////////////
+          int modcons=1;
+          FTYPE *ucons;
+          ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+          // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
+          // in general, not sure which pl really exists at this point, so pick first in PBOUNDLOOP loop
+          struct of_geom *fixupptrgeom;
+          PBOUNDLOOP(pliter,pl) {
+            fixupptrgeom=ptrgeom[pl];
+            break;
+          }
 
-	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
-	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
-	}
+          PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+          diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+          PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+        }
 
 
       }// end loop over j
@@ -2977,93 +2982,93 @@ int poledeath(int whichx2,
       OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMPBCLOOPBLOCK{
-	OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+        OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	for (j = gammadeathjs; j <= gammadeathje; j++) { // currently not multiple-point dependent, so normal j loop is fine
+        for (j = gammadeathjs; j <= gammadeathje; j++) { // currently not multiple-point dependent, so normal j loop is fine
 
 
-	  //////////////
-	  //
-	  // setup initial pr (already using pl, so use pl2 for prdiag assignment/setup)
-	  //
-	  //////////////
-	  PLOOP(pliter,pl2) prdiag[pl2]=MACP0A1(prim,i,j,k,pl2);
-	  int madechange=0;
+          //////////////
+          //
+          // setup initial pr (already using pl, so use pl2 for prdiag assignment/setup)
+          //
+          //////////////
+          PLOOP(pliter,pl2) prdiag[pl2]=MACP0A1(prim,i,j,k,pl2);
+          int madechange=0;
 
 
-	  ///////////
-	  //
-	  // forever-kept debug
-	  //
-	  ///////////
-	  PBOUNDLOOP(pliter,pl2){
-	    if( !isfinite( MACP0A1(prim,i,j,k,pl2))){
-	      dualfprintf(fail_file,"BNDNAN: ispstag=%d t=%21.15g nstep=%ld steppart=%d :: i=%d j=%d k=%d pl2=%d prim=%21.15g\n",ispstag,t,nstep,steppart,i,j,k,pl2,MACP0A1(prim,i,j,k,pl2));
-	    }
-	  }
-
-
-
-	  ///////////
-	  //
-	  // get u^r and limit if necessary
-	  //
-	  ///////////
-	  get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-
-	  ucon_calc(MAC(prim,i,j,k),ptrgeom[pl],ucon, others);
-	  // only limit velocity if outgoing relative to grid (GODMARK: only valid in KS or BL-like coordinates such that u^r>0 means outgoing w.r.t. an observer at infinity)
-	  if(ucon[RR]>0.0){
-
-	    bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
-
-
-	    if(V[pl][RR]<=GAMMAPOLEOUTGOINGRADIUS){
-	      // flat \gamma limit up to GAMMAPOLEOUTGOINGRADIUS
-	      gammavaluelimit = GAMMAPOLEOUTGOING;
-	    }
-	    else{
-	      gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
-	    }
-
-	    limit_gamma(gammavaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-	    madechange++;
-	  }
-	  else{
-	    limit_gamma(GAMMAPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-	    madechange++;
-	  }
+          ///////////
+          //
+          // forever-kept debug
+          //
+          ///////////
+          PBOUNDLOOP(pliter,pl2){
+            if( !isfinite( MACP0A1(prim,i,j,k,pl2))){
+              dualfprintf(fail_file,"BNDNAN: ispstag=%d t=%21.15g nstep=%ld steppart=%d :: i=%d j=%d k=%d pl2=%d prim=%21.15g\n",ispstag,t,nstep,steppart,i,j,k,pl2,MACP0A1(prim,i,j,k,pl2));
+            }
+          }
 
 
 
+          ///////////
+          //
+          // get u^r and limit if necessary
+          //
+          ///////////
+          get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-	  if(madechange){
-	    ///////////
-	    //
-	    // accounting for on-grid changes
-	    //
-	    ////////////
-	    int modcons=1;
-	    FTYPE *ucons;
-	    ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
-	    // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
-	    // in general, not sure which pl2 really exists at this point, so pick first in PBOUNDLOOP loop
-	    struct of_geom *fixupptrgeom;
-	    //	    PBOUNDLOOP(pliter,pl2) {
-	    pl2=pl;  // only 1 ptrgeom defined
-	    fixupptrgeom=ptrgeom[pl2];
-	    //	      break;
-	    //	    }
+          ucon_calc(MAC(prim,i,j,k),ptrgeom[pl],ucon, others);
+          // only limit velocity if outgoing relative to grid (GODMARK: only valid in KS or BL-like coordinates such that u^r>0 means outgoing w.r.t. an observer at infinity)
+          if(ucon[RR]>0.0){
+
+            bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+
+
+            if(V[pl][RR]<=GAMMAPOLEOUTGOINGRADIUS){
+              // flat \gamma limit up to GAMMAPOLEOUTGOINGRADIUS
+              gammavaluelimit = GAMMAPOLEOUTGOING;
+            }
+            else{
+              gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
+            }
+
+            limit_gamma(gammavaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            madechange++;
+          }
+          else{
+            limit_gamma(GAMMAPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            madechange++;
+          }
+
+
+
+
+          if(madechange){
+            ///////////
+            //
+            // accounting for on-grid changes
+            //
+            ////////////
+            int modcons=1;
+            FTYPE *ucons;
+            ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
+            // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
+            // in general, not sure which pl2 really exists at this point, so pick first in PBOUNDLOOP loop
+            struct of_geom *fixupptrgeom;
+            //	    PBOUNDLOOP(pliter,pl2) {
+            pl2=pl;  // only 1 ptrgeom defined
+            fixupptrgeom=ptrgeom[pl2];
+            //	      break;
+            //	    }
 	    
-	    PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
-	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
-	    PLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
+            PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
+            diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+            PLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
 
-	  }
+          }
 
 
-	}// end over j
+        }// end over j
       }// end loop 13
     }// end if ispstag==0
   }// end if POLEGAMMADEATH
@@ -3087,20 +3092,21 @@ int poledeath(int whichx2,
 // Note that if special3dspc==1, then bound_x2dn/x2up_polaraxis_full3d() [that calls poledeath() and/or polesmooth()] is called *after* MPI call in bound_prim_user_after_mpi_dir()
 // If special3dspc==0, then not accurately handling polar axis so can't expect polesmooth() to be as effective.
 int polesmooth(int whichx2,
-	      int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
-	      int *inboundloop,
-	      int *outboundloop,
-	      int *innormalloop,
-	      int *outnormalloop,
-	      int (*inoutlohi)[NUMUPDOWN][NDIM],
-	      int riin, int riout, int rjin, int rjout, int rkin, int rkout,
-	      int *dosetbc,
-	      int enerregion,
-	      int *localenerpos)
+               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+               int *inboundloop,
+               int *outboundloop,
+               int *innormalloop,
+               int *outnormalloop,
+               int (*inoutlohi)[NUMUPDOWN][NDIM],
+               int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+               int *dosetbc,
+               int enerregion,
+               int *localenerpos)
 {
   
   int i, j, k;
   int j0, dj, stopj, rj;
+  int fakej;
   FTYPE X[NDIM], V[NDIM];
   FTYPE r, th, ph;
   FTYPE dxdxp[NDIM][NDIM], idxdxp[NDIM][NDIM];
@@ -3111,6 +3117,8 @@ int polesmooth(int whichx2,
   int pliter,pl;
 
 
+  if(whichx2==X2DN) return(0);
+  return(0);
 
 
   /////////////////////
@@ -3145,13 +3153,14 @@ int polesmooth(int whichx2,
   //
   /////////////////////
   // need k slowest index so can easily do MPI sends/receives
-#define MAPFULLPR(i,k,pl) (((k)+N3BND)*(N1BND+N1+N1BND)*NPR + ((i)+N1BND)*NPR + (pl))
-  // so access as: fullpr[MAPFULLPR(i,k,pl)]  .  Order of i,k,pl is just to be similar to normal order of i,j,k,pl when removing j.
-#define N3TOTFULLPR (N3BND+totalsize[3]+N3BND)
+#define MAPFULLPR(i,fakej,k,pl) ( (fakej)*(N3BND+N3+N3BND)*(N1BND+N1+N1BND)*NPR + ((k)+N3BND)*(N1BND+N1+N1BND)*NPR + ((i)+N1BND)*NPR + (pl) )
+  // so access as: fullpr[MAPFULLPR(i,fakej,k,pl)]  .  Order of i,fakej,k,pl is just to be similar to normal order of i,j,k,pl
 #define N1TOTFULLPR (N1BND+N1+N1BND)
+#define N2TOTFULLPR (ncpux3>1&&USEMPI&&N3>1 ? 1 : 2) // need 2 j positions if single cpu
+#define N3TOTFULLPR (N3BND+totalsize[3]+N3BND)
   if(firsttime){
     // not necessary if USEMPI==0 or ncpux3==1, but still do since not expensive
-    fullpr=(FTYPE *)malloc(sizeof(FTYPE)*(N3TOTFULLPR*N1TOTFULLPR*NPR));
+    fullpr=(FTYPE *)malloc(sizeof(FTYPE)*(N2TOTFULLPR*N3TOTFULLPR*N1TOTFULLPR*NPR));
     if(fullpr==NULL){
       dualfprintf(fail_file,"Cannot allocate fullpr\n");
       myexit(195367346);
@@ -3169,18 +3178,21 @@ int polesmooth(int whichx2,
   //
   //////////////////////
   if (whichx2==X2DN) {
-    j0 = -POLESMOOTH; //starting from this j
-    rj = POLESMOOTH;  //until this j
+    j0 = -POLESMOOTH; //starting from this j including this j
+    rj = POLESMOOTH;  //until this j but not including this j
     dj = 1;
     //    stopj=rj+1; // can also average-out j=rj
     stopj=rj;
+    fakej=0;
   }
   else{
-    j0 = N2-1+POLESMOOTH;  //starting from this j
-    rj = N2-1-POLESMOOTH; //until this j
+    j0 = N2-1+POLESMOOTH;  //starting from this j including this j
+    rj = N2-1-POLESMOOTH; //until this j but not including this j
     dj = -1;
     //    stopj=rj-1; // can also average-out j=rj
     stopj=rj;
+    if(N2TOTFULLPR==1) fakej=0;
+    else fakej=1; // 2 j memory slots since on 1 cpu
   }
 
 
@@ -3219,7 +3231,7 @@ int polesmooth(int whichx2,
 
 
     // store in fullpr the SPC versions of U1-U3 and other scalars.  Might as well avoid B1-B3 overwritten later.
-    PBOUNDLOOP(pliter,pl)  if(pl<B1 || pl>B3) fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)] = spcpr[pl];
+    PBOUNDLOOP(pliter,pl)  if(pl<B1 || pl>B3) fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,pl)] = spcpr[pl];
 
     /////////////////////////////////////////
     // TRANSFORM quasi-SPC to quasi-CART
@@ -3234,12 +3246,12 @@ int polesmooth(int whichx2,
     // No need to get dxdxp using dxdxpprim_ijk() near pole except to obtain dominant scale.  Major issue is twisting of coordinates, and dxdxp[1,2] and dxdxp[2,1] aren't large enough near pole to introduce major twisting.
     
     // put CART[U1-U3] into prfull[B1-B3] for storage
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B1)] = -(r*sin(ph)*sin(th)*spcpr[U3]) + cos(ph)*sin(th)*spcpr[U1] + r*cos(ph)*cos(th)*spcpr[U2];
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B1)] = -(r*sin(ph)*sin(th)*spcpr[U3]) + cos(ph)*sin(th)*spcpr[U1] + r*cos(ph)*cos(th)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
 
 #if(DEBUGPOLESMOOTH)
-    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereINITIAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g spc=%g cart=%g i/dxdxp11=%g %g\n",t,i,j,k,pl,pr[pl],spcpr[pl],fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)],idxdxp[RR][RR],dxdxp[RR][RR]);
+    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereINITIAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g spc=%g cart=%g i/dxdxp11=%g %g\n",t,i,j,k,pl,pr[pl],spcpr[pl],fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,pl)],idxdxp[RR][RR],dxdxp[RR][RR]);
 #endif
   }
 
@@ -3278,39 +3290,39 @@ int polesmooth(int whichx2,
       // non-blocking (all sends's occur at once)
       int count=N3*N1M*NPR;
       for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
-	if(posk!=mycpupos[3]){
-	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk (large tag space to ensure no duplicates)
-	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
+        if(posk!=mycpupos[3]){
+          int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+          int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk (large tag space to ensure no duplicates)
+          MPI_Isend(&fullpr[MAPFULLPR(-N1BND,fakej,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
 #if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,tag);
+          dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,tag);
 #endif
-	}
+        }
       }
       
       
       // receive all other portions of pr and fill local myid's fullpr data
       // non-blocking (all recv's occur at once and while sends are already going)
       for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
-	if(posk!=mycpupos[3]){
-	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int tag=originmyid + numprocs*mycpupos[3]; // tag used by other myid.  Receiving for my mycpupos[3]
-	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
+        if(posk!=mycpupos[3]){
+          int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+          int tag=originmyid + numprocs*mycpupos[3]; // tag used by other myid.  Receiving for my mycpupos[3]
+          MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
 #if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,tag);
+          dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,tag);
 #endif
-	}
+        }
       }
       
 
       // wait for all data to be recv'ed before moving to average that uses fullpr data and requires all data to be present in fullpr
       for(posk=0;posk<ncpux3;posk++){
-	if(posk!=mycpupos[3]){
-	  MPI_Wait(&rrequest[posk],&mpistatus); // assume successful so don't check mpistatus
+        if(posk!=mycpupos[3]){
+          MPI_Wait(&rrequest[posk],&mpistatus); // assume successful so don't check mpistatus
 #if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Wait: posk=%d\n",posk);
+          dualfprintf(fail_file,"MPI_Wait: posk=%d\n",posk);
 #endif
-	}
+        }
       }
 
 
@@ -3321,7 +3333,7 @@ int polesmooth(int whichx2,
 
 #if(DEBUGPOLESMOOTH)
   LOOPF1 for(k=0;k<totalsize[3];k++){
-    PBOUNDLOOP(pliter,pl) if(pl==RHO || pl==B3) dualfprintf(fail_file,"FULLPRCHECK: i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,k,pl)]);
+    PBOUNDLOOP(pliter,pl) if(pl==RHO || pl==B3) dualfprintf(fail_file,"FULLPRCHECK: i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,fakej,k,pl)]);
   }
 #endif
 
@@ -3364,15 +3376,15 @@ int polesmooth(int whichx2,
 #endif
       
       // Averaged quasi-SPC versions (note spcavgpr[B1-B3] not used and fullpr[B1-B3] stored quasi-CART U1-U3, so might as well avoid B1-B3)
-      PBOUNDLOOP(pliter,pl) if(pl<B1 || pl>B3) spcavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+      PBOUNDLOOP(pliter,pl) if(pl<B1 || pl>B3) spcavgpr[pl] += fullpr[MAPFULLPR(i,fakej,k,pl)];
 
       // Averaged non-velocities for quasi-CART (avoid cartavgpr[pl=U1-U3] that cumulate next.  Also go ahead and avoid B1-B3 since fullpr[B1-B3] filled will cart U1-U3
-      PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) cartavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+      PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) cartavgpr[pl] += fullpr[MAPFULLPR(i,fakej,k,pl)];
 
       // cumulate quasi-CART U1-U3 (stored in fullpr[B1-B3])
-      cartavgpr[U1] += fullpr[MAPFULLPR(i,k,B1)];
-      cartavgpr[U2] += fullpr[MAPFULLPR(i,k,B2)];
-      cartavgpr[U3] += fullpr[MAPFULLPR(i,k,B3)];
+      cartavgpr[U1] += fullpr[MAPFULLPR(i,fakej,k,B1)];
+      cartavgpr[U2] += fullpr[MAPFULLPR(i,fakej,k,B2)];
+      cartavgpr[U3] += fullpr[MAPFULLPR(i,fakej,k,B3)];
 
     }// end cumulation over k at j=rj
 
@@ -3385,8 +3397,8 @@ int polesmooth(int whichx2,
     /////////////
     PBOUNDLOOP(pliter,pl){
       if(pl<B1 || pl>B3){ // skip unused B1-B3
-	cartavgpr[pl] /= (FTYPE)totalsize[3];
-	spcavgpr[pl]  /= (FTYPE)totalsize[3];
+        cartavgpr[pl] /= (FTYPE)totalsize[3];
+        spcavgpr[pl]  /= (FTYPE)totalsize[3];
       }
     }
 
@@ -3413,60 +3425,60 @@ int polesmooth(int whichx2,
       for (j=j0; j != stopj; j+=dj) { // over interior j to stopj that is (typically) rj
 
 
-	//////////////////////////////////////////////////
-	// TRANSFORM CART to quasi-SPC
-	// Current interior-pole location (j, which is inside previous rj location)
-	bl_coord_ijk_2(i,j,k,CENT,X,V);
-	r = V[1];
-	th = V[2];
-	ph = V[3];
+        //////////////////////////////////////////////////
+        // TRANSFORM CART to quasi-SPC
+        // Current interior-pole location (j, which is inside previous rj location)
+        bl_coord_ijk_2(i,j,k,CENT,X,V);
+        r = V[1];
+        th = V[2];
+        ph = V[3];
 
-	// Set non-velocity SPC (cartavgpr[B1-B3] has nothing, so avoid)
-	PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) spcpr[pl] = spcavgpr[pl]; // could also use cartavgpr too.  Same results for scalars.
+        // Set non-velocity SPC (cartavgpr[B1-B3] has nothing, so avoid)
+        PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) spcpr[pl] = spcavgpr[pl]; // could also use cartavgpr too.  Same results for scalars.
 	
-	// Set quasi-SPC for i,j,k from phi-averaged quasi-Cart from i,j=rj,all k
-	// just inverse transformation of above cartavgpr(pr)
- 	spcpr[U1] = cos(ph)*sin(th)*cartavgpr[U1] + sin(ph)*sin(th)*cartavgpr[U2] + cos(th)*cartavgpr[U3];
-	spcpr[U2] = pow(r,-1)*(cos(ph)*cos(th)*cartavgpr[U1] + cos(th)*sin(ph)*cartavgpr[U2] - sin(th)*cartavgpr[U3]);
-	spcpr[U3] = (1./sin(th))*pow(r,-1)*(-sin(ph)*cartavgpr[U1] + cos(ph)*cartavgpr[U2]);
+        // Set quasi-SPC for i,j,k from phi-averaged quasi-Cart from i,j=rj,all k
+        // just inverse transformation of above cartavgpr(pr)
+        spcpr[U1] = cos(ph)*sin(th)*cartavgpr[U1] + sin(ph)*sin(th)*cartavgpr[U2] + cos(th)*cartavgpr[U3];
+        spcpr[U2] = pow(r,-1)*(cos(ph)*cos(th)*cartavgpr[U1] + cos(th)*sin(ph)*cartavgpr[U2] - sin(th)*cartavgpr[U3]);
+        spcpr[U3] = (1./sin(th))*pow(r,-1)*(-sin(ph)*cartavgpr[U1] + cos(ph)*cartavgpr[U2]);
 
-	// The average of v_x and v_y around axis removes rotation around axis, so add back-in the phi-averaged rotational velocity
-	spcpr[U3] += spcavgpr[U3];
+        // The average of v_x and v_y around axis removes rotation around axis, so add back-in the phi-averaged rotational velocity
+        spcpr[U3] += spcavgpr[U3];
 
-	// TODOMARK GODMARK: Why not also add back-in average compression/expansion around axis in \theta direction by doing:
-	// Might be better for shocks near axis
-	// spcpr[U2] += spcavgpr[U2];
+        // TODOMARK GODMARK: Why not also add back-in average compression/expansion around axis in \theta direction by doing:
+        // Might be better for shocks near axis
+        // spcpr[U2] += spcavgpr[U2];
 
-	// NOTEMARK: spcpr[U1]=r is just like cartavgpr[U3]=z, so no recovery of net motion required.
+        // NOTEMARK: spcpr[U1]=r is just like cartavgpr[U3]=z, so no recovery of net motion required.
 
 
-	//////////////////////////////////////////////////
-	// TRANSFORM quasi-SPC to PRIMECOORDS
+        //////////////////////////////////////////////////
+        // TRANSFORM quasi-SPC to PRIMECOORDS
 
-	// set pr to assign
-	pr = MAC(prim,i,j,k);
+        // set pr to assign
+        pr = MAC(prim,i,j,k);
 
-	// Set other non-velocity, non-field things (DO NOT OVERWRITE FIELD!)
-	PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) pr[pl] = spcpr[pl];
+        // Set other non-velocity, non-field things (DO NOT OVERWRITE FIELD!)
+        PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) pr[pl] = spcpr[pl];
 
     	// Since using simplified dxdxp above, must use inverse of that for consistency.  Cannot use full idxdxp unless used full dxdxp.
-	//	idxdxprim_ijk(i, j, k, CENT, idxdxp);
-	dxdxprim_ijk(i, j, k, CENT, dxdxp);
-	idxdxp[RR][RR]=dxdxp[TH][TH]/(dxdxp[TH][TH]*dxdxp[RR][RR]-dxdxp[TH][RR]*dxdxp[RR][TH]);
-	idxdxp[RR][TH]=dxdxp[RR][TH]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
-	idxdxp[TH][RR]=dxdxp[TH][RR]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
-	idxdxp[TH][TH]=dxdxp[RR][RR]/(dxdxp[TH][TH]*dxdxp[RR][RR]-dxdxp[TH][RR]*dxdxp[RR][TH]);
-	idxdxp[PH][PH]=1.0/dxdxp[PH][PH];
+        //	idxdxprim_ijk(i, j, k, CENT, idxdxp);
+        dxdxprim_ijk(i, j, k, CENT, dxdxp);
+        idxdxp[RR][RR]=dxdxp[TH][TH]/(dxdxp[TH][TH]*dxdxp[RR][RR]-dxdxp[TH][RR]*dxdxp[RR][TH]);
+        idxdxp[RR][TH]=dxdxp[RR][TH]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
+        idxdxp[TH][RR]=dxdxp[TH][RR]/(dxdxp[TH][RR]*dxdxp[RR][TH]-dxdxp[TH][TH]*dxdxp[RR][RR]);
+        idxdxp[TH][TH]=dxdxp[RR][RR]/(dxdxp[TH][TH]*dxdxp[RR][RR]-dxdxp[TH][RR]*dxdxp[RR][TH]);
+        idxdxp[PH][PH]=1.0/dxdxp[PH][PH];
 
-	// note that the below idxdp[] is transposed compared to how would act on u_\mu
-	pr[U1]=idxdxp[RR][RR]*spcpr[U1] + idxdxp[RR][TH]*spcpr[U2];
-	pr[U2]=idxdxp[TH][RR]*spcpr[U1] + idxdxp[TH][TH]*spcpr[U2];
-	pr[U3]=idxdxp[PH][PH]*spcpr[U3];
+        // note that the below idxdp[] is transposed compared to how would act on u_\mu
+        pr[U1]=idxdxp[RR][RR]*spcpr[U1] + idxdxp[RR][TH]*spcpr[U2];
+        pr[U2]=idxdxp[TH][RR]*spcpr[U1] + idxdxp[TH][TH]*spcpr[U2];
+        pr[U3]=idxdxp[PH][PH]*spcpr[U3];
 
-	// DONE!  Have full pr=prim[] set now
+        // DONE!  Have full pr=prim[] set now
 
 #if(DEBUGPOLESMOOTH)
-	PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereFINAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g\n",t,i,j,k,pl,pr[pl]);
+        PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereFINAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g\n",t,i,j,k,pl,pr[pl]);
 #endif
 
 
@@ -3514,21 +3526,21 @@ void user1_adjust_fluxcttoth_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
       if(dir==X1DN && BCtype[X1DN]==FIXEDUSEPANALYTIC || dir==X1UP && BCtype[X1UP]==FIXEDUSEPANALYTIC){ // otherwise don't do
 
-	i = dofluxreg[ACTIVEREGION][dir];
+        i = dofluxreg[ACTIVEREGION][dir];
 
-	//if boundary is not on this processor, do not modify emf's
-	if( i < -MAXBND ) continue;
-	if( i > N1-1+MAXBND) continue;
+        //if boundary is not on this processor, do not modify emf's
+        if( i < -MAXBND ) continue;
+        if( i > N1-1+MAXBND) continue;
 
-	//the boundary is on the processor, so reset emf's to zero at the boundary
-	if(dir==X1UP && BCtype[dir]==FIXEDUSEPANALYTIC){ // i.e. don't reset EMF2=0 for lower boundary since that corresponds to rotation
-	  COMPFULLLOOPP1_23{ 
-	    MACP1A0(emf,2,i,j,k) = 0.0;
-	  }
-	}
-	COMPFULLLOOPP1_23{ 
-	  MACP1A0(emf,3,i,j,k) = 0.0;
-	}
+        //the boundary is on the processor, so reset emf's to zero at the boundary
+        if(dir==X1UP && BCtype[dir]==FIXEDUSEPANALYTIC){ // i.e. don't reset EMF2=0 for lower boundary since that corresponds to rotation
+          COMPFULLLOOPP1_23{ 
+            MACP1A0(emf,2,i,j,k) = 0.0;
+          }
+        }
+        COMPFULLLOOPP1_23{ 
+          MACP1A0(emf,3,i,j,k) = 0.0;
+        }
       }
     }
   }
@@ -3612,46 +3624,46 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
       if(dir==X1DN && BCtype[X1DN]==FIXEDUSEPANALYTIC || dir==X1UP && BCtype[X1UP]==FIXEDUSEPANALYTIC){ // otherwise don't do
 
-	//if boundary is not on this processor, do not modify emf's
-	i = dofluxreg[ACTIVEREGION][dir];
-	if( i < -MAXBND ) continue;
-	if( i > N1-1+MAXBND) continue;
+        //if boundary is not on this processor, do not modify emf's
+        i = dofluxreg[ACTIVEREGION][dir];
+        if( i < -MAXBND ) continue;
+        if( i > N1-1+MAXBND) continue;
 
 
-	//the boundary is on the processor, so reset emf's to zero at the boundary
-	COMPFULLLOOPP1_23{
-	  // EMF[3]:
+        //the boundary is on the processor, so reset emf's to zero at the boundary
+        COMPFULLLOOPP1_23{
+          // EMF[3]:
 #if(N1>1)
-	  MACP1A1(fluxvec,1,i,j,k,B2) = 0.0;
-	  MACP1A1(fluxvec,1,i,j,k,B1) = 0.0; // always zero
+          MACP1A1(fluxvec,1,i,j,k,B2) = 0.0;
+          MACP1A1(fluxvec,1,i,j,k,B1) = 0.0; // always zero
 #endif
 #if(N2>1)
-	  MACP1A1(fluxvec,2,i,j,k,B1) = 0.0;
-	  MACP1A1(fluxvec,2,i,j,k,B2) = 0.0; // always zero
+          MACP1A1(fluxvec,2,i,j,k,B1) = 0.0;
+          MACP1A1(fluxvec,2,i,j,k,B2) = 0.0; // always zero
 #endif
-	}
+        }
       }
 
       
       if(dir==X1UP && BCtype[dir]==FIXEDUSEPANALYTIC){ // i.e. don't reset EMF2=0 for lower boundary since that corresponds to rotation
 
-	//if boundary is not on this processor, do not modify emf's
-	i = dofluxreg[ACTIVEREGION][dir];
-	if( i < -MAXBND ) continue;
-	if( i > N1-1+MAXBND) continue;
+        //if boundary is not on this processor, do not modify emf's
+        i = dofluxreg[ACTIVEREGION][dir];
+        if( i < -MAXBND ) continue;
+        if( i > N1-1+MAXBND) continue;
 
 
-	COMPFULLLOOPP1_23{
-	  // EMF[2]:
+        COMPFULLLOOPP1_23{
+          // EMF[2]:
 #if(N1>1)
-	  MACP1A1(fluxvec,1,i,j,k,B3) = 0.0;
-	  MACP1A1(fluxvec,1,i,j,k,B1) = 0.0; // always zero
+          MACP1A1(fluxvec,1,i,j,k,B3) = 0.0;
+          MACP1A1(fluxvec,1,i,j,k,B1) = 0.0; // always zero
 #endif
 #if(N3>1)
-	  MACP1A1(fluxvec,3,i,j,k,B1) = 0.0;
-	  MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
+          MACP1A1(fluxvec,3,i,j,k,B1) = 0.0;
+          MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 #endif
-	}
+        }
       }
 
 
@@ -3761,27 +3773,27 @@ void check_spc_singularities_user(void)
     
       for(indloc=0;indloc<numlocs;indloc++){
 
-	if(indloc==0) loc=FACE1;
-	else if(indloc==1) loc=CORN3;
-	else if(indloc==2) loc=CORN2;
-	else if(indloc==3) loc=CORNT;
+        if(indloc==0) loc=FACE1;
+        else if(indloc==1) loc=CORN3;
+        else if(indloc==2) loc=CORN2;
+        else if(indloc==3) loc=CORNT;
 
-	// get local metric quantities for this loc,i,j,k
-	GETLOCALMETRIC(loc,i,j,k);
+        // get local metric quantities for this loc,i,j,k
+        GETLOCALMETRIC(loc,i,j,k);
 
-	singfound=0;
-	singfound+=(localgdet[0]!=0.0);
+        singfound=0;
+        singfound+=(localgdet[0]!=0.0);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) singfound+=(LOCALEOMFUNCMAC(pl)!=0.0);
+        PLOOP(pliter,pl) singfound+=(LOCALEOMFUNCMAC(pl)!=0.0);
 #endif
 
-	if(singfound){
-	  if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
-	  localgdet[0]=0.0;
+        if(singfound){
+          if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
+          localgdet[0]=0.0;
 #if(WHICHEOM!=WITHGDET)
-	  PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
+          PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif
-	}
+        }
       }// end over indloc
     }// end loop 23
   }
@@ -3828,37 +3840,37 @@ void check_spc_singularities_user(void)
 
       for(indloc=0;indloc<numlocs;indloc++){
 
-	if(indloc==0) loc=FACE2;
-	else if(indloc==1) loc=CORN3;
-	else if(indloc==2) loc=CORN1;
-	else if(indloc==3) loc=CORNT;
+        if(indloc==0) loc=FACE2;
+        else if(indloc==1) loc=CORN3;
+        else if(indloc==2) loc=CORN1;
+        else if(indloc==3) loc=CORNT;
 
-	// get local metric quantities for this loc,i,j,k
-	GETLOCALMETRIC(loc,i,j,k);
+        // get local metric quantities for this loc,i,j,k
+        GETLOCALMETRIC(loc,i,j,k);
 
-	singfound=0;
-	singfound+=(fabs(localgdet[0])>0.0);
+        singfound=0;
+        singfound+=(fabs(localgdet[0])>0.0);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) singfound+=(fabs(LOCALEOMFUNCMAC(pl))>0.0);
+        PLOOP(pliter,pl) singfound+=(fabs(LOCALEOMFUNCMAC(pl))>0.0);
 #endif
 
-	nonsingfound=0;
-	nonsingfound+=(fabs(localgdet[0])<100*NUMEPSILON);
+        nonsingfound=0;
+        nonsingfound+=(fabs(localgdet[0])<100*NUMEPSILON);
 #if(WHICHEOM!=WITHGDET)
-	PLOOP(pliter,pl) nonsingfound+=(fabs(LOCALEOMFUNCMAC(pl))<100*NUMEPSILON);
+        PLOOP(pliter,pl) nonsingfound+=(fabs(LOCALEOMFUNCMAC(pl))<100*NUMEPSILON);
 #endif
 
-	if(needzero && singfound){
-	  if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
-	  localgdet[0]=0.0;
+        if(needzero && singfound){
+          if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
+          localgdet[0]=0.0;
 #if(WHICHEOM!=WITHGDET)
-	  PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
+          PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif
-	}
-	else if(needzero==0 && nonsingfound){
-	  dualfprintf(fail_file,"Detected |\\detg|<=NUMEPSILON at i=%d j=%d k=%d loc=%d with gdet=%21.15g: Must be non-zero\n",i,j,k,loc,localgdet[0]);
-	  myexit(9813523);
-	}
+        }
+        else if(needzero==0 && nonsingfound){
+          dualfprintf(fail_file,"Detected |\\detg|<=NUMEPSILON at i=%d j=%d k=%d loc=%d with gdet=%21.15g: Must be non-zero\n",i,j,k,loc,localgdet[0]);
+          myexit(9813523);
+        }
       }// end over indloc
     }// end loop 13
   }// end over poles
@@ -3883,17 +3895,17 @@ int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE
       dualfprintf(fail_file,"k=%d\n",k);
       dualfprintf(fail_file,"%02s | i=\n   ","j");
       for(i=-N1BND;i<=N1BND;i++){
-	if(ispstag==1 && (pl==5 && i==-N1BND)) dualfprintf(fail_file,"%021s ","NA");
-	else dualfprintf(fail_file,"%19s%02d "," ",i);
+        if(ispstag==1 && (pl==5 && i==-N1BND)) dualfprintf(fail_file,"%021s ","NA");
+        else dualfprintf(fail_file,"%19s%02d "," ",i);
       }
       dualfprintf(fail_file,"\n");
       for(j=-N2BND;j<=N2BND;j++){
-	dualfprintf(fail_file,"%02d ",j);
-	for(i=-N1BND;i<=N1BND;i++){
-	  if(ispstag==1 && (pl==5 && i==-N1BND || pl==6 && j==-N2BND)) dualfprintf(fail_file,  "%21s ","NA");
-	  else  dualfprintf(fail_file,  "%21.15g ",MACP0A1(prim,i,j,k,pl));
-	}
-	dualfprintf(fail_file,"\n");
+        dualfprintf(fail_file,"%02d ",j);
+        for(i=-N1BND;i<=N1BND;i++){
+          if(ispstag==1 && (pl==5 && i==-N1BND || pl==6 && j==-N2BND)) dualfprintf(fail_file,  "%21s ","NA");
+          else  dualfprintf(fail_file,  "%21.15g ",MACP0A1(prim,i,j,k,pl));
+        }
+        dualfprintf(fail_file,"\n");
       }
       dualfprintf(fail_file,"\n");
     }

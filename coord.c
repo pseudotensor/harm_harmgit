@@ -1445,8 +1445,11 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #if(1)
     // So use X[2] only -- closer to using j itself that we don't have available.
     if(fabs(startx[TH]-X[TH])<SINGSMALL) V[TH]=SINGSMALL;
-    FTYPE endx2=startx[TH]+totalsize[2]*dx[TH];
+    FTYPE endx2=startx[TH]+totalsize[TH]*dx[TH];
     if(fabs(endx2-X[TH])<SINGSMALL) V[TH]=M_PI-SINGSMALL;
+
+    //    dualfprintf(fail_file,"X[TH]=%g V[TH]=%g startx2=%g endx2=%g\n",X[TH],V[TH],startx[TH],endx2);
+
 #endif
 #if(0)
     // OK, but worry about large radii where \theta is small towards axis
@@ -2046,13 +2049,22 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       bl_coord(Xl, Vl);
       dxdxp[j][k] = (Vh[j] - Vl[j]) / (Xh[k] - Xl[k]);
 
+
+      if(j==k && fabs(dxdxp[j][k])<NUMEPSILON){
+	dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g > %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
+      }
+
+
       // GODMARK: unless N is a power of 2, X causes V to not be machine representable
       // GODMARK: Also, not only Xh-Xl, but each Xl and Xh must be machine representable
 
-      // So even for a uniform grid dxdxp can vary near machine level
-      //      dualfprintf(fail_file,"Vh=%21.15g Vl=%21.15g Xh=%2.15g Xl=%21.15g DX=%21.15g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
-      //      dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
-      //	}
+#if(0)
+      if(j==2 && k==2 && ( fabs(Vh[2]-0.0)<1E-2 || fabs(Vh[2]-M_PI)<1E-2)){
+	// So even for a uniform grid dxdxp can vary near machine level
+	dualfprintf(fail_file,"Vh=%21.15g Vl=%21.15g Xh=%2.15g Xl=%21.15g DX=%21.15g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
+	dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
+      }
+#endif
 
     }
   }

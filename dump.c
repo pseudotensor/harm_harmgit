@@ -440,6 +440,9 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
     if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
       *numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
     }
+
+    *numcolumns+=3;
+
   }
 
 
@@ -606,6 +609,14 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
   myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
 #endif
+
+
+  if(FLUXB==FLUXCTSTAG) myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf);
+  else{
+    FTYPE plblob[NPR]={0};
+    myset(datatype,plblob,B1,3,writebuf);
+  }
+
 
   if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
     // uses jrdp3dudebug in gtwod.m that assumes CALCFARADAYANDCURRENTS==0

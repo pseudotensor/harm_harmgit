@@ -136,7 +136,7 @@ int init(int *argc, char **argv[])
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
 
-    //THETAROT = 0.5*0.7; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
+    THETAROT = 0.0; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
 
     // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
     // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
@@ -477,7 +477,7 @@ int init(int *argc, char **argv[])
 
 
 
-#if(0) // SUPERGODMARK: Deal with initial tilt
+#if(1) // SUPERGODMARK: Deal with initial tilt
   ///////////////////
   //
   // Both normal and restart mode need to setup grid
@@ -485,7 +485,8 @@ int init(int *argc, char **argv[])
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
 
-    //    THETAROT = 0.5*0.7; // reset grid with rotation
+    THETAROT = 1.5708; // reset grid with rotation
+    //THETAROT = 0.0; // reset grid with rotation
 
     // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
     // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
@@ -712,8 +713,8 @@ int prepre_init(void)
   }
   else{
     // choice
-    //    binaryoutput=TEXTOUTPUT;
-    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
+    binaryoutput=TEXTOUTPUT;
+    //binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
     sortedoutput=SORTED;
   }
 

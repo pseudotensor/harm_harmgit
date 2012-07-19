@@ -826,6 +826,8 @@ int gdet_func_singcheck(int whichcoord, FTYPE *V,FTYPE (*generalmatrixlower)[NDI
   }
 #endif
 
+  //  dualfprintf(fail_file,"gdet=%g\n",*gdet);
+
 
   return(toreturn);
 

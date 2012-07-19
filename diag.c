@@ -320,8 +320,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     tlastareamap=t;
   }
 
-
-
+  if(dodumpgen[IMAGEDUMPTYPE]==1){
+    area_map(call_code, FINALTDUMPAREAMAP, 10, -4, N2-1,0, GLOBALPOINT(pdump));
+  }
 
 
   ///////////////////////

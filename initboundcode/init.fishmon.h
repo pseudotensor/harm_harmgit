@@ -11,9 +11,9 @@
 #undef N3
 #endif
 
-#define N1 64
+#define N1 32
 #define N2 64
-#define N3 1
+#define N3 8
 
 // atch adjusts
 #undef MAXWELL
@@ -147,7 +147,7 @@
 #define MAXWELL PRIMMAXWELL
 
 
-#define TRACKVPOT 1 // now on by default
+#define TRACKVPOT 0 // now on by default
 #define EVOLVEWITHVPOT 0 // not on by default
 
 #define DOGRIDSECTIONING 0 // not on by default
@@ -171,6 +171,8 @@
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
+#undef DOMIXTHETAPHI
+#define DOMIXTHETAPHI 1 // for g_{\theta\phi} // no choice
 #endif
 
 
@@ -178,12 +180,12 @@
 #undef DOPOLESMOOTH
 #undef DOPOLEGAMMADEATH
 #define DOPOLEDEATH 0
-#define DOPOLESMOOTH 2
+#define DOPOLESMOOTH 0
 #define DOPOLEGAMMADEATH 0 // 2 // not sure if this is needed if polesmooth() used.  Seems not necessary.
 
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
-#if(DOPOLESMOOTH)
+#if(DOPOLESMOOTH||1)
 #define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
 #else
 #define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working yet, but may be just more sensitive
@@ -200,8 +202,8 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0
-//#define FULLOUTPUT MAXBND
-#define FULLOUTPUT 0
+#define FULLOUTPUT MAXBND
+//#define FULLOUTPUT 0
 
 
 #define MAILWHENDONE 1
@@ -281,22 +283,25 @@
 #define HYDROLIMADJUSTONLY 0
 #define FLUXADJUST FLUXFIXED
 #define HYDROFLUXADJUSTONLY 0
-#define STEPOVERNEGU NEGDENSITY_NEVERFIXUP
-#define STEPOVERNEGRHO NEGDENSITY_NEVERFIXUP
-#define STEPOVERNEGRHOU NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGU NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGRHO NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGRHOU NEGDENSITY_NEVERFIXUP
+#define STEPOVERNEGU NEGDENSITY_FIXONFULLSTEP
+#define STEPOVERNEGRHO NEGDENSITY_FIXONFULLSTEP
+#define STEPOVERNEGRHOU NEGDENSITY_FIXONFULLSTEP
 #define UTOPRIMADJUST UTOPRIMAVG
 #define UTOPRIMFAILRETURNTYPE UTOPRIMRETURNADJUSTED
 #define SMOOTHSING 0 // near BH
 #define COORDSINGFIX (1) // for FLUXB==FLUXCTSTAG
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
-//#define SINGSMALL (1E-3)
-#define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (1E-7)
+//#define SINGSMALL (10000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-//#define CONNDERTYPE DIFFGAMMIE // DEBUG
-#define CONNDERTYPE DIFFNUMREC
+#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1
@@ -336,7 +341,9 @@
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 // #define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL (used in Sasha tests)
-#define RESCALEINTERP 0
+#undef VARTOINTERPFIELD
+#define VARTOINTERPFIELD GDETVERSION
+#define RESCALEINTERP 1
 #define DOEXTRAINTERP 0
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
@@ -374,7 +381,7 @@
 #define DODUMPOTHER 0
 
 #undef FLUXDUMP
-#define FLUXDUMP 0
+#define FLUXDUMP 1
 
 struct Ccoordparams {
     double timescalefactor;
@@ -390,7 +397,7 @@ struct Ccoordparams {
 // disable things that are not really needed because they are debugging type things
 //
 ///////////////////////////////////////
-#if(PRODUCTION>=2)
+#if(PRODUCTION>=3)
 //#undef DOJETDIAG
 #undef DODEBUG
 #undef DOFLOORDIAG

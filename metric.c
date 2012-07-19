@@ -296,7 +296,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	// all the above are analytic, so have to convert to prim coords.
 	gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
       }
-      //  DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+      //DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
       //    if(ptrgeom->i==7 && nstep==1084){
       //    //      DLOOP(j,k) dualfprintf(fail_file,"present time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);
@@ -1539,7 +1539,7 @@ void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   //  if(nstep>1051){
   // dualfprintf(fail_file,"MBH=%21.15g a=%21.15g gcov[GIND(TT,TT)]=%21.15g\n",MBH,a,gcov[GIND(TT,TT)]);
     
-  //  DLOOP(j,k) dualfprintf(fail_file,"ks gcov[%d][%d]=%g\n",j,k,gcov[GIND(j,k)]);
+  //  DLOOP(j,k) dualfprintf(fail_file,"ks V=%g gcov[%d][%d]=%g\n",V[j],j,k,gcov[GIND(j,k)]);
   //}
 
 }

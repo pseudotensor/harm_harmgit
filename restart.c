@@ -210,20 +210,20 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
   // always NPR
-  //*numcolumns=NPR*2; // primitives and conservatives
+  *numcolumns=NPR*2; // primitives and conservatives
   //*numcolumns=NPR; // primitives only
 
 
   // counters not crucial
   //  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] + dnumcolumns[DEBUGDUMPTYPE] ;
 
-  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
+  //  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
 
   
-  if(EVOLVEWITHVPOT||TRACKVPOT){
-    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
-    *numcolumns += dnumcolumns[VPOTDUMPTYPE];
-  }
+  //if(EVOLVEWITHVPOT||TRACKVPOT){
+  //    // even with TRACKVPOT, with vpot as diagnostic, don't regenerate vpot from B, so need to store in restart file so can continue updating it.s
+  //    *numcolumns += dnumcolumns[VPOTDUMPTYPE];
+  //  }
 
   *numversion=1;
 }
@@ -240,23 +240,23 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // NOTEMARK: see also dump.c
 
-  if(EVOLVEWITHVPOT||TRACKVPOT){
-    if(dnumcolumns[VPOTDUMPTYPE]>0){
-      int jj;
-      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
-      }
-    }
-  }
+  //if(EVOLVEWITHVPOT||TRACKVPOT){
+  //    if(dnumcolumns[VPOTDUMPTYPE]>0){
+  //      int jj;
+  //      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+  //	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+  //      }
+  //    }
+  //  }
   
-  if(dnumcolumns[DISSDUMPTYPE]>0){
-    myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
-  }
+  //  if(dnumcolumns[DISSDUMPTYPE]>0){
+  //    myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
+  //  }
 
 
-  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
-    myset(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
-  }
+  //  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
+  //    myset(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
+  //  }
 
   // too many of these and not crucial since just counters
   //  if(dnumcolumns[DEBUGDUMPTYPE]>0){
@@ -333,23 +333,23 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
   // NOTEMARK: see also dump.c
 
-  if(EVOLVEWITHVPOT||TRACKVPOT){
-    if(dnumcolumns[VPOTDUMPTYPE]>0){
-      int jj;
-      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
-      }
-    }
-  }
+  //  if(EVOLVEWITHVPOT||TRACKVPOT){
+  //    if(dnumcolumns[VPOTDUMPTYPE]>0){
+  //      int jj;
+  //      for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+  //	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+  //      }
+  //    }
+  //  }
 
-  if(dnumcolumns[DISSDUMPTYPE]>0){
-    myget(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
-  }
+  //  if(dnumcolumns[DISSDUMPTYPE]>0){
+  //    myget(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
+  //  }
 
 
-  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
-    myget(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
-  }
+  //  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
+  //    myget(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
+  //  }
 
   // counters not crucial
   //  if(dnumcolumns[DEBUGDUMPTYPE]>0){

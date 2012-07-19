@@ -134,6 +134,16 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
 
+#if(0)
+	int pl=B1-1+dir;
+	if(i==0 && (j==0||j==-1) && k==0 && dir==1){
+	  dualfprintf(fail_file,"vpot2fieldDN: dir=%d j=%d : %g %g %g\n",dir,j,MACP0A1(pfield,i,j,k,pl), MACP0A1(ufield,i,j,k,pl),igdetgnosing[dir]);
+	}
+	if(i==0 && (j==N2-1||j==N2) && k==0 && dir==1){
+	  dualfprintf(fail_file,"vpot2fieldUP: dir=%d j=%d: %g %g %g\n",dir,j,MACP0A1(pfield,i,j,k,pl), MACP0A1(ufield,i,j,k,pl),igdetgnosing[dir]);
+	}
+#endif
+
       }/// end 3D LOOP
     }// end if
  
@@ -152,6 +162,21 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 	set_igdetsimple(ptrgeomf[dir]);
 	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+
+
+#if(0)
+	if(i==0&&k==0){
+	  dualfprintf(fail_file,"GOD: j=%d : %g %g %g : %g %g %g : %g %g\n",j,NOAVGCORN_2(A[1],i,j,kp1mac(k)),NOAVGCORN_2(A[1],i,j,k),dx[3],NOAVGCORN_2(A[3],ip1mac(i),j,k),-NOAVGCORN_2(A[3],i,j,k),dx[1],igdetgnosing[dir],MACP0A1(pfield,i,j,k,B1-1+dir));
+	}
+
+	int pl=B1-1+dir;
+	if((i==0 || i==-1) && j==0 && k==0 && dir==2){
+	  dualfprintf(fail_file,"vpot2fieldDN: dir=%d i=%d : %g %g %g\n",dir,i,MACP0A1(pfield,i,j,k,pl), MACP0A1(ufield,i,j,k,pl),igdetgnosing[dir]);
+	}
+	if((i==0 || i==-1) && j==N2 && k==N3/2 && dir==2){
+	  dualfprintf(fail_file,"vpot2fieldUP: dir=%d i=%d : %g %g %g\n",dir,i,MACP0A1(pfield,i,j,k,pl), MACP0A1(ufield,i,j,k,pl),igdetgnosing[dir]);
+	}
+#endif
 
       }
     }
@@ -175,6 +200,9 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
       }
     }
   }// end full parallel region (with implied barrier)
+
+
+
 
 
 
@@ -288,12 +316,12 @@ int fluxcalc_fluxctstag(int stage,
 
     //loop over the interfaces where fluxes are computed -- atch, useCOMPZSLOOP( is, ie, js, je, ks, ke ) { ... }
     // since looping over edges (emfs) and flux loop different than emf loop, then expand loops so consistent with both fluxes corresponding to that emf
-    is=emffluxloop[dir][FIS];
-    ie=emffluxloop[dir][FIE];
-    js=emffluxloop[dir][FJS];
-    je=emffluxloop[dir][FJE];
-    ks=emffluxloop[dir][FKS];
-    ke=emffluxloop[dir][FKE];
+    is=emffluxloop[dir][FIS]-1;
+    ie=emffluxloop[dir][FIE]+1;
+    js=emffluxloop[dir][FJS]-1;
+    je=emffluxloop[dir][FJE]+1;
+    ks=emffluxloop[dir][FKS]-1;
+    ke=emffluxloop[dir][FKE]+1;
 
 
     // dir corrsponds to *edge,emf* NOT face
@@ -449,7 +477,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     FTYPE emffinal;
     FTYPE geomcornodir1,geomcornodir2;
     FTYPE topwave[COMPDIM-1],bottomwave[COMPDIM-1];
-    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;//OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
     
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
@@ -512,7 +540,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // -?del? since going from FACE to CORN
       // del2 for c2d[][0] since wspeed[odir1] is wave going in odir1-direction, whereas other wavespeed to MAX with is in other (odir2) direction
       if(Nvec[odir1]>1){
-	c2d[CMIN][0] = fabs(MAX(0.,MAX(-MACP2A0(wspeed,odir1,CMIN,i,j,k),-MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
+	c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMIN,i,j,k),+MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
 	c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMAX,i,j,k),+MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
       }
       else{
@@ -523,7 +551,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
       
       if(Nvec[odir2]>1){
-	c2d[CMIN][1] = fabs(MAX(0.,MAX(-MACP2A0(wspeed,odir2,CMIN,i,j,k),-MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
+	c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMIN,i,j,k),+MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
 	c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMAX,i,j,k),+MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
       }
       else{
@@ -534,6 +562,18 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
       ctop[0]    = MAX(c2d[CMIN][0],c2d[CMAX][0]);
       ctop[1]    = MAX(c2d[CMIN][1],c2d[CMAX][1]);
+
+
+
+      //      dualfprintf(fail_file,"speeds: %g %g %g %g %g %g %g %g\n",
+      // MACP2A0(wspeed,odir1,CMIN,i,j,k),
+      // MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2),
+      // MACP2A0(wspeed,odir1,CMAX,i,j,k),
+      // MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2),
+      // MACP2A0(wspeed,odir2,CMIN,i,j,k),
+      // MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1),
+      // MACP2A0(wspeed,odir2,CMAX,i,j,k),
+      // MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1));
 
 
       //////////////////////////////////
@@ -551,6 +591,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // dB[1] corresponds to dB["odir2"]
       //      dB[1] = MACP3A0(pbcorn,dir,B1-1+odir2,1,i,j,k) - MACP3A0(pbcorn,dir,B1-1+odir2,0,i,j,k) ;
       dB[1] = MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,1) - MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,0) ;
+
 
 
 
@@ -641,12 +682,34 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       geomcornodir2=1.0;
 #endif
 
+      if(nstep<=10) emffinal=0.0;
 
 
 #if(0) // DEBUG:
-    if(i==26 && j==40 && k==0){
-      dualfprintf(fail_file,"ORIG: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
+    if(i==0 && j==0 && k==0){
+      if(nstep>=11) dualfprintf(fail_file,"\nTOUCH\n");
+      dualfprintf(fail_file,"\nORIGDN: dir=%d odir1=%d odir2=%d\n",dir,odir1,odir2);
+      dualfprintf(fail_file,"speeds: %g %g %g %g %g %g %g %g\n",MACP2A0(wspeed,odir1,CMIN,i,j,k), MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2),MACP2A0(wspeed,odir1,CMAX,i,j,k),MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2),MACP2A0(wspeed,odir2,CMIN,i,j,k),MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1),MACP2A0(wspeed,odir2,CMAX,i,j,k),MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1));
+      dualfprintf(fail_file,"\nORIGDN: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
       dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
+      dualfprintf(fail_file,"Bs: %g %g : %g %g\n",MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,1),MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,0),MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,1),MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,0));
+      if(dir==3) dualfprintf(fail_file,"B1h=%g B1l=%g\n",GLOBALMACP0A1(pstagglobal,i,j,k,B1),GLOBALMACP0A1(pstagglobal,i,j-1,k,B1));
+      if(dir==3) dualfprintf(fail_file,"B2h=%g B2l=%g\n",GLOBALMACP0A1(pstagglobal,i-1,j,k,B2),GLOBALMACP0A1(pstagglobal,i,j,k,B2));
+      if(dir==3) dualfprintf(fail_file,"B1h=%g B1l=%g\n",GLOBALMACP0A1(unewglobal,i,j,k,B1),GLOBALMACP0A1(unewglobal,i,j-1,k,B1));
+      if(dir==3) dualfprintf(fail_file,"B2h=%g B2l=%g\n",GLOBALMACP0A1(unewglobal,i-1,j,k,B2),GLOBALMACP0A1(unewglobal,i,j,k,B2));
+    }
+
+    if(i==0 && j==N2 && k==N3/2){
+      if(nstep>=11) dualfprintf(fail_file,"\nTOUCH\n");
+      dualfprintf(fail_file,"\nORIGUP: dir=%d odir1=%d odir2=%d\n",dir,odir1,odir2);
+      dualfprintf(fail_file,"speeds: %g %g %g %g %g %g %g %g\n",MACP2A0(wspeed,odir1,CMIN,i,j,k), MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2),MACP2A0(wspeed,odir1,CMAX,i,j,k),MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2),MACP2A0(wspeed,odir2,CMIN,i,j,k),MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1),MACP2A0(wspeed,odir2,CMAX,i,j,k),MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1));
+      dualfprintf(fail_file,"\nORIGUP: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
+      dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
+      dualfprintf(fail_file,"Bs: %g %g : %g %g\n",MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,1),MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,0),MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,1),MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,0));
+      if(dir==3) dualfprintf(fail_file,"B1h=%g B1l=%g\n",GLOBALMACP0A1(pstagglobal,i,j,k,B1),GLOBALMACP0A1(pstagglobal,i,j-1,k,B1));
+      if(dir==3) dualfprintf(fail_file,"B2h=%g B2l=%g\n",GLOBALMACP0A1(pstagglobal,i-1,j,k,B2),GLOBALMACP0A1(pstagglobal,i,j,k,B2));
+      if(dir==3) dualfprintf(fail_file,"B1h=%g B1l=%g\n",GLOBALMACP0A1(unewglobal,i,j,k,B1),GLOBALMACP0A1(unewglobal,i,j-1,k,B1));
+      if(dir==3) dualfprintf(fail_file,"B2h=%g B2l=%g\n",GLOBALMACP0A1(unewglobal,i-1,j,k,B2),GLOBALMACP0A1(unewglobal,i,j,k,B2));
     }
 #endif
 
@@ -916,7 +979,9 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
-    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    //    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    OPENMP3DLOOPSETUPFULL;
+
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -932,7 +997,8 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
-    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    //    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+      OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -948,7 +1014,9 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     get_stag_startendindices(Uconsevolveloop, dir, &is,&ie,&js,&je,&ks,&ke);
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
-    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+    //    OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+      OPENMP3DLOOPSETUPFULL;
+
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -1000,6 +1068,25 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
   MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
 
 
+#if(0)
+  if(i==0 && (j==0||j==-1) && k==0 && dir==1){
+    dualfprintf(fail_file,"ustag2pstagDN: dir=%d j=%d : %g %g %g\n",dir,j,MACP0A1(pstag,i,j,k,pl), MACP0A1(ustag,i,j,k,pl),igdetgnosing);
+  }
+  if(i==0 && (j==N2-1||j==N2) && k==0 && dir==1){
+    dualfprintf(fail_file,"ustag2pstagUP: dir=%d j=%d: %g %g %g\n",dir,j,MACP0A1(pstag,i,j,k,pl), MACP0A1(ustag,i,j,k,pl),igdetgnosing);
+  }
+
+
+  if((i==0 || i==-1) && j==0 && k==0 && dir==2){
+    dualfprintf(fail_file,"ustag2pstagDN: dir=%d i=%d : %g %g %g\n",dir,i,MACP0A1(pstag,i,j,k,pl), MACP0A1(ustag,i,j,k,pl),igdetgnosing);
+  }
+  if((i==0 || i==-1) && j==N2 && k==N3/2 && dir==2){
+    dualfprintf(fail_file,"ustag2pstagUP: dir=%d i=%d : %g %g %g\n",dir,i,MACP0A1(pstag,i,j,k,pl), MACP0A1(ustag,i,j,k,pl),igdetgnosing);
+  }
+#endif
+
+  
+
 }
 
 
@@ -1017,7 +1104,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // B3 or \detg B3 along 3-dir is same.
 //
 ///////
-#define IFNOTRESCALETHENUSEGDET 2
+#define IFNOTRESCALETHENUSEGDET 0
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
 
@@ -1319,7 +1406,8 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 	// NOW do constrained loop
 	get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
 	////////      COMPZSLOOP(is,ie,js,je,ks,ke){
-	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+	//	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+	OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)
 	OPENMP3DLOOPBLOCK{
 	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -1557,7 +1645,7 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // 0 : just use direct Bi in transverse interpolation
 // 1 : use \detg Bi in transverse directions
 // 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 2
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 0
 // 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region) for nsdipole problem
 
 //#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
@@ -1804,15 +1892,16 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
       // cent2faceloop is over CENT positions, which now since accessing the faces needs to be transcribed to FACE values interior to those CENT values
       // One shifts up in interpdir (dir) flux direction because interpolated -1 extra CENT cell and N CENT cell to get flux at 0 and N.
       // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
-      is=cent2faceloop[dir].is + SHIFT1*(dir==1);
-      ie=cent2faceloop[dir].ie;
-      js=cent2faceloop[dir].js + SHIFT2*(dir==2);
-      je=cent2faceloop[dir].je;
-      ks=cent2faceloop[dir].ks + SHIFT3*(dir==3);
-      ke=cent2faceloop[dir].ke;
+      is=cent2faceloop[dir].is- SHIFT1*(dir==1);
+      ie=cent2faceloop[dir].ie+1;
+      js=cent2faceloop[dir].js- SHIFT2*(dir==2);
+      je=cent2faceloop[dir].je+1;
+      ks=cent2faceloop[dir].ks- SHIFT3*(dir==3);
+      ke=cent2faceloop[dir].ke+1;
 
       /////////COMPZSLOOP( is, ie, js, je, ks, ke ){
-      OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+      //      OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+      OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // can't use "nowait" when using p2interp for each dir in next loop
       OPENMP3DLOOPBLOCK{
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -2051,22 +2140,22 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	// loop below will be at effective-FACEs, so extended in interpdir direction
 	// One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
 	if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
-	  is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
-	  ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
-	  js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
-	  je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
-	  ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
-	  ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
+	  is=face2cornloop[edgedir][EMFodir1][EMFodir2].is-1;// + SHIFT1*(interpdir==1);
+	  ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie+1;
+	  js=face2cornloop[edgedir][EMFodir1][EMFodir2].js-1;// + SHIFT2*(interpdir==2);
+	  je=face2cornloop[edgedir][EMFodir1][EMFodir2].je+1;
+	  ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks-1;// + SHIFT3*(interpdir==3);
+	  ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke+1;
 	}
 	else{
 	  // since just copying, revert to locations where interpolated CENT -> FACE
 	  // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
-	  is=cent2faceloop[interpdir].is + SHIFT1*(interpdir==1);
-	  ie=cent2faceloop[interpdir].ie;
-	  js=cent2faceloop[interpdir].js + SHIFT2*(interpdir==2);
-	  je=cent2faceloop[interpdir].je;
-	  ks=cent2faceloop[interpdir].ks + SHIFT3*(interpdir==3);
-	  ke=cent2faceloop[interpdir].ke;
+	  is=cent2faceloop[interpdir].is-1;// + SHIFT1*(interpdir==1);
+	  ie=cent2faceloop[interpdir].ie+1;
+	  js=cent2faceloop[interpdir].js-1;// + SHIFT2*(interpdir==2);
+	  je=cent2faceloop[interpdir].je+1;
+	  ks=cent2faceloop[interpdir].ks-1;// + SHIFT3*(interpdir==3);
+	  ke=cent2faceloop[interpdir].ke+1;
 	  //	  is=-N1BND+idel;
 	  //	  ie=N1-1+N1BND;
 	  //	  js=-N2BND+jdel;

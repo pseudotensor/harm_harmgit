@@ -84,21 +84,27 @@ void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *j
   // if(subgrid inner boundary>global active grid inner boundary)
   if(AVOIDADVANCESHIFTX1DN||enerposreg[ACTIVEREGION][X1DN]>enerposreg[ACTIVEREGION][X1DN]) *is=loop[FIS];
   else *is=loop[FIS]-SHIFT1;
+*is=loop[FIS]-SHIFT1;
 
   if(AVOIDADVANCESHIFTX1UP||enerposreg[ACTIVEREGION][X1UP]<enerposreg[ACTIVEREGION][X1UP]) *ie=loop[FIE]+SHIFT1*(dir==1);
   else *ie=loop[FIE]+SHIFT1;
+ *ie=loop[FIE]+SHIFT1;
 
   if(AVOIDADVANCESHIFTX2DN||enerposreg[ACTIVEREGION][X2DN]>enerposreg[ACTIVEREGION][X2DN]) *js=loop[FJS];
   else *js=loop[FJS]-SHIFT2;
+ *js=loop[FJS]-SHIFT2;
 
   if(AVOIDADVANCESHIFTX2UP||enerposreg[ACTIVEREGION][X2UP]<enerposreg[ACTIVEREGION][X2UP]) *je=loop[FJE]+SHIFT2*(dir==2);
   else *je=loop[FJE]+SHIFT2;
+ *je=loop[FJE]+SHIFT2;
 
   if(AVOIDADVANCESHIFTX3DN||enerposreg[ACTIVEREGION][X3DN]>enerposreg[ACTIVEREGION][X3DN]) *ks=loop[FKS];
   else *ks=loop[FKS]-SHIFT3;
+ *ks=loop[FKS]-SHIFT3;
 
   if(AVOIDADVANCESHIFTX3UP||enerposreg[ACTIVEREGION][X3UP]<enerposreg[ACTIVEREGION][X3UP]) *ke=loop[FKE]+SHIFT3*(dir==3);
   else *ke=loop[FKE]+SHIFT3;
+ *ke=loop[FKE]+SHIFT3;
 
 }
 
@@ -123,12 +129,12 @@ void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks
 {
 
   // this loop range must be equal or larger than that used in copy_tempucum_finalucum()
-  *is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-  *ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-  *js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-  *je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-  *ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-  *ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+  *is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+  *ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+  *js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+  *je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+  *ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+  *ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
 
   if(FLUXB==FLUXCTSTAG){
@@ -169,12 +175,12 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
     extern void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum);
 
     // loop range where final ucum is set from scratch ucum that may have been set outside desired region for simplicity of loop structures
-    is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-    ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-    js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-    je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-    ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-    ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+    is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+    ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+    js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+    je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+    ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+    ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
 
     if(FLUXB==FLUXCTSTAG){
@@ -194,12 +200,12 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B1
       pl=B1;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+      is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
       ie=loop[FIE]+SHIFT1; // always shift - override
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
@@ -214,12 +220,12 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B2
       pl=B2;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+      is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
       je=loop[FJE]+SHIFT2;
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
@@ -235,12 +241,12 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
       // do pl==B3
       pl=B3;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+      is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+      ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+      js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+      je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+      ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+      ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
       ke=loop[FKE]+SHIFT3;
       copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
@@ -287,12 +293,12 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
     extern void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum);
 
     // loop range where final ucum is set from scratch ucum that may have been set outside desired region for simplicity of loop structures
-    is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-    ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-    js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-    je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-    ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-    ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+    is=loop[FIS]-SHIFT1;//*(AVOIDADVANCESHIFTX1DN==0);
+    ie=loop[FIE]+SHIFT1;//*(AVOIDADVANCESHIFTX1UP==0);
+    js=loop[FJS]-SHIFT2;//*(AVOIDADVANCESHIFTX2DN==0);
+    je=loop[FJE]+SHIFT2;//*(AVOIDADVANCESHIFTX2UP==0);
+    ks=loop[FKS]-SHIFT3;//*(AVOIDADVANCESHIFTX3DN==0);
+    ke=loop[FKE]+SHIFT3;//*(AVOIDADVANCESHIFTX3UP==0);
 
 
     if(FLUXB==FLUXCTSTAG){

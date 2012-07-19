@@ -1389,6 +1389,14 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	  //////////////////////////////
 	  fixup_negdensities(&fixed, startpl, endpl, i, j, k, mypflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
+	  if(fixed==1 && (startpl<=RHO && endpl>=U1)){
+	    // then fixup but only changed densities, so still need to process non-densities
+	    startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+	  }
+
+
+	  dualfprintf(fail_file,"startpl=%d endpl=%d mypflag=%d\n",startpl,endpl,mypflag);
+
 
 	  //////////////////////////////
 	  //
@@ -1449,7 +1457,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	      }
 #endif
 
-	    }
+	    }// end over density
 
 
 
@@ -1517,6 +1525,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 	  } // end if fixed==0
+
 	}// end if not keeping static
 	// else kept static
 	
@@ -1626,7 +1635,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILUNEG){
 	  
-      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
       else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLEUNEG==1){
@@ -1646,7 +1655,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	}// end if handling u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative u or if allowing but not yet final step
       else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
-	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+	if(HANDLEUNEG==1) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
@@ -1660,7 +1669,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHONEG){
 	  
-      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ if(HANDLERHONEG) *fixed=1; }
       else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLERHONEG==1){
@@ -1680,7 +1689,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	}// end if handling rho<0 in special way
       }// end if not allowing negative rho or if allowing but not yet final step
       else if((STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
-	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+	if(HANDLERHONEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if rho<0
   }// end if not fixed
@@ -1695,7 +1704,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHOUNEG){
 
-      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ if(HANDLERHOUNEG) *fixed=1; }
       // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
       else if( (STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)  ||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
@@ -1718,7 +1727,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	}// end if handling rho<0 and u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative rho or if allowing but not yet final step
       else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
-	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+	if(HANDLERHOUNEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if rho<0 and u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
@@ -1849,6 +1858,9 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     }
   }
   else if(mypflag==UTOPRIMFAILRHOUNEG){
+
+    dualfprintf(fail_file,"GOT HERE\n");
+
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGRHOU==-1){
@@ -2024,7 +2036,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
 
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: startpl=%d endpl=%d :: i=%d j=%d k=%d\n",startpl,endpl,i,j,k); // not too much
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,startpl,endpl,i,j,k); // not too much
 
 
   if(( mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 ) ){
@@ -2240,6 +2252,8 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
     numavg=MAX(numavg0,numavg1); // only matters now that this is nonzero
   }
 
+
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,numavg,startpl,endpl,i,j,k);
 
       	  
   if( mypflag==UTOPRIMFAILU2AVG2){
