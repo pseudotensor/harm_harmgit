@@ -502,7 +502,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // -?del? since going from FACE to CORN
       // del2 for c2d[][0] since wspeed[odir1] is wave going in odir1-direction, whereas other wavespeed to MAX with is in other (odir2) direction
       if(Nvec[odir1]>1){
-	c2d[CMIN][0] = fabs(MAX(0.,MAX(-MACP2A0(wspeed,odir1,CMIN,i,j,k),-MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
+	c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMIN,i,j,k),+MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
 	c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMAX,i,j,k),+MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
       }
       else{
@@ -513,7 +513,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
       
       if(Nvec[odir2]>1){
-	c2d[CMIN][1] = fabs(MAX(0.,MAX(-MACP2A0(wspeed,odir2,CMIN,i,j,k),-MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
+	c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMIN,i,j,k),+MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
 	c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMAX,i,j,k),+MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
       }
       else{
