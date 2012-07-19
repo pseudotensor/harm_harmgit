@@ -774,7 +774,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 	pr[UU] += du;
       }
     }
-    if(pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
+    if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
       //compute parallel velocity component (along full B)
       compute_vpar(pr, ptrgeom, &vpar);
       //damp parallel velocity component
