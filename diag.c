@@ -981,9 +981,9 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
 
   if(type==FINALTDUMPAREAMAP){
     dualfprintf(fail_file, "area map\n");
-    dualfprintf(fail_file, "failure at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
+    dualfprintf(fail_file, "areamap at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
     coord(i,j,k,loc,X);
-    dualfprintf(fail_file, "failure at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
+    dualfprintf(fail_file, "areamap at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
 
 
 

@@ -1458,7 +1458,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #if(1)
     // So use X[2] only -- closer to using j itself that we don't have available.
     if(fabs(startx[TH]-X[TH])<SINGSMALL) V[TH]=SINGSMALL;
-    FTYPE endx2=startx[TH]+totalsize[2]*dx[TH];
+    FTYPE endx2=startx[TH]+totalsize[TH]*dx[TH];
     if(fabs(endx2-X[TH])<SINGSMALL) V[TH]=M_PI-SINGSMALL;
 #endif
 #if(0)
@@ -2109,6 +2109,10 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       //      dualfprintf(fail_file,"Vh=%21.15g Vl=%21.15g Xh=%2.15g Xl=%21.15g DX=%21.15g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
       //      dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
       //	}
+
+      if(j==k && fabs(dxdxp[j][k])<NUMEPSILON){
+	dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g > %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
+      }
 
     }
   }

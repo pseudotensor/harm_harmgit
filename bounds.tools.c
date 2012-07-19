@@ -3101,6 +3101,7 @@ int polesmooth(int whichx2,
   
   int i, j, k;
   int j0, dj, stopj, rj;
+  int fakej;
   FTYPE X[NDIM], V[NDIM];
   FTYPE r, th, ph;
   FTYPE dxdxp[NDIM][NDIM], idxdxp[NDIM][NDIM];
@@ -3111,6 +3112,7 @@ int polesmooth(int whichx2,
   int pliter,pl;
 
 
+  //  return(0);
 
 
   /////////////////////
@@ -3145,13 +3147,14 @@ int polesmooth(int whichx2,
   //
   /////////////////////
   // need k slowest index so can easily do MPI sends/receives
-#define MAPFULLPR(i,k,pl) (((k)+N3BND)*(N1BND+N1+N1BND)*NPR + ((i)+N1BND)*NPR + (pl))
-  // so access as: fullpr[MAPFULLPR(i,k,pl)]  .  Order of i,k,pl is just to be similar to normal order of i,j,k,pl when removing j.
-#define N3TOTFULLPR (N3BND+totalsize[3]+N3BND)
+#define MAPFULLPR(i,fakej,k,pl) ( (fakej)*(N3BND+N3+N3BND)*(N1BND+N1+N1BND)*NPR + ((k)+N3BND)*(N1BND+N1+N1BND)*NPR + ((i)+N1BND)*NPR + (pl) )
+  // so access as: fullpr[MAPFULLPR(i,fakej,k,pl)]  .  Order of i,fakej,k,pl is just to be similar to normal order of i,j,k,pl
 #define N1TOTFULLPR (N1BND+N1+N1BND)
+#define N2TOTFULLPR (ncpux3>1&&USEMPI&&N3>1 ? 1 : 2) // need 2 j positions if single cpu
+#define N3TOTFULLPR (N3BND+totalsize[3]+N3BND)
   if(firsttime){
     // not necessary if USEMPI==0 or ncpux3==1, but still do since not expensive
-    fullpr=(FTYPE *)malloc(sizeof(FTYPE)*(N3TOTFULLPR*N1TOTFULLPR*NPR));
+    fullpr=(FTYPE *)malloc(sizeof(FTYPE)*(N2TOTFULLPR*N3TOTFULLPR*N1TOTFULLPR*NPR));
     if(fullpr==NULL){
       dualfprintf(fail_file,"Cannot allocate fullpr\n");
       myexit(195367346);
@@ -3174,6 +3177,7 @@ int polesmooth(int whichx2,
     dj = 1;
     //    stopj=rj+1; // can also average-out j=rj
     stopj=rj;
+    fakej=0;
   }
   else{
     j0 = N2-1+POLESMOOTH;  //starting from this j including this j
@@ -3181,6 +3185,8 @@ int polesmooth(int whichx2,
     dj = -1;
     //    stopj=rj-1; // can also average-out j=rj
     stopj=rj;
+    if(N2TOTFULLPR==1) fakej=0;
+    else fakej=1; // 2 j memory slots since on 1 cpu
   }
 
 
@@ -3219,7 +3225,7 @@ int polesmooth(int whichx2,
 
 
     // store in fullpr the SPC versions of U1-U3 and other scalars.  Might as well avoid B1-B3 overwritten later.
-    PBOUNDLOOP(pliter,pl)  if(pl<B1 || pl>B3) fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)] = spcpr[pl];
+    PBOUNDLOOP(pliter,pl)  if(pl<B1 || pl>B3) fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,pl)] = spcpr[pl];
 
     /////////////////////////////////////////
     // TRANSFORM quasi-SPC to quasi-CART
@@ -3234,12 +3240,12 @@ int polesmooth(int whichx2,
     // No need to get dxdxp using dxdxpprim_ijk() near pole except to obtain dominant scale.  Major issue is twisting of coordinates, and dxdxp[1,2] and dxdxp[2,1] aren't large enough near pole to introduce major twisting.
     
     // put CART[U1-U3] into prfull[B1-B3] for storage
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B1)] = -(r*sin(ph)*sin(th)*spcpr[U3]) + cos(ph)*sin(th)*spcpr[U1] + r*cos(ph)*cos(th)*spcpr[U2];
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
-    fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B1)] = -(r*sin(ph)*sin(th)*spcpr[U3]) + cos(ph)*sin(th)*spcpr[U1] + r*cos(ph)*cos(th)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B2)] = r*cos(ph)*sin(th)*spcpr[U3] + sin(ph)*sin(th)*spcpr[U1] + r*cos(th)*sin(ph)*spcpr[U2];
+    fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,B3)] = cos(th)*spcpr[U1] - r*sin(th)*spcpr[U2];
 
 #if(DEBUGPOLESMOOTH)
-    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereINITIAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g spc=%g cart=%g i/dxdxp11=%g %g\n",t,i,j,k,pl,pr[pl],spcpr[pl],fullpr[MAPFULLPR(i,mycpupos[3]*N3+k,pl)],idxdxp[RR][RR],dxdxp[RR][RR]);
+    PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"Got hereINITIAL: t=%g i=%d j=%d k=%d : pl=%d pr=%g spc=%g cart=%g i/dxdxp11=%g %g\n",t,i,j,k,pl,pr[pl],spcpr[pl],fullpr[MAPFULLPR(i,fakej,mycpupos[3]*N3+k,pl)],idxdxp[RR][RR],dxdxp[RR][RR]);
 #endif
   }
 
@@ -3281,7 +3287,7 @@ int polesmooth(int whichx2,
 	if(posk!=mycpupos[3]){
 	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
 	  int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk (large tag space to ensure no duplicates)
-	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
+	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,fakej,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
 #if(DEBUGPOLESMOOTH)
 	  dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,tag);
 #endif
@@ -3295,7 +3301,7 @@ int polesmooth(int whichx2,
 	if(posk!=mycpupos[3]){
 	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
 	  int tag=originmyid + numprocs*mycpupos[3]; // tag used by other myid.  Receiving for my mycpupos[3]
-	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
+	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
 #if(DEBUGPOLESMOOTH)
 	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,tag);
 #endif
@@ -3321,7 +3327,7 @@ int polesmooth(int whichx2,
 
 #if(DEBUGPOLESMOOTH)
   LOOPF1 for(k=0;k<totalsize[3];k++){
-    PBOUNDLOOP(pliter,pl) if(pl==RHO || pl==B3) dualfprintf(fail_file,"FULLPRCHECK: i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,k,pl)]);
+    PBOUNDLOOP(pliter,pl) if(pl==RHO || pl==B3) dualfprintf(fail_file,"FULLPRCHECK: i=%d k=%d pl=%d fullpr=%g\n",i,k,pl,fullpr[MAPFULLPR(i,fakej,k,pl)]);
   }
 #endif
 
@@ -3364,15 +3370,15 @@ int polesmooth(int whichx2,
 #endif
       
       // Averaged quasi-SPC versions (note spcavgpr[B1-B3] not used and fullpr[B1-B3] stored quasi-CART U1-U3, so might as well avoid B1-B3)
-      PBOUNDLOOP(pliter,pl) if(pl<B1 || pl>B3) spcavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+      PBOUNDLOOP(pliter,pl) if(pl<B1 || pl>B3) spcavgpr[pl] += fullpr[MAPFULLPR(i,fakej,k,pl)];
 
       // Averaged non-velocities for quasi-CART (avoid cartavgpr[pl=U1-U3] that cumulate next.  Also go ahead and avoid B1-B3 since fullpr[B1-B3] filled will cart U1-U3
-      PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) cartavgpr[pl] += fullpr[MAPFULLPR(i,k,pl)];
+      PBOUNDLOOP(pliter,pl) if(pl<U1 || pl>B3) cartavgpr[pl] += fullpr[MAPFULLPR(i,fakej,k,pl)];
 
       // cumulate quasi-CART U1-U3 (stored in fullpr[B1-B3])
-      cartavgpr[U1] += fullpr[MAPFULLPR(i,k,B1)];
-      cartavgpr[U2] += fullpr[MAPFULLPR(i,k,B2)];
-      cartavgpr[U3] += fullpr[MAPFULLPR(i,k,B3)];
+      cartavgpr[U1] += fullpr[MAPFULLPR(i,fakej,k,B1)];
+      cartavgpr[U2] += fullpr[MAPFULLPR(i,fakej,k,B2)];
+      cartavgpr[U3] += fullpr[MAPFULLPR(i,fakej,k,B3)];
 
     }// end cumulation over k at j=rj
 

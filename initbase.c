@@ -478,6 +478,15 @@ int init(int *argc, char **argv[])
 
 
 #if(0) // SUPERGODMARK: Deal with initial tilt
+  // SUPERGODMARK: After changing metric, should really also do after below:
+  // 1) A_i or U -> Bstag for stag method *or* A_i -> B for Toth
+  // 2) Bstag -> B for stag method
+  // 3) Bstag,U -> Bhat for stag higher order method
+  // etc.
+  //
+  // Otherwise, gdet changes and t=0 Bstag and B won't be consistent with A_i and U for the new metric.
+
+
   ///////////////////
   //
   // Both normal and restart mode need to setup grid

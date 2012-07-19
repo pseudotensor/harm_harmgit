@@ -12,6 +12,8 @@
 int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, struct of_state *state_l, struct of_state * state_r, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE *ctopptr)
 {
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
+  int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax);
+  int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   int failreturn;
   FTYPE ftemp;
   FTYPE p_roe[NPR],cminmax_roe[NUMCS];
@@ -37,13 +39,17 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
   MYFUN(vchar(p_r, state_r, dir, ptrgeom, &cminmax_r[CMAX], &cminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
 
   cminmax_calc(cminmax_l[CMIN],cminmax_r[CMIN],cminmax_l[CMAX],cminmax_r[CMAX],&cminmax[CMIN],&cminmax[CMAX],ctopptr);
+  //  cminmax_calc_1(cminmax_l[CMIN],cminmax_r[CMIN],cminmax_l[CMAX],cminmax_r[CMAX],&cminmax[CMIN],&cminmax[CMAX]);
   // have cmin,cmax,ctop here
 
 #if(STOREWAVESPEEDS==2)
   // Use fact that always compute flux before need wspeed [GODMARK: Not sure for old interpline use of wspeed, but that's deprecated code]
+  // remove sign information for wspeed by calling cminmax_calc() above already
   GLOBALMACP2A0(wspeed,dir,CMIN,i,j,k)=cminmax[CMIN];
   GLOBALMACP2A0(wspeed,dir,CMAX,i,j,k)=cminmax[CMAX];
 #endif
+
+  //  cminmax_calc_2(&cminmax[CMIN],&cminmax[CMAX],ctopptr);
 
 #else
   // other non-local estimate
@@ -239,6 +245,7 @@ void get_roe_averaged_state(int dir, FTYPE *p_l, struct of_state *state_l, FTYPE
 
 
 // complete storage of wave speeds per dimension
+// only called for STOREWAVESPEEDS==1
 int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*finalwspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
 
@@ -321,7 +328,9 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE2][NSTORE3][NUMCS], int dir, int is, 
     int reallim;
     int m;
     FTYPE ftemp[NUMCS];
+    FTYPE ctop;
     extern int choose_limiter(int dir, int i, int j, int k, int pl);
+    int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP( is-idel, ie+idel, js-jdel, je+jdel, ks-kdel, ke+kdel ); // due to averaging of this face quantity to get centered i/j/k=0 back
 
 
@@ -377,6 +386,10 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE2][NSTORE3][NUMCS], int dir, int is, 
       //  }
 #endif
 
+      // go ahead and also restrict cmin and cmax
+      cminmax_calc_2(&MACP2A0(wspeed,dir,CMIN,i,j,k),&MACP2A0(wspeed,dir,CMAX,i,j,k),&ctop); // ctop not used
+
+
     }// end 3D loop
   }// end parallel region
 
@@ -393,8 +406,21 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE2][NSTORE3][NUMCS], int dir, int is, 
 // maybe try local lax Friedrich, using max wave speed from zones used to reconstruct the zone (most common?)
 // also can try more global wave speed, or even speed of light.
 
-// determine cmin,cmax,ctop
 int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop)
+{
+  int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax);
+  int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
+
+
+  cminmax_calc_1(cmin_l,cmin_r,cmax_l,cmax_r,cmin,cmax);
+  cminmax_calc_2(cmin,cmax,ctop);
+
+  return(0);
+
+}
+
+// determine cmin,cmax,ctop
+int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax)
 {
   FTYPE lmin,lmax,ltop;
 
@@ -427,6 +453,24 @@ int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin
   lmax=2.0*cmax_l*cmax_r/(cmax_l+cmax_r);
 #endif
 
+  // returns signed speed still
+  *cmin=lmin;
+  *cmax=lmax;
+
+  return(0);
+      
+
+
+}
+
+
+
+
+// determine cmin,cmax,ctop
+int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop)
+{
+  FTYPE lmin=*cmin;
+  FTYPE lmax=*cmax;
 
 #if(HYPERHLL==0)
   // sharp change at c=0

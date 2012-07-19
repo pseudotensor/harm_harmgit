@@ -543,6 +543,7 @@
 // theta value where singularity is displaced to
 
 
+// SINGSMALL can't be smaller than DXDELTA in dxdxp (i.e. currently ~1E-5 for DOUBLE)
 //#define SINGSMALL (1E-3)
 //#define SINGSMALL (1E-20)
 #define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!.  1E-14 works, but need some insurance so use 1E-13
