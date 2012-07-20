@@ -1581,6 +1581,7 @@ int extrapfunc(int boundary, int j,int k,
   Dqp=Bd3ri3-Bd3ri2;
   Dqm=Bd3ri2-Bd3;
   Dqc=Bd3ri3-Bd3;
+  Dqc*=0.5;
   dqBd3 = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
 
 
@@ -1608,6 +1609,7 @@ int extrapfunc(int boundary, int j,int k,
     Dqp=Mdotri3-Mdotri2;
     Dqm=Mdotri2-Mdot;
     Dqc=Mdotri3-Mdot;
+    Dqc*=0.5;
     dqMdot = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
@@ -1623,6 +1625,7 @@ int extrapfunc(int boundary, int j,int k,
     Dqp=MACP0A1(prim,ri3,rj,rk,pl)-MACP0A1(prim,ri2,rj,rk,pl);
     Dqm=MACP0A1(prim,ri2,rj,rk,pl)-MACP0A1(prim,ri,rj,rk,pl);
     Dqc=MACP0A1(prim,ri3,rj,rk,pl)-MACP0A1(prim,ri,rj,rk,pl);
+    Dqc*=0.5;
     dq[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
@@ -1637,6 +1640,7 @@ int extrapfunc(int boundary, int j,int k,
     Dqp=log(SMALL+fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri2,rj,rk,pl)));
     Dqm=log(SMALL+fabs(MACP0A1(prim,ri2,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl)));
     Dqc=log(SMALL+fabs(MACP0A1(prim,ri3,rj,rk,pl)))-log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl)));
+    Dqc*=0.5;
     dqlogdensity[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
@@ -1650,6 +1654,7 @@ int extrapfunc(int boundary, int j,int k,
     Dqp=(ptrri3geom[pl]->gdet)*MACP0A1(prim,ri3,rj,rk,pl)-(ptrri2geom[pl]->gdet)*MACP0A1(prim,ri2,rj,rk,pl);
     Dqm=(ptrri2geom[pl]->gdet)*MACP0A1(prim,ri2,rj,rk,pl)-(ptrrgeom[pl]->gdet)*MACP0A1(prim,ri,rj,rk,pl);
     Dqc=(ptrri3geom[pl]->gdet)*MACP0A1(prim,ri3,rj,rk,pl)-(ptrrgeom[pl]->gdet)*MACP0A1(prim,ri,rj,rk,pl);
+    Dqc*=0.5;
     dqgdetpl[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
@@ -1665,6 +1670,7 @@ int extrapfunc(int boundary, int j,int k,
       Dqp=uconrefri3[jj]-uconrefri2[jj];
       Dqm=uconrefri2[jj]-uconref[jj];
       Dqc=uconrefri3[jj]-uconref[jj];
+      Dqc*=0.5;
       dqucon[jj] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
     }
 
@@ -1970,7 +1976,7 @@ int extrapfunc(int boundary, int j,int k,
     ////////
     for(pl=B1;pl<=B2;pl++){
       igdetnosing=sign(ptrgeom[pl]->gdet)/(fabs(ptrgeom[pl]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-      MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing);
+      MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
     }
 
     ///////////////
@@ -2013,10 +2019,15 @@ int extrapfunc(int boundary, int j,int k,
     pl=B3; MACP0A1(prim,i,j,k,pl) = (myBd3*gcon33 + Bu1*gcon03*gcov01 + Bu2*gcon03*gcov02 + Bu1*gcon13*gcov11 + Bu2*gcon13*gcov12 + Bu1*gcon23*gcov21 + Bu2*gcon23*gcov22)*igdetnosing;
 
     // old B_\phi imprecise copy (need to avoid singularity anywways)
-    //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
-
-
-
+    //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
+    
+    // maybe more consistent with interpolation
+    if(0){
+      pl=B3;
+      igdetnosing=sign(ptrgeom[pl]->gdet)/(fabs(ptrgeom[pl]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+      MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
+    }
+      
 
 
 
