@@ -296,7 +296,7 @@
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
-#define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (10000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
@@ -341,7 +341,9 @@
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 // #define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL (used in Sasha tests)
-#define RESCALEINTERP 0
+#undef VARTOINTERPFIELD
+#define VARTOINTERPFIELD GDETVERSION
+#define RESCALEINTERP 1
 #define DOEXTRAINTERP 0
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1

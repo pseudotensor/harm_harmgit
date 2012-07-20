@@ -1392,6 +1392,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	  if(fixed==1 && (startpl<=RHO && endpl>=U1)){
 	    // then fixup but only changed densities, so still need to process non-densities
 	    startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+	    fixed=0; // then reset fixed->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
 	  }
 
 
