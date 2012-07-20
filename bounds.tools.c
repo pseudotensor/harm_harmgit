@@ -1979,55 +1979,60 @@ int extrapfunc(int boundary, int j,int k,
       MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
     }
 
-    ///////////////
-    //
-    // obtian generally correct B^\phi[B^r,B^\theta,B_\phi]
-    //
-    ///////////////
-    if(dirprim[B3]==FACE3){
-      // then assume staggered method
-      // need to average fields
-      //      Bu1=0.25*(MACP0A1(prim,i,j,k,B1)+MACP0A1(prim,ip1,j,k,B1)+MACP0A1(prim,i,j,km1,B1)+MACP0A1(prim,ip1,j,km1,B1));
-      //Bu2=0.25*(MACP0A1(prim,i,j,k,B2)+MACP0A1(prim,i,jp1,k,B2)+MACP0A1(prim,i,j,km1,B2)+MACP0A1(prim,i,jp1,km1,B2));
-      // assume average just results in the same value since can't average non-set values
-      Bu1=MACP0A1(prim,i,j,k,B1);
-      Bu2=MACP0A1(prim,i,j,k,B2);
+
+#define EXTRAPBD3 0
+
+    if(EXTRAPBD3){
+      ///////////////
+      //
+      // obtian generally correct B^\phi[B^r,B^\theta,B_\phi]
+      //
+      ///////////////
+      if(dirprim[B3]==FACE3){
+	// then assume staggered method
+	// need to average fields
+	//      Bu1=0.25*(MACP0A1(prim,i,j,k,B1)+MACP0A1(prim,ip1,j,k,B1)+MACP0A1(prim,i,j,km1,B1)+MACP0A1(prim,ip1,j,km1,B1));
+	//Bu2=0.25*(MACP0A1(prim,i,j,k,B2)+MACP0A1(prim,i,jp1,k,B2)+MACP0A1(prim,i,j,km1,B2)+MACP0A1(prim,i,jp1,km1,B2));
+	// assume average just results in the same value since can't average non-set values
+	Bu1=MACP0A1(prim,i,j,k,B1);
+	Bu2=MACP0A1(prim,i,j,k,B2);
+      }
+      else{
+	// then assume all fields at CENT
+	Bu1=MACP0A1(prim,i,j,k,B1);
+	Bu2=MACP0A1(prim,i,j,k,B2);
+      }
+      gcon03=ptrgeom[B3]->gcon[GIND(0,3)];
+      gcon13=ptrgeom[B3]->gcon[GIND(1,3)];
+      gcon23=ptrgeom[B3]->gcon[GIND(2,3)];
+      gcon33=ptrgeom[B3]->gcon[GIND(3,3)];
+
+      gcov01=ptrgeom[B3]->gcov[GIND(0,1)];
+      gcov02=ptrgeom[B3]->gcov[GIND(0,2)];
+      gcov11=ptrgeom[B3]->gcov[GIND(1,1)];
+      gcov12=gcov21=ptrgeom[B3]->gcov[GIND(1,2)];
+      gcov22=ptrgeom[B3]->gcov[GIND(2,2)];
+      gcov03=ptrgeom[B3]->gcov[GIND(0,3)];
+      gcov13=ptrgeom[B3]->gcov[GIND(1,3)];
+      gcov23=ptrgeom[B3]->gcov[GIND(2,3)];
+	  
+      // Bd3fromBu.nb (just moved signs)
+      myBd3=Bd3 + dqBd3*(i-ri);
+      ftemp=(1.0 - gcon03*gcov03 - gcon13*gcov13 - gcon23*gcov23);
+      igdetnosing=sign(ftemp)/(fabs(ftemp)+SMALL);
+      pl=B3; MACP0A1(prim,i,j,k,pl) = (myBd3*gcon33 + Bu1*gcon03*gcov01 + Bu2*gcon03*gcov02 + Bu1*gcon13*gcov11 + Bu2*gcon13*gcov12 + Bu1*gcon23*gcov21 + Bu2*gcon23*gcov22)*igdetnosing;
+
+      // old B_\phi imprecise copy (need to avoid singularity anywways)
+      //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
     }
     else{
-      // then assume all fields at CENT
-      Bu1=MACP0A1(prim,i,j,k,B1);
-      Bu2=MACP0A1(prim,i,j,k,B2);
-    }
-    gcon03=ptrgeom[B3]->gcon[GIND(0,3)];
-    gcon13=ptrgeom[B3]->gcon[GIND(1,3)];
-    gcon23=ptrgeom[B3]->gcon[GIND(2,3)];
-    gcon33=ptrgeom[B3]->gcon[GIND(3,3)];
-
-    gcov01=ptrgeom[B3]->gcov[GIND(0,1)];
-    gcov02=ptrgeom[B3]->gcov[GIND(0,2)];
-    gcov11=ptrgeom[B3]->gcov[GIND(1,1)];
-    gcov12=gcov21=ptrgeom[B3]->gcov[GIND(1,2)];
-    gcov22=ptrgeom[B3]->gcov[GIND(2,2)];
-    gcov03=ptrgeom[B3]->gcov[GIND(0,3)];
-    gcov13=ptrgeom[B3]->gcov[GIND(1,3)];
-    gcov23=ptrgeom[B3]->gcov[GIND(2,3)];
-	  
-    // Bd3fromBu.nb (just moved signs)
-    myBd3=Bd3 + dqBd3*(i-ri);
-    ftemp=(1.0 - gcon03*gcov03 - gcon13*gcov13 - gcon23*gcov23);
-    igdetnosing=sign(ftemp)/(fabs(ftemp)+SMALL);
-    pl=B3; MACP0A1(prim,i,j,k,pl) = (myBd3*gcon33 + Bu1*gcon03*gcov01 + Bu2*gcon03*gcov02 + Bu1*gcon13*gcov11 + Bu2*gcon13*gcov12 + Bu1*gcon23*gcov21 + Bu2*gcon23*gcov22)*igdetnosing;
-
-    // old B_\phi imprecise copy (need to avoid singularity anywways)
-    //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
-    
-    // maybe more consistent with interpolation
-    if(0){
+      // maybe more consistent with interpolation
+      // also seems to be less large values in general near poles for tilted spins
       pl=B3;
       igdetnosing=sign(ptrgeom[pl]->gdet)/(fabs(ptrgeom[pl]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
       MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
     }
-      
+    
 
 
 
