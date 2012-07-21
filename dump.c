@@ -594,18 +594,29 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&(ptrgeom->gdet),0,1,writebuf); // 1 //gdet  //end of default read
 
 
-#if(CALCFARADAYANDCURRENTS) // NIM*2+6*2 = 8+12=20
-  // updated 11/16/2003
-  // new 10/23/2003
-  // current density 
-  lower_vec(GLOBALMAC(jcon,i,j,k),ptrgeom,jcov); 
-  myset(datatype,GLOBALMAC(jcon,i,j,k),0,NDIM,writebuf); // (NDIM)
-  myset(datatype,jcov,0,NDIM,writebuf);// (NDIM)
-  // faraday (2*6)
-  lowerf(GLOBALMAC(fcon,i,j,k),ptrgeom,fcov);
-  myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
-  myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
-#endif
+  if(CALCFARADAYANDCURRENTS){ // NIM*2+6*2 = 8+12=20
+    // updated 11/16/2003
+    // new 10/23/2003
+    // current density 
+    lower_vec(GLOBALMAC(jcon,i,j,k),ptrgeom,jcov); 
+    myset(datatype,GLOBALMAC(jcon,i,j,k),0,NDIM,writebuf); // (NDIM)
+    myset(datatype,jcov,0,NDIM,writebuf);// (NDIM)
+    // faraday (2*6)
+    lowerf(GLOBALMAC(fcon,i,j,k),ptrgeom,fcov);
+    myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
+    myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
+  }
+
+
+  // DEBUG: Also add +3 to numcolumns for this to work
+  if(0){
+    if(FLUXB==FLUXCTSTAG) myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf);
+    else{
+      FTYPE plblob[NPR]={0};
+      myset(datatype,plblob,B1,3,writebuf);
+    }
+  }
+
 
   if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
     // uses jrdp3dudebug in gtwod.m that assumes CALCFARADAYANDCURRENTS==0

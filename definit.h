@@ -720,7 +720,7 @@
 
 // control bounds.tools.c for SPC coordinates polar axis fixups
 #define DOPOLEDEATH 0
-#define DOPOLESMOOTH 2
+#define DOPOLESMOOTH 1
 #define DOPOLEGAMMADEATH 0
 
 
@@ -729,7 +729,7 @@
 #if(DOPOLESMOOTH)
 #define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
 #else
-#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working yet, but may be just more sensitive
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // working fine now that wavespeed bug in fluxctstag.c was fixed, extrapfunc B1,B2 bug fixed, and extrap gdet B3 instead of Bd3 that exaggerates extrapolation near poles and inconsistent with interpolation.  Also using VARTOINTERPFIELD GDETVERSION.
 #endif
 
 
@@ -824,7 +824,8 @@
 #define PULSARFIELD3 3
 #define GDETVERSION 4
 
-#define VARTOINTERPFIELD NOSPECIALFIELD
+//#define VARTOINTERPFIELD NOSPECIALFIELD
+#define VARTOINTERPFIELD GDETVERSION // most consistent with fluxctstag.c and standard extrapfunc in bounds.tools.c
 
 #define NUMPANALYTICOTHER 0
 #define DODUMPOTHER 0 // whether to dump other stuff
