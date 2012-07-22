@@ -180,15 +180,15 @@
 #undef DOPOLESMOOTH
 #undef DOPOLEGAMMADEATH
 #define DOPOLEDEATH 0
-#define DOPOLESMOOTH 2
-#define DOPOLEGAMMADEATH 0 // 2 // not sure if this is needed if polesmooth() used.  Seems not necessary.
+#define DOPOLESMOOTH 1
+#define DOPOLEGAMMADEATH 1 // 2 // not sure if this is needed if polesmooth() used.  Seems not necessary.
 
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
 #if(DOPOLESMOOTH)
 #define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
 #else
-#define IF3DSPCTHENMPITRANSFERATPOLE 0 // not working yet, but may be just more sensitive
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // not working yet, but may be just more sensitive
 #endif
 
 

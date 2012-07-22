@@ -1932,7 +1932,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     FTYPE prdiag[NPR],pr[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
     diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
-    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
 
     ////////////////
     //

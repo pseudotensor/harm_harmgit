@@ -3126,7 +3126,10 @@ int polesmooth(int whichx2,
   FTYPE cartavgpr[NPR], spcavgpr[NPR],spcpr[NPR];
   static int firsttime=1;
   int pliter,pl;
-
+#if(USEMPI)
+  static MPI_Request *srequest;
+  static MPI_Request *rrequest;
+#endif
 
   //  return(0);
 
@@ -3176,7 +3179,6 @@ int polesmooth(int whichx2,
       myexit(195367346);
     }
     // fullpr never freed, but repeatedly used
-    firsttime=0;
   }
 
 
@@ -3277,20 +3279,23 @@ int polesmooth(int whichx2,
   ////////////////////////////
   if(USEMPI && ncpux3>1 && N3>1){
 #if(USEMPI)
-    MPI_Request *srequest;
-    MPI_Request *rrequest;
     MPI_Status mpistatus;
 
-    srequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
-    if(srequest==NULL){
-      dualfprintf(fail_file,"Cannot allocate srequest\n");
-      myexit(19523766);
+
+    if(firsttime){
+      srequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+      if(srequest==NULL){
+	dualfprintf(fail_file,"Cannot allocate srequest\n");
+	myexit(19523766);
+      }
+      rrequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+      if(rrequest==NULL){
+	dualfprintf(fail_file,"Cannot allocate rrequest\n");
+	myexit(346962762);
+      }
     }
-    rrequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
-    if(rrequest==NULL){
-      dualfprintf(fail_file,"Cannot allocate rrequest\n");
-      myexit(346962762);
-    }
+
+
 
 
     if(mycpupos[2]==0 || mycpupos[2]==ncpux2-1){ // only done for j=rj near physical poles
@@ -3498,6 +3503,10 @@ int polesmooth(int whichx2,
 
   }// end over each i
   
+
+  firsttime=0;
+
+
   return(0);
   
 }
