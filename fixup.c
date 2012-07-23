@@ -827,6 +827,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE FREEZE_BSQORHO;
   FTYPE FREEZE_BSQOU;
   FTYPE vpar_target = 0.95;
+  FTYPE ftr;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -842,11 +843,13 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
+    omegastar = get_omegaf_phys(t, dt, steppart);
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     //inverse timescale over which motion is damped, let's try 10% of period
     b0 = 1./(frac*tau);
-    b1 = b0 * f_trans1(r);
+    ftr = f_trans1(r);
+    b1 = b0 * ftr;
     if(1) {
       //compute parallel velocity component (along full B)
       compute_vpar(pr, ptrgeom, &vpar);
