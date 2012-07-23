@@ -727,10 +727,11 @@ FTYPE f_trans1(FTYPE r)
   
   rs = fracRlc * Rlc;
   
-  x = (r - fracRlc*Rlc)/dfracRlc;
+  x = (r/Rlc - fracRlc)/dfracRlc;
   f = 1 - x*x;
   
   if(f<0) f = 0;
+  if(r<rs) f = 1;
   
   return(f);
 }
