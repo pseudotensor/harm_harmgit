@@ -731,7 +731,7 @@ FTYPE f_trans1(FTYPE r)
   f = 1 - x*x;
   
   if(f<0) f = 0;
-  if(r<rs) f = 1;
+  //if(r<rs) f = 1;
   
   return(f);
 }
