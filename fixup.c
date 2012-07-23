@@ -819,15 +819,17 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE tau;
   FTYPE drho, du;
   FTYPE Bcon[NDIM];
-  FTYPE vpar, dvpar;
+  FTYPE uu, duu;
   FTYPE omegaf;
   FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
   FTYPE tiltangle;
   FTYPE costhetaprime;
   FTYPE FREEZE_BSQORHO;
   FTYPE FREEZE_BSQOU;
-  FTYPE vpar_target = 0.95;
+  FTYPE gamma_target = 5;
+  FTYPE uu_target = sqrt(gamma_target*gamma_target - 1);
   FTYPE ftr;
+  FTYPE gamma, qsq;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -850,15 +852,19 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     b0 = 1./(frac*tau);
     ftr = f_trans1(r);
     b1 = b0 * ftr;
+    //compute full gamma
+    gamma_calc(pr, ptrgeom, &gamma, &qsq);
+    uu = sqrt(gamma*gamma - 1);
     if(1) {
       //compute parallel velocity component (along full B)
-      compute_vpar(pr, ptrgeom, &vpar);
+      //compute_vpar(pr, ptrgeom, &vpar);
       //damp parallel velocity component
-      dvpar = - dt * b1 * (vpar-vpar_target);
-      //update parallel velocity component
-      vpar += dvpar;
-      //update parallel velocity component
-      set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
+      duu = - dt * b1 * (uu-uu_target);
+      //update 4-velocity
+      uu += duu;
+      gamma = sqrt(uu*uu+1);
+      //update parallel velocity component so that total Lorentz factor = gamma
+      set_vpar(1., gamma, ptrgeom, pr);
     }
   }
   return(0);
