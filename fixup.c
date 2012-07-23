@@ -716,6 +716,26 @@ FTYPE f_trans(FTYPE r)
   return(f);
 }
 
+FTYPE f_trans1(FTYPE r)
+{
+  FTYPE f, rs;
+  //fraction of Rlc over which to carry out Komissarov's swindle
+  FTYPE fracRlc = 0.8;
+  FTYPE dfracRlc = 0.1;
+  //radius of light cylinder
+  FTYPE Rlc = 1.0 / get_omegaf_phys(t, dt, steppart);
+  
+  rs = fracRlc * Rlc;
+  
+  t = (r - fracRlc*Rlc)/dfracRlc;
+  f = 1 - t*t;
+  
+  if(f<0) f = 0;
+  
+  return(f);
+}
+
+
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
@@ -788,6 +808,60 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   return(0);
 }
 
+int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
+{
+  FTYPE f_trans1(FTYPE r);
+  FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
+  FTYPE b0, b1, b2;
+  FTYPE r, th, ph;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE omegastar;
+  FTYPE tau;
+  FTYPE drho, du;
+  FTYPE Bcon[NDIM];
+  FTYPE vpar, dvpar;
+  FTYPE omegaf;
+  FTYPE frac = 0.005;  //fraction of rotation over which to force densities to target values
+  FTYPE tiltangle;
+  FTYPE costhetaprime;
+  FTYPE FREEZE_BSQORHO;
+  FTYPE FREEZE_BSQOU;
+  FTYPE vpar_target = 0.95;
+  
+  Bcon[0]=0;
+  Bcon[1]=pr[B1];
+  Bcon[2]=pr[B2];
+  Bcon[3]=pr[B3];
+  
+  
+  coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X);
+  bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
+  r=V[1];
+  th=V[2];
+  ph=V[3];
+  
+  //only do so on final step
+  if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
+    //pulsar rotational period
+    tau = 2*M_PIl/omegastar;
+    //inverse timescale over which motion is damped, let's try 10% of period
+    b0 = 1./(frac*tau);
+    b1 = b0 * f_trans1(r);
+    if(1) {
+      //compute parallel velocity component (along full B)
+      compute_vpar(pr, ptrgeom, &vpar);
+      //damp parallel velocity component
+      dvpar = - dt * b1 * (vpar-vpar_target);
+      //update parallel velocity component
+      vpar += dvpar;
+      //update parallel velocity component
+      set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
+    }
+  }
+  return(0);
+}
+
+
 FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi)
 {
   FTYPE alpha = tiltangle;
@@ -803,6 +877,8 @@ FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi)
 // finalstep==0 is non-accounting, finalstep==1 is accounting
 int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
+  int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep);
+  int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep);
   int pliter,pl;
   int ip, jp, im, jm;
   FTYPE bsq, del;
@@ -896,6 +972,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     /////////////////////////////
 #if(USEKOMISWINDLE)
     freeze_motion(prfloor, pr, ucons, ptrgeom, finalstep);
+#endif
+    
+#if(ADDVPARSWINDLE)
+    add_vpar_motion(prfloor, pr, ucons, ptrgeom, finalstep);
 #endif
     /////////////////////////////
     //

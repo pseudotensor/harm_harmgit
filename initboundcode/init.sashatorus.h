@@ -413,6 +413,9 @@ struct Ccoordparams {
 #undef USEKOMISWINDLE
 #define USEKOMISWINDLE 1
 
+#undef ADDVPARSWINDLE
+#define ADDVPARSWINDLE 1
+
 #undef NSBC_ASSUME_DIPOLE_FIELD
 #define NSBC_ASSUME_DIPOLE_FIELD 1  //assumes dipolar field on the neutron star to simplify BC setting
 
