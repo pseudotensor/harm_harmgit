@@ -830,6 +830,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE uu_target = sqrt(gamma_target*gamma_target - 1);
   FTYPE ftr;
   FTYPE gamma, qsq;
+  FTYPE Vmag[NDIM];
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -843,11 +844,16 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   th=V[2];
   ph=V[3];
   
+  
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
     omegastar = get_omegaf_phys(t, dt, steppart);
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
+    convert_spc2mag(V, Vmag);
+    if(t < 3 * tau || (fabs(Vmag[2]) > 1 && fabs(Vmag[2]-M_PIl) > 1)){
+      return(0);
+    }
     //inverse timescale over which motion is damped, let's try 10% of period
     b0 = 1./(frac*tau);
     ftr = f_trans1(r);
