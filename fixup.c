@@ -718,7 +718,7 @@ FTYPE f_trans(FTYPE r)
 
 FTYPE f_trans1(FTYPE r)
 {
-  FTYPE f, rs;
+  FTYPE f, rs, x;
   //fraction of Rlc over which to carry out Komissarov's swindle
   FTYPE fracRlc = 0.8;
   FTYPE dfracRlc = 0.1;
@@ -727,8 +727,8 @@ FTYPE f_trans1(FTYPE r)
   
   rs = fracRlc * Rlc;
   
-  t = (r - fracRlc*Rlc)/dfracRlc;
-  f = 1 - t*t;
+  x = (r - fracRlc*Rlc)/dfracRlc;
+  f = 1 - x*x;
   
   if(f<0) f = 0;
   
