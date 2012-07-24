@@ -1736,7 +1736,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 
 
 
-// DOCOUNTNEG???? only applies for STEPOVERNEG???==-1
+// DOCOUNTNEG???? only applies for STEPOVERNEG???==NEGDENSITY_NEVERFIXUP
 
 // whether to count any substep u<zerouuperbaryon*prim[RHO] as failure in debug data
 // 2: always counted
@@ -1794,7 +1794,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   else if(mypflag==UTOPRIMFAILRHONEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGRHO==-1){
+    if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHO==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILRHONEG;
@@ -1826,7 +1826,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGU==-1){
+    if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGU==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILUNEG;
@@ -1858,7 +1858,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   else if(mypflag==UTOPRIMFAILRHOUNEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGRHOU==-1){
+    if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHOU==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;

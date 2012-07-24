@@ -3303,37 +3303,86 @@ int polesmooth(int whichx2,
       
       // transfer myid mycpupos[3] pr data to all other relevant cores (all other cores at this mycpupos[1],mycpupos[2] for all mycpupos[3])
       // non-blocking (all sends's occur at once)
-      int count=N3*N1M*NPR;
-      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
-	if(posk!=mycpupos[3]){
-	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int tag=myid + numprocs*posk; // sending to mycpupos[3]=posk (large tag space to ensure no duplicates)
-	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,fakej,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , tag , MPI_COMM_GRMHD , &srequest[posk]);
-#if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,tag);
-#endif
-	}
-      }
-      
-      
+
       // receive all other portions of pr and fill local myid's fullpr data
-      // non-blocking (all recv's occur at once and while sends are already going)
+      // non-blocking (all recv's occur at once)
+
+      int count=N3*N1M*NPR;
+
       for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
 	if(posk!=mycpupos[3]){
+
 	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int tag=originmyid + numprocs*mycpupos[3]; // tag used by other myid.  Receiving for my mycpupos[3]
-	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , tag , MPI_COMM_GRMHD , &rrequest[posk]);
+	  int recvtag=TAGSTARTBOUNDMPIPOLESMOOTH + originmyid + numprocs*mycpupos[3]; // recvtag used by other myid.  Receiving for my mycpupos[3]
+
+	  // do recv
+	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , recvtag , MPI_COMM_GRMHD , &rrequest[posk]);
 #if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,tag);
+	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,recvtag);
 #endif
+
 	}
       }
+
+
+      // do sends, with option to handshake first to ensure recv is ready and posted to avoid unexpected messages filling up buffer.
+      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
+	if(posk!=mycpupos[3]){
+	  
+	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+	  int recvtag=TAGSTARTBOUNDMPIPOLESMOOTH + originmyid + numprocs*mycpupos[3]; // recvtag used by other myid.  Receiving for my mycpupos[3]
+	  
+	  int destmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+	  int sendtag=TAGSTARTBOUNDMPIPOLESMOOTH + myid + numprocs*posk; // sending to mycpupos[3]=posk (large sendtag space to ensure no duplicates)
+	  
+	  if(MPIFLOWCONTROL==1){
+	    // handshake before each send but after all recv's posted
+	    int nothingsend=0;
+	    int nothingrecv=0;
+	    int maxtag = numprocs*ncpux3; // might be somewhat limiting on numprocs for large number of ncpux3
+	    
+	    MPI_Sendrecv(
+			 &nothingsend,0,MPI_INT,
+			 MPIid[destmyid],
+			 maxtag + sendtag,
+			 
+			 &nothingrecv,0,MPI_INT,
+			 MPIid[originmyid],
+			 maxtag + recvtag,
+			 
+			 MPI_COMM_GRMHD,MPI_STATUS_IGNORE);
+	    
+	  } // end if doing FLOWCONTROL
+
+
+	  // now send
+	  MPI_Isend(&fullpr[MAPFULLPR(-N1BND,fakej,mycpupos[3]*N3,0)] , count , MPI_FTYPE , MPIid[destmyid] , sendtag , MPI_COMM_GRMHD , &srequest[posk]);
+#if(DEBUGPOLESMOOTH)
+	  dualfprintf(fail_file,"MPI_Isend: posk=%d : %d %d\n",posk,destmyid,sendtag);
+#endif
+	  }
+	}
+
+      
+
       
 
       // wait for all data to be recv'ed before moving to average that uses fullpr data and requires all data to be present in fullpr
+      // wait for recv's
       for(posk=0;posk<ncpux3;posk++){
 	if(posk!=mycpupos[3]){
 	  MPI_Wait(&rrequest[posk],&mpistatus); // assume successful so don't check mpistatus
+#if(DEBUGPOLESMOOTH)
+	  dualfprintf(fail_file,"MPI_Wait: posk=%d\n",posk);
+#endif
+	}
+      }
+
+
+      // finally wait for sends
+      for(posk=0;posk<ncpux3;posk++){
+	if(posk!=mycpupos[3]){
+	  MPI_Wait(&srequest[posk],&mpistatus); // assume successful so don't check mpistatus
 #if(DEBUGPOLESMOOTH)
 	  dualfprintf(fail_file,"MPI_Wait: posk=%d\n",posk);
 #endif

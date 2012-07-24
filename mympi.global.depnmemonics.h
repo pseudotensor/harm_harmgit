@@ -1,5 +1,6 @@
-// still use MPI data type for communicating types to functions
 #if(USEMPI==0)
+
+// still use MPI data type for communicating types to functions
 typedef int MPI_Datatype;
 #define MPI_CHAR           ((MPI_Datatype)1)
 #define MPI_UNSIGNED_CHAR  ((MPI_Datatype)2)
@@ -14,6 +15,23 @@ typedef int MPI_Datatype;
 #define MPI_DOUBLE         ((MPI_Datatype)11)
 #define MPI_LONG_DOUBLE    ((MPI_Datatype)12)
 #define MPI_LONG_LONG_INT  ((MPI_Datatype)13)
+
+// fake non-MPI types to avoid USEMPI==0 conditionals on function calls
+#define MPI_Request int
+
+#define MPI_COMM_WORLD 0
+#define MPI_COMM_GRMHD 1
+
+#define MPI_STATUS_IGNORE 0
+
+#define MPI_Irecv(buf,size,datatype,id,tag,comm,request)
+#define MPI_Isrecv(buf,size,datatype,id,tag,comm,request)
+#define MPI_Isend(buf,size,datatype,id,tag,comm,request)
+#define MPI_Issend(buf,size,datatype,id,tag,comm,request)
+#define MPI_Sendrecv(addrs,sizes,datatypes,ids,tags, addrr,sizer,datatyper,idr,tagr,comm,status)
+#define MPI_Wait(req,status)
+#define MPI_Bcast(add,size,datatype,id,comm)
+
 #endif
 
 // need not change below datatype stuff
@@ -56,3 +74,29 @@ typedef int MPI_Datatype;
 #define BUFFERMAP2 ((long long int)k*N1*N2+(long long int)j*N1+(long long int)i)
 #define BUFFERINIT0 bufferoffset=0
 // mpi uses BUFFERINIT in global.h as well
+
+
+
+
+
+// MPIFLOWCONTROL setup
+// for MPIFLOWCONTROL==2, setup global tag space *and* non-overlapping buffer spaces for recv's.
+// So can pre-post recv's long before sends, so to avoid unexpected buffers filling up and/or direct write to application buffer.
+#if(MPIFLOWCONTROL==2 || 1)
+// bound_flux requires global tag space for even simple separate pre-post recv's.
+
+// not setup because requires workbc separate for each bound call in normal computational loop
+
+#define TAGSTARTBOUNDMPI (0) // numprocs*COMPDIM*2 in size
+#define TAGSTARTBOUNDMPIINT (TAGSTARTBOUNDMPI + numprocs*COMPDIM*2) // numprocs*COMPDIM*2 in size
+#define TAGSTARTBOUNDMPIPOLESMOOTH (TAGSTARTBOUNDMPIINT + numprocs*COMPDIM*2) // 2*numprocs*ncpux3 in size
+#define TAGSTARTFRDOT (TAGSTARTBOUNDMPIPOLESMOOTH + 2*numprocs*ncpux3) // numprocs in size
+
+#else
+
+#define TAGSTARTBOUNDMPI (0)
+#define TAGSTARTBOUNDMPIINT (0)
+#define TAGSTARTBOUNDMPIPOLESMOOTH (0)
+#define TAGSTARTFRDOT (0) // numprocs in size
+
+#endif

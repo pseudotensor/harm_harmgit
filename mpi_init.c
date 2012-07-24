@@ -53,7 +53,7 @@ int init_MPI_general(int *argc, char **argv[])
   MPIid=(int*)malloc(sizeof(int)*truenumprocs);
   if(MPIid==NULL){
     stderrfprintf("Problem allocating memory for MPIid with truenumprocs=%d\n",truenumprocs); fflush(stderr);
-    myexit(6794382152);
+    myexit(679438212);
   }
 
 

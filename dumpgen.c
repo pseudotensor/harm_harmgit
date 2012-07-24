@@ -27,6 +27,18 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   int gopastlinebreak(FILE *stream);
   int whichdumpversion;
 
+
+
+  // see if want to only do ROMIO finish-up when doing MPIVERSION>=2
+  if(whichdump==FAKEDUMPTYPE){
+    // only writebufptr and which  realy used, so just ignore other values
+    // -1 indicates separate finish romio call, so that next call to mpiio_final() will not think some new file is ready to be finished.
+    mpiio_final(0, 0, NULL, 0, MPICOMBINEROMIO, NULL, -1, 0, NULL, &writebuf);
+    // done with finishing-up prior ROMIO combine if using ROMIO
+    return(0);
+  }
+
+
   ////////////
   //
   // setup file format for header and dump

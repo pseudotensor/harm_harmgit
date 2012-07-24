@@ -13,8 +13,6 @@
 void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
 		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
-  static int priorinit=0;
-  void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns, MPI_Datatype datatype, void **jonioptr, void **writebufptr);
 
 
   logsfprintf("\nmpiio_init begin\n");
@@ -38,21 +36,8 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
   // clean up prior call (internally handle mpicombinetype)
   //
   //////////////////////////
-  mpiio_final(priorinit, bintxt, sorted, fpptr, headerbytesize, which, filename, numcolumns, datatype, jonioptr, writebufptr);
+  mpiio_final(bintxt, sorted, fpptr, headerbytesize, which, filename, numcolumns, datatype, jonioptr, writebufptr);
 
-
-  //////////////////////////
-  //
-  // priorinit indicates to *next call* of this function that mpiio_final(priorinit) should end/close/cleanup previously written file if was using ROMIO and writing in this call
-  // otherwise assume file writing call was fully completed already before
-  // below assumes mpicombinetype==truempicombinetype when doing ROMIO
-  //
-  //////////////////////////
-
-  if(mpicombinetype==MPICOMBINEROMIO && which==WRITEFILE){
-    priorinit=1;
-  }
-  else priorinit=0;
 
   //////////////////////////
   //
@@ -72,11 +57,16 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
 
 }
 
+
+
+
 // used to cleanup file writing in non-blocking way
 // should be called before writing if previously wrote and also called at end of calculation to close last file (use fake write to do so)
-void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
+void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
 		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
+  static int priorinit=0;
+
 
 
   if(priorinit){
@@ -92,6 +82,23 @@ void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long head
     logsfprintf("mpiio_final end\n");
 
   }
+
+
+  //////////////////////////
+  //
+  // priorinit indicates to *next call* of this function that mpiio_final(priorinit) should end/close/cleanup previously written file if was using ROMIO and writing in this call
+  // otherwise assume file writing call was fully completed already before
+  // below assumes mpicombinetype==truempicombinetype when doing ROMIO
+  //
+  //////////////////////////
+
+  if(mpicombinetype==MPICOMBINEROMIO && which==WRITEFILE){
+    priorinit=1;
+  }
+  else priorinit=0;
+
+  // if numcolumns==-1, then separate finish of ROMIO call
+  if(numcolumns==-1) priorinit=0;
 
 }
 
@@ -1091,7 +1098,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[0] = 1;
 
-      sizeofmemory = 1*(long long int)sizeofdatatype;
+      sizeofmemory = 0; // 1*(long long int)sizeofdatatype;
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
@@ -1212,8 +1219,9 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
   // http://www.sesp.cse.clrc.ac.uk/Publications/paraio/paraio/paraio.html
   // http://www.sesp.cse.clrc.ac.uk/Publications/paraio/paraio/node53.html
 
-    // GODMARK: Could use Asynchronous IO if using MPI-2
-    // GODMARK: Could use non-blocking MPI_File_iread() and MPI_File_iwrite() with MPIO_Wait() if wanted to write while continuing processes
+  // GODMARK: Could use Asynchronous IO if using MPI-2
+  // GODMARK: Could use non-blocking MPI_File_iread() and MPI_File_iwrite() with MPIO_Wait() if wanted to write while continuing processes
+
   //
   // http://www.nersc.gov/nusers/resources/software/libs/io/mpiio.php
   // Collective: MPI_File_iread_all() ?
@@ -1231,6 +1239,9 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 #if(USEMPI&&USEROMIO)
   if(operationtype==READROMIO){
     logsfprintf("mpiioromio_seperate begin\n");
+
+    if(BARRIERROMIOPRE==1) MPI_Barrier(MPI_COMM_GRMHD); // force barrier before begin writing so avoids large number of unexpected buffer space required.
+
 #if(MPIVERSION>=2)
     // non-blocking but need data from read immediately, so not taking advantage
     MPI_File_read_all_begin(fh, writebuf, bufcount, datatype);
@@ -1251,6 +1262,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
   }
   else  if(operationtype==WRITECLOSEROMIO){
     logsfprintf("mpiioromio_combine begin\n");
+
+    if(BARRIERROMIOPRE==1) MPI_Barrier(MPI_COMM_GRMHD); // force barrier before begin writing so avoids large number of unexpected buffer space required.
 
 #if(MPIVERSION>=2)
     MPI_File_write_all_begin(fh, writebuf, bufcount, datatype);

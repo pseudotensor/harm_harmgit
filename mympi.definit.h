@@ -12,7 +12,7 @@
 // ROMIO for tungsten since problems with minmem method.
 // Some systems problem with ROMIO as happens to some people: File locking failed in ADIOI_Set_lock.
 // TACC's Lonestar can NOT do ROMIO properly (no file locking)
-#define USEROMIO  0   // choice, whether to use ROMIO parallel I/O package
+#define USEROMIO  1   // choice, whether to use ROMIO parallel I/O package
 // Something wrong with ROMIO still on Kraken.
 // below comes from compiler so tied to machine's MPI setup type
 #define MPIAVOIDFORK (USINGMPIAVOIDFORK)   // choice (avoids system/fork/etc calls)
@@ -20,6 +20,17 @@
 #define USEROMIO  0   // no choice
 #define MPIAVOIDFORK 0   // always 0, can't have GM without MPI
 #endif
+
+
+// whether to put barrier before ROMIO write/read start so that avoids large unexpected messages on (e.g.) Cray Kraken NICS.
+#define BARRIERROMIOPRE 1
+
+// see boundmpi.c sendrecv() for details
+// 0 : no strong flow control
+// 1 : simple handshake to ensure recv posts
+// 2 : post recv before computations so very likely all recv's posted before send. [NOT YET -- requires careful handling of which boundary calls repeat and also need workbc space for each type want to have pre-post recv's.]
+#define MPIFLOWCONTROL 0
+
 
 
 

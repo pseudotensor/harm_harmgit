@@ -181,7 +181,8 @@
 #undef DOPOLEGAMMADEATH
 #define DOPOLEDEATH 0
 #define DOPOLESMOOTH 1
-#define DOPOLEGAMMADEATH 1 // 2 // not sure if this is needed if polesmooth() used.  Seems not necessary.
+#define DOPOLEGAMMADEATH 0
+// Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE

@@ -178,13 +178,13 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
   // report if data has rho<0 or u<0
   ZLOOP{
-    if(STEPOVERNEGRHO!=-1){
+    if(STEPOVERNEGRHO!=NEGDENSITY_NEVERFIXUP){
       if(MACP0A1(prim,i,j,k,RHO)<=0.0){
 	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
 	failflag++;
       }
     }
-    if(STEPOVERNEGU!=-1){
+    if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
       if(MACP0A1(prim,i,j,k,UU)<=0.0){
 	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
 	failflag++;
@@ -218,7 +218,8 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
   if(failflag>0){
     dualfprintf(fail_file,"Restart data has at least %d failures, please correct\n",failflag);
-    return(1);
+    myexit(1); // aborts MPI
+    //    return(1);  // currently doesn't abort properly in MPI
   }
 
 
@@ -308,7 +309,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   //
   /////////////////////
 #if(CHECKRHONEGZERORESTART)
-  if(STEPOVERNEGRHO!=-1){
+  if(STEPOVERNEGRHO!=NEGDENSITY_NEVERFIXUP){
     FULLLOOP{// OPENMPOPTMARK: Don't optimize since return
       if(MACP0A1(prim,i,j,k,RHO)<=0.0){
 	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -316,7 +317,7 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 	
       }
     }
-    if(STEPOVERNEGU!=-1){
+    if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
       if(MACP0A1(prim,i,j,k,UU)<=0.0){
 	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
 	return(1);

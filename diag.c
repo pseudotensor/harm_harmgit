@@ -232,7 +232,8 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if(DOENOFLUX != NOENOFLUX){
       // bound GLOBALPOINT(udump) (unew) so divb can be computed at MPI boundaries (still real boundaries won't be computed correctly for OUTFLOW types)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
-      bound_mpi(STAGEM1,finalstep,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+      int fakedir=0;
+      bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
     }
   }
   
@@ -1661,7 +1662,7 @@ void frdotout(void)
 	  }
 	}
 	else{
-	  MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l],l, MPI_COMM_GRMHD,&rrequest);
+	  MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l], TAGSTARTFRDOT + l, MPI_COMM_GRMHD,&rrequest);
 	  MPI_Wait(&rrequest,&mpichstatus);
 	}
 	for(i=0;i<N1;i++) PDIAGLOOP(pl){
@@ -1676,7 +1677,7 @@ void frdotout(void)
       }
     }
     else{
-      MPI_Isend(frdot,N1*NPR,MPI_SFTYPE,MPIid[0],myid, MPI_COMM_GRMHD,&srequest);
+      MPI_Isend(frdot,N1*NPR,MPI_SFTYPE,MPIid[0],TAGSTARTFRDOT + myid, MPI_COMM_GRMHD,&srequest);
       MPI_Wait(&srequest,&mpichstatus);
     }
 #endif
