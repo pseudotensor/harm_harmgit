@@ -18,6 +18,7 @@ typedef int MPI_Datatype;
 
 // fake non-MPI types to avoid USEMPI==0 conditionals on function calls
 #define MPI_Request int
+#define MPI_Status int
 
 #define MPI_COMM_WORLD 0
 #define MPI_COMM_GRMHD 1

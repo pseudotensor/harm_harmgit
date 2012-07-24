@@ -3126,12 +3126,10 @@ int polesmooth(int whichx2,
   FTYPE cartavgpr[NPR], spcavgpr[NPR],spcpr[NPR];
   static int firsttime=1;
   int pliter,pl;
-#if(USEMPI)
-  static MPI_Request *srequest;
-  static MPI_Request *rrequest;
-#endif
 
   //  return(0);
+
+
 
 
   /////////////////////
@@ -3155,6 +3153,10 @@ int polesmooth(int whichx2,
 #if(DEBUGPOLESMOOTH)
   dualfprintf(fail_file,"Got here t=%g\n",t);
 #endif
+
+
+
+
 
 
 
@@ -3206,6 +3208,69 @@ int polesmooth(int whichx2,
     if(N2TOTFULLPR==1) fakej=0;
     else fakej=1; // 2 j memory slots since on 1 cpu
   }
+
+
+
+
+  //////////////////////////////
+  //
+  // if MPI, then setup memory and pre-post recv's
+  //
+  ////////////////////////////
+  static MPI_Request *srequest;
+  static MPI_Request *rrequest;
+
+  if(USEMPI && ncpux3>1 && N3>1){
+
+    if(firsttime){
+      srequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+      if(srequest==NULL){
+	dualfprintf(fail_file,"Cannot allocate srequest\n");
+	myexit(19523766);
+      }
+      rrequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
+      if(rrequest==NULL){
+	dualfprintf(fail_file,"Cannot allocate rrequest\n");
+	myexit(346962762);
+      }
+    }
+
+
+
+    if(mycpupos[2]==0 || mycpupos[2]==ncpux2-1){ // only done for j=rj near physical poles
+      int posk;
+      
+      // transfer myid mycpupos[3] pr data to all other relevant cores (all other cores at this mycpupos[1],mycpupos[2] for all mycpupos[3])
+      // non-blocking (all sends's occur at once)
+
+      // receive all other portions of pr and fill local myid's fullpr data
+      // non-blocking (all recv's occur at once)
+
+      int count=N3*N1M*NPR;
+
+      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
+	if(posk!=mycpupos[3]){
+
+	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
+	  int recvtag=TAGSTARTBOUNDMPIPOLESMOOTH + originmyid + numprocs*mycpupos[3]; // recvtag used by other myid.  Receiving for my mycpupos[3]
+
+	  // do recv
+	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , recvtag , MPI_COMM_GRMHD , &rrequest[posk]);
+#if(DEBUGPOLESMOOTH)
+	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,recvtag);
+#endif
+
+	}
+      }
+    }
+  }
+
+
+
+
+
+
+
 
 
 
@@ -3272,29 +3337,15 @@ int polesmooth(int whichx2,
 
 
 
+
+
   //////////////////////////////
   //
   // if MPI, then send my portion to other posk's and insert portions from all other posk's
   //
   ////////////////////////////
   if(USEMPI && ncpux3>1 && N3>1){
-#if(USEMPI)
     MPI_Status mpistatus;
-
-
-    if(firsttime){
-      srequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
-      if(srequest==NULL){
-	dualfprintf(fail_file,"Cannot allocate srequest\n");
-	myexit(19523766);
-      }
-      rrequest=(MPI_Request *)malloc(sizeof(MPI_Request)*ncpux3);
-      if(rrequest==NULL){
-	dualfprintf(fail_file,"Cannot allocate rrequest\n");
-	myexit(346962762);
-      }
-    }
-
 
 
 
@@ -3308,22 +3359,6 @@ int polesmooth(int whichx2,
       // non-blocking (all recv's occur at once)
 
       int count=N3*N1M*NPR;
-
-      for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
-	if(posk!=mycpupos[3]){
-
-	  int originmyid=posk*ncpux2*ncpux1 + mycpupos[2]*ncpux1 + mycpupos[1];
-	  int recvtag=TAGSTARTBOUNDMPIPOLESMOOTH + originmyid + numprocs*mycpupos[3]; // recvtag used by other myid.  Receiving for my mycpupos[3]
-
-	  // do recv
-	  MPI_Irecv(&fullpr[MAPFULLPR(-N1BND,fakej,posk*N3,0)] , count , MPI_FTYPE , MPIid[originmyid] , recvtag , MPI_COMM_GRMHD , &rrequest[posk]);
-#if(DEBUGPOLESMOOTH)
-	  dualfprintf(fail_file,"MPI_Irecv: posk=%d : %d %d\n",posk,originmyid,recvtag);
-#endif
-
-	}
-      }
-
 
       // do sends, with option to handshake first to ensure recv is ready and posted to avoid unexpected messages filling up buffer.
       for(posk=0;posk<ncpux3;posk++){ // posk is absolute mycpupos[3] value
@@ -3391,7 +3426,6 @@ int polesmooth(int whichx2,
 
 
     }// end if physical polar myid
-#endif
   }// end if USEMPI and ncpux3>1 so have to transfer to other procs
 
 
