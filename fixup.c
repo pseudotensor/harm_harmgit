@@ -833,6 +833,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE gamma, qsq;
   FTYPE Vmag[NDIM];
   FTYPE thetacr = 1.22;
+  FTYPE x, y;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -845,6 +846,8 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   r=V[1];
   th=V[2];
   ph=V[3];
+  x = r*sin(th);
+  y = r*cos(th);
   
   
   //only do so on final step
@@ -853,7 +856,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     convert_spc2mag(V, Vmag);
-    if(t < 3 * tau || (fabs(Vmag[2]) > thetacr && fabs(Vmag[2]-M_PIl) > thetacr)){
+    if(t < 3 * tau || fabs(y) < 1./tan(1.27)*0.7*5-0.3*(x-4) ){
       return(0);
     }
     //inverse timescale over which motion is damped, let's try 10% of period
