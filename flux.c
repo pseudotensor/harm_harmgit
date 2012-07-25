@@ -709,13 +709,13 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       }
     }
 
-    // whehter dimension is relevant
+    // whether dimension is relevant
     int doingdimen[NDIM];
     doingdimen[1]=N1NOT1;
     doingdimen[2]=N2NOT1;
     doingdimen[3]=N3NOT1;
 
-    int dimenorig=1;
+    int dimenorig=1; // choose one dimension to stick things into
 
 #pragma omp parallel
     {
@@ -766,7 +766,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
     }
 
 
-  }// end iver doing PERCELLDT
+  }// end over doing PERCELLDT
 
 
 
@@ -1179,7 +1179,6 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 	  // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
 	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
 	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
-
 #pragma omp critical
 	    {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
 	      if (dtij < *ndt){
@@ -1451,7 +1450,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
 	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 #pragma omp critical
-	    {
+	    {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
 	      if (dtij < *ndt){
 		*ndt = dtij;
 		// below are global so can report when other dt's are reported in advance.c
