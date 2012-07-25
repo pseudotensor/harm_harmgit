@@ -963,15 +963,25 @@ int counttotal(int enerregion, CTYPE *vars, int num)
   for(variter=0;variter<num;variter++) vars[variter]= 0;
 
   enerpos=enerposreg[enerregion];
+  
+  // looping over [0][variter] is equivalent to original FINALSTEPLOOP TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
 
-  ZLOOP { // diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
+  // ZLOOP: diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
+
+  ZLOOP {
     if(WITHINENERREGION(enerpos,i,j,k) ){
-      for(variter=0;variter<num;variter++){
-	// looping over [0][variter] is equivalent to original FINALSTEPLOOP TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
-	vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
-      }
+      for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
     }
   }
+
+  // below for restarting with counters in case no spatial counters
+  // see restart.c and restart_read_defs_new()
+  i=-1;
+  j=-1;
+  k=-1;
+  for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
+
+
   return(0);
 }
 

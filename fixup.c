@@ -266,20 +266,24 @@ int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
   //
   /////////////////////
   if(DODEBUG){
-    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<0 || ptrgeom->i<-N1BND || ptrgeom->i>N1-1+N1BND ||ptrgeom->j<-N2BND || ptrgeom->j>N2-1+N2BND ||ptrgeom->k<-N3BND || ptrgeom->k>N3-1+N3BND ){
+
+    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<COUNTNOTHING || ptrgeom->i<-N1BND || ptrgeom->i>N1-1+N1BND ||ptrgeom->j<-N2BND || ptrgeom->j>N2-1+N2BND ||ptrgeom->k<-N3BND || ptrgeom->k>N3-1+N3BND ){
       dualfprintf(fail_file,"In diag_fixup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       myexit(24683463);
     }
 
-    int indexfinalstep;
-    indexfinalstep=0;
-    TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
-    if(finalstep){
-      indexfinalstep=1;
-      // iterate finalstep version
+    if(whocalled!=COUNTNOTHING){
+      int indexfinalstep;
+      indexfinalstep=0;
       TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
-    }
-  }
+      if(finalstep){
+	indexfinalstep=1;
+	// iterate finalstep version
+	TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+      }
+    }// end if counting something
+
+  }// end if DODEBUG
 
 
   return(0);
@@ -1364,7 +1368,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	    startpl=RHO;
 	    endpl=UU;
 	  }
- 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
+ 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
 	    startpl=UU;
 	    endpl=UU;
 	  }
@@ -1823,13 +1827,18 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
       docorrectucons=1;
     }
   }
-  else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2){ // GODMARK: maybe want separate accounting
+  else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
+
+    // default counting:
+    if(mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD) utoprimfailtype=COUNTCOLD;
+    else utoprimfailtype=COUNTUTOPRIMFAILUNEG;
+
+    // now set whether to ucons correction or override counting
     if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGU==1){
 	if(finalstep){
-	  utoprimfailtype=COUNTUTOPRIMFAILUNEG;
 	  docorrectucons=1;
 	}
 	else{
@@ -1838,7 +1847,6 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 	}
       }
       else if(DOCOUNTNEGU==2){
-	utoprimfailtype=COUNTUTOPRIMFAILUNEG;
 	docorrectucons=1;
       }
       else{
@@ -1851,7 +1859,6 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
       docorrectucons=0;
     }
     else{
-      utoprimfailtype=COUNTUTOPRIMFAILUNEG;
       docorrectucons=1;
     }
   }
@@ -2034,7 +2041,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,startpl,endpl,i,j,k); // not too much
 
 
-  if(( mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 ) ){
+  if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD){
     if(HOWTOAVG_WHEN_U2AVG==CAUSALAVG_WHEN_U2AVG){ // causal type
       doavgcausal=1;
       failavglooptype=0;

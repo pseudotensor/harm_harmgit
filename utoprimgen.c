@@ -595,7 +595,7 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
 #if(PRODUCTION==0)      
-      if(debugfail>=2) dualfprintf(fail_file,"i=%d j=%d k=%d :: Tried entropy and good! hotpflag=%d entropypflag=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
 #endif
 
       
@@ -682,7 +682,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
       
 #if(PRODUCTION==0)      
-      if(debugfail>=2) dualfprintf(fail_file,"Tried cold and good! i=%d j=%d k=%d :: hotpflag=%d coldpflag=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,coldpflag);
+      if(debugfail>=2) dualfprintf(fail_file,"Tried cold and good on finalstep=%d! i=%d j=%d k=%d :: hotpflag=%d coldpflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,coldpflag);
 #endif
 
       ///////////////////////////////
@@ -699,7 +699,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
 	//  if internal energy is not negligible or unknown, then should average or evolve!
 	pr[UU]=pr0[UU];
 	// then very bad failure, so try cold inversion and average internal energy for now
-	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1; // assume only internal energy needs correcting by averaging
+	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1FROMCOLD; // assume only internal energy needs correcting by averaging
 	
       }// end if (else) trying cold inversion
 
@@ -714,7 +714,10 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
       // account for change to hot MHD conserved quantities
-      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,COUNTCOLD);
+      int counttype;
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDCOLD) counttype=COUNTCOLD;
+      else counttype=COUNTNOTHING; // do correction, but don't do counting until later
+      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
 
       // reset pflag since above does full accounting, unless need to average-out internal energy still
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDCOLD){
