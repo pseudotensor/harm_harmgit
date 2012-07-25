@@ -217,8 +217,8 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 #endif
 
   if(failflag>0){
-    dualfprintf(fail_file,"Restart data has at least %d failures, please correct\n",failflag);
-    myexit(1); // aborts MPI
+    dualfprintf(fail_file,"Restart data has at least %d failures, please correct or accept that fixup will fix them.\n",failflag);
+    //myexit(1); // aborts MPI
     //    return(1);  // currently doesn't abort properly in MPI
   }
 
@@ -309,22 +309,33 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   //
   /////////////////////
 #if(CHECKRHONEGZERORESTART)
+  failflag=0;
+
   if(STEPOVERNEGRHO!=NEGDENSITY_NEVERFIXUP){
-    FULLLOOP{// OPENMPOPTMARK: Don't optimize since return
+    FULLLOOP{
       if(MACP0A1(prim,i,j,k,RHO)<=0.0){
-	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	return(1);
-	
+	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,RHO));
+	//	return(1);
+	failflag++;
       }
-    }
-    if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
+    }// end fullloop
+  }// end negrho check
+
+  if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
+    FULLLOOP{
       if(MACP0A1(prim,i,j,k,UU)<=0.0){
-	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	return(1);
-	
+	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,UU));
+	//	return(1);
+	failflag++;
       }
-    }
+    }// end fullloop
   }
+
+  if(failflag>0){
+    dualfprintf(fail_file,"Restart data has at least %d failures -- even after fixup should have been applied!\n",failflag);
+    myexit(1); // aborts MPI (abort, not return, so no stall on other cores)
+  }
+
 #endif
 
 
