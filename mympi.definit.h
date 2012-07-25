@@ -13,7 +13,6 @@
 // Some systems problem with ROMIO as happens to some people: File locking failed in ADIOI_Set_lock.
 // TACC's Lonestar can NOT do ROMIO properly (no file locking)
 #define USEROMIO  1   // choice, whether to use ROMIO parallel I/O package
-// Something wrong with ROMIO still on Kraken.
 // below comes from compiler so tied to machine's MPI setup type
 #define MPIAVOIDFORK (USINGMPIAVOIDFORK)   // choice (avoids system/fork/etc calls)
 #else
