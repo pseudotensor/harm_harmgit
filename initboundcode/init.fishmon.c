@@ -183,6 +183,7 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+
   if(WHICHPROBLEM==THICKDISK){
     cour=0.8;
     //  fluxmethod= HLLFLUX;
