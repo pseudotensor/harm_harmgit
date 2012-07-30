@@ -460,7 +460,8 @@ int init_global(void)
 
 
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
-  lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
+  //lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
+  lim[1] = lim[2] = lim[3] = MC; //sas: it's already set in init.tools.c but reset it here just to make sure
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
 
 // AKMARK: cooling
