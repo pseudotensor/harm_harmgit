@@ -1284,6 +1284,11 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     whichfake=whichrestart;
     DTfake=MAX(1,DTr/10); // only thing that matters currently.
   }
+  if(bcasthead){
+    MPI_Bcast(&fakesteps, 2, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&whichfake, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&DTfake, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+  }
 
 
 

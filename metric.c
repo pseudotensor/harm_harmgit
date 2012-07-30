@@ -431,6 +431,14 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 //
 // So since we want X->V to be mapping V=(t,r,hnew,phnew), this is *not* to be used.
 //
+// -----
+//
+// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
+//
+// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
+// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
+// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
+//
 ////////////////////////////
 int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
 {
