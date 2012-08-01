@@ -860,9 +860,9 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     convert_spc2mag(V, Vmag);
-//    if(t < 0 * 3 * tau || fabs(y) < 1./tan(1.3)*0.7*5-0.3*(x-4) ){
-//      return(0);
-//    }
+    if(t < 3 * tau){// || fabs(y) < 1./tan(1.3)*0.7*5-0.3*(x-4) ){
+      return(0);
+    }
     ycr1 = 1./tan(thetacr1)*0.7*5-0.3*(x-4);
     ycr2 = 1./tan(thetacr2)*0.7*5-0.3*(x-4);
     
