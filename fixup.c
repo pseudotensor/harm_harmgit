@@ -739,6 +739,7 @@ FTYPE f_trans1(FTYPE r)
 
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
+  FTYPE f_trans(FTYPE r);
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
   FTYPE b0, b1, b2;
   FTYPE r, th, ph;
@@ -832,8 +833,11 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE ftr;
   FTYPE gamma, qsq;
   FTYPE Vmag[NDIM];
-  FTYPE thetacr = 1.22;
+  FTYPE thetacr1 = 1.22;
+  FTYPE thetacr2 = 1.3;
+  FTYPE ycr1, ycr2;
   FTYPE x, y;
+  extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -856,9 +860,12 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     //pulsar rotational period
     tau = 2*M_PIl/omegastar;
     convert_spc2mag(V, Vmag);
-    if(t < 0 * 3 * tau || fabs(y) < 1./tan(1.3)*0.7*5-0.3*(x-4) ){
-      return(0);
-    }
+//    if(t < 0 * 3 * tau || fabs(y) < 1./tan(1.3)*0.7*5-0.3*(x-4) ){
+//      return(0);
+//    }
+    ycr1 = 1./tan(thetacr1)*0.7*5-0.3*(x-4);
+    ycr2 = 1./tan(thetacr2)*0.7*5-0.3*(x-4);
+    
     //inverse timescale over which motion is damped, let's try 10% of period
     b0 = 1./(frac*tau);
     ftr = f_trans1(r);
@@ -866,6 +873,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     //compute full gamma
     gamma_calc(pr, ptrgeom, &gamma, &qsq);
     uu = sqrt(gamma*gamma - 1);
+    uu_target = Ftrgen(fabs(y), ycr2, ycr1, uu, uu_target);
     if(1) {
       //compute parallel velocity component (along full B)
       //compute_vpar(pr, ptrgeom, &vpar);
