@@ -32,9 +32,21 @@ ssh pseudotensor@cli.globusonline.org scp -r -s 1 xsede#nautilus:/lustre/medusa/
 ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/jmckinne xsede#ranch:/home/01014/tg802609/   &> jonkraken2ranch.globusonline.tryagain.errors.txt
 
 # rblandfo
-# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ jcmkinne"
+# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ rblandfo"
 # but need to ensure jmckinne on kraken can access rblandfo's stuff. (at least chmod a+x /lustre/scratch/rblandfo and then chmod -R a+rx * inside that directory)
 ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/rblandfo xsede#ranch:/home/01014/tg802609/
+
+
+####################################
+# from pfe1 to Ranch
+# jmckinn2
+# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ jcmkinn2"
+# then create ssh keys locally for system: ssh-keygen -t rsa
+# then add id_rsa.pub to authorized_keys on other systems.  Also add to public keys on globusonline.
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#pfe1:/nobackup/jmckinn2 xsede#ranch:/home/01014/tg802609/ 
+
+
+
 
 
 ######################################
@@ -223,6 +235,35 @@ do
 done
 
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist336.txt
+
+
+################
+# from pfe1 (jmckinn2) to Nautilus (jmckinne) for *3d7* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/nobackup/jmckinn2/
+cd $mydir
+rm -rf $mydir/globuslist337.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep 3d7`
+dirlist2=`lssdir2 | grep hr3tilt`
+dirlist="$dirlist1 $dirlist2"
+for fil in $dirlist
+do
+    echo "pseudotensor#pfe1$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist337.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "pseudotensor#pfe1$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist337.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist337.txt
 
 
 

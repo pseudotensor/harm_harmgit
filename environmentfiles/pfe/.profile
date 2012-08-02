@@ -24,4 +24,17 @@ export MPICC_CC=icc
 export MPIF90_F90=ifort
 export MPICXX_CXX=icpc
 
+# other modules
+module load petsc/3.1-p7/intel/mpt
+module load gnuplot/4.4.0
+module load math/intel_mkl_64_10.0.011
+module load mathematica/7.0.1
+module load matlab/2010b
+
+
+export MPI_TYPE_DEPTH=20
+export MPICH_MAX_SHORT_MSG_SIZE=16000
+export MPICH_PTL_UNEX_EVENTS=80000
+export MPICH_UNEX_BUFFER_SIZE=768M
+
 
