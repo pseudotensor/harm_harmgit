@@ -838,7 +838,10 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE ycr1, ycr2;
   FTYPE x, y;
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-  
+
+  FREEZE_BSQORHO = (FRACBSQORHO) * BSQORHOLIMIT;
+  FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT;
+
   Bcon[0]=0;
   Bcon[1]=pr[B1];
   Bcon[2]=pr[B2];
@@ -870,6 +873,19 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     b0 = 1./(frac*tau);
     ftr = f_trans1(r);
     b1 = b0 * ftr;
+
+    tiltangle = get_ns_alpha();
+    costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
+    b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
+    if( DOEVOLVERHO ){
+      drho = - dt * b2 * (pr[RHO] - BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO);
+      pr[RHO] += drho;
+    }
+    if( DOEVOLVEUU ){
+      du = - dt * b2 * (pr[UU] - BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU);
+      pr[UU] += du;
+    }
+    
     //compute full gamma
     gamma_calc(pr, ptrgeom, &gamma, &qsq);
     uu = sqrt(gamma*gamma - 1);
