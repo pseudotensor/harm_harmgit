@@ -888,6 +888,9 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
       }
     }
     
+    //smoothly switch on parallel velocity
+    uu_target = Ftrgen(t, 3*tau, 4*tau, 0, uu_target);
+    
     //compute full gamma
     gamma_calc(pr, ptrgeom, &gamma, &qsq);
     uu = sqrt(gamma*gamma - 1);
