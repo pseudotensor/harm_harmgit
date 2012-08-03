@@ -896,7 +896,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     uu = sqrt(gamma*gamma - 1);
     //uu_target = Ftrgen(fabs(y), ycr2, ycr1, uu, uu_target);
     b1 = Ftrgen(fabs(y), ycr2, ycr1, 0, b1);
-    if(1) {
+    if(fabs(y)>ycr2 && omegastar*r<0.8+0.1) {
       //compute parallel velocity component (along full B)
       //compute_vpar(pr, ptrgeom, &vpar);
       //damp parallel velocity component
