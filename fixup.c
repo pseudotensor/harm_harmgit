@@ -839,6 +839,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE x, y;
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   int use_vpar = 1;
+  int do_smooth_switch_on = 0;
   
   FREEZE_BSQORHO = (FRACBSQORHO) * BSQORHOLIMIT;
   FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT;
@@ -889,8 +890,10 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
       }
     }
     
-    //smoothly switch on parallel velocity
-    uu_target = Ftrgen(t, 3*tau, 4*tau, 0, uu_target);
+    if (do_smooth_switch_on) {
+      //smoothly switch on parallel velocity
+      uu_target = Ftrgen(t, 3*tau, 4*tau, 0, uu_target);
+    }
     
     if(use_vpar) {
       //compute full gamma
