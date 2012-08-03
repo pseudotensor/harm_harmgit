@@ -828,7 +828,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE costhetaprime;
   FTYPE FREEZE_BSQORHO;
   FTYPE FREEZE_BSQOU;
-  FTYPE gamma_target = 5;
+  FTYPE gamma_target = 4;
   FTYPE uu_target = sqrt(gamma_target*gamma_target - 1);
   FTYPE ftr;
   FTYPE gamma, qsq;
