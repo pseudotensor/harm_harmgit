@@ -152,6 +152,7 @@ ifeq ($(USENAU),1)
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
 MCC=icc -lmpi
 COMP=icc -lmpi
+USELAPACK=0
 endif
 
 ifeq ($(USEICCINTELNEW),1)
@@ -354,6 +355,11 @@ EXTRA=$(DEBUGFLAG) $(GPROFFLAG) -DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) 
 #
 #############################################################################
 
+ifeq ($(USENAU),1)
+DFLAGS=-DUSINGICC=1 -DUSINGORANGE=0 $(EXTRA)
+CFLAGSPRE = -Wall -O3 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
+endif
 
 
 ifeq ($(USEGCC),1)
