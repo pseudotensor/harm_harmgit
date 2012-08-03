@@ -838,8 +838,8 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE ycr1, ycr2;
   FTYPE x, y;
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-  int use_vpar = 1;
-  int do_smooth_switch_on = 1;
+  int use_vpar = 0;
+  int do_smooth_switch_on = 0;
   
   FREEZE_BSQORHO = (FRACBSQORHO) * BSQORHOLIMIT;
   FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT;
