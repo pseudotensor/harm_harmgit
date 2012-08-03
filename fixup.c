@@ -834,7 +834,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE gamma, qsq;
   FTYPE Vmag[NDIM];
   FTYPE thetacr1 = 1.10;
-  FTYPE thetacr2 = 1.24;
+  FTYPE thetacr2 = 1.30;
   FTYPE ycr1, ycr2;
   FTYPE x, y;
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
