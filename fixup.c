@@ -838,7 +838,8 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   FTYPE ycr1, ycr2;
   FTYPE x, y;
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-
+  int use_vpar = 1;
+  
   FREEZE_BSQORHO = (FRACBSQORHO) * BSQORHOLIMIT;
   FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT;
 
@@ -891,9 +892,15 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
     //smoothly switch on parallel velocity
     uu_target = Ftrgen(t, 3*tau, 4*tau, 0, uu_target);
     
-    //compute full gamma
-    gamma_calc(pr, ptrgeom, &gamma, &qsq);
-    uu = sqrt(gamma*gamma - 1);
+    if(use_vpar) {
+      //compute full gamma
+      gamma_calc(pr, ptrgeom, &gamma, &qsq);
+      uu = sqrt(gamma*gamma - 1);
+    }
+    else {
+      compute_upar(pr, ptrgeom, &uu);
+    }
+
     //uu_target = Ftrgen(fabs(y), ycr2, ycr1, uu, uu_target);
     b1 = Ftrgen(fabs(y), ycr2, ycr1, 0, b1);
     if(fabs(y)>ycr2 && omegastar*r<0.8+0.1) {
@@ -905,7 +912,12 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
       uu += duu;
       gamma = sqrt(uu*uu+1);
       //update parallel velocity component so that total Lorentz factor = gamma
-      set_vpar(1., gamma, ptrgeom, pr);
+      if( use_vpar ){
+	set_vpar(1., gamma, ptrgeom, pr);
+      }
+      else {
+	set_upar(uu, GAMMAMAX, ptrgeom, pr);
+      }
     }
   }
   return(0);

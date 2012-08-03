@@ -2968,6 +2968,173 @@ int compute_vpar(FTYPE *pr, struct of_geom *geom, FTYPE *vpar)
   return(0);
 }
 
+int compute_upar(FTYPE *pr, struct of_geom *geom, FTYPE *upar)
+{
+  FTYPE Bccov[NDIM],Bccon[NDIM],ucon[NDIM];
+  FTYPE Bsq;
+  FTYPE absB;
+  FTYPE Bdotu;
+  int j;
+  
+  Bccon[0] = 0;
+  Bccon[1] = pr[B1];
+  Bccon[2] = pr[B2];
+  Bccon[3] = pr[B3];
+  
+  lower_vec(Bccon,geom,Bccov);
+  //obtain coordinate 4-velocity
+  pr2ucon(WHICHVEL, pr, geom, ucon);
+  
+  Bsq=0.0+SMALL;
+  SLOOPA(j) Bsq+=Bccon[j]*Bccov[j];
+  
+  //|B|
+  absB=sqrt(Bsq);
+  
+  //B_mu u^mu
+  Bdotu = 0.0;
+  SLOOPA(j) Bdotu+=Bccov[j]*ucon[j];
+  
+  //vpar = v^mu B_mu / |B|
+  *upar = Bdotu/absB;
+  
+  //define positive parallel velocity to be directed away from star
+  if (Bccon[1]<0) {
+    *upar *= -1;
+  }
+  
+  return(0);
+}
+
+
+//assumes pr contains WHICHVEL velocity
+int set_upar(FTYPE vpar_or_upar, FTYPE gamma_max, struct of_geom *geom, FTYPE *pr)
+{
+  FTYPE Bccov[NDIM],Bccon[NPR];
+  FTYPE vcon[NDIM],ucon[NDIM];
+  FTYPE Bdotv;
+  FTYPE vpar_old_vec[NDIM], vperp_old_vec[NDIM];
+  FTYPE vpar_old;
+  FTYPE Bsq;
+  FTYPE absB;
+  int j;
+  FTYPE gamma_perp, qsq_perp;
+  FTYPE vperp_sq, vmax_sq; 
+  FTYPE vpar, upar;
+  FTYPE gammasq;
+  int is_vpar = 0;
+  
+  //////////////////////
+  //
+  // Obtain B^mu, B_mu, and |B|
+  //
+  //////////////////////
+  
+  Bccon[0] = 0;
+  Bccon[1] = pr[B1];
+  Bccon[2] = pr[B2];
+  Bccon[3] = pr[B3];
+  
+  //define positive parallel velocity to be directed away from star
+  if (Bccon[1]<0) {
+    vpar_or_upar *= -1;
+  }
+  
+  lower_vec(Bccon,geom,Bccov);
+  
+  //Obtain |B|
+  Bsq=0.0+SMALL;
+  SLOOPA(j) Bsq+=Bccon[j]*Bccov[j];
+  absB=sqrt(Bsq);
+  
+  //////////////////////
+  //
+  // Obtain u^mu (4-vel) and v^mu (3-vel)
+  //
+  //////////////////////
+  
+  //obtain coordinate 4-velocity
+  pr2ucon(WHICHVEL, pr, geom, ucon);
+  //obtain coordinate 3-velocity
+  DLOOPA(j) vcon[j] = ucon[j]/ucon[TT];
+  
+  //////////////////////
+  //
+  // Obtain dot-product, (B,v)
+  //
+  //////////////////////
+  
+  //B_mu v^mu
+  Bdotv = 0.0;
+  SLOOPA(j) Bdotv+=Bccov[j]*vcon[j];
+  
+  //////////////////////
+  //
+  // Compute old parallel and perpendicular component of velocity, i.e.,
+  // vpar_old_vec^mu = k B^mu
+  // vperp_old_vec^\mu B_mu = 0
+  //
+  //////////////////////
+  
+  //vpar_old = v^mu B_mu / |B|
+  vpar_old = Bdotv/absB;
+  //vpar_old_vec^mu = vpar_old B^mu/|B|
+  SLOOPA(j) vpar_old_vec[j]  = vpar_old * Bccon[j] / absB;
+  //vperp_old_vec^mu = v^mu - vpar_old_vec^mu  
+  SLOOPA(j) vperp_old_vec[j] = vcon[j] - vpar_old_vec[j];
+  
+  //compute gamma of vperp_old_vec
+  MYFUN(vcon2pr(WHICHVEL, vperp_old_vec, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+  gamma_calc(pr, geom, &gamma_perp, &qsq_perp);
+  
+  vperp_sq = qsq_perp/(1+qsq_perp);
+  vmax_sq = 1.-1./(gamma_max*gamma_max);
+  
+  if( is_vpar ) {
+    vpar = vpar_or_upar;
+    if(vmax_sq <= vperp_sq){
+      vpar = 0.0;
+    }
+    else if(vperp_sq+vpar*vpar>vmax_sq) {
+      vpar = sqrt(vmax_sq - vperp_sq) * sign(vpar);
+    }
+    //else leave vpar as it is
+    
+    //////////////////////
+    //
+    // Replace the old parallel velocity with the supplied one
+    //
+    //////////////////////
+    
+    //new v^mu with the supplied vpar: v^mu = vperp_old_vec^mu + vpar B^mu/|B|
+    SLOOPA(j) vcon[j] = vperp_old_vec[j] + vpar * Bccon[j] / absB;
+    
+    //put the velocity back into pr
+    MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+  }
+  else {
+    upar = vpar_or_upar;
+    gammasq = (1+qsq_perp)*(1+upar*upar);
+    vpar = upar / sqrt(gammasq);
+    
+    //limit vpar
+    if(vperp_sq+vpar*vpar>vmax_sq) {
+      vpar = sqrt(vmax_sq - vperp_sq) * sign(vpar);
+    }
+    
+    //new v^mu with the supplied vpar: v^mu = vperp_old_vec^mu + vpar B^mu/|B|
+    SLOOPA(j) vcon[j] = vperp_old_vec[j] + vpar * Bccon[j] / absB;
+    
+    //put the velocity back into pr
+    MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+  }
+  
+  return(0);
+}
+    
+    
+    
+
 //assumes pr contains WHICHVEL velocity
 int set_vpar(FTYPE vpar, FTYPE gamma_max, struct of_geom *geom, FTYPE *pr)
 {
