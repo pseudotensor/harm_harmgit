@@ -63,7 +63,6 @@ static FTYPE x20;
 #define USESJETLOGHOVERR 1
 #if(USESJETLOGHOVERR)
 static FTYPE torusrmax; // was extern and original located in init.sashatorus.c, but should be inverted as now is so extern is in init.sashatorus.c.
-#endif
 static FTYPE torusrmax_loc;
 #endif
 static FTYPE OmegaNS;

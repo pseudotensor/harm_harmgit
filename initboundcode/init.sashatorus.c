@@ -60,7 +60,7 @@ static FTYPE rhodisk;
 
 static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
 static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-FTYPE torusrmax;   // AKMARK: torus pressure max
+extern FTYPE torusrmax;   // AKMARK: torus pressure max
 FTYPE t_transition;
 FTYPE global_vpar0;
 FTYPE global_dipole_alpha;
