@@ -171,6 +171,9 @@
 //spherical polar flat space for NS
 #define MCOORD SPCMINKMETRIC
 #endif
+
+#undef IF3DSPCTHENMPITRANSFERATPOLE
+#define IF3DSPCTHENMPITRANSFERATPOLE 1
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
 #define ANALYTICMEMORY 1
@@ -197,7 +200,7 @@
 #define DOEVOLVEMETRIC 0
 #define EVOLVEMETRICSUBSTEP 0 // evolve metric every substep
 #define LIMITSOURCES 1
-#define LIMITDTWITHSOURCETERM 0
+#define LIMITDTWITHSOURCETERM 0 // causes problems, drops dt too low
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
 #define DODISS 0
@@ -270,7 +273,7 @@
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
-#define SINGSMALL (1E-13) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (10000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
