@@ -317,14 +317,17 @@
 #define HYPERHLL 0
 #define HORIZONSUPERFAST 0
 
-//#define VARTOINTERP PRIMTOINTERP
-#define VARTOINTERP PRIMTOINTERP_PSR
+#define VARTOINTERP PRIMTOINTERP
+//#define VARTOINTERP PRIMTOINTERP_PSR
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL //(used in Sasha tests)
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP   // AKMARK: requires DOEXTRAINTERP
+#undef VARTOINTERPFIELD
+#define VARTOINTERPFIELD GDETVERSION
+//#define VARTOINTERPFIELD NOSPECIALFIELD  //note that this only does rescaling for interpolation of dir == 1
 #define RESCALEINTERP 1
-#define DOEXTRAINTERP 1   // AKMARK: 1 produces infinities and NaNs in fieldsvst.dat; check dump format
+#define DOEXTRAINTERP 0   // AKMARK: 1 produces infinities and NaNs in fieldsvst.dat; check dump format
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
 #define USEPRIMITIVEFROMAVGCONSERVED 0
