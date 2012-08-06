@@ -457,7 +457,7 @@ struct Ccoordparams {
 #define USERRESETREGION 0
 
 #undef RESCALEINTERPFLUXCTSTAG
-#defin RESCALEINTERPFLUXCTSTAG 0
+#define RESCALEINTERPFLUXCTSTAG 0
 
 ///////////////////////////////////////
 //
