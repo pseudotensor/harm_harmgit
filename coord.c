@@ -1017,7 +1017,6 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
   //for SJETCOORDS
   FTYPE theexp;
-  FTYPE myalpha;
 
 
   // AKMARK: coordinates defined, in particular, phi wedge (e.g., V[3]=2.0*M_PI*X[3])
@@ -1189,10 +1188,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //hyperexponential for X[1] > x1br
     V[1] = R0+exp(theexp);
     if( 0 != x20 ) {
-      //variable power-law index
-      myalpha = Ftrgen(fabs(X[2]), x20, hslope*x20, -1, 0);
-      //uniform in theta
-      V[2] = M_PI_2l * ( 1.0+X[2]*pow(V[1]/Rin,myalpha) ); 
+      if( fabs(X[2]) < x20 ) {
+	//uniform in theta
+	V[2] = M_PI_2l * ( 1.0+X[2]*Rin/V[1] ); 
+      }
+      else if( fabs(X[2]) > hslope*x20 ) {
+	V[2] = M_PI_2l * (1.0 +X[2]);
+      }
+      else {
+	V[2] = Ftrgen(fabs(X[2]), x20, hslope*x20, M_PI_2l * ( 1.0+x20*sign(X[2])*Rin/V[1] ), M_PI_2l * (1.0 +hslope*x20*sign(X[2])));
+      }
+
     }
     else {
       V[2] = M_PI_2l * (1.0 +X[2]); 
