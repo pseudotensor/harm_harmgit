@@ -1004,6 +1004,7 @@ void read_coord_parms(int defcoordlocal)
 void bl_coord(FTYPE *X, FTYPE *V)
 {
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
+  FTYPE Fangle( FTYPE x );
   extern FTYPE mysin(FTYPE th);
   FTYPE myx2;
   FTYPE mysign,ts1,fnstar,myNrat;
@@ -1189,7 +1190,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[1] = R0+exp(theexp);
     if( 0 != x20 ) {
       V[2] = fabs(X[2])*Rin/V[1]; 
-      V[2] += Ftrgen( fabs(X[2]), x20, 2-x20, 0, 2*(1-Rin/V[1]) );
+      V[2] += Fangle((fabs(X[2])/x20-hslope)/(hslope-1))*(1-Rin/V[1])*(hslope-1)/(1./x20-hslope);
       V[2] *= sign(X[2]);
       V[2] = M_PI_2l * ( 1.0+V[2] );
     }

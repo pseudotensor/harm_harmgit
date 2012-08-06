@@ -437,6 +437,7 @@ int init_grid(void)
   
   if (defcoord=SNSCOORDS) {
     global_x20 = 0.1;  //value of |x2| at which to start transition from cylindric to spherical coords
+    hslope = 2.; //hslope*global_x20 is the value of |x2| at which this transition finishes
   }
 
   return(0);
