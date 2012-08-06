@@ -451,3 +451,25 @@ struct Ccoordparams {
 
 #undef SET_FACE1DN
 #define SET_FACE1DN 1
+
+// problem-dependent code activation
+#undef USERRESETREGION
+#define USERRESETREGION 0
+
+#undef RESCALEINTERPFLUXCTSTAG
+#defin RESCALEINTERPFLUXCTSTAG 0
+
+///////////////////////////////////////
+//
+// disable things that are not really needed because they are debugging type things
+//
+///////////////////////////////////////
+#if(PRODUCTION>=2)
+//#undef DOJETDIAG
+#undef DODEBUG
+#undef DOFLOORDIAG
+//#define DOJETDIAG 0
+#define DODEBUG 0
+#define DOFLOORDIAG 0
+#endif
+
