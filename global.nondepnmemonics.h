@@ -1120,7 +1120,6 @@
 #define USEKOMISWINDLE (0)
 #define ADDVPARSWINDLE (0)
 #define NSBC_ASSUME_DIPOLE_FIELD (0)
-#define DORESCALEINTERPFLUXCTSTAG (1)  //automatically enable rescale interp when itnerpolating pstag if RESCALEINTERP==1
 #define DOPOLEDEATH (1)
 #define DOPOLEGAMMADEATH (1)
 #define DOPOLESMOOTH (0)
