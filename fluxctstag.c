@@ -1016,7 +1016,6 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     struct of_gdetgeom gdetgeomfdontuse[NDIM];
     struct of_gdetgeom *ptrgdetgeomf[NDIM];
     extern int rescale(int which, int dir, FTYPE *pr, struct of_geom *geom,FTYPE*newvar);
-    FTYPE signedgdet;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
 
@@ -1052,16 +1051,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 #elif(IFNOTRESCALETHENUSEGDET)
 	// get geometry for face pre-interpolated values
 	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	signedgdet = ptrgdetgeomf[dir]->gdet;
-#if(FLIPGDETAXIS==0)
-	//flip sign of gdet across the polar axis, make distinction between FACE2 and non-FACE2 location
-	//(since FACE2 is located exactly at the polar axis)
-	if( mycpupos[2] == 0 && j < 0
-	 || mycpupos[2] == ncpux2 - 1 && j > N2-1 + (dir==2) ){
-	  signedgdet *= -1.;
-	}
-#endif
-	MACP0A1(p2interp,i,j,k,pl) = signedgdet*MACP0A1(pstag,i,j,k,pl);
+	MACP0A1(p2interp,i,j,k,pl) = (ptrgdetgeomf[dir]->gdet)*MACP0A1(pstag,i,j,k,pl);	
 #endif
 	
       }// end COMPFULLLOOP
