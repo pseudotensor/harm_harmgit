@@ -1003,6 +1003,7 @@ void read_coord_parms(int defcoordlocal)
 /* Returns boyer-lindquist coordinte of point */
 void bl_coord(FTYPE *X, FTYPE *V)
 {
+  FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   extern FTYPE mysin(FTYPE th);
   FTYPE myx2;
   FTYPE mysign,ts1,fnstar,myNrat;
