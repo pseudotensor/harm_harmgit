@@ -1,5 +1,6 @@
 #include "decs.h"
 
+// only to myid==0
 void myfprintf(FILE* fileptr, char *format, ...)
 {
   va_list arglist;
@@ -8,7 +9,7 @@ void myfprintf(FILE* fileptr, char *format, ...)
     va_start (arglist, format);
 
     if(fileptr==NULL){
-      fprintf(stderr,"tried to print to null file pointer: %s\n",format);
+      stderrfprintf("tried to print to null file pointer: %s\n",format);
       fflush(stderr);
     }
     else{
@@ -31,15 +32,17 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 
   va_start (arglist, format);
 
-  if(fileptr==NULL){
-    fprintf(stderr,"tried to print to null file pointer: %s\n",format);
-    fflush(stderr);
-  }
-  else{
-    va_copy(arglistcopy,arglist);
-    vfprintf (fileptr, format, arglistcopy);
-    fflush(fileptr);
-    va_end(arglistcopy);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(fileptr==NULL){
+      stderrfprintf("tried to print to null file pointer: %s\n",format);
+      fflush(stderr);
+    }
+    else{
+      va_copy(arglistcopy,arglist);
+      vfprintf (fileptr, format, arglistcopy);
+      fflush(fileptr);
+      va_end(arglistcopy);
+    }
   }
   if(myid==0){
     va_copy(arglistcopy,arglist);
@@ -54,21 +57,87 @@ void dualfprintf(FILE* fileptr, char *format, ...)
 void logsfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
+
+
   
 
   va_start (arglist, format);
 
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
+  }
   if  ((myid==0)&&(logfull_file)){
     va_copy(arglistcopy,arglist);
     vfprintf (logfull_file, format, arglistcopy);
     fflush(logfull_file);
     va_end(arglistcopy);
   }
-  if(log_file){
-    va_copy(arglistcopy,arglist);
-    vfprintf (log_file, format, arglistcopy);
-    fflush(log_file);
-    va_end(arglistcopy);
+  va_end(arglist);
+}
+
+
+
+// prints to log_file(all cpus)
+void logfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+  
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
+  }
+  va_end(arglist);
+}
+
+// prints to logdt_file(all cpus)
+void logdtfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(logdt_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (logdt_file, format, arglistcopy);
+      fflush(logdt_file);
+      va_end(arglistcopy);
+    }
+  }
+  va_end(arglist);
+}
+
+// prints to stderr if PRODUCTION<=1 for all CPUs but only myid==0 if PRODUCTION>=2
+void stderrfprintf(char *format, ...)
+{
+  va_list arglist,arglistcopy;
+
+
+
+  va_start (arglist, format);
+
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(stderr){
+      va_copy(arglistcopy,arglist);
+      vfprintf (stderr, format, arglistcopy);
+      fflush(stderr);
+      va_end(arglistcopy);
+    }
   }
   va_end(arglist);
 }
@@ -77,23 +146,25 @@ void logsfprintf(char *format, ...)
 void trifprintf(char *format, ...)
 {
   va_list arglist, arglistcopy;
-  
+
 
   va_start (arglist, format);
 
-  if  ((myid==0)&&(logfull_file)){
-    va_copy(arglistcopy,arglist);
-    vfprintf (logfull_file, format, arglistcopy);
-    fflush(logfull_file);
-    va_end(arglistcopy);
-  }
-  if(log_file){
-    va_copy(arglistcopy,arglist);
-    vfprintf (log_file, format, arglistcopy);
-    fflush(log_file);
-    va_end(arglistcopy);
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
+    if(log_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (log_file, format, arglistcopy);
+      fflush(log_file);
+      va_end(arglistcopy);
+    }
   }
   if(myid==0){
+    if(logfull_file){
+      va_copy(arglistcopy,arglist);
+      vfprintf (logfull_file, format, arglistcopy);
+      fflush(logfull_file);
+      va_end(arglistcopy);
+    }
     va_copy(arglistcopy,arglist);
     vfprintf (stderr, format, arglistcopy);
     fflush(stderr);

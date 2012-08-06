@@ -152,6 +152,7 @@ int extrarestartfunction_old(void)
   MBH=1.0;
   QBH=0.0;
   EP3=0.0;
+  THETAROT=0.0;
 
   
   if(DODISS) ENERREGIONLOOP(enerregion) for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) dissreg_tot[enerregion][dissloop]=0.0;

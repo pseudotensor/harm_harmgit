@@ -42,12 +42,12 @@ int isenoughfreespace(unsigned long long need)
 	if(myid==0 && !MPIAVOIDFORK){
 	  if(MAILFROMREMOTE){
 	    sprintf(mysys,"resulthdspace=`echo \"\\`pwd\\` ran out of HD space\"` ; ssh %s@%s \"echo $resulthdspace | mail %s\"",REMOTEUSER,REMOTEHOST,EMAILADDRESS);
-	    fprintf(stderr,"system call: %s\n",mysys);
+	    stderrfprintf("system call: %s\n",mysys);
 	    system(mysys);
 	  }
 	  else{
 	    sprintf(mysys,"echo \"`pwd` ran out of HD space | mail %s\"",EMAILADDRESS);
-	    fprintf(stderr,"system call: %s\n",mysys);
+	    stderrfprintf("system call: %s\n",mysys);
 	    system(mysys);
 	  }
 	}

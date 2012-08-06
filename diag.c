@@ -3,13 +3,22 @@
 
 /* diagnostics subroutine */
 
-#define DIAGREPORT {trifprintf("t=%21.15g to do: tener=%21.15g (dt=%21.15g): dump_cnt=%ld @ t=%21.15g (dt=%21.15g) : avg_cnt=%ld @ t=%21.15g (dt=%21.15g) : debug_cnt=%ld @ t=%21.15g (dt=%21.15g) : image_cnt=%ld @ t=%21.15g (dt=%21.15g): restart=%d @ nstep=%ld (dt=%ld)\n",t,tdumpgen[ENERDUMPTYPE],DTdumpgen[ENERDUMPTYPE],dumpcntgen[MAINDUMPTYPE],tdumpgen[MAINDUMPTYPE],DTdumpgen[MAINDUMPTYPE],dumpcntgen[AVG1DUMPTYPE],tdumpgen[AVG1DUMPTYPE],DTdumpgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE],tdumpgen[DEBUGDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],tdumpgen[IMAGEDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],whichrestart,nrestart,DTr);}
+#define DIAGREPORT {trifprintf("t=%21.15g to do: tener=%21.15g (dt=%21.15g): dump_cnt=%ld @ t=%21.15g (dt=%21.15g) : avg_cnt=%ld @ t=%21.15g (dt=%21.15g) : debug_cnt=%ld @ t=%21.15g (dt=%21.15g) : image_cnt=%ld @ t=%21.15g (dt=%21.15g): restart=%d @ nstep=%ld (dt=%ld) dtfake=%ld\n",t,tdumpgen[ENERDUMPTYPE],DTdumpgen[ENERDUMPTYPE],dumpcntgen[MAINDUMPTYPE],tdumpgen[MAINDUMPTYPE],DTdumpgen[MAINDUMPTYPE],dumpcntgen[AVG1DUMPTYPE],tdumpgen[AVG1DUMPTYPE],DTdumpgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE],tdumpgen[DEBUGDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],tdumpgen[IMAGEDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],whichrestart,nrestart,DTr,DTfake);}
 
 
 
-static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen);
-static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart);
-static int post_dump(int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart);
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap
+		       ,long long int nlastrestart, long long int nrestart
+		       ,long long int nlastfake, long long int nfake
+		       ,int *doareamap, int *dodumpgen);
+static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+		    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
+		    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+		    );
+static int post_dump(int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+		     ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
+		     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+		     );
 
 
 
@@ -28,11 +37,17 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   static SFTYPE tlastgen[NUMDUMPTYPES];
   static SFTYPE tlastareamap;
   static long long int dumpcgen[NUMDUMPTYPES];
-  static long long int restartc;
   static SFTYPE tdumpgen[NUMDUMPTYPES];
-  static long long int nlastrestart,nrestart;
-  int doareamap;
   int dodumpgen[NUMDUMPTYPES];
+  // restart stuff
+  static long long int restartc;
+  static long long int nlastrestart,nrestart;
+  // fake stuff
+  static long long int fakec;
+  static long long int nlastfake,nfake;
+
+  // other stuff
+  int doareamap;
   int dtloop;
 
   int dir,interpi,enodebugi;
@@ -80,9 +95,14 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   dumpfuncgen[FAILFLOORDUDUMPTYPE]=&failfloordudump;
   // ENERDUMPTYPE : not standard spatial dump file and not standard prototype
   dumpfuncgen[ENERDUMPTYPE]=NULL;
-  // FAKEDUMPTYPE : not called in standard way (fakedump()) and not standard type of function prototype anyways
-  dumpfuncgen[FAKEDUMPTYPE]=NULL;
-
+  if(USEMPI && USEROMIO==1 && MPIVERSION==2){
+    // then do restart-like dumping of fakedump so ROMIO non-blocking writes are eventually put to disk on reasonable timestep scale.
+    dumpfuncgen[FAKEDUMPTYPE]=&fakedump;
+  }
+  else{
+    // then no need to call fakedump()
+    dumpfuncgen[FAKEDUMPTYPE]=NULL;
+  }
 
 
 
@@ -97,7 +117,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     
     // no need to repeat if restarting
     nlastrestart = (long) (DTr*(SFTYPE)((localrealnstep/DTr))-1);
+    nlastfake = (long) (DTfake*(SFTYPE)((localrealnstep/DTfake))-1);
     tlastareamap = localt-SMALL;
+
 
     for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
       tlastgen[dtloop] = DTdumpgen[dtloop]*(SFTYPE)((long long int)(t/DTdumpgen[dtloop]))-SMALL;
@@ -134,6 +156,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       // assuming started at t=0 and localnstep=0 for original run
       // time to dump NEXT
       nrestart = (long)(DTr*(SFTYPE)((localrealnstep/DTr)+1));
+      nfake = (long)(DTfake*(SFTYPE)((localrealnstep/DTfake)+1));
 
       for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
 	tdumpgen[dtloop]=DTdumpgen[dtloop]*(SFTYPE)((long long int)(localt/DTdumpgen[dtloop])+1);
@@ -153,7 +176,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // setup what we will dump this call to diag()
   //
   ////////////////////////
-  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, &doareamap, dodumpgen);
+  get_dodumps(call_code, firsttime, localt, localnstep, localrealnstep, tdumpgen, tlastgen, tlastareamap, nlastrestart, nrestart, nlastfake, nfake, &doareamap, dodumpgen);
 
 
   //////////////////
@@ -209,7 +232,8 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if(DOENOFLUX != NOENOFLUX){
       // bound GLOBALPOINT(udump) (unew) so divb can be computed at MPI boundaries (still real boundaries won't be computed correctly for OUTFLOW types)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
-      bound_mpi(STAGEM1,finalstep,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+      int fakedir=0;
+      bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
     }
   }
   
@@ -257,7 +281,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // need integratd quantities for restart dump, but don't write them to ener file.
   // (not part of standard NUMDUMPTYPES array)
   /////////////////////
-  if(dodumpgen[ENERDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE]){
+  if(DOENERDIAG&&(dodumpgen[ENERDUMPTYPE]||dodumpgen[RESTARTDUMPTYPE])){
     // get integrated quantities and possiblly dump them to files
     dump_ener(dodumpgen[ENERDUMPTYPE],dodumpgen[RESTARTDUMPTYPE],call_code);
   }
@@ -270,7 +294,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // (not part of standard NUMDUMPTYPES array)
   ///////////////////
 
-  if(dodumpgen[ENERDUMPTYPE]){
+  if(DOENERDIAG&&dodumpgen[ENERDUMPTYPE]){
     if(COMPUTEFRDOT){
       frdotout(); // need to include all terms and theta fluxes on horizon/outer edge at some point GODMARK
     }
@@ -313,7 +337,10 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     
     if(dodumpgen[dumptypeiter]&&dumpfuncgen[dumptypeiter]!=NULL){
       // pre_dump:
-      pre_dump(dumptypeiter,t,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen,whichrestart,restartc,localrealnstep,nrestart,DTr,nlastrestart);
+      pre_dump(dumptypeiter,t,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen
+	       ,whichrestart,restartc,localrealnstep,nrestart,DTr,nlastrestart
+	       ,whichfake,fakec,nfake,DTfake,nlastfake
+	       );
       
 
       if((*(dumpfuncgen[dumptypeiter]))(dumpcntgen[dumptypeiter]) >= 1){
@@ -325,7 +352,10 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       if(dodumpgen[dumptypeiter] && dumptypeiter==MAINDUMPTYPE) dumpcntmain=dumpcntgen[dumptypeiter];
       
       // post_dump:
-      post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart);
+      post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen
+		,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart
+		,fakesteps, &whichfake, &fakec, &nfake, DTfake, &nlastfake
+		);
     }
   }
 
@@ -505,8 +535,10 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 static int pre_dump(
-int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,
-int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart)
+int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
+,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+)
 {
 
   DIAGREPORT;
@@ -523,8 +555,10 @@ int whichrestart, long long int restartc, long long int localrealnstep, long lon
 
 
 static int post_dump(
-int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen,
-long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart)
+int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
+,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+)
 {
   char temps[MAXFILENAME];
   char temps2[MAXFILENAME];
@@ -544,6 +578,17 @@ long *restartsteps, int *whichrestart, long long int *restartc, long localrealns
     *restartc = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nrestart))/((FTYPE)DTr)));
     *nrestart = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTr)) + (*restartc)) * DTr;
     *nlastrestart=localrealnstep;
+  }
+  else if(whichDT==FAKEDUMPTYPE){
+    fakesteps[*whichfake] = localrealnstep;
+    *whichfake = !(*whichfake); // go ahead and oscillate this, even if not used.
+
+    // set "counter"
+    dumpcntgen[whichDT]=(long int)(*whichfake); // counter not currently used, but ok to set this to something.
+    
+    *fakec = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nfake))/((FTYPE)DTfake)));
+    *nfake = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTfake)) + (*fakec)) * DTfake;
+    *nlastfake=localrealnstep;
   }
   else{
     
@@ -569,7 +614,7 @@ long *restartsteps, int *whichrestart, long long int *restartc, long localrealns
 }
 
 
-static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, int *doareamap, int *dodumpgen)
+static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, long long int nlastfake, long long int nfake, int *doareamap, int *dodumpgen)
 {
 
 
@@ -718,7 +763,11 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   else dodumpgen[ENERDUMPTYPE]=0;
   
   
-  // FAKEDUMPTYPE is fake dump controlled in other code
+  // FAKEDUMPTYPE
+  if((USEMPI && USEROMIO==1 && MPIVERSION==2)&&( ((nlastfake!=nfake)&&(failed == 0) && (localrealnstep >= nfake ))||(call_code==FINAL_OUT) ) ){
+    dodumpgen[FAKEDUMPTYPE]=1;
+  }
+  else dodumpgen[FAKEDUMPTYPE]=0;
 
 
 
@@ -933,9 +982,9 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
 
   if(type==FINALTDUMPAREAMAP){
     dualfprintf(fail_file, "area map\n");
-    dualfprintf(fail_file, "failure at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
+    dualfprintf(fail_file, "areamap at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
     coord(i,j,k,loc,X);
-    dualfprintf(fail_file, "failure at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
+    dualfprintf(fail_file, "areamap at: i=%d j=%d k=%d\n",i+startpos[1],j+startpos[2],k+startpos[3]);
 
 
 
@@ -1613,7 +1662,7 @@ void frdotout(void)
 	  }
 	}
 	else{
-	  MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l],l, MPI_COMM_GRMHD,&rrequest);
+	  MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l], TAGSTARTFRDOT + l, MPI_COMM_GRMHD,&rrequest);
 	  MPI_Wait(&rrequest,&mpichstatus);
 	}
 	for(i=0;i<N1;i++) PDIAGLOOP(pl){
@@ -1628,7 +1677,7 @@ void frdotout(void)
       }
     }
     else{
-      MPI_Isend(frdot,N1*NPR,MPI_SFTYPE,MPIid[0],myid, MPI_COMM_GRMHD,&srequest);
+      MPI_Isend(frdot,N1*NPR,MPI_SFTYPE,MPIid[0],TAGSTARTFRDOT + myid, MPI_COMM_GRMHD,&srequest);
       MPI_Wait(&srequest,&mpichstatus);
     }
 #endif

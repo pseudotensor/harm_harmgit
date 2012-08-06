@@ -102,6 +102,7 @@ long dumpcntgen[NUMDUMPTYPES];
 //SFTYPE DTi;
 //SFTYPE DTdebug;
 long DTr;
+long DTfake;
 //long dump_cnt;
 //long avg_cnt;
 //long debug_cnt;
@@ -205,11 +206,13 @@ int mpicombine;
 int mpicombinetype;
 int truempicombinetype;
 int halftimep;
-int whichrestart;
 int appendold;
 int whocalleducon; // OPENMPNOTE: Ensure those are set as threadprivate [noted only called outside parallel regions]
 // global flags
+int whichrestart;
+int whichfake;
 long restartsteps[2];
+long fakesteps[2];
 int binaryoutput,sortedoutput;
 int CHECKCONT,DOTSTEPDIAG,DOLOGSTEP,DOLOGPERF;
 int NDTCCHECK,NZCCHECK,NDTDOTCCHECK,NGOCHECK,NTIMECHECK,NDTPERFDUMPCHECK;
@@ -254,10 +257,10 @@ int didstorepositiondata,didstoremetricdata;
 
 /* physical consts */
 FTYPE msun,lsun,rsun,G,H,C,qe,Na,malpha,mn,me,kb,arad,sigmasb,sigmamat,mevocsq,ergPmev,mp,Q,R,Re,hpl,hbar,K,K2;
-SFTYPE a,MBH,QBH,EP3;
+SFTYPE a,MBH,QBH,EP3,THETAROT;
 FTYPE Mfactor,Jfactor,rhofactor;
 SFTYPE dabh,dE,dJ,dEold,dJold;
-FTYPE mb,mbcsq,mbwithrhounit,amu,a0,MBH0,QBH0,EP30,Mdot,Mdotc,Mcgs,Ccode;
+FTYPE mb,mbcsq,mbwithrhounit,amu,a0,MBH0,QBH0,EP30,THETAROT0,Mdot,Mdotc,Mcgs,Ccode;
 FTYPE Lunit,Tunit,Vunit,rhounit,rhomassunit,Munit,mdotunit,energyunit,edotunit,Pressureunit,Tempunit,Bunit,massunitPmsun;
 int rho0unittype;
 FTYPE ledd,leddcode;

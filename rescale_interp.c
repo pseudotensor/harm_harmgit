@@ -841,6 +841,64 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   // problem when used with dir=2 since near axis end up dividing by 0
 
 
+#elif(VARTOINTERPFIELD==GDETVERSION)
+
+  //  dxdxprim_ijk( ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, dxdxp );
+
+
+  if(which==1){ // rescale before interpolation
+
+    Bconin[0]=0.0;
+    Bconin[1]=pr[B1];
+    Bconin[2]=pr[B2];
+    Bconin[3]=pr[B3];
+
+    if(dir==1){
+      p2interp[B1]=Bconin[1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=Bconin[2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=Bconin[3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
+    else if(dir==2){
+      p2interp[B1]=Bconin[1];
+      p2interp[B2]=Bconin[2];
+      p2interp[B3]=Bconin[3];
+    }
+    else{
+      p2interp[B1]=Bconin[1];
+      p2interp[B2]=Bconin[2];
+      p2interp[B3]=Bconin[3];
+    }
+  }
+  else if(which==-1){ // unrescale after interpolation
+
+    Bconin[0]=0.0;
+    Bconin[1]=p2interp[B1];
+    Bconin[2]=p2interp[B2];
+    Bconin[3]=p2interp[B3];
+    
+    if(dir==1){
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
+    else if(dir==2){
+      pr[B1]=Bconin[1];
+      pr[B2]=Bconin[2];
+      pr[B3]=Bconin[3];
+    }
+    else{
+      pr[B1]=Bconin[1];
+      pr[B2]=Bconin[2];
+      pr[B3]=Bconin[3];
+    }
+      
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+
+
 #endif // end over choices for VARTOINTERPFIELD
 
 

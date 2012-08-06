@@ -67,19 +67,20 @@ int dump_ener(int doener, int dordump, int call_code)
 
 
 
-
-
   //////////////////////////////////
   //
   // Open/append some files
   //
 
   if ((call_code == INIT_OUT) || (firsttime == 1)) {
-    // PER CPU FILE
-    sprintf(dfnam,"probe.dat%s",myidtxt);
-    if((probe_file=fopen(dfnam,"at"))==NULL){
-      dualfprintf(fail_file,"Can't open probe file\n");
-      myexit(1);
+
+    if(DOENERDIAG){ // NOTEMARK: Locking probe output to DOENERDIAG=0/1
+      // PER CPU FILE
+      sprintf(dfnam,"probe.dat%s",myidtxt);
+      if((probe_file=fopen(dfnam,"at"))==NULL){
+	dualfprintf(fail_file,"Can't open probe file\n");
+	myexit(1);
+      }
     }
     
     
@@ -429,7 +430,7 @@ int dump_ener(int doener, int dordump, int call_code)
 
 	  // by this time of the diagnostics, dE, dJ include horizon flux but MBH and a aren't yet updated.
 	  // however, horizoncum_tot IS updated so that for this enerregion u0-horizoncum_tot[0] is conserved exactly
-	  myfprintf(metricparmsener_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d ",dE,dJ,MBH0+dE,a0+dabh,(a0+dabh)/(SMALL+MBH0+dE),MBH0,MBH,a0,a0/(SMALL+MBH0),a,a/(SMALL+MBH),QBH0,QBH0/(SMALL+MBH0),QBH,QBH/(SMALL+MBH),EP30,EP30/(SMALL+MBH0),EP3,EP3/(SMALL+MBH),Rhor,Risco,horizoni+N1*horizoncpupos1);
+	  myfprintf(metricparmsener_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d ",dE,dJ,MBH0+dE,a0+dabh,(a0+dabh)/(SMALL+MBH0+dE),MBH0,MBH,a0,a0/(SMALL+MBH0),a,a/(SMALL+MBH),QBH0,QBH0/(SMALL+MBH0),QBH,QBH/(SMALL+MBH),EP30,EP30/(SMALL+MBH0),EP3,EP3/(SMALL+MBH),THETAROT0,THETAROT0/(SMALL+MBH0),THETAROT,THETAROT/(SMALL+MBH),Rhor,Risco,horizoni+N1*horizoncpupos1);
 	}
 
 	if(DOSELFGRAVVSR){
@@ -485,23 +486,26 @@ int dump_ener(int doener, int dordump, int call_code)
 
 
       if(enerregion==GLOBALENERREGION){ // only for total region for now
+
 	/////////////////////////
 	// PROBE FILE
-	// !!per CPU!! probe file NPRDUMP*3 terms
-	//
-	////////////////////////
+	if(DOENERDIAG){
+	  // !!per CPU!! probe file NPRDUMP*3 terms
+	  //
+	  ////////////////////////
 #define ITER1 MAX(N1/4,1)
 #define ITER2 MAX(N2/4,1)
 #define ITER3 MAX(N3/4,1)
-	// 2D probe
-	// k  = N3/2+1;	for(i=0;i<N1;i+=ITER1) for(j=0;j<N2;j+=ITER2){
-	for(i=0;i<N1;i+=ITER1) for(j=0;j<N2;j+=ITER2) for(k=0;k<N3;k+=ITER3){
-	  // 2D probe (consistent with original SM macro)
-	  //	  PDUMPLOOP(pliter,pl) fprintf(probe_file, "%d %d %d %ld %21.15g %21.15g\n",startpos[1]+i,startpos[2]+j,pl,realnstep, t, GLOBALMACP0A1(p,i,j,k,pl));
-	  // 3d probe
-	  PDUMPLOOP(pliter,pl) fprintf(probe_file, "%d %d %d %d %ld %21.15g %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,realnstep, t, GLOBALMACP0A1(pdump,i,j,k,pl));
+	  // 2D probe
+	  // k  = N3/2+1;	for(i=0;i<N1;i+=ITER1) for(j=0;j<N2;j+=ITER2){
+	  for(i=0;i<N1;i+=ITER1) for(j=0;j<N2;j+=ITER2) for(k=0;k<N3;k+=ITER3){
+		// 2D probe (consistent with original SM macro)
+		//	  PDUMPLOOP(pliter,pl) fprintf(probe_file, "%d %d %d %ld %21.15g %21.15g\n",startpos[1]+i,startpos[2]+j,pl,realnstep, t, GLOBALMACP0A1(p,i,j,k,pl));
+		// 3d probe
+		PDUMPLOOP(pliter,pl) fprintf(probe_file, "%d %d %d %d %ld %21.15g %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,realnstep, t, GLOBALMACP0A1(pdump,i,j,k,pl));
+	      }
+	  fflush(probe_file);
 	}
-	fflush(probe_file);
 
 
 	/////////////////////////
@@ -567,7 +571,7 @@ int dump_ener(int doener, int dordump, int call_code)
 	if(DOLUMVSR) myfclose(&lumener_file,"Couldn't close lumener_file\n");
 	if(DODISSVSR) 	  for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) myfclose(&dissener_file[dissloop],"Couldn't close dissener_file\n");
 	if(DODEBUG) myfclose(&debug_file,"Couldn't close debug_file\n");
-	fclose(probe_file);
+	if(DOENERDIAG) fclose(probe_file);
       }
     }
   }// end enerregion loop
@@ -701,7 +705,7 @@ void divbmaxavg(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrd
   }
 
   // PER CPU
-  fprintf(log_file,"  proc: %04d : divbmax: %d %d %d : %21.15g divbavg: %21.15g\n", myid, imax, jmax, kmax, divbmax, divbavg / ((FTYPE) (N1*N2*N3))); fflush(log_file);
+  logfprintf("  proc: %04d : divbmax: %d %d %d : %21.15g divbavg: %21.15g\n", myid, imax, jmax, kmax, divbmax, divbavg / ((FTYPE) (N1*N2*N3)));
 
 #if(USEMPI)			// give CPU=0 total
   divbmaxsend = divbmax;
@@ -959,15 +963,25 @@ int counttotal(int enerregion, CTYPE *vars, int num)
   for(variter=0;variter<num;variter++) vars[variter]= 0;
 
   enerpos=enerposreg[enerregion];
+  
+  // looping over [0][variter] is equivalent to original FINALSTEPLOOP TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
 
-  ZLOOP { // diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
+  // ZLOOP: diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
+
+  ZLOOP {
     if(WITHINENERREGION(enerpos,i,j,k) ){
-      for(variter=0;variter<num;variter++){
-	// looping over [0][variter] is equivalent to original FINALSTEPLOOP TSCALELOOP FLLOOP since at least last two entries in failfloorcount array are continuous in memory
-	vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
-      }
+      for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
     }
   }
+
+  // below for restarting with counters in case no spatial counters
+  // see restart.c and restart_read_defs_new()
+  i=-1;
+  j=-1;
+  k=-1;
+  for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
+
+
   return(0);
 }
 

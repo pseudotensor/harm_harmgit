@@ -1,0 +1,52 @@
+1) graphviz + doxygen for html pages of code, graphs, etc.
+
+==========SEARCHING===========
+http://www.graphviz.org/Download_linux_ubuntu.php
+http://www.graphviz.org/
+http://www.ibm.com/developerworks/library/l-graphvis/ (looks cool but old)
+
+
+had problem with "dot" from graphviz.  apparently configures/makes/installs and doxygen the same, but during run the dot complains of no valid png or pdf output.  No help online except to use default dot, and that worked ok.  No idea why doesn't compile properly.  Also, apparently some aptitude install'ed packages not seen by graphviz.
+
+http://stackoverflow.com/questions/27857/c-c-source-code-visualization (install graphviz and its required elements from listing in configure, and install doxygen)
+http://stackoverflow.com/questions/3076735/how-to-exclude-a-function-from-a-call-graph-in-doxygen
+
+===USAGE====
+a) install ubuntu version -- latest version has dot problems with png/pdfs.
+b) run in code directory as: doxygen ~/Doxyfile  and view html stuff in doxygenresults directory
+
+
+
+2) valgrind / kcachegrind
+
+==========SEARCHING===========
+Looking for that run-time version:
+
+https://en.wikipedia.org/wiki/Call_graph 
+
+http://www.scitools.com/products/understand/ 
+http://scitools.com/download/latest/Understand/Understand-3.0.615-Linux-64bit.tgz (2 week eval)
+
+http://stackoverflow.com/questions/1136728/where-can-i-find-good-open-source-code-flow-visualization-software
+http://kcachegrind.sourceforge.net/html/Home.html (free and run-time)
+
+===USAGE====
+
+a) install ubuntu version
+b) in run dir do:
+i) kcachegrind &
+ii) valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes ./grmhd 1 1 1 1
+
+MPI also works but need to use same compiler that mpicc (or whatever compiles HARM) uses (e.g. gcc on ki-jmck right now I think)
+
+c) for memcheck, do replace (ii) above with:
+ii-alt) valgrind --leak-check=full --log-file=valgrindlog.txt ./grmhd 1 1 1 1
+
+
+In both cases, if installed your own graphviz, /usr/local/bin/dot is messed up.  So I moved that to /usr/local/bin/dotbad and call graphing in both programs works.
+
+
+
+
+
+

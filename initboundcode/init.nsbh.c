@@ -2576,11 +2576,11 @@ int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE
 
 
 // bound CENTered quantities
-int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_prim_user_dir_nsbh(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  //  int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  //  int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  int bound_prim_user_dir_nsbh_new(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  //  int bound_prim_user_dir_nsbh_old1(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  //  int bound_prim_user_dir_nsbh_old2(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int boundreturn;
 
 
@@ -2589,9 +2589,9 @@ int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int
   boundreturn=0;
   // first get old type BCs
   // TEST DEBUG:  With _new() and removed avoidance of Bfield setting, still showed constant but wrong omegaf -- as if calling _old1() mattered while shouldn't.
-  //  boundreturn+=bound_prim_user_dir_nsbh_old1(boundstage, boundtime, whichdir, boundvartype, prim);
+  //  boundreturn+=bound_prim_user_dir_nsbh_old1(boundstage, finalstep, boundtime, whichdir, boundvartype, prim);
   // now overwrite with new parabolic interpolation type, but can turn on/off which prim[pl] this is done for
-  boundreturn+=bound_prim_user_dir_nsbh_new(boundstage, boundtime, whichdir, boundvartype, prim);
+  boundreturn+=bound_prim_user_dir_nsbh_new(boundstage, finalstep, boundtime, whichdir, boundvartype, prim);
 
 
   return(boundreturn);
@@ -2604,7 +2604,7 @@ int bound_prim_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int
 // TODO GODMARK: Note, could use face or corner analytical values at surface to pass interpolation through --  might be more stable by fixing extrapolation to surface value.  That would be more consistent with how A_i is treated.  Potentially how extrapolate into NS shouldn't matter too much, but apparently does alot (oscillating B_phi and OmegaF with this method vs. fixed wrong omegaf and B_\phi for older bound method)
 // When DUP copy ends up with corner-like active cell to be copied from, then value can be quite off compared to nearer cells leading to lots of pointy behavior near surface.  Do like with A_dir and usecompact==1 so DUP result is more compact and doesn't miss changes near to surface.  That is, pointy behavior doesn't smooth-off and stays there for long time.  E.g. shear in U3 generates B3, but shear of U3 along surface from pointy copy means B3 that's generated preserved shear.
 // One would think EMF that fixes U3 to NS surface rate would avoid that problem in long-term sense.
-int bound_prim_user_dir_nsbh_new(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_prim_user_dir_nsbh_new(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   static int firstwhichdir;
   static int firsttime=1;
@@ -4019,7 +4019,7 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
 
 // special NS boundary code for staggered fields
-int bound_pstag_user_dir_nsbh(int boundstage, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int bound_pstag_user_dir_nsbh(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
   // v1)

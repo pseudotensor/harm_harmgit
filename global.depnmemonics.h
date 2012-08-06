@@ -122,6 +122,12 @@
 //used by mpi_init.c for some bound types to set sign of copy for polar BCs
 #define SIGNFLIPGDET (FLIPGDETAXIS==0 ? 1.0 : -1.0)
 
+//used to set sign of U2,B2 across axis
+#define SIGNFLIPU2B2 (FLIPU2B2AXIS==0 ? 1.0 : -1.0)
+//used to set sign of U3,B3 across axis
+#define SIGNFLIPU3B3 (FLIPU3B3AXIS==0 ? 1.0 : -1.0)
+
+
 
 // setup for various boundary situations
 // so doesn't produce differences in irrelevant directions, whether boundary zones or not

@@ -39,7 +39,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
   void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc, FTYPE *gcovinfuncprim, FTYPE *gcovpertinfuncprim);
   FTYPE gcovselfpert[NDIM];
   extern int set_gcov_selfspcmetric(FTYPE *X, FTYPE *V, FTYPE *gcovselfpert);
-  FTYPE V[NDIM];
+  FTYPE V[NDIM],Vmetric[NDIM],Xmetric[NDIM];
   int j,k;
   int presenttime;
   FTYPE phi;
@@ -94,7 +94,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
   ///////////////////////////
   //
-  // Determine current X and get g_{\mu\nu}
+  // Determine current full X, get V, then get g_{\mu\nu}
   //
   ///////////////////////////
   if(presenttime){
@@ -124,43 +124,58 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
       //dualfprintf(fail_file,"blcoordcalled: i=%d j=%d k=%d p=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
 
+
+      ////////////////////////////
+      //
+      // Use V[X] and get Vmetric[V[X]] since all set_gcov's are in terms of Vmetric=r,h,ph (i.e. axisymmetric-type old/original versions)
+      //
+      ////////////////////////////
+      rotate_VtoVmetric(whichcoord,V,Vmetric);
+      int jj; DLOOPA(jj) Xmetric[jj]=X[jj]; // no change?  Depends upon how Xmetric used in set_gcov. GODMARK
+      
+
  
+      ////////////////////////////
+      //
+      // Use Vmetric[] and get metric
+      //
+      ////////////////////////////
       if(whichcoord>=0){
 	if(whichcoord==BLCOORDS){
-	  set_gcov_blmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_blmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==KSCOORDS){
-	  set_gcov_ksmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_ksmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==KS_JP1_COORDS){
-	  set_gcov_ks_jp1_metric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_ks_jp1_metric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==KS_BH_TOV_COORDS){
-	  set_gcov_ks_bh_tov_metric(X, V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_ks_bh_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==KS_TOV_COORDS){
-	  set_gcov_ks_tov_metric(X, V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_ks_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==BL_TOV_COORDS){
-	  set_gcov_bl_tov_metric(X, V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_bl_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==HTMETRIC){
-	  set_gcov_htmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_htmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==HTMETRICACCURATE){
-	  set_gcov_htmetric_accurate(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_htmetric_accurate(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==CARTMINKMETRIC){
-	  set_gcov_cartminkmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_cartminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==UNIGRAVITY){
-	  set_gcov_unigravity(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_unigravity(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==CYLMINKMETRIC){
-	  set_gcov_cylminkmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_cylminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==SPCMINKMETRIC){
-	  set_gcov_spcminkmetric(V, gcovinfunc, gcovpertinfunc);
+	  set_gcov_spcminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else{
 	  dualfprintf(fail_file,"gcov_func(): no such whichcoord=%d\n",whichcoord);
@@ -190,10 +205,10 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	 whichcoord==SPCMINKMETRIC
 	 ){
 	// then using spherical polar coordinates and can do self-gravity as designed
-	set_gcov_selfspcmetric(X,V,gcovselfpert);
+	set_gcov_selfspcmetric(Xmetric,Vmetric,gcovselfpert);
 
 	// OLD DEBUG
-	//    phi = -0.1/V[1];
+	//    phi = -0.1/Vmetric[1];
 	//gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*(-2.0*phi);
 	//      gcovpertinfunc[TT] += -2.0*phi;
 	//      gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*(-2.0*phi);
@@ -222,11 +237,11 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 	//      DLOOPA(j){
-	//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,X[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);
+	//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,Xmetric[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);
 	//      }
 
 	//	DLOOPA(j){
-	//	  dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: gcovselfpert[%d]=%21.15g\n",t,steppart,nstep,X[1],j,gcovselfpert[j]);
+	//	  dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: gcovselfpert[%d]=%21.15g\n",t,steppart,nstep,Xmetric[1],j,gcovselfpert[j]);
 	//	}
 
 
@@ -258,19 +273,30 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 #endif
 
 
-      //  DLOOP(j,k) { fprintf(stderr,"1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+      //  DLOOP(j,k) { stderrfprintf("1gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+
 
 
       ///////////
       //
-      // whether to convert to prim coords
+      // If rotating metric, now we perform transformation on the metric differentials
+      //
+      // X[] inputted is really X, not Xmetric or anything else.
+      // i.e., X[] is associated with V, not Vmetric.
+      ///////////
+      transVmetric2V(whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc);
+
+
+      ///////////
+      //
+      // Convert to prim coords
       //
       ///////////
       if(getprim==1){
 	// all the above are analytic, so have to convert to prim coords.
-	gcov2gcovprim(ptrgeom, X, V, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
+	gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
       }
-      //  DLOOP(j,k) { fprintf(stderr,"2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
+      //  DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
       //    if(ptrgeom->i==7 && nstep==1084){
       //    //      DLOOP(j,k) dualfprintf(fail_file,"present time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);
@@ -307,9 +333,9 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
     else{
       // then don't have grid at right location and need to interpolate
 #if(NEWMETRICSTORAGE)
-      interpX_gcov(X, GLOBALPOINT(compgeomlast), NULL, NULL, gcovinfunc, gcovpertinfunc);
+      interpX_gcov(Xmetric, GLOBALPOINT(compgeomlast), NULL, NULL, gcovinfunc, gcovpertinfunc);
 #else
-      interpX_gcov(X, NULL, GLOBALPOINT(gcovlast), GLOBALPOINT(gcovpertlast), gcovinfunc, gcovpertinfunc);
+      interpX_gcov(Xmetric, NULL, GLOBALPOINT(gcovlast), GLOBALPOINT(gcovpertlast), gcovinfunc, gcovpertinfunc);
 #endif
       // above untested, so fail for now
       dualfprintf(fail_file,"interpX_gcov() unexpectedly called\n");
@@ -321,6 +347,154 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 
+}
+
+
+//Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
+FTYPE arctanmath(FTYPE x, FTYPE y)
+{
+  return(atan2(y,x));
+}
+
+
+////////////////
+/// Rotate V[X] (r,thnew,phnew as in bl_coord) to Vmetric (r,th,ph as in set_gcov)
+// That is, when using rotated metric, we assume metric itself still has Vmetric=r,th,ph, while X is mapped to V=rnew,hnew,phnew.
+// So input to set_gcov(X,V) needs to then get V->Vmetric before getting gcov(Vmetric).
+//  So real spherical polar coordinates for grid itself is V=rnew,hnew,phnew.
+//
+// Use this rather than direct transformation(rnew,hnew,phnew) because that expression becomes too complicated in mathematica.  So just take 3 steps:
+// 1) gcov_func(X,V)
+// 2) rotate_VtoVmetric(V,Vmetric)
+// 3) set_gcov...(Vmetric)
+// 4) transVmetric2V(gcov) (which internally uses rotate_VtoVmetric() to keep expressions simple (i.e. kept in terms of Vmetric)
+//
+// #2 just accounts for Vmetric[V[X]] as far as assignment of metric values so that X[] grid has used correct values of old/metric r,h,ph
+// #4 accounts for differentials in metric so that ds^2 is the same.  This is written in terms of V=rnew,hnew,phnew, so can just feed-in V[X].
+//
+///////////////
+int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
+{
+
+  if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
+    // see metricrot.nb.  
+    FTYPE tnew,rnew,hnew,phnew; // true V used in bl_coord() to map to X
+	
+    tnew=V[0];
+    rnew=V[1];
+    hnew=V[2];
+    phnew=V[3];
+
+
+    FTYPE told,rold,hold,phold; // what is inside metric functions like set_gcov()
+    told=tnew;
+    rold=rnew;
+
+    FTYPE b0=THETAROT;
+
+    hold=arctanmath (cos (b0)*cos (hnew) - 1.*cos (phnew)*sin (b0)*sin (hnew),pow (pow (cos (hnew)*sin (b0) + cos (b0)*cos (phnew)*sin (hnew),2) + pow (sin (hnew),2)*pow (sin (phnew),2),0.5));
+
+    phold=arctanmath (cos (hnew)*sin (b0) + cos (b0)*cos (phnew)*sin (hnew),sin (hnew)*sin (phnew));
+
+
+    // keep \theta between 0 and \pi
+    if(hold<0.0) hold+=M_PI;
+    if(hold>M_PI) hold-=M_PI;
+
+    // keep \phi between 0 and 2\pi
+    if(phold<0.0) phold+=2.0*M_PI;
+    if(phold>2.0*M_PI) phold-=2.0*M_PI;
+
+
+    Vmetric[0]=told;
+    Vmetric[1]=rold;
+    Vmetric[2]=hold;
+    Vmetric[3]=phold;
+
+  }
+  else{
+    int jj; DLOOPA(jj) Vmetric[jj]=V[jj];
+  }
+
+  
+  return(0);
+
+}
+
+
+////////////////////////////
+//
+// perform rotation of V (for spherical polar coordinates)
+//
+// This takes input of V=(t,r,h,ph) and gives back Vmetric=(t,r,hnew,phnew)
+// where h,ph are in original metric form and hnew,phnew are rotated versions
+//
+// So since we want X->V to be mapping V=(t,r,hnew,phnew), this is *not* to be used.
+//
+// -----
+//
+// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
+//
+// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
+// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
+// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
+//
+////////////////////////////
+int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
+{
+
+  if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
+    // see metricrot.nb.  Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
+    FTYPE t,r,h,ph;
+	
+    t=Vmetric[0];
+    r=Vmetric[1];
+    h=Vmetric[2];
+    ph=Vmetric[3];
+
+    FTYPE xc,yc,zc,Rold;
+    xc=mysin(h)*mycos(ph);
+    yc=mysin(h)*mysin(ph);
+    zc=mycos(h);
+    Rold=sqrt(xc*xc + yc*yc);
+
+    // rotation around y-axis using right-hand rule
+    FTYPE xcnew,ycnew,zcnew,Rnew;
+    xcnew=xc*mycos(THETAROT)-zc*mysin(THETAROT);
+    ycnew=yc;
+    zcnew=zc*mycos(THETAROT)+xc*mysin(THETAROT);
+    Rnew=sqrt(xcnew*xcnew + ycnew*ycnew);
+
+    // Below uses atan2 so gets back correct quadrant
+    FTYPE tnew,rnew,hnew,phnew;
+    tnew=t;
+    rnew=r;
+    // these return in range [-\pi,\pi]
+    hnew=atan2(Rnew,zcnew);
+    phnew=atan2(ycnew,xcnew);
+
+    // keep \theta between 0 and \pi
+    if(hnew<0.0) hnew+=M_PI;
+    if(hnew>M_PI) hnew-=M_PI;
+
+    // keep \phi between 0 and 2\pi
+    if(phnew<0.0) phnew+=2.0*M_PI;
+    if(phnew>2.0*M_PI) phnew-=2.0*M_PI;
+
+
+    V[0]=tnew;
+    V[1]=rnew;
+    V[2]=hnew;
+    V[3]=phnew;
+
+  }
+  else{
+    int jj; DLOOPA(jj) V[jj]=Vmetric[jj];
+  }
+
+
+
+  return(0);
 }
 
 
@@ -607,8 +781,9 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
   else if(WHICHEOM==WITHSINSQ){ // obviously coordinate dependent
     bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
 
-    r=V[1];
-    th=V[2];
+    // rotate consistently with rotation in metric.c
+    // that is, anytime take i,j,k -> V for metric stuff, need to first rotate V.
+    r=V[1]; th=V[2]; // NOTEMARK :No rotation_V here because th and sin(th)^2 below are for polar grid itself, not the metric.
     ftemp=sin(th)*sin(th);
     PLOOP(pliter,pl) EOMFUNCASSIGN(pl)=ftemp;
   }
@@ -3396,7 +3571,7 @@ void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
   idxvol[TH]=IDXTH(a,R0,r,th,th2[0],th2[1]);
   idxvol[PH]=1.0/dx[3];
 
-  fprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
+  dualfprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
   
   */
 

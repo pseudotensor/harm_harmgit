@@ -16,9 +16,13 @@ static void interp_init(void);
 static void setup_zones(void);
 static void interp_readcommandlineargs(int argc, char *argv[]);
 static void readdata_preprocessdata(void);
+
+static void setup_interpolation_memory(void);
+
 static void input_header(void);
 static void output_header(void);
 static void output2file_postinterpolation(void);
+
 
 static void old_usage(int argc, int basicargcnum);
 static void usage(int argc, int basicargcnum);
@@ -33,7 +37,7 @@ static void defaultoptions(void);
 
 static void post_coordsetup(void);
 
-
+static void print_out_example_usage(void);
 
 
 
@@ -72,6 +76,7 @@ int main(int argc, char *argv[])
     // flush outputs
     fflush(stderr);
     fflush(stdout);
+    if(outfile!=NULL) fflush(outfile);
     return(0);
   }
 
@@ -81,6 +86,10 @@ int main(int argc, char *argv[])
 
 
   if(doinginterpolation){
+
+
+    setup_interpolation_memory();
+
     // only refine or setup new grid if doing interpolation
 
     // refine data
@@ -114,11 +123,37 @@ int main(int argc, char *argv[])
   // flush outputs
   fflush(stderr);
   fflush(stdout);
+  if(outfile!=NULL) fflush(outfile);
   return(0);
 }
 
 
 
+
+// allocate global arrays for interpolation memory
+static void setup_interpolation_memory(void)
+{
+
+  if(ALLOCATENEWIMAGEDATA==0) return; // not allocating newimage or newdata, just outputting directly during interpolation.  Saves huge memory on large interpolations
+
+  fprintf(stderr,"Allocating newdata or newimage\n"); fflush(stderr);
+
+  if(DATATYPE==0){
+    newimage  = c5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+    if(newimage==NULL){
+      fprintf(stderr,"Couldn't allocate newimage\n"); fflush(stderr);
+      myexit(1);
+    }
+  }
+  else{
+    newdata  = f5matrix(0,numoutputcols-1,-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[col][h][i][j][k]
+    if(newdata==NULL){
+      fprintf(stderr,"Couldn't allocate newdata\n"); fflush(stderr);
+      myexit(1);
+    }
+  }
+
+}
 
 
 
@@ -281,11 +316,34 @@ static void setup_zones(void)
 
 
 
+void gdump_tostartofdata(FILE* gdumpinlocal)
+{
+
+  rewind(gdumpinlocal);
+  // skip first line assuming it's a header line if READHEADERGDUMP=1
+  if(READHEADERGDUMP) while(fgetc(gdumpinlocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  
+
+}
+
+void infile_tostartofdata(FILE* infilelocal)
+{
+
+  rewind(infilelocal);
+  // skip first line assuming it's a header line if READHEADER=1
+  if(READHEADER) while(fgetc(infilelocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  
+
+}
+
+
 // read and process input data
 static void readdata_preprocessdata(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
+  int colini;
   unsigned char tempuc;
+  int doubleworkfake;
 
 
   if(getgdump){
@@ -295,10 +353,11 @@ static void readdata_preprocessdata(void)
       exit(1);
     }
     else{
-      // skip first line assuming it's a header line
-      while(fgetc(gdumpin)!='\n'); // go past end of line
+      gdump_tostartofdata(gdumpin);
     }
   }
+
+
 
 
   ///////////////////////////////////
@@ -319,38 +378,45 @@ static void readdata_preprocessdata(void)
 
     /* make arrays for images */
     if(!DOUBLEWORK){
-      oldimage0 = c4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
-      newimage  = c4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;
+      oldimage0 = c5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
+      if(oldimage0==NULL){
+	fprintf(stderr,"Couldn't allocate oldimage0\n"); fflush(stderr);
+	myexit(1);
+      }
     }
     else{
-      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
-      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
+      olddata0 = f5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[col][h][i][j][k]
+      if(olddata0==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+	myexit(1);
+      }
     }
     /* read in old image */
     if(jonheader){
       // skip 4 lines
-      for(i=1;i<=4;i++) while(fgetc(stdin)!='\n');
+      for(i=1;i<=4;i++) while(fgetc(infile)!='\n');
     }
     fprintf(stderr,"reading image\n"); fflush(stderr);
 
     
     // read order and write order same, so good image output
-    totalmin=BIG;
-    totalmax=-BIG;
+    coli=0; // only 1 column
+    totalmin[coli]=BIG;
+    totalmax[coli]=-BIG;
     for(h=0;h<oN0;h++){ // for files (reading-writing), time is slowest index
       for(k=0;k<oN3;k++){
 	for(j=0;j<oN2;j++){
 	  for(i=0;i<oN1;i++){
 	    if(DOUBLEWORK){
-	      fread(&tempuc, sizeof(unsigned char), 1, stdin) ;
-	      olddata0[h][i][j][k]=(FTYPE)tempuc;
-	      if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
-	      if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
+	      fread(&tempuc, sizeof(unsigned char), 1, infile) ;
+	      olddata0[coli][h][i][j][k]=(FTYPE)tempuc;
+	      if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+	      if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
 	    }
 	    else{
-	      fread(&oldimage0[h][i][j][k], sizeof(unsigned char), 1, stdin) ;
-	      if(oldimage0[h][i][j][k]>totalmax) totalmax=oldimage0[h][i][j][k];
-	      if(oldimage0[h][i][j][k]<totalmin) totalmin=oldimage0[h][i][j][k];
+	      fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, infile) ;
+	      if(oldimage0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=oldimage0[coli][h][i][j][k];
+	      if(oldimage0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=oldimage0[coli][h][i][j][k];
 	    }
 	  }
 	}
@@ -364,131 +430,157 @@ static void readdata_preprocessdata(void)
       gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);      
     }
 
-    /////////////
-    //
-    // set boundary conditions (as if scalars)
-    //
-    ///////////// 
-    if(BOUNDARYEXTRAP==1){
-      // lower and upper h
-      for(i=0;i<oN1;i++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(h=-numbc[0];h<0;h++) olddata0[h][i][j][k]=olddata0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) olddata0[h][i][j][k]=olddata0[oN0-1][i][j][k];
-	    }
-	    else{
-	      for(h=-numbc[0];h<0;h++) oldimage0[h][i][j][k]=oldimage0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) oldimage0[h][i][j][k]=oldimage0[oN0-1][i][j][k];
-	    }
-	  }
-	}
-      }
-      // lower and upper i
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(i=-numbc[1];i<0;i++) olddata0[h][i][j][k]=olddata0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) olddata0[h][i][j][k]=olddata0[h][oN1-1][j][k];
-	    }
-	    else{
-	      for(i=-numbc[1];i<0;i++) oldimage0[h][i][j][k]=oldimage0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) oldimage0[h][i][j][k]=oldimage0[h][oN1-1][j][k];
-	    }
-	  }
-	}
-      }
-      // lower and upper j
-      for(h=0;h<oN0;h++){
-	for(i=0;i<oN1;i++){
-	  for(k=0;k<oN3;k++){
-	    if(DOUBLEWORK){
-	      for(j=-numbc[2];j<0;j++) olddata0[h][i][j][k]=olddata0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) olddata0[h][i][j][k]=olddata0[h][i][oN2-1][k];
-	    }
-	    else{
-	      for(j=-numbc[2];j<0;j++) oldimage0[h][i][j][k]=oldimage0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) oldimage0[h][i][j][k]=oldimage0[h][i][oN2-1][k];
-	    }
-	  }
-	}
-      }
-      // lower and upper k
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(DOUBLEWORK){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][oN3-1];
-	    }
-	    else{
-	      for(k=-numbc[3];k<0;k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][oN3-1];
-	    }
-	  }
-	}
-      }
-    }
+    // apply boundary conditions
+    apply_boundaryconditions_olddata(numoutputcols, oN0, numbc[0], DOUBLEWORK, oldimage0, olddata0);
 
-
-    if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-      // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-      for(h=0;h<oN0;h++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(DOUBLEWORK){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
-	    }
-	    else{
-	      for(k=-numbc[3];k<0;k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) oldimage0[h][i][j][k]=oldimage0[h][i][j][k-oN3];
-	    }
-	  }
-	}
-      }
-    }// end if periodic
-    
   }
+
+
+
   ///////////////////////////////////
   //
-  // DATATYPE==1
+  // DATATYPE>=1
   //
   ///////////////////////////////////
-  else if(DATATYPE==1){
+  else{
+
+
     imagedata=1; // says treat as data
 
 
     if(immediateoutput==1){
       // only ever inputting and outputting at once and don't interpolate and don't need to store more than 1 grid point
-      compute_preprocess(outputvartype,gdumpin, NULL);
+      compute_preprocess(outputvartype,gdumpin, 0,0,0,0,NULL, NULL);
+
+
     }
-    else{ // case where need to process more than 1 grid point at a time (i.e. integrals or averages or interpolations or whatever)
+    else{
+      // case where need to process more than 1 grid point at a time (i.e. integrals or averages or interpolations or whatever)
 
 
-      olddata0 = f4matrix(-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[h][i][j][k]
-      newdata  = f4matrix(-numbc[0]+0,nN0-1+numbc[0],-numbc[1]+0,nN1-1+numbc[1],-numbc[2]+0,nN2-1+numbc[2],-numbc[3]+0,nN3-1+numbc[3]) ;   // newdata[h][i][j][k]
+      ////////////////
+      fprintf(stderr,"Before allocate olddata0: %d %d %d %d %d %d %d %d %d %d\n",0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]); fflush(stderr);
+      // ALLOCATE MEMORY for storing HARM-based processed data (olddata0)
+      olddata0 = f5matrix(0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[coli][h][i][j][k]
+      if(olddata0==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+	myexit(1);
+      }
+      fprintf(stderr,"After allocate olddata0\n"); fflush(stderr);
 
 
 
-      totalmin=BIG;
-      totalmax=-BIG;
-      // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
-      LOOPOLDDATA{
-
-	if(outputvartype==0){ // only 1 thing in (e.g. for scalar image or data)
-	  readelement(stdin,&olddata0[h][i][j][k]);
-	}
-	else{// for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
-	  compute_preprocess(outputvartype,gdumpin, &olddata0[h][i][j][k]);
-	}
-	if(olddata0[h][i][j][k]>totalmax) totalmax=olddata0[h][i][j][k];
-	if(olddata0[h][i][j][k]<totalmin) totalmin=olddata0[h][i][j][k];
-	
-      }// end LOOPOLDDATA
       
+      // compute additional quantities that can be transformed, processesed, and/or eventually interpolated
+      // so far creates olddatacurrent globally if doing anything
+      // ensure olddata0 allocated if computing everything in compute_additionals()
+      compute_additionals();
+
+
+
+
+
+      //////////////////
+      // PREPARE FOR LOOP
+      //
+      // initialize totalmin and totalmax
+      for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	totalmin[coli]=BIG;
+	totalmax[coli]=-BIG;
+      }
+      // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
+      int kprior,firsttimecompute=1;
+
+
+      // setup temp new column space to avoid passing entire array "olddata0" to functions because "coli" is at the front of array storage function, when only need per space-time point.
+      FTYPE *olddata0temp=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
+      if(olddata0temp==NULL){
+	fprintf(stderr,"Couldn't allocate olddata0temp\n");
+	exit(1);
+      }
+
+
+      FTYPE *olddata0temporig=NULL;
+      if(outputvartype==0){
+	// old column space
+	olddata0temporig=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+	if(olddata0temporig==NULL){
+	  fprintf(stderr,"Couldn't allocate olddata0temporig\n");
+	  exit(1);
+	}
+      }
+
+
+      ////////////
+      // LOOP over HARM data and get use multiple values to get (e.g.) Cartesian orthonormal result
+      //
+      // no iteration over coli -- multiple input columns handled by outputvartype>0
+      int hprior=-1000;
+      LOOPOLDDATA{
+	
+	// only 1 thing in (e.g. for scalar image or data)
+	if(outputvartype==0){
+	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temporig[colini]);
+
+	  // if multiple input columns, choose 0th column, unless selecting part of field line file
+	  if(DATATYPE==1000){
+	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // rho_0
+	  }
+	  else if(DATATYPE==1001){
+	    coli=0; colini=1;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // u_g
+	  }
+	  else{
+	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // first or only column
+	  }
+
+
+	}
+	else{
+	  // for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
+	  int dotstoappear;
+	  dotstoappear=oN0*oN3;
+
+
+ 	  if(firsttimecompute==1){
+	    fprintf(stderr,"compute_preprocess(%d dots to appear):",dotstoappear); fflush(stderr);
+	  }
+	  if(k!=kprior){
+	    fprintf(stderr,"."); fflush(stderr);
+	    kprior=k;
+	  }
+
+	  // reset gdump if changed time -- assumes gdump same for each time so don't have to create multi-time gdump
+	  if(h!=hprior && oN0!=1){
+	    gdump_tostartofdata(gdumpin);
+	    hprior=h;
+	  }
+
+
+	  // get new columns by processing data
+	  compute_preprocess(outputvartype, gdumpin, h,i,j,k,olddatacurrent, olddata0temp);
+
+
+	  // copy from temp space
+	  for(coli=0;coli<numoutputcols;coli++)  olddata0[coli][h][i][j][k]=olddata0temp[coli];
+
+	}
+
+	// determine min/max of data
+	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	  if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+	  if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
+	}
+	
+	firsttimecompute=0;
+      }// end LOOPOLDDATA
+
+
+      // free temp column space
+      free(olddata0temp);
+      if(outputvartype==0){
+	free(olddata0temporig);
+      }
+
 
       if(filter){
 	// filter not setup for periodic bc
@@ -496,65 +588,21 @@ static void readdata_preprocessdata(void)
 	gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);
       }
 
-      /////////////
-      //
-      // set boundary conditions (as if scalars)
-      //
-      ///////////// 
-      if(BOUNDARYEXTRAP==1){
-	// lower and upper h
-	for(i=0;i<oN1;i++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      for(h=-numbc[0];h<0;h++) olddata0[h][i][j][k]=olddata0[0][i][j][k];
-	      for(h=oN0;h<oN0+numbc[0];h++) olddata0[h][i][j][k]=olddata0[oN0-1][i][j][k];
-	    }
-	  }
-	}
-	// lower and upper i
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(k=0;k<oN3;k++){
-	      for(i=-numbc[1];i<0;i++) olddata0[h][i][j][k]=olddata0[h][0][j][k];
-	      for(i=oN1;i<oN1+numbc[1];i++) olddata0[h][i][j][k]=olddata0[h][oN1-1][j][k];
-	    }
-	  }
-	}
-	// lower and upper j
-	for(h=0;h<oN0;h++){
-	  for(i=0;i<oN1;i++){
-	    for(k=0;k<oN3;k++){
-	      for(j=-numbc[2];j<0;j++) olddata0[h][i][j][k]=olddata0[h][i][0][k];
-	      for(j=oN2;j<oN2+numbc[2];j++) olddata0[h][i][j][k]=olddata0[h][i][oN2-1][k];
-	    }
-	  }
-	}
-	// lower and upper k
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(i=0;i<oN1;i++){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][0];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][oN3-1];
-	    }
-	  }
-	}
-      }
 
-      // override and always have boundary cells if periodic in x3
-      if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-	// then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
-	for(h=0;h<oN0;h++){
-	  for(j=0;j<oN2;j++){
-	    for(i=0;i<oN1;i++){
-	      for(k=-numbc[3];k<0;k++) olddata0[h][i][j][k]=olddata0[h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbc[3];k++) olddata0[h][i][j][k]=olddata0[h][i][j][k-oN3];
-	    }
-	  }
-	}
-      }// end if PERIODIC
-    }
 
-  }
+      // apply boundary conditions (spatial and temporal) on HARM-grid data
+      doubleworkfake=1; // force use of olddata0
+      apply_boundaryconditions_olddata(numoutputcols,oN0,numbc[0],doubleworkfake,oldimage0,olddata0);
+
+
+
+    }// end else if immediateoutput!=1
+
+  }// end else if DATATYPE>=1
+
+
+
+
 
 
 
@@ -567,78 +615,253 @@ static void readdata_preprocessdata(void)
     ///////////////
 
     if(defaultvaluetype==0){
-      if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue=totalmin;
-      else defaultvalue=0.0; // vector-like things otherwise around 0
+      if(DATATYPE==14){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=0.0; // vx
+	defaultvalue[3]=0.0; // vy
+	defaultvalue[4]=0.0; // vz
+	defaultvalue[5]=0.0; // Bx
+	defaultvalue[6]=0.0; // By
+	defaultvalue[7]=0.0; // Bz
+	defaultvalue[8]=0.0; // FEMrad
+	defaultvalue[9]=0.0; // Bphi
+	if(docurrent==1){
+	  defaultvalue[9]=0.0; // Jt (can be + or -, so choose 0 as default)
+	  defaultvalue[10]=0.0; // Jx
+	  defaultvalue[11]=0.0; // Jy
+	  defaultvalue[12]=0.0; // Jz
+	}
+      }
+      else{
+	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
+	  else defaultvalue[coli]=0.0; // vector-like things otherwise around 0
+	}
+      }
     }
     else if(defaultvaluetype==1){
-      defaultvalue=totalmin;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=totalmin[coli];
     }
     else if(defaultvaluetype==2){
-      defaultvalue=totalmax;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=totalmax[coli];
     }
     else if(defaultvaluetype==3){
-      defaultvalue=0.0;
+      for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0;
     }
     else if(defaultvaluetype==4){
-      defaultvalue=1E35; // for V5D missing data
-      fprintf(stderr,"Using V5D missing data for defaultvalue=%g\n",defaultvalue);
+      for(coli=0;coli<numoutputcols;coli++){
+	defaultvalue[coli]=1E35; // for V5D missing data
+	fprintf(stderr,"Using V5D missing data for defaultvalue[coli=%d]=%g\n",coli,defaultvalue[coli]);
+      }
     }
 
 
     if(VERBOSITY>=1){
-      fprintf(stderr,"defaultvalue=%21.15g\n",defaultvalue);
+      for(coli=0;coli<numoutputcols;coli++) fprintf(stderr,"defaultvalue[coli=%d]=%21.15g\n",coli,defaultvalue[coli]);
     }
 
   }
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////
+//
+// set boundary conditions (as if scalars) to original HARM-grid data
+//
+///////////// 
+void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal)
+{
+  int coli,h,i,j,k;
+  int numbclocal[NDIM];
+  int jj;
+
+  DLOOPA(jj) numbclocal[jj]=numbc[jj];
+  // now override if user wants (e.g. if doing DATATYPE==14 with 3-time data and don't want additional temporal boundary conditions -- would only waste space)
+  numbclocal[TT]=numbc0local;
+
+
+  /////////////
+  //
+  // set boundary conditions (as if scalars)
+  //
+  ///////////// 
+  for(coli=0;coli<numcols;coli++){ // over all independent columsn of data
+      
+    if(BOUNDARYEXTRAP==1){
+      // lower and upper h
+      for(i=0;i<oN1;i++){
+	for(j=0;j<oN2;j++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(h=-numbclocal[0];h<0;h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][0][i][j][k];
+	      for(h=oN0local;h<oN0local+numbclocal[0];h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][oN0local-1][i][j][k];
+	    }
+	    else{
+	      for(h=-numbclocal[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
+	      for(h=oN0local;h<oN0local+numbclocal[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0local-1][i][j][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper i
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(i=-numbclocal[1];i<0;i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][0][j][k];
+	      for(i=oN1;i<oN1+numbclocal[1];i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][oN1-1][j][k];
+	    }
+	    else{
+	      for(i=-numbclocal[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
+	      for(i=oN1;i<oN1+numbclocal[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper j
+      for(h=0;h<oN0local;h++){
+	for(i=0;i<oN1;i++){
+	  for(k=0;k<oN3;k++){
+	    if(doubleworklocal){
+	      for(j=-numbclocal[2];j<0;j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][0][k];
+	      for(j=oN2;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][oN2-1][k];
+	    }
+	    else{
+	      for(j=-numbclocal[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
+	      for(j=oN2;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
+	    }
+	  }
+	}
+      }
+      // lower and upper k
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(doubleworklocal){
+	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][0];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][oN3-1];
+	    }
+	    else{
+	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
+	    }
+	  }
+	}
+      }
+    }// end if BOUNDARYEXTRAP=1
+      
+      
+    if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
+      // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
+      for(h=0;h<oN0local;h++){
+	for(j=0;j<oN2;j++){
+	  for(i=0;i<oN1;i++){
+	    if(doubleworklocal){
+	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k-oN3];
+	    }
+	    else{
+	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
+	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
+	    }
+	  }
+	}
+      }
+    }// end if periodic
+
+  }// end over coli
+
+
+
+}
+
+
+
+
+
+
+
 // read single element from file in text or binary format and any element C type
-void readelement(FILE *input, FTYPE *datain)
+void readelement(int binaryinputlocal, char* inFTYPElocal, FILE *input, FTYPE *datain)
 {
   
-  if     (binaryinput==0 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fscanf(input,"%ld",&dumli);   *datain=(FTYPE)dumli;      }
-  else if(binaryinput==0 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fscanf(input,"%lld",&dumlli); *datain=(FTYPE)dumlli;     }
-  else if(binaryinput==0 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fscanf(input,"%f",&dumf) ;    *datain=(FTYPE)dumf;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fscanf(input,"%lf",&dumd);    *datain=(FTYPE)dumd;       }
-  else if(binaryinput==0 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fscanf(input,"%Lf",&dumld);   *datain=(FTYPE)dumld;      }
+  if     (binaryinputlocal==0 && strcmp(inFTYPElocal,"b")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"i")==0   ){ int dumi;             fscanf(input,"%d",&dumi) ;    *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       fscanf(input,"%ld",&dumli);   *datain=(FTYPE)dumli;      }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; fscanf(input,"%lld",&dumlli); *datain=(FTYPE)dumlli;     }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"f")==0   ){ float dumf;           fscanf(input,"%f",&dumf) ;    *datain=(FTYPE)dumf;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"d")==0   ){ double dumd;          fscanf(input,"%lf",&dumd);    *datain=(FTYPE)dumd;       }
+  else if(binaryinputlocal==0 && strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    fscanf(input,"%Lf",&dumld);   *datain=(FTYPE)dumld;      }
 
-  if     (binaryinput==1 && strcmp(inFTYPE,"b")==0   ){ int dumi;             fread(&dumi,bytesize,1,input);          *datain=(FTYPE)dumi;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"i")==0   ){ int dumi;             fread(&dumi,intsize,1,input);           *datain=(FTYPE)dumi;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"li")==0  ){ long int dumli;       fread(&dumli,longintsize,1,input);      *datain=(FTYPE)dumli;      }
-  else if(binaryinput==1 && strcmp(inFTYPE,"lli")==0 ){ long long int dumlli; fread(&dumlli,longlongintsize,1,input); *datain=(FTYPE)dumlli;     }
-  else if(binaryinput==1 && strcmp(inFTYPE,"f")==0   ){ float dumf;           fread(&dumf,floatsize,1,input);         *datain=(FTYPE)dumf;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"d")==0   ){ double dumd;          fread(&dumd,doublesize,1,input);        *datain=(FTYPE)dumd;       }
-  else if(binaryinput==1 && strcmp(inFTYPE,"ld")==0  ){ long double dumld;    fread(&dumld,longdoublesize,1,input);   *datain=(FTYPE)dumld;      }
+  if     (binaryinputlocal==1 && strcmp(inFTYPElocal,"b")==0   ){ int dumi;             fread(&dumi,bytesize,1,input);          *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"i")==0   ){ int dumi;             fread(&dumi,intsize,1,input);           *datain=(FTYPE)dumi;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       fread(&dumli,longintsize,1,input);      *datain=(FTYPE)dumli;      }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; fread(&dumlli,longlongintsize,1,input); *datain=(FTYPE)dumlli;     }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"f")==0   ){ float dumf;           fread(&dumf,floatsize,1,input);         *datain=(FTYPE)dumf;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"d")==0   ){ double dumd;          fread(&dumd,doublesize,1,input);        *datain=(FTYPE)dumd;       }
+  else if(binaryinputlocal==1 && strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    fread(&dumld,longdoublesize,1,input);   *datain=(FTYPE)dumld;      }
 
 }
 
 // write single element to file in text or binary format and any element C type
-void writeelement(FILE *output, FTYPE dataout)
+void writeelement(int binaryoutputlocal, char* outFTYPElocal, FILE *output, FTYPE dataout)
 {
   
-  if     (binaryoutput==0 && strcmp(outFTYPE,"b")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"i")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"li")==0  ){ long int dumli=(long int)dataout;            fprintf(output,"%ld",dumli);     }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"lli")==0 ){ long long int dumlli=(long long int)dataout; fprintf(output,"%lld",dumlli);   }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"f")==0   ){ float dumf=(float)dataout;                   fprintf(output,"%15.7g",dumf) ;  }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"d")==0   ){ double dumd=(double)dataout;                 fprintf(output,"%22.16g",dumd);  }
-  else if(binaryoutput==0 && strcmp(outFTYPE,"ld")==0  ){ long double dumld=(long double)dataout;      fprintf(output,"%26.21Lg",dumld); }
+  if     (binaryoutputlocal==0 && strcmp(outFTYPElocal,"b")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"i")==0   ){ int dumi=(int)dataout;                       fprintf(output,"%d",dumi) ;      }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"li")==0  ){ long int dumli=(long int)dataout;            fprintf(output,"%ld",dumli);     }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"lli")==0 ){ long long int dumlli=(long long int)dataout; fprintf(output,"%lld",dumlli);   }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"f")==0   ){ float dumf=(float)dataout;                   fprintf(output,"%15.7g",dumf) ;  }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"d")==0   ){ double dumd=(double)dataout;                 fprintf(output,"%22.16g",dumd);  }
+  else if(binaryoutputlocal==0 && strcmp(outFTYPElocal,"ld")==0  ){ long double dumld=(long double)dataout;      fprintf(output,"%26.21Lg",dumld); }
 
-  if     (binaryoutput==1 && strcmp(outFTYPE,"b")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,bytesize,1,output);          }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"i")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,intsize,1,output);           }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"li")==0  ){ long int dumli=(long int)dataout;            fwrite(&dumli,longintsize,1,output);      }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"lli")==0 ){ long long int dumlli=(long long int)dataout; fwrite(&dumlli,longlongintsize,1,output); }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"f")==0   ){ float dumf=(float)dataout;                   fwrite(&dumf,floatsize,1,output);         }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"d")==0   ){ double dumd=(double)dataout;                 fwrite(&dumd,doublesize,1,output);        }
-  else if(binaryoutput==1 && strcmp(outFTYPE,"ld")==0  ){ long double dumld=(long double)dataout;      fwrite(&dumld,longdoublesize,1,output);   }
+  if     (binaryoutputlocal==1 && strcmp(outFTYPElocal,"b")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,bytesize,1,output);          }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"i")==0   ){ int dumi=(int)dataout;                       fwrite(&dumi,intsize,1,output);           }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"li")==0  ){ long int dumli=(long int)dataout;            fwrite(&dumli,longintsize,1,output);      }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"lli")==0 ){ long long int dumlli=(long long int)dataout; fwrite(&dumlli,longlongintsize,1,output); }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"f")==0   ){ float dumf=(float)dataout;                   fwrite(&dumf,floatsize,1,output);         }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"d")==0   ){ double dumd=(double)dataout;                 fwrite(&dumd,doublesize,1,output);        }
+  else if(binaryoutputlocal==1 && strcmp(outFTYPElocal,"ld")==0  ){ long double dumld=(long double)dataout;      fwrite(&dumld,longdoublesize,1,output);   }
 
 }
 
 
-
+// read single element from file in text or binary format and any element C type
+long sizeelement(char* inFTYPElocal)
+{
+  
+  if     ( strcmp(inFTYPElocal,"b")==0   ){ int dumi;             return(sizeof(dumi));       }
+  else if( strcmp(inFTYPElocal,"i")==0   ){ int dumi;             return(sizeof(dumi));       }
+  else if( strcmp(inFTYPElocal,"li")==0  ){ long int dumli;       return(sizeof(dumli));      }
+  else if( strcmp(inFTYPElocal,"lli")==0 ){ long long int dumlli; return(sizeof(dumlli));     }
+  else if( strcmp(inFTYPElocal,"f")==0   ){ float dumf;           return(sizeof(dumf));       }
+  else if( strcmp(inFTYPElocal,"d")==0   ){ double dumd;          return(sizeof(dumd));       }
+  else if( strcmp(inFTYPElocal,"ld")==0  ){ long double dumld;    return(sizeof(dumld));      }
+  else{
+    fprintf(stderr,"No such inFTYPE=%s\n",inFTYPElocal);
+    exit(1);
+  }
+}
 
 
 
@@ -655,8 +878,7 @@ static void input_header(void)
     // assumes header really has ALL this info (could tell user how many entries on header with wc and compare against desired.
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
-    fscanf(stdin, SCANHEADER,
-	   &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&EP3,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns);
+    fscanf(infile, SCANHEADER,SCANHEADERARGS);
 
 
     // set other things not set by header, but not really used right now
@@ -671,14 +893,13 @@ static void input_header(void)
 	fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
       }
     }
-    while(fgetc(stdin)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
+    while(fgetc(infile)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
   }
 
   // print header from file
   fprintf(stderr,"PRINTSCANHEADER\n");
-  fprintf(stderr, PRINTSCANHEADER,
-	  tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
-
+  fprintf(stderr, PRINTSCANHEADER,PRINTHEADERARGS);
+	  
 
 
 }
@@ -698,18 +919,16 @@ static void output_header(void)
   //
   //////////////////////////
   fprintf(stderr,"header:\n");
-  fprintf(stderr, "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	  tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+  fprintf(stderr, PRINTHEADERSTDERR,PRINTHEADERSTDERRARGS);
   fprintf(stderr, "NEW: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g\n",nN1,nN2,nN3,Xmax[1],Xmax[2],Xmax[3],fakedxc,fakedyc,fakedzc);
   fprintf(stderr, "OTHER: %22.16g %22.16g %22.16g %22.16g\n",fakeRin,dxc,dyc,dzc);
    
 
   if(WRITEHEADER){
-    if(DATATYPE==1){
+    if(DATATYPE>=1){
       // print out a header
       ftemp=0.0;
-      fprintf(stdout, "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n",
-	      tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+      fprintf(outfile, PRINTHEADERSTDOUT,PRINTHEADERSTDOUTARGS);
     }
   }
 
@@ -742,45 +961,86 @@ void post_coordsetup(void)
 // output newgrid data to file
 static void output2file_postinterpolation(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
   unsigned char uctemp;
   FTYPE ftemp;
+
+  if(ALLOCATENEWIMAGEDATA==0){
+    fprintf(stderr,"Nothing to do.  Inside output2file_postinterpolation() when ALLOCATENEWIMAGEDATA==0.  Already wrote data to file.\n");
+    return;
+  }
 
 
   // OUTPUT TO FILE
   fprintf(stderr,"Output to file\n"); fflush(stderr);
 
 
+  OUTPUTLOOP{
+    output2file_perpointcoli_postinterpolation(newimage[coli][h][i][j][k], newdata[coli][h][i][j][k]);
+  }// end over OUTPUTLOOP
 
-  // in principle could output in different order if wanted
-  if(DATATYPE==0){
-    for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-      fwrite(&newimage[h][i][j][k], sizeof(unsigned char), 1, stdout) ;
+}
+
+
+
+// output single point of newgrid data to file
+// here, assumes input is 1-D array of quantities (i.e. coli's) as used directly by interpolation to avoid having to allocate newdata or newimage arrays
+// which=0: dealing with image output
+// which=1: dealing with data output
+void output2file_perpoint_postinterpolation(int which, int h, int i, int j, int k, unsigned char *newimagelocal, FTYPE *newdatalocal)
+{
+  unsigned char uctemp;
+  FTYPE ftemp;
+  int coli;
+
+
+  if(ALLOCATENEWIMAGEDATA==0){
+    for(coli=0;coli<numoutputcols;coli++){
+      output2file_perpointcoli_postinterpolation(newimagelocal[coli], newdatalocal[coli]);
     }
   }
-  else if(DATATYPE==1){
-    if(imagedata==0){
-      for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	ftemp=newdata[h][i][j][k];
-	//	if(ftemp<0.0) ftemp=0.0;
-	//if(ftemp>255.0) ftemp=255.0;
-	//uctemp=(unsigned char)ftemp;
-	uctemp = FLOAT2IMAGE(ftemp);
-	fwrite(&uctemp, sizeof(unsigned char), 1, stdout) ;
+  else{
+    
+    if(which==1){
+      // assign (interpolated) old value to new grid position
+      if(DATATYPE==0){
+	for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(newdatalocal[coli]);
+      }
+      else{
+	for(coli=0;coli<numoutputcols;coli++)  newdata[coli][h][i][j][k] = (FTYPE)(newdatalocal[coli]) ;
       }
     }
     else{
-      if(sizeof(FTYPE)==sizeof(double)){
-	for(h=0;h<nN0;h++)  for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  //fprintf(stderr,"write: i=%d j=%d newdata=%22.16g\n",i,j,newdata[h][i][j][k]); fflush(stderr);
-	  fprintf(stdout,"%22.16g\n",newdata[h][i][j][k]) ;
-	}
-      }
-      else if(sizeof(FTYPE)==sizeof(float)){
-	for(h=0;h<nN0;h++) for(k=0;k<nN3;k++) for(j=0;j<nN2;j++)      for(i=0;i<nN1;i++) {
-	  fprintf(stdout,"%15.7g\n",newdata[h][i][j][k]) ;
-	}
-      }
+
+    }
+
+  }
+  
+}
+
+
+// output single point and per column of newgrid data to file
+// input is actual values
+void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTYPE newdatalocal)
+{
+  unsigned char uctemp;
+  FTYPE ftemp;
+
+
+  if(DATATYPE==0){
+    fwrite(&newimagelocal, sizeof(unsigned char), 1, outfile) ;
+  }
+  else{
+    if(imagedata==0){
+      ftemp=newdatalocal;
+      //	if(ftemp<0.0) ftemp=0.0;
+      //if(ftemp>255.0) ftemp=255.0;
+      //uctemp=(unsigned char)ftemp;
+      uctemp = FLOAT2IMAGE(ftemp);
+      fwrite(&uctemp, sizeof(unsigned char), 1, outfile) ;
+    }
+    else{
+      writeelement(binaryoutput,outFTYPE,outfile,newdatalocal) ;
     }
   }
 }
@@ -789,22 +1049,23 @@ static void output2file_postinterpolation(void)
 
 
 // IMAGE WRITE FUNCTION
-void writeimage(char * name, unsigned char ****image, int nt, int nx, int ny, int nz)
+void writeimage(char * name, unsigned char *****image, int nt, int nx, int ny, int nz)
 {
   FILE * out;
-  int h,i,j,k;
+  int coli,h,i,j,k;
 
   if((out=fopen(name,"wb"))==NULL){
     fprintf(stderr,"Cannot open %s\n",name);
     exit(1);
   }
 
+  coli=0;
   for(h=0;h<nt;h++){
     for(k=0;k<nz;k++){
       for(j=0;j<ny;j++){
 	for(i=0;i<nx;i++){
-	  fwrite(&image[h][i][j][k], sizeof(unsigned char), 1, out) ;
-	  //      fprintf(out, "%c",(unsigned char)((int)image[h][i][j][k]));
+	  fwrite(&image[coli][h][i][j][k], sizeof(unsigned char), 1, out) ;
+	  //      fprintf(out, "%c",(unsigned char)((int)image[coli][h][i][j][k]));
 	}
       }
     }
@@ -882,7 +1143,9 @@ void old_usage(int argc, int basicargcnum)
 	  "6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
 	  "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "12=output lower component (inputting all 4 columns of data: u^i)\n"
+	  "13=fulldiag\n"
 	  "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
+	  "1000+x=input fieldline file and generate certain outputs for each x=0,1,2,...\n"
 	  );
   fprintf(stderr,"INTERPTYPE: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
   fprintf(stderr,"READHEADER: 0=false 1=true\n");
@@ -932,7 +1195,7 @@ void old_usage(int argc, int basicargcnum)
   fprintf(stderr,"extrapolate: 0 = no, 1 = yes\n");
   fprintf(stderr,"defaultvaluetype: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
   // below is optional but requires above 2 to be read-in
-  fprintf(stderr,"gdumpfilepathname : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,100...\n");
+  fprintf(stderr,"gdumpfilepathname : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,100+x,1000+x...\n");
 
   fprintf(stderr,"e.g.\n");
   fprintf(stderr,"~/sm/iinterp 0 0 1 1 456 456 1  1 0 0  1 0 256 512 1  1.321 40 0 40 40 0.3 0 < im0p0s0l0000.r8 > ../iimages/iim0p0s0l0000.r8\n");
@@ -960,14 +1223,20 @@ void old_usage(int argc, int basicargcnum)
 void parse_commandline(int argc, char *argv[])
 {
   int i;
+  int ii;
   int checktdata=0;
   int usage=0;
   int goodarg=0;
   int totalgoodargs=0;
   int argcheckstart=1;
   int setbinaryinput=0,setbinaryoutput=0;
+  int setbinaryinputgdump=0;
+  int setinfile=0,setoutfile=0;
+  int setinfilem1=0,setinfilep1=0;
   int setinFTYPE=0,setoutFTYPE=0;
+  int setinFTYPEgdump=0;
   int setreadheader=0,setwriteheader=0;
+  int setreadheadergdump=0,setwriteheadergdump=0;
   char **argvnew;
 
   if(argc>1){
@@ -1002,14 +1271,15 @@ void parse_commandline(int argc, char *argv[])
       }
     }
 
+
+
+
+
     if(usage){
       fprintf(stderr,"Usage (argc=%d): \n\n",argc);
 
       fprintf(stderr,"iinterp <args> < inputfile2stdin > outputfile2stdout\n");
-
-      fprintf(stderr,"E.g. Normal Data Interpolation:\n iinterp -dtype 1 -itype 1 -head 1 1 -oN 1 128 64 128 -grids 1 0 -nN 1 128 128 1 -ibox 0 0 -40 40 -40 40 0 0 -dofull2pi 1 -defaultvaluetype 0 < infile > outfile \n\n");
-      fprintf(stderr,"E.g. Full Diag:\n iinterp -binaryinput 1 -dtype 1001 -head 1 0 -dofull2pi 1 -gdump gdump < infile > outfile \n\n");
-      fprintf(stderr,"E.g. Old args:\n iinterp -oldargs <alloldargs or nothing for usage information> \n\n");
+      fprintf(stderr,"iinterp <args> -infile inputfile -outfile outputfile\n");
 
       fprintf(stderr,"<args> is any of the below:\n\n");
       fprintf(stderr,"-usage (or no args): Gives Usage Information and exit (don't actually do anything with rest of args)\n");
@@ -1029,6 +1299,19 @@ void parse_commandline(int argc, char *argv[])
       if(argc>1 && strcmp(argv[i],"-usage")==0){
 	goodarg++;
       }
+
+      
+
+
+
+
+
+
+
+
+
+
+
 
       //////////////////
       //
@@ -1056,6 +1339,16 @@ void parse_commandline(int argc, char *argv[])
 	}
 	else{
 	  fprintf(stderr,"-version -ver --version --ver -v --v : Gives Version Information\n");
+	}
+      }  
+      if(usage || strcmp(argv[i],"-examples")==0) {
+	if(usage==0){
+	  goodarg++;
+	  print_out_example_usage();
+	  exit(0);
+	}
+	else{
+	  fprintf(stderr,"-examples : Gives Example Usage Forms/Points\n");
 	}
       }  
       if(usage || strcmp(argv[i],"-compile")==0) {
@@ -1101,6 +1394,90 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-binaryoutput <binaryoutput>\n");
 	  fprintf(stderr,"\t<binaryoutput>: 0=text 1=binary\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infile")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infile=fopen(argv[++i],"rt");
+	    if(infile==NULL){
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infile\n");
+	      myexit(1);
+	    }
+	    //while(fgetc(infile)!='\n');
+	  }
+	  setinfile=1;
+	  // set defaults
+	  if(setoutfile==0){
+	    setoutfile=1;
+	    outfile=stdout;
+	  }
+	}
+	else{
+	  fprintf(stderr,"-infile <inputfilename>\n");
+	  fprintf(stderr,"\t<inputfilename>: Name of input file (used instead of stdin)\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infilem1")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infilem1=fopen(argv[++i],"rt");
+	    if(infilem1==NULL){
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infilem1: %s\n",argv[i]);
+	      myexit(1);
+	    }
+	    while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
+	  }
+	  setinfilem1=1;
+	}
+	else{
+	  fprintf(stderr,"-infilem1 <inputfilenamem1>\n");
+	  fprintf(stderr,"\t<inputfilenamem1>: Name of input file for m1 of 3-time DATATYPE==14 case\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-infilep1")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+	    else infilep1=fopen(argv[++i],"rt");
+	    if(infilep1==NULL){
+	      perror("fopen");
+	      fprintf(stderr,"Can't open infilep1: %s\n",argv[i]);
+	      myexit(1);
+	    }
+	    while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
+	  }
+	  setinfilep1=1;
+	}
+	else{
+	  fprintf(stderr,"-infilep1 <inputfilenamep1>\n");
+	  fprintf(stderr,"\t<inputfilenamep1>: Name of input file for p1 of 3-time DATATYPE==14 case\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-outfile")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    if(binaryinput) outfile=fopen(argv[++i],"wb"); // b for binary not relevant for unix
+	    else outfile=fopen(argv[++i],"wt");
+	  }
+	  setoutfile=1;
+	  // set defaults
+	  if(setoutfile==0){
+	    setinfile=1;
+	    infile=stdin;
+	  }
+	}
+	else{
+	  fprintf(stderr,"-outfile <outputfilename>\n");
+	  fprintf(stderr,"\t<outputfilename>: Name of output file (used instead of stdout)\n");
 	}
       }
       if (usage || strcmp(argv[i],"-inFTYPE")==0) {
@@ -1219,8 +1596,10 @@ void parse_commandline(int argc, char *argv[])
 	  "\t6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
 	  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
 	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
+	  "\t13=Full Diag\n"
+	  "\t14=Input fieldline file and output rho, ug, vortho123, Borth123, FEMradial, Bphi all in 1 file and interpolate all at once using more memory\n"
 	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
-	  "\t1001=Full Diag\n"
+	  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
 	  );
 	}
       }
@@ -1372,13 +1751,24 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<dofull2pi>: whether to do full 2pi or not (see coord.c)\n");
 	}
       }
+      if (usage || strcmp(argv[i],"-docurrent")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&docurrent) ;
+	}
+	else{
+	  fprintf(stderr,"-docurrent <docurrent>\n");
+	  fprintf(stderr,"\t<docurrent>: whether to compute current (slower) if doing datatype==14\n");
+	}
+      }
       if (usage || strcmp(argv[i],"-tdata")==0) {
 	if(usage==0){
 	  goodarg++;
 	  // below 2 for 4D data inputs, specifying start and end times for dumps used
+	  // also store starttdata0 and endtdata0 in case the others are modified since dual-using these variables really for DATATYPE==14
 	  if(i+2<argc) checktdata=1;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&starttdata) ;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endtdata) ;
+	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&starttdata); starttdata0=starttdata;}
+	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&endtdata); endtdata0=endtdata;}
 	}
 	else{
 	  fprintf(stderr,"-tdata <starttdata> <endtdata>\n");
@@ -1386,6 +1776,7 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<starttdata>: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
 	  fprintf(stderr,"\t<endtdata>: time 4D input dumps end\n");
 	  fprintf(stderr,"\tNote: -tdata required if oN0>1 || nN1>1\n");
+	  fprintf(stderr,"\tAlso used to set infilem1 and infilep1 times for 3-time DATATYPE==14 procedure for getting current\n");
 	}
       }
       if (usage || strcmp(argv[i],"-tnrdeg")==0) {
@@ -1426,11 +1817,73 @@ void parse_commandline(int argc, char *argv[])
 	  goodarg++;
 	  if(i+1<argc) getgdump=1;
 	  if(i+1<argc) sscanf(argv[++i],"%s",&gdumpfilename[0]);
+	  if(setreadheadergdump==0){ setreadheadergdump=1; READHEADERGDUMP=1; }
+	  if(setwriteheadergdump==0){ setwriteheadergdump=1; WRITEHEADERGDUMP=1; }
 	}
 	else{
 	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
 	  // below is optional but requires above 2 to be read-in
-	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,100...\n");
+	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,100+x,1000+x...\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-gdumphead")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){ setreadheadergdump=1; sscanf(argv[++i],"%d",&READHEADERGDUMP); } // 0 or 1
+	  if(i+1<argc){ setwriteheadergdump=1; sscanf(argv[++i],"%d",&WRITEHEADERGDUMP); } // 0 or 1
+	}
+	else{
+	  fprintf(stderr,"-gdumphead <DOREADHEADERGDUMP> <DOWRITEHEADERGDUMP>\n");
+	  fprintf(stderr,"\t<DOREADHEADERGDUMP> or <DOWRITEHEADERGDUMP>: 0 or 1 for each\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-binaryinputgdump")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryinputgdump) ;
+	  setbinaryinputgdump=1;
+	}
+	else{
+	  fprintf(stderr,"-binaryinputgdump <binaryinputgdump>\n");
+	  fprintf(stderr,"\t<binaryinputgdump>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-inFTYPEgdump")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){
+	    i++;
+	    if(strcmp(argv[i],"byte")==0){
+	      strcpy(inFTYPEgdump,"b"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"int")==0){
+	      strcpy(inFTYPEgdump,"i"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longint")==0){
+	      strcpy(inFTYPEgdump,"li"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longlongint")==0){
+	      strcpy(inFTYPEgdump,"lli"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"float")==0){
+	      strcpy(inFTYPEgdump,"f"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"double")==0){
+	      strcpy(inFTYPEgdump,"d"); setinFTYPEgdump=1;
+	    }
+	    else if(strcmp(argv[i],"longdouble")==0){
+	      strcpy(inFTYPEgdump,"ld"); setinFTYPEgdump=1;
+	    }
+	    else{
+	      fprintf(stderr,"Unknown inFTYPEgdump\n");
+	      exit(1);
+	    }
+
+	  }
+	}
+	else{
+	  fprintf(stderr,"-inFTYPEgdump <inFTYPEgdumpstring>\n");
+	  fprintf(stderr,"\t<inFTYPEgdumpstring>: byte, int, longint, longlongint, float, double, longdouble\n");
 	}
       }
       if (usage || strcmp(argv[i],"-verbose")==0) {
@@ -1507,8 +1960,208 @@ void parse_commandline(int argc, char *argv[])
     fprintf(stderr,"Have nN0>1 || oN0>1 but didn't set tdata, using default!\n");
   }
 
+  // some checks if actually got sufficient args (i.e. when defaults aren't possible or don't make sense or contradict requirements)
+
+  if(DATATYPE==14 && docurrent==1){
+    if(checktdata==0){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -tdata\n"); fflush(stderr); myexit(1); }
+    if(infilem1==NULL || infilep1==NULL){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -infilem1 and -infilep2\n"); fflush(stderr); myexit(1); }
+    if(getgdump==0){ fprintf(stderr,"DATATYPE==14 && docurrent==1 requires -gdump\n"); fflush(stderr); myexit(1); }
+  }
+
 
 }
+
+
+
+
+
+
+
+
+void print_out_example_usage(void)
+{
+
+
+  fprintf(stderr,"E.g. Normal Data Interpolation:\n iinterp -dtype 1 -itype 1 -head 1 1 -oN 1 128 64 128 -grids 1 0 -nN 1 128 128 1 -ibox 0 0 -40 40 -40 40 0 0 -dofull2pi 1 -defaultvaluetype 0 < infile > outfile \n\n");
+  fprintf(stderr,"E.g. Full Diag:\n iinterp -binaryinput 1 -dtype 1001 -head 1 0 -dofull2pi 1 -gdump gdump < infile > outfile \n\n");
+  fprintf(stderr,"E.g. Old args:\n iinterp -oldargs <alloldargs or nothing for usage information> \n\n");
+
+
+
+  fprintf(stderr,
+"##################\n"
+"# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
+"\n"
+"#\n"
+"# 1) make program\n"
+"\n"
+"cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
+"# setup for reduced code set\n"
+"rm -rf init.c init.h\n"
+"touch init.h\n"
+"\n"
+"\n"
+"# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
+"# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
+"\n"
+"# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
+"\n"
+"make superclean ; make prepiinterp ; make iinterp &> make.log\n"
+"\n"
+"# also make bin2txt program:\n"
+"\n"
+"make superclean ; make prepbin2txt ; make bin2txt\n"
+"# check makefile and setup for ki-rh39/orange/etc.\n"
+"\n"
+"# ensure no errors during compile or link (need lapack!)\n"
+"\n"
+"##############\n"
+"4) copy programs to your path\n"
+"\n"
+"cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
+"cp bin2txt ~/bin/bin2txt.orange\n"
+"\n"
+"###############\n"
+"# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
+"\n"
+"# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)\n"
+"newheader=0\n"
+"\n"
+"# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
+"dumpnum=5437\n"
+"dumpnumm1=$(($dumpnum-1))\n"
+"if [ -e dumps/fieldline$dumpnumm1.bin ]\n"
+"then\n"
+"    dumpnumm1=$(($dumpnum-1))\n"
+"else\n"
+"    dumpnumm1=$(($dumpnum))\n"
+"fi\n"
+"dumpnump1=$(($dumpnum+1))\n"
+"if [ -e dumps/fieldline$dumpnump1.bin ]\n"
+"then\n"
+"    dumpnump1=$(($dumpnum+1))\n"
+"else\n"
+"    dumpnump1=$(($dumpnum))\n"
+"fi	\n"
+"#\n"
+"# get times of dumps\n"
+"time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
+"timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
+"timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
+"#\n"
+"# get original resolution\n"
+"nt=1\n"
+"nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
+"ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
+"nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
+"if [ $newheader -eq 0 ]\n"
+"then\n"
+"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
+"else\n"
+"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`\n"
+"fi\n"
+"R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
+"Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
+"Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
+"hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
+"defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
+"#\n"
+"# Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z\n"
+"# That is:\n"
+"# So box(n)x refers to true x\n"
+"# So box(n)y refers to true z\n"
+"# So box(n)z refers to true y\n"
+"#\n"
+"# True x is V5D's x and iinterp's x\n"
+"# True z is V5D's y and iinterp's y\n"
+"# True y is V5D's z and iinterp's z\n"
+"#\n"
+"#\n"
+"# Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively\n"
+"#\n"
+"boxnt=1\n"
+"boxnx=100\n"
+"boxny=100\n"
+"boxnz=100\n"
+"boxxl=-10\n"
+"boxyl=-10\n"
+"boxzl=-10\n"
+"boxxh=10\n"
+"boxyh=10\n"
+"boxzh=10\n"
+"\n"
+"# set docurrent=0 if want quick result with no current density\n"
+"# this will change number of output columns\n"
+"docurrent=1\n"
+"\n"
+"cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
+"IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
+"# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
+"mkdir $IDUMPDIR\n"
+"#\n"
+"#\n"
+"#\n"
+"whichoutput=14\n"
+"outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz\n"
+"~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename\n"
+"\n"
+"\n"
+"# as a test, one can do just 1 variable (the density)\n"
+"if [ 1 -eq 0 ]\n"
+"then\n"
+"    outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz\n"
+"    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename\n"
+"fi\n"
+"\n"
+"\n"
+"# The whichoutput==14 case results in a file with 1 line text header, line break, then data\n"
+"# The binary data block of *floats* (4 bytes) is ordered as:\n"
+"# fastest index: column or quantity list\n"
+"# next fastest index: i (associated with true x)\n"
+"# next fastest index: j (associated with true y)\n"
+"# next fastest index: k (associated with true z)\n"
+"# slowest index: h (time, but only single time here)\n"
+"\n"
+"# Note that while array access of quantity is out of order in iinterp result, the 3D spatial grid is still written as a right-handed coordinate system.\n"
+"# So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).\n"
+"\n"
+"# The columns or quantities in the list are ordered as:\n"
+"# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)\n"
+"# FEMrad is the radial energy flux\n"
+"# Bphi is the poloidal enclosed current density\n"
+"# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)\n"
+"# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu\n"
+"# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)\n"
+"# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.\n"
+"# All vectors are orthonormal\n"
+"#\n"
+"# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"# can check how looks in text by doing:\n"
+"\n"
+"file=$outfilename\n"
+"if [ $newheader -eq 0 ]\n"
+"then\n"
+"    numoutputcols=`head -1 $file  |awk '{print $30}'`\n"
+"else\n"
+"    numoutputcols=`head -1 $fil |awk '{print $32}'`\n"
+"fi\n"
+"newnx=`head -1 $file |awk '{print $2}'`\n"
+"newny=`head -1 $file |awk '{print $3}'`\n"
+"newnz=`head -1 $file |awk '{print $4}'`\n"
+"bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols\n"
+"less -S $file.txt\n"
+"\n"
+"# should look reasonable.\n"
+
+	  );
+
+  fflush(stderr);
+}
+
 
 
 
@@ -1671,7 +2324,9 @@ void interpret_commandlineresults_subpart1(void)
   //        \Delta_\thetahat \Omega vahat
   //        rho0 -u_t u^t A_\phi B^ihat v^ihat
   //        use gdump to get Connection that relates to radial gravity force that would balance magnetic force: Here need: T^x3_\nu , [ [rho0*1 + (u+p+b^2)/rho0] u^{t or phi} u_{t or phi} + ptot delta^lambda_kappa - b^lambda_kappa ] Gamma^kappa_{nu lambda} (24 things)
-
+  // 14 : input field line and output things
+  // 100+x : x number of 4-vectors
+  // 1000+x: fieldline input file and output x-type file
 
   // integrationtype:
   // [for \Upsilon, get normalization when doing next step of integrating]
@@ -1683,15 +2338,17 @@ void interpret_commandlineresults_subpart1(void)
   // differencetype: (for d_x3 or whatever)
 
 
+
+  // defaults
+  immediateoutput=0;// default is not immediate in-out
+  num4vectors=1; // default
+  outputvartype=0; // scalar
+  vectorcomponent=0; // scalar
+  numoutputcols=1; // normally old style is 1 output column since was interpolating 1 thing at a time.
+
   
   // set number of columns of data
   if(DATATYPE>1){
-
-    // defaults
-    immediateoutput=0;// default is not immediate in-out
-    num4vectors=1; // default
-    outputvartype=0; // scalar
-    vectorcomponent=0; // scalar
 
 
     // assume always want to transform vectors correctly
@@ -1715,6 +2372,24 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=12; // Compute B_\\phi [conserved current]
       fprintf(stderr,"Computing B_\\phi\n");
     }
+    else if(DATATYPE==13){
+      fprintf(stderr,"Full Diagnostics for this data file (all except time derivative stuff)\n");
+      // force input and output grid types to be the same
+      outputvartype=13; // Full Diag
+      immediateoutput=1; // Immediate computation of many quantities without interpolation
+      vectorcomponent=-1; // indicates to output all components
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else if(DATATYPE==14){
+      fprintf(stderr,"input field line file and output things\n");
+      outputvartype=14;
+      immediateoutput=0; // Immediate computation of many quantities without interpolation
+      vectorcomponent=-1; // indicates to output all components
+      // create, interpolate, and output all "numoutputcols" things at once
+      if(docurrent)  numoutputcols=2+3*2+2+NDIM;
+      else numoutputcols=2+3*2+2;
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;
       fprintf(stderr,"Transforming %d contravariant 4-vectors to orthonormal basis\n",num4vectors);
@@ -1724,20 +2399,43 @@ void interpret_commandlineresults_subpart1(void)
       vectorcomponent=-1; // indicates to output all components
       // only valid for DATATYPE=1 type of data (i.e. not images)
     }
-    else if(DATATYPE>=1001 && DATATYPE<10000){
-      fprintf(stderr,"Full Diagnostics for this data file (all except time derivative stuff)\n");
+    else if(DATATYPE>=1000 && DATATYPE<9999){
+      fprintf(stderr,"Input fieldline type file\n");
       // force input and output grid types to be the same
-      outputvartype=13; // Full Diag
-      immediateoutput=1; // Immediate computation of many quantities without interpolation
-      vectorcomponent=-1; // indicates to output all components
-      // only valid for DATATYPE=1 type of data (i.e. not images)
+      int xdatatype=DATATYPE-1000;
+      if(xdatatype==0) outputvartype=0; // rho
+      else if(xdatatype==1) outputvartype=0; // u
+      else if(xdatatype>=2 && xdatatype<=5){
+	immediateoutput=0;
+	vectorcomponent=xdatatype-2;// v^x0
+	num4vectors=1;
+	outputvartype=1; 
+	fprintf(stderr,"Output v-vector=%d type file\n",vectorcomponent);
+      }
+      else if(xdatatype>=6 && xdatatype<=9){
+	immediateoutput=0;
+	vectorcomponent=xdatatype-6;// B^x0
+	num4vectors=1;
+	outputvartype=1; 
+	fprintf(stderr,"Output B-vector=%d type file\n",vectorcomponent);
+      }
+      else if(xdatatype==11){
+	outputvartype=11; // energy flux
+	vectorcomponent=1;
+	fprintf(stderr,"Output energy flux\n");
+      }
+      else if(xdatatype==12){
+	outputvartype=12; // Current
+	vectorcomponent=3;
+	fprintf(stderr,"Output current\n");
+      }
     }
     else{
       dualfprintf(fail_file,"No such DATATYPE=%d\n",DATATYPE);
     }
 
     // finally set to normal data type from now on using vectorcomponent or outputvartype
-    DATATYPE=1;
+    //    DATATYPE=1; // no, leave as original DATATYPE so know file input format as well
   }
   else{
     fprintf(stderr,"Processing scalar\n");
@@ -1745,7 +2443,16 @@ void interpret_commandlineresults_subpart1(void)
     outputvartype=0; // scalar
     vectorcomponent=0; // scalar
   }
+
+
+  if(numoutputcols>MAXCOLS){
+    fprintf(stderr,"Not enough MAXCOLS=%d for numoutputcols=%d\n",MAXCOLS,numoutputcols);
+    exit(1);
+  }
+
+
 }
+
 
 
 
@@ -1923,6 +2630,11 @@ void defaultoptions(void)
 
   // These are dumb defaults.  Bit smarter defaults set when doing new parsing, so user doesn't have to give all options always.
 
+  infile=stdin;
+  outfile=stdout;
+
+  infilem1=NULL;
+  infilep1=NULL;
 
   DATATYPE=1; binaryinput=0; strcpy(inFTYPE,"d");
 
@@ -1968,6 +2680,8 @@ void defaultoptions(void)
 
   dofull2pi=1;
 
+  docurrent=0;
+
   starttdata=0;
   endtdata=2000;
 
@@ -1983,9 +2697,16 @@ void defaultoptions(void)
   outputvartype=0; // scalar
   vectorcomponent=0; // scalar
 
+  READHEADERGDUMP=1;
+  WRITEHEADERGDUMP=1;
+  binaryinputgdump=1;
+  strcpy(inFTYPEgdump,"d");
+
   DEBUGINTERP=0;
   SIMPLEDEBUGINTERP=0;
   VERBOSITY=1; // default to moderate verbosity
   
+
+
 
 }

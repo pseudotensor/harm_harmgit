@@ -8,6 +8,7 @@
 
 static int restart_process_extra_variables(void);
 
+static int restartupperpole_set(void);
 
 
 int extrarestartfunction_new(void)
@@ -94,8 +95,8 @@ int restart_init(int which)
   //
   ////////////////
   trifprintf("before write_restart_header(TEXTOUTPUT,log_file)\n");
-  fprintf(log_file,"header contents below\n"); fflush(log_file);
-  write_restart_header(RESTARTDUMPTYPE,dnumversion[RESTARTDUMPTYPE],dnumcolumns[RESTARTDUMPTYPE],TEXTOUTPUT,log_file);
+  logfprintf("header contents below\n"); 
+  if(log_file) write_restart_header(RESTARTDUMPTYPE,dnumversion[RESTARTDUMPTYPE],dnumcolumns[RESTARTDUMPTYPE],TEXTOUTPUT,log_file);
 
   ////////////////
   //
@@ -213,7 +214,7 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   //*numcolumns=NPR; // primitives only
 
 
-  // counters not crucial
+  // spatial debug counters not crucial
   //  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] + dnumcolumns[DEBUGDUMPTYPE] ;
 
   *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
@@ -247,7 +248,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
       }
     }
   }
-  
+
   if(dnumcolumns[DISSDUMPTYPE]>0){
     myset(datatype,&GLOBALMAC(dissfunpos,i,j,k),0,dnumcolumns[DISSDUMPTYPE],writebuf);
   }
@@ -440,7 +441,7 @@ int restartupperpole_read(long dump_cnt)
 
 
 // restart needs to set B2=0 along outer pole if not being used.
-int restartupperpole_set(void)
+static int restartupperpole_set(void)
 {
 
   if(mycpupos[2]==ncpux2-1){// only need to operate on true upper pole
@@ -1028,17 +1029,16 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&a, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&MBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&QBH, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-//  if(readwrite!=READHEAD||1){
-//    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-//    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&THETAROT, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
-//  }
-//  else{
-//    EP3=0.0;
-//    
-//    // radians
-//    THETAROT=1.5708; // as if restarted with this set
-//  }
+  if(readwrite!=READHEAD||1){
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&EP3, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+    headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&THETAROT, sizeof(SFTYPE), sheaderone, 1, MPI_SFTYPE, headerptr);
+  }
+  else{
+    EP3=0.0;
+    
+    // radians
+    THETAROT=1.5708; // as if restarted with this set
+  }
 
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gam, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&gamideal, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
@@ -1153,7 +1153,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     }
   }
   else headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&dumpcntgen[0], sizeof(long), "%ld", NUMDUMPTYPES, MPI_LONG, headerptr);
-
+  
   
   
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&prMAX[0],sizeof(FTYPE), headerone, NPR, MPI_FTYPE,headerptr);
@@ -1225,8 +1225,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   //end Aug 16, 2007 (updated by JCM 07/24/08)
  
 
-  dualfprintf(fail_file,"\nheadercount=%d\n",headercount);
-
+  trifprintf("\nheadercount=%d\n",headercount);
+ 
 
   // BELOW moved to dump_gen
   // now read of tail is controlled by dump_gen()
@@ -1276,8 +1276,34 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   }
 
 
+
+  // final things need to set but lock to rdump header content since don't want to add new header entry.  GODMARK: Eventually should add to restart header.
+  if(readwrite==READHEAD){
+    fakesteps[0]=restartsteps[0];
+    fakesteps[1]=restartsteps[1];
+    whichfake=whichrestart;
+    DTfake=MAX(1,DTr/10); // only thing that matters currently.
+  }
+  if(bcasthead){
+    MPI_Bcast(&fakesteps, 2, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&whichfake, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&DTfake, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+  }
+
+
+
   if(readwrite==READHEAD) trifprintf("end reading header of restart file\n");
   else if(readwrite==WRITEHEAD) trifprintf("end writing header of restart file\n");
+
+
+
+
+
+
+
+
+
+
 
 
   return(0);
@@ -1310,7 +1336,15 @@ int restart_read_defs_new(void)
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
-    FAILFLOORLOOP(indexfinalstep,tscale,floor) failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
+    FAILFLOORLOOP(indexfinalstep,tscale,floor){
+      failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
+      // failfloorcountlocal overwritten by counttotal by integratel in dump_ener.c, so also put in spatial spot.  Need this if not tracking counters spatially.  Or shouldn't reset failfloorcountlocal to zero in counttotal in dump_ener.c and reset counters to zero elsewhere at start of simulation.
+      // So just stick it somewhere we can easily track down later on this myid==0 core.
+      int i=-1;
+      int j=-1;
+      int k=-1;
+      GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor) = failfloorcountlocal[indexfinalstep][tscale][floor];
+    }
 
 
     if(DODISS) ENERREGIONLOOP(enerregion) for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) dissreg[enerregion][dissloop]=dissreg_tot[enerregion][dissloop];

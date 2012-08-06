@@ -107,7 +107,16 @@ int user1_init_global(void)
   SAFE=1.3;
   //  cour = 0.9;
   //  cour=0.8;
-  cour = 0.4999; // Changed to cour=0.5 because noticed that with STOREWAVESPEEDS==1 that extremely unstable with 0.8 near pole due to larger or smaller wave speeds from max-averaging from CENT to FACE1/2/3.  While may be inconsistency in Riemann solution, LAXF is simply a diffusive solution so shouldn't be so dependent upon exact wave speed.  Noticed that with one setup where instability appeared (large radii 512x32 type run) that forcing timestep to be like STOREWAVESPEEDS==0 led to much more stable solution, but still kinda unstable to a saturation point.  That was with cour=0.83*0.8=664.  For safety, use cour=0.4999.  In any case, this is motivated by fact that only with cour<0.5 will Riemann waves from interface not intersect by a single timestep, and only with non-intersecting waves does Riemann solution make sense.  So cour>0.5 is really too aggressive.  Still keep multi-dimen effective courant reducer since that's there for different reasons of multi-dimen stability issues.
+  cour = 0.4999;
+
+  // NOTEMARK on cour
+  // Changed to cour=0.5 because noticed that with STOREWAVESPEEDS==1 that extremely unstable with 0.8 near pole due to larger or smaller wave speeds from max-averaging from CENT to FACE1/2/3.  While may be inconsistency in Riemann solution, LAXF is simply a diffusive solution so shouldn't be so dependent upon exact wave speed.  Noticed that with one setup where instability appeared (large radii 512x32 type run) that forcing timestep to be like STOREWAVESPEEDS==0 led to much more stable solution, but still kinda unstable to a saturation point.  That was with cour=0.83*0.8=664.  For safety, use cour=0.4999.  In any case, this is motivated by fact that only with cour<0.5 will Riemann waves from interface not intersect by a single timestep, and only with non-intersecting waves does Riemann solution make sense.  So cour>0.5 is really too aggressive.  Still keep multi-dimen effective courant reducer since that's there for different reasons of multi-dimen stability issues.
+
+  // NOTEMARK on cour
+  // For standard non-tilted torus model at a=0.9375 in fully 3D with 64x64x8 resolution.
+  // As of 07/26/2012, I have found cour=0.4999 leads to ~40k "entropy and bad" or "Failed to find" SOFT errors and no hard failures (i.e. "cold and bad").  But, cour=0.8 leads to only 21K non-hard failures but gets 1 or 2 hard failures.
+  // So overall cour=0.4999 more trustable to evolve velocity, but more frequently fails to evolve densities.
+
 
   ///////////////////////
   //
@@ -269,6 +278,7 @@ int user1_init_global(void)
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 3000;
+  DTfake=MAX(1,DTr/10);
 
 
   tf=2E3; // very problem dependent, should override

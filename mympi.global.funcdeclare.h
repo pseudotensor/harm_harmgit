@@ -54,24 +54,26 @@ extern int final_myexit(void);
 
 extern int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
-extern int bound_mpi(int boundstage, int finalstep, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+extern int bound_mpi(int boundstage, int finalstep, int fakedir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
-extern int bound_mpi_int(int boundstage, int finalstep, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
+extern int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
+extern int bound_mpi_int(int boundstage, int finalstep, int fakedir, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
+
 extern void pack(int dir, int boundtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM]);
 extern void unpack(int dir, int boundtype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 extern void pack_int(int dir, int boundtype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM]);
 extern void unpack_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
 
-extern int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
+extern int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int fakedir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
 extern void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue);
 
 
-#if(USEMPI)
-extern void sendrecv(int dir,int boundtype,FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
-extern void sendrecv_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
+extern void recvonly(int dir,int boundtype,FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
+extern void sendonly(int dir,int boundtype,FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
+extern void recvonly_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
+extern void sendonly_int(int dir, int boundtype, PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],MPI_Request *requests);
 extern void recvwait(int dir,MPI_Request *request);
 extern void sendwait(int dir,MPI_Request *request);
-#endif
 
 extern void mpimax(SFTYPE*maxptr);
 extern void mpiimax(int*maxptr);
@@ -90,6 +92,9 @@ extern int getsizeofdatatype(MPI_Datatype datatype);
 
 extern void mpiio_init(int bintxt, int sorted, FILE ** fp, long headerbytesize, int which, char *filename, int numcolumns,
 		       MPI_Datatype datatype, void **jonio, void **writebuf);
+
+extern void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns, MPI_Datatype datatype, void **jonioptr, void **writebufptr);
+
 extern void mpiio_combine(int bintxt, int sorted,
 			  int numcolumns, MPI_Datatype datatype,
 			  FILE ** fp, void *jonio, void *writebuf);
@@ -107,7 +112,6 @@ extern void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int 
 
 extern void mpiioromio_init_combine(int operationtype, int which, long headerbytesize, char *filename, int numcolumns,MPI_Datatype datatype, void **writebufptr, void *writebuf);
 
-#if(USEMPI)
 extern void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 			   FILE ** fp, void *jonio, void *writebuf);
 extern void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumns,
@@ -117,7 +121,6 @@ extern void mpiiotu_combine(MPI_Datatype datatype, int numcolumns,
 			    FILE ** fp, void *writebuf);
 extern void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
 			     FILE ** fp,void *writebuf);
-#endif
 
 
 

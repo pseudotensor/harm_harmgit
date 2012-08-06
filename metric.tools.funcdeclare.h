@@ -34,3 +34,10 @@ extern void set_igdet_old(struct of_geom *geom);
 
 extern void check_rmin(void);
 
+extern void transgcov(FTYPE *gcov, FTYPE (*trans)[NDIM], FTYPE *gcovprim);
+
+extern void transgcovself(FTYPE *gcov, FTYPE (*trans)[NDIM]);
+
+extern void get_gcovpert(FTYPE *gcovprim, FTYPE *gcovpert, FTYPE *gcovpertprim);
+
+extern void transgcovgcovpertself(FTYPE *gcov, FTYPE *gcovpert, FTYPE (*trans)[NDIM]);

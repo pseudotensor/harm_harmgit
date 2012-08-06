@@ -9,7 +9,7 @@ void lubksb(FTYPE **a, int n, int *indx, FTYPE b[])
 #if(PRODUCTION==0)
     // if ludcmp() fails, indx could be 0
     if(indx[i]<1 || indx[i]>n){
-      fprintf(stderr,"Major failure in lubksb: i=%d indx=%d\n",i,indx[i]);
+      stderrfprintf("Major failure in lubksb: i=%d indx=%d\n",i,indx[i]);
     }
 #endif
     ip = indx[i];

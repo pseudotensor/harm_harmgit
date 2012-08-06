@@ -15,6 +15,9 @@ extern void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYP
 extern void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);
 
 
+extern int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric);
+extern int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V);
+
 //extern void gcov_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov);
 //extern void gcon_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);
 

@@ -20,15 +20,17 @@ int init_MPI_general(int *argc, char **argv[])
   int provided,required=MPI_THREAD_MULTIPLE;
   // lonestar4 locked-up here for some reason.   Had to set USEOPENMP->0 in makehead.inc.  Ranger was fine with openmp, but wasn't using openmp with lonestar3 with production runs, so unsure what situation is.
   ierr=MPI_Init_thread(argc, argv,required,&provided);
-  fprintf(stderr,"Using MPI_Init_thread with required=%d and provided=%d\n",required,provided);
+  stderrfprintf("Using MPI_Init_thread with required=%d and provided=%d\n",required,provided);
 #else
+  stderrfprintf( "Begin: MPI_Init\n"); fflush(stderr);
   ierr=MPI_Init(argc, argv);
+  stderrfprintf( "End: MPI_Init\n"); fflush(stderr);
 #endif
 
 
 
   if(ierr!=0){
-    fprintf(stderr,"MPI Error during MPI_Init\n");
+    stderrfprintf("MPI Error during MPI_Init\n");
     exit(1);
   }
 
@@ -36,9 +38,9 @@ int init_MPI_general(int *argc, char **argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myid_world); // WORLD proc id
   MPI_Get_processor_name(processor_name, &procnamelen); // to ensure really on certain nodes
 
-  fprintf(stderr, "WORLD proc: %d of %d on %s\n", myid_world,truenumprocs,processor_name);
+  stderrfprintf( "WORLD proc: %d of %d on %s\n", myid_world,truenumprocs,processor_name);
 
-  fprintf(stderr, "end: init_MPI\n");
+  stderrfprintf( "end: init_MPI\n");
   fflush(stderr);
 #else
   truenumprocs=1;
@@ -47,12 +49,11 @@ int init_MPI_general(int *argc, char **argv[])
 #endif
 
 
-
-  if (MAXCPUS < truenumprocs) {
-    fprintf(stderr,
-	    "Must increase MAXCPUS in global.h, %d is too many\n",
-	    truenumprocs);
-    myexit(38743421);
+  // allocate things that are truenumprocs in size
+  MPIid=(int*)malloc(sizeof(int)*truenumprocs);
+  if(MPIid==NULL){
+    stderrfprintf("Problem allocating memory for MPIid with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(679438212);
   }
 
 
@@ -168,7 +169,7 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
 #endif
 
 
-  trifprintf("done with init_MPI_setupfilesandgrid()\n");  fflush(log_file);
+  trifprintf("done with init_MPI_setupfilesandgrid()\n");
 
 }
 
@@ -202,10 +203,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
-	fprintf(stderr,"proc: %04d : OR\n",myid);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
+	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
+	stderrfprintf("proc: %04d : OR\n",myid);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -220,10 +221,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
-	fprintf(stderr,"proc: %04d : OR\n",myid);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
+	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
+	stderrfprintf("proc: %04d : OR\n",myid);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -237,10 +238,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	fprintf(stderr,"proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
-	fprintf(stderr,"proc: %04d : OR\n",myid);
-	fprintf(stderr,"proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads RESTARTMODE WHICHFILE\n",myid);
+	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
+	stderrfprintf("proc: %04d : OR\n",myid);
+	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -252,9 +253,9 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	fprintf(stderr,"<progname>\n");
-	fprintf(stderr,"OR\n");
-	fprintf(stderr,"<progname> RESTARTMODE WHICHFILE\n");
+	stderrfprintf("<progname>\n");
+	stderrfprintf("OR\n");
+	stderrfprintf("<progname> RESTARTMODE WHICHFILE\n");
       }
       exit(1);
     }
@@ -282,20 +283,20 @@ void myargs(int argc, char *argv[])
   /////////////////
 
   if(ncpux1>1 && N1==1){
-    fprintf(stderr,"Cannot have ncpux1=%d>N1=%d\n",ncpux1,N1);
+    stderrfprintf("Cannot have ncpux1=%d>N1=%d\n",ncpux1,N1);
     exit(1);
   }
   if(ncpux2>1 && N2==1){
-    fprintf(stderr,"Cannot have ncpux2=%d>N2=%d\n",ncpux2,N2);
+    stderrfprintf("Cannot have ncpux2=%d>N2=%d\n",ncpux2,N2);
     exit(1);
   }
   if(ncpux3>1 && N3==1){
-    fprintf(stderr,"Cannot have ncpux3=%d>N3=%d\n",ncpux3,N3);
+    stderrfprintf("Cannot have ncpux3=%d>N3=%d\n",ncpux3,N3);
     exit(1);
   }
 
 
-  if(numopenmpthreads>N1*N2*N3) fprintf(stderr,"OpenMP threads (%d) larger than total number of points (%d), so parallelization will be poor\n",numopenmpthreads,N1*N2*N3);
+  if(numopenmpthreads>N1*N2*N3) stderrfprintf("OpenMP threads (%d) larger than total number of points (%d), so parallelization will be poor\n",numopenmpthreads,N1*N2*N3);
 
 
 
@@ -309,7 +310,7 @@ void myargs(int argc, char *argv[])
 
   // test
   if(sizeproclist_grmhd!=numprocs){
-    fprintf(stderr, "Got (sizeproclist_grmhd=%d) != (numprocs=ncpux1*ncpux2*ncpux3=%d). ncpux1=%d ncpux2=%d ncpux3=%d.  Did you run without mpirun?\n",sizeproclist_grmhd,numprocs,ncpux1,ncpux2,ncpux3);
+    stderrfprintf( "Got (sizeproclist_grmhd=%d) != (numprocs=ncpux1*ncpux2*ncpux3=%d). ncpux1=%d ncpux2=%d ncpux3=%d.  Did you run without mpirun?\n",sizeproclist_grmhd,numprocs,ncpux1,ncpux2,ncpux3);
     exit(1);
   }
 
@@ -332,7 +333,7 @@ void init_genfiles(int gopp)
   void set_binarytype(char *binarytype);
 
 
-  fprintf(stderr, "begin: init_genfiles ... ");
+  stderrfprintf( "begin: init_genfiles ... ");
   fflush(stderr);
 
   if (gopp == 1) {
@@ -342,33 +343,38 @@ void init_genfiles(int gopp)
   }
   // always have fail and general log open
 
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
   sprintf(temps, "%s0_fail%s%s", DATADIR, extension, myidtxt);
   if ((fail_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "fail: Cannot open: %s\n", temps);
+      stderrfprintf( "fail: Cannot open: %s\n", temps);
     exit(1);
   }
-  fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
+  }
 
 
-
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
   sprintf(temps, "%s0_log%s%s", DATADIR, extension, myidtxt);
   if ((log_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "log: Cannot open: %s\n", temps);
+      stderrfprintf( "log: Cannot open: %s\n", temps);
     exit(1);
   }
-  fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
   fprintf(log_file, "fail_file: %d log_file: %d\n", (int)fail_file,
 	  (int)log_file);
   fflush(log_file);
+  }
 
 
+  if(PRODUCTION<=2 && myid==0 || PRODUCTION<=1){
   sprintf(temps, "%s0_logdt%s%s", DATADIR, extension, myidtxt);
   if ((logdt_file = fopen(temps, "at")) == NULL) {
-    fprintf(stderr, "logdt: Cannot open: %s\n", temps);
+      stderrfprintf( "logdt: Cannot open: %s\n", temps);
     exit(1);
   }
-  fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
   fflush(logdt_file);
+  }
 
 
 
@@ -381,36 +387,36 @@ void init_genfiles(int gopp)
 
     sprintf(temps, "%s0_logfull%s%s", DATADIR, binarytype, extension);
     if ((logfull_file = fopen(temps, "at")) == NULL) {
-      fprintf(stderr, "logfull: Cannot open: %s\n", temps);
+      stderrfprintf( "logfull: Cannot open: %s\n", temps);
       exit(1);
     }
-    fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
     fprintf(logfull_file, "logfull_file: %d \n", (int)logfull_file);
     fflush(logfull_file);
 
 
     sprintf(temps, "%s0_logdtfull%s%s", DATADIR, binarytype, extension);
     if ((logdtfull_file = fopen(temps, "at")) == NULL) {
-      fprintf(stderr, "logdtfull: Cannot open: %s\n", temps);
+      stderrfprintf( "logdtfull: Cannot open: %s\n", temps);
       exit(1);
     }
-    fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
     fprintf(logdtfull_file, "logdtfull_file: %d \n", (int)logdtfull_file);
     fflush(logdtfull_file);
 
     sprintf(temps, "%s0_logstep%s%s", DATADIR, binarytype, extension);
     if ((logstep_file = fopen(temps, "at")) == NULL) {
-      fprintf(stderr, "logstep: Cannot open: %s\n", temps);
+      stderrfprintf( "logstep: Cannot open: %s\n", temps);
       exit(1);
     }
-    fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
 
     sprintf(temps, "%s0_logperf%s%s", DATADIR, binarytype, extension);
     if ((logperf_file = fopen(temps, "at")) == NULL) {
-      fprintf(stderr, "logperf: Cannot open: %s\n", temps);
+      stderrfprintf( "logperf: Cannot open: %s\n", temps);
       exit(1);
     }
-    fprintf(stderr, "opened: %s\n", temps);
+    stderrfprintf( "opened: %s\n", temps);
 
 
 
@@ -519,7 +525,6 @@ void init_placeongrid_gridlocation(void)
   mycpupos[2]=(int)((myid%(ncpux1*ncpux2))/ncpux1);
   mycpupos[3]=(int)(myid/(ncpux1*ncpux2));
 
-  //  SLOOPA(j) dualfprintf(log_file,"mycpupos[%d]=%d",j,mycpupos[j]);
 
 
   for (m = 1; m <= COMPDIM; m++) {
@@ -579,23 +584,23 @@ void init_placeongrid_gridlocation(void)
   /////////////////
 
 #if(USEMPI)
-  fprintf(log_file,"myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
+  logfprintf("myid=%d node_name=%s procnamelen=%d\n",myid,processor_name,procnamelen);
 #endif
   trifprintf("\nnumprocs(MPI)=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d\n",numprocs,ncpux1,ncpux2,ncpux3,numopenmpthreads);
   trifprintf("\n Per MPI Task: N1=%d N2=%d N3=%d\n",N1,N2,N3);
-  fprintf(log_file,"per: %d %d\n", periodicx1, periodicx2);
+  logfprintf("per: %d %d\n", periodicx1, periodicx2);
 
   for (m = 1; m <= COMPDIM; m++) {
-    fprintf(log_file,"mycpupos[%d]: %d\n", m, mycpupos[m]);
-    fprintf(log_file, "startpos[%d]: %d\n", m, startpos[m]);
-    fprintf(log_file, "endpos[%d]: %d\n", m, endpos[m]);
-    fprintf(log_file, "totalsize[%d]: %lld\n", m, totalsize[m]);
+    logfprintf("mycpupos[%d]: %d\n", m, mycpupos[m]);
+    logfprintf( "startpos[%d]: %d\n", m, startpos[m]);
+    logfprintf( "endpos[%d]: %d\n", m, endpos[m]);
+    logfprintf( "totalsize[%d]: %lld\n", m, totalsize[m]);
   }
 
   trifprintf("totalzones: %d\n", totalzones);
 
 
-  fflush(log_file);
+  
 
 
 
@@ -1033,7 +1038,7 @@ void init_placeongrid_griddecomposition(void)
 	// allows simple transformations on MPI copies
 	PALLLOOP(pl){
 	  for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
-	    primfactor[bti][dir][gridpos][PACK][pl]=1.0;
+	    primfactor[bti][dir][gridpos][PACK][pl]  =1.0;
 	    primfactor[bti][dir][gridpos][UNPACK][pl]=1.0;
 	  }
 	}
@@ -1110,13 +1115,18 @@ void init_placeongrid_griddecomposition(void)
 	      if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
 		// at both poles we flip signature of B2 and U2 only
 		// Here we flip upon packing
-		primfactor[bti][dir][gridpos][PACK][U2]=primfactor[bti][dir][gridpos][PACK][B2]=-1.0;
+		primfactor[bti][dir][gridpos][PACK][U2]=primfactor[bti][dir][gridpos][PACK][B2]=SIGNFLIPU2B2;
+		// NOTEMARK: if only interpolate U3 and B3 across pole and not \detg U3 and \detg B3 (with FLIPGDETAXIS==1), then have to flip sign across pole to avoid jump in U3 and B3 at pole.  Then, U3 and B3 will be an extremum and reduce to lower order but not have a dissipation term in the EMF-type flux calculation.
+		primfactor[bti][dir][gridpos][PACK][U3]=primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPU3B3;
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
 		// process sign while packing
 		PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=SIGNFLIPGDET; // (e.g. gdet T^2_1. Assuming primitives are correct on active domain, then T^2_1 would be opposite signs for continuous flow through pole, but gdet has kink, so product has no kink)
 		primfactor[bti][dir][gridpos][PACK][U2]=-SIGNFLIPGDET; // \detg T^2_2
 		primfactor[bti][dir][gridpos][PACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		primfactor[bti][dir][gridpos][PACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 is like \detg T^2_2 as far as sign if don't interpolate \detg U3 and \detg B3 across pole.
+		primfactor[bti][dir][gridpos][PACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
+		// No need to handle T^2_3 
 	      }
 	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
 		// flip while packing
@@ -1296,7 +1306,8 @@ void init_placeongrid_griddecomposition(void)
 	      if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
 		// at both poles we flip signature of B2 and U2 only
 		// Here we flip upon unpacking
-		primfactor[bti][dir][gridpos][UNPACK][U2]=primfactor[bti][dir][gridpos][UNPACK][B2]=-1.0;
+		primfactor[bti][dir][gridpos][UNPACK][U2]=primfactor[bti][dir][gridpos][UNPACK][B2]=SIGNFLIPU2B2;
+		primfactor[bti][dir][gridpos][UNPACK][U3]=primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPU3B3; // again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
 		// Here we flip upon unpacking
@@ -1304,6 +1315,8 @@ void init_placeongrid_griddecomposition(void)
 		// override for symmetric quantities
 		primfactor[bti][dir][gridpos][UNPACK][U2]=-SIGNFLIPGDET; // \detg T^2_2 , avoid kink must flip sign
 		primfactor[bti][dir][gridpos][UNPACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+		primfactor[bti][dir][gridpos][UNPACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 like \detg T^2_3 if U3&B3 (not \detg U3&B3) interpolated
+		primfactor[bti][dir][gridpos][UNPACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
 	      }
 	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
 		// Here we flip upon unpacking
@@ -1418,7 +1431,7 @@ void init_placeongrid_griddecomposition(void)
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {
     for (m = 0; m < COMPDIM*2; m++) {
       for(l = 0 ; l < DIRGENNUMVARS ; l++) {
-	fprintf(log_file, "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
+	logfprintf( "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
       }
     }
   }
@@ -1427,7 +1440,7 @@ void init_placeongrid_griddecomposition(void)
     for (m = 0; m < COMPDIM*2; m++) {
       for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++) {
 	for(l = 0 ; l < DIRLOOPNUMVARS ; l++) {
-	  fprintf(log_file, "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
+	  logfprintf( "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
 	}
       }
     }
@@ -1455,28 +1468,27 @@ void init_placeongrid_griddecomposition(void)
     if(SIMULBCCALC>=1){
       for(stage=stagei;stage<=stagef;stage++){
 	STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
-	fprintf(log_file,"CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,-1,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-1,N1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1,0,N2-1,isc,iec,jsc,jec);
-	fprintf(log_file,"F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(0,N1-1,0,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-1,N1,-1,N2,isc,iec,jsc,jec);
-	fprintf(log_file,"DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
 	STAGECONDITION(-2,N1+1,-2,N2+1,isc,iec,jsc,jec);
-	fprintf(log_file,"PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	fprintf(log_file,"\n");
+	logfprintf("PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+	logfprintf("\n");
       }
     }
   }
 #endif
 
-  fflush(log_file);
 
 
 
@@ -1541,7 +1553,7 @@ int myexit(int call_code)
 
     dofaildump=0;
     if (call_code > 0) {
-      fprintf(stderr,
+      stderrfprintf(
 	      "proc: %s : Failure.  Please check failure file: cc: %d\n",
 	      myidtxt, call_code);
 
@@ -1564,7 +1576,7 @@ int myexit(int call_code)
 
 
     if (dofaildump) {
-      fprintf(stderr, "proc: %s : dumping failure dump with callcode=2\n",
+      stderrfprintf( "proc: %s : dumping failure dump with callcode=2\n",
 	      myidtxt);
 
       // assume want previous timestep data, not bad just-computed
@@ -1581,7 +1593,7 @@ int myexit(int call_code)
     ////////////////////////////////
 #if(USEMPI)
     if(cleanfinish && USEROMIO==1 && MPIVERSION==2 ){
-      fakedump();
+      fakedump(0);
     }
 #endif
 
@@ -1601,13 +1613,13 @@ int myexit(int call_code)
 
 
     if(cleanfinish){
-      fprintf(stderr, "Ending Computation on proc: %s, holding for other cpus\n", myidtxt);
+      stderrfprintf( "Ending Computation on proc: %s, holding for other cpus\n", myidtxt);
     }
 
 
     myfprintf(stderr, "Ended Computation on all processors\n");
     //final_myexit(); // Don't want to Abort if don't have to
-    fprintf(stderr, "END\n");
+    stderrfprintf( "END\n");
     fflush(stderr);
     exit(0);
 
@@ -1641,11 +1653,11 @@ int error_check(int wherefrom)
   if (numprocs > 1) {
     errorsend = failed;
 #if(USEMPI)
-    // fprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
+    // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
     // fflush(fail_file);
     MPI_Allreduce(&errorsend, &failed, 1, MPI_INT, MPI_MAX,
 		  MPI_COMM_GRMHD);
-    // fprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
+    // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
     // fflush(fail_file);
 #endif
   }
@@ -1674,12 +1686,21 @@ int error_check(int wherefrom)
 #if(0)
 void init_MPIgroup(void)
 {
-  int ranks[MAXCPUS] = {0}; 
+  int *ranks;
   int i,j,k,numranks;
+
+
+  // allocate things that are truenumprocs in size
+  ranks=(int*)malloc(sizeof(int)*truenumprocs);
+  if(ranks==NULL){
+    stderrfprintf("Problem allocating memory for ranks with truenumprocs=%d\n",truenumprocs); fflush(stderr);
+    myexit(915213756);
+  }
+
 
   MPI_Comm_group(MPI_COMM_WORLD, &MPI_GROUP_WORLD);
 
-  fprintf(stderr,"begin: proc: %s init_MPIgroup\n",myidtxt); fflush(stderr);
+  stderrfprintf("begin: proc: %s init_MPIgroup\n",myidtxt); fflush(stderr);
 
   // x1-inner
   j=0;
@@ -1691,7 +1712,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux2*ncpux3){
-    fprintf(stderr,"problem with inner x1-group: numranks: %d ncpux2: %d ncpux3: %d ncpux2*ncpux3: %d\n",numranks,ncpux2,ncpux3,ncpux2*ncpux3);
+    stderrfprintf("problem with inner x1-group: numranks: %d ncpux2: %d ncpux3: %d ncpux2*ncpux3: %d\n",numranks,ncpux2,ncpux3,ncpux2*ncpux3);
     myexit(97834683);
   }
   // now ranks holds inner x1 boundary of cpus, and numranks holds number of such ranks
@@ -1710,7 +1731,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux2*ncpux3){
-    fprintf(stderr,"problem with outer x1-group: numranks: %d ncpux2*ncpux3: %d\n",numranks,ncpux2*ncpux3);
+    stderrfprintf("problem with outer x1-group: numranks: %d ncpux2*ncpux3: %d\n",numranks,ncpux2*ncpux3);
     myexit(92787621);
   }
   // now create group and communicator
@@ -1727,7 +1748,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux1*ncpux3){
-    fprintf(stderr,"problem with inner x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
+    stderrfprintf("problem with inner x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
     myexit(83649545);
   }
   // now create group and communicator
@@ -1744,7 +1765,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux1*ncpux3){
-    fprintf(stderr,"problem with outer x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
+    stderrfprintf("problem with outer x2-group: numranks: %d ncpux1*ncpux3: %d\n",numranks,ncpux1*ncpux3);
     myexit(28364888);
   }
 
@@ -1764,7 +1785,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux1*ncpux2){
-    fprintf(stderr,"problem with inner x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
+    stderrfprintf("problem with inner x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
     myexit(18758365);
   }
   // now create group and communicator
@@ -1781,7 +1802,7 @@ void init_MPIgroup(void)
   }
   numranks=j;
   if(numranks!=ncpux1*ncpux2){
-    fprintf(stderr,"problem with outer x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
+    stderrfprintf("problem with outer x3-group: numranks: %d ncpux1*ncpux2: %d\n",numranks,ncpux1*ncpux2);
     myexit(29776546);
   }
 
@@ -1789,11 +1810,14 @@ void init_MPIgroup(void)
   MPI_Group_incl(MPI_GROUP_WORLD, numranks, ranks, &grprem[4]);
   MPI_Comm_create(MPI_COMM_WORLD, grprem[4], &combound[4]); 
 
+
+  free(ranks);
+
   // 0: right 1: up 2: left 3: down 4: out 5: in(as in bound.c)
 
   // when using these communicators, must make sure the call to a communication using it isn't done by a non-member cpu!
   // (above: stupid, I know, should just skip if non-member cpu tries a function)
-  fprintf(stderr,"end: proc: %s init_MPIgroup\n",myidtxt); fflush(stderr);
+  stderrfprintf("end: proc: %s init_MPIgroup\n",myidtxt); fflush(stderr);
 }
 #endif
 

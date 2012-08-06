@@ -252,20 +252,24 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   //
   ////////////////////////////////////
   if(onemorestep){
+    dualfprintf(fail_file,"Got onemorestep dt=%g\n",dt);
     // check if previous step was onemorestep==1
     reallaststep=1;
     dt=SMALL;
   }
   else{
     if (t + dt > tf){
+      dualfprintf(fail_file,"Got t+dt>tf : %g %g %g\n",t,dt,tf);
       dt = tf - t;
       onemorestep=1;
     }
     else if (t + dt == tf){
+      dualfprintf(fail_file,"Got t+dt==tf : %g %g %g\n",t,dt,tf);
       reallaststep=1;
     }
     // make sure don't get pathological case of dt=0 on last step
     if(dt<SMALL){
+      dualfprintf(fail_file,"Got dt<SMALL : %g\n",dt);
       reallaststep=1;
       dt=SMALL;
     }
@@ -1655,13 +1659,18 @@ int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvart
 
 
 
+    // pre-post MPI recv's
+    if(doboundmpi){
+      MYFUN(bound_mpi_dir(boundstage, finalstep, -dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+    }
+
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
       MYFUN(bound_prim_user_dir(boundstage, finalstep, boundtime, dir, boundvartype, prim),"step_ch.c:bound_prim()", "bound_prim_user()", 1);
     }// end if stage0 or stagem1
   
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, finalstep, dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, finalstep, +dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
     }
 
     // real boundary zones
@@ -1733,6 +1742,11 @@ int bound_anypstag(int boundstage, int finalstep, SFTYPE boundtime, int boundvar
     nprboundlist[2]=B3;
 
 
+    // pre-post MPI recvs
+    if(doboundmpi){
+      MYFUN(bound_mpi_dir(boundstage, finalstep, -dir, mystagboundvar, pstag, NULL, NULL, NULL,NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
+    }
+
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
       MYFUN(bound_pstag_user_dir(boundstage, finalstep, boundtime, dir,mystagboundvar,pstag),"step_ch.c:bound_pstag()", "bound_pstag_user()", 1);
@@ -1740,7 +1754,7 @@ int bound_anypstag(int boundstage, int finalstep, SFTYPE boundtime, int boundvar
 
 
     if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, finalstep, dir, mystagboundvar, pstag, NULL, NULL, NULL,NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
+      MYFUN(bound_mpi_dir(boundstage, finalstep, +dir, mystagboundvar, pstag, NULL, NULL, NULL,NULL),"step_ch.c:bound_pstag()", "bound_mpi()", 1);
     }
 
     // real boundary zones
@@ -1787,6 +1801,12 @@ int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
   }
 
 
+  // pre-post recv's
+  if(doboundmpi){
+    MYFUN(bound_mpi(boundstage, finalstep, -1, boundvartype, NULL, F1, F2, F3, NULL),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+  }
+
+  
   // real boundary zones
   if((boundstage==STAGE0)||(boundstage==STAGEM1)){
     MYFUN(bound_flux_user(boundstage, finalstep, boundtime, boundvartype,F1,F2,F3),"step_ch.c:bound_flux()", "bound_flux_user()", 1);
@@ -1794,7 +1814,7 @@ int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
   if(doboundmpi){
-    MYFUN(bound_mpi(boundstage, finalstep, boundvartype, NULL, F1, F2, F3, NULL),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+    MYFUN(bound_mpi(boundstage, finalstep, +1, boundvartype, NULL, F1, F2, F3, NULL),"step_ch.c:bound_flux()", "bound_mpi()", 1);
   }
 
 
@@ -1818,6 +1838,12 @@ int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
   }
 
 
+  // pre-post MPI recv's
+  if(doboundmpi){
+    MYFUN(bound_mpi(boundstage, finalstep, -1, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+  }
+
+
   // real boundary zones
   if((boundstage==STAGE0)||(boundstage==STAGEM1)){
     MYFUN(bound_vpot_user(boundstage, finalstep, boundtime, boundvartype,vpot),"step_ch.c:bound_vpot()", "bound_vpot_user()", 1);
@@ -1825,7 +1851,7 @@ int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
   if(doboundmpi){
-    MYFUN(bound_mpi(boundstage, finalstep, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);
+    MYFUN(bound_mpi(boundstage, finalstep, +1, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);
   }
 
 
@@ -1845,6 +1871,24 @@ int bound_pflag(int boundstage, int finalstep, SFTYPE boundtime, PFTYPE (*prim)[
   int boundvartype=BOUNDINTTYPE;
   
 
+
+
+  if(doboundmpi){
+
+    if(UTOPRIMFIXMPICONSISTENT==1){
+      MYFUN(bound_mpi_int(boundstage, finalstep, -1, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+    }
+    else{
+      // need to fill boundary cells with failure
+      // otherwise, would have to go deeper into fixups and dependency chain for the UTOPRIMFIXMPICONSISTENT chocie would become too deep
+      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, finalstep, -1, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+    }
+
+  }
+
+
+
+
   if((boundstage==STAGE0)||(boundstage==STAGEM1)){
 
     MYFUN(bound_pflag_user(boundstage, finalstep, boundtime, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_pflag_user()", 1);
@@ -1855,12 +1899,12 @@ int bound_pflag(int boundstage, int finalstep, SFTYPE boundtime, PFTYPE (*prim)[
   if(doboundmpi){
 
     if(UTOPRIMFIXMPICONSISTENT==1){
-      MYFUN(bound_mpi_int(boundstage, finalstep, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+      MYFUN(bound_mpi_int(boundstage, finalstep, +1, boundvartype, prim),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
     }
     else{
       // need to fill boundary cells with failure
       // otherwise, would have to go deeper into fixups and dependency chain for the UTOPRIMFIXMPICONSISTENT chocie would become too deep
-      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, finalstep, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
+      MYFUN(bound_mpi_int_fakeutoprimmpiinconsisent(boundstage, finalstep, +1, boundvartype, prim,UTOPRIMFAILFAKEVALUE),"step_ch.c:bound_pflag()", "bound_mpi_int()", 1);
     }
 
   }

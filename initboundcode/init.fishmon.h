@@ -35,6 +35,8 @@
 #undef HIGHERORDERMEM
 #undef MAXBND
 #undef MCOORD
+#undef ALLOWMETRICROT
+#undef PERCELLDT
 #undef PRODUCTION
 #undef FULLOUTPUT
 #undef MAILWHENDONE
@@ -165,6 +167,36 @@
 
 
 #define MCOORD KSCOORDS
+#define ALLOWMETRICROT 1
+#if(ALLOWMETRICROT==1)
+#undef CONNAXISYMM
+#define CONNAXISYMM 0 //required to be 0 if really rotating metric
+#undef DOMIXTHETAPHI
+#define DOMIXTHETAPHI 1
+#endif
+
+
+#undef DOPOLEDEATH
+#undef DOPOLESMOOTH
+#undef DOPOLEGAMMADEATH
+#define DOPOLEDEATH 0
+#define DOPOLESMOOTH 1
+#define DOPOLEGAMMADEATH 0
+// Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
+
+
+#undef IF3DSPCTHENMPITRANSFERATPOLE
+#if(DOPOLESMOOTH)
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
+#else
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // not working yet, but may be just more sensitive
+#endif
+
+
+
+#define PERCELLDT 0
+
+
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
 #define FIELDSTAGMEM 1 // testing
@@ -173,6 +205,7 @@
 #define PRODUCTION 0
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
+
 
 #define MAILWHENDONE 1
 #define MAILFROMREMOTE 0
@@ -188,11 +221,11 @@
 #define DOENODEBUG 0
 #define DOEVOLVEMETRIC 0
 #define EVOLVEMETRICSUBSTEP 1 // evolve metric every substep
-#define LIMITSOURCES 1
+#define LIMITSOURCES 0
 #define LIMITDTWITHSOURCETERM 0 // causes problems, drops dt too low
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
-#define DODISS 0
+#define DODISS 1
 #define DOLUMVSR 0
 #define DODISSVSR 0
 #define DOSELFGRAVVSR 0
@@ -251,9 +284,12 @@
 #define HYDROLIMADJUSTONLY 0
 #define FLUXADJUST FLUXFIXED
 #define HYDROFLUXADJUSTONLY 0
-#define STEPOVERNEGU NEGDENSITY_NEVERFIXUP
-#define STEPOVERNEGRHO NEGDENSITY_NEVERFIXUP
-#define STEPOVERNEGRHOU NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGU NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGRHO NEGDENSITY_NEVERFIXUP
+//#define STEPOVERNEGRHOU NEGDENSITY_NEVERFIXUP
+#define STEPOVERNEGU NEGDENSITY_FIXONFULLSTEP
+#define STEPOVERNEGRHO NEGDENSITY_FIXONFULLSTEP
+#define STEPOVERNEGRHOU NEGDENSITY_FIXONFULLSTEP
 #define UTOPRIMADJUST UTOPRIMAVG
 #define UTOPRIMFAILRETURNTYPE UTOPRIMRETURNADJUSTED
 #define SMOOTHSING 0 // near BH
@@ -261,7 +297,7 @@
 // whether to move polar axis to a bit larger theta
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
-#define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
+#define SINGSMALL (10000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
@@ -306,7 +342,9 @@
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 // #define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL (used in Sasha tests)
-#define RESCALEINTERP 0
+#undef VARTOINTERPFIELD
+#define VARTOINTERPFIELD GDETVERSION
+#define RESCALEINTERP 1
 #define DOEXTRAINTERP 0
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
@@ -353,5 +391,18 @@ struct Ccoordparams {
 
 // problem-dependent code activation
 #undef USERRESETREGION
-#define USERRESETREGION 1
+#define USERRESETREGION 0
 
+///////////////////////////////////////
+//
+// disable things that are not really needed because they are debugging type things
+//
+///////////////////////////////////////
+#if(PRODUCTION>=2)
+//#undef DOJETDIAG
+#undef DODEBUG
+#undef DOFLOORDIAG
+//#define DOJETDIAG 0
+#define DODEBUG 0
+#define DOFLOORDIAG 0
+#endif

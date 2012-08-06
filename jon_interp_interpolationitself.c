@@ -9,20 +9,20 @@ static int old_coord(FTYPE t, FTYPE r,FTYPE th,FTYPE ph,FTYPE *X) ;
 static FTYPE old_distance(FTYPE t1, FTYPE x1, FTYPE y1, FTYPE z1,  FTYPE t2, FTYPE x2, FTYPE y2, FTYPE z2);
 static FTYPE new_distances(FTYPE t1, FTYPE r1, FTYPE th1, FTYPE ph1,   FTYPE t2, FTYPE r2, FTYPE th2, FTYPE ph2);
 static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE *xc, FTYPE*yc, FTYPE *zc);
-static FTYPE plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage,FTYPE****olddata);
-static FTYPE bilinear_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage, FTYPE****olddata);
-static FTYPE bilinear_interp_ij(int hold, int iold, int jold,int kold, FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,unsigned char****oldimage,FTYPE****olddata);
-static FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char****oldimage,FTYPE****olddata);
+static int plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
+static int bilinear_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage, FTYPE*****olddata, FTYPE *newdatatemp);
+static int bilinear_interp_ij(int hold, int iold, int jold,int kold, FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
+static int bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
 static void interpicoord(FTYPE *X,int loc, int *h, int *i, int *j, int *k);
 static int is_atboundary(int *holdvar, int *ioldvar, int *joldvar, int *koldvar, int *atboundary, int *nearboundary);
-static FTYPE nearest_interp(int hold, int iold,int jold, int kold, unsigned char****oldimage,FTYPE****olddata);
-static FTYPE bicubic_interp_wrap(int nt, int nx, int ny, int nz, int hold, int iold, int jold, int kold, FTYPE x0, FTYPE x1, FTYPE x2, FTYPE x3, unsigned char****oldimage,FTYPE****olddata);
+static int nearest_interp(int hold, int iold,int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
+static int bicubic_interp_wrap(int nt, int nx, int ny, int nz, int hold, int iold, int jold, int kold, FTYPE x0, FTYPE x1, FTYPE x2, FTYPE x3, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
 static void X2spc(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_curr);
 
 static int root_find1(FTYPE t, FTYPE r,FTYPE th, FTYPE ph, FTYPE*X) ;
 static int root_find2(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *X);  
 
-static FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold,unsigned char****oldimage,FTYPE****olddata);
+static int nearest_interp_ij(int hold, int iold,int jold,int kold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
 static void old_ijk2rthph(int hold, int iold, int jold, int kold, FTYPE *t, FTYPE*r, FTYPE*th, FTYPE *ph);
 static void oldf_ijk2rthph(FTYPE hold, FTYPE iold, FTYPE jold, FTYPE kold, FTYPE *t, FTYPE*r, FTYPE*th, FTYPE *ph);
 static void dervs_for_bicubic(int nx, int ny, FTYPE **ya, FTYPE **fy1a, FTYPE **fy2a, FTYPE **fy12a); // only 2D
@@ -37,8 +37,8 @@ static int usrfun_joninterp(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *beta, FTY
 static int usrfun_joninterp2(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff, FTYPE **alpha);
 
 
-static void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhigh, int nyhigh, int nzhigh, unsigned char****oldimage,FTYPE****olddata);
-static void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nxlow, int nylow, int nzlow, unsigned char****oldimage,FTYPE****olddata);
+static void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhigh, int nyhigh, int nzhigh, unsigned char*****oldimage,FTYPE*****olddata);
+static void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nxlow, int nylow, int nzlow, unsigned char*****oldimage,FTYPE*****olddata);
 
 static int lowericoord(FTYPE *X,int loc, int *h, int *i, int *j, int *k);
 
@@ -49,26 +49,35 @@ static int lowericoord(FTYPE *X,int loc, int *h, int *i, int *j, int *k);
 
 
 // just copy over data from old -> new
-//unsigned char****oldimage,FTYPE****olddata,unsigned char****newimage,FTYPE****newdata
+//unsigned char*****oldimage,FTYPE*****olddata,unsigned char*****newimage,FTYPE*****newdata
 void copy_old2new(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
 
-  if(DATATYPE==0) LOOPINTERP newimage[h][i][j][k]=oldimage[h][i][j][k];
-  else if(DATATYPE==1) LOOPINTERP newdata[h][i][j][k]=olddata[h][i][j][k];
-
+  if(ALLOCATENEWIMAGEDATA){
+    if(DATATYPE==0) for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newimage[coli][h][i][j][k]=oldimage[coli][h][i][j][k];
+    else for(coli=0;coli<numoutputcols;coli++) LOOPINTERP newdata[coli][h][i][j][k]=olddata[coli][h][i][j][k];
+  }
+  else{
+    // otherwise write to file directly instead of storing in newimage or newdata
+    OUTPUTLOOP{
+      output2file_perpointcoli_postinterpolation(oldimage[coli][h][i][j][k], olddata[coli][h][i][j][k]);
+    }
+  }
 
 }
 
 
 
 // function that actually does interpolation
-//unsigned char****oldimage,FTYPE****olddata,unsigned char****newimage,FTYPE****newdata
+//unsigned char*****oldimage,FTYPE*****olddata,unsigned char*****newimage,FTYPE*****newdata
 int compute_spatial_interpolation(void)
 {
   //
   // used for image specific details
   int interptypetodo,getinterp;
+  //
+  int coli;
   //
   int hold,iold,jold,kold ;
   /////////////////////////////
@@ -82,12 +91,25 @@ int compute_spatial_interpolation(void)
   // special interpolation stuff
   int nosolution;
   FTYPE dhold,diold,djold,dkold;
-  FTYPE ftemp;
   unsigned char uctemp;
+
+  // setup temp column space
+  FTYPE *newdatatemp=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
+  if(newdatatemp==NULL){
+    fprintf(stderr,"Couldn't allocate newdatatemp\n");
+    exit(1);
+  }
+
+  // setup temp column space
+  unsigned char *newimagetemp=(unsigned char*)malloc((unsigned)(numoutputcols)*sizeof(unsigned char));
+  if(newimagetemp==NULL){
+    fprintf(stderr,"Couldn't allocate newimagetemp\n");
+    exit(1);
+  }
 
   
   if(DATATYPE==0)   fprintf(stderr,"start to interpolate image (in 3D, each . is each k from %d to %d)\n",0,nN3);
-  else if(DATATYPE==1)   fprintf(stderr,"start to interpolate data (in 3D, each . is each k from %d to %d)\n",0,nN3);
+  else fprintf(stderr,"start to interpolate data (in 3D, each . is each k from %d to %d)\n",0,nN3);
   fflush(stderr);
 
 
@@ -99,9 +121,13 @@ int compute_spatial_interpolation(void)
   }
 
 
+
+  
+
+
   
   int kprogress=0;
-  LOOPINTERP{
+  LOOPINTERP{ // no coli in LOOPINTERP!  COLIMARK: loop over columns (coli) is done for each position, so don't have to repeat physical space-time mapping for each data value
 
     // assume if 3D want indicator of progress every k
     if(k==kprogress){
@@ -163,7 +189,7 @@ int compute_spatial_interpolation(void)
     if(DATATYPE==0){
       // make black if no solution or if out of bounds
       if(nosolution){
-	newimage[h][i][j][k] = defaultvalue ;
+	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
 	getinterp=0;
       }
       else if(
@@ -178,7 +204,7 @@ int compute_spatial_interpolation(void)
 	  interptypetodo=0;
 	}
 	else{
-	  newimage[h][i][j][k] = defaultvalue ;
+	  for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
 	  getinterp=0;
 	  interptypetodo=0;
 	}
@@ -188,10 +214,10 @@ int compute_spatial_interpolation(void)
 	interptypetodo=INTERPTYPE;
       }
     }
-    else if(DATATYPE==1){
+    else{
       // make defaultvalue only if no solution
       if(nosolution) {
-	newdata[h][i][j][k]=defaultvalue;
+	for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
 	getinterp=0;
       }
       else if(
@@ -205,7 +231,7 @@ int compute_spatial_interpolation(void)
 	  interptypetodo=0;
 	}
 	else{
-	  newdata[h][i][j][k]=defaultvalue;
+	  for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
 	  getinterp=0;
 	  interptypetodo=0;
 	}
@@ -223,7 +249,11 @@ int compute_spatial_interpolation(void)
     }
 
 
-    if(getinterp){
+
+
+    if(getinterp){ // done for both DATATYPE==0 and 1.  Fills newdatatemp with result, so have to copy to newimagetemp at the end
+
+
       // get old grid's h,i,j,k from determined X
       interpicoord(X,CENT,&hold,&iold,&jold,&kold);
 
@@ -257,17 +287,17 @@ int compute_spatial_interpolation(void)
       }
 
       if(interptypetodo==0){
-	ftemp=nearest_interp(hold,iold,jold,kold,oldimage,olddata);
+	nearest_interp(hold,iold,jold,kold,oldimage,olddata, newdatatemp);
       }
       else if(interptypetodo==1){
-	ftemp=bilinear_interp_simple(hold,iold,jold,kold,X,startx,dx,oldimage,olddata);
-	//	ftemp=bilinear_interp(t,r,th,ph, hold, iold, jold, kold, oldimage,olddata); // not working
+	bilinear_interp_simple(hold,iold,jold,kold,X,startx,dx,oldimage,olddata,newdatatemp);
+	//	bilinear_interp(t,r,th,ph, hold, iold, jold, kold, oldimage,olddata,newdatatemp); // not working
       }
       else if(interptypetodo==2){
-	ftemp=plane_interp(t, r, th, ph, hold, iold, jold, kold, oldimage,olddata);
+	plane_interp(t, r, th, ph, hold, iold, jold, kold, oldimage,olddata, newdatatemp);
       }
       else if(interptypetodo==3){
-	ftemp=bicubic_interp_wrap(oN0,oN1,oN2,oN3, hold,iold,jold,kold, X[0],X[1],X[2],X[3],oldimage,olddata);
+	bicubic_interp_wrap(oN0,oN1,oN2,oN3, hold,iold,jold,kold, X[0],X[1],X[2],X[3],oldimage,olddata, newdatatemp);
       }
       else{
 	fprintf(stderr,"no such interptypetodo=%d\n",interptypetodo);
@@ -279,18 +309,14 @@ int compute_spatial_interpolation(void)
 	fprintf(stderr,"Done interp h=%d i=%d j=%d k=%d\n",h,i,j,k); fflush(stderr);
       }
 
-      // assign (interpolated) old value to new grid position
-      if(DATATYPE==0) newimage[h][i][j][k] = FLOAT2IMAGE(ftemp);
-      else newdata[h][i][j][k] = (FTYPE)(ftemp) ;
-
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"Done set newdata\n"); fflush(stderr);
+	fprintf(stderr,"Done set newdata(temp) or write to file the interpolation result\n"); fflush(stderr);
       }
 
       // test symmetry -- yes!
       //      if(j==nN2/3 && (i==nN1/4 || i==3*nN1/4-1)){
-      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdata[h][i][j][k]);
+      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdatatemp[coli]);
       //      }
 
 
@@ -299,27 +325,52 @@ int compute_spatial_interpolation(void)
       //	fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
       //      }
 
-      //      if(newdata[h][i][j][k]<=0.0){
+      //      if(newdatatemp[coli]<=0.0){
       //      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       //      }
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d : %g\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold, ftemp);
+	fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold);
+	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	  fprintf(stderr,"coli=%d newdatatemp=%g\n",coli,newdatatemp[coli]);
+	}
+	fflush(stderr);
       }
 
 
-    }
+      // copy over newdatatemp to newimagetemp if doing DATATYPE==0
+      if(DATATYPE==0){
+	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(newdatatemp[coli]) ;
+      }
+
+
+    }// end if getinterp==1
     else{
-      if(DATATYPE==0)      newimage[h][i][j][k] = defaultvalue ;
-      else newdata[h][i][j][k]=defaultvalue;
+      for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+	if(DATATYPE==0)      newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]) ;
+	else newdatatemp[coli]=defaultvalue[coli];
+      }
     }// end else
+
+
+    ////////////////
+    // OUTPUT or STORE result (either defaultvalue, interpoled value, or no value)
+    int whichdatatype=DATATYPE; // 1 means using newdatatemp
+    output2file_perpoint_postinterpolation(whichdatatype, h,i,j,k, newimagetemp, newdatatemp);
+
 
   }// end loop over new zones
 
+
+  // free temp column space
+  free(newdatatemp);
+  free(newimagetemp);
+
+
   // report that done
   if(DATATYPE==0)   fprintf(stderr,"done interpolating image\n");
-  else if(DATATYPE==1)   fprintf(stderr,"done interpolating data\n");
+  else fprintf(stderr,"done interpolating data\n");
   fflush(stderr);
 
 
@@ -364,7 +415,7 @@ void setup_newgrid(void)
     startyc=startx[2];
     startzc=startx[3]; // was 0
 
-    //	     &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&EP3);
+    //	     &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&EP3,&THETAROT);
 
     fakedtc=dtc;
     fakedxc=dxc;
@@ -1594,7 +1645,7 @@ static int usrfun_joninterp(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *beta, FTY
 // y1,y2,y3 are 3 points y position
 // z1,z2,z3 are 3 points values
 // quad_interp is fully 3D capable
-static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage,FTYPE****olddata, FTYPE*dist, FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE*myfun,  FTYPE *tcref,FTYPE*xcref,FTYPE*ycref,FTYPE *zcref)
+static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE*dist, FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE(*myfun)[NUMIJKMEM],  FTYPE *tcref,FTYPE*xcref,FTYPE*ycref,FTYPE *zcref)
 {
   FTYPE t1,t2,t3, x1,x2,x3,  y1,y2,y3,  z1,z2,z3;
   int p;
@@ -1694,20 +1745,21 @@ static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hol
 
   if(DEBUGINTERP)   fprintf(stderr,"tref=%g rref=%g thref=%g phref=%g  tcref=%g xcref=%g ycref=%g zcref=%g\n",tref,rref,thref,phref,*tcref,*xcref,*ycref,*zcref);
 
+  int coli;
   for(p=1;p<=NUMIJK;p++){
     old_ijk2rthph(hsel[p],isel[p],jsel[p],ksel[p], &myt[p],&myr[p],&myth[p],&myph[p]) ;
     old_xyzcoord(myt[p],myr[p],myth[p],myph[p], &mytc[p],&myxc[p],&myyc[p],&myzc[p]);
     dist[p]=old_distance(mytc[p],myxc[p],myyc[p],myzc[p],*tcref,*xcref,*ycref,*zcref);
     if(DATATYPE==0){
-      myfun[p]=(FTYPE)((unsigned char)oldimage[hsel[p]][isel[p]][jsel[p]][ksel[p]]);
-      if(DEBUGINTERP)       fprintf(stderr,"p=%d hsel=%d isel=%d jsel=%d ksel=%d :: myt=%g myr=%g myth=%g myph=%g :: mytc=%g myxc=%g myyc=%g myzc=%g :: fun=%g\n",p,hsel[p],isel[p],jsel[p],ksel[p], myt[p],myr[p],myth[p],myph[p], mytc[p],myxc[p],myyc[p],myzc[p], myfun[p]); fflush(stderr);
+      for(coli=0;coli<numoutputcols;coli++) myfun[coli][p]=(FTYPE)((unsigned char)oldimage[coli][hsel[p]][isel[p]][jsel[p]][ksel[p]]);
+      if(DEBUGINTERP)       fprintf(stderr,"p=%d hsel=%d isel=%d jsel=%d ksel=%d :: myt=%g myr=%g myth=%g myph=%g :: mytc=%g myxc=%g myyc=%g myzc=%g :: fun=%g\n",p,hsel[p],isel[p],jsel[p],ksel[p], myt[p],myr[p],myth[p],myph[p], mytc[p],myxc[p],myyc[p],myzc[p], myfun[0][p]); fflush(stderr); // COLIMARK: only showing coli=0 for now
     }
     else{
-      myfun[p]=olddata[hsel[p]][isel[p]][jsel[p]][ksel[p]];
+      for(coli=0;coli<numoutputcols;coli++) myfun[coli][p]=olddata[coli][hsel[p]][isel[p]][jsel[p]][ksel[p]];
     }
   }
 
-  // feeds back dist, mytc, myxc, myyc, myzc,  myfun
+  // feeds back dist, mytc, myxc, myyc, myzc,  myfun[][]
   return(0);
 
 }
@@ -1722,17 +1774,17 @@ static int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hol
 // z1,z2,z3 are 3 points z position
 // f1,f2,f3 are 3 points function values
 // plane_interp is NOT fully 3D capable because assumes only using x-y space and so essentially nearest neighbor in k-space
-static FTYPE plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage,FTYPE****olddata)
+static int plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
   FTYPE t1,t2,t3, x1,x2,x3, y1,y2,y3, z1,z2,z3;
   FTYPE f1,f2,f3;
   FTYPE a3,b3,c3,aoc,boc,newvalue;
   int p;
-  FTYPE myt[NUMIJKMEM],myr[NUMIJKMEM],myth[NUMIJKMEM],myph[NUMIJKMEM],myfun[NUMIJKMEM],dist[NUMIJKMEM],mytc[NUMIJKMEM],myxc[NUMIJKMEM],myyc[NUMIJKMEM],myzc[NUMIJKMEM];
+  FTYPE myt[NUMIJKMEM],myr[NUMIJKMEM],myth[NUMIJKMEM],myph[NUMIJKMEM],myfun[MAXCOLS][NUMIJKMEM],dist[NUMIJKMEM],mytc[NUMIJKMEM],myxc[NUMIJKMEM],myyc[NUMIJKMEM],myzc[NUMIJKMEM];
   FTYPE tcref,xcref,ycref,zcref;
-  int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage,FTYPE****olddata, FTYPE*dist, FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE*myfun, FTYPE *tcref, FTYPE*xcref,FTYPE*ycref,FTYPE *zcref);
+  int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE*dist, FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE(*myfun)[NUMIJKMEM], FTYPE *tcref, FTYPE*xcref,FTYPE*ycref,FTYPE *zcref);
 
-  FTYPE nearest_interp(int hold, int iold,int jold,int kold,unsigned char****oldimage,FTYPE****olddata);
+  int nearest_interp(int hold, int iold,int jold,int kold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
   int which,whichc;
   int a,b,c;
   FTYPE interpolate;
@@ -1740,8 +1792,7 @@ static FTYPE plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int 
 
 
   if(quad_interp(tref, rref, thref, phref,  hold, iold, jold, kold, oldimage,olddata, dist,  mytc, myxc, myyc, myzc, myfun, &tcref, &xcref,&ycref,&zcref)>=1){
-    ftemp=nearest_interp(hold,iold,jold,kold,oldimage,olddata);
-    return(ftemp);
+    return(nearest_interp(hold,iold,jold,kold,oldimage,olddata, newdatatemp));
   }
 
   //////////////////////
@@ -1776,55 +1827,65 @@ static FTYPE plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int 
   //a=whichc;b=2;c=3;
   //  a=1;b=2;c=3;
 
-  // GODMARK3D
-  x1=myxc[a]; y1=myyc[a]; f1=myfun[a];
-  x2=myxc[b]; y2=myyc[b]; f2=myfun[b];
-  x3=myxc[c]; y3=myyc[c]; f3=myfun[c];
 
-  if(1){
+  int coli;
+  for(coli=0;coli<numoutputcols;coli++){ // over columns of data
+
     // GODMARK3D
-    a3=y2* f1 - y3* f1 - y1* f2 + y3* f2 + y1* f3 - y2* f3;
-    b3=-(x2* f1 - x3* f1 - x1* f2 + x3* f2 + x1* f3 - x2* f3);
-    c3=x2* y1 - x3* y1 - x1* y2 + x3* y2 + x1* y3 - x2* y3;
-    aoc=a3/c3;
-    boc=b3/c3;
+    x1=myxc[a]; y1=myyc[a]; f1=myfun[coli][a];
+    x2=myxc[b]; y2=myyc[b]; f2=myfun[coli][b];
+    x3=myxc[c]; y3=myyc[c]; f3=myfun[coli][c];
     
-    if(DEBUGINTERP)     fprintf(stderr,"%d %d %d %d :: %g %g %g %g %g\n",hold,iold,jold,kold,a3,b3,c3,aoc,boc); fflush(stderr);
+    if(1){
+      // GODMARK3D
+      a3=y2* f1 - y3* f1 - y1* f2 + y3* f2 + y1* f3 - y2* f3;
+      b3=-(x2* f1 - x3* f1 - x1* f2 + x3* f2 + x1* f3 - x2* f3);
+      c3=x2* y1 - x3* y1 - x1* y2 + x3* y2 + x1* y3 - x2* y3;
+      aoc=a3/c3;
+      boc=b3/c3;
+      
+      if(DEBUGINTERP)     fprintf(stderr,"%d %d %d %d :: %g %g %g %g %g\n",hold,iold,jold,kold,a3,b3,c3,aoc,boc); fflush(stderr);
+      
+      newvalue=f1;
+      interpolate=-aoc*(xcref-x1)-boc*(ycref-y1); // references off point (x1,y1) with value f1
+      newvalue+=interpolate;
+    }
+    else{
+      newvalue=((y3 - ycref)*(x2*f1 - x1*f2) + x3*(-(y2*f1) + ycref*f1 + y1*f2 - ycref*f2) + 
+		(-(x2*y1) + x1*y2 - x1*ycref + x2*ycref)*f3 + xcref*(y2*f1 - y3*f1 - y1*f2 + y3*f2 + y1*f3 - y2*f3))/(x3*(y1 - y2) + x1*(y2 - y3) + x2*(-y1 + y3));
+    }
+    if(DEBUGINTERP)   fprintf(stderr,"%d %d %d %d :: %g %g %g\n",hold,iold,jold,kold, newvalue,interpolate,f1); fflush(stderr);
     
-    newvalue=f1;
-    interpolate=-aoc*(xcref-x1)-boc*(ycref-y1); // references off point (x1,y1) with value f1
-    newvalue+=interpolate;
-  }
-  else{
-    newvalue=((y3 - ycref)*(x2*f1 - x1*f2) + x3*(-(y2*f1) + ycref*f1 + y1*f2 - ycref*f2) + 
-	      (-(x2*y1) + x1*y2 - x1*ycref + x2*ycref)*f3 + xcref*(y2*f1 - y3*f1 - y1*f2 + y3*f2 + y1*f3 - y2*f3))/(x3*(y1 - y2) + x1*(y2 - y3) + x2*(-y1 + y3));
-  }
-  if(DEBUGINTERP)   fprintf(stderr,"%d %d %d %d :: %g %g %g\n",hold,iold,jold,kold, newvalue,interpolate,f1); fflush(stderr);
+    if(DATATYPE==0){
+      // note that for images the function value may go one image value up
+      // or down on a whim.  For a given pallette file (say john.pal) the
+      // bottom then can have sharp colors changes to black.  Let's up
+      // everything by 0.5 to avoid this.
+      newvalue+=0.5;
+      if(newvalue>255.0) newvalue=255;
+      else if(newvalue<0.0) newvalue=0;
 
-  if(DATATYPE==0){
-    // note that for images the function value may go one image value up
-    // or down on a whim.  For a given pallette file (say john.pal) the
-    // bottom then can have sharp colors changes to black.  Let's up
-    // everything by 0.5 to avoid this.
-    newvalue+=0.5;
-    if(newvalue>255.0) newvalue=255;
-    else if(newvalue<0.0) newvalue=0;
-  }
- 
-  return(newvalue);
+    }
+
+    // assign for return out of this function
+    newdatatemp[coli]=newvalue;
+    
+  }// over columns
+
+  return(0);
 }
 
 
 
 
 // simple bi-linear interpolation wrapper
-FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char****oldimage,FTYPE****olddata)
+int bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, FTYPE *startx, FTYPE *dx, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
   FTYPE ftemp;
   int atboundary[NDIM],nearboundary[NDIM];
   FTYPE dhold,diold,djold,dkold;
-  FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold,unsigned char****oldimage,FTYPE****olddata);
-  FTYPE bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,unsigned char****oldimage,FTYPE****olddata);
+  int nearest_interp_ij(int hold, int iold,int jold,int kold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
+  int bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
 
 
   is_atboundary(&hold,&iold,&jold,&kold,atboundary,nearboundary);
@@ -1833,8 +1894,7 @@ FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, F
 
   if(BILINEARREDUCE2NEARESTATBOUNDARY && (nearboundary[0]||nearboundary[1]||nearboundary[2]||nearboundary[3]) ){
     // then just use nearest neighbor
-    ftemp=nearest_interp_ij(hold,iold,jold,kold,oldimage,olddata);
-    return(ftemp);
+    return(nearest_interp_ij(hold,iold,jold,kold,oldimage,olddata,newdatatemp));
   }
   else{
 
@@ -1858,11 +1918,10 @@ FTYPE bilinear_interp_simple(int hold, int iold, int jold, int kold, FTYPE *X, F
 
 
 
-    ftemp=bilinear_interp_ij(hold,iold,jold,kold, dhold,diold,djold,dkold, oldimage,olddata);
-    return(ftemp);
-
+    return(bilinear_interp_ij(hold,iold,jold,kold, dhold,diold,djold,dkold, oldimage,olddata, newdatatemp));
   }
   
+  return(0);
 
 }
 
@@ -1952,11 +2011,11 @@ int is_atboundary(int *holdvar, int *ioldvar, int *joldvar, int *koldvar, int *a
 
 
 // bi-linear interpolation (used by bi-linear wrapper)
-static FTYPE bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,  unsigned char****oldimage,FTYPE****olddata)
+static int bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dhold, FTYPE diold,FTYPE djold,FTYPE dkold,  unsigned char*****oldimage,FTYPE*****olddata,FTYPE *newdatatemp)
 {
   int holdp,ioldp,joldp,koldp;
   FTYPE newvalue;
-  FTYPE myfun[NUMIJKMEM],dist[NUMIJKMEM];
+  FTYPE myfun[MAXCOLS][NUMIJKMEM],dist[NUMIJKMEM];
   int hsel[NUMIJKMEM],isel[NUMIJKMEM],jsel[NUMIJKMEM],ksel[NUMIJKMEM];
   int p;
   FTYPE ftemp;
@@ -2026,49 +2085,54 @@ static FTYPE bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dh
   }
 
 
-
-
-  for(p=1;p<=NUMIJK;p++){
+  int coli;
+  for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+  
+    for(p=1;p<=NUMIJK;p++){
+      if(DATATYPE==0){
+	myfun[coli][p]=(double)((unsigned char)oldimage[hsel[p]][isel[p]][jsel[p]][ksel[p]]);
+      }
+      else{
+	myfun[coli][p]=olddata[coli][hsel[p]][isel[p]][jsel[p]][ksel[p]];
+      }
+      //    fprintf(stderr,"bi: p=%d dist=%10.5g myfun=%10.5g\n",p,dist[p],myfun[0][p]);
+    }
+    
+    // get total distance and cumulative value
+    newvalue=0.0;
+    totaldist=0.0;
+    for(p=1;p<=NUMIJK;p++){
+      newvalue+=dist[p]*myfun[coli][p];
+      totaldist+=dist[p];
+    }
+    
+    // normalize value
+    newvalue = newvalue/totaldist;
+    
     if(DATATYPE==0){
-      myfun[p]=(double)((unsigned char)oldimage[hsel[p]][isel[p]][jsel[p]][ksel[p]]);
+      // note that for images the function value may go one image value up
+      // or down on a whim.  For a given pallette file (say john.pal) the
+      // bottom then can have sharp colors changes to black.  Let's up
+      // everything by 0.5 to avoid this.
+      newvalue+=0.5;
+      if(newvalue>255.0) newvalue=255;
+      else if(newvalue<0.0) newvalue=0;
     }
-    else{
-      myfun[p]=olddata[hsel[p]][isel[p]][jsel[p]][ksel[p]];
-    }
-    //    fprintf(stderr,"bi: p=%d dist=%10.5g myfun=%10.5g\n",p,dist[p],myfun[p]);
+
+    newdatatemp[coli]=newvalue;
   }
 
-  // get total distance and cumulative value
-  newvalue=0.0;
-  totaldist=0.0;
-  for(p=1;p<=NUMIJK;p++){
-    newvalue+=dist[p]*myfun[p];
-    totaldist+=dist[p];
-  }
-
-  // normalize value
-  newvalue = newvalue/totaldist;
-
-  if(DATATYPE==0){
-    // note that for images the function value may go one image value up
-    // or down on a whim.  For a given pallette file (say john.pal) the
-    // bottom then can have sharp colors changes to black.  Let's up
-    // everything by 0.5 to avoid this.
-    newvalue+=0.5;
-    if(newvalue>255.0) newvalue=255;
-    else if(newvalue<0.0) newvalue=0;
-  }
-
-  return(newvalue);
+  return(0);
 }
 
 
 
 // nearest neighbor
-static FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned char****oldimage,FTYPE****olddata)
+static int nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
   FTYPE newvalue;
   int atboundary;
+  int coli;
 
 
   if(BOUNDARYEXTRAP==0){
@@ -2097,13 +2161,17 @@ static FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned ch
   }
 
   if(DEBUGINTERP){
-    fprintf(stderr,"Problem?: hold=%d iold=%d jold=%d kold=%d   oN0=%d oN1=%d oN2=%d oN3=%d :: %21.15g\n",hold,iold,jold,kold,oN0,oN1,oN2,oN3,olddata[hold][iold][jold][kold]);
+    for(coli=0;coli<numoutputcols;coli++) fprintf(stderr,"Problem?: hold=%d iold=%d jold=%d kold=%d   oN0=%d oN1=%d oN2=%d oN3=%d :: coli=%d %21.15g\n",hold,iold,jold,kold,oN0,oN1,oN2,oN3,coli,olddata[coli][hold][iold][jold][kold]);
+  }
+
+  
+  for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+    if(DATATYPE==0)			newdatatemp[coli]=(FTYPE)oldimage[coli][hold][iold][jold][kold] ;
+    else 			newdatatemp[coli]=(FTYPE)olddata[coli][hold][iold][jold][kold] ;
   }
 
 
-  if(DATATYPE==0)			newvalue=(FTYPE)oldimage[hold][iold][jold][kold] ;
-  else 			newvalue=(FTYPE)olddata[hold][iold][jold][kold] ;
-  return(newvalue);
+  return(0);
 }
 
 
@@ -2114,110 +2182,116 @@ static FTYPE nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned ch
 // also not setup for oN0>1 or oN3>1
 //
 // bi-linear interpolation using real distances instead of grid-based distances
-static FTYPE bilinear_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char****oldimage,FTYPE****olddata)
+static int bilinear_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int hold, int iold, int jold, int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
   FTYPE f1,f2;
   int holdp,ioldp,joldp,koldp;
   FTYPE newvalue;
-  FTYPE dist[NUMIJKMEM],mytc[NUMIJKMEM],myxc[NUMIJKMEM],myyc[NUMIJKMEM],myzc[NUMIJKMEM],myfun[NUMIJKMEM];
+  FTYPE dist[NUMIJKMEM],mytc[NUMIJKMEM],myxc[NUMIJKMEM],myyc[NUMIJKMEM],myzc[NUMIJKMEM],myfun[MAXCOLS][NUMIJKMEM];
   FTYPE tcref,xcref,ycref,zcref;
   int hsel[NUMIJKMEM],isel[NUMIJKMEM],jsel[NUMIJKMEM],ksel[NUMIJKMEM];
   int p;
   FTYPE ftemp;
-  FTYPE nearest_interp(int hold, int iold,int jold,int kold,unsigned char****oldimage,FTYPE****olddata);
-  int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref,  int hold, int iold, int jold, int kold,  unsigned char****oldimage,FTYPE****olddata,  FTYPE*dist,  FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE*myfun,  FTYPE *tcref,FTYPE*xcref,FTYPE*ycref,FTYPE *zcref);
-
+  int nearest_interp(int hold, int iold,int jold,int kold,unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp);
+  int quad_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref,  int hold, int iold, int jold, int kold,  unsigned char*****oldimage,FTYPE*****olddata,  FTYPE*dist,  FTYPE *mytc, FTYPE*myxc, FTYPE*myyc, FTYPE*myzc, FTYPE(*myfun)[NUMIJKMEM],  FTYPE *tcref,FTYPE*xcref,FTYPE*ycref,FTYPE *zcref);
 
 
 
 
   if(quad_interp(tref, rref, thref, phref,  hold, iold, jold, kold,  oldimage,olddata,  dist, mytc, myxc, myyc, myzc,  myfun,  &tcref,&xcref,&ycref,&zcref)>=1){
-    ftemp=nearest_interp(hold,iold,jold,kold,oldimage,olddata);
-    return(ftemp);
+    nearest_interp(hold,iold,jold,kold,oldimage,olddata,newdatatemp);
+    return(0);
   }
 
 
-  // now assign actual weighted value, bilinear filtering
-  newvalue=0.0;
-  // first 3 are weights by true distance
-  if(0){
-    // =
-    // half of _ and the other half of -
-    // 1-2 and 3-4
-    p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[2]))*myfun[p];
-    p=2; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[2]))*myfun[p];
-    p=3; newvalue+=0.5*(1.0-dist[p]/(dist[3]+dist[4]))*myfun[p];
-    p=4; newvalue+=0.5*(1.0-dist[p]/(dist[3]+dist[4]))*myfun[p];
-  }
-  else if(0){
-    // || // 1-3 and 2-4
-    p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[3]))*myfun[p];
-    p=3; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[3]))*myfun[p];
-    p=2; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[4]))*myfun[p];
-    p=4; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[4]))*myfun[p];
-  }
-  else if(0){
-    // X // 1-4 and 2-3
-    p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[4]))*myfun[p];
-    p=4; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[4]))*myfun[p];
-    p=2; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[3]))*myfun[p];
-    p=3; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[3]))*myfun[p];
-  }
-  else if(1){
-    // weight by x and y
-    p=1; newvalue =(1.0-fabs(xcref-myxc[1])/fabs(myxc[2]-myxc[1]))*(1.0-fabs(ycref-myyc[1])/fabs(myyc[2]-myyc[1]))*myfun[p];
-    p=2; newvalue +=(1.0-fabs(myxc[2]-xcref)/fabs(myxc[2]-myxc[1]))*(1.0-fabs(myyc[2]-ycref)/fabs(myyc[2]-myyc[1]))*myfun[p];
-    p=3; newvalue +=(1.0-fabs(xcref-myxc[3])/fabs(myxc[3]-myxc[4]))*(1.0-fabs(ycref-myyc[3])/fabs(myyc[3]-myyc[4]))*myfun[p];
-    p=4; newvalue +=(1.0-fabs(myxc[4]-xcref)/fabs(myxc[3]-myxc[4]))*(1.0-fabs(myyc[4]-ycref)/fabs(myyc[3]-myyc[4]))*myfun[p];
-  }
-  else if(0){
-    if(myxc[2]>myxc[1]){
-      f1=(xcref-myxc[1])*(myfun[2]-myfun[1])/(myxc[2]-myxc[1])+myfun[1];
+  int coli;
+  for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+      
+
+    // now assign actual weighted value, bilinear filtering
+    newvalue=0.0;
+    // first 3 are weights by true distance
+    if(0){
+      // =
+      // half of _ and the other half of -
+      // 1-2 and 3-4
+      p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[2]))*myfun[coli][p];
+      p=2; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[2]))*myfun[coli][p];
+      p=3; newvalue+=0.5*(1.0-dist[p]/(dist[3]+dist[4]))*myfun[coli][p];
+      p=4; newvalue+=0.5*(1.0-dist[p]/(dist[3]+dist[4]))*myfun[coli][p];
     }
-    else{
-      f1=(xcref-myxc[2])*(myfun[1]-myfun[2])/(myxc[1]-myxc[2])+myfun[2];
+    else if(0){
+      // || // 1-3 and 2-4
+      p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[3]))*myfun[coli][p];
+      p=3; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[3]))*myfun[coli][p];
+      p=2; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[4]))*myfun[coli][p];
+      p=4; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[4]))*myfun[coli][p];
     }
-    if(myxc[4]>myxc[3]){
-      f2=(xcref-myxc[3])*(myfun[4]-myfun[3])/(myxc[4]-myxc[3])+myfun[3];
+    else if(0){
+      // X // 1-4 and 2-3
+      p=1; newvalue =0.5*(1.0-dist[p]/(dist[1]+dist[4]))*myfun[coli][p];
+      p=4; newvalue+=0.5*(1.0-dist[p]/(dist[1]+dist[4]))*myfun[coli][p];
+      p=2; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[3]))*myfun[coli][p];
+      p=3; newvalue+=0.5*(1.0-dist[p]/(dist[2]+dist[3]))*myfun[coli][p];
     }
-    else{
-      f2=(xcref-myxc[4])*(myfun[3]-myfun[4])/(myxc[3]-myxc[4])+myfun[4];
+    else if(1){
+      // weight by x and y
+      p=1; newvalue =(1.0-fabs(xcref-myxc[1])/fabs(myxc[2]-myxc[1]))*(1.0-fabs(ycref-myyc[1])/fabs(myyc[2]-myyc[1]))*myfun[coli][p];
+      p=2; newvalue +=(1.0-fabs(myxc[2]-xcref)/fabs(myxc[2]-myxc[1]))*(1.0-fabs(myyc[2]-ycref)/fabs(myyc[2]-myyc[1]))*myfun[coli][p];
+      p=3; newvalue +=(1.0-fabs(xcref-myxc[3])/fabs(myxc[3]-myxc[4]))*(1.0-fabs(ycref-myyc[3])/fabs(myyc[3]-myyc[4]))*myfun[coli][p];
+      p=4; newvalue +=(1.0-fabs(myxc[4]-xcref)/fabs(myxc[3]-myxc[4]))*(1.0-fabs(myyc[4]-ycref)/fabs(myyc[3]-myyc[4]))*myfun[coli][p];
     }
-    if(myyc[3]>myyc[1]){ // 1 associated with f1, 3 associated with f2
-      newvalue=(ycref-myyc[1])*(f2-f1)/(myyc[3]-myyc[1])+f1;
+    else if(0){
+      if(myxc[2]>myxc[1]){
+	f1=(xcref-myxc[1])*(myfun[coli][2]-myfun[coli][1])/(myxc[2]-myxc[1])+myfun[coli][1];
+      }
+      else{
+	f1=(xcref-myxc[2])*(myfun[coli][1]-myfun[coli][2])/(myxc[1]-myxc[2])+myfun[coli][2];
+      }
+      if(myxc[4]>myxc[3]){
+	f2=(xcref-myxc[3])*(myfun[coli][4]-myfun[coli][3])/(myxc[4]-myxc[3])+myfun[coli][3];
+      }
+      else{
+	f2=(xcref-myxc[4])*(myfun[coli][3]-myfun[coli][4])/(myxc[3]-myxc[4])+myfun[coli][4];
+      }
+      if(myyc[3]>myyc[1]){ // 1 associated with f1, 3 associated with f2
+	newvalue=(ycref-myyc[1])*(f2-f1)/(myyc[3]-myyc[1])+f1;
+      }
+      else{
+	newvalue=(ycref-myyc[3])*(f1-f2)/(myyc[1]-myyc[3])+f2;
+      }
     }
-    else{
-      newvalue=(ycref-myyc[3])*(f1-f2)/(myyc[1]-myyc[3])+f2;
+    
+    if(DATATYPE==0){
+      // note that for images the function value may go one image value up
+      // or down on a whim.  For a given pallette file (say john.pal) the
+      // bottom then can have sharp colors changes to black.  Let's up
+      // everything by 0.5 to avoid this.
+      newvalue+=0.5;
+      if(newvalue>255.0) newvalue=255;
+      else if(newvalue<0.0) newvalue=0;
     }
+
+    newdatatemp[coli]=newvalue;
   }
 
-  if(DATATYPE==0){
-    // note that for images the function value may go one image value up
-    // or down on a whim.  For a given pallette file (say john.pal) the
-    // bottom then can have sharp colors changes to black.  Let's up
-    // everything by 0.5 to avoid this.
-    newvalue+=0.5;
-    if(newvalue>255.0) newvalue=255;
-    else if(newvalue<0.0) newvalue=0;
-  }
-
-  return(newvalue);
+  return(0);
 }
 
 
 
 
 
-static FTYPE nearest_interp(int hold,int iold,int jold,int kold, unsigned char****oldimage,FTYPE****olddata)
+static int nearest_interp(int hold,int iold,int jold,int kold, unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
-  return(nearest_interp_ij(hold,iold,jold,kold,oldimage,olddata));
+  return(nearest_interp_ij(hold,iold,jold,kold,oldimage,olddata,newdatatemp));
 }
 
 
 
 // bicubic interpolation wrapper
 // treats t and \phi directions as nearest neighbor
-static FTYPE bicubic_interp_wrap(int nt, int nx, int ny, int nz,  int hold, int iold, int jold, int kold,  FTYPE x0, FTYPE x1, FTYPE x2,FTYPE x3,  unsigned char****oldimage,FTYPE****olddata)
+static int bicubic_interp_wrap(int nt, int nx, int ny, int nz,  int hold, int iold, int jold, int kold,  FTYPE x0, FTYPE x1, FTYPE x2,FTYPE x3,  unsigned char*****oldimage,FTYPE*****olddata, FTYPE *newdatatemp)
 {
   int j,k;
   static int firsttime=1;
@@ -2263,59 +2337,67 @@ static FTYPE bicubic_interp_wrap(int nt, int nx, int ny, int nz,  int hold, int 
   }
 
   
-  // always copy values
-  if(DATATYPE==0){
-    for(j=0;j<nx;j++) for(k=0;k<ny;k++){
-	ya[j][k]=(FTYPE)oldimage[hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
-      }
+  int priorcoli=-100;
+  int coli;
+  for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+
+    // always copy values
+    if(DATATYPE==0){
+      for(j=0;j<nx;j++) for(k=0;k<ny;k++){
+	  ya[j][k]=(FTYPE)oldimage[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
+	}
+    }
+    // else if(DATATYPE==1) ya=olddata;
+    else{
+      for(j=0;j<nx;j++) for(k=0;k<ny;k++){
+	  ya[j][k]=olddata[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
+	}
+    }
+    
+    
+    if(firsttime || lastk!=kold|| lasth!=hold || priorcoli!=coli){
+      // required to recompute if coli changed
+      // GODMARK3D -- for now redo derivs for each new kold and each new hold
+      recomputederivs=1;
+    }
+    else recomputederivs=0;
+
+
+    if(recomputederivs){
+      lasth=hold; // store hold into lasth for which recomputed derivatives
+      lastk=kold; // store kold into lastk for which recomputed derivatives
+      priorcoli=coli;
+      
+      
+      // compute derivatives of low resolution data
+      dervs_for_bicubic(nx,ny,ya,y1a,y2a,y12a);
+    }
+    
+    
+    
+    Xget[0]=x0;
+    Xget[1]=x1;
+    Xget[2]=x2;
+    Xget[3]=x3;
+    
+    
+      
+    newdatatemp[coli]=bicubic_interp(nx,ny,hold,iold,jold,kold,Xget,ya,y1a, y2a, y12a,dx[1],dx[2]);
   }
-  // else if(DATATYPE==1) ya=olddata;
-  else{
-    for(j=0;j<nx;j++) for(k=0;k<ny;k++){
-	ya[j][k]=olddata[hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
-      }
-  }
 
-
-  if(firsttime || lastk!=kold|| lasth!=hold){
-    // GODMARK3D -- for now redo derivs for each new kold and each new hold
-    recomputederivs=1;
-  }
-  else recomputederivs=0;
-
-
-  if(recomputederivs){
-    lasth=hold; // store hold into lasth for which recomputed derivatives
-    lastk=kold; // store kold into lastk for which recomputed derivatives
-
-
-    // compute derivatives of low resolution data
-    dervs_for_bicubic(nx,ny,ya,y1a,y2a,y12a);
-  }
-  
-
-
-  Xget[0]=x0;
-  Xget[1]=x1;
-  Xget[2]=x2;
-  Xget[3]=x3;
- 
 
   // no longer using firsttime after below line
   if(firsttime) firsttime=0;
 
 
- 
-  return(bicubic_interp(nx,ny,hold,iold,jold,kold,Xget,ya,y1a, y2a, y12a,dx[1],dx[2]));
-
-
-
+  return(0);
 }
 
 
 
 
 // compute derivatives of data
+// COLIMARK: Done per data or column point outside this function
 void dervs_for_bicubic(int nx, int ny, FTYPE **ya, FTYPE **y1a, FTYPE **y2a, FTYPE **y12a)
 {
   int j,k;
@@ -2387,6 +2469,7 @@ void dervs_for_bicubic(int nx, int ny, FTYPE **ya, FTYPE **y1a, FTYPE **y2a, FTY
 
 // see Numerical recipies figure 3.6.1 and section 3.6 on page 123
 //      ftemp=bicubic_interp(nxlow,nylow,il,jl,ftempi,ftempj,ya,y1a,y2a,y12a,dx[1],dx[2]);
+// COLIMARK: Done per column of data, not over all data
 FTYPE bicubic_interp(int nx,int ny, int hl,int il,int jl,int kl, FTYPE *Xget,FTYPE **ya,FTYPE **y1a, FTYPE **y2a, FTYPE**y12a,FTYPE dx1,FTYPE dx2)
 {
   FTYPE Xp[4+1][NDIM];
@@ -2532,7 +2615,7 @@ static int lowericoord(FTYPE *X,int loc, int *h, int *i, int *j, int *k)
 // refine data
 void refine_data(void)
 {
-  int h,i,j,k;
+  int coli,h,i,j,k;
 
   //////////////////////////
   //
@@ -2557,12 +2640,12 @@ void refine_data(void)
 
     if(refinefactor>1.0){
       if(DATATYPE==0){
-	oldimage = c4matrix(0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) oldimage[h][i][j][k]=oldimage0[h][i][j][k];
+	oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
       }
       else{
-	olddata = f4matrix(0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) olddata[h][i][j][k]=olddata0[h][i][j][k];
+	olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
       }
       //writeimage("jontest1.r8",oldimage,roN0,roN1,roN2,roN3);
       //      exit(0);
@@ -2571,12 +2654,12 @@ void refine_data(void)
     else{
       high2low(oN0, oN1, oN2, oN3, roN0, roN1, roN2, roN3, oldimage0,olddata0);
       if(DATATYPE==0){
-	oldimage = c4matrix(0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(k=0;k<roN3;k++) for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++)  for(h=0;h<roN0;h++) oldimage[h][i][j][k]=oldimage0[h][i][j][k];
+	oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++) for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++)  for(h=0;h<roN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
       }
       else{
-	olddata = f4matrix(0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(k=0;k<roN3;k++)  for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) for(h=0;h<roN0;h++) olddata[h][i][j][k]=olddata0[h][i][j][k];
+	olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++)  for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) for(h=0;h<roN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
       }
     }
     // reset size
@@ -2602,7 +2685,7 @@ void refine_data(void)
 
 // assumes data is of size nxhigh*nyhigh, but only the smallest portion is filled with nxlow*nylow data
 // assumes square grid data and going from integer sizes to larger integer size grid.
-void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhigh, int nyhigh, int nzhigh,  unsigned char****oldimage,FTYPE****olddata)
+void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhigh, int nyhigh, int nzhigh,  unsigned char*****oldimage,FTYPE*****olddata)
 {
   FTYPE **Ilowf;
   unsigned char **Ilowc;
@@ -2617,6 +2700,12 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   FTYPE **y1a,**y2a,**y12a;
   FTYPE **ya;
   FTYPE Xget[NDIM];
+
+
+  if(numoutputcols>1){
+    fprintf(stderr,"low2high not setup for numoutputcols=%d>1\n",numoutputcols);
+    exit(1);
+  }
 
 
   // GODMARK3D
@@ -2659,8 +2748,8 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   // setup Ilow
   for(il=0;il<nxlow;il++){
     for(jl=0;jl<nylow;jl++){
-      if(DATATYPE==0) Ilowc[il][jl]=oldimage[0][il][jl][0];// GODMARK3D
-      else if(DATATYPE==1) Ilowf[il][jl]=olddata[0][il][jl][0]; // GODMARK3D
+      if(DATATYPE==0) Ilowc[il][jl]=oldimage[0][0][il][jl][0];// GODMARK3D // COLIMARK
+      else Ilowf[il][jl]=olddata[0][0][il][jl][0]; // GODMARK3D // COLIMARK
     }
   }
 
@@ -2689,7 +2778,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       exit(1);
     }
     for(j=0;j<nxlow;j++) for(k=0;k<nylow;k++){
-	ya[j][k]=(FTYPE)oldimage[0][j][k][0]; // GODMARK3D
+	ya[j][k]=(FTYPE)oldimage[0][0][j][k][0]; // GODMARK3D // COLIMARK
       }
   }
   // else if(DATATYPE==1) ya=olddata;
@@ -2700,7 +2789,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       exit(1);
     }
     for(j=0;j<nxlow;j++) for(k=0;k<nylow;k++){
-	ya[j][k]=olddata[0][j][k][0]; // GODMARK3D
+	ya[j][k]=olddata[0][0][j][k][0]; // GODMARK3D // COLIMARK
       }
 
   }
@@ -2724,11 +2813,11 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
     if(DATATYPE==1){
     if(1){ // needs to be set
     for(jl=0;jl<nxlow;jl++)      for(il=0;il<nylow;il++) {
-    ftemp=olddata[0][il][jl][0]; // GODMARK3D
+    ftemp=olddata[0][0][il][jl][0]; // GODMARK3D // COLIMARK
     if(ftemp<0.0) ftemp=0.0;
     if(ftemp>255.0) ftemp=255.0;
     uctemp=(unsigned char)ftemp;
-    oldimage[0][ih][jh][0]=uctemp; // GODMARK3D
+    oldimage[0][0][ih][jh][0]=uctemp; // GODMARK3D // COLIMARK
     }
     }
     }
@@ -2766,7 +2855,9 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       dil=(FTYPE)ftempi-(FTYPE)(il+SHIFTNN);
       djl=(FTYPE)ftempj-(FTYPE)(jl+SHIFTNN);
 
-      ftemp=nearest_interp_ij(hl, il, jl, kl ,Ilowc,Ilowf);
+      FTYPE blob[MAXCOLS]
+      nearest_interp_ij(hl, il, jl, kl ,Ilowc,Ilowf,blob);
+      ftemp=blob[0]; // GODCOLIMARK
 #elif(HIGHLOWINTERPTYPE==1)
       ///////////////////////////////////////////
       //
@@ -2829,22 +2920,22 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
 
 
       // just write back into the given multi-pointers
-      if(DATATYPE==0) oldimage[0][ih][jh][0]=(unsigned char)ftemp;// GODMARK3D
-      else olddata[0][ih][jh][0]=ftemp; // GODMARK3D
+      if(DATATYPE==0) oldimage[0][0][ih][jh][0]=(unsigned char)ftemp;// GODMARK3D // COLIMARK
+      else olddata[0][0][ih][jh][0]=ftemp; // GODMARK3D // COLIMARK
 
-      //fprintf(stderr,"olddata[%d][%d][%d][%d]=%g\n",0,ih,jh,0,olddata[0][ih][jh][0]); // GODMARK3D
+      //fprintf(stderr,"olddata[%d][%d][%d][%d]=%g\n",0,ih,jh,0,olddata[0][0][ih][jh][0]); // GODMARK3D // COLIMARK
     }
   }
   if(0){// debug (need to setup this memory stuff -- segfaults for data currently
     // in principle could output in different order if wanted
-    if(DATATYPE==1){
+    if(DATATYPE!=0){
       if(1){ // needs to be set
 	for(jh=0;jh<nyhigh;jh++)      for(ih=0;ih<nxhigh;ih++) {
-	    ftemp=olddata[0][ih][jh][0];// GODMARK3D
+	    ftemp=olddata[0][0][ih][jh][0];// GODMARK3D // COLIMARK
 	    if(ftemp<0.0) ftemp=0.0;
 	    if(ftemp>255.0) ftemp=255.0;
 	    uctemp=(unsigned char)ftemp;
-	    oldimage[0][ih][jh][0]=uctemp; // GODMARK3D
+	    oldimage[0][0][ih][jh][0]=uctemp; // GODMARK3D // COLIMARK
 	  }
       }
     }
@@ -2856,7 +2947,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
   if(DATATYPE==0){
     free_cmatrix(Ilowc,0,nxlow-1,0,nylow-1) ;
   }
-  else if(DATATYPE==1){
+  else{
     free_fmatrix(Ilowf,0,nxlow-1,0,nylow-1) ;
   }
   //  exit(0);
@@ -2866,7 +2957,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
 
 // area weighted based interpolation from high resolution to lower resolution
 // assumes feed in high resolution and put low resolution version into same buffer at end
-void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nxlow, int nylow, int nzlow,  unsigned char ****oldimage,FTYPE****olddata)
+void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nxlow, int nylow, int nzlow,  unsigned char *****oldimage,FTYPE*****olddata)
 {
   FTYPE *Ihigh;
   FTYPE *Ilow;
@@ -2878,6 +2969,11 @@ void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nx
   FTYPE deltaih,deltajh;
   FTYPE W;
 
+
+  if(numoutputcols>1){
+    fprintf(stderr,"high2low not setup for numoutputcols=%d>1\n",numoutputcols);
+    exit(1);
+  }
 
   // +1's are just so I[1] is first and I[N] exists
   Ihigh=(FTYPE*)malloc(sizeof(FTYPE)*(nxhigh+1)*(nyhigh+1));
@@ -2891,7 +2987,7 @@ void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nx
 
   for(jh=1;jh<=nyhigh;jh++){
     for(ih=1;ih<=nxhigh;ih++){
-      Ihigh[jh*nxhigh+ih]=olddata[0][ih][jh][0]; // GODMARK3D
+      Ihigh[jh*nxhigh+ih]=olddata[0][0][ih][jh][0]; // GODMARK3D // COLIMARK
     }
   }
 
@@ -2930,7 +3026,7 @@ void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nx
   for(jl=1;jl<=nylow;jl++){
     for(il=1;il<=nxlow;il++){
       // go back to where we came from, just filling the partial array
-      olddata[0][il][jl][0]=Ilow[jl*nxlow+il]/IlowW[jl*nxlow+il]; // GODMARK3D
+      olddata[0][0][il][jl][0]=Ilow[jl*nxlow+il]/IlowW[jl*nxlow+il]; // GODMARK3D // COLIMARK
     }
   }
 

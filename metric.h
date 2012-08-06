@@ -1,8 +1,4 @@
 
-// whether metric mixes r-\phi or \theta-\phi.  Alows for optimizations since not often mixing with \phi
-#define DOMIXTHETAPHI 0 // for g_{\theta\phi}
-
-
 #define PRIMECOORDS -1 // whatever the prime coordinate/metric is, used in transforms.c
 #define CARTMINKMETRIC 0 // cartesian that is
 #define BLCOORDS 1 // just set Rin oustide horizon for normal star

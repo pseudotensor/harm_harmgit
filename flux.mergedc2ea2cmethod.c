@@ -195,7 +195,7 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
     get_geometry_gdetonly(i, j, k, CORN1-1+corner, ptrgeomcorn); // at CORN[dir]
       
     // then need to store geometry for merged method
-    MACP1A0(geomcorn,CORN1-1+corner,i,j,k)=ptrgeomcorn->gdet; // SUPERGODMARK: Should be avoided since already stored metric if doing new method
+    MACP1A0(geomcorn,corner,i,j,k)=ptrgeomcorn->gdet; // SUPERGODMARK: Should be avoided since already stored metric if doing new method
   }// end loop over i,j,k
 
 
@@ -262,15 +262,15 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 
   // +-odir1 and +-odir2 w.r.t. cell center
   // set default i,j,k position
-  DIMENLOOP(ijkdimen){
-    for(m=0;m<NUMCS;m++){
-      for(l=0;l<NUMCS;l++){
-        ijkcorn[ijkdimen][m][l]=i;
-	ijkcorn[ijkdimen][m][l]=j;
-	ijkcorn[ijkdimen][m][l]=k;
-      }
+  //  DIMENLOOP(ijkdimen){
+  for(m=0;m<NUMCS;m++){
+    for(l=0;l<NUMCS;l++){
+      ijkcorn[1][m][l]=i;
+      ijkcorn[2][m][l]=j;
+      ijkcorn[3][m][l]=k;
     }
   }
+  //}
 
   // shift i,j,k up only as required
   // shift each
@@ -490,7 +490,7 @@ int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
     for(positer=0;positer<NUMPOS4EMF;positer++){
       
       odir1pos=refodir1+positer*NNOT1vec[odir1];
-      odir1pos=refodir2+positer*NNOT1vec[odir2];
+      odir2pos=refodir2+positer*NNOT1vec[odir2];
       
       vcon[jj][positer]=vcon9[jj][odir1pos][odir2pos];
       gdetBcon[jj][positer]=gdetBcon9[jj][odir1pos][odir2pos];
@@ -1191,7 +1191,7 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
   ///////////////////////////
   //DLOOPA(jj){
   // only loop over non-diagonal terms, doing diagonal term last outside loop (done to avoid conditional inside loop)
-  for(iter=0;iter<=NDIM-1;iter++){
+  for(iter=0;iter<NDIM-1;iter++){
     jj=myloop[iter];
 
 
@@ -1336,7 +1336,7 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 
     // iterate only over spatial EOMs that are not along dir (\nu==dir has flux=0 identically)
     // loop here is differently used than above since here start with iter=1
-    for(iter=1;iter<=NDIM-1;iter++){
+    for(iter=1;iter<NDIM-1;iter++){
       jj=myloop[iter]; // term is jj-EOM, not flux in jj direction
 
 #if(WHICHEOM!=WITHGDET&&MERGEDC2EA2CMETHOD)
@@ -1413,8 +1413,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     // correct left-down corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at left-down CORN3 at i,j
     // NEWMARK: signature!
-    MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) += 0.25*Fld;
-    MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) += -0.25*Fld;
+    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) += 0.25*Fld;
+    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) += -0.25*Fld;
   
     // correct right-down corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at right-down CORN3 at i+1,j
@@ -1422,8 +1422,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir1)*NNOT1vec[2];
     kk=k+(3==odir1)*NNOT1vec[3];
     // NEWMARK: signature!
-    MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Frd;
-    MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Frd;
+    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Frd;
+    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Frd;
 
     // correct left-up corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at left-up CORN3 at i,j+1
@@ -1431,8 +1431,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir2)*NNOT1vec[2];
     kk=k+(3==odir2)*NNOT1vec[3];
     // NEWMARK: signature!
-    MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Flu;
-    MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Flu;
+    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Flu;
+    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Flu;
 
     // correct right-up corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at right-up CORN3 at i+1,j+1
@@ -1441,8 +1441,8 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
     jj=j+(2==odir1+(2==odir2))*NNOT1vec[2];
     kk=k+(3==odir1+(3==odir2))*NNOT1vec[3];
     // NEWMARK: signature!
-    MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Fru;
-    MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Fru;
+    if(NNOT1vec[odir1]) MACP1A1(fluxvec,odir1,ii,jj,kk,B1-1+odir2) += 0.25*Fru;
+    if(NNOT1vec[odir2]) MACP1A1(fluxvec,odir2,ii,jj,kk,B1-1+odir1) += -0.25*Fru;
 
   }  
   

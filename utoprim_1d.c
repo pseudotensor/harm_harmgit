@@ -44,7 +44,7 @@ int Utoprim_1d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag, FTYPE *pr
 
 
 #if( WHICHVEL != VELREL4 )
-  fprintf(stderr,"Utoprim_1d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_1d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1);
 #endif
 
@@ -253,7 +253,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 
 #if(!OPTIMIZED)
   if( ltrace ) {
-    fprintf(stderr,"(W,W_last,Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+    stderrfprintf("(W,W_last,Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
 	    W,W_last, Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) ;
   }
 
@@ -360,7 +360,7 @@ static FTYPE utsq_calc(FTYPE W)
 
 #if(!OPTIMIZED)
 	if( ltrace ) {
-	  fprintf(stderr,"enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+	  stderrfprintf("enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,W4,Wsq) ;
 	  fflush(stderr);
 	}
 #endif
@@ -377,7 +377,7 @@ static FTYPE utsq_calc(FTYPE W)
 
 	/*
 	  if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
-	    fprintf(stderr,"utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+	    stderrfprintf("utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
 	    return(0.) ;
 	  }
 	*/
@@ -398,7 +398,7 @@ static FTYPE gammasq_calc(FTYPE W)
 
 #if(!OPTIMIZED)
 	if( ltrace ) {
-	  fprintf(stderr,"enter utsq  %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,Wsq) ;
+	  stderrfprintf("enter utsq  %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,Wsq) ;
 	  fflush(stderr);
 	}
 #endif
@@ -631,28 +631,28 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
       if( ltrace ) { 
 	res_func_val = res_func(x);
 	res_func_old = res_func(x_old);
-	fprintf(stderr,"gnr(): f_old, f, res_func_old, res_func_val = %21.15g  %21.15g  %21.15g  %21.15g  \n",
+	stderrfprintf("gnr(): f_old, f, res_func_old, res_func_val = %21.15g  %21.15g  %21.15g  %21.15g  \n",
 		f_old, f, res_func_old, res_func_val );
-	fprintf(stderr,"gnr(): x_old = ");
+	stderrfprintf("gnr(): x_old = ");
 	for( id = 0; id < n ; id++) {
-	  fprintf(stderr," %21.15g ",x_old[id]);
+	  stderrfprintf(" %21.15g ",x_old[id]);
 	}
-	fprintf(stderr,"\n ");
-	fprintf(stderr,"gnr(): x     = ");
+	stderrfprintf("\n ");
+	stderrfprintf("gnr(): x     = ");
 	for( id = 0; id < n ; id++) {
-	  fprintf(stderr," %21.15g ",x[id]);
+	  stderrfprintf(" %21.15g ",x[id]);
 	}
-	fprintf(stderr,"\n ");
-	fprintf(stderr,"gnr(): dn    = ");
+	stderrfprintf("\n ");
+	stderrfprintf("gnr(): dn    = ");
 	for( id = 0; id < n ; id++) {
-	  fprintf(stderr," %21.15g ",dn[id]);
+	  stderrfprintf(" %21.15g ",dn[id]);
 	}
-	fprintf(stderr,"\n ");
-	fprintf(stderr,"gnr(): del_f = ");
+	stderrfprintf("\n ");
+	stderrfprintf("gnr(): del_f = ");
 	for( id = 0; id < n ; id++) {
-	  fprintf(stderr," %21.15g ",del_f[id]);
+	  stderrfprintf(" %21.15g ",del_f[id]);
 	}
-	fprintf(stderr,"\n ");
+	stderrfprintf("\n ");
       }
 #endif
 
@@ -669,7 +669,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
 	}
 #if(!OPTIMIZED)
 	if( ltrace && retval ) { 
-	  fprintf(stderr,"general_newton_raphson():  retval, resid_check = %4i  %21.15g \n",retval, resid_check);
+	  stderrfprintf("general_newton_raphson():  retval, resid_check = %4i  %21.15g \n",retval, resid_check);
 	  fflush(stderr);
 	}     
 #endif
@@ -679,8 +679,8 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
       if( (retval == 2) && (USE_LINE_SEARCH_ALWAYS == do_line_search) ) { 
 	if( ltrace ) { 
 #if(!OPTIMIZED)
-	  fprintf(stderr,"gnr(): bad first step: retval, f_old, f  = %4i  %21.15g  %21.15g  \n",retval,f_old,f);
-	  fprintf(stderr,"gnr: doing recursive call, retval, errx = %4i  %21.15g \n", retval, errx );
+	  stderrfprintf("gnr(): bad first step: retval, f_old, f  = %4i  %21.15g  %21.15g  \n",retval,f_old,f);
+	  stderrfprintf("gnr: doing recursive call, retval, errx = %4i  %21.15g \n", retval, errx );
 	  fflush(stderr);
 #endif
 	  retval = general_newton_raphson( x_orig, n, ((do_line_search+1)%2), funcd, res_func );
@@ -705,7 +705,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
 	}
 	else if( ltrace ) { 
 #if(!OPTIMIZED)
-	  fprintf(stderr,"general_newton_raphson():  retval, grad_check = %4i  %21.15g \n",retval, grad_check);
+	  stderrfprintf("general_newton_raphson():  retval, grad_check = %4i  %21.15g \n",retval, grad_check);
 	  fflush(stderr);
 #endif
 	}
@@ -738,18 +738,18 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
 
 #if(!OPTIMIZED)
     if( ltrace ) {
-      fprintf(stderr," general_newton_raphson(): niter,f_old,f,errx_old,errx = %4i  %21.15g  %21.15g  %21.15g  %21.15g\n",  
+      stderrfprintf(" general_newton_raphson(): niter,f_old,f,errx_old,errx = %4i  %21.15g  %21.15g  %21.15g  %21.15g\n",  
 	      n_iter,f_old,f,errx_old,errx );
-      fprintf(stderr,"gnr(): x_old = ");
+      stderrfprintf("gnr(): x_old = ");
       for( id = 0; id < n ; id++) {
-	fprintf(stderr," %21.15g ",x_old[id]);
+	stderrfprintf(" %21.15g ",x_old[id]);
       }
-      fprintf(stderr,"\n ");
-      fprintf(stderr,"gnr(): x     = ");
+      stderrfprintf("\n ");
+      stderrfprintf("gnr(): x     = ");
       for( id = 0; id < n ; id++) {
-	fprintf(stderr," %21.15g ",x[id]);
+	stderrfprintf(" %21.15g ",x[id]);
       }
-      fprintf(stderr,"\n ");
+      stderrfprintf("\n ");
       fflush(stderr);
     }
 #endif
@@ -775,7 +775,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
   if( (fabs(errx) > MIN_NEWT_TOL) && (i_extra == 0) ){
     if( (do_line_search != USE_LINE_SEARCH_ALWAYS) || (USE_LINE_SEARCH_ALWAYS < 0) ) { 
       if(ltrace2) {
-	// fprintf(stderr," totalcount = %d   0   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
+	// stderrfprintf(" totalcount = %d   0   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
 	// fflush(stderr);
 #if(!OPTIMIZED)
  	bin_newt_data( errx, n_iter, 0, 0 );
@@ -783,14 +783,14 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
       }
 #if(!OPTIMIZED)
       if(ltrace) {
-	fprintf(stderr,"general_newton_raphson():  did not find solution \n");
+	stderrfprintf("general_newton_raphson():  did not find solution \n");
 	if( retval == -1 ) {
-	  fprintf(stderr,"general_newton_raphson(): lnsrch converged: x = ");
-	  for( id = 0; id < n ; id++)  fprintf(stderr," %21.15g  ",x[id]);
-	  fprintf(stderr,"\n");
-	  fprintf(stderr,"general_newton_raphson(): lnsrch converged: x_old = ");
-	  for( id = 0; id < n ; id++)  fprintf(stderr," %21.15g  ",x_old[id]);
-	  fprintf(stderr,"\n");
+	  stderrfprintf("general_newton_raphson(): lnsrch converged: x = ");
+	  for( id = 0; id < n ; id++)  stderrfprintf(" %21.15g  ",x[id]);
+	  stderrfprintf("\n");
+	  stderrfprintf("general_newton_raphson(): lnsrch converged: x_old = ");
+	  for( id = 0; id < n ; id++)  stderrfprintf(" %21.15g  ",x_old[id]);
+	  stderrfprintf("\n");
 	}
 	fflush(stderr);
       }
@@ -800,7 +800,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
     else {
       /* If bad return and we tried line searching, try it without before giving up: */
 #if(!OPTIMIZED)
-      fprintf(stderr,"gnr: doing recursive call, do_line_search, retval, errx = %4i  %4i  %21.15g \n",
+      stderrfprintf("gnr: doing recursive call, do_line_search, retval, errx = %4i  %4i  %21.15g \n",
 	      do_line_search, retval, errx );
       fflush(stderr);
 #endif
@@ -811,13 +811,13 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
   }
   if( (fabs(errx) <= MIN_NEWT_TOL) && (fabs(errx) > NEWT_TOL) ){
     if(ltrace2) {
-      // fprintf(stderr," totalcount = %d   1   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
+      // stderrfprintf(" totalcount = %d   1   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
       // fflush(stderr);
       bin_newt_data( errx, n_iter, 1, 0 );
     }
 #if(!OPTIMIZED)
     if(ltrace) {
-      fprintf(stderr,"general_newton_raphson(): found minimal solution \n");
+      stderrfprintf("general_newton_raphson(): found minimal solution \n");
       fflush(stderr);
     }
 #endif
@@ -825,7 +825,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
   }
   if( fabs(errx) <= NEWT_TOL ){
     if(ltrace2) {
-      // fprintf(stderr," totalcount = %d   2   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra, errx); 
+      // stderrfprintf(" totalcount = %d   2   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra, errx); 
       // fflush(stderr);
       bin_newt_data( errx, n_iter, 2, 0 );
     }
@@ -1092,7 +1092,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 
 #if(!OPTIMIZED)
   if( ltrace ) {
-    fprintf(stderr,"my_lnsrch(): sum, slope, test, alamin =   %21.15g  %21.15g  %21.15g  %21.15g \n",sum,slope,test,alamin); 
+    stderrfprintf("my_lnsrch(): sum, slope, test, alamin =   %21.15g  %21.15g  %21.15g  %21.15g \n",sum,slope,test,alamin); 
     fflush(stderr);
   }
 #endif
@@ -1115,7 +1115,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 
     if( bad_step ) { 
       *check = 2;
-      if(debugfail>=2) fprintf(stderr,"my_lnsrch(): bad_step = 1,  f = %21.15g \n", *f); fflush(stderr);
+      if(debugfail>=2) stderrfprintf("my_lnsrch(): bad_step = 1,  f = %21.15g \n", *f); fflush(stderr);
       return;
     }
       
@@ -1124,7 +1124,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
       *check=1;
 #if(!OPTIMIZED)
       if( ltrace ) { 
-	fprintf(stderr,"my_lnsrch(): alam < alamin: alam, alamin = %21.15g  %21.15g \n", alam,alamin); fflush(stderr);
+	stderrfprintf("my_lnsrch(): alam < alamin: alam, alamin = %21.15g  %21.15g \n", alam,alamin); fflush(stderr);
       }
 #endif
       return;
@@ -1132,7 +1132,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
     else if (*f <= fold+ALF*alam*slope) {
 #if(!OPTIMIZED)
       if( ltrace ) { 
-	fprintf(stderr,"my_lnsrch(): good exit:  alam, alamin, f, fold = %21.15g  %21.15g %21.15g  %21.15g \n", alam,alamin, *f, fold); fflush(stderr);
+	stderrfprintf("my_lnsrch(): good exit:  alam, alamin, f, fold = %21.15g  %21.15g %21.15g  %21.15g \n", alam,alamin, *f, fold); fflush(stderr);
       }
 #endif
       return;
@@ -1142,7 +1142,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 	tmplam = -slope/(2.0*(*f-fold-slope));
 #if(!OPTIMIZED)
 	if( ltrace ) {
-	  fprintf(stderr,"my_lnsrch(): setting tmplam!!    tmplam, alam =  %21.15g  %21.15g !!\n", tmplam, alam);
+	  stderrfprintf("my_lnsrch(): setting tmplam!!    tmplam, alam =  %21.15g  %21.15g !!\n", tmplam, alam);
 	  fflush(stderr);
 	}
 #endif
@@ -1157,7 +1157,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 	  disc=b*b-3.0*a*slope;
 	  if (disc<0.0) {
 	    if( disc < -1.e-10 ) {
-	      if(debugfail>=2) fprintf(stderr,"my_lnsrch(): Big Roundoff problem:  disc = %21.15g \n", disc);
+	      if(debugfail>=2) stderrfprintf("my_lnsrch(): Big Roundoff problem:  disc = %21.15g \n", disc);
 	    }
 	    disc = 0.;
 	  }
@@ -1167,7 +1167,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 	  tmplam=0.5*alam;
 #if(!OPTIMIZED)
 	if( ltrace ) {
-	  fprintf(stderr,"my_lnsrch(): rhs1, rhs2, a, b, tmplam, alam =  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g !!\n",
+	  stderrfprintf("my_lnsrch(): rhs1, rhs2, a, b, tmplam, alam =  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g !!\n",
 		  rhs1, rhs2, a, b, tmplam, alam );
 	  fflush(stderr);
 	}
@@ -1181,7 +1181,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
 
 #if(!OPTIMIZED)
     if( ltrace ) {
-      fprintf(stderr,"my_lnsrch(): icount, alam, alam2, tmplam  =   %4i  %21.15g  %21.15g  %21.15g \n",
+      stderrfprintf("my_lnsrch(): icount, alam, alam2, tmplam  =   %4i  %21.15g  %21.15g  %21.15g \n",
 	      icount, alam, alam2, tmplam);
       fflush(stderr);
     }

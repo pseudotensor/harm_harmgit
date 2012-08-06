@@ -70,12 +70,15 @@ int init_dumps(void)
   ///////////////////////////
   init_dnumcolumns_dnumversion();
 
-  ///////////////////////////
-  //
-  // setup link list
-  //
-  ///////////////////////////
-  init_linklists();
+
+  if(mpicombine==1 && mpicombinetype==MPICOMBINEMINMEM){
+    ///////////////////////////
+    //
+    // setup link list (only used for MINMEM method)
+    //
+    ///////////////////////////
+    init_linklists();
+  }
 
   trifprintf("end: init_dumps\n");
 
@@ -386,9 +389,11 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
     fwrite(&Rout,sizeof(FTYPE),1,headerptr);
     fwrite(&hslope,sizeof(FTYPE),1,headerptr);
     fwrite(&localdt,sizeof(FTYPE),1,headerptr);
+    fwrite(&defcoord,sizeof(int),1,headerptr);
     fwrite(&MBH,sizeof(FTYPE),1,headerptr);
     fwrite(&QBH,sizeof(FTYPE),1,headerptr);
     fwrite(&EP3,sizeof(FTYPE),1,headerptr);
+    fwrite(&THETAROT,sizeof(FTYPE),1,headerptr);
     fwrite(&is,sizeof(int),1,headerptr);
     fwrite(&ie,sizeof(int),1,headerptr);
     fwrite(&js,sizeof(int),1,headerptr);
@@ -401,9 +406,9 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 #endif
   }
   fflush(headerptr);
@@ -591,18 +596,29 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&(ptrgeom->gdet),0,1,writebuf); // 1 //gdet  //end of default read
 
 
-#if(CALCFARADAYANDCURRENTS) // NIM*2+6*2 = 8+12=20
-  // updated 11/16/2003
-  // new 10/23/2003
-  // current density 
-  lower_vec(GLOBALMAC(jcon,i,j,k),ptrgeom,jcov); 
-  myset(datatype,GLOBALMAC(jcon,i,j,k),0,NDIM,writebuf); // (NDIM)
-  myset(datatype,jcov,0,NDIM,writebuf);// (NDIM)
-  // faraday (2*6)
-  lowerf(GLOBALMAC(fcon,i,j,k),ptrgeom,fcov);
-  myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
-  myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
-#endif
+  if(CALCFARADAYANDCURRENTS){ // NIM*2+6*2 = 8+12=20
+    // updated 11/16/2003
+    // new 10/23/2003
+    // current density 
+    lower_vec(GLOBALMAC(jcon,i,j,k),ptrgeom,jcov); 
+    myset(datatype,GLOBALMAC(jcon,i,j,k),0,NDIM,writebuf); // (NDIM)
+    myset(datatype,jcov,0,NDIM,writebuf);// (NDIM)
+    // faraday (2*6)
+    lowerf(GLOBALMAC(fcon,i,j,k),ptrgeom,fcov);
+    myset(datatype,GLOBALMAC(fcon,i,j,k),0,NUMFARADAY,writebuf); //  (6)
+    myset(datatype,fcov,0,NUMFARADAY,writebuf); // (6)
+  }
+
+
+  // DEBUG: Also add +3 to numcolumns for this to work
+  if(0){
+    if(FLUXB==FLUXCTSTAG) myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf);
+    else{
+      FTYPE plblob[NPR]={0};
+      myset(datatype,plblob,B1,3,writebuf);
+    }
+  }
+
 
   myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf); // 3 more
 
@@ -1771,7 +1787,7 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 // fake dump so can push out data in case still in MPI=2 delayed writing buffer
-int fakedump(void)
+int fakedump(long dump_cnt)// arg not used
 {
   MPI_Datatype datatype;
   int whichdump;

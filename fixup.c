@@ -149,7 +149,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
 
   COMPZLOOP{
-    //    fprintf(fail_file,"i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
+    //    dualfprintf(fail_file,"i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
     get_geometry(i,j,k,CENT,ptrgeom);
     if(fixup1zone(MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)
       FAILSTATEMENT("fixup.c:fixup()", "fixup1zone()", 1);
@@ -266,11 +266,13 @@ int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
   //
   /////////////////////
   if(DODEBUG){
-    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<0 || ptrgeom->i<-N1BND || ptrgeom->i>N1-1+N1BND ||ptrgeom->j<-N2BND || ptrgeom->j>N2-1+N2BND ||ptrgeom->k<-N3BND || ptrgeom->k>N3-1+N3BND ){
+
+    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<COUNTNOTHING || ptrgeom->i<-N1BND || ptrgeom->i>N1-1+N1BND ||ptrgeom->j<-N2BND || ptrgeom->j>N2-1+N2BND ||ptrgeom->k<-N3BND || ptrgeom->k>N3-1+N3BND ){
       dualfprintf(fail_file,"In diag_fixup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       myexit(24683463);
     }
 
+    if(whocalled!=COUNTNOTHING){
     int indexfinalstep;
     indexfinalstep=0;
     TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
@@ -279,7 +281,9 @@ int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
       // iterate finalstep version
       TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
     }
-  }
+    }// end if counting something
+
+  }// end if DODEBUG
 
 
   return(0);
@@ -434,8 +438,8 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
     struct of_geom *ptrgeom;
     struct of_geom geomdontuse;
 
-    if(DOENOFLUX != NOENOFLUX){
-      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with NOENOFLUX==0\n");
+    if(DOENOFLUX!=NOENOFLUX){
+      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with DOENOFLUX==NOENOFLUX\n");
       myexit(3487622211);
     }
     
@@ -841,7 +845,7 @@ int add_vpar_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptr
   extern FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
   int use_vpar = 0;
   int do_smooth_switch_on = 0;
-  
+
   FREEZE_BSQORHO = (FRACBSQORHO) * BSQORHOLIMIT;
   FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT;
 
@@ -934,7 +938,7 @@ FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi)
   
   return( cos(theta)*cos(alpha)+sin(theta)*cos(phi)*sin(alpha) );
 }
-		     
+
 // 0 = primitive (adds rho,u in comoving frame)
 // 1 = conserved but rho,u added in ZAMO frame
 // 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
@@ -1039,7 +1043,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 #if(USEKOMISWINDLE)
     freeze_motion(prfloor, pr, ucons, ptrgeom, finalstep);
 #endif
-    
+
 #if(ADDVPARSWINDLE)
     add_vpar_motion(prfloor, pr, ucons, ptrgeom, finalstep);
 #endif
@@ -1395,13 +1399,13 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
       checki=ISGAMMACHECK;
       if(checkcondition[checki] && (vote[checki]>numvotes[checki]*0.5)){
 	// then majority rules
-	//	fprintf(stderr,"caught one-0: %d %d\n",i,j);
+	//	stderrfprintf("caught one-0: %d %d\n",i,j);
 	GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILGAMMAPERC;
       }
       checki=ISUUCHECK;
       if(checkcondition[checki] && (vote[checki]>numvotes[checki]*0.5)){
 	// then majority rules
-	//	fprintf(stderr,"caught one-1: %d %d\n",i,j);
+	//	stderrfprintf("caught one-1: %d %d\n",i,j);
 	GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILUPERC;
       }
 
@@ -1609,7 +1613,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	    startpl=RHO;
 	    endpl=UU;
 	  }
- 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
+ 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
 	    startpl=UU;
 	    endpl=UU;
 	  }
@@ -1633,6 +1637,12 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	  //
 	  //////////////////////////////
 	  fixup_negdensities(&fixed, startpl, endpl, i, j, k, mypflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+
+	  if(fixed==1 && (startpl<=RHO && endpl>=U1)){
+	    // then fixup but only changed densities, so still need to process non-densities
+	    startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+	    fixed=0; // then reset fixed->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
+	  }
 
 
 	  //////////////////////////////
@@ -1694,7 +1704,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	      }
 #endif
 
-	    }
+	    }// end over density
 
 
 
@@ -1762,6 +1772,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 	  } // end if fixed==0
+
 	}// end if not keeping static
 	// else kept static
 	
@@ -1816,7 +1827,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     }
   }  
 #endif
-  
+
   return(0);
 }
 
@@ -1908,7 +1919,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILUNEG){
 	  
-      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
       else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLEUNEG==1){
@@ -1928,7 +1939,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	}// end if handling u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative u or if allowing but not yet final step
       else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
-	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+	if(HANDLEUNEG==1) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
@@ -1942,7 +1953,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHONEG){
 	  
-      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ if(HANDLERHONEG) *fixed=1; }
       else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
 	if(HANDLERHONEG==1){
@@ -1977,7 +1988,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   if(*fixed!=0){
     if(mypflag==UTOPRIMFAILRHOUNEG){
 
-      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ *fixed=1; }
+      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ if(HANDLERHOUNEG) *fixed=1; }
       // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
       else if( (STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)  ||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
@@ -2000,7 +2011,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 	}// end if handling rho<0 and u<zerouuperbaryon*prim[RHO] in special way
       }// end if not allowing negative rho or if allowing but not yet final step
       else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
-	*fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+	if(HANDLERHOUNEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
       }
     }// end if rho<0 and u<zerouuperbaryon*prim[RHO]
   }// end if not fixed
@@ -2021,7 +2032,7 @@ int freeze_torus(int i, int j, int k, int loc, FTYPE (*pv)[NSTORE2][NSTORE3][NPR
 
   r = V[1];
   th = V[2];
-  
+
   if( is_inside_torus_freeze_region(r, th) ) {
     //inside torus body; keep hydro quantities equal to ICs until t = 100
     MACP0A1(pv,i,j,k,RHO)=MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
@@ -2037,7 +2048,7 @@ int freeze_torus(int i, int j, int k, int loc, FTYPE (*pv)[NSTORE2][NSTORE3][NPR
   
 #endif
 
-// DOCOUNTNEG???? only applies for STEPOVERNEG???==-1
+// DOCOUNTNEG???? only applies for STEPOVERNEG???==NEGDENSITY_NEVERFIXUP
 
 // whether to count any substep u<zerouuperbaryon*prim[RHO] as failure in debug data
 // 2: always counted
@@ -2095,7 +2106,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   else if(mypflag==UTOPRIMFAILRHONEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGRHO==-1){
+    if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHO==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILRHONEG;
@@ -2124,10 +2135,16 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
       docorrectucons=1;
     }
   }
-  else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2){ // GODMARK: maybe want separate accounting
+  else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGU==-1){
+
+    // default counting:
+    if(mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD) utoprimfailtype=COUNTCOLD;
+    else utoprimfailtype=COUNTUTOPRIMFAILUNEG;
+
+    // now set whether to ucons correction or override counting
+    if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGU==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILUNEG;
@@ -2159,7 +2176,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   else if(mypflag==UTOPRIMFAILRHOUNEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
-    if(STEPOVERNEGRHOU==-1){
+    if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHOU==1){
 	if(finalstep){
 	  utoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
@@ -2233,7 +2250,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     FTYPE prdiag[NPR],pr[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
     diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
-    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
 
     ////////////////
     //
@@ -2332,10 +2349,10 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
 
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: startpl=%d endpl=%d :: i=%d j=%d k=%d\n",startpl,endpl,i,j,k); // not too much
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,startpl,endpl,i,j,k); // not too much
 
 
-  if(( mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 ) ){
+  if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD){
     if(HOWTOAVG_WHEN_U2AVG==CAUSALAVG_WHEN_U2AVG){ // causal type
       doavgcausal=1;
       failavglooptype=0;
@@ -2548,6 +2565,8 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
     numavg=MAX(numavg0,numavg1); // only matters now that this is nonzero
   }
 
+
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,numavg,startpl,endpl,i,j,k);
 
       	  
   if( mypflag==UTOPRIMFAILU2AVG2){
@@ -3335,7 +3354,7 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // here realgammamax is u^t not u^t\alpha
   if((uu0 > uu0max && (uu0!=1.0))) {    
 
-    //fprintf(fail_file,"gamma=%21.15g realgammamax=%21.15g\n",gamma,gammamax);
+    //dualfprintf(fail_file,"gamma=%21.15g realgammamax=%21.15g\n",gamma,gammamax);
 
     if(debugfail>=2) dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
     // rescale velocities to reduce gamma to realgammamax

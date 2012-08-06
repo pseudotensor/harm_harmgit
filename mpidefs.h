@@ -24,13 +24,11 @@ int ncpux1, ncpux2, ncpux3;
 int truenumprocs;
 int myid_world, numprocs;
 int myid; // GRMHD CODE rank for non-MPI commands
-int MPIid[MAXCPUS]; // GRMHD MPI internal rank for MPI commands
+int *MPIid; // GRMHD MPI internal rank for MPI commands
 char myidtxt[MAXFILENAME];
 long long int totalzones, realtotalzones,realtotalcompzones;
 long long int rtotalzones;
 long long int itotalzones;
-//int sizes[COMPDIM + 1][MAXCPUS];
-//int isizes[COMPDIM + 1][MAXCPUS];
 long long int totalsize[COMPDIM + 1];
 long long int itotalsize[COMPDIM + 1];
 int mycpupos[COMPDIM + 1];		// my position amongst the cpus

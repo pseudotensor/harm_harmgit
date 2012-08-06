@@ -1,0 +1,166 @@
+#!/bin/bash
+#
+# http://www.nas.nasa.gov/hecc/support/kb/Choosing-an-MPI-Library_305.html
+#
+# REMEMBER for HARM code:
+# 1) PRODUCTION 1 in init.h
+# 2) Set N1,N2,N3, and MAXBND in init.h
+# 3) set lim[] in init.c
+#
+#
+# qsub <this filename>
+#
+#
+#
+#  Submit this script using the command: qsub <script_name>
+#
+#  Use the "qstat" command to check the status of a job.
+#
+# The following are embedded QSUB options. The syntax is #PBS (the # does
+# _not_  denote that the lines are commented out so do not remove).
+#
+### walltime : maximum wall clock time (hh:mm:ss)
+#PBS -l walltime=8:00:00
+### shrink to fit
+#####PBS -l min_walltime=24:00:00,max_walltime=120:00:00
+#
+### qstat -Q
+### normal, debug, long, wide, low
+#PBS -q normal
+######PBS -q long
+#
+#
+# to check what's free: /u/scicon/tools/bin/node_stats.sh
+# checking mission directorate shares: qstat -W shares=-
+# model=har,neh,wes,san
+# select=NODES:ncpus=NUMCORESPERNODE;mpiprocs=NUMPROCSPERNODE
+#####PBS -l select=342:ncpus=8:model=har
+#PBS -l select=342:ncpus=12:model=wes
+#
+#PBS -W group_list=s1181
+#
+# export all my environment variables to the job
+#####PBS -V
+#
+# job name (default = name of script file)
+#PBS -N tt1.5b
+#
+#
+# filename for standard output (default = <job_name>.o<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -o thickdiskfull3d7tilt1.5708b.out
+#
+# filename for standard error (default = <job_name>.e<job_id>)
+# at end of job, it is in directory from which qsub was executed
+# remove extra ## from the line below if you want to name your own file
+#PBS -e thickdiskfull3d7tilt1.5708b.err
+#
+#PBS -m be
+#
+#PBS -M jmckinne@stanford.edu
+#
+#
+# End of embedded QSUB options
+#
+# set echo               # echo commands before execution; use for debugging
+#
+
+
+# stolen from .profile
+# PFE modules
+module load comp-intel/2012.0.032
+#module load comp-intel/2011.2
+#module load mpi-sgi/mpt.2.04.10789
+module load mpi-sgi/mpt.2.06r6
+#module load mpi-sgi/mpt.2.06a67
+#module load mpi-intel/4.0.2.003
+export MPICC_CC=icc
+export MPIF90_F90=ifort
+export MPICXX_CXX=icpc
+
+# other modules
+module load petsc/3.1-p7/intel/mpt
+module load gnuplot/4.4.0
+module load math/intel_mkl_64_10.0.011
+module load mathematica/7.0.1
+module load matlab/2010b
+
+
+
+export MPI_TYPE_DEPTH=20
+export MPICH_MAX_SHORT_MSG_SIZE=16000
+export MPICH_PTL_UNEX_EVENTS=80000
+export MPICH_UNEX_BUFFER_SIZE=768M
+
+
+
+
+#cd $PBS_O_WORKDIR
+#cd /lustre/scratch/jmckinne/
+
+# where job submitted instead of home
+#cd $PBS_O_WORKDIR
+# has up to 1TB only:
+mkdir -p /nobackup/jmckinn2/
+cd /nobackup/jmckinn2/
+
+
+  
+###################
+#
+# setup run
+#
+##################
+#
+export NCPUX1=8
+export NCPUX2=16
+export NCPUX3=32
+export NTOT=4096
+export FILENAME="thickdiskfull3d7tilt1.5708"
+export DIRFILE="/u/jmckinn2/thickdiskfull3d7tilt1.5708/"
+export RUNDIR=/nobackup/jmckinn2/thickdiskfull3d7tilt1.5708b/
+
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+# get executable and input files from mass storage
+cp $DIRFILE/$FILENAME .
+cp $DIRFILE/*.dat .
+cp $DIRFILE/*.txt .
+
+wait
+chmod u+x $FILENAME
+wait
+
+##################################################
+#
+#    start job
+#
+##################################################
+
+
+date
+
+mpiexec -np $NTOT $RUNDIR/$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 1 0 > output.txt
+
+date
+

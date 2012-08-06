@@ -5,9 +5,18 @@
 int doinginterpolation;
 int oldparse;
 char inFTYPE[4];
+char inFTYPEgdump[4];
 char outFTYPE[4];
+int numoutputcols;
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
+int binaryinputgdump;
+FILE *infile;
+FILE *infilem1;
+FILE *infilep1;
+FILE *outfile;
+
+int docurrent;
 
 int calledranc;
 FTYPE NUMEPSILONPOW23;
@@ -57,9 +66,10 @@ FTYPE gridAAglobal,gridr0global;
 FTYPE X[NDIM];
 FTYPE Xmetricnew[NDIM],Xmetricold[NDIM]; // used to store time of latest and oldest metric
 FTYPE endtdata,starttdata; // for 4D dump inputs
+FTYPE endtdata0,starttdata0; // for 3-time 4D compute_additionals()
 
 
-FTYPE tdump,gam,spin,MBH,EP3; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
+FTYPE tdump,gam,spin,MBH,QBH,EP3,THETAROT; // tdump used to be t, like it is in HARM, but now t is used locally for 4D interpolation
 int startpos[NDIM];
 int totalsize[NDIM];
 long realnstep,nstep;
@@ -91,8 +101,8 @@ int outputvartype;
 // vector component: 0=scalar, 1,2,3 
 int vectorcomponent;
 int defaultvaluetype,EXTRAPOLATE;
-FTYPE totalmin,totalmax;
-FTYPE defaultvalue;
+FTYPE totalmin[MAXCOLS],totalmax[MAXCOLS];
+FTYPE defaultvalue[MAXCOLS];
 int didrefine;
 int filter;
 FTYPE sigma;
@@ -102,6 +112,8 @@ int imagedata;
 // file stuff
 int READHEADER;
 int WRITEHEADER;
+int READHEADERGDUMP;
+int WRITEHEADERGDUMP;
 int jonheader;
 int getgdump;
 char gdumpfilename[200];
@@ -165,10 +177,12 @@ FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTOR
 // Note these below memory things are not affected by global.storage.h since created instead of as global arrays
 // So this code presumes [h][i][j][k] format always and is not optimized for arbitrary storage mapping
 // That is, matrix() is always (0,1,2,3) and access is always [h][i][j][k] associated with t(h), r(i), theta(j), phi(k)
-unsigned char ****oldimage,****oldimage0,****newimage;
-FTYPE ****olddata,****olddata0;
-FTYPE ****newdata;
-
+unsigned char *****oldimage,*****oldimage0,*****newimage;
+FTYPE *****olddata,*****olddata0;
+FTYPE *****newdata;
+FTYPE *****olddata3time;
+FTYPE *****olddatagdump;
+FTYPE *****olddatacurrent;
 
 
 

@@ -202,7 +202,7 @@ int flux_ct(int stage,
 
   MYFUN(flux_ct_diffusivecorrections(stage, pb, emf, vconemf, dq1, dq2, dq3, F1, F2, F3),"step_ch.c:advance()", "flux_ct",1);
 
-  
+
   if(EVOLVEWITHVPOT>0 ||  TRACKVPOT>0){
     // Evolve A_i
     // Had to be here where EMFs are at standard CORN1,2,3 positions and before final F assigned
@@ -210,6 +210,13 @@ int flux_ct(int stage,
     evolve_vpotgeneral(FLUXB, stage, initialstep, finalstep, pb, Nvec, NULL, emf, CUf, CUnew, fluxdt, fluxtime, vpot);
   }
 
+  int fluxvpot_modifyemfsuser=0;
+  fluxvpot_modifyemfsuser=(EVOLVEWITHVPOT>0 ||  TRACKVPOT>0)&&(MODIFYEMFORVPOT==MODIFYEMF || MODIFYEMFORVPOT==MODIFYVPOT);
+
+  if(fluxvpot_modifyemfsuser==0){// if didn't already call adjust_emfs() in fluxvpot above, have to allow user to be able to still modify emfs calling function directly
+    // User "boundary conditions" to modify EMFs before used to get fluxes
+    adjust_fluxcttoth_emfs(fluxtime,pb,emf);
+  }
 
   //////////////
   //
@@ -1152,6 +1159,7 @@ int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)
   // full-type geometry below
   FTYPE coefemf[NDIM];
   extern int choose_limiter(int dir, int i, int j, int k, int pl);
+
 
 
 

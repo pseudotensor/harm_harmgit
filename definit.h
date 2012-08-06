@@ -24,13 +24,13 @@
 #define ACCURATESINCOS 1
 
 // whether to try entropy inversion if hot fails
-#define HOT2ENTROPY 0
+#define HOT2ENTROPY 1
 
 // whether to try cold inversion if hot fails
-#define HOT2COLD 0
+#define HOT2COLD 1
 
 // whether to try cold inversion if entropy fails
-#define ENTROPY2COLD 0
+#define ENTROPY2COLD 1
 
 
 // *NUMBER* OF DIMENSIONS FOR COMPUTATION
@@ -76,7 +76,7 @@
 
 // whether to do a2c during c2e
 // see interpline.c
-#define MERGEDC2EA2CMETHODMA 1
+#define MERGEDC2EA2CMETHODMA 0
 #define MERGEDC2EA2CMETHODEM 0
 #define MERGEDC2EA2CMETHOD (MERGEDC2EA2CMETHODMA || MERGEDC2EA2CMETHODEM)
 
@@ -250,7 +250,7 @@
 #define PRODUCTION 0
 // 0: full images, dumps, etc., few more key failure stderr/fail_file messages
 // 1: only log density image since too many images (takes alot of time), no utoprim failure messages -- assume debug.out and debug???? will have info if needed
-// 2: #1 but also avoid error_check()
+// 2: #1 but also avoid error_check() and avoid per-MPI-proc log and fail files
 
 
 // 0: normal computational zones outputted on diagnostics
@@ -339,6 +339,26 @@
 #define DOSUPERDEBUG 0
 // 0: don't output super debug output
 // 1: do
+
+// whether to allow metric rotations
+// 0: don't
+// 1: do
+#define ALLOWMETRICROT 0
+// TODO:
+// * coordinate transformations still valid?
+// * SET RESET THETAROT for IC so IC uses normal metric?
+
+
+// whether metric mixes r-\phi or \theta-\phi.  Alows for optimizations since not often mixing with \phi
+#if(ALLOWMETRICROT)
+#define DOMIXTHETAPHI 1 // for g_{\theta\phi} // no choice
+#else
+#define DOMIXTHETAPHI 0 // choice
+#endif
+// careful not to use DOMIXTHETAPHI in .h files since init.h might change it.
+
+
+
 
 // whether to evolve metric value of M and a and Q
 #define DOEVOLVEMETRIC 0
@@ -523,6 +543,7 @@
 // theta value where singularity is displaced to
 
 
+// SINGSMALL can't be smaller than DXDELTA in dxdxp (i.e. currently ~1E-5 for DOUBLE)
 //#define SINGSMALL (1E-3)
 //#define SINGSMALL (1E-20)
 #define SINGSMALL (1000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!.  1E-14 works, but need some insurance so use 1E-13
@@ -685,19 +706,36 @@
 // 0: don't do anything special
 // 1: zero polar theta flux since should be 0
 
+
 // seems to cause problems at 0 and pi boundaries with FFDE, or even just one boundary???
 // GODMARK
 
 // REASON: Cannot just set F=0.  The flux of the kinetic energy still has the pressure term even if the velocity into the wall is 0!
 
 
-// if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
-#define IF3DSPCTHENMPITRANSFERATPOLE 1
-
 // whether to flip gdet sign over coordinate singularities
 // completely generally, this should be 1 so that \detg is smooth across the axis.  So then standard boundary conditions on primitives give correct non-kinked behavior through polar axis (including for ram pressure flux term).
 #define FLIPGDETAXIS 1
 
+// whether to flip sign of U3,B3 across the pole
+//Another thing that might have helped is how I treat the BCs.  Recall I now flip U2,B2,U3,B3.  U2,B2 makes sense so interpolation sees continuous function for (e.g.) a Cartesian flow through the pole.  In addition, as I mentioned before, I flip U3,B3 because in axisymmetry that just gives the same result of a DONOR-like interpolation.  So there's no change.  In addition, there is no EMF on the pole in that case because U2,B2 on the pole itself is zero.  In non-axisymmetry, flow through the axis would lead to a sign flip and singularity right on the pole.  This would lead to a highly dissipative EMF right at the pole.  By flipping U3,B3 I'm choosing to make the region a numerical "core" instead of a sign-changed singularity.  This core will use DONOR, but have no dissipation term across the pole.
+//As we discussed, one could modulate U3,B3 by \sin\theta and achieve a higher-order result.  But the flip or modulation is required to avoid a dissipation-dominated result at the pole.  Most generally, some scheme should be capable of arbitrary high order even in SPC, and I'm guessing modulation by \sin\theta is probably the right thing to do given U3,B3\propto \pm 1\theta near the pole when U3,B3 near the pole matters.
+#define FLIPU3B3AXIS 1
+
+
+// should always be 1
+#define FLIPU2B2AXIS 1
+
+
+// control bounds.tools.c for SPC coordinates polar axis fixups
+#define DOPOLEDEATH 0
+#define DOPOLESMOOTH 0 // can choose 1, but probably not necessary and generally won't treat flow correctly near pole even if possibly more robust.
+#define DOPOLEGAMMADEATH 0
+
+
+
+// if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
+#define IF3DSPCTHENMPITRANSFERATPOLE 1 // working fine now that wavespeed bug in fluxctstag.c was fixed, extrapfunc B1,B2 bug fixed, and extrap gdet B3 instead of Bd3 that exaggerates extrapolation near poles and inconsistent with interpolation.  Also using VARTOINTERPFIELD GDETVERSION.
 
 
 
@@ -789,8 +827,10 @@
 #define PULSARFIELD 1
 #define PULSARFIELD2 2
 #define PULSARFIELD3 3
+#define GDETVERSION 4
 
-#define VARTOINTERPFIELD NOSPECIALFIELD
+//#define VARTOINTERPFIELD NOSPECIALFIELD
+#define VARTOINTERPFIELD GDETVERSION // most consistent with fluxctstag.c and standard extrapfunc in bounds.tools.c
 
 #define NUMPANALYTICOTHER 0
 #define DODUMPOTHER 0 // whether to dump other stuff

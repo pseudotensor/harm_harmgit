@@ -30,7 +30,7 @@ int init(int *argc, char **argv[])
 
 
 
-  fprintf(stderr,"Start init\n"); fflush(stderr);
+  stderrfprintf("Start init\n"); fflush(stderr);
 
   //////////////
   //
@@ -136,6 +136,8 @@ int init(int *argc, char **argv[])
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
 
+    //THETAROT = 0.5*0.7; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
+
     // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
     // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
     post_par_set();
@@ -203,7 +205,7 @@ int init(int *argc, char **argv[])
 	if(DOSELFGRAVVSR){
 	  trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
 	  // if box_grid needs to change, is done inside below function
-	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 	  trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
 	}
       }
@@ -454,7 +456,7 @@ int init(int *argc, char **argv[])
     // don't want conservatives or primitives to change, just compute metric
     if(DOSELFGRAVVSR){
       trifprintf("new metric with self-gravity\n");
-      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+      compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
       trifprintf("done with computing new metric with self-gravity dt=%21.15g\n",dt);
     }
 
@@ -473,6 +475,57 @@ int init(int *argc, char **argv[])
 
   }// done if RESTARTMODE==1
 
+
+
+#if(0) // SUPERGODMARK: Deal with initial tilt
+  // SUPERGODMARK: After changing metric, should really also do after below:
+  // 1) A_i or U -> Bstag for stag method *or* A_i -> B for Toth
+  // 2) Bstag -> B for stag method
+  // 3) Bstag,U -> Bhat for stag higher order method
+  // etc.
+  //
+  // Otherwise, gdet changes and t=0 Bstag and B won't be consistent with A_i and U for the new metric.
+
+
+  ///////////////////
+  //
+  // Both normal and restart mode need to setup grid
+  //
+  //////////////////
+  if(RESTARTMODE==0 || RESTARTMODE==1){
+
+    //    THETAROT = 0.5*0.7; // reset grid with rotation
+
+    // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
+    // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
+    post_par_set();
+
+    if(RESTARTMODE==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
+
+    // get grid
+    // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
+    set_grid(0,0,0);
+
+    if(RESTARTMODE==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
+
+    // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
+    set_box_grid_parameters();
+
+    if(RESTARTMODE==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
+
+    // user post_set_grid function
+    init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
+
+    if(RESTARTMODE==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
+  
+
+    trifprintf("MCOORD=%d\n",MCOORD);
+    trifprintf("COMPDIM=%d\n",COMPDIM);
+    trifprintf("MAXBND=%d\n",MAXBND);
+    trifprintf("FLUXB=%d\n",FLUXB);
+
+  }
+#endif
 
 
 
@@ -670,7 +723,8 @@ int prepre_init(void)
   }
   else{
     // choice
-    binaryoutput=TEXTOUTPUT;
+    //    binaryoutput=TEXTOUTPUT;
+    binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
     sortedoutput=SORTED;
   }
 
@@ -912,8 +966,8 @@ int pre_init(int *argc, char **argv[])
 
 
   report_systeminfo(stderr);
-  report_systeminfo(log_file);
-  if(myid==0) report_systeminfo(logfull_file);
+  if(log_file) report_systeminfo(log_file);
+  if(myid==0&&logfull_file) report_systeminfo(logfull_file);
 
   /////////////////
   //
@@ -1035,6 +1089,7 @@ int init_defgrid(void)
   MBH=MBH0;
   QBH=QBH0;
   EP3=EP30;
+  THETAROT=THETAROT0;
 
 
   return(0);
@@ -1061,10 +1116,13 @@ int init_defglobal(void)
   defcon = 1.0;
   /* maximum increase in timestep */
   SAFE=1.3;
+  nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;
   restartsteps[1] = 0;
-  nstep = realnstep = 0;
+  whichfake = whichrestart;
+  fakesteps[0] = restartsteps[0];
+  fakesteps[1] = restartsteps[1];
   failed = 0;
   cour = 0.5;  //atch: modified the courant factor from 0.9
   doevolvemetricsubsteps=0; // default is to evolve on long steps (only applicable if DOEVOLVEMETRIC==1 && EVOLVEMETRICSUBSTEP==2)
@@ -1148,6 +1206,7 @@ int init_defglobal(void)
   //  DTener=1.0;
   //  DTi=1.0;
   DTr=1;
+  DTfake=MAX(1,DTr/10);
 
 
 
@@ -1174,7 +1233,14 @@ int init_defglobal(void)
 
   DODIAGS=1; // whether to do diagnostics
   // specify individual diagnostics to be done
-  DOENERDIAG=1;
+
+  if(PRODUCTION>=2){ // then disable things not really using
+    DOENERDIAG=0;
+    // still kinda use images to check if looks reasonable, and already limit images to 1 image file if PRODUCTION==1
+  }
+  else{
+    DOENERDIAG=1;
+  }
   DOGDUMPDIAG=1;
   DORDUMPDIAG=1;
   DODUMPDIAG=1;
@@ -1359,6 +1425,7 @@ int init_defconsts(void)
   MBH0=1.0;
   QBH0=0.0;
   EP30=0.0;
+  THETAROT0=0.0;
   Mfactor=1.0;
   Jfactor=1.0;
   rhofactor=1.0;
@@ -1432,7 +1499,7 @@ int set_box_grid_parameters(void)
   // need to recompute horizon-related quantities if horizon is growing due to accretion
   if(ISBLACKHOLEMCOORD(MCOORD)){
     find_horizon(0);
-    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3);
+    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g THETAROT=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3,THETAROT);
   }
   else{
     horizoni=horizoncpupos1=0;
@@ -2081,6 +2148,16 @@ void check_bnd_num(void)
   }
 
 
+  if(ALLOWMETRICROT==1 && (CONNAXISYMM==1 || DOMIXTHETAPHI==0)){
+    dualfprintf(fail_file,"Generally must set CONNAXISYMM==0 and DOMIXTHETAPHI==1 if ALLOWMETRICROT==1 -- only special cases would override this.\n");
+    myexit(2467346463);
+  }
+
+
+
+
+
+
 
   // external checks
   parainitchecks();
@@ -2676,7 +2753,7 @@ void makedirs(void)
 #if( USINGMPIAVOIDMKDIR ) 
   //AT: for certain systems, neither way works to create dirs, 
   //    so not create them at all
-  //fprintf(stderr,"USEMPIAVOIDMKDIR==1: User must create dumps and images\n");
+  //stderrfprintf("USEMPIAVOIDMKDIR==1: User must create dumps and images\n");
 #else
   if ((mpicombine && (myid == 0)) || (mpicombine == 0)) {
     
@@ -2692,7 +2769,7 @@ void makedirs(void)
       mkdir("dumps",0700);
       mkdir("images",0700);
 #else
-      fprintf(stderr,"WIN32: User must create dumps and images\n");
+      stderrfprintf("WIN32: User must create dumps and images\n");
 #endif
     }
   }
@@ -2822,7 +2899,7 @@ int assert_func( int is_bad_val, char *s, ... )
 
   if( 0 != is_bad_val ) {
     if(fileptr==NULL){
-      fprintf(stderr,"tried to print to null file pointer: %s\n",s);
+      stderrfprintf("tried to print to null file pointer: %s\n",s);
       fflush(stderr);
     }
     else{

@@ -1173,9 +1173,9 @@ int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
     // set r=4+i set h=j set ph=k gsetup gammienew
     //
     FULLLOOP{
-      fprintf(fail_file,"%d %d %d ",i,j,k);
-      PLOOP(pliter,pl) fprintf(fail_file,"%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
-      fprintf(fail_file,"\n");
+      dualfprintf(fail_file,"%d %d %d ",i,j,k);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
+      dualfprintf(fail_file,"\n");
     }
     //		myexit(0);
   }
@@ -1202,9 +1202,9 @@ int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
     // set r=4+i set h=j set ph=k gsetup gammienew
     //
     FULLLOOP{
-      fprintf(log_file,"%d %d %d ",i,j,k);
-      PLOOP(pliter,pl) fprintf(log_file,"%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
-      fprintf(log_file,"\n");
+      logfprintf("%d %d %d ",i,j,k);
+      PLOOP(pliter,pl) logfprintf("%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
+      logfprintf("\n");
     }
     myexit(0);
   }
@@ -1260,7 +1260,8 @@ int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nve
     // ghost cells only need *additional* flux for FLUXRECON integration along direction itself
     // otherwise fluxes exist (for example) to update volume average quantities in ghost+active region
     // so this is not a good function to use to diagnose boundary issues if within ghost+active layer
-    bound_flux(STAGEM1,t,BOUNDFLUXTYPE,fluxvec[1],fluxvec[2],fluxvec[3], 0, USEMPI);
+    int finalstep=0;
+    bound_flux(STAGEM1,finalstep,t,BOUNDFLUXTYPE,fluxvec[1],fluxvec[2],fluxvec[3], USEMPI);
     
 #if(0)
     // trying to diagnose ghost+active issue with test=1102 and EVOLVEVPOT

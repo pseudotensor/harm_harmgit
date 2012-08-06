@@ -48,7 +48,7 @@ int Utoprim_2d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *p
 
 
 #if( WHICHVEL != VELREL4 )
-  fprintf(stderr,"Utoprim_2d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
+  stderrfprintf("Utoprim_2d() Not implemented for WHICHVEL = %d \n", WHICHVEL );
   return(1);
 #endif
 
@@ -242,7 +242,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   ret = find_root_2D_gen( &W )  ; 
 
   if( ltrace ) {
-    fprintf(stderr,"(W,W_last,Bsq,Qtsq,QdotB,gammasq,Qdotn) %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+    stderrfprintf("(W,W_last,Bsq,Qtsq,QdotB,gammasq,Qdotn) %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
 	    W,W_last,
 	    Bsq,Qtsq,QdotB,gammasq,Qdotn) ;
   }
@@ -337,14 +337,14 @@ static FTYPE utsq_calc(FTYPE W)
 	Wsq = W*W ;
 	W4 = Wsq*Wsq ;
 
-	//fprintf(stderr,"enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+	//stderrfprintf("enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
 	utsq = (Bsq*QdotBsq + W*(2.*QdotBsq + Qtsq*W))/
 		(W4 + 2.*Bsq*Wsq*W + Wsq*(Bsq*Bsq - Qtsq) 
 			- QdotBsq*(2.*W + Bsq)) ; 
 
 	/*
 	if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
-		//fprintf(stderr,"utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+		//stderrfprintf("utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
 		return(0.) ;
 	}
 	*/
@@ -512,8 +512,8 @@ static int find_root_2D_gen(FTYPE *x0)
   }
 
   if( (ntries >= MAX_NEWT_RETRIES) &&  (MAX_NEWT_RETRIES > 0)  ) {
-    fprintf(stderr, "find_root_2D_gen():  Bad exit value from general_newton_raphson() !! \n");
-    fprintf(stderr, "find_root_2D_gen():  ntries = %d , x[0] = %21.15g , x[1] = %21.15g  \n", ntries, x[0], x[1]); fflush(stderr);
+    stderrfprintf( "find_root_2D_gen():  Bad exit value from general_newton_raphson() !! \n");
+    stderrfprintf( "find_root_2D_gen():  ntries = %d , x[0] = %21.15g , x[1] = %21.15g  \n", ntries, x[0], x[1]); fflush(stderr);
   }
 
   if( ret != 0 ) {
@@ -557,7 +557,7 @@ static FTYPE x1_of_x0(FTYPE x0, int vartype )
 
   case 4 : return( ( utsq > 0. ) ? (utsq)                 : 0.0       );   /* utsq  */
 
-  default : fprintf(stderr, "\nx1_of_x0():  only defined for vartype=2,3,4   and vartype = %d !! \n", vartype); exit(1);
+  default : stderrfprintf( "\nx1_of_x0():  only defined for vartype=2,3,4   and vartype = %d !! \n", vartype); exit(1);
 
   }
 
@@ -604,7 +604,7 @@ static void validate_x(FTYPE x[2], FTYPE x0[2], int vartype )
     x[1] = (x[1] > UTSQ_TOO_BIG) ?   x0[1]     : x[1];    /* if it's too big   */
     break;
 
-  default : fprintf(stderr, "\nvalidate_x0():  only defined for vartype=2,3,4   and vartype = %d !! \n", vartype); exit(1);
+  default : stderrfprintf( "\nvalidate_x0():  only defined for vartype=2,3,4   and vartype = %d !! \n", vartype); exit(1);
 
   }
 }
@@ -666,7 +666,7 @@ static int general_newton_raphson(
 	if( numdamped >= numdampedtot ){ allowdamp=0; numdamped=0; numstable=0;}
 
 	if( ltrace ) {
-	  fprintf(stderr,"general_newton_raphson():  f_old = %21.15g ,  f = %21.15g , dampfactor = %21.15g \n",f_old, f,dampfactor);
+	  stderrfprintf("general_newton_raphson():  f_old = %21.15g ,  f = %21.15g , dampfactor = %21.15g \n",f_old, f,dampfactor);
 	  fflush(stderr);
 	}
       }
@@ -705,7 +705,7 @@ static int general_newton_raphson(
 #endif 
 
       if( ltrace ) {
-	fprintf(stderr," general_newton_raphson(): niter = %d , f_old = %21.15g , f = %21.15g , errx_old = %21.15g , errx = %21.15g\n",  
+	stderrfprintf(" general_newton_raphson(): niter = %d , f_old = %21.15g , f = %21.15g , errx_old = %21.15g , errx = %21.15g\n",  
 		n_iter,f_old,f,errx_old,errx );
 	fflush(stderr);
       }
@@ -728,7 +728,7 @@ static int general_newton_raphson(
 	fflush(stdout);
       }
       if(ltrace) {
-	fprintf(stderr,"general_newton_raphson():  did not find solution \n");
+	stderrfprintf("general_newton_raphson():  did not find solution \n");
 	fflush(stderr);
       }
       return(1);
@@ -739,7 +739,7 @@ static int general_newton_raphson(
 	fflush(stdout);
       }
       if(ltrace) {
-	fprintf(stderr,"general_newton_raphson(): found minimal solution \n");
+	stderrfprintf("general_newton_raphson(): found minimal solution \n");
 	fflush(stderr);
       }
       return(0);

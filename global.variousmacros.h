@@ -23,7 +23,7 @@
 
 // #define FAILSTATEMENT(file,function,number) {fprintf(fail_file,"%s
 // %d-%s(): failure\n",file,number,function); fflush(fail_file);
-// fprintf(fail_file,"MAC(rho,i,j,k): %21.15g MAC(uu,i,j,k): %21.15g MAC(rho2,i,j,k):
+// dualfprintf(fail_file,"MAC(rho,i,j,k): %21.15g MAC(uu,i,j,k): %21.15g MAC(rho2,i,j,k):
 // %21.15g MAC(uu2,i,j,k): %21.15g i: %d j: %d pl:
 // %d\n",MACP0A1(p,i,j,k,RHO),MACP0A1(p,i,j,k,UU),MACP0A1(ph,i,j,k,RHO),MACP0A1(ph,i,j,k,UU),i,j,pl);
 // return(1);}

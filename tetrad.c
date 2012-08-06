@@ -214,7 +214,7 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
   }
 
   /*
-    DLOOP(j,k) fprintf(stderr,"chk3 %d %d %g %g\n",j,k,a[j][k],w[j]) ;
+    DLOOP(j,k) stderrfprintf("chk3 %d %d %g %g\n",j,k,a[j][k],w[j]) ;
   */
 
   ////////////////////////////

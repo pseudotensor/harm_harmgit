@@ -145,10 +145,10 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 #if(0)
     // DEBUG
     if((ilocal==32)&&(jlocal==40)&&(klocal==32)){
-      fprintf(stderr,"%d %21.15g %21.15g %21.15g %21.15g\n",dir,EF,cs2,cms2,va2);
-      for(i=0;i<NDIM;i++) fprintf(stderr,"%21.15g ",ucon[i]); fprintf(stderr,"\n");
-      for(i=0;i<NDIM;i++) fprintf(stderr,"%21.15g ",bcon[i]); fprintf(stderr,"\n");
-      for(i=0;i<NDIM;i++){ for(j=0;j<NDIM;j++) fprintf(stderr,"%21.15g ",gcon[GIND(i,j)]); fprintf(stderr,"\n");}
+      stderrfprintf("%d %21.15g %21.15g %21.15g %21.15g\n",dir,EF,cs2,cms2,va2);
+      for(i=0;i<NDIM;i++) stderrfprintf("%21.15g ",ucon[i]); stderrfprintf("\n");
+      for(i=0;i<NDIM;i++) stderrfprintf("%21.15g ",bcon[i]); stderrfprintf("\n");
+      for(i=0;i<NDIM;i++){ for(j=0;j<NDIM;j++) stderrfprintf("%21.15g ",gcon[GIND(i,j)]); stderrfprintf("\n");}
     }
 #endif
 
@@ -170,10 +170,10 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   
 #if(0)
   if(realfast(dir,geom,q,EF,cs2,cms2,va2,q->ucon,q->bcon,geom->gcon,vmin,vmax)>=1) return(1);
-  fprintf(stderr,"%d %d\n",geom->i,geom->j);
-  fprintf(stderr,"rf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
+  stderrfprintf("%d %d\n",geom->i,geom->j);
+  stderrfprintf("rf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
   if(simplefast(dir,geom, q, cms2,vmin,vmax)>=1) return(1);
-  fprintf(stderr,"sf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
+  stderrfprintf("sf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
 #endif
 
 

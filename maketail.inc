@@ -384,7 +384,7 @@ $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc mak
 	# remove old depenedencies file and create
 	( rm -rf deps.depsbin2txt.list ; touch deps.depsbin2txt.list )
 	# create new dependencies file
-	( for fil in `cat depsbin2txt` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c >> deps.depsbin2txt.list ; done )
+	( for fil in `cat depsbin2txt` ; do  echo $$fil.c ; $(MMCOMP) $(BIN2TXTLIBS) -c -MM $$fil.c >> deps.depsbin2txt.list ; done )
 	#
   	# 	create prep file for make to know to recompile or prep again
 	( echo	$(OBJSBIN2TXT) > $(PREPBIN2TXT) )

@@ -13,8 +13,6 @@
 void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
 		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
-  static int priorinit=0;
-  void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns, MPI_Datatype datatype, void **jonioptr, void **writebufptr);
 
 
   logsfprintf("\nmpiio_init begin\n");
@@ -38,21 +36,8 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
   // clean up prior call (internally handle mpicombinetype)
   //
   //////////////////////////
-  mpiio_final(priorinit, bintxt, sorted, fpptr, headerbytesize, which, filename, numcolumns, datatype, jonioptr, writebufptr);
+  mpiio_final(bintxt, sorted, fpptr, headerbytesize, which, filename, numcolumns, datatype, jonioptr, writebufptr);
 
-
-  //////////////////////////
-  //
-  // priorinit indicates to *next call* of this function that mpiio_final(priorinit) should end/close/cleanup previously written file if was using ROMIO and writing in this call
-  // otherwise assume file writing call was fully completed already before
-  // below assumes mpicombinetype==truempicombinetype when doing ROMIO
-  //
-  //////////////////////////
-
-  if(mpicombinetype==MPICOMBINEROMIO && which==WRITEFILE){
-    priorinit=1;
-  }
-  else priorinit=0;
 
   //////////////////////////
   //
@@ -72,11 +57,16 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
 
 }
 
+
+
+
 // used to cleanup file writing in non-blocking way
 // should be called before writing if previously wrote and also called at end of calculation to close last file (use fake write to do so)
-void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
+void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
 		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
+  static int priorinit=0;
+
 
 
   if(priorinit){
@@ -92,6 +82,23 @@ void mpiio_final(int priorinit, int bintxt, int sorted, FILE ** fpptr, long head
     logsfprintf("mpiio_final end\n");
 
   }
+
+
+  //////////////////////////
+  //
+  // priorinit indicates to *next call* of this function that mpiio_final(priorinit) should end/close/cleanup previously written file if was using ROMIO and writing in this call
+  // otherwise assume file writing call was fully completed already before
+  // below assumes mpicombinetype==truempicombinetype when doing ROMIO
+  //
+  //////////////////////////
+
+  if(mpicombinetype==MPICOMBINEROMIO && which==WRITEFILE){
+    priorinit=1;
+  }
+  else priorinit=0;
+
+  // if numcolumns==-1, then separate finish of ROMIO call
+  if(numcolumns==-1) priorinit=0;
 
 }
 
@@ -182,7 +189,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
   sizeofdatatype=getsizeofdatatype(datatype);
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here 0: i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
+  dualfprintf(fail_file,"got here 0: i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
 #endif
 
   if(sorted==UNSORTED){
@@ -239,11 +246,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   if(dolocal){
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.5: %lld %lld %lld %d\n",bfi,datagot+blinkptr->num,blinkptr->num,dolocal); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.5: %lld %lld %lld %d\n",bfi,datagot+blinkptr->num,blinkptr->num,dolocal); fflush(fail_file);
 #endif
     // We are ready to read or write from/to cpu=0
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.6\n"); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.6\n"); fflush(fail_file);
 #endif
 
 
@@ -256,7 +263,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     if(readwrite==WRITEFILE){
       // means we have put what we want into writebuf, now send to cpu=0
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.65 : %lld %lld %d %d\n",writebuf,blinkptr->num,MPIid[0],myid); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.65 : %lld %lld %d %d\n",writebuf,blinkptr->num,MPIid[0],myid); fflush(fail_file);
 #endif
       // must keep myid>0 cpus stalled until cpu=0 needs their data
       // that is, Wait below continues if data copied out of buffer, but we want pseudo-blocking call here
@@ -264,7 +271,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       // can't stall cpu=0 since only below has recv, but ok since cpu=0 stuck below until cpu=0 data needed again
       else MPI_Isend(writebuf,blinkptr->num,datatype,MPIid[0],myid, MPI_COMM_GRMHD,&request);
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.66 : %lld\n",writebuf); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.66 : %lld\n",writebuf); fflush(fail_file);
 #endif
       // adjust offset to keep standard writebuf BUFFERMAP format with just an offset (offset keeps true memory area always as written part)
       bufferoffset -= (long long int)blinkptr->num;// or =-(long long int)datagot+(long long int)blinkptr->num
@@ -283,11 +290,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       // means we need to fill writebuf with what cpu=0 will send us
       // recv's will Wait below until data is coming.
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.65 : %lld\n",writebuf); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.65 : %lld\n",writebuf); fflush(fail_file);
 #endif
       MPI_Irecv(writebuf,blinkptr->num,datatype,MPIid[0],myid, MPI_COMM_GRMHD,&request);      
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here 0.66 : %lld %lld\n",writebuf,blinkptr); fflush(fail_file);
+      dualfprintf(fail_file,"got here 0.66 : %lld %lld\n",writebuf,blinkptr); fflush(fail_file);
 #endif
       bufferoffset=(long long int)(-datagot);
     }// end if READFILE
@@ -299,7 +306,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     // now iterate to next node in list
     blinkptr=(blinkptr->np);
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.67 : %lld\n",blinkptr); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.67 : %lld\n",blinkptr); fflush(fail_file);
 #endif
     if(blinkptr==NULL){
       thisslavedone=1;
@@ -314,13 +321,13 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       }
     }
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 0.7\n"); fflush(fail_file);
+    dualfprintf(fail_file,"got here 0.7\n"); fflush(fail_file);
 #endif
 
   }
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here .8\n"); fflush(fail_file);
+  dualfprintf(fail_file,"got here .8\n"); fflush(fail_file);
 #endif
 
 
@@ -389,7 +396,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     joniooffset=(long long int)joniosize/((long long int)2);
 
 #if(DEBUGMINMEM)
-    fprintf(fail_file,"got here 2: joniooffset=%lld\n",joniooffset); fflush(fail_file);
+    dualfprintf(fail_file,"got here 2: joniooffset=%lld\n",joniooffset); fflush(fail_file);
 #endif
 
 
@@ -406,7 +413,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here 3\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here 3\n"); fflush(fail_file);
 #endif
 	/////////
 	// determine amount of data to get from cpu group
@@ -424,17 +431,17 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datatoget0=0;
 	while(doset){
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
 #endif
 	  datatoget0 += (long long int)(cpulinkptr->num);
 	  if(cpulinkptr->cpu==0) doing0=1;
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
-	  fprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
 #endif
 	  MPI_Irecv(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
 #endif
 	  // have myid wait before continuing to make sure receive is complete
 	  MPI_Wait(&request0,&mpichstatus);
@@ -442,11 +449,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  //	  for(sii=0;sii<cpulinkptr->num;sii++){
 
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
 #endif
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
+	    dualfprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
 #endif
 
 
@@ -477,7 +484,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    gk=(long long int)(mypos/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
+	    dualfprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
 #endif
 
 	    if(
@@ -490,7 +497,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	       ){
 
 #if(DEBUGMINMEM)
-	      fprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
+	      dualfprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
 #endif
 
 	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[sii+joniooffset]=jonio1[uii++];
@@ -504,7 +511,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
 #endif
 
 	  /////////////////
@@ -612,7 +619,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       dofull=1;
       while(dofull){
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here 4\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here 4\n"); fflush(fail_file);
 #endif
 	// we read data into 2nd half of jonio (sorted part), then desort for one cpu, then continue for next cpu 
 	
@@ -627,7 +634,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	datasofarc0+=datatogetc0;      
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
+	dualfprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
 #endif
 
 	/////////////
@@ -673,7 +680,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  }
 	}// end if TEXTOUTPUT
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here2\n"); fflush(fail_file);
+	dualfprintf(fail_file,"got here2\n"); fflush(fail_file);
 #endif
 
 
@@ -693,7 +700,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 	while(doset){
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
 #endif
 
 	  if(cpulinkptr->cpu==0) doing0=1;
@@ -703,7 +710,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  uii=0;
 	  for(sii=0;sii<datatogetc0;sii++){
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
+	    dualfprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
 #endif
 
 	    mypos=(long long int)((long long int)sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + ((long long int)cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
@@ -713,7 +720,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    gk=(long long int)(((long long int)mypos)/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	    fprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
+	    dualfprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
 #endif
 	    if(
 	       (gi>=startpos0[1][cpulinkptr->cpu])&&
@@ -724,7 +731,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	       (gk<=endpos0[3][cpulinkptr->cpu])
 	       ){
 #if(DEBUGMINMEM)
-	      fprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
+	      dualfprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
 #endif
 
 	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[uii++]=jonio1[sii+joniooffset];
@@ -736,7 +743,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    }// end if within this CPUs data
 	  }// end over sii
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here3\n"); fflush(fail_file);
+	  dualfprintf(fail_file,"got here3\n"); fflush(fail_file);
 #endif
 
 
@@ -748,7 +755,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	    myexit(10006);
 	  }
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here4\n"); fflush(fail_file);	  
+	  dualfprintf(fail_file,"got here4\n"); fflush(fail_file);	  
 #endif
 	  // jonio is the unsorted bit here starting at index=0 (for all cpus)
 	  MPI_Isend(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
@@ -761,7 +768,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	  if(cpulinkptr->end) doset=0;
 	  cpulinkptr=cpulinkptr->np;
 #if(DEBUGMINMEM)
-	  fprintf(fail_file,"got here5\n"); fflush(fail_file);	  
+	  dualfprintf(fail_file,"got here5\n"); fflush(fail_file);	  
 #endif
 
 	}// end while doset
@@ -777,7 +784,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 	//////////////////
 
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here6\n"); fflush(fail_file);	  
+	dualfprintf(fail_file,"got here6\n"); fflush(fail_file);	  
 #endif
 
 	datasofar0 += (long long int)datatoget0; // diagnostic
@@ -804,7 +811,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 	// otherwise continue
 #if(DEBUGMINMEM)
-	fprintf(fail_file,"got here7\n"); fflush(fail_file);	  
+	dualfprintf(fail_file,"got here7\n"); fflush(fail_file);	  
 #endif
 
 
@@ -815,7 +822,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-      fprintf(fail_file,"got here8\n"); fflush(fail_file);	  
+      dualfprintf(fail_file,"got here8\n"); fflush(fail_file);	  
 #endif
 
 
@@ -831,7 +838,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here 6\n"); fflush(fail_file);
+  dualfprintf(fail_file,"got here 6\n"); fflush(fail_file);
 #endif
 
   // have myid wait before continuing so buffer can be released for more writing to
@@ -839,7 +846,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   //  logsfprintf("end mpiminmem_read\n");
 #if(DEBUGMINMEM)
-  fprintf(fail_file,"got here9\n"); fflush(fail_file);	  
+  dualfprintf(fail_file,"got here9\n"); fflush(fail_file);	  
 #endif
 
 
@@ -888,6 +895,13 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
   logsfprintf("mpiio end seperate\n");
 
 }
+
+
+
+
+// NICS Nautilus hints:
+// http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
+// http://www.nics.tennessee.edu/io-tips
 
 // filename only needed for INITROMIO
 // operationtype=INITROMIO or WRITECLOSEROMIO
@@ -960,7 +974,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[3] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
@@ -986,7 +1000,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1008,7 +1022,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = romiocolumns;
       array_of_gsizes[0] = totalsize[1];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)romiocolumns*(long long int)sizeofdatatype;
+      sizeofmemory = (long long int)N1*(long long int)romiocolumns*(long long int)sizeofdatatype;
     
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1029,7 +1043,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[2];
       array_of_gsizes[0] = totalsize[3];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3];
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)N3*(long long int)sizeofdatatype;
       
       array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
@@ -1051,7 +1065,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       array_of_gsizes[1] = totalsize[1];
       array_of_gsizes[0] = totalsize[2];
 
-      sizeofmemory = (long long int)totalsize[1]*(long long int)totalsize[2];
+      sizeofmemory = (long long int)N1*(long long int)N2*(long long int)sizeofdatatype;
       
       array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -1069,13 +1083,28 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
       
       array_of_gsizes[0] = totalsize[1];
 
-      sizeofmemory = (long long int)totalsize[1];
+      sizeofmemory = (long long int)N1*(long long int)sizeofdatatype;
       
       array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
       
       array_of_dargs[0] = MPI_DISTRIBUTE_DFLT_DARG;
       
       array_of_psizes[0]=ncpux1;
+    }
+    else if(romiocolumns==0){
+      // write nothing actually
+      ndims=1;
+      order = MPI_ORDER_C;
+      
+      array_of_gsizes[0] = 1;
+
+      sizeofmemory = 0; // 1*(long long int)sizeofdatatype;
+      
+      array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
+      
+      array_of_dargs[0] = MPI_DISTRIBUTE_DFLT_DARG;
+      
+      array_of_psizes[0]=1;
     }
     else{
       dualfprintf(fail_file,"Shouldn't reach to end of ROMIO selection\n");
@@ -1115,7 +1144,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 
 
     // fail if MPI functions below can't handle buffer size
-    if((long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2L*1024L*1024L*1024L) && sizeof(int)<=4){
+    if((long long int)N1*(long long int)N2*(long long int)N3*(long long int)romiocolumns*(long long int)sizeofdatatype>=(long long int)(2L*1024L*1024L*1024L) && sizeof(int)<=4){
       dualfprintf(fail_file,"JCM couldn't figure out how to modify ROMIO so would work when sizeof(int)==4 and buffer size is >2GB\n");
       myexit(867546243);
     }
@@ -1190,8 +1219,9 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
   // http://www.sesp.cse.clrc.ac.uk/Publications/paraio/paraio/paraio.html
   // http://www.sesp.cse.clrc.ac.uk/Publications/paraio/paraio/node53.html
 
-    // GODMARK: Could use Asynchronous IO if using MPI-2
-    // GODMARK: Could use non-blocking MPI_File_iread() and MPI_File_iwrite() with MPIO_Wait() if wanted to write while continuing processes
+  // GODMARK: Could use Asynchronous IO if using MPI-2
+  // GODMARK: Could use non-blocking MPI_File_iread() and MPI_File_iwrite() with MPIO_Wait() if wanted to write while continuing processes
+
   //
   // http://www.nersc.gov/nusers/resources/software/libs/io/mpiio.php
   // Collective: MPI_File_iread_all() ?
@@ -1209,6 +1239,9 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 #if(USEMPI&&USEROMIO)
   if(operationtype==READROMIO){
     logsfprintf("mpiioromio_seperate begin\n");
+
+    if(BARRIERROMIOPRE==1) MPI_Barrier(MPI_COMM_GRMHD); // force barrier before begin writing so avoids large number of unexpected buffer space required.
+
 #if(MPIVERSION>=2)
     // non-blocking but need data from read immediately, so not taking advantage
     MPI_File_read_all_begin(fh, writebuf, bufcount, datatype);
@@ -1229,6 +1262,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
   }
   else  if(operationtype==WRITECLOSEROMIO){
     logsfprintf("mpiioromio_combine begin\n");
+
+    if(BARRIERROMIOPRE==1) MPI_Barrier(MPI_COMM_GRMHD); // force barrier before begin writing so avoids large number of unexpected buffer space required.
 
 #if(MPIVERSION>=2)
     MPI_File_write_all_begin(fh, writebuf, bufcount, datatype);
@@ -2679,17 +2714,17 @@ int init_linklists(void)
   // check link lists
   for(i=0;i<NUMDUMPTYPES;i++){
     if(dnumcolumns[i]>0){
-      fprintf(log_file,"i=%d\n",i); fflush(log_file);
+      logfprintf("i=%d\n",i);
       blinkptr=blinkptr0[i];
       numlists=0;
       numcells=0;
       while(blinkptr!=NULL){
 	numcells+=blinkptr->num;
-	//      fprintf(log_file,"i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells); fflush(log_file);
+	//      logfprintf("i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells);
 	numlists++;
 	blinkptr=blinkptr->np; // next one
       }
-      fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
+      logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
       numlists=0;
     }
   }
@@ -2699,17 +2734,17 @@ int init_linklists(void)
     trifprintf("start cpu==0 lists\n");
     for(i=0;i<NUMDUMPTYPES;i++){
       if(dnumcolumns[i]>0){
-	fprintf(log_file,"i=%d\n",i); fflush(log_file);
+	logfprintf("i=%d\n",i);
 	cpulinkptr=cpulinkptr0[i];
 	numlists=0;
 	numcells=0;
 	while(cpulinkptr!=NULL){
 	  numcells+=cpulinkptr->num;
-	  //	fprintf(log_file,"i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells); fflush(log_file);
+	  //	logfprintf("i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells);
 	  numlists++;
 	  cpulinkptr=cpulinkptr->np; // next one
 	}
-	fprintf(log_file,"i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
+	logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
 	numlists=0;
       }
     }
@@ -2756,7 +2791,7 @@ int setuplinklist(int numcolumns,int which)
     // cpulist0's size is maximum possible number of cpus in a list due to buffer size
     //    buffersize=(int)(ceil(ceil((FTYPE)(N1*N2*N3*NUMBUFFERS)/(FTYPE)numcolumns)*(FTYPE)(numcolumns)/(FTYPE)N1));
     buffersize=numprocs;
-    fprintf(stderr,"max cpus in a list=%lld\n",buffersize); fflush(stderr);
+    stderrfprintf("max cpus in a list=%lld\n",buffersize); fflush(stderr);
     if((cpulist0=(long long int*)malloc(sizeof(long long int)*buffersize))==NULL){
       dualfprintf(fail_file,"can't allocate cpulist0\n");
       myexit(10012);
@@ -2843,9 +2878,9 @@ int setuplinklist(int numcolumns,int which)
     }
     gcount++;
     //    if(myid==0){
-    //  fprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
+    //  dualfprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
     // }
-    //    fprintf(log_file,"%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount); fflush(log_file);
+    //    logfprintf("%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount);
     // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
     // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
     // chunk in minimum size of numcolumns
@@ -2885,7 +2920,7 @@ int setuplinklist(int numcolumns,int which)
 	    firstlijk[lcpu]=1; // reset starting value
 	  }
 	  else{
-	    fprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
+	    dualfprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
 	    myexit(10020);
 	  }
 	}
@@ -2894,7 +2929,7 @@ int setuplinklist(int numcolumns,int which)
 	numcpusinlist0=0; // reset list of cpus for this list
       }
       if(lcount>0){
-	fprintf(log_file,"numcolumns=%d lcount=%lld\n",numcolumns,lcount); fflush(log_file);
+	logfprintf("numcolumns=%d lcount=%lld\n",numcolumns,lcount); 
         // initialize another structure
         // set previous structure value to this structure, set this next one to NULL
         if(firstlink){
