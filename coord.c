@@ -1188,17 +1188,10 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //hyperexponential for X[1] > x1br
     V[1] = R0+exp(theexp);
     if( 0 != x20 ) {
-      if( fabs(X[2]) < x20 ) {
-	//uniform in theta
-	V[2] = M_PI_2l * ( 1.0+X[2]*Rin/V[1] ); 
-      }
-      else if( fabs(X[2]) > hslope*x20 ) {
-	V[2] = M_PI_2l * (1.0 +X[2]);
-      }
-      else {
-	V[2] = Ftrgen(fabs(X[2]), x20, hslope*x20, M_PI_2l * ( 1.0+x20*sign(X[2])*Rin/V[1] ), M_PI_2l * (1.0 +hslope*x20*sign(X[2])));
-      }
-
+      V[2] = fabs(X[2])*Rin/V[1]; 
+      V[2] += Ftrgen( fabs(X[2]), x20, 2-x20, 0, 2*(1-Rin/V[1]) );
+      V[2] *= sign(X[2]);
+      V[2] = M_PI_2l * ( 1.0+V[2] );
     }
     else {
       V[2] = M_PI_2l * (1.0 +X[2]); 
