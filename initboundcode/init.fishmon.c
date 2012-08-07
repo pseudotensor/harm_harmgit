@@ -183,6 +183,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+
+  cour=0.8;
   if(WHICHPROBLEM==THICKDISK){
     cour=0.8;
     //  fluxmethod= HLLFLUX;
@@ -230,7 +232,7 @@ int init_grid(void)
 {
   
   // metric stuff first
-  a = 0.9375 ;
+  a = 0.99 ;
 
   if(ALLOWMETRICROT){
     THETAROT = THETAROTMETRIC; // defines metric generally
@@ -243,7 +245,7 @@ int init_grid(void)
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = 0.0;
-  Rout = 40.0;
+  Rout = 20.0;
 #elif(WHICHPROBLEM==THICKDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = 0.0;
@@ -261,7 +263,9 @@ int init_grid(void)
   hslope = 1.04*pow(h_over_r,2.0/3.0);
 
 
-  setRin_withchecks(&Rin);
+  //  setRin_withchecks(&Rin);
+
+  Rin=1.1;
 
 
 
@@ -326,14 +330,8 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.5;
 
-  // ener period
-  DTdumpgen[ENERDUMPTYPE] = 2.0;
-  /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 2.0;
-  // fieldline locked to images so can overlay
-  DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
@@ -394,7 +392,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
   // defaults
-  beta = 1.e2 ;
+  beta = 1.e-4 ;
   randfact = 4.e-2;
 
 
@@ -603,7 +601,7 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   /* regions outside torus */
   // this region is already in Kerr Schild prime in proper primitive quantity for velocity
-  if (lnh < 0. || r < rin) {
+  if (1||lnh < 0. || r < rin) {
 
 
     get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
@@ -889,7 +887,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
     /* vertical field version*/
-    if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
+    if(1||(FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
       FTYPE rpow;
       rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
       vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
@@ -897,7 +895,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
     /* field-in-disk version */
-    if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
+    if(0&&(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT)){
       q = rho_av / rhomax - 0.2;
       if (q > 0.)      vpot += q;
     }

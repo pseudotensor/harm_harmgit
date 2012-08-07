@@ -440,6 +440,9 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
     if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
       *numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
     }
+
+    *numcolumns+=3;
+
   }
 
 
@@ -609,7 +612,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
   // DEBUG: Also add +3 to numcolumns for this to work
-  if(0){
+  if(1){
     if(FLUXB==FLUXCTSTAG) myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf);
     else{
       FTYPE plblob[NPR]={0};

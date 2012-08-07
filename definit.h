@@ -717,6 +717,15 @@
 // completely generally, this should be 1 so that \detg is smooth across the axis.  So then standard boundary conditions on primitives give correct non-kinked behavior through polar axis (including for ram pressure flux term).
 #define FLIPGDETAXIS 1
 
+// whether to flip sign of U3,B3 across the pole
+//Another thing that might have helped is how I treat the BCs.  Recall I now flip U2,B2,U3,B3.  U2,B2 makes sense so interpolation sees continuous function for (e.g.) a Cartesian flow through the pole.  In addition, as I mentioned before, I flip U3,B3 because in axisymmetry that just gives the same result of a DONOR-like interpolation.  So there's no change.  In addition, there is no EMF on the pole in that case because U2,B2 on the pole itself is zero.  In non-axisymmetry, flow through the axis would lead to a sign flip and singularity right on the pole.  This would lead to a highly dissipative EMF right at the pole.  By flipping U3,B3 I'm choosing to make the region a numerical "core" instead of a sign-changed singularity.  This core will use DONOR, but have no dissipation term across the pole.
+//As we discussed, one could modulate U3,B3 by \sin\theta and achieve a higher-order result.  But the flip or modulation is required to avoid a dissipation-dominated result at the pole.  Most generally, some scheme should be capable of arbitrary high order even in SPC, and I'm guessing modulation by \sin\theta is probably the right thing to do given U3,B3\propto \pm 1\theta near the pole when U3,B3 near the pole matters.
+#define FLIPU3B3AXIS 1
+
+
+// should always be 1
+#define FLIPU2B2AXIS 1
+
 
 // control bounds.tools.c for SPC coordinates polar axis fixups
 #define DOPOLEDEATH 0

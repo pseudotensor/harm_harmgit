@@ -11,9 +11,9 @@
 #undef N3
 #endif
 
-#define N1 64
+#define N1 32
 #define N2 64
-#define N3 1
+#define N3 8
 
 // atch adjusts
 #undef MAXWELL
@@ -147,7 +147,7 @@
 #define MAXWELL PRIMMAXWELL
 
 
-#define TRACKVPOT 1 // now on by default
+#define TRACKVPOT 0 // now on by default
 #define EVOLVEWITHVPOT 0 // not on by default
 
 #define DOGRIDSECTIONING 0 // not on by default
@@ -203,8 +203,8 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0
-//#define FULLOUTPUT MAXBND
-#define FULLOUTPUT 0
+#define FULLOUTPUT MAXBND
+//#define FULLOUTPUT 0
 
 
 #define MAILWHENDONE 1
@@ -301,8 +301,8 @@
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-//#define CONNDERTYPE DIFFGAMMIE // DEBUG
-#define CONNDERTYPE DIFFNUMREC
+#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1
@@ -398,7 +398,7 @@ struct Ccoordparams {
 // disable things that are not really needed because they are debugging type things
 //
 ///////////////////////////////////////
-#if(PRODUCTION>=2)
+#if(PRODUCTION>=3)
 //#undef DOJETDIAG
 #undef DODEBUG
 #undef DOFLOORDIAG
