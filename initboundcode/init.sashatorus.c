@@ -371,7 +371,7 @@ int init_grid(void)
   Rout = 1E5;
 #elif(WHICHPROBLEM==NSTAR)
   Rin = rin;
-  Rout = 1e3;
+  Rout = 1e2;
   R0 = 0.5;
 #endif
 
@@ -385,7 +385,7 @@ int init_grid(void)
   global_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
   global_rbr = 1000.;  //radius at which hyperexponentiation kicks in
   if(WHICHPROBLEM==NSTAR){
-    global_rbr = 100.;
+    global_rbr = 10.;
   }
   
   /////////////////////
