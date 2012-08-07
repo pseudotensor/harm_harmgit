@@ -12,8 +12,8 @@
 #endif
 
 // AKMARK: # of cells per tile (N1, N2, N3 = r, theta, phi)
-#define N1 16
-#define N2 16
+#define N1 8
+#define N2 8
 #define N3 8
 
 // atch adjusts
