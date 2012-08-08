@@ -29,7 +29,16 @@ USETACCLONESTAR4=0
 USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
+USEPFESGIMPT=0
+USEORB=0
 USENAU=1
+
+#####################
+#
+# GSL CHOICE (needed for limotorus)
+#
+#####################
+USEGSL=0
 
 
 ########################
@@ -40,7 +49,7 @@ USENAU=1
 # default should be 0 since has large performance hit.
 USEGPROF=0
 
- 
+
 ########################
 #
 # Debug information in binary
@@ -187,9 +196,9 @@ ENFORCEPRECISION=0
 #
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
-USELAPACK=0
+USELAPACK=1
 # below is for new form of library -l line
-USELAPACKNEW=0
+USELAPACKNEW=1
 else
 # NO choice for below
 USELAPACK=0
