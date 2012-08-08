@@ -1035,7 +1035,8 @@ int bound_x2dn_polaraxis_full3d(
 
 		// flip sign
 		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"INNER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1059,7 +1060,8 @@ int bound_x2dn_polaraxis_full3d(
 		// flip sign
 		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
 		// NOTEMARK: No U3,B3 staggered yet, so below not used
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"INNER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1195,7 +1197,8 @@ int bound_x2dn_polaraxis(
 	    LOOPBOUND2IN {
 	      PBOUNDLOOP(pliter,pl){
 		if(pl==U2 || pl==B2)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 	      } // end over pl
 	    } // end over boundary cells
 	  }// end loop 13
@@ -1293,7 +1296,8 @@ int bound_x2up_polaraxis_full3d(
 
 		// flip sign
 		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"OUTER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1316,7 +1320,8 @@ int bound_x2up_polaraxis_full3d(
 	  
 		// flip sign
 		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"OUTER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1442,7 +1447,8 @@ int bound_x2up_polaraxis(
 	    LOOPBOUND2OUT {
 	      PBOUNDLOOP(pliter,pl){
 		if(pl==U2 || pl==B2)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 	      } // end over pl
 	    } // end over bondary cells
 	  }// end loop 13

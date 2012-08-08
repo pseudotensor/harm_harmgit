@@ -1125,7 +1125,8 @@ void init_placeongrid_griddecomposition(void)
 		// Here we flip upon packing
 		primfactor[bti][dir][gridpos][PACK][U2]=primfactor[bti][dir][gridpos][PACK][B2]=SIGNFLIPU2B2;
 		// NOTEMARK: if only interpolate U3 and B3 across pole and not \detg U3 and \detg B3 (with FLIPGDETAXIS==1), then have to flip sign across pole to avoid jump in U3 and B3 at pole.  Then, U3 and B3 will be an extremum and reduce to lower order but not have a dissipation term in the EMF-type flux calculation.
-		primfactor[bti][dir][gridpos][PACK][U3]=primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPU3B3;
+		primfactor[bti][dir][gridpos][PACK][U3]=SIGNFLIPU3;
+		primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPB3;
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
 		// process sign while packing
@@ -1315,7 +1316,8 @@ void init_placeongrid_griddecomposition(void)
 		// at both poles we flip signature of B2 and U2 only
 		// Here we flip upon unpacking
 		primfactor[bti][dir][gridpos][UNPACK][U2]=primfactor[bti][dir][gridpos][UNPACK][B2]=SIGNFLIPU2B2;
-		primfactor[bti][dir][gridpos][UNPACK][U3]=primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPU3B3; // again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
+		primfactor[bti][dir][gridpos][UNPACK][U3]=SIGNFLIPU3;
+		primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPB3; // again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
 	      }
 	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
 		// Here we flip upon unpacking

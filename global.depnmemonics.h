@@ -134,7 +134,8 @@
 //used to set sign of U2,B2 across axis
 #define SIGNFLIPU2B2 (FLIPU2B2AXIS==0 ? 1.0 : -1.0)
 //used to set sign of U3,B3 across axis
-#define SIGNFLIPU3B3 (FLIPU3B3AXIS==0 ? 1.0 : -1.0)
+#define SIGNFLIPU3 (FLIPU3AXIS==0 ? 1.0 : -1.0)
+#define SIGNFLIPB3 (FLIPB3AXIS==0 ? 1.0 : -1.0)
 
 
 
