@@ -891,7 +891,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0;
 
 
-  if(l==2){// A_\phi
+  if(l==2){// A_\theta
 
     r=V[1];
     th=V[2];
