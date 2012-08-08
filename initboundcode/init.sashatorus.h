@@ -477,7 +477,7 @@ struct Ccoordparams {
 #endif
 
 #undef FLIPU3AXIS
-#define FLIPU3AXIS 0
+#define FLIPU3AXIS 1
 
 #undef FLIPB3AXIS
 #define FLIPB3AXIS 1
