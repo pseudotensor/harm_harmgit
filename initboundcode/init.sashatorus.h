@@ -324,8 +324,8 @@
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL //(used in Sasha tests)
 //#define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP   // AKMARK: requires DOEXTRAINTERP
 #undef VARTOINTERPFIELD
-#define VARTOINTERPFIELD GDETVERSION
-//#define VARTOINTERPFIELD NOSPECIALFIELD  //note that this only does rescaling for interpolation of dir == 1
+//#define VARTOINTERPFIELD GDETVERSION
+#define VARTOINTERPFIELD NOSPECIALFIELD  //note that this only does rescaling for interpolation of dir == 1
 #define RESCALEINTERP 1
 #define DOEXTRAINTERP 1   // AKMARK: 1 produces infinities and NaNs in fieldsvst.dat; check dump format
 
