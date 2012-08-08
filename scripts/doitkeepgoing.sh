@@ -1,25 +1,25 @@
 #!/bin/bash
 
 # run as (e.g.) : (nohup sh doitfull3d7tilt1.5708.sh &> doitfull3d7tilt1.5708.out &)
-
+system=3
+user=jmckinn2
+jobprefix=tt1.5
+jobdirprefix=thickdiskfull3d7tilt1.5708
 cd ~/thickdiskfull3d7tilt1.5708/
 
 
+#########################
 listlet1=`eval echo {a..z}`
 listlet2=`echo $listlet1 | sed 's/\([a-z]\)/next\1/g'`
 listlet3=`echo $listlet2 | sed 's/next/nextnext/g'`
 listlet="$listlet1 $listlet2 $listlet3"
 arraylet=($listlet)
 
-system=3
-user=jmckinn2
-jobprefix=tt1.5
-jobdirprefix=thickdiskfull3d7tilt1.5708
-
-
 #################
 numjobs=`echo $listlet | wc | awk '{print $2}'`
-seqstart=0
+
+seqstart=1 # if set this to restart the job, need to ensure batch file is chosen with same letter.
+
 seqend=$(($numjobs-1))
 
 
