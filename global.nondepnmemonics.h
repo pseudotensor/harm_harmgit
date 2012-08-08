@@ -1114,6 +1114,7 @@
 
 #define FIELDLINEGDETB 0
 #define FIELDLINEFLUX 0
+#define FIELDLINEBSTAG 0
 #define DOADJUSTEMFS 0
 #define DOAVGFLUX 0
 //#define CONNAXISYMM 0 -- commented out since already defined in definit.h

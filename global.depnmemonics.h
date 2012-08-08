@@ -46,9 +46,18 @@
 
 // dump.c's fieldlinedump()
 // CHANGES alot, make sure # is correct!
-#if( FIELDLINEGDETB == 1 && FIELDLINEFLUX == 1)
+#if( FIELDLINEGDETB == 1 && FIELDLINEFLUX == 1 && FIELDLINEBSTAG == 0)
 #define NUMFIELDLINEQUANTITIES (14+9)
 // rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3,(9 fluxes)
+#elif( FIELDLINEGDETB == 1 && FIELDLINEFLUX == 1 && FIELDLINEBSTAG == 1)
+#define NUMFIELDLINEQUANTITIES (14+9+3)
+// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3,(9 fluxes),B1stag,B2stag,B3stag
+#elif( FIELDLINEGDETB == 1 && FIELDLINEFLUX == 0 && FIELDLINEBSTAG == 1)
+#define NUMFIELDLINEQUANTITIES (14+3)
+// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3,B1stag,B2stag,B3stag
+#elif( FIELDLINEGDETB == 0 && FIELDLINEFLUX == 0 && FIELDLINEBSTAG == 1)
+#define NUMFIELDLINEQUANTITIES (11+3)
+// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,B1stag,B2stag,B3stag
 #elif( FIELDLINEGDETB == 1)
 #define NUMFIELDLINEQUANTITIES (14)
 // rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3

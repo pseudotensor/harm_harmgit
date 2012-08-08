@@ -1371,6 +1371,18 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   
 #endif
   
+#if( FIELDLINEBSTAG == 1)
+  //it is useful to have access to gdet*B^i at cell faces directly for plotting field lines
+  ftemp=(float)(GLOBALMACP0A1(pstagglobal,i,j,k,B1));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  ftemp=(float)(GLOBALMACP0A1(pstagglobal,i,j,k,B2));
+  myset(datatype,&ftemp,0,1,writebuf);
+  
+  ftemp=(float)(GLOBALMACP0A1(pstagglobal,i,j,k,B3));
+  myset(datatype,&ftemp,0,1,writebuf);
+#endif
+  
   // see grmhd-dualfcon2omegaf.nb
   // below can be obtained from above set of v and B
   // \Omega_F_1

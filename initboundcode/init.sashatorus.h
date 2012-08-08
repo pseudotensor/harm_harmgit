@@ -377,6 +377,9 @@ struct Ccoordparams {
 #undef FIELDLINEFLUX
 #define FIELDLINEFLUX 1
 
+#undef FIELDLINEBSTAG
+#define FIELDLINEBSTAG 1
+
 #undef DOAVGFLUX
 #define DOAVGFLUX 1
 
