@@ -1022,6 +1022,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
 
+#define B1PL 1
 
 
 // wrapper for rescale() used for staggered field
@@ -1039,6 +1040,9 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     struct of_geom *ptrgeomf[NDIM];
     struct of_gdetgeom gdetgeomfdontuse[NDIM];
     struct of_gdetgeom *ptrgdetgeomf[NDIM];
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE V[NDIM];
+    FTYPE r,th;
     extern int rescale(int which, int dir, FTYPE *pr, struct of_geom *geom,FTYPE*newvar);
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
@@ -1076,9 +1080,17 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 	MACP0A1(p2interp,i,j,k,pl) = MACP0A1(pstag,i,j,k,pl);
 
 	if(IFNOTRESCALETHENUSEGDETswitch(dir)){
-	// get geometry for face pre-interpolated values
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	  MACP0A1(p2interp,i,j,k,pl) *= (ptrgdetgeomf[dir]->gdet);
+	  if(B1PL && dir == 1){
+	    dxdxprim_ijk( i, j, k, FACE1-1+dir, dxdxp );
+	    bl_coord_ijk( i, j, k, FACE1-1+dir, V);
+	    r=V[1]; th=V[2];
+	    MACP0A1(p2interp,i,j,k,pl) *= (r*r*r*dxdxp[1][1]);
+	  }
+	  else{
+	    // get geometry for face pre-interpolated values
+	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+	    MACP0A1(p2interp,i,j,k,pl) *= (ptrgdetgeomf[dir]->gdet);
+	  }
 	}	  
 #endif
 	
@@ -1212,6 +1224,9 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
     struct of_gdetgeom *ptrgdetgeomf[NDIM];
     int jj;
     FTYPE ucentgdet;
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE r,th;
+    FTYPE V[NDIM];
 
     OPENMP3DLOOPVARSDEFINE;
 
@@ -1356,12 +1371,21 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 #elif(IFNOTRESCALETHENUSEGDET)
 	  get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
-
+	  dxdxprim_ijk( i, j, k, CENT, dxdxp );
 	  
 	  if(IFNOTRESCALETHENUSEGDETswitch(dir)){
-	  set_igdetsimple(ptrgdetgeomc);
-	  igdetgnosing=ptrgdetgeomc->igdetnosing;
-	    ucentgdet=1.0;
+	    if(B1PL && dir == 1){
+	      dxdxprim_ijk( i, j, k, CENT, dxdxp );
+	      bl_coord_ijk( i, j, k, CENT, V);
+	      r=V[1]; th=V[2];
+	      igdetgnosing=1./(r*r*r*dxdxp[1][1]);
+	      ucentgdet=(ptrgdetgeomc->gdet)*igdetgnosing;
+	    }
+	    else {
+	      set_igdetsimple(ptrgdetgeomc);
+	      igdetgnosing=ptrgdetgeomc->igdetnosing;
+	      ucentgdet=1.0;
+	    }
 	  }
 	  else{
 	    igdetgnosing=1.0;
