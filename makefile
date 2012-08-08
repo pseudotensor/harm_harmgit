@@ -125,6 +125,14 @@ ifeq ($(USEICCINTEL),1)
 MCC=mpicc
 COMP=icc
 endif
+ifeq ($(USENAU),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC=icc -O0 -lmpi
+COMP=icc -O0 -lmpi
+USELAPACK=0
+endif
+
 
 ifeq ($(USEICCINTELNEW),1)
 # uses -static for secure library usage
@@ -318,6 +326,16 @@ EXTRA=$(DEBUGFLAG) $(GPROFFLAG) -DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) 
 # Define preprocessor and compile flags, and linked libraries for each compiler or system type
 #
 #############################################################################
+
+
+ifeq ($(USENAU),1)
+DFLAGS=-DUSINGICC=1 -DUSINGORANGE=0 $(EXTRA)
+#CFLAGSPRE = -Wall -O0 $(DFLAGS)
+#CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
+CFLAGSPRE = -Wall -O2 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O2 $(DFLAGS)
+endif
+
 
 
 
