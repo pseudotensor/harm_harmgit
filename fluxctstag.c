@@ -1018,7 +1018,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // B3 or \detg B3 along 3-dir is same.
 //
 ///////
-#define IFNOTRESCALETHENUSEGDET 2
+#define IFNOTRESCALETHENUSEGDET 1
 
 #define IFNOTRESCALETHENUSEGDETswitch(dir) (IFNOTRESCALETHENUSEGDET==1 || (IFNOTRESCALETHENUSEGDET==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (dir==1 || dir==3))))
 
