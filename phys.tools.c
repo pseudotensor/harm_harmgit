@@ -3149,7 +3149,8 @@ int set_upar(FTYPE vpar_or_upar, FTYPE gamma_max, struct of_geom *geom, FTYPE *p
       SLOOPA(j) ucon[j] = uperp_old_vec[j]*(sqrt(gammasq)/gamma_old) + upar * Bccon[j] / absB;
       
       //put the velocity back into pr
-      MYFUN(ucon2pr(WHICHVEL, ucon, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+      //MYFUN(ucon2pr(WHICHVEL, ucon, geom, pr),"phys.c:set_vpar()", "vcon2pr()", 1);
+      ucon2pr(WHICHVEL, ucon, geom, pr);
     }
 
   }
