@@ -430,11 +430,12 @@ LONGDOUBLECOMMAND=-long_double
 
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
 
-CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+#CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O0
 
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 
-GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+GCCCFLAGSPRE= -Wall -O0 $(DFLAGS)
 
 
 LDFLAGS=-lm  $(LAPACKLDFLAGS)
