@@ -106,8 +106,8 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
   //
   ///////////////////
   if(USEMPI){
-    //mpicombine = 1;    // choice
-    mpicombine=0;
+    mpicombine = 1;    // choice
+    //mpicombine=0;
 
     // 
     if(mpicombine){
@@ -770,10 +770,13 @@ void init_placeongrid_griddecomposition(void)
     
       // x1
       if((dir==X1UP)||(dir==X1DN)){
-	if( ((mycpupos[1]>0)&&(mycpupos[1]<ncpux1-1)) // interior CPUs
+	if(ncpux1>1 &&
+	   (
+	    ((mycpupos[1]>0)&&(mycpupos[1]<ncpux1-1)) // interior CPUs
 	    || (mycpupos[1]==0 && dir==X1UP) // inner-CPUs pointing up
 	    || (mycpupos[1]==ncpux1-1 && dir==X1DN) // outer-CPUs pointing down
-	    ){
+	    )
+	   ){
 	  if(dir==X1UP) dirgenset[bti][dir][DIROTHER]=myid+1;
 	  if(dir==X1DN) dirgenset[bti][dir][DIROTHER]=myid-1;
 	}
@@ -785,10 +788,12 @@ void init_placeongrid_griddecomposition(void)
     
       // x2
       if((dir==X2UP)||(dir==X2DN)){
-	if(
-	   ((mycpupos[2]>0)&&(mycpupos[2]<ncpux2-1)) // interior CPU
-	   || (mycpupos[2]==0 && dir==X2UP) // exterior CPU connected to interior
-	   || (mycpupos[2]==ncpux2-1 && dir==X2DN) // exterior CPU connected to interior
+	if(ncpux2>1 &&
+	   (
+	    ((mycpupos[2]>0)&&(mycpupos[2]<ncpux2-1)) // interior CPU
+	    || (mycpupos[2]==0 && dir==X2UP) // exterior CPU connected to interior
+	    || (mycpupos[2]==ncpux2-1 && dir==X2DN) // exterior CPU connected to interior
+	    )
 	   ){
 	  if(dir==X2UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1;
 	  if(dir==X2DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1;
@@ -823,10 +828,13 @@ void init_placeongrid_griddecomposition(void)
     
       // x3
       if((dir==X3UP)||(dir==X3DN)){
-	if( ((mycpupos[3]>0)&&(mycpupos[3]<ncpux3-1))
+	if(ncpux3>1 &&
+	   (
+	    ((mycpupos[3]>0)&&(mycpupos[3]<ncpux3-1))
 	    || (mycpupos[3]==0 && dir==X3UP)
 	    || (mycpupos[3]==ncpux3-1 && dir==X3DN)
-	    ){
+	    )
+	   ){
 	  if(dir==X3UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1*ncpux2;
 	  if(dir==X3DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1*ncpux2;
 	}

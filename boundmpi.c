@@ -340,6 +340,8 @@ void recvonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND 
 
   truesize=get_truesize(dir, boundvartype);
 
+  dualfprintf(fail_file,"BEFORE dir=%d %d\n",dir,boundvartype);
+  dualfprintf(fail_file,"%d %d\n",TAGSTARTBOUNDMPI,dirgenset[boundvartype][dir][DIRTAGR]);
   MPI_Irecv(workbc[UNPACK][dir],
 	    truesize,
 	    MPI_FTYPE,
@@ -347,6 +349,7 @@ void recvonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND 
 	    TAGSTARTBOUNDMPI + dirgenset[boundvartype][dir][DIRTAGR],
 	    MPI_COMM_GRMHD,
 	    &requests[dir*2+REQRECV]);
+  dualfprintf(fail_file,"AFTER dir=%d %d: id=%d : %d tag=%d\n",dir,boundvartype,MPIid[dirgenset[boundvartype][dir][DIROTHER]],TAGSTARTBOUNDMPI,dirgenset[boundvartype][dir][DIRTAGR]);
   
 }
 
@@ -391,6 +394,8 @@ void sendonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND 
   } // end if doing FLOWCONTROL
   
   
+  dualfprintf(fail_file,"BEFORESEND dir=%d %d\n",dir,boundvartype);
+  dualfprintf(fail_file,"%d %d\n",TAGSTARTBOUNDMPI,dirgenset[boundvartype][dir][DIRTAGS]);
   MPI_Isend(workbc[PACK][dir],
 	    truesize,
 	    MPI_FTYPE,
@@ -398,6 +403,8 @@ void sendonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND 
 	    TAGSTARTBOUNDMPI + dirgenset[boundvartype][dir][DIRTAGS],
 	    MPI_COMM_GRMHD,
 	    &requests[dir*2+REQSEND]);
+  dualfprintf(fail_file,"AFTERSEND dir=%d %d: id=%d : %d tag=%d\n",dir,boundvartype,MPIid[dirgenset[boundvartype][dir][DIROTHER]],TAGSTARTBOUNDMPI,dirgenset[boundvartype][dir][DIRTAGS]);
+
 }
   
 

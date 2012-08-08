@@ -814,7 +814,7 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
   SFTYPE rho_av, u_av,q;
-  FTYPE r,th;
+  FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
 
@@ -874,11 +874,27 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   }
 
 
+  FTYPE rpow;
+  rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+  //      vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
+  
+  FTYPE FIELDROT=M_PI*0.5;
+  FTYPE hpow=2.0;
+
+  if(l==2){// A_\phi
+
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+  }
+
   if(l==3){// A_\phi
 
     r=V[1];
     th=V[2];
-
+    ph=V[3];
 
 
     // Blandford quadrapole field version
@@ -888,9 +904,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     /* vertical field version*/
     if(1||(FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
-      FTYPE rpow;
-      rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
-      vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
+      vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
 
 
