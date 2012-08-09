@@ -22,7 +22,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define THETAROTMETRIC (0.0)
+#define THETAROTMETRIC (0.5*M_PIl)
 
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -887,7 +887,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow;
   rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
-  FTYPE FIELDROT=0.0;
+  FTYPE FIELDROT=0.5*M_PIl;
   FTYPE hpow=2.0;
 
 
