@@ -41,6 +41,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   extern void undoconsts(FTYPE *uconconst, FTYPE *V, struct of_geom *ptrgeom, FTYPE (*dxdxp)[NDIM],FTYPE *uconmetp);
 #endif
   FTYPE Bconin[NDIM],Bconout[NDIM];
+  FTYPE Uconin[NDIM],Uconout[NDIM];
   FTYPE dxdxp[NDIM][NDIM];
 
 
@@ -600,10 +601,89 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   }
 
 
+#elif(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION)
+
+
+  if(which==1){ // rescale before interpolation
+
+    PINTERPLOOP(pliter,pl) p2interp[pl]=pr[pl];
+
+    //    p2interp[U1]=pr[U1]*(ptrgeom->gdet);
+    //    p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+    //    p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+    if(dir==1||dir==3){
+      p2interp[U1]=pr[U1]*(ptrgeom->gdet);
+      p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+      p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+      p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
+    if(dir==2){
+      //p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+      //p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+      p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
+  }
+  else if(which==-1){ // unrescale after interpolation
+
+    PINTERPLOOP(pliter,pl) pr[pl]=p2interp[pl];
+
+    //    pr[U1]=p2interp[U1]/(ptrgeom->gdet);
+    //    pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+    //    pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+    if(dir==1||dir==3){
+      pr[U1]=p2interp[U1]/(ptrgeom->gdet);
+      pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+      pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
+    if(dir==2){
+      //pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+      //pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
+      
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+
+
 #endif // end over choices for VARTOINTERP
 
 
-#if(VARTOINTERPFIELD==PULSARFIELD)
+
+
+
+
+
+
+  //////////////////////////////////////////
+  //
+  // SEPARATE FIELD-ONLY TRANSFORMATIONS.  Assumes VARTOINTERP=PRIMTOINTERP so nothing done otherwise for fields.
+  //
+  /////////////////////////////////////////
+
+
+#if(VARTOINTERPFIELD==NOFIELDRESCALE)
+
+  // DO NOTHING, assume VARTOINTERP takes care of any transformation or non-transformation
+
+#elif(VARTOINTERPFIELD==PULSARFIELD)
 
 
   if(dir==1){
@@ -774,6 +854,37 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
       pr[B2]=Bconin[2];
       pr[B3]=Bconin[3];
     }
+      
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+
+
+#elif(VARTOINTERPFIELD==GDETFULLVERSION)
+
+  if(which==1){ // rescale before interpolation
+
+    Bconin[0]=0.0;
+    Bconin[1]=pr[B1];
+    Bconin[2]=pr[B2];
+    Bconin[3]=pr[B3];
+
+    p2interp[B1]=Bconin[1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+    p2interp[B2]=Bconin[2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+    p2interp[B3]=Bconin[3]*(ptrgeom->gdet);//*pow(V[1],3);
+  }
+  else if(which==-1){ // unrescale after interpolation
+
+    Bconin[0]=0.0;
+    Bconin[1]=p2interp[B1];
+    Bconin[2]=p2interp[B2];
+    Bconin[3]=p2interp[B3];
+    
+    pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+    pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+    pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
       
   }
   else{

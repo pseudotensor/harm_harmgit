@@ -29,7 +29,8 @@ ssh pseudotensor@cli.globusonline.org scp -r -s 1 xsede#nautilus:/lustre/medusa/
 #
 # below done once, so can easily copy using globusonline.
 # ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ jcmkinne"
-ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/jmckinne xsede#ranch:/home/01014/tg802609/   &> jonkraken2ranch.globusonline.tryagain.errors.txt
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/jmckinne xsede#ranch:/home/01014/tg802609/
+#   &> jonkraken2ranch.globusonline.tryagain.errors.txt
 
 # rblandfo
 # ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ rblandfo"
