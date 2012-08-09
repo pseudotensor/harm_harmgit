@@ -775,8 +775,8 @@ void get_limit_slopes(int reallim, int extremum, FTYPE *dq1l, FTYPE *dq1r, FTYPE
 
   case MC:
     // monotonized central (Woodward) (Barth-Jespersen)
-    Dqm = 2.0 * dq1l[0];
-    Dqp = 2.0 * dq1r[0];
+    Dqm = 1.5 * dq1l[0];
+    Dqp = 1.5 * dq1r[0];
     Dqc = dq2[0];
     *dq=MINMODGEN(extremum,Dqc,MINMODGEN(extremum,Dqm,Dqp));
     break;
