@@ -127,7 +127,7 @@ int prepre_init_specific_init(void)
   global_vpar0 = 0.0;
   
 #if(WHICHPROBLEM==NSTAR)
-  global_dipole_alpha = 60 * M_PI / 180.;
+  global_dipole_alpha = 0 * M_PI / 180.;
   global_OmegaNS = 0.2;
 #endif
   funreturn=user1_prepre_init_specific_init();
