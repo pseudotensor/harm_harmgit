@@ -1428,7 +1428,11 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
 	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
 	tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
       }
-    // use tmpgcov since gcon might be same address as gconprim
+
+  }
+  DLOOP(j,k){
+    // also must be outside above DLOOP because tempgcov can be reset to zero if GINDASSIGNFACTOR is zero, and then gcovprim would be zero, but that normally points also to gcov!
+    // use tmpgcov since gcon might be same address as gcovprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }
 #else
@@ -1521,7 +1525,9 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
 	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
 	tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k]; // GINDASSIGNFACTOR(j,k) not needed because tmpgcov not += to itself.  RHS is summed over as if entire metric there, as wanted.
       }
-    // use tmpgcov since gcon might be same address as gconprim
+  }
+  DLOOP(j,k){
+    // use tmpgcov since gcon might be same address as gcovprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }
 

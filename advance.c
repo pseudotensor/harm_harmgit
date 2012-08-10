@@ -2060,9 +2060,28 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 
   else{
 
+    
+    FTYPE lowerF2,upperF2;
+#if(IF3DSPCTHENMPITRANSFERATPOLE==1)
+    // Ensure that spherical polar axis flux only contributes to B2 for special3dspc=1 with polar cut-out.
+    // Allows more arbitrary interpolations across axis (including with gdet factors)
+    // "lower" means we will zero-out lower F2, while "upper" means we will zero-out upper F2 in terms of j in Du2avg expression
+    int preconditionF2lower=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==0 || startpos[2]+j==N2));
+    int preconditionF2upper=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==-1 || startpos[2]+j==N2-1));
+#endif
 
     // other (normal) FLUXB methods, including FLUXCTSTAG
     PLOOP(pliter,pl) {
+
+#if(IF3DSPCTHENMPITRANSFERATPOLE==1)
+      if(pl!=B2 && preconditionF2lower) lowerF2=0.0;
+      else lowerF2=1.0;
+      if(pl!=B2 && preconditionF2upper) upperF2=0.0;
+      else upperF2=1.0;
+#else
+      lowerF2=1.0;
+      upperF2=1.0;
+#endif
 
 
 #if(N1>1)
@@ -2072,7 +2091,7 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 #endif
 #if(N2>1)
       dU2avg[pl]=(
-		  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
+		  - (upperF2*MACP0A1(F2,i,jp1mac(j),k,pl) - lowerF2*MACP0A1(F2,i,j,k,pl)) *idx2
 		  );
 #endif
 #if(N3>1)

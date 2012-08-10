@@ -1011,11 +1011,11 @@ int bound_x2dn_polaraxis_full3d(
 
 
     if(BCtype[X2DN]==POLARAXIS && special3dspc){
-
+      
       /* inner polar BC (preserves u^t rho and u) */
       if ( (totalsize[2]>1) && (mycpupos[2] == 0) ) {
 
-	if(ncpux3==1){
+	if(whichcall==1 && ncpux3==1){
 	  // if ncpux3>1 then this is handled by MPI
 	  ////////	  LOOPX2dir{
 
@@ -1034,8 +1034,12 @@ int bound_x2dn_polaraxis_full3d(
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 		// flip sign
-		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"INNER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1056,10 +1060,14 @@ int bound_x2dn_polaraxis_full3d(
 		rj = -j; // FACE2 values
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
 		// flip sign
-		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
 		// NOTEMARK: No U3,B3 staggered yet, so below not used
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"INNER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1194,8 +1202,12 @@ int bound_x2dn_polaraxis(
 	
 	    LOOPBOUND2IN {
 	      PBOUNDLOOP(pliter,pl){
-		if(pl==U2 || pl==B2)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 	      } // end over pl
 	    } // end over boundary cells
 	  }// end loop 13
@@ -1272,7 +1284,7 @@ int bound_x2up_polaraxis_full3d(
       if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
 
-	if(ncpux3==1){
+	if(whichcall==1 && ncpux3==1){
 	  // if ncpux3>1 then this is handled by MPI
 
 	  //////	  LOOPX2dir{
@@ -1292,8 +1304,12 @@ int bound_x2up_polaraxis_full3d(
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 		// flip sign
-		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"OUTER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1315,8 +1331,12 @@ int bound_x2up_polaraxis_full3d(
 		MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  
 		// flip sign
-		if(pl==U2 || pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 
 #if(DEBUGINOUTLOOPS)		
 		dualfprintf(fail_file,"OUTER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1441,8 +1461,12 @@ int bound_x2up_polaraxis(
 
 	    LOOPBOUND2OUT {
 	      PBOUNDLOOP(pliter,pl){
-		if(pl==U2 || pl==B2)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2B2;
-		if(pl==U3 || pl==B3)  MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3B3;
+		if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
+		if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
+		if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
+		if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
+		if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
+		if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
 	      } // end over pl
 	    } // end over bondary cells
 	  }// end loop 13
@@ -4028,8 +4052,9 @@ int polesmooth(int whichx2,
 	// NOW set boundary conditions consistent with full3d treatment
 	// NO!  Boundary cell values only change in \theta, not \phi as physical cells would, for given j.  So no changes to sign should occur.
 	//	if(j<0 && whichx2==X2DN || j>totalsize[2]-1 && whichx2==X2UP){
-	//	  pr[U2]*=SIGNFLIPU2B2;
-	//	  pr[U3]*=SIGNFLIPU3B3;
+	//	  pr[U1]*=SIGNFLIP12;
+	//	  pr[U2]*=SIGNFLIPU2;
+	//	  pr[U3]*=SIGNFLIPU3;
 	//	  // Note that B2,B3 are not ever modified, so no need for sign change
 	//	}
 

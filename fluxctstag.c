@@ -1017,6 +1017,9 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 // B2 along 2-dir because B2 and B2hat are regular near pole and division by near-zero would be inaccurate at pole. Assumes B2 flips sign across pole in correct sense in boundary cells as viewed by active cells.  Also for EMF_1 or EMF_3 wouldn't make sense unless also interpolated \detg v2 that makes no sense either.
 // B3 or \detg B3 along 3-dir is same.
 //
+// 1 might be fine because this is only used for face2cent, and using "1" instead of "2" allows even jumps in B2 (e.g. due to sign change) across the pole so CENT version of B2 higher order.
+// However, experimentally found 1 leads to MANY more hot->entropy reductions.  So should use "2"
+//
 ///////
 #define IFNOTRESCALETHENUSEGDET 1
 
@@ -1585,10 +1588,10 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 2
 // 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region) for nsdipole problem
 
-//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtich(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
+//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitch(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
 
 // since only store 1 thing to interpolate in any direction, has to be uniform use of \detg per Bi, which works-out to be ok.
-//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
+//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
 
 // B1 along 2 and 3-dir.  3-dir isn't issue as \detg B1 same.  But B1 regular at pole and no sign change.  So shouldn't introduce \detg that would make \detg B1\propto \theta and require obtaining B1 at pole by division by small value.  It would also make cancellation for EMF_3: -v1 B2 + v2 B1 terms harder unless also interpolated \detg v1, but that also wouldn't make sense.
 
@@ -1596,7 +1599,34 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 
 // Interpolate B3 along 1-dir and 2-dir.  Probably some other interpolation better for 1-dir, but for 2-dir, if interpolate \detg B3 across pole, then would have to interpolate \detg v3 for EMF_1: -v2 B3 + v3 B2 to have consistent cancellation on the polar cut-out.  Otherwise B2 at the pole (which must be regular) would result from wrongly cancelling terms in EMF_1.
 
-#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
+// All uses gdet, except for 2-dir only B3 uses gdet.
+//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
+
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==1 && (interpdir==1 || interpdir==3) || facedir==2 && (interpdir==1 || interpdir==3) ||  facedir==3 && (interpdir==1 || interpdir==3)   )))) // GODMARK: Want to allow interpdir==2 with facedir==3, but not working yet.
+
+
+
+
+///////////////////////////////////////////
+//
+// whether to include gdet in velocity
+// NOTEMARK: Don't have full control since precompute with or without gdet factor for *both* interpdir's.  So can't choose differently for each interpdir.
+// Choosing 0 means prior default of nothing done to velocity when interpolating it.
+
+// Choose 1 to always use gdet for all velocity components for all interpolation directions.
+
+// Choosing 2 currently avoids application on v1.  Assumes also interpolate gdet*B2 and gdet*B3 in fluxctstag and in rescale_interp and bounds extrapolations.
+//  Note that odir is always interpdir for velocity, so if only want to ever interpolate uu3 in 2-dir, then that'll never be done here.  Just avoid odir=2 to avoid interpolating v2 across 2-dir.  So that's why have odir==1 || odir==2 for this "2" option.
+//  2 works fine.  Not contentious with any dir==2 since never want to interpolate v2 in 2-dir.
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY 0
+
+// e.g. dir=facedir=1 means odir12=23 so v2 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  gdet on v2 is crucial if interpolating gdet*B2 in dir=2 in IFNOTRESCALETHENUSEGDET in interpolate_pfield_face2cent() for choices for field-directed interpolation.
+// e.g. dir=facedir=2 means odir12=13 so v1 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  v1 not crucial.
+// e.g. dir=facedir=3 means odir12=12 so v1 and v2 would have gdet applied (application to v1 and v2 not crucial for non-axisymmetry near poles)
+#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(facedir,odir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (odir==1 || odir==3) )))
+
+
+
 
 
 // INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
@@ -1694,8 +1724,10 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
   // instead of using rescale(), just assume always better to inteprolate gdet B^i since the flux is conserved
 #define NUMSTAGINTERP 6
 #define BFACEINTERP 0
+#define BFACEINTERPODIR1 0
 #define BLFACEINTERP 0 // same as BFACEINTERP
-#define BRFACEINTERP 1 // only used if Nvec[dir]==1
+#define BRFACEINTERP 1 // only used if Nvec[dir]==1 [No, but used to hold non-gdet applied version if required]
+#define BFACEINTERPODIR2 1 // used to hold standard B field, not gdet*B, in case required.
 #define VLODIR1INTERP 2
 #define VRODIR1INTERP 3
 #define VLODIR2INTERP 4
@@ -1754,9 +1786,10 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
     int EMFodir1,EMFodir2;
     struct of_state ql,qr;
     struct of_state *ptrql,*ptrqr;
-    FTYPE igdetgnosing;
+    FTYPE igdetgnosing,igdetgnosingvel;
     int usedq;
     int whichodir;
+    int BFACEINTERPCURRENT;
     int Aodir1,Aodir2;
     int Bodir1,Bodir2;
     int Codir1,Codir2;
@@ -1872,30 +1905,45 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
-	}
+	// Just always do to avoid complicated conditional
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 
 
 #endif
 
 
-	MACP0A1(p2interp,i,j,k,BFACEINTERP) = prface_l[B1-1+dir]; // note that prface_l[dir]=prface_r[dir] at face[dir]
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
-	  // p2interp located at face[dir] before interpolation, so gdet should be there
+	MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) = MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) = prface_l[B1-1+dir]; // note that prface_l[dir]=prface_r[dir] at face[dir]
+	// p2interp located at face[dir] before interpolation, so gdet should be there
 	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
 	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	  MACP0A1(p2interp,i,j,k,BFACEINTERP) *= (ptrgdetgeomf->gdet);
+	// odir1 and odir2 here refer to possible choices for interpdir, which is always different than [and transverse to] dir.
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir1)){
+	  MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) *= (ptrgdetgeomf->gdet);
+	}
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir2)){
+	  MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) *= (ptrgdetgeomf->gdet);
 	}
 
 
 	// VELs: note don't use velocity in "dir" direction
+	// GODMARK: Could/Should allow application of rescale on v^i, such as gdet.  This would allow (e.g.) SPC to handle uu3 and B3 the same with gdet, so that interpolation doesn't operate on divergent quantity and operates consistently on these so EMF1 is correctly cancels terms.
 	// LEFTVEL: compute and store v^i at face (input to ucon_calc() is primitive list as correct in primface_l,r)
 	MACP0A1(p2interp,i,j,k,VLODIR1INTERP) = (ptrql->ucon[odir1])/(ptrql->ucon[TT]);
 	MACP0A1(p2interp,i,j,k,VLODIR2INTERP) = (ptrql->ucon[odir2])/(ptrql->ucon[TT]);
 	// RIGHTVEL: compute and store v^i at face
 	MACP0A1(p2interp,i,j,k,VRODIR1INTERP) = (ptrqr->ucon[odir1])/(ptrqr->ucon[TT]);
 	MACP0A1(p2interp,i,j,k,VRODIR2INTERP) = (ptrqr->ucon[odir2])/(ptrqr->ucon[TT]);
+
+	// See comments related to switch prior to this whole function
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1)){
+	  MACP0A1(p2interp,i,j,k,VLODIR1INTERP) *= (ptrgdetgeomf->gdet);
+	  MACP0A1(p2interp,i,j,k,VRODIR1INTERP) *= (ptrgdetgeomf->gdet);
+	}
+	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2)){
+	  MACP0A1(p2interp,i,j,k,VLODIR2INTERP) *= (ptrgdetgeomf->gdet);
+	  MACP0A1(p2interp,i,j,k,VRODIR2INTERP) *= (ptrgdetgeomf->gdet);
+	}
+      
 
 
 
@@ -1963,7 +2011,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	  npr2interpstart=0;
 	  npr2interpend=2; // 3 things
-	  npr2interplist[0]=BFACEINTERP;
+	  npr2interplist[0]=BFACEINTERPODIR1; // always interpdir field
+	  BFACEINTERPCURRENT=npr2interplist[0];
 	  // ODIR? should be same as interpdir
 	  npr2interplist[1]=VLODIR1INTERP; // hence [1] is for previous p_l
 	  npr2interplist[2]=VRODIR1INTERP; // hence [2] is for previous p_r
@@ -1984,7 +2033,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 	  npr2interpstart=0;
 	  npr2interpend=2; // 3 things
-	  npr2interplist[0]=BFACEINTERP;
+	  npr2interplist[0]=BFACEINTERPODIR2; // always interpdir field
+	  BFACEINTERPCURRENT=npr2interplist[0];
 	  // ODIR? should be same as interpdir
 	  npr2interplist[1]=VLODIR2INTERP; // hence [1] is for previous p_l
 	  npr2interplist[2]=VRODIR2INTERP; // hence [2] is for previous p_r
@@ -2136,6 +2186,8 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	      p2interp_r[pl] = p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl);
 	    }
 
+
+
 	  }
 	  else if(Nvec[dir]==1&&Nvec[interpdir]!=1){
 
@@ -2167,20 +2219,20 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
 	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
-	      // as when storing, still at original face locations already interpolated/computed during normal flux calculation
-	      get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
-	    }
+	    // Just always do to avoid complicated conditional
+	    // as when storing, still at original face locations already interpolated/computed during normal flux calculation
+	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 
 
 #endif
 
 	    // now copy over values
-	    p2interp_l[BFACEINTERP] = prface_l[B1-1+dir];
-	    p2interp_r[BFACEINTERP] = prface_r[B1-1+dir];
-	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)){
-	      p2interp_l[BFACEINTERP] *= (ptrgdetgeomf->gdet);
-	      p2interp_r[BFACEINTERP] *= (ptrgdetgeomf->gdet);
+	    p2interp_l[BFACEINTERPCURRENT] = prface_l[B1-1+dir];
+	    p2interp_r[BFACEINTERPCURRENT] = prface_r[B1-1+dir];
+	    // applying gdet if just copying result so same application of factors as when setting up p2interp[]
+	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)){
+	      p2interp_l[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
+	      p2interp_r[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
 	    }
 
 	    // [1,2] are from previous (i.e. face) interpolation.  But if Nvec[dir=facedir]=1, then those are same values
@@ -2188,12 +2240,24 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	    // here, the l,r indicate across interpdir (not dir as otherwise when requiring interpolation)
 	    p2interp_l[npr2interplist[1]] = p2interp_l[npr2interplist[2]] = (ptrql->ucon[interpdir])/(ptrql->ucon[TT]);
 	    p2interp_r[npr2interplist[1]] = p2interp_r[npr2interplist[2]] = (ptrqr->ucon[interpdir])/(ptrqr->ucon[TT]);
+	    // applying gdet if just copying result so same application of factors as when setting up p2interp[]
+	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
+	      p2interp_l[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
+	      p2interp_l[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
+	      p2interp_r[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
+	      p2interp_r[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
+	    }
 	  }
 	  else{
 	    dualfprintf(fail_file,"Shouldn't reach here in fluxctstag.c\n");
 	    myexit(837434873);
 	  }
 
+
+
+	  //////////////////////////////////////
+	  // DONE with interpolations or copies
+	  //////////////////////////////////////
 
 
 
@@ -2203,16 +2267,19 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  //
 	  // MACP1A3(pbcorn,corner/emf/edge dir,i,j,k,which field,+-present interpdir)
 
-	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)==1 && CORNGDETVERSION==1){	    
-	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	  // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
-	  set_igdetsimple(ptrgdetgeomcorn);
-	  igdetgnosing = ptrgdetgeomcorn->igdetnosing;
+	  int didsetigdet;
+	  didsetigdet=0;
+	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==1 && CORNGDETVERSION==1){	    
+	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+	    // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
+	    set_igdetsimple(ptrgdetgeomcorn);
+	    igdetgnosing = ptrgdetgeomcorn->igdetnosing;
+	    didsetigdet=1;
 	  }
-	  else if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswtichuni(dir)==0 && CORNGDETVERSION==0){
-	  get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	  // then add gdet now since will not multiply geometry once have final EMF
-	  igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
+	  else if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==0 && CORNGDETVERSION==0){
+	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+	    // then add gdet now since will not multiply geometry once have final EMF
+	    igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
 	  }
 	  else{
 	  // nothing to do
@@ -2238,11 +2305,26 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  // edgedir=1: EMFodir1=2 EMFodir2=3 then emf[0][0] is emf[left for EMFodir1][left for EMFodir2]
 	  // so if interpolated in 2-dir and EMFodir1==2, then emf[0/1 filled with current p_l and p_r][0/1 filled with previous p_l p_r]
 
+
+	  // de-applying any gdet factor
+	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
+	    if(didsetigdet){
+	      igdetgnosingvel=igdetgnosing;
+	    }
+	    else{
+	      get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+	      set_igdetsimple(ptrgdetgeomcorn);
+	      igdetgnosingvel = ptrgdetgeomcorn->igdetnosing;
+	    }
+	  }
+	  else igdetgnosingvel=1.0;
+
+
 	  // npr2interplist[1,2] constains [u,d for velocity in interpdir direction]	
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2) = p2interp_l[npr2interplist[1]]; // current p_l for previous p_l 
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]]; // current p_r for previous p_l
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]]; // current p_l for previous p_r
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]]; // current p_r for previous p_r
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2) = p2interp_l[npr2interplist[1]] *= igdetgnosingvel; // current p_l for previous p_l 
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]] *= igdetgnosingvel; // current p_r for previous p_l
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]] *= igdetgnosingvel; // current p_l for previous p_r
+	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]] *= igdetgnosingvel; // current p_r for previous p_r
 	}// endCOMPZSLOOP
   
       }// end loop over (whichodir) other directions // at end of loop, have pbcorn,pvcorn for this 1 face interpolated to 2 corners
