@@ -1397,7 +1397,7 @@ void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, stru
 //  exit(1);
 //}
 
-#define OPTMETRICLOOP 1 // whether to use highly optmized loop (assumes metric is symmetric)
+#define OPTMETRICLOOP 0 // whether to use highly optmized loop (assumes metric is symmetric)
 #define COMPUTEPERTURBEDMETRIC 0 // GODMARK: NOT CORRECT RIGHT NOW, so do NOT do it
 
 void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, FTYPE *gcovprim, FTYPE *gcovpertprim)
@@ -1427,7 +1427,11 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
 	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
 	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
 	tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
+	//if(j==1 && k==1) dualfprintf(fail_file,"BLOB(l=%d m=%d): %g %g %g %g %g\n",l,m,tmpgcov[GIND(j,k)],GINDASSIGNFACTOR(j,k),gcov[GIND(l,m)],dxdxp[l][j],dxdxp[m][k]);
       }
+  }
+  DLOOP(j,k){
+    // also must be outside above DLOOP because tempgcov can be reset to zero if GINDASSIGNFACTOR is zero, and then gcovprim would be zero, but that normally points also to gcov!
     // use tmpgcov since gcon might be same address as gconprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }

@@ -1611,7 +1611,19 @@ void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     if(totalsize[2]==1 && FIXGDETSPC_WHEN_1DRADIAL){
       dxdxp[2][2] = 2.0/dx[2]; // so that d\theta = 2
     }
+
+#if(1)
+    FTYPE endx2=startx[TH]+totalsize[TH]*dx[TH];
+    if(X[2]<startx[2] || X[2]>endx2){
+      dxdxp[2][0]*=-1.0;
+      dxdxp[2][1]*=-1.0;
+      dxdxp[2][3]*=-1.0;
+    }
+#endif
+
   }
+
+ 
 
 }
 

@@ -7,15 +7,12 @@ int init_MPI_GRMHD(int *argc, char **argv[])
 {
 
 
-#if(USEMPI)
   stderrfprintf( "Begin: init_MPI_GRMHD\n"); fflush(stderr);
-  // init MPI (assumes nothing in set_arrays.c used here) : always done
-  // non-blocking:
+  // init MPI (assumes nothing in set_arrays.c used here) : always done non-blocking:
+  // also called if USEMPI==0
   init_MPI_general(argc, argv);
   // NOW CAN USE myid to determine if print-out things
-#else
-  stderrfprintf( "Did NOT init_MPI_GRMHD\n"); fflush(stderr);
-#endif
+  //  stderrfprintf( "Did NOT init_MPI_GRMHD\n"); fflush(stderr);
 
 
 

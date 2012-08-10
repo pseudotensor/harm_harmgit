@@ -720,26 +720,28 @@
 // whether to flip sign of U3,B3 across the pole
 //Another thing that might have helped is how I treat the BCs.  Recall I now flip U2,B2,U3,B3.  U2,B2 makes sense so interpolation sees continuous function for (e.g.) a Cartesian flow through the pole.  In addition, as I mentioned before, I flip U3,B3 because in axisymmetry that just gives the same result of a DONOR-like interpolation.  So there's no change.  In addition, there is no EMF on the pole in that case because U2,B2 on the pole itself is zero.  In non-axisymmetry, flow through the axis would lead to a sign flip and singularity right on the pole.  This would lead to a highly dissipative EMF right at the pole.  By flipping U3,B3 I'm choosing to make the region a numerical "core" instead of a sign-changed singularity.  This core will use DONOR, but have no dissipation term across the pole.
 //As we discussed, one could modulate U3,B3 by \sin\theta and achieve a higher-order result.  But the flip or modulation is required to avoid a dissipation-dominated result at the pole.  Most generally, some scheme should be capable of arbitrary high order even in SPC, and I'm guessing modulation by \sin\theta is probably the right thing to do given U3,B3\propto \pm 1\theta near the pole when U3,B3 near the pole matters.
-#define FLIPU3B3AXIS 1
+#define FLIPU3AXIS 0
+#define FLIPB3AXIS 0
 
 
 // should always be 1
-#define FLIPU2B2AXIS 1
+#define FLIPU2AXIS 0
+#define FLIPB2AXIS 0
+
+// should always be 0
+#define FLIPU1AXIS 0
+#define FLIPB1AXIS 0
 
 
 // control bounds.tools.c for SPC coordinates polar axis fixups
 #define DOPOLEDEATH 0
-#define DOPOLESMOOTH 1
+#define DOPOLESMOOTH 0 // can choose 1, but probably not necessary and generally won't treat flow correctly near pole even if possibly more robust.
 #define DOPOLEGAMMADEATH 0
 
 
 
 // if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD)) and below is 1, then do polar MPI boundary transfer
-#if(DOPOLESMOOTH)
-#define IF3DSPCTHENMPITRANSFERATPOLE 1 // if polesmooth() used, then can/must use full 3d for pole and works fine
-#else
 #define IF3DSPCTHENMPITRANSFERATPOLE 1 // working fine now that wavespeed bug in fluxctstag.c was fixed, extrapfunc B1,B2 bug fixed, and extrap gdet B3 instead of Bd3 that exaggerates extrapolation near poles and inconsistent with interpolation.  Also using VARTOINTERPFIELD GDETVERSION.
-#endif
 
 
 
@@ -774,6 +776,9 @@
 
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 #define VARTOINTERP PRIMTOINTERP
+
+//#define VARTOINTERPFIELD NOSPECIALFIELD
+#define VARTOINTERPFIELD GDETVERSION // most consistent with fluxctstag.c and standard extrapfunc in bounds.tools.c
 
 
 
@@ -827,14 +832,7 @@
 #define BONDI_BOUNDARY_SET_PL_PR 0  //do not analytically set p_l & p_r at the outer boundary for the Bondi problem
 
 
-#define NOSPECIALFIELD 0
-#define PULSARFIELD 1
-#define PULSARFIELD2 2
-#define PULSARFIELD3 3
-#define GDETVERSION 4
 
-//#define VARTOINTERPFIELD NOSPECIALFIELD
-#define VARTOINTERPFIELD GDETVERSION // most consistent with fluxctstag.c and standard extrapfunc in bounds.tools.c
 
 #define NUMPANALYTICOTHER 0
 #define DODUMPOTHER 0 // whether to dump other stuff

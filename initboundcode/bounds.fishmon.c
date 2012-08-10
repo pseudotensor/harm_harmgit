@@ -151,6 +151,7 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       if(BCtype[dir]==POLARAXIS && special3dspc){
 	int whichcall=1;
 	bound_x2dn_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	//dualfprintf(fail_file,"DID CALL1 dir=%d\n",dir);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
 	bound_x2dn_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -167,6 +168,7 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       if(BCtype[dir]==POLARAXIS && special3dspc){
 	int whichcall=1;
 	bound_x2up_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+	//	dualfprintf(fail_file,"DID CALL2 dir=%d\n",dir);
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
 	bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -327,7 +329,7 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
   // use post-MPI values to operate poledeath() and/or polesmooth() since otherwise boundary values poledeath uses are not set yet
-  if(whichdir==2){
+  if(0&&whichdir==2){
 
     dir=X2DN;
     if(dosetbc[dir]){

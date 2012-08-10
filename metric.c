@@ -287,6 +287,10 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       transVmetric2V(whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc);
 
 
+      if(ptrgeom->p==CENT && (ptrgeom->i==-2 && ptrgeom->j==-3 && ptrgeom->k==0 || ptrgeom->i==-2 && ptrgeom->j==2 && ptrgeom->k==4)){
+	DLOOP(j,k) dualfprintf(fail_file,"PREPRIM: tk=%d present time: gcov[%d][%d]=%21.15g\n",ptrgeom->k,j,k,gcovinfunc[GIND(j,k)]);
+      }
+
       ///////////
       //
       // Convert to prim coords
@@ -296,6 +300,13 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	// all the above are analytic, so have to convert to prim coords.
 	gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
       }
+
+
+
+      if(ptrgeom->p==CENT && (ptrgeom->i==-2 && ptrgeom->j==-3 && ptrgeom->k==0 || ptrgeom->i==-2 && ptrgeom->j==2 && ptrgeom->k==4)){
+	DLOOP(j,k) dualfprintf(fail_file,"tk=%d present time: gcov[%d][%d]=%21.15g\n",ptrgeom->k,j,k,gcovinfunc[GIND(j,k)]);
+      }
+      
       //  DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
       //    if(ptrgeom->i==7 && nstep==1084){
@@ -397,19 +408,15 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
     phold=arctanmath (cos (hnew)*sin (b0) + cos (b0)*cos (phnew)*sin (hnew),sin (hnew)*sin (phnew));
 
 
-    // keep \theta between 0 and \pi
-    if(hold<0.0) hold+=M_PI;
-    if(hold>M_PI) hold-=M_PI;
-
-    // keep \phi between 0 and 2\pi
-    if(phold<0.0) phold+=2.0*M_PI;
-    if(phold>2.0*M_PI) phold-=2.0*M_PI;
-
+    fix_hp(&hold,&phold);
 
     Vmetric[0]=told;
     Vmetric[1]=rold;
     Vmetric[2]=hold;
     Vmetric[3]=phold;
+    int jj;
+    
+    DLOOPA(jj) dualfprintf(fail_file,"jj=%d V=%21.15g Vmetric=%21.15g\n",jj,V[jj],Vmetric[jj]);
 
   }
   else{
@@ -422,6 +429,50 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 }
 
 
+// put \theta,\phi in positive normal region of \theta,\phi.
+int fix_hp(FTYPE *h, FTYPE *p)
+{
+  FTYPE th=*h,ph=*p;
+
+#if(0)
+  // keep \theta between 0 and \pi
+  if(th<0.0) th+=M_PI;
+  if(th>M_PI) th-=M_PI;
+
+  // keep \phi between 0 and 2\pi
+  if(ph<0.0) ph+=2.0*M_PI;
+  if(ph>2.0*M_PI) ph-=2.0*M_PI;
+#else
+
+  // keep \phi between 0 and 2\pi.  Can always do that full rotation.
+  // assume never more out of phase that 1 full rotation
+  if(ph<0.0) ph+=2.0*M_PI;
+  if(ph>2.0*M_PI) ph-=2.0*M_PI;
+
+  // keep \theta between 0 and \pi and \phi between 0 and 2\pi
+  // but need to be at same physical SPC location, not arbitrary rotation
+  if(th>=0.0 && th<=M_PI){
+    // do nothing
+  }
+  else if(th<0.0){
+    th*=-1.0;
+    if(ph<=M_PI) ph+=M_PI;
+    else if(ph>M_PI) ph-=M_PI;
+  }
+  else if(th>M_PI){
+    th=M_PI-th;
+    if(ph<=M_PI) ph+=M_PI;
+    else if(ph>M_PI) ph-=M_PI;
+  }
+#endif
+
+  *h=th;
+  *p=ph;
+
+  return(0);
+
+}
+
 ////////////////////////////
 //
 // perform rotation of V (for spherical polar coordinates)
@@ -430,6 +481,14 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 // where h,ph are in original metric form and hnew,phnew are rotated versions
 //
 // So since we want X->V to be mapping V=(t,r,hnew,phnew), this is *not* to be used.
+//
+// -----
+//
+// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
+//
+// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
+// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
+// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
 //
 ////////////////////////////
 int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
@@ -465,13 +524,8 @@ int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
     hnew=atan2(Rnew,zcnew);
     phnew=atan2(ycnew,xcnew);
 
-    // keep \theta between 0 and \pi
-    if(hnew<0.0) hnew+=M_PI;
-    if(hnew>M_PI) hnew-=M_PI;
 
-    // keep \phi between 0 and 2\pi
-    if(phnew<0.0) phnew+=2.0*M_PI;
-    if(phnew>2.0*M_PI) phnew-=2.0*M_PI;
+    fix_hp(&hnew,&phnew);
 
 
     V[0]=tnew;

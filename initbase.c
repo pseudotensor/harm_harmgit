@@ -494,7 +494,8 @@ int init(int *argc, char **argv[])
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
 
-    THETAROT = 0.5*1.5708; // reset grid with rotation
+    //    THETAROT = 0.5*1.5708; // reset grid with rotation
+    THETAROT = 1.5708; // reset grid with rotation
 
     // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
     // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop

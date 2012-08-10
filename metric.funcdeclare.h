@@ -21,3 +21,5 @@ extern int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V);
 //extern void gcov_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov);
 //extern void gcon_func(int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon);
 
+extern int fix_hp(FTYPE *h, FTYPE *p);
+

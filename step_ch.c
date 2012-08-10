@@ -481,6 +481,11 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
   //#endif
 
+  //  if(nstep==2){
+  //      dump(5000);
+  //      myexit(0);
+  //  }
+
 #if(PRODUCTION==0)
   trifprintf( "]");
 #endif
@@ -1446,7 +1451,7 @@ int bound_evolveprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*pr
 
 
   bound_anyprim(boundstage, finalstep, boundtime, boundvartype, prim, pstag, ucons,doboundmpi);
-  if(unewisavg && BOUNDUNEW){
+  if(0&&unewisavg && BOUNDUNEW){
     // SUPERGODMARK:
     // if not outflow boundary, then can bound u as p
     // desirable since machine errors can be different and lead to secular changes
@@ -1649,24 +1654,30 @@ int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvart
 
 
     // pre-post MPI recv's
-    if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, finalstep, -dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
-    }
+    //    if(doboundmpi){
+    //      MYFUN(bound_mpi_dir(boundstage, finalstep, -dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+    //    }
 
     // real boundary zones
     if((boundstage==STAGE0)||(boundstage==STAGEM1)){
       MYFUN(bound_prim_user_dir(boundstage, finalstep, boundtime, dir, boundvartype, prim),"step_ch.c:bound_prim()", "bound_prim_user()", 1);
     }// end if stage0 or stagem1
+
+    //    if(nstep==2){
+    //      if(dir==1) dump(5001);
+    //      if(dir==2) dump(5002);
+    //      if(dir==3) dump(5003);
+    //    }
   
-    if(doboundmpi){
-      MYFUN(bound_mpi_dir(boundstage, finalstep, +dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
-    }
+    //    if(doboundmpi){
+    //      MYFUN(bound_mpi_dir(boundstage, finalstep, +dir, boundvartype, prim, NULL, NULL, NULL,NULL),"step_ch.c:bound_prim()", "bound_mpi()", 1);
+    //    }
 
     // real boundary zones
-    if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-      int ispstag=BOUNDPRIMLOC;
-      MYFUN(bound_prim_user_after_mpi_dir(boundstage, finalstep, boundtime, dir, boundvartype, ispstag, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
-    }// end if stage0 or stagem1
+    //if((boundstage==STAGE0)||(boundstage==STAGEM1)){
+    //  int ispstag=BOUNDPRIMLOC;
+    //  MYFUN(bound_prim_user_after_mpi_dir(boundstage, finalstep, boundtime, dir, boundvartype, ispstag, prim),"step_ch.c:bound_prim()", "bound_prim_user_after_mpi()", 1);
+    //    }// end if stage0 or stagem1
 
 
     ////////////////////////////////////////////
