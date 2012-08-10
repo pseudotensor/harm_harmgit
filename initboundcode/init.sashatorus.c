@@ -501,9 +501,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   //SASMARK: decrease magnetization by 2x to make it easier (still is around ~45>>1)
-  BSQORHOLIMIT=FRACBSQORHO*FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=FRACBSQOU*FLOORFACTOR*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=FRACBSQOU*FLOORFACTOR*BSQOUPREFACT*1E2;
+  BSQORHOLIMIT=FLOORFACTOR*1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=FLOORFACTOR*BSQOUPREFACT*1E2; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=FLOORFACTOR*BSQOUPREFACT*1E2;
   RHOMIN = 1E-4;
   UUMIN = 1E-4;
   GAMMADAMP=50.0;
@@ -1009,7 +1009,8 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   int i, j, k;
-  FTYPE pr[NPR];
+  FTYPE vpar;
+  FTYPE bsq;
 
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
   funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
@@ -1081,8 +1082,14 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   FULLLOOP {
     get_geometry(i, j, k, CENT, ptrgeom);
     //then reinstate the ZAMO velocity along field lines
-    set_vpar(global_vpar0, GAMMAMAX, ptrgeom, pr);
-  }
+    set_vpar(global_vpar0, GAMMAMAX, ptrgeom, MAC(prim,i,j,k));
+    if(bsq_calc(MAC(prim,i,j,k),ptrgeom,&bsq)>=1){
+      dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
+      return(1);
+    }
+    MAC(prim,i,j,k)[RHO] = bsq/(FRACBSQORHO*BSQORHOLIMIT);
+    MAC(prim,i,j,k)[UU]  = bsq/(FRACBSQOU*BSQOULIMIT);
+  }    
 #endif
   
   return(0);
