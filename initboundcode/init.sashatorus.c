@@ -1006,6 +1006,10 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   int funreturn;
   int fieldfrompotential[NDIM];
   FTYPE rhomax, umax, amax;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  int i, j, k;
+  FTYPE pr[NPR];
 
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
   funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
@@ -1057,7 +1061,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 #endif
   
   
-#if( WHICHPROBLEM == NSTAR && 0 )
+#if( WHICHPROBLEM == NSTAR && 0)  //USE THIS WITH GRAVITY TO RESET 4-vel to zero
   //ensure that VEL4 field velocity is zero (so that the only motion is
   //parallel to field lines)
   //compute parallel velocity (to the poloidal field) of a ZAMO
@@ -1070,9 +1074,17 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   ucon2pr(WHICHVEL, ucon, ptrgeom, pr);  //this does not use t-component of ucon, so no need to set it
   
   //then reinstate the ZAMO velocity along field lines
-  set_vpar(vpar, GAMMA_MAX, ptrgeom, pr);
+  set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
 #endif
-    
+
+#if( WHICHPROBLEM == NSTAR )  //USE THIS WITH GRAVITY TO RESET 4-vel to zero
+  FULLLOOP {
+    get_geometry(i, j, k, CENT, ptrgeom);
+    //then reinstate the ZAMO velocity along field lines
+    set_vpar(global_vpar0, GAMMAMAX, ptrgeom, pr);
+  }
+#endif
+  
   return(0);
 
 
