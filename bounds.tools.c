@@ -682,11 +682,11 @@ int bound_x2dn_polaraxis_full3d(
 
 
     if(BCtype[X2DN]==POLARAXIS && special3dspc){
-
+      
       /* inner polar BC (preserves u^t rho and u) */
       if ( (totalsize[2]>1) && (mycpupos[2] == 0) ) {
 
-	if(ncpux3==1){
+	if(whichcall==1 && ncpux3==1){
 	  // if ncpux3>1 then this is handled by MPI
 	  ////////	  LOOPX2dir{
 
@@ -955,7 +955,7 @@ int bound_x2up_polaraxis_full3d(
       if (  (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ) {
 
 
-	if(ncpux3==1){
+	if(whichcall==1 && ncpux3==1){
 	  // if ncpux3>1 then this is handled by MPI
 
 	  //////	  LOOPX2dir{

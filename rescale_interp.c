@@ -621,7 +621,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
       p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
       p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
     }
-    if(dir==2){
+    if(0&&dir==2){
+      //p2interp[U1]=pr[U1]*(ptrgeom->gdet);
       //p2interp[U2]=pr[U2]*(ptrgeom->gdet);
       //p2interp[U3]=pr[U3]*(ptrgeom->gdet);
 
@@ -647,7 +648,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
       pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
       pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
     }
-    if(dir==2){
+    if(0&&dir==2){
+      //pr[U1]=p2interp[U1]/(ptrgeom->gdet);
       //pr[U2]=p2interp[U2]/(ptrgeom->gdet);
       //pr[U3]=p2interp[U3]/(ptrgeom->gdet);
 

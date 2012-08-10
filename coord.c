@@ -1611,6 +1611,20 @@ void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     if(totalsize[2]==1 && FIXGDETSPC_WHEN_1DRADIAL){
       dxdxp[2][2] = 2.0/dx[2]; // so that d\theta = 2
     }
+
+#if(1)
+    // dxdxp[2][1] changes sign across axis if consistently decollimate/collimate grid.  Yet, this will cause gv311 [primecoords] to be asymmetric for any given theta,phi when theta goes negative or beyond \pi.
+    // To have correct symmetries in true SPC (not just extended \theta meanginless domain) must change sign and use FLIPU3AXIS 0 , FLIPB3AXIS 0 , FLIPU2AXIS 0 , and FLIPB2AXIS 0 .
+    // This is the only way (e.g.) uu1 will be properly symmetric at respective theta,\phi positions when including ghost zones.  EMF needs v1=uu1/u0, so symmetry requires this to be correct.
+    // This forces symmetry on primitives across pole, but may be bad for interpolation unless flip sign when doing interpolation itself.
+    FTYPE endx2=startx[TH]+totalsize[TH]*dx[TH];
+    if(X[2]<startx[2] || X[2]>endx2){
+      dxdxp[2][0]*=-1.0;
+      dxdxp[2][1]*=-1.0;
+      dxdxp[2][3]*=-1.0;
+    }
+#endif
+
   }
 
 }
