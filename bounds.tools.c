@@ -4291,6 +4291,12 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 	    MACP1A1(fluxvec,3,i,j,k,B3) = 0.0; // always zero
 	  }
 #endif
+#if(N1>1 && N3==1 && DONSEMFS)
+	  if( j >= 0 && j <= N2 ){
+	    get_geometry(i, j, k  , FACE1, ptrgeom)
+	    MACP1A1(fluxvec,1,i,j,k,B3) = -ptrgeom->gdet * get_omegaf_code(t, dt, steppart)*GLOBALMACP0A1(pstagglobal,i,j,k,B1);
+	  }  
+#endif
 	}
       }
 
