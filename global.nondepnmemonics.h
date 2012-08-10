@@ -1146,3 +1146,6 @@
 #define FRACBSQOU (1)
 #define VPARBND (0.5)
 
+#define B1PL 0  //if =1, use consistent interpolation in fluxctstag.c of Sasha's neutron star problem
+
+

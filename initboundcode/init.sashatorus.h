@@ -476,3 +476,18 @@ struct Ccoordparams {
 #define DOFLOORDIAG 0
 #endif
 
+#undef FLIPU2AXIS
+#define FLIPU2AXIS 1
+
+#undef FLIPB2AXIS
+#define FLIPB2AXIS 1
+
+
+#undef FLIPU3AXIS
+#define FLIPU3AXIS 0
+
+#undef FLIPB3AXIS
+#define FLIPB3AXIS 0
+
+#undef B1PL
+#define B1PL 1
