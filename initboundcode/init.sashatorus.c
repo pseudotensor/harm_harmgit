@@ -1078,7 +1078,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
 #endif
 
-#if( WHICHPROBLEM == NSTAR )  //USE THIS WITH GRAVITY TO RESET 4-vel to zero
+#if( WHICHPROBLEM == NSTAR )  //set parallel velocity to global_vpar0 AND set rho and u at 1/FRACBSQORHO and 1/FRACBSQOU times the floor
   FULLLOOP {
     get_geometry(i, j, k, CENT, ptrgeom);
     //then reinstate the ZAMO velocity along field lines
