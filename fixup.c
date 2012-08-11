@@ -708,15 +708,31 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 
 FTYPE f_trans(FTYPE r)
 {
-  FTYPE f, rs;
+  FTYPE f, rs, rf;
   //fraction of Rlc over which to carry out Komissarov's swindle
   FTYPE fracRlc = 1.0;
+  FTYPE hardfracRlc = 0.5;
   //radius of light cylinder
   FTYPE Rlc = 1.0 / get_omegaf_phys(t, dt, steppart);
+  FTYPE rmin;
   
   rs = fracRlc * Rlc;
+  rf = hardfracRlc * Rlc;
   
+  //standard Komi prescription
   f = (r<rs)?((rs-r)/(rs-Rin)):(0);
+  
+  //happy addition: hard freeze everything within r = rf
+  //helps ensure nearly perfect force-free
+#if(1)
+  //limit r
+  rmin = rf*(1+NUMEPSILON);
+  if(r<rmin) {
+    r = rmin;
+  }
+  
+  f *= (rs-rf)/(r-rf);
+#endif
   
   return(f);
 }
@@ -760,6 +776,8 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE costhetaprime;
   FTYPE FREEZE_BSQORHO;
   FTYPE FREEZE_BSQOU;
+  const FTYPE MAXEXPVAL = 30;
+  FTYPE rho0, u0;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -788,34 +806,41 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     //inverse timescale over which motion is damped, let's try 10% of period
     b0 = 1./(frac*tau);
     b1 = b0 * f_trans(r);
-    b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
+    b2 = b1; //XXX * fabs(costhetaprime);  //account for pulsar tilt
     if( DOEVOLVERHO ){
-      drho = - dt * b2 * (pr[RHO] - BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO);
-      if( 0 ) {
-	pr[RHO] += drho;
+      rho0 = BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO;
+      if( dt * b2 > MAXEXPVAL ) {
+	//so large an exponent that is equivalent to essentially hard-fixing the value
+	pr[RHO] = rho0;
       }
       else {
-	pr[RHO] = prfloor[RHO];
+	pr[RHO] = rho0 + (pr[RHO]-rho0)*exp(-dt * b2);
       }
-
     }
     if( DOEVOLVEUU ){
-      du = - dt * b2 * (pr[UU] - BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU);
-      if( 0 ){
-	pr[UU] += du;
+      u0 = BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU;
+      if( dt * b2 > MAXEXPVAL ) {
+	//so large an exponent that is equivalent to essentially hard-fixing the value
+	pr[UU] = u0;
       }
       else {
-	pr[UU] = prfloor[UU];
+	pr[UU] = u0 + (pr[UU]-u0)*exp(-dt * b2);
       }
     }
     if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
       //compute parallel velocity component (along full B)
       compute_vpar(pr, ptrgeom, &vpar);
-      //damp parallel velocity component
-      dvpar = - dt * b1 * vpar;
+
       //update parallel velocity component
-      //vpar += dvpar;
-      vpar = 0;
+      if( dt * b2 > MAXEXPVAL ) {
+	//so large an exponent that is equivalent to essentially hard-fixing the value
+	vpar = 0;
+      }
+      else {
+	//damp parallel velocity component
+	vpar *= exp(-dt * b1);
+      }
+
       //update parallel velocity component
       set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
     }
