@@ -778,6 +778,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE FREEZE_BSQOU;
   const FTYPE MAXEXPVAL = 30;
   FTYPE rho0, u0;
+  FTYPE ftrr;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
@@ -798,51 +799,56 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
-    omegastar = get_omegaf_phys(t, dt, steppart);
-    tiltangle = get_ns_alpha();
-    costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
-    //pulsar rotational period
-    tau = 2*M_PIl/omegastar;
-    //inverse timescale over which motion is damped, let's try 10% of period
-    b0 = 1./(frac*tau);
-    b1 = b0 * f_trans(r);
-    b2 = b1; //XXX * fabs(costhetaprime);  //account for pulsar tilt
-    if( DOEVOLVERHO ){
-      rho0 = BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO;
-      if( dt * b2 > MAXEXPVAL ) {
-	//so large an exponent that is equivalent to essentially hard-fixing the value
-	pr[RHO] = rho0;
-      }
-      else {
-	pr[RHO] = rho0 + (pr[RHO]-rho0)*exp(-dt * b2);
-      }
-    }
-    if( DOEVOLVEUU ){
-      u0 = BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU;
-      if( dt * b2 > MAXEXPVAL ) {
-	//so large an exponent that is equivalent to essentially hard-fixing the value
-	pr[UU] = u0;
-      }
-      else {
-	pr[UU] = u0 + (pr[UU]-u0)*exp(-dt * b2);
-      }
-    }
-    if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
-      //compute parallel velocity component (along full B)
-      compute_vpar(pr, ptrgeom, &vpar);
+    ftrr = f_trans(r);
+    //only need to do the following if actually within Komi's zone
+    if( ftrr > 0 ){
+      omegastar = get_omegaf_phys(t, dt, steppart);
+      tiltangle = get_ns_alpha();
+      costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
+      //pulsar rotational period
+      tau = 2*M_PIl/omegastar;
+      //inverse timescale over which motion is damped, let's try 10% of period
+      b0 = 1./(frac*tau);
+      b1 = b0 * ftrr;
+      b2 = b1; //XXX * fabs(costhetaprime);  //account for pulsar tilt
 
-      //update parallel velocity component
-      if( dt * b2 > MAXEXPVAL ) {
-	//so large an exponent that is equivalent to essentially hard-fixing the value
-	vpar = 0;
+      if( DOEVOLVERHO ){
+	rho0 = BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO;
+	if( dt * b2 > MAXEXPVAL ) {
+	  //so large an exponent that is equivalent to essentially hard-fixing the value
+	  pr[RHO] = rho0;
+	}
+	else {
+	  pr[RHO] = rho0 + (pr[RHO]-rho0)*exp(-dt * b2);
+	}
       }
-      else {
-	//damp parallel velocity component
-	vpar *= exp(-dt * b1);
+      if( DOEVOLVEUU ){
+	u0 = BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU;
+	if( dt * b2 > MAXEXPVAL ) {
+	  //so large an exponent that is equivalent to essentially hard-fixing the value
+	  pr[UU] = u0;
+	}
+	else {
+	  pr[UU] = u0 + (pr[UU]-u0)*exp(-dt * b2);
+	}
       }
+      if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
+	//compute parallel velocity component (along full B)
+	compute_vpar(pr, ptrgeom, &vpar);
 
-      //update parallel velocity component
-      set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
+	//update parallel velocity component
+	if( dt * b2 > MAXEXPVAL ) {
+	  //so large an exponent that is equivalent to essentially hard-fixing the value
+	  vpar = 0;
+	}
+	else {
+	  //damp parallel velocity component
+	  vpar *= exp(-dt * b1);
+	}
+
+	//update parallel velocity component
+	set_vpar(vpar, GAMMAMAX, ptrgeom, pr);
+      }
     }
   }
   return(0);
