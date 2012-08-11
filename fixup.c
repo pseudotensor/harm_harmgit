@@ -810,7 +810,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
       //inverse timescale over which motion is damped, let's try 10% of period
       b0 = 1./(frac*tau);
       b1 = b0 * ftrr;
-      b2 = b1; //XXX * fabs(costhetaprime);  //account for pulsar tilt
+      b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
 
       if( DOEVOLVERHO ){
 	rho0 = BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO;
