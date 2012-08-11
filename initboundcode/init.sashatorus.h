@@ -484,3 +484,6 @@ struct Ccoordparams {
 
 #undef FLIPU2B2AXIS
 #define FLIPU2B2AXIS 1
+
+#undef STORESHOCKINDICATOR
+#define STORESHOCKINDICATOR 0
