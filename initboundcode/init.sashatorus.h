@@ -179,7 +179,7 @@
 #define ANALYTICMEMORY 1
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
-#define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
+#define MAXBND 3 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 1
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
