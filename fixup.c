@@ -763,7 +763,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FTYPE f_trans(FTYPE r);
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
   FTYPE b0, b1, b2;
-  FTYPE r, th, ph;
+  FTYPE r, th, ph, R;
   FTYPE X[NDIM], V[NDIM];
   FTYPE omegastar;
   FTYPE tau;
@@ -791,6 +791,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   r=V[1];
   th=V[2];
   ph=V[3];
+  R = r*sin(th);
   
   //FREEZE_BSQORHO = (FRACBSQORHO*FRACBSQORHO) * BSQORHOLIMIT / pow(r,2.);
   //FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT; ///pow(r,2.*gam);
