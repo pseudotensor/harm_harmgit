@@ -799,11 +799,17 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   FREEZE_BSQOU = (FRACBSQOU) * BSQOULIMIT; ///pow(r,2.*gam);
   
   //only do so on final step
-  if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
+  if((DOEVOLVERHO||DOEVOLVEUU)) {
+    if( steppart == 0 ) {
+      mydt = 0.5*dt;
+    }
+    else {
+      mydt = dt;
+    }
     ftrr = f_trans(R);
     //only need to do the following if actually within Komi's zone
     if( ftrr > 0 ){
-      omegastar = get_omegaf_phys(t, dt, steppart);
+      omegastar = get_omegaf_phys(t, mydt, steppart);
       tiltangle = get_ns_alpha();
       costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
       //pulsar rotational period
@@ -815,22 +821,22 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
       if( DOEVOLVERHO ){
 	rho0 = BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO;
-	if( dt * b2 > MAXEXPVAL ) {
+	if( mydt * b2 > MAXEXPVAL ) {
 	  //so large an exponent that is equivalent to essentially hard-fixing the value
 	  pr[RHO] = rho0;
 	}
 	else {
-	  pr[RHO] = rho0 + (pr[RHO]-rho0)*exp(-dt * b2);
+	  pr[RHO] = rho0 + (pr[RHO]-rho0)*exp(-mydt * b2);
 	}
       }
       if( DOEVOLVEUU ){
 	u0 = BSQOULIMIT*prfloor[UU]/FREEZE_BSQOU;
-	if( dt * b2 > MAXEXPVAL ) {
+	if( mydt * b2 > MAXEXPVAL ) {
 	  //so large an exponent that is equivalent to essentially hard-fixing the value
 	  pr[UU] = u0;
 	}
 	else {
-	  pr[UU] = u0 + (pr[UU]-u0)*exp(-dt * b2);
+	  pr[UU] = u0 + (pr[UU]-u0)*exp(-mydt * b2);
 	}
       }
       if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
@@ -838,13 +844,13 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 	compute_vpar(pr, ptrgeom, &vpar);
 
 	//update parallel velocity component
-	if( dt * b2 > MAXEXPVAL ) {
+	if( mydt * b2 > MAXEXPVAL ) {
 	  //so large an exponent that is equivalent to essentially hard-fixing the value
 	  vpar = 0;
 	}
 	else {
 	  //damp parallel velocity component
-	  vpar *= exp(-dt * b1);
+	  vpar *= exp(-mydt * b1);
 	}
 
 	//update parallel velocity component
