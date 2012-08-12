@@ -800,7 +800,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   
   //only do so on final step
   if(1 == finalstep && (DOEVOLVERHO||DOEVOLVEUU)) {
-    ftrr = f_trans(r);
+    ftrr = f_trans(R);
     //only need to do the following if actually within Komi's zone
     if( ftrr > 0 ){
       omegastar = get_omegaf_phys(t, dt, steppart);
