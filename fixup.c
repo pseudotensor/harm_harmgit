@@ -779,6 +779,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   const FTYPE MAXEXPVAL = 30;
   FTYPE rho0, u0;
   FTYPE ftrr;
+  FTYPE mydt;
   
   Bcon[0]=0;
   Bcon[1]=pr[B1];
