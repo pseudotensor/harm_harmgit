@@ -1336,16 +1336,17 @@ int restart_read_defs_new(void)
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
-    FAILFLOORLOOP(indexfinalstep,tscale,floor){
-      failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
-      // failfloorcountlocal overwritten by counttotal by integratel in dump_ener.c, so also put in spatial spot.  Need this if not tracking counters spatially.  Or shouldn't reset failfloorcountlocal to zero in counttotal in dump_ener.c and reset counters to zero elsewhere at start of simulation.
-      // So just stick it somewhere we can easily track down later on this myid==0 core.
-      int i=-1;
-      int j=-1;
-      int k=-1;
-      GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor) = failfloorcountlocal[indexfinalstep][tscale][floor];
+    if(DODEBUG){
+      FAILFLOORLOOP(indexfinalstep,tscale,floor){
+	failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
+	// failfloorcountlocal overwritten by counttotal by integratel in dump_ener.c, so also put in spatial spot.  Need this if not tracking counters spatially.  Or shouldn't reset failfloorcountlocal to zero in counttotal in dump_ener.c and reset counters to zero elsewhere at start of simulation.
+	// So just stick it somewhere we can easily track down later on this myid==0 core.
+	int i=-1;
+	int j=-1;
+	int k=-1;
+	GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor) = failfloorcountlocal[indexfinalstep][tscale][floor];
+      }
     }
-
 
     if(DODISS) ENERREGIONLOOP(enerregion) for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) dissreg[enerregion][dissloop]=dissreg_tot[enerregion][dissloop];
     // assume (*dissfunpos)[][] not restored since zeroed out each dump

@@ -866,27 +866,32 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
 #elif(VARTOINTERPFIELD==GDETFULLVERSION)
 
+
   if(which==1){ // rescale before interpolation
 
-    Bconin[0]=0.0;
-    Bconin[1]=pr[B1];
-    Bconin[2]=pr[B2];
-    Bconin[3]=pr[B3];
-
-    p2interp[B1]=Bconin[1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
-    p2interp[B2]=Bconin[2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
-    p2interp[B3]=Bconin[3]*(ptrgeom->gdet);//*pow(V[1],3);
+    if(dir==1||dir==3){
+      p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
+    if(0&&dir==2){
+      p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
   }
   else if(which==-1){ // unrescale after interpolation
 
-    Bconin[0]=0.0;
-    Bconin[1]=p2interp[B1];
-    Bconin[2]=p2interp[B2];
-    Bconin[3]=p2interp[B3];
-    
-    pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
-    pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
-    pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    if(dir==1||dir==3){
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
+    if(0&&dir==2){
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
       
   }
   else{
