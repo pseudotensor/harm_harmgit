@@ -807,7 +807,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     else {
       mydt = dt;
     }
-    ftrr = f_trans(R);
+    ftrr = f_trans(r);
     //only need to do the following if actually within Komi's zone
     if( ftrr > 0 ){
       omegastar = get_omegaf_phys(t, mydt, steppart);
