@@ -423,17 +423,17 @@ int fix_hp(FTYPE *h, FTYPE *p)
 #if(0)
   // keep \theta between 0 and \pi
   if(th<0.0) th+=M_PI;
-  if(th>M_PI) th-=M_PI;
+  if(th>=M_PI) th-=M_PI;
 
   // keep \phi between 0 and 2\pi
   if(ph<0.0) ph+=2.0*M_PI;
-  if(ph>2.0*M_PI) ph-=2.0*M_PI;
+  if(ph>=2.0*M_PI) ph-=2.0*M_PI;
 #else
 
   // keep \phi between 0 and 2\pi.  Can always do that full rotation.
   // assume never more out of phase that 1 full rotation
   if(ph<0.0) ph+=2.0*M_PI;
-  if(ph>2.0*M_PI) ph-=2.0*M_PI;
+  if(ph>=2.0*M_PI) ph-=2.0*M_PI;
 
   // keep \theta between 0 and \pi and \phi between 0 and 2\pi
   // but need to be at same physical SPC location, not arbitrary rotation
@@ -444,12 +444,15 @@ int fix_hp(FTYPE *h, FTYPE *p)
     th*=-1.0;
     if(ph<=M_PI) ph+=M_PI;
     else if(ph>M_PI) ph-=M_PI;
+    else{ dualfprintf(fail_file,"Shouldn't be here1 with th=%g ph=%g\n",th,ph); myexit(1);}
   }
-  else if(th>M_PI){
+  else if(th>=M_PI){
     th=M_PI-th;
     if(ph<=M_PI) ph+=M_PI;
     else if(ph>M_PI) ph-=M_PI;
+    else{ dualfprintf(fail_file,"Shouldn't be here2 with th=%g ph=%g\n",th,ph); myexit(1);}
   }
+  else{ dualfprintf(fail_file,"Shouldn't be here3 with th=%g ph=%g\n",th,ph); myexit(1);}
 #endif
 
   *h=th;
