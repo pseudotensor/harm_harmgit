@@ -85,6 +85,9 @@ static FTYPE Rstar,Afactor;
 static FTYPE AAAA,AAA,BBB,DDD,CCCC,Rj;
 static FTYPE ii0;
 
+// for defcoord=SNSCOORDS
+void vofx_snscoords( FTYPE *X, FTYPE *V );
+
 // for defcoord=SJETCOORDS
 static void vofx_sjetcoords( FTYPE *X, FTYPE *V );  //original coordinates
 static void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout ); //coordinate "cylindrifier"
@@ -1000,7 +1003,6 @@ void read_coord_parms(int defcoordlocal)
 void bl_coord(FTYPE *X, FTYPE *V)
 {
   FTYPE Ftrgen( FTYPE x, FTYPE xa, FTYPE xb, FTYPE ya, FTYPE yb );
-  FTYPE Fangle( FTYPE x );
   extern FTYPE mysin(FTYPE th);
   FTYPE myx2;
   FTYPE mysign,ts1,fnstar,myNrat;
@@ -1175,29 +1177,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[3]=2.0*M_PI*X[3];
   }
   else if (defcoord == SNSCOORDS ) {
-    V[0] = X[0];
-    
-    theexp = npow*X[1];
-    
-    if( X[1] > x1br ) {
-      theexp += cpow2 * pow(X[1]-x1br,npow2);
-    }
-    //hyperexponential for X[1] > x1br
-    V[1] = R0+exp(theexp);
-    if( 0 != x20 ) {
-      V[2] = fabs(X[2])*Rin/V[1]; 
-      V[2] += Fangle((fabs(X[2])/x20-hslope)/(hslope-1))*(1-Rin/V[1])*(hslope-1)/(1./x20-hslope);
-      V[2] *= sign(X[2]);
-      V[2] = M_PI_2l * ( 1.0+V[2] );
-    }
-    else {
-      V[2] = M_PI_2l * (1.0 +X[2]); 
-    }
-    // default is uniform \phi grid
-    V[3]=2.0*M_PI*X[3];
+#if(DOCYLINDRIFYCOORDS)
+    //use original coordinates
+    vofx_snscoords( X, V );
+#else
+    //apply cylindrification to original coordinates
+    //[this internally calls vofx_sjetcoords()] 
+    vofx_cylindrified( X, vofx_snscoords, V );
+#endif   
   }
   else if (defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB) {
-#if(0)
+#if(DOCYLINDRIFYCOORDS)
     //use original coordinates
     vofx_sjetcoords( X, V );
 #else
@@ -1561,6 +1551,34 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 
 
+}
+
+void vofx_snscoords( FTYPE *X, FTYPE *V )
+{
+  FTYPE theexp;
+  FTYPE Fangle( FTYPE x );
+
+  
+  V[0] = X[0];
+
+  theexp = npow*X[1];
+
+  if( X[1] > x1br ) {
+    theexp += cpow2 * pow(X[1]-x1br,npow2);
+  }
+  //hyperexponential for X[1] > x1br
+  V[1] = R0+exp(theexp);
+  if( 0 != x20 ) {
+    V[2] = fabs(X[2])*Rin/V[1]; 
+    V[2] += Fangle((fabs(X[2])/x20-hslope)/(hslope-1))*(1-Rin/V[1])*(hslope-1)/(1./x20-hslope);
+    V[2] *= sign(X[2]);
+    V[2] = M_PI_2l * ( 1.0+V[2] );
+  }
+  else {
+    V[2] = M_PI_2l * (1.0 +X[2]); 
+  }
+  // default is uniform \phi grid
+  V[3]=2.0*M_PI*X[3];
 }
 
 void vofx_sjetcoords( FTYPE *X, FTYPE *V )
