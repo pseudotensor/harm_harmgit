@@ -1177,7 +1177,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[3]=2.0*M_PI*X[3];
   }
   else if (defcoord == SNSCOORDS ) {
-#if(DOCYLINDRIFYCOORDS)
+#if(!DOCYLINDRIFYCOORDS)
     //use original coordinates
     vofx_snscoords( X, V );
 #else
@@ -1187,7 +1187,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #endif   
   }
   else if (defcoord == SJETCOORDS || defcoord == SJETCOORDS_BOB) {
-#if(DOCYLINDRIFYCOORDS)
+#if(!DOCYLINDRIFYCOORDS)
     //use original coordinates
     vofx_sjetcoords( X, V );
 #else
