@@ -428,14 +428,14 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 2.4;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
     //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
     //by POLEDEATH (see bounds.tools.c).
   
-  if (defcoord=SNSCOORDS) {
+  if (0&&defcoord=SNSCOORDS) {
     global_x20 = 0;  //value of |x2| at which to start transition from cylindric to spherical coords
     hslope = 2.; //hslope*global_x20 is the value of |x2| at which this transition finishes
   }
