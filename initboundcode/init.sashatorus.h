@@ -438,7 +438,7 @@ struct Ccoordparams {
 #define DOPOLEGAMMADEATH 0
 
 #undef DOPOLESMOOTH
-#define DOPOLESMOOTH 0
+#define DOPOLESMOOTH 2
 
 #undef DONSEMFS
 #define DONSEMFS 1
