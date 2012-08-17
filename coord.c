@@ -1568,17 +1568,16 @@ void vofx_snscoords( FTYPE *X, FTYPE *V )
   }
   //hyperexponential for X[1] > x1br
   V[1] = R0+exp(theexp);
-  if( 0 != x20 ) {
-    V[2] = fabs(X[2])*Rin/V[1]; 
-    V[2] += Fangle((fabs(X[2])/x20-hslope)/(hslope-1))*(1-Rin/V[1])*(hslope-1)/(1./x20-hslope);
-    V[2] *= sign(X[2]);
-    V[2] = M_PI_2l * ( 1.0+V[2] );
-  }
-  else {
-    V[2] = M_PI_2l * (1.0 +X[2]); 
-  }
+  V[2] = M_PI_2l * (1.0 +X[2]); 
   // default is uniform \phi grid
   V[3]=2.0*M_PI*X[3];
+
+#if(0) //cylindrify toward midplane
+  V[2] = fabs(X[2])*Rin/V[1]; 
+  V[2] += Fangle((fabs(X[2])/x20-hslope)/(hslope-1))*(1-Rin/V[1])*(hslope-1)/(1./x20-hslope);
+  V[2] *= sign(X[2]);
+  V[2] = M_PI_2l * ( 1.0+V[2] );
+#endif
 }
 
 void vofx_sjetcoords( FTYPE *X, FTYPE *V )
