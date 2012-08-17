@@ -435,7 +435,7 @@ int init_grid(void)
     //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
     //by POLEDEATH (see bounds.tools.c).
   
-  if (0&&defcoord=SNSCOORDS) {
+  if (0&&defcoord==SNSCOORDS) {
     global_x20 = 0;  //value of |x2| at which to start transition from cylindric to spherical coords
     hslope = 2.; //hslope*global_x20 is the value of |x2| at which this transition finishes
   }
