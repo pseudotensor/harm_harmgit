@@ -710,7 +710,7 @@ FTYPE f_trans(FTYPE r)
 {
   FTYPE f, rs, rf;
   //fraction of Rlc over which to carry out Komissarov's swindle
-  FTYPE fracRlc = 1.0;
+  FTYPE fracRlc = 0.7;
   FTYPE hardfracRlc = 0.5;
   //radius of light cylinder
   FTYPE Rlc = 1.0 / get_omegaf_phys(t, dt, steppart);
