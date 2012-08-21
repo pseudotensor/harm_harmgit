@@ -706,11 +706,11 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
   return(0);
 }
 
-FTYPE f_trans(FTYPE r)
+FTYPE f_trans(FTYPE r, FTYPE fracRlc)
 {
   FTYPE f, rs, rf;
   //fraction of Rlc over which to carry out Komissarov's swindle
-  FTYPE fracRlc = 0.7;
+  //FTYPE fracRlc = 0.7;
   FTYPE hardfracRlc = 0.5;
   //radius of light cylinder
   FTYPE Rlc = 1.0 / get_omegaf_phys(t, dt, steppart);
@@ -760,7 +760,7 @@ FTYPE f_trans1(FTYPE r)
 
 int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
-  FTYPE f_trans(FTYPE r);
+  FTYPE f_trans(FTYPE r, FTYPE fracRlc);
   FTYPE costhetatilted(FTYPE tiltangle, FTYPE theta, FTYPE phi);
   FTYPE b0, b1, b2;
   FTYPE r, th, ph, R;
@@ -807,7 +807,7 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     else {
       mydt = dt;
     }
-    ftrr = f_trans(r);
+    ftrr = f_trans(r,0.7);
     //only need to do the following if actually within Komi's zone
     if( ftrr > 0 ){
       omegastar = get_omegaf_phys(t, mydt, steppart);
@@ -840,6 +840,21 @@ int freeze_motion(FTYPE *prfloor, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 	  pr[UU] = u0 + (pr[UU]-u0)*exp(-mydt * b2);
 	}
       }
+    }
+
+    ftrr = f_trans(r,1.0);
+    //only need to do the following if actually within Komi's zone
+    if( ftrr > 0 ){
+      omegastar = get_omegaf_phys(t, mydt, steppart);
+      tiltangle = get_ns_alpha();
+      costhetaprime = costhetatilted( tiltangle, th, ph-omegastar*t );
+      //pulsar rotational period
+      tau = 2*M_PIl/omegastar;
+      //inverse timescale over which motion is damped, let's try 10% of period
+      b0 = 1./(frac*tau);
+      b1 = b0 * ftrr;
+      b2 = b1 * fabs(costhetaprime);  //account for pulsar tilt
+
       if(1 || pr[RHO] < 0.1 * BSQORHOLIMIT*prfloor[RHO]/FREEZE_BSQORHO) {
 	//compute parallel velocity component (along full B)
 	compute_vpar(pr, ptrgeom, &vpar);
