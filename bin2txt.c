@@ -222,6 +222,20 @@ int main(
     fprintf(stderr,"Last line must have:\nx_start x_finish y_start y_finish z_start z_finish\n");
     fprintf(stderr,"e.g. for one variable:\n\ndensity 1E-4 1\n");
     fprintf(stderr,"0 1 0 1 0 1\n");
+    fprintf(stderr,"e.g. for fieldline file with 11 columns:\n");
+    fprintf(stderr,"density 1E-4 1\n"
+	    "ug 1E-4 1\n"
+	    "negudt 1E-4 1\n"
+	    "mu 1E-4 1\n"
+	    "uut 1E-4 1\n"
+	    "vr 1E-4 1\n"
+	    "vh 1E-4 1\n"
+	    "vph 1E-4 1\n"
+	    "Br 1E-4 1\n"
+	    "Bh 1E-4 1\n"
+	    "Bp 1E-4 1\n"
+	    "0 1 0 1 0 1\n"
+	    );
     fprintf(stderr,"vis5d e.g.: ./bin2txt 0 5 0 3 64 64 64 1 vis5d.image.head imx0-0-0-s1-0000.dat.r8.gz imx0-0-0-s1-0000.dat.v5d b 1\n");
 
     fprintf(stderr,"\n");
@@ -423,15 +437,24 @@ int main(
     // x_start x_finish y_start y_finish z_start z_finish
     for(i=0;i<NumVars;i++){
       fscanf(vis5dheader,"%s %f %f",VarName[i],&minmax[0][i],&minmax[1][i]);
-      fprintf(stderr,"VarName[%d]=%s min: %g max: %g\n",i,VarName[i],minmax[0][i],minmax[1][i]);  fflush(stderr);
+      fprintf(stderr,"VarName[%d of %d]=%s min: %g max: %g\n",i,NumVars-1,VarName[i],minmax[0][i],minmax[1][i]);  fflush(stderr);
     }    
+
+    fprintf(stderr,"DONE fscanf1\n"); fflush(stderr);
+
     fscanf(vis5dheader,"%f",&pos[1][1]);
     fscanf(vis5dheader,"%f",&pos[1][2]);
     fscanf(vis5dheader,"%f",&pos[2][1]);
     fscanf(vis5dheader,"%f",&pos[2][2]);
     fscanf(vis5dheader,"%f",&pos[3][1]);
     fscanf(vis5dheader,"%f",&pos[3][2]);
+
+    fprintf(stderr,"DONE fscanf2: %f %f %f %f %f %f\n",pos[1][1],pos[1][2],pos[2][1],pos[2][2],pos[3][1],pos[3][2]); fflush(stderr);
+
     while(fgetc(vis5dheader)!='\n'); // skip rest of line
+
+    fprintf(stderr,"DONE fgetc\n"); fflush(stderr);
+
     for(i=0;i<NumTimes;i++){
       TimeStamp[i]=i%60+((i/60)%60)*100+(i/(60*60))*10000;
       //fprintf(stderr,"ts: %06d\n",TimeStamp[i]); fflush(stderr);
@@ -439,6 +462,10 @@ int main(
     }
 
   }
+
+
+  fprintf(stderr,"DONE fscanfs\n"); fflush(stderr);
+
 
   if((dest==5)||(source==5)){
 
@@ -468,6 +495,9 @@ int main(
     }
 
   }
+
+  fprintf(stderr,"DONE ProJVert\n"); fflush(stderr);
+
 
 #endif
 

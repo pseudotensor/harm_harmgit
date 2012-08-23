@@ -316,22 +316,22 @@ static void setup_zones(void)
 
 
 
-void gdump_tostartofdata(FILE* gdumpinlocal)
+void gdump_tostartofdata(FILE** gdumpinlocal)
 {
 
-  rewind(gdumpinlocal);
+  rewind(*gdumpinlocal);
   // skip first line assuming it's a header line if READHEADERGDUMP=1
-  if(READHEADERGDUMP) while(fgetc(gdumpinlocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  if(READHEADERGDUMP) while(fgetc(*gdumpinlocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
   
 
 }
 
-void infile_tostartofdata(FILE* infilelocal)
+void infile_tostartofdata(FILE** infilelocal)
 {
 
-  rewind(infilelocal);
+  rewind(*infilelocal);
   // skip first line assuming it's a header line if READHEADER=1
-  if(READHEADER) while(fgetc(infilelocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
+  if(READHEADER) while(fgetc(*infilelocal)!='\n'); // go past end of line (i.e. assume if binaryoutput=0/1 still text header if requesting to read the header)
   
 
 }
@@ -353,7 +353,7 @@ static void readdata_preprocessdata(void)
       exit(1);
     }
     else{
-      gdump_tostartofdata(gdumpin);
+      gdump_tostartofdata(&gdumpin);
     }
   }
 
@@ -551,7 +551,7 @@ static void readdata_preprocessdata(void)
 
 	  // reset gdump if changed time -- assumes gdump same for each time so don't have to create multi-time gdump
 	  if(h!=hprior && oN0!=1){
-	    gdump_tostartofdata(gdumpin);
+	    gdump_tostartofdata(&gdumpin);
 	    hprior=h;
 	  }
 
@@ -1635,6 +1635,16 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-oN <oN0> <oN1> <oN2> <oN3>\n");
 	  fprintf(stderr,"\t<oN?> : old grid sizes for (e.g.) t,r,\\theta,\\phi \n");
+	}
+      }
+      if (usage || strcmp(argv[i],"-numcolumns")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc) sscanf(argv[++i],"%d",&numcolumns) ;
+	}
+	else{
+	  fprintf(stderr,"-numcolumns <numcolumns>\n");
+	  fprintf(stderr,"\t<numcolumns> : number of columns in input file.  Required if OLDERHEADER<2\n");
 	}
       }
       if (usage || strcmp(argv[i],"-refine")==0) {

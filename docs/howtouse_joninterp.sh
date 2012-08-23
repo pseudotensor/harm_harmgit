@@ -1,13 +1,40 @@
 ##################
 # shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.
 
+# choose which type of code/system setup
+#system=1   # lustre and reduced code on orange
+system=2   # ki-rh42
+
+
+# setup dirs
+if [ $system -eq 1 ]
+then
+    joninterpcodedir=/lustre/ki/pfs/jmckinne/harmgit_jon2interp/
+    basedir=/lustre/ki/pfs/jmckinne/thickdisk7/
+    iinterpprogname=~/bin/iinterp.orange.thickdisk7
+    bin2txtprogname=~/bin/bin2txt.orange
+fi
+
+if [ $system -eq 2 ]
+then
+    joninterpcodedir=/data/jon/harmgit/
+    basedir=`pwd`
+    iinterpprogname=`pwd`/iinterp
+    bin2txtprogname=`pwd`/bin2txt
+fi
+
 #
 # 1) make program
 
-cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/
-# setup for reduced code set
-rm -rf init.c init.h
-touch init.h
+
+cd $joninterpcodedir
+
+if [ $system -eq 1 ]
+then
+    # setup for reduced code set
+    rm -rf init.c init.h
+    touch init.h
+fi
 
 
 # 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)
@@ -25,19 +52,29 @@ make superclean ; make prepbin2txt ; make bin2txt
 # ensure no errors during compile or link (need lapack!)
 
 ##############
-4) copy programs to your path
+# 4) copy programs to your path
 
-cp iinterp ~/bin/iinterp.orange.thickdisk7
-cp bin2txt ~/bin/bin2txt.orange
+cp iinterp $iinterpprogname
+cp bin2txt $bin2txtprogname
 
 ###############
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
 # 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)
-newheader=0
+# -1=VERYOLD header with 21 entries (runlocaldipole3dfiducial)
+newheader=-1
+
+# REQUIRED FILES:
+# 1) ensure dumps contains fieldline files
+# 2) local $basedir contains coordparms.dat if different than default.
+# 3) dumps contains gdump.bin file
+
 
 # get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump
-dumpnum=5437
+#dumpnum=4000
+
+dumpnum=2000
+
 dumpnumm1=$(($dumpnum-1))
 if [ -e dumps/fieldline$dumpnumm1.bin ]
 then
@@ -51,7 +88,8 @@ then
     dumpnump1=$(($dumpnum+1))
 else
     dumpnump1=$(($dumpnum))
-fi	
+fi
+
 #
 # get times of dumps
 time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`
@@ -69,6 +107,11 @@ then
 else
     numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`
 fi
+if [ $newheader -eq -1 ]
+then
+    numcolumns=11
+fi
+
 R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`
 Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`
 Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`
@@ -88,38 +131,50 @@ defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
 #
 # Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively
 #
+# box grid count
 boxnt=1
-boxnx=100
-boxny=100
-boxnz=100
-boxxl=-10
-boxyl=-10
-boxzl=-10
-boxxh=10
-boxyh=10
-boxzh=10
+boxnx=256
+boxny=256
+boxnz=256
+#
+# box size
+boxxl=-100
+boxyl=-100
+boxzl=-100
+boxxh=100
+boxyh=100
+boxzh=100
 
 # set docurrent=0 if want quick result with no current density
 # this will change number of output columns
 docurrent=1
 
-cd /lustre/ki/pfs/jmckinne/thickdisk7/
-IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/
+
+
+cd $basedir
+IDUMPDIR=$basedir/idumps/
 # ensure coordparms.dat exists here -- required to read in harm internal grid parameters
 mkdir $IDUMPDIR
 #
 #
 #
+if [ $newheader -eq -1 ]
+then
+    gdumpname=./dumps/gdump.runlocaldipole3dfiducial.bin
+else
+    gdumpname=./dumps/gdump.bin
+fi
+
 whichoutput=14
 outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
 
 
 # as a test, one can do just 1 variable (the density)
 if [ 1 -eq 0 ]
 then
     outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz
-    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename
+    $iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename
 fi
 
 
@@ -135,6 +190,8 @@ fi
 # So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).
 
 # The columns or quantities in the list are ordered as:
+# 14 things:
+#
 # rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
 # FEMrad is the radial energy flux
 # Bphi is the poloidal enclosed current density
@@ -155,6 +212,7 @@ fi
 
 
 
+############################################
 # can check how looks in text by doing:
 
 file=$outfilename
@@ -167,10 +225,63 @@ fi
 newnx=`head -1 $file |awk '{print $2}'`
 newny=`head -1 $file |awk '{print $3}'`
 newnz=`head -1 $file |awk '{print $4}'`
-bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols
+$bin2txtprogname 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols
 less -S $file.txt
 
 # should look reasonable.
+
+
+
+############################################
+# can look in vis5d and see how looks
+
+[jon@ki-rh42 v5dfield]$ cat  head.v5d
+density 1E-4 1
+ug 1E-4 1
+negudt 1E-4 1
+mu 1E-4 1
+uut 1E-4 1
+vr 1E-4 1
+vh 1E-4 1
+vph 1E-4 1
+Br 1E-4 1
+Bh 1E-4 1
+Bp 1E-4 1
+0 1 0 1 0 1
+
+
+# original SPC data cube
+# ./bin2txt 1 5 0 1 3 288 128 128 1 head.v5d fieldline4000.bin fieldline4000.v5d f 11
+
+# interpolated Cartesian data cube
+# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head.v5d $outfilename $outfilename.v5d f 14
+
+
+[jon@ki-rh42 v5dfield]$ cat  head14.v5d
+density 1E-4 1
+ug 1E-4 1
+vx 1E-4 1
+vy 1E-4 1
+vz 1E-4 1
+Bx 1E-4 1
+By 1E-4 1
+Bz 1E-4 1
+FEMrad 1E-4 1
+Bphi 1E-4 1
+Jt 1E-4 1
+Jx 1E-4 1
+Jy 1E-4 1
+Jz 1E-4 1
+0 1 0 1 0 1
+
+
+# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
+# infilename=idumps/fieldline5437.cart.bin.100.100.100
+# infilename=idumps/fieldline2000.cart.bin.100.100.100
+# ./bin2txt 1 5 0 1 3 100 100 100 1 head14.v5d $infilename $infilename.v5d f 14
+
+
+
 
 
 
@@ -179,6 +290,8 @@ less -S $file.txt
 
 
 #
+############################################
+############################################
 ################################### DONE!
 
 
@@ -204,9 +317,9 @@ less -S $file.txt
 
 # another beginning of slow way:
 # setup new compact 3-time file read-in as 1-time file
-bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnum.bin $IDUMPDIR/fieldline$dumpnum.txt f $numcolumns
-bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnumm1.bin $IDUMPDIR/fieldline$dumpnumm1.txt f $numcolumns
-bin2txt.orange 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnump1.bin $IDUMPDIR/fieldline$dumpnump1.txt f $numcolumns
+$bin2txtprogname 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnum.bin $IDUMPDIR/fieldline$dumpnum.txt f $numcolumns
+$bin2txtprogname 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnumm1.bin $IDUMPDIR/fieldline$dumpnumm1.txt f $numcolumns
+$bin2txtprogname 1 2 0 -1 3 $nx $ny $nz 1 dumps/fieldline$dumpnump1.bin $IDUMPDIR/fieldline$dumpnump1.txt f $numcolumns
 #... using "join" or "pr" or similar -- but too slow to create text files and pointless.
 
 
@@ -249,44 +362,44 @@ ls -art *.c <PASTE echo $GREPCOMMAND here>
 
 # interpolate to get rest-mass density
 whichoutput=1000
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.rho.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.rho.bin
 #
 # interpolate to get thermal gas internal energy density
 whichoutput=1001
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.ug.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.ug.bin
 #
 #
 # interpolate to get orthonormal v^x
 whichoutput=1003
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vx.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vx.bin
 #
 # interpolate to get orthonormal v^y
 whichoutput=1004
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vy.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vy.bin
 #
 # interpolate to get orthonormal v^z
 whichoutput=1005
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vz.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.vz.bin
 #
 # interpolate to get orthonormal B^x
 whichoutput=1007
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bx.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bx.bin
 #
 # interpolate to get orthonormal B^y
 whichoutput=1008
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.By.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.By.bin
 #
 # interpolate to get orthonormal B^z
 whichoutput=1009
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bz.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bz.bin
 #
 # interpolate to get radial energy flux per unit sin(\theta)
 whichoutput=1011
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.FE.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.FE.bin
 #
 # interpolate to get poloidal current density (B_\phi)
 whichoutput=1012
-~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bphi.bin
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN 1 272 128 256 -refine 1.0 -filter 0 -grids 1 0 -nN 1 $boxnx $boxny $boxnz -ibox 0 0 -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double < ./dumps/fieldline$dumpnum.bin > $IDUMPDIR/fieldline$dumpnum.cart.Bphi.bin
 
 # merge interpolation results
 
@@ -310,10 +423,10 @@ tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1],
 
 ############ SKIP THIS SECTION AND GO TO IINTERP SECTION
 # convert fieldline????.bin into text format.
-cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/
+cd $joninterpcodedir
 make superclean ; make prepbin2txt ; make bin2txt
 
-~/bin/bin2txt.orange  1 2 0 -1 3 272 128 256 1 fieldline5437.bin fieldline5437.txt f 11
+$bin2txtprogname  1 2 0 -1 3 272 128 256 1 fieldline5437.bin fieldline5437.txt f 11
 
 # now break into separate columns
 head -1 fieldline5437.txt > fieldline5437.txt.head
@@ -330,4 +443,4 @@ awk '{print $7*$4}' fieldline5437.txt.data > fieldline5437.txt.data.uux3
 ################
 
 # -coord <Rin> <Rout> <R0> <hslope>
-#~/bin/iinterp.orangenew -binaryinput 0 -binaryoutput 0 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN 272 128 256 -refine 1.0 -filter 0 0 -grids 1 0 -nN $boxnx $boxny $boxnz -ibox -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvalue 0 -gdump ./gdump.txt < fieldline5437.rho.txt > fieldline5437.cart.rho.txt
+#$iinterpprogname -binaryinput 0 -binaryoutput 0 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN 272 128 256 -refine 1.0 -filter 0 0 -grids 1 0 -nN $boxnx $boxny $boxnz -ibox -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvalue 0 -gdump ./gdump.txt < fieldline5437.rho.txt > fieldline5437.cart.rho.txt

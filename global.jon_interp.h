@@ -190,6 +190,7 @@
 #define fail_file stderr
 #define logfull_file stderr
 #define log_file stderr
+#define logdt_file stderr
 #define myexit exit
 
 
@@ -248,9 +249,10 @@
 
 
 // whether to use new THETAROT header or not
+// 2: very old header (21 things: runlocaldipole3dfiducial)
 // 1: old header
 // 0: new header
-#define OLDERHEADER 0
+#define OLDERHEADER 2
 
 
 // need not change below datatype stuff
@@ -261,6 +263,8 @@
 #define SCANFIELDLINE "%f %f %f %f %f %f %f %f %f %f %f" // 11 items
 #if(OLDERHEADER==1)
 #define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %d %d %d %d %d %d %d %d %d" // 30
+#elif(OLDERHEADER==2)
+#define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f" // 21
 #else
 #define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %f  %f %d %d %d %d %d %d %d %d %d" // 32
 #endif
@@ -271,6 +275,8 @@
 #define SCANFIELDLINE "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf" // 11 items
 #if(OLDERHEADER==1)
 #define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %d %d %d %d %d %d %d %d %d" // 30
+#elif(OLDERHEADER==2)
+#define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf" // 21
 #else
 #define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %lf %lf %d %d %d %d %d %d %d %d %d" // 32
 #endif
@@ -281,6 +287,8 @@
 #define SCANFIELDLINE "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf" // 11 items
 #if(OLDERHEADER==1)
 #define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %d %d %d %d %d %d %d %d %d" // 30
+#elif(OLDERHEADER==2)
+#define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf" // 21
 #else
 #define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %Lf %Lf %d %d %d %d %d %d %d %d %d" // 32
 #endif
@@ -297,9 +305,25 @@
 
 #define PRINTHEADERSTDERRARGS tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
 
-#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
+#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
 
 #define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
+
+
+#elif(OLDERHEADER==2) // ELIF
+
+
+#define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g\n" // 21
+#define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH
+#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
+
+#define PRINTHEADERSTDERR "OLD2: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
+
+#define PRINTHEADERSTDERRARGS tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
+
+#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
+
+#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH
 
 
 #else //ELSE
@@ -410,8 +434,8 @@ extern int compute_additionals(void);
 
 extern void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal);
 
-extern void gdump_tostartofdata(FILE *gdumpinlocal);
-extern void infile_tostartofdata(FILE* infilelocal);
+extern void gdump_tostartofdata(FILE **gdumpinlocal);
+extern void infile_tostartofdata(FILE **infilelocal);
 
 extern void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTYPE newdatalocal);
 

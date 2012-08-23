@@ -981,17 +981,27 @@ int compute_additionals(void)
     /////////////////////////
     // free temp space
     //
-    fprintf(stderr,"Freeing space used by computing additionals\n"); fflush(stderr);
-    
+    fprintf(stderr,"BEGIN Freeing space used by computing additionals\n"); fflush(stderr);
+    fprintf(stderr,"olddata3time: %d %d %d %d %d %d %d %d %d %d",0,NUMCOLUMNSSTORE-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
+    fprintf(stderr,"olddatagdump: %d %d %d %d %d %d %d %d %d %d",0,numgdumps-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
+
+    //    olddata3time = f5matrix(0,NUMCOLUMNSSTORE-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;    
+    //    olddatagdump = f5matrix(0,numgdumps-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ; // no temporal gdump
+
     free_f5matrix(olddata3time,0,NUMCOLUMNSSTORE-1,-numbc0fake,oN0fake-1+numbc0fake,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
     free_f5matrix(olddatagdump,0,numgdumps-1,0,0,-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]);
   
+    fprintf(stderr,"DONE Freeing space used by computing additionals\n"); fflush(stderr);
 
+
+    fprintf(stderr,"BEGIN rewinds\n"); fflush(stderr);
 
     // now rewind fieldline files and gdump files and pass header if exists, so starting at normal starting point as if this routine were never called
-    infile_tostartofdata(infile);
+    infile_tostartofdata(&infile);
     // no need to rewind infilem1 and infilep1
-    gdump_tostartofdata(gdumpin);
+    gdump_tostartofdata(&gdumpin);
+
+    fprintf(stderr,"END rewinds\n"); fflush(stderr);
 
 
     fprintf(stderr,"END Computing additionals\n"); fflush(stderr);
@@ -1559,16 +1569,31 @@ void read_gdumpline(FILE *in, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[N
   }
   else{
     FTYPE tiFTYPE[NDIM];
+    // 3
     SLOOPA(jj){ readelement(binaryinputgdump,inFTYPEgdump,in,&tiFTYPE[jj]); ti[jj]=(int)tiFTYPE[jj];} // file stores gdump columns as FTYPE when binary format, and ok to read as float if text format.
     
+    // 6
     SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&X[jj]);
+    // 9
     SLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&V[jj]);
+    // 9+64=73
     DLOOPA(jj) DLOOPA(kk) DLOOPA(ll) readelement(binaryinputgdump,inFTYPEgdump,in,&conn[jj][kk][ll]);
+    // 73+16=89
     DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcon[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
+    // 89+16=105
     DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&gcov[GIND(jj,kk)]); // notice that read-in 16 elements but only store 10 unique ones
+    // 106
     readelement(binaryinputgdump,inFTYPEgdump,in,gdet); // gdet already pointer
+    // 110
     DLOOPA(jj) readelement(binaryinputgdump,inFTYPEgdump,in,&ck[jj]);
+    // 126
     DLOOPA(jj) DLOOPA(kk) readelement(binaryinputgdump,inFTYPEgdump,in,&dxdxp[jj][kk]);
+
+
+    // DEBUG:
+    //    dualfprintf(fail_file,"readgdump: %d %d %d : dxdxp00=%g\n",ti[1],ti[2],ti[3],dxdxp[0][0]);
+
+
   }
 
 

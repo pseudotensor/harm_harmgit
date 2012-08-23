@@ -183,6 +183,16 @@ ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist.txt
 ################
 # from Kraken (rblandfo) to Nautilus (jmckinne) for sashaa* of only fieldline+gdump files for analysis.
 
+cd /lustre/scratch/rblandfo/
+list="sashaa99t1.5708i sashaa9b100t1.5708i sashaam9full2pit1.5708i"
+for dirname in $list
+do
+	chgrp -R tug1111 $dirname
+	find $dirname -type d -exec chmod 750 {} \;
+	find $dirname -type f -exec chmod 640 {} \;
+done
+
+
 # keep trailing slash!
 mydir=/lustre/scratch/rblandfo/
 cd $mydir
