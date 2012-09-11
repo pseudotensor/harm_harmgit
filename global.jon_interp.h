@@ -252,7 +252,8 @@
 // 2: very old header (21 things: runlocaldipole3dfiducial)
 // 1: old header
 // 0: new header
-#define OLDERHEADER 2
+//#define OLDERHEADER 2
+// NOW this is input variable defaulted to 0
 
 
 // need not change below datatype stuff
@@ -261,88 +262,72 @@
 #define SCANARGVEC "%f %f %f"
 #define SCANARG4VEC "%f %f %f %f"
 #define SCANFIELDLINE "%f %f %f %f %f %f %f %f %f %f %f" // 11 items
-#if(OLDERHEADER==1)
-#define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %d %d %d %d %d %d %d %d %d" // 30
-#elif(OLDERHEADER==2)
-#define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f" // 21
-#else
-#define SCANHEADER      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %f  %f %d %d %d %d %d %d %d %d %d" // 32
-#endif
+#define SCANHEADER1      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %d %d %d %d %d %d %d %d %d" // 30
+#define SCANHEADER2      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f" // 21
+#define SCANHEADER0      " %f %d %d %d  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f %d  %f  %f  %f  %f %d %d %d %d %d %d %d %d %d" // 32
 #elif(REALTYPE==DOUBLETYPE)
 #define SCANARG "%lf"
 #define SCANARGVEC "%lf %lf %lf"
 #define SCANARG4VEC "%lf %lf %lf %lf"
 #define SCANFIELDLINE "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf" // 11 items
-#if(OLDERHEADER==1)
-#define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %d %d %d %d %d %d %d %d %d" // 30
-#elif(OLDERHEADER==2)
-#define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf" // 21
-#else
-#define SCANHEADER      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %lf %lf %d %d %d %d %d %d %d %d %d" // 32
-#endif
+#define SCANHEADER1      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %d %d %d %d %d %d %d %d %d" // 30
+#define SCANHEADER2      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf" // 21
+#define SCANHEADER0      "%lf %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf %lf %lf %d %d %d %d %d %d %d %d %d" // 32
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define SCANARG "%Lf"
 #define SCANARGVEC "%Lf %Lf %Lf"
 #define SCANARG4VEC "%Lf %Lf %Lf %Lf"
 #define SCANFIELDLINE "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf" // 11 items
-#if(OLDERHEADER==1)
-#define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %d %d %d %d %d %d %d %d %d" // 30
-#elif(OLDERHEADER==2)
-#define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf" // 21
-#else
-#define SCANHEADER      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %Lf %Lf %d %d %d %d %d %d %d %d %d" // 32
-#endif
+#define SCANHEADER1      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %d %d %d %d %d %d %d %d %d" // 30
+#define SCANHEADER2      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf" // 21
+#define SCANHEADER0      "%Lf %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %d %Lf %Lf %Lf %Lf %d %d %d %d %d %d %d %d %d" // 32
 #endif
 
 
 
-#if(OLDERHEADER==1)
-#define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %d %d %d %d %d %d %d %d %d\n" // 30
-#define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
-#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
+#define PRINTSCANHEADER1 "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %d %d %d %d %d %d %d %d %d\n" // 30
+#define SCANHEADERARGS1 &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
+#define PRINTHEADERARGS1 tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
-#define PRINTHEADERSTDERR "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
+#define PRINTHEADERSTDERR1 "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
 
-#define PRINTHEADERSTDERRARGS tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERSTDERRARGS1 tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
 
-#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
+#define PRINTHEADERSTDOUT1 "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 30
 
-#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
-
-
-#elif(OLDERHEADER==2) // ELIF
+#define PRINTHEADERSTDOUTARGS1 tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
 
-#define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g\n" // 21
-#define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH
-#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
-
-#define PRINTHEADERSTDERR "OLD2: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
-
-#define PRINTHEADERSTDERRARGS tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
-
-#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
-
-#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH
 
 
-#else //ELSE
+#define PRINTSCANHEADER2 "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g\n" // 21
+#define SCANHEADERARGS2 &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH
+#define PRINTHEADERARGS2 tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
 
-#define PRINTSCANHEADER "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %g  %g  %d %d %d %d %d %d %d %d %d\n" // 32
-#define SCANHEADERARGS &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&EP3,&THETAROT,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
+#define PRINTHEADERSTDERR2 "OLD2: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
 
-#define PRINTHEADERARGS tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
+#define PRINTHEADERSTDERRARGS2 tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH
+
+#define PRINTHEADERSTDOUT2 "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g\n" // 21
+
+#define PRINTHEADERSTDOUTARGS2 tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH
+
+
+
+#define PRINTSCANHEADER0 "%g  %d %d %d %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %g  %d %g  %g  %g  %g  %d %d %d %d %d %d %d %d %d\n" // 32
+#define SCANHEADERARGS0 &tdump,&totalsize[1],&totalsize[2],&totalsize[3],&startx[1],&startx[2],&startx[3],&dX[1],&dX[2],&dX[3],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dtdump,&defcoord,&MBH,&QBH,&EP3,&THETAROT,&is,&ie,&js,&je,&ks,&ke,&whichdump,&whichdumpversion,&numcolumns
+
+#define PRINTHEADERARGS0 tdump,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],readnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 // 32 -- should be same as dump_header_general() in dump.c
 
-#define PRINTHEADERSTDERR "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
+#define PRINTHEADERSTDERR0 "OLD: %22.16g :: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g :: %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
 
-#define PRINTHEADERSTDERRARGS tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+#define PRINTHEADERSTDERRARGS0 tdump,oN1,oN2,oN3,startx[1],startx[2],startx[3],dX[1],dX[2],dX[3],realnstep,gam,spin,R0,Rin,Rout,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
 
-#define PRINTHEADERSTDOUT "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
+#define PRINTHEADERSTDOUT0 "%22.16g %d %d %d %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %ld %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %22.16g %d %22.16g %22.16g %22.16g %22.16g %d %d %d %d %d %d %d %d %d\n" // 32
 
-#define PRINTHEADERSTDOUTARGS tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
+#define PRINTHEADERSTDOUTARGS0 tdump, nN1, nN2, nN3, startxc, startyc, startzc, fakedxc,fakedyc,fakedzc,realnstep,gam,spin,ftemp,endxc,endyc,hslope,dtdump,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numoutputcols
 
-#endif
 
 
 
@@ -433,6 +418,7 @@ extern void compute_simple_gdetFuu(FTYPE gdet, FTYPE *gcov, FTYPE *ucon, FTYPE *
 extern int compute_additionals(void);
 
 extern void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal);
+extern void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal);
 
 extern void gdump_tostartofdata(FILE **gdumpinlocal);
 extern void infile_tostartofdata(FILE **infilelocal);

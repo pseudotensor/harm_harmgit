@@ -15,6 +15,8 @@ static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
 static int compute_datatype14(int which, FTYPE *val, FTYPE *fvar, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
 
+static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom);
+
 
 
 static FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda);
@@ -458,6 +460,45 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
       // already stored in fvar
     }
   }
+  else if(outputvartypelocal==15 || outputvartypelocal==16  || outputvartypelocal==17){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
+
+    if(docurrent==1){
+      dualfprintf(fail_file,"Can't do outputvartypelocal==15 with docurrent=1\n");
+      myexit(5235);
+    }
+
+    //    if(numoutputcols!=4 && numoutputcols!=6){
+    //      fprintf(stderr,"numoutputcols=%d != %d (%d) as expected for datatype==15 or 16\n",numoutputcols,4,6);
+    //      myexit(1);
+    //    }
+
+
+    // first get gdump data (only once per call to compute_preprocess() !!)
+    read_gdumpline(gdumpfile, ti,  X,  V,  conn,  gcon,  gcov,  &gdet,  ck,  dxdxp, &geom);
+    
+    
+    // normal read-in
+    int colini;
+    FTYPE val[MAXINCOLS];
+    for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // numcolumns is input number of columns
+    
+    compute_datatype15(outputvartypelocal, val, fvar, ti,  X,  V,  conn,  gcon,  gcov,  gdet,  ck,  dxdxp, &geom);
+    
+
+    //DEBUG
+    //for(coli=0;coli<numoutputcols;coli++) dualfprintf(fail_file,"coli=%d fvar=%g\n",coli,fvar[coli]);
+
+
+    if(immediateoutput==1){ // then immediately write to output
+      int coli; for(coli=0;coli<numoutputcols;coli++) writeelement(binaryoutput,outFTYPE,outfile,fvar[coli]);
+    }
+    else{
+      // already stored in fvar
+    }
+
+
+
+  }
   else{
     fprintf(stderr,"No such outputvartypelocal=%d\n",outputvartypelocal);
     exit(1);
@@ -592,6 +633,151 @@ static int compute_datatype14(int which, FTYPE *val, FTYPE *fvar, int ti[],  FTY
 
 
   }
+
+
+  return(0);
+}
+
+// compute datatype==15 stuff
+// val is input stuff from fieldline file (colini - numcolumns)
+// fvar is final stuff (coli - numoutputcols)
+static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], struct of_geom *ptrgeom)
+{
+  int concovtype;
+  int jj;
+
+
+
+
+  /////////////////////
+  // also assign to coli type with numoutputcols data values
+  int coli;
+
+
+
+
+  // now do normal assign to vector (for middle time if doing3time==1)
+  FTYPE vecv[NDIM],vecB[NDIM];
+  vecv[0]=val[FLU0]; vecv[1]=val[FLV1]; vecv[2]=val[FLV2]; vecv[3]=val[FLV3];
+  SLOOPA(jj) vecv[jj]*=vecv[TT]; // now uu[jj]
+  vecB[TT]=0.0; SLOOPA(jj) vecB[jj]=val[FLB1+jj-1];
+
+  
+
+
+  // DEBUG:
+  //    SLOOPA(jj) dualfprintf(fail_file,"jj=%d vecv=%g vecB=%g\n",jj,vecv[jj],vecB[jj]);
+
+
+  // convert coordinate basis vector compnents to single orthonormal basis component desired
+
+  // instantly transform vector from original to new coordinate system while reading in to avoid excessive memory use
+
+  // do vecv
+  FTYPE vecvortho[NDIM];
+  concovtype=1; // contravariant
+  vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecv, vecvortho);
+
+  // do vecB
+  FTYPE vecBortho[NDIM];
+  concovtype=1; // contravariant
+  vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecB, vecBortho);
+
+  int vectorcomponentlocal;
+
+  // compute FEMrad
+  FTYPE FEMrad;
+  vectorcomponentlocal=1; // radial component
+  vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, &FEMrad);
+
+  // compute B_{\phi}
+  vectorcomponentlocal=3; // \phi component
+  FTYPE Bphi;
+  vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
+
+  // 3-velocity magnitude: v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)
+  // Lorentz factor: ut = 1/sqrt(1-v^2)
+  // 4-velocity: u={ut,ut*vx,ut*vy,ut*vz)
+
+  // v^2 = u^i u^i / (u^t u^t)
+  FTYPE vsq=(vecvortho[RR]*vecvortho[RR] + vecvortho[TH]*vecvortho[TH] + vecvortho[PH]*vecvortho[PH])/vecvortho[TT]*vecvortho[TT];
+  if(vsq<0.0) vsq=0.0;
+  if(vsq>1.0-1E-10) vsq=1.0-1E-10;
+
+
+  // B^2
+  FTYPE Bsq=0.0;
+  DLOOPA(jj) Bsq += vecBortho[jj];
+
+  // field along flow: u.B = ux*Bx + uy*By + uz*Bz (i.e. Bt=0)
+  FTYPE udotB=0.0;
+  DLOOPA(jj) udotB += vecBortho[jj]*vecvortho[jj]; // B.u (B 3-frame magfield and u 4-vel)
+  // comoving magnetic field: b^\mu = (B^\mu + (u.B)u^\mu)/ut
+  FTYPE vecBorthoco[NDIM];
+  DLOOPA(jj) vecBorthoco[jj] = (vecBortho[jj] + udotB*vecvortho[jj])/vecvortho[TT];
+  // comoving mag energy: b^2/2 = 0.5*(B^2 + (u.B)^2)/ut^2
+  //  FTYPE bsq = (Bsq + udotB*udotB)/(vecvortho[TT]*vecvortho[TT]); // using B,u, but same as using b directly
+  FTYPE bsq=0.0;
+  DLOOPA(jj) bsq += vecBorthoco[jj]*vecBorthoco[jj]; // directly
+
+
+  FTYPE rho=val[FLRHO];
+  FTYPE ug=val[FLU];
+  FTYPE uu0ortho=vecvortho[TT];
+
+#if(0)
+  // not necessary for Sasha models
+  // fix-up jet region density
+  if(bsq/rho>30.0){
+    rho=ug=1E-10;
+  }
+#endif
+
+
+  FTYPE Rcyl=V[1]*sin(V[2]);
+
+
+  ///////////////////
+  // set outputs
+  if(outputvartypelocal==15){
+    fvar[0]=rho;
+    fvar[1]=ug;
+    fvar[2]=uu0ortho;
+    fvar[3]=bsq;
+  }
+  else if(outputvartypelocal==16){
+    fvar[0]=rho;
+    fvar[1]=ug;
+    fvar[2]=uu0ortho;
+    fvar[3]=bsq;
+    fvar[4]=log10(rho);
+    fvar[5]=-log10(rho);
+    fvar[6]=log10(bsq);
+    fvar[7]=Rcyl;
+  }
+  else if(outputvartypelocal==17){
+    fvar[0]=rho;
+    fvar[1]=ug;
+    fvar[2]=uu0ortho;
+    //    fvar[3]=bsq;
+    fvar[3]=MIN(bsq/rho,1E2);
+    fvar[4]=log10(rho);
+    fvar[5]=-log10(rho);
+    fvar[6]=log10(bsq);
+    fvar[7]=Rcyl;
+    fvar[8]=vecvortho[1]/vecvortho[TT];
+    fvar[9]=vecvortho[2]/vecvortho[TT];
+    fvar[10]=vecvortho[3]/vecvortho[TT];
+    fvar[11]=vecBortho[1];
+    fvar[12]=vecBortho[2];
+    fvar[13]=vecBortho[3];
+  }
+  else{
+    dualfprintf(fail_file,"No such outputvartypelocal=%d\n",outputvartypelocal);
+    myexit(1);
+  }
+
+
 
 
   return(0);

@@ -5,7 +5,24 @@
 #system=1   # lustre and reduced code on orange
 system=2   # ki-rh42
 
+#whichmodel=0 # runlocal
+#whichmodel=1 # sashaa9b100t0.6
+whichmodel=2 # sasha99t1.5708
 
+if [ $whichmodel -eq 0 ]
+then
+    modelname="runlocaldipole3fiducial"
+fi
+if [ $whichmodel -eq 1 ]
+then
+    modelname="sashaa9b100t0.6"
+fi
+if [ $whichmodel -eq 2 ]
+then
+    modelname="sashaa99t1.5708"
+fi
+
+#################################################
 # setup dirs
 if [ $system -eq 1 ]
 then
@@ -23,7 +40,9 @@ then
     bin2txtprogname=`pwd`/bin2txt
 fi
 
-#
+
+
+###################################################
 # 1) make program
 
 
@@ -51,18 +70,21 @@ make superclean ; make prepbin2txt ; make bin2txt
 
 # ensure no errors during compile or link (need lapack!)
 
-##############
+
+######################################################
 # 4) copy programs to your path
 
 cp iinterp $iinterpprogname
 cp bin2txt $bin2txtprogname
 
-###############
+#######################################################
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
-# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)
-# -1=VERYOLD header with 21 entries (runlocaldipole3dfiducial)
-newheader=-1
+# CHOOSE correctly:
+# 0=NEWER header with 32 entries (tilted sims)
+# 1=OLDER header with 30 entries (thickdisk/sasha sims)
+# 2=VERYOLD header with 21 entries (runlocaldipole3dfiducial)
+OLDERHEADER=0
 
 # REQUIRED FILES:
 # 1) ensure dumps contains fieldline files
@@ -71,9 +93,22 @@ newheader=-1
 
 
 # get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump
-#dumpnum=4000
 
-dumpnum=2000
+# CHOOSE:
+if [ $whichmodel -eq 0 ]
+    dumpnum=2000
+then
+fi
+if [ $whichmodel -eq 1 ]
+then
+    dumpnum=4000
+fi
+if [ $whichmodel -eq 2 ]
+then
+    dumpnum=5736
+fi
+
+
 
 dumpnumm1=$(($dumpnum-1))
 if [ -e dumps/fieldline$dumpnumm1.bin ]
@@ -101,22 +136,34 @@ nt=1
 nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`
 ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`
 nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`
-if [ $newheader -eq 0 ]
+if [ $OLDERHEADER -eq 0 ]
 then
-    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`
-else
     numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`
 fi
-if [ $newheader -eq -1 ]
+if [ $OLDERHEADER -eq 1 ]
+then
+    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`
+fi
+if [ $OLDERHEADER -eq 2 ]
 then
     numcolumns=11
 fi
 
+bhspin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $13}'`
 R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`
 Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`
 Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`
 hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`
 defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
+
+
+######
+# COPY correct coordparms.dat to local dir.
+alias cp='cp'
+cp coordparms.dat.$modelname coordparms.dat
+alias cp='cp -i'
+######
+
 #
 # Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z
 # That is:
@@ -131,23 +178,63 @@ defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
 #
 # Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively
 #
+
+#whichres=0
+whichres=1
+#whichres=2
+
 # box grid count
 boxnt=1
-boxnx=256
-boxny=256
-boxnz=256
-#
-# box size
-boxxl=-100
-boxyl=-100
-boxzl=-100
-boxxh=100
-boxyh=100
-boxzh=100
+if [ $whichres -eq 0 ]
+then
+    boxnx=100
+    boxny=100
+    boxnz=100
+fi
+if [ $whichres -eq 1 ]
+then
+    boxnx=256
+    boxny=256
+    boxnz=256
+fi
+if [ $whichres -eq 2 ]
+then
+    boxnx=512
+    boxny=512
+    boxnz=512
+fi
+
+if [ 1 -eq 0 ]
+then
+    #
+    # box size
+    boxxl=-40
+    boxyl=-40
+    boxzl=-40
+    boxxh=40
+    boxyh=40
+    boxzh=40
+fi
+
+if [ 1 -eq 1 ]
+then
+    #
+    # box size
+    boxxl=-1E3
+    boxyl=-1E3
+    boxzl=-1E3
+    boxxh=1E3
+    boxyh=1E3
+    boxzh=1E3
+fi
+
 
 # set docurrent=0 if want quick result with no current density
 # this will change number of output columns
-docurrent=1
+
+# CHOOSE:
+#docurrent=1
+docurrent=0
 
 
 
@@ -158,16 +245,45 @@ mkdir $IDUMPDIR
 #
 #
 #
-if [ $newheader -eq -1 ]
+if [ $whichmodel -eq 0 ]
 then
-    gdumpname=./dumps/gdump.runlocaldipole3dfiducial.bin
-else
-    gdumpname=./dumps/gdump.bin
+    gdumpname=./dumps/gdump.bin.runlocaldipole3dfiducial
+fi
+if [ $whichmodel -eq 1 ]
+then
+    gdumpname=./dumps/gdump.bin.sashaa9b100t0.6
+fi
+if [ $whichmodel -eq 2 ]
+then
+    gdumpname=./dumps/gdump.bin.sashaa99t1.5708
 fi
 
-whichoutput=14
-outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz
-$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
+
+# CHOOSE:
+#whichoutput=14
+#whichoutput=15
+#whichoutput=16
+whichoutput=17
+
+if [ $whichoutput -eq 16 ]
+then
+#    iinterpprogname=${iinterpprogname}16
+    iinterpprogname=iinterp16new
+fi
+if [ $whichoutput -eq 17 ]
+then
+    iinterpprogname=iinterp17
+fi
+
+# non-vis5d
+defaultvalue=0
+# vis5d
+#defaultvalue=4  # causes segfault after using vis5d after creating v5d file
+
+
+outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.boxzh${boxzh}.box${boxnx}x${boxny}x${boxnz}.out${whichoutput}.model${modelname}
+
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype $defaultvalue -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
 
 
 # as a test, one can do just 1 variable (the density)
@@ -213,22 +329,35 @@ fi
 
 
 ############################################
-# can check how looks in text by doing:
 
 file=$outfilename
-if [ $newheader -eq 0 ]
+if [ $OLDERHEADER -eq 0 ]
+then
+    numoutputcols=`head -1 $file |awk '{print $32}'`
+fi
+if [ $OLDERHEADER -eq 1 ]
 then
     numoutputcols=`head -1 $file  |awk '{print $30}'`
-else
-    numoutputcols=`head -1 $fil |awk '{print $32}'`
+fi
+if [ $OLDERHEADER -eq 2 ]
+then
+    numoutputcols=11 # or 14 or 4 or whatever
 fi
 newnx=`head -1 $file |awk '{print $2}'`
 newny=`head -1 $file |awk '{print $3}'`
 newnz=`head -1 $file |awk '{print $4}'`
-$bin2txtprogname 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols
-less -S $file.txt
 
-# should look reasonable.
+
+
+
+# can check how looks in text by doing:
+if [ 1 -eq 0 ]
+then
+    $bin2txtprogname 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols
+    less -S $file.txt
+    # should look reasonable.
+fi
+
 
 
 
@@ -274,14 +403,139 @@ Jy 1E-4 1
 Jz 1E-4 1
 0 1 0 1 0 1
 
+[jon@ki-rh42 v5dfield]$ cat  head4.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsq 1E-4 1
+0 1 0 1 0 1
+
+[jon@ki-rh42 v5dfield]$ cat head8.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsq 1E-4 1
+lrho 1E-4 1
+neglrho 1E-4 1
+lbsq 1E-4 1
+Rcyl 1E-4 1
+0 1 0 1 0 1
+
+[jon@ki-rh42 v5dfield]$ cat headout16.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsq 1E-4 1
+lrho 1E-4 1
+Rcyl 1E-4 1
+0 1 0 1 0 1
+
+# using iinterp16
+[jon@ki-rh42 v5dfield]$ cat headout16old.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsq 1E-4 1
+lrho 1E-4 1
+lbsq 1E-4 1
+0 1 0 1 0 1
+
+
+[jon@ki-rh42 v5dfield]$ cat headout17.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsqorho 1E-4 1
+lrho 1E-4 1
+neglrho 1E-4 1
+lbsq 1E-4 1
+Rcyl 1E-4 1
+W 1E-4 1
+V 1E-4 1
+U 1E-4 1
+W2 1E-4 1
+V2 1E-4 1
+U2 1E-4 1
+0 1 0 1 0 1
+
+# Old iinterp + vis5d: v1,v2,v3 -> V,W,U because v1=vx, v2=vz, v3=vy
+
+# Now, after becoming orthonormal and using lambdatrans, v1=vx, v2=vy, v3=vz
+# With V,W,U assigned by head.v5d above, then V=vx W=vy, U=vz
+# So in vis5d:
+# East/West :  oldV2  =  Bx   = newU2
+# North/South: oldW2  =  By   = newV2
+# Vertical:    oldU2  =  Bz   = newW2
+
+# To get natural order of U=vx, V=vy, W=vz, then use header with order in head.v5d as just:
+# U,V,W   and U2,V2,W2
+
+# NO!  Apparently it's:
+#  East/West: W2   = Bz
+#  North/South: V2 = By
+#  Vertical: U2    = Bx
+# So set order in head.v5d as:
+# W,V,U = Bx,By,Bz
+
+
 
 # rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
-# infilename=idumps/fieldline5437.cart.bin.100.100.100
-# infilename=idumps/fieldline2000.cart.bin.100.100.100
-# ./bin2txt 1 5 0 1 3 100 100 100 1 head14.v5d $infilename $infilename.v5d f 14
+# ./bin2txt 1 5 0 1 3 100 100 100 1 head14.v5d $outfilename $outfilename.v5d f 14
+# ./bin2txt 1 5 0 1 3 256 256 256 1 head14.v5d $outfilename $outfilename.v5d f 14
+
+# rho0,ug,uu0,bsq
+# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head4.v5d $outfilename $outfilename.v5d f 4
+
+
+# rho0,ug,uu0,bsq,lrho,neglrho,lbsq,Rcyl
+# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head8.v5d $outfilename $outfilename.v5d f 8
+
+
+############################
+
+
+./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 headout17.v5d $outfilename $outfilename.v5d f $numoutputcols
+
+# to just check (no script):
+#
+#  vis5d $outfilename.v5d -mbs 1000
+
+#  vis5d $outfilename.v5d -mbs 3000
 
 
 
+ixmin=$boxxl
+iymin=$boxyl
+izmin=$boxzl
+ixmax=$boxxh
+iymax=$boxyh
+izmax=$boxzh
+
+
+# don't pass path to vis5d
+imagefilename=`basename ${outfilename}.v5d.3dmovie.ppm`
+
+echo "set outputfilename" \"${imagefilename}\" > $outfilename.headscript.tcl
+#
+echo "set ixmin [expr $ixmin]" >> $outfilename.headscript.tcl
+echo "set ixmax [expr $ixmax]" >> $outfilename.headscript.tcl
+#
+echo "set iymin [expr $iymin]" >> $outfilename.headscript.tcl
+echo "set iymax [expr $iymax]" >> $outfilename.headscript.tcl
+#
+echo "set izmin [expr $izmin]" >> $outfilename.headscript.tcl
+echo "set izmax [expr $izmax]" >> $outfilename.headscript.tcl
+#
+
+
+# create final v5d script
+cat $outfilename.headscript.tcl fulltiltmovie.tcl > $outfilename.v5d.3dmovie.tcl
+
+resx=800
+resy=800
+
+# -offscreen
+vis5d $outfilename.v5d -mbs 1000 -geometry ${resx}x${resy} -script $outfilename.v5d.3dmovie.tcl
 
 
 

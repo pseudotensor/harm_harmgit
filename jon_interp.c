@@ -635,6 +635,44 @@ static void readdata_preprocessdata(void)
 	  defaultvalue[12]=0.0; // Jz
 	}
       }
+      else if(DATATYPE==15){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=1.0; // uu0
+	defaultvalue[3]=0.0; // bsq
+      }
+      else if(DATATYPE==16){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=1.0; // uu0
+	defaultvalue[3]=0.0; // bsq
+	defaultvalue[4]=log10(totalmin[0]); // lrho
+	defaultvalue[5]=-log10(totalmin[0]); // -lrho
+	defaultvalue[6]=log10(totalmin[0]); // lbsq
+	defaultvalue[7]=0.0; // R
+      }
+      else if(DATATYPE==17){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=1.0; // uu0
+	defaultvalue[3]=0.0; // bsq
+	defaultvalue[4]=log10(totalmin[0]); // lrho
+	defaultvalue[5]=-log10(totalmin[0]); // -lrho
+	defaultvalue[6]=log10(totalmin[0]); // lbsq
+	defaultvalue[7]=0.0; // R
+	defaultvalue[8]=0.0; // vx
+	defaultvalue[9]=0.0; // vy
+	defaultvalue[10]=0.0; // vz
+	defaultvalue[11]=0.0; // bx
+	defaultvalue[12]=0.0; // by
+	defaultvalue[13]=0.0; // bz
+      }
       else{
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
 	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
@@ -793,6 +831,76 @@ void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local
 
 
 
+  if(smoothpole) apply_boundaryconditions_olddata_cleanpole(numcols, oN0local, numbc0local, doubleworklocal, oldimagelocal, olddatalocal);
+
+
+}
+
+
+/////////////
+//
+// smooth pole (as if scalars) to original HARM-grid data
+//
+// assume boundary conditions already applied
+//
+///////////// 
+void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int numbc0local, int doubleworklocal, unsigned char *****oldimagelocal, FTYPE *****olddatalocal)
+{
+  int coli,h,i,j,k;
+  int numbclocal[NDIM];
+  int jj;
+
+  DLOOPA(jj) numbclocal[jj]=numbc[jj];
+  // now override if user wants (e.g. if doing DATATYPE==14 with 3-time data and don't want additional temporal boundary conditions -- would only waste space)
+  numbclocal[TT]=numbc0local;
+
+
+#define SMOOTHSIZE 3 // number of j-cells +-SMOOTHSIZE to use.  Always use all k-cells.
+
+  FTYPE ftemp[2];
+  int count[2];
+
+  /////////////
+  //
+  // smooth spherical polar axis (as if scalars)
+  //
+  ///////////// 
+  for(coli=0;coli<numcols;coli++){ // over all independent columsn of data
+
+    // over all h and i
+    for(h=0;h<oN0local;h++){
+      for(i=0;i<oN1;i++){
+
+	if(doubleworklocal){
+	  // form average
+	  // no need to include boundary cells and do extra work since just copies of active cells
+	  ftemp[0]=ftemp[1]=0.0;
+	  count[0]=count[1]=0;
+	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
+	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
+	  // assign average to all members, including boundary cells!
+	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-numbclocal[2];j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	} // end if doubleworklocal==1
+	else{
+	  // no need to include boundary cells and do extra work since just copies of active cells
+	  // form average
+	  ftemp[0]=ftemp[1]=0.0;
+	  count[0]=count[1]=0;
+	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
+	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
+	  // assign average to all members, including boundary cells!
+	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-numbclocal[2];j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	} // end if doubleworklocal==1
+	  
+
+      }// over i
+    } // over h
+  }// end over coli
+
+
+
 }
 
 
@@ -878,7 +986,9 @@ static void input_header(void)
     // assumes header really has ALL this info (could tell user how many entries on header with wc and compare against desired.
     // GODMARK
     // If using gammie.m's interpsingle, must keep interpsingle macro's header output up-to-date
-    fscanf(infile, SCANHEADER,SCANHEADERARGS);
+    if(OLDERHEADER==2) fscanf(infile, SCANHEADER2,SCANHEADERARGS2);
+    else if(OLDERHEADER==1) fscanf(infile, SCANHEADER1,SCANHEADERARGS1);
+    else if(OLDERHEADER==0) fscanf(infile, SCANHEADER0,SCANHEADERARGS0);
 
 
     // set other things not set by header, but not really used right now
@@ -898,8 +1008,9 @@ static void input_header(void)
 
   // print header from file
   fprintf(stderr,"PRINTSCANHEADER\n");
-  fprintf(stderr, PRINTSCANHEADER,PRINTHEADERARGS);
-	  
+  if(OLDERHEADER==2) fprintf(stderr,PRINTSCANHEADER2,PRINTHEADERARGS2);
+  else if(OLDERHEADER==1) fprintf(stderr,PRINTSCANHEADER1,PRINTHEADERARGS1);
+  else if(OLDERHEADER==0) fprintf(stderr,PRINTSCANHEADER0,PRINTHEADERARGS0);
 
 
 }
@@ -919,7 +1030,10 @@ static void output_header(void)
   //
   //////////////////////////
   fprintf(stderr,"header:\n");
-  fprintf(stderr, PRINTHEADERSTDERR,PRINTHEADERSTDERRARGS);
+  if(OLDERHEADER==2) fprintf(stderr,PRINTHEADERSTDERR2,PRINTHEADERSTDERRARGS2);
+  else if(OLDERHEADER==1) fprintf(stderr,PRINTHEADERSTDERR1,PRINTHEADERSTDERRARGS1);
+  else if(OLDERHEADER==0) fprintf(stderr,PRINTHEADERSTDERR0,PRINTHEADERSTDERRARGS0);
+
   fprintf(stderr, "NEW: %d %d %d :: %22.16g %22.16g %22.16g :: %22.16g %22.16g %22.16g\n",nN1,nN2,nN3,Xmax[1],Xmax[2],Xmax[3],fakedxc,fakedyc,fakedzc);
   fprintf(stderr, "OTHER: %22.16g %22.16g %22.16g %22.16g\n",fakeRin,dxc,dyc,dzc);
    
@@ -928,7 +1042,9 @@ static void output_header(void)
     if(DATATYPE>=1){
       // print out a header
       ftemp=0.0;
-      fprintf(outfile, PRINTHEADERSTDOUT,PRINTHEADERSTDOUTARGS);
+      if(OLDERHEADER==2) fprintf(outfile,PRINTHEADERSTDOUT2,PRINTHEADERSTDOUTARGS2);
+      else if(OLDERHEADER==1) fprintf(outfile,PRINTHEADERSTDOUT1,PRINTHEADERSTDOUTARGS1);
+      else if(OLDERHEADER==0) fprintf(outfile,PRINTHEADERSTDOUT0,PRINTHEADERSTDOUTARGS0);
     }
   }
 
@@ -1598,6 +1714,7 @@ void parse_commandline(int argc, char *argv[])
 	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
 	  "\t13=Full Diag\n"
 	  "\t14=Input fieldline file and output rho, ug, vortho123, Borth123, FEMradial, Bphi all in 1 file and interpolate all at once using more memory\n"
+	  "\t15=Input fieldline file and output rho, uu0, bsq all in 1 file and interpolate all at once using more memory\n"
 	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
 	  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
 	  );
@@ -1624,6 +1741,17 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<DOREADHEADER> or <DOWRITEHEADER>: 0 or 1 for each\n");
 	}
       }
+      if (usage || strcmp(argv[i],"-headtype")==0) {
+	if(usage==0){
+	  goodarg++;
+	  if(i+1<argc){ sscanf(argv[++i],"%d",&OLDERHEADER); } // 0,1,2,...
+	}
+	else{
+	  fprintf(stderr,"-headtype <OLDERHEADER>\n");
+	  fprintf(stderr,"\t<OLDERHEADER>: 2=very old runlocaldipole, 1=thickdisksasha models 0=tilted models\n");
+	  fprintf(stderr,"\tApplies to gdump, dump, fieldline, or any input files with header.\n");
+	}
+      }
       if (usage || strcmp(argv[i],"-oN")==0) {
 	if(usage==0){
 	  goodarg++;
@@ -1644,7 +1772,7 @@ void parse_commandline(int argc, char *argv[])
 	}
 	else{
 	  fprintf(stderr,"-numcolumns <numcolumns>\n");
-	  fprintf(stderr,"\t<numcolumns> : number of columns in input file.  Required if OLDERHEADER<2\n");
+	  fprintf(stderr,"\t<numcolumns> : number of columns in input file.  Required if OLDERHEADER>=2\n");
 	}
       }
       if (usage || strcmp(argv[i],"-refine")==0) {
@@ -1822,6 +1950,16 @@ void parse_commandline(int argc, char *argv[])
 	  fprintf(stderr,"\t<defaultvaluetype>: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
 	}
       }
+      if (usage || strcmp(argv[i],"-smoothpole")==0) {
+	if(usage==0){
+	  goodarg++;
+	  sscanf(argv[++i],"%d",&smoothpole);
+	}
+	else{
+	  fprintf(stderr,"-smoothpole <smoothpole>\n");
+	  fprintf(stderr,"\t<smoothpole>: 0 = no, 1 = yes\n");
+	}
+      }
       if (usage || strcmp(argv[i],"-gdump")==0) {
 	if(usage==0){
 	  goodarg++;
@@ -1833,7 +1971,7 @@ void parse_commandline(int argc, char *argv[])
 	else{
 	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
 	  // below is optional but requires above 2 to be read-in
-	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,100+x,1000+x...\n");
+	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,15,100+x,1000+x...\n");
 	}
       }
       if (usage || strcmp(argv[i],"-gdumphead")==0) {
@@ -2335,6 +2473,7 @@ void interpret_commandlineresults_subpart1(void)
   //        rho0 -u_t u^t A_\phi B^ihat v^ihat
   //        use gdump to get Connection that relates to radial gravity force that would balance magnetic force: Here need: T^x3_\nu , [ [rho0*1 + (u+p+b^2)/rho0] u^{t or phi} u_{t or phi} + ptot delta^lambda_kappa - b^lambda_kappa ] Gamma^kappa_{nu lambda} (24 things)
   // 14 : input field line and output things
+  // 15 : input field line and output few things
   // 100+x : x number of 4-vectors
   // 1000+x: fieldline input file and output x-type file
 
@@ -2399,6 +2538,29 @@ void interpret_commandlineresults_subpart1(void)
       if(docurrent)  numoutputcols=2+3*2+2+NDIM;
       else numoutputcols=2+3*2+2;
       // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else if(DATATYPE==15){
+      fprintf(stderr,"input field line file and output a few things\n");
+      outputvartype=15;
+      immediateoutput=0; // Immediate computation of many quantities without interpolation
+      vectorcomponent=-1; // indicates to output all components
+      // create, interpolate, and output all "numoutputcols" things at once
+      numoutputcols=4; // rho, ug, uu0, bsq
+      // only valid for DATATYPE=1 type of data (i.e. not images)
+    }
+    else if(DATATYPE==16){
+      fprintf(stderr,"input field line file and output a few things\n");
+      outputvartype=16;
+      immediateoutput=0;
+      vectorcomponent=-1;
+      numoutputcols=8;
+    }
+    else if(DATATYPE==17){
+      fprintf(stderr,"input field line file and output a few things\n");
+      outputvartype=17;
+      immediateoutput=0;
+      vectorcomponent=-1;
+      numoutputcols=14;
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;
@@ -2651,6 +2813,7 @@ void defaultoptions(void)
   INTERPTYPE=1;
   READHEADER=1;
   WRITEHEADER=1;
+  OLDERHEADER=0;
 
   binaryoutput=0; strcpy(outFTYPE,"d");
 

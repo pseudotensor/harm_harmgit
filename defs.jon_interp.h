@@ -11,6 +11,7 @@ int numoutputcols;
 int bytesize, intsize, longintsize, longlongintsize, floatsize, doublesize, longdoublesize;
 int binaryinput,binaryoutput;
 int binaryinputgdump;
+int OLDERHEADER;
 FILE *infile;
 FILE *infilem1;
 FILE *infilep1;
@@ -100,7 +101,7 @@ int immediateoutput,num4vectors;
 int outputvartype; 
 // vector component: 0=scalar, 1,2,3 
 int vectorcomponent;
-int defaultvaluetype,EXTRAPOLATE;
+int defaultvaluetype,EXTRAPOLATE,smoothpole;
 FTYPE totalmin[MAXCOLS],totalmax[MAXCOLS];
 FTYPE defaultvalue[MAXCOLS];
 int didrefine;
