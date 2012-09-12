@@ -204,7 +204,7 @@ then
     boxnz=512
 fi
 
-if [ 1 -eq 0 ]
+if [ 1 -eq 1 ]
 then
     #
     # box size
@@ -216,7 +216,7 @@ then
     boxzh=40
 fi
 
-if [ 1 -eq 1 ]
+if [ 1 -eq 0 ]
 then
     #
     # box size
@@ -226,6 +226,18 @@ then
     boxxh=1E3
     boxyh=1E3
     boxzh=1E3
+fi
+
+if [ 1 -eq 0 ]
+then
+    #
+    # box size
+    boxxl=-350
+    boxyl=-350
+    boxzl=-350
+    boxxh=350
+    boxyh=350
+    boxzh=350
 fi
 
 
@@ -276,14 +288,17 @@ then
 fi
 
 # non-vis5d
-defaultvalue=0
+#defaultvalue=0
+#doextrap=0
 # vis5d
-#defaultvalue=4  # causes segfault after using vis5d after creating v5d file
+defaultvalue=4  # so vis5d shows black sphere for BH
+doextrap=0 # so shows up a dark sphere for BH
+smoothpole=1
 
 
 outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.boxzh${boxzh}.box${boxnx}x${boxny}x${boxnz}.out${whichoutput}.model${modelname}
 
-$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype $defaultvalue -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
+$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap $doextrap -defaultvaluetype $defaultvalue -smoothpole $smoothpole -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
 
 
 # as a test, one can do just 1 variable (the density)
@@ -502,6 +517,15 @@ U2 1E-4 1
 
 #  vis5d $outfilename.v5d -mbs 3000
 
+# ~/bin/vis5d  $outfilename.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0
+# -script 3dtry.set  
+
+# if filename too long, then v5d will crash trying to render that name in the window
+# so do:
+# ln -s $outfilename.v5d use.v5d
+# and then call vis5d with use.v5d instead.
+
+############## create vis5d script (or see previous scripts already made):
 
 
 ixmin=$boxxl

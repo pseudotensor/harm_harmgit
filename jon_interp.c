@@ -855,7 +855,8 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
   numbclocal[TT]=numbc0local;
 
 
-#define SMOOTHSIZE 3 // number of j-cells +-SMOOTHSIZE to use.  Always use all k-cells.
+#define SMOOTHSIZE MIN(oN2,3) // number of j-cells +-SMOOTHSIZE to use.  Always use all k-cells.
+
 
   FTYPE ftemp[2];
   int count[2];
@@ -879,8 +880,8 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
 	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
 	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
 	  // assign average to all members, including boundary cells!
-	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-numbclocal[2];j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	  if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	  if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
 	} // end if doubleworklocal==1
 	else{
 	  // no need to include boundary cells and do extra work since just copies of active cells
@@ -890,8 +891,8 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
 	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
 	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
 	  // assign average to all members, including boundary cells!
-	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-numbclocal[2];j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	  for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	  if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	  if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
 	} // end if doubleworklocal==1
 	  
 
@@ -2865,6 +2866,7 @@ void defaultoptions(void)
 
   EXTRAPOLATE=1; // default to extrapolate
   defaultvaluetype=0; // assume typical default
+  smoothpole=0;
 
   immediateoutput=0;// default is not immediate in-out
   outputvartype=0; // scalar
