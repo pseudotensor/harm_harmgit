@@ -861,43 +861,46 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
   FTYPE ftemp[2];
   int count[2];
 
+
   /////////////
   //
   // smooth spherical polar axis (as if scalars)
   //
   ///////////// 
-  for(coli=0;coli<numcols;coli++){ // over all independent columsn of data
+  for(coli=0;coli<numcols;coli++){ // over all independent columns of data
 
-    // over all h and i
-    for(h=0;h<oN0local;h++){
-      for(i=0;i<oN1;i++){
+    if(oldgridtype==GRIDTYPESPC){ // only method right now applies if original PRIMECOORD grid is spherical polar grid.
+      // over all h and i
+      for(h=0;h<oN0local;h++){
+	for(i=0;i<oN1;i++){
 
-	if(doubleworklocal){
-	  // form average
-	  // no need to include boundary cells and do extra work since just copies of active cells
-	  ftemp[0]=ftemp[1]=0.0;
-	  count[0]=count[1]=0;
-	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
-	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
-	  // assign average to all members, including boundary cells!
-	  if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	  if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-	} // end if doubleworklocal==1
-	else{
-	  // no need to include boundary cells and do extra work since just copies of active cells
-	  // form average
-	  ftemp[0]=ftemp[1]=0.0;
-	  count[0]=count[1]=0;
-	  for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
-	  for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
-	  // assign average to all members, including boundary cells!
-	  if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	  if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-	} // end if doubleworklocal==1
+	  if(doubleworklocal){
+	    // form average
+	    // no need to include boundary cells and do extra work since just copies of active cells
+	    ftemp[0]=ftemp[1]=0.0;
+	    count[0]=count[1]=0;
+	    for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
+	    for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
+	    // assign average to all members, including boundary cells!
+	    if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	    if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	  } // end if doubleworklocal==1
+	  else{
+	    // no need to include boundary cells and do extra work since just copies of active cells
+	    // form average
+	    ftemp[0]=ftemp[1]=0.0;
+	    count[0]=count[1]=0;
+	    for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
+	    for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
+	    // assign average to all members, including boundary cells!
+	    if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+	    if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+	  } // end if doubleworklocal==1
 	  
 
-      }// over i
-    } // over h
+	}// over i
+      } // over h
+    }
   }// end over coli
 
 
