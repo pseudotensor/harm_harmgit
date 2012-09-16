@@ -336,9 +336,11 @@ int init_grid(void)
   rin = 1.;
 #endif
 
+#if(MCOORD!=KSCOORD)
   Rhor = rin;
   Risco = rin;
- 
+#endif
+  
   // AKMARK: hslope
   hslope = 0.13;  //sas: use a constant slope as Jon suggests in the comments
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
