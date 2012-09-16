@@ -45,9 +45,9 @@
 // AKMARK: which problem
 //#define WHICHPROBLEM THINDISKFROMMATHEMATICA // choice
 //#define WHICHPROBLEM THICKDISKFROMMATHEMATICA // choice
-//#define WHICHPROBLEM THINTORUS
+#define WHICHPROBLEM THINTORUS
 //#define WHICHPROBLEM NORMALTORUS
-#define WHICHPROBLEM NSTAR
+//#define WHICHPROBLEM NSTAR
 
 #define TORUSHASBREAKS 0   // AKMARK: 0 for usual torus, 1 for 3-region torus (constant l in regions 1 and 3)
 
