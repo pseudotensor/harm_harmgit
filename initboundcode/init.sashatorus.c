@@ -364,8 +364,8 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.83 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
-  R0 = 0.3;
+  Rin = 0.64 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  R0 = 0.0;
   Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
 	setRin_withchecks(&Rin);
@@ -389,6 +389,9 @@ int init_grid(void)
   if(WHICHPROBLEM==NSTAR){
     global_rbr = 100.;
   }
+  else if(WHICHPROBLEM==THINTORUS) {
+    global_rbr = 200.;  //make it smaller than the default 1000. while trying to make thin disks work
+  }
   
   /////////////////////
   //ANGULAR GRID SETUP (so far irrelevant for WHICHPROBLEM==NSTAR)
@@ -411,7 +414,7 @@ int init_grid(void)
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
   //the larger r0grid, the larger the thickness of the jet 
   //to resolve
-  global_r0grid = 5.0*Rin;    
+  global_r0grid = 25.0*Rin;    
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
@@ -419,7 +422,7 @@ int init_grid(void)
     
   //distance after which the jet grid collimates according to the usual jet formula
   //the larger this distance, the wider is the jet region of the grid
-  global_rjetend = 5;
+  global_rjetend = 3*Rin;
     
   //distance at which disk part of the grid becomes monopolar
   //the larger r0disk, the larger the thickness of the disk 
@@ -430,7 +433,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 0.98;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
