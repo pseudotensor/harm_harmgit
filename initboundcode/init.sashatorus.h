@@ -444,10 +444,10 @@ struct Ccoordparams {
 #define DONSEMFS 1
 
 #undef FRACBSQORHO
-#define FRACBSQORHO (0.5)
+#define FRACBSQORHO (1.0)
 
 #undef FRACBSQOU
-#define FRACBSQOU (0.5)
+#define FRACBSQOU (1.0)
 
 #undef VPARBND
 #define VPARBND (0.9)
