@@ -191,7 +191,7 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 		//	enk0=0.00161;
 #endif
 	//	rin = (1. + h_over_r)*Risco;
-	rincool=10.;
+	rincool=0.;
         /* crude approximation */
         Wcirc = 1./(a + pow(R,1.5)) ;
         cs_circ = thetacool/sqrt(R) ;
@@ -207,8 +207,8 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 	// dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])) ;
 	//     if(t > 0.){
 
-
-	if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0.) {
+	//SASMARK: cool only inside the initial disk, r > rincool
+	if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0. && r > rincool) {
 
 	  //       	  dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])*(q->ucov[TT])) ;
 
