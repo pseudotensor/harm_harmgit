@@ -303,10 +303,10 @@ int init_grid(void)
 #endif
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 34.; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusn = 2. - 1.55;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  torusrmax = 62.5; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   
-  beta = 1.e2 ;   // AKMARK: plasma beta (pgas/pmag)
+  beta = 0.5e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
   
 #if(MCOORD==KSCOORDS)
@@ -322,7 +322,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
-  rin = 15. ;
+  rin = 20. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
