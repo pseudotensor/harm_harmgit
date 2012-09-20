@@ -790,7 +790,7 @@ void init_placeongrid_griddecomposition(void)
       if((dir==X2UP)||(dir==X2DN)){
 	if(ncpux2>1 &&
 	   (
-	    ((mycpupos[2]>0)&&(mycpupos[2]<ncpux2-1)) // interior CPU
+	    (mycpupos[2]>0 && mycpupos[2]<ncpux2-1) // interior CPU
 	    || (mycpupos[2]==0 && dir==X2UP) // exterior CPU connected to interior
 	    || (mycpupos[2]==ncpux2-1 && dir==X2DN) // exterior CPU connected to interior
 	    )

@@ -673,6 +673,27 @@ static void readdata_preprocessdata(void)
 	defaultvalue[12]=0.0; // by
 	defaultvalue[13]=0.0; // bz
       }
+      else if(DATATYPE==18){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=1.0; // uu0
+	defaultvalue[3]=0.0; // bsq
+	defaultvalue[4]=log10(totalmin[0]); // lrho
+	defaultvalue[5]=-log10(totalmin[0]); // -lrho
+	defaultvalue[6]=log10(totalmin[0]); // lbsq
+	defaultvalue[7]=0.0; // R
+	defaultvalue[8]=0.0; // vx
+	defaultvalue[9]=0.0; // vy
+	defaultvalue[10]=0.0; // vz
+	defaultvalue[11]=0.0; // bx
+	defaultvalue[12]=0.0; // by
+	defaultvalue[13]=0.0; // bz
+	defaultvalue[14]=0.0; // posr
+	defaultvalue[15]=0.0; // posh
+	defaultvalue[16]=0.0; // posph
+      }
       else{
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
 	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
@@ -868,6 +889,13 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
   //
   ///////////// 
   for(coli=0;coli<numcols;coli++){ // over all independent columns of data
+
+    // skip non-simulation data things so don't smooth (e.g.) spatial position information
+    if(DATATYPE==16 && coli==7) continue;
+    if(DATATYPE==17 && coli==7) continue;
+    if(DATATYPE==18 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
+    
+
 
     if(oldgridtype==GRIDTYPESPC){ // only method right now applies if original PRIMECOORD grid is spherical polar grid.
       // over all h and i
@@ -2565,6 +2593,13 @@ void interpret_commandlineresults_subpart1(void)
       immediateoutput=0;
       vectorcomponent=-1;
       numoutputcols=14;
+    }
+    else if(DATATYPE==18){
+      fprintf(stderr,"input field line file and output a few things\n");
+      outputvartype=18;
+      immediateoutput=0;
+      vectorcomponent=-1;
+      numoutputcols=17;
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;

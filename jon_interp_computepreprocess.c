@@ -460,7 +460,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
       // already stored in fvar
     }
   }
-  else if(outputvartypelocal==15 || outputvartypelocal==16  || outputvartypelocal==17){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
+  else if(outputvartypelocal==15 || outputvartypelocal==16  || outputvartypelocal==17  || outputvartypelocal==18){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
 
     if(docurrent==1){
       dualfprintf(fail_file,"Can't do outputvartypelocal==15 with docurrent=1\n");
@@ -771,6 +771,26 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[11]=vecBortho[1];
     fvar[12]=vecBortho[2];
     fvar[13]=vecBortho[3];
+  }
+  else if(outputvartypelocal==18){
+    fvar[0]=rho; // rest-mass density
+    fvar[1]=ug;  // internal energy density
+    fvar[2]=uu0ortho; // Lorentz factor
+    //    fvar[3]=bsq;
+    fvar[3]=MIN(bsq/rho,1E2); // limited bsq/rho
+    fvar[4]=log10(rho);
+    fvar[5]=-log10(rho);
+    fvar[6]=log10(bsq);
+    fvar[7]=Rcyl; // Cylindrical radius
+    fvar[8]=vecvortho[1]/vecvortho[TT]; // vx
+    fvar[9]=vecvortho[2]/vecvortho[TT]; // vy
+    fvar[10]=vecvortho[3]/vecvortho[TT]; // vz
+    fvar[11]=vecBortho[1]; // Bx
+    fvar[12]=vecBortho[2]; // By
+    fvar[13]=vecBortho[3]; // Bz
+    fvar[14]=V[1]; // spherical polar radius r
+    fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
+    fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
   }
   else{
     dualfprintf(fail_file,"No such outputvartypelocal=%d\n",outputvartypelocal);

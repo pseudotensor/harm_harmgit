@@ -2066,8 +2066,8 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     // Ensure that spherical polar axis flux only contributes to B2 for special3dspc=1 with polar cut-out.
     // Allows more arbitrary interpolations across axis (including with gdet factors)
     // "lower" means we will zero-out lower F2, while "upper" means we will zero-out upper F2 in terms of j in Du2avg expression
-    int preconditionF2lower=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==0 || startpos[2]+j==N2));
-    int preconditionF2upper=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==-1 || startpos[2]+j==N2-1));
+    int preconditionF2lower=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==0 || startpos[2]+j==totalsize[2]));
+    int preconditionF2upper=(ISSPCMCOORD(MCOORD) && FLUXB==FLUXCTSTAG && special3dspc && (startpos[2]+j==-1 || startpos[2]+j==totalsize[2]-1));
 #endif
 
     // other (normal) FLUXB methods, including FLUXCTSTAG

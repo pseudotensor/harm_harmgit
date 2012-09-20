@@ -275,16 +275,24 @@ fi
 #whichoutput=14
 #whichoutput=15
 #whichoutput=16
-whichoutput=17
+#whichoutput=17
+whichoutput=18
 
 if [ $whichoutput -eq 16 ]
 then
 #    iinterpprogname=${iinterpprogname}16
     iinterpprogname=iinterp16new
+    headv5d=headout16.v5d
 fi
 if [ $whichoutput -eq 17 ]
 then
     iinterpprogname=iinterp17
+    headv5d=headout17.v5d
+fi
+if [ $whichoutput -eq 18 ]
+then
+    iinterpprogname=iinterp18
+    headv5d=headout18.v5d
 fi
 
 # non-vis5d
@@ -473,6 +481,26 @@ V2 1E-4 1
 U2 1E-4 1
 0 1 0 1 0 1
 
+[jon@ki-rh42 v5dfield]$ cat headout18.v5d
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsqorho 1E-4 1
+lrho 1E-4 1
+neglrho 1E-4 1
+lbsq 1E-4 1
+Rcyl 1E-4 1
+W 1E-4 1
+V 1E-4 1
+U 1E-4 1
+W2 1E-4 1
+V2 1E-4 1
+U2 1E-4 1
+posr 1E-4 1
+posh 1E-4 1
+posph 1E-4 1
+0 1 0 1 0 1
+
 # Old iinterp + vis5d: v1,v2,v3 -> V,W,U because v1=vx, v2=vz, v3=vy
 
 # Now, after becoming orthonormal and using lambdatrans, v1=vx, v2=vy, v3=vz
@@ -509,7 +537,7 @@ U2 1E-4 1
 ############################
 
 
-./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 headout17.v5d $outfilename $outfilename.v5d f $numoutputcols
+./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 $headv5d $outfilename $outfilename.v5d f $numoutputcols
 
 # to just check (no script):
 #
@@ -519,6 +547,9 @@ U2 1E-4 1
 
 # ~/bin/vis5d  $outfilename.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0
 # -script 3dtry.set  
+
+~/bin/vis5d $outfilename.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 
+
 
 # if filename too long, then v5d will crash trying to render that name in the window
 # so do:
@@ -560,7 +591,6 @@ resy=800
 
 # -offscreen
 vis5d $outfilename.v5d -mbs 1000 -geometry ${resx}x${resy} -script $outfilename.v5d.3dmovie.tcl
-
 
 
 
