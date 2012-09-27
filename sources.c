@@ -146,6 +146,8 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 	FTYPE rincool;
 	FTYPE nocoolthetafactor,thetacool,taucool;
 
+	FTYPE u0, unew;
+	FTYPE deltat;
 
 
 	// setup for macros
@@ -186,10 +188,15 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 #if( DOAUTOCOMPUTEENK0 )
 	enk0 = global_toruskappafinal;
 #else
-	enk0 = 0.0043; //as read from ic's for thick torus
+	//enk0 = 0.0043; //as read from ic's for thick torus
 	//enk0=0.00016; //Rebecca's version
 		//	enk0=0.00161;
+	enk0 = MAX(0.1/r,0.0022);  //specific for rtf2_15r34.1_pi_0_0_0, this gives about half of time-averaged entropy
 #endif
+	
+	//target internal energy
+	u0 = enk0*(pow(rho, gam))/(gam-1.);
+
 	//	rin = (1. + h_over_r)*Risco;
 	rincool=0.;
         /* crude approximation */
@@ -207,8 +214,8 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 	// dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])) ;
 	//     if(t > 0.){
 
-	//SASMARK: cool only inside the initial disk, r > rincool
-	if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0. && r > rincool) {
+	//if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0.) {
+	if(t > 0. && enk > enk0) {
 
 	  //       	  dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])*(q->ucov[TT])) ;
 
@@ -220,6 +227,15 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 
 
 	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
+	  if( steppart == 0 ){
+	    deltat = 0.5*dt;
+	  }
+	  else{
+	    deltat = dt;
+	  }
+	  unew = u0 + (u-u0)*exp(-deltat*Wcirc/taucool);
+
+	  dUcool = unew - u;
 
 	  //	  dUcool*=COOLTAPER1(th);
 	  //  dUcool*=taper_func(R,Rhor);
