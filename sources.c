@@ -129,7 +129,7 @@ int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of
 // Rebecca's cooling function:
 
 #define REBECCATHETACOOL       (h_over_r)	/* should be same as h_over_r */
-#define REBECCATAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really REBECCATAUCOOL=2*M_PI would be 1 rotational time */
+#define REBECCATAUCOOL         (0.1*2.0*M_PI)	        /* cooling time in number of rotational times : really REBECCATAUCOOL=2*M_PI would be 1 rotational time */
 #define REBECCANOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 
