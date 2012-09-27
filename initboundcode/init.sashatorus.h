@@ -410,6 +410,10 @@ struct Ccoordparams {
 #define DO_OPTIMIZE_DISK_FLUX 0
 #define DO_NORMALIZE_FIELD 0
 
+#undef OPTIMIZE_VERT_FLUX
+#define OPTIMIZE_VERT_FLUX 1
+
+
 #undef DOADJUSTEMFS 
 #define DOADJUSTEMFS 1
 

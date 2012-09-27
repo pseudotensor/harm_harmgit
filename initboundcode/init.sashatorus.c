@@ -1036,7 +1036,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   //here need to 
   //1) compute bsq
   //2) rescale field components such that beta = p_g/p_mag is what I want (constant in the main disk body and tapered off to zero near torus edges)
-  normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
+  normalize_field_local_nodivb( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
   
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
@@ -1048,8 +1048,8 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 #endif
 
 #if(OPTIMIZE_VERT_FLUX)
-  normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
-  
+  //normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
+  normalize_midplane(targbeta, prim, pstag, ucons, A, Bhat);
 #else
   //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
   normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
@@ -1109,6 +1109,114 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   return(0);
 
 
+}
+
+
+int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+				 FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  int finalstep;
+  FTYPE midnorm;
+  
+  bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
+  
+  midnorm = (FTYPE*) calloc(ncpux1*N1,sizeof(FTYPE));
+
+  //gives field normalization at every value of i (at iglobal = ny/2)
+  compute_field_norm_midplane( targbeta, prim, midnorm, prim, pstag, ucons, A, Bhat );
+
+  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
+  
+  //Now rescale staggered field components (ucons)
+  //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
+  //ZLOOP{
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1,0,N3-1) {
+    
+    // normalize primitive
+    // DON'T DO THIS SO AS NOT TO INTRODUCE ORDER DEPENDENCE IN LOOP
+    //MACP0A1(prim,i,j,k,B1) *= ratc_ij;
+    //MACP0A1(prim,i,j,k,B2) *= ratc_ij;
+    //MACP0A1(prim,i,j,k,B3) *= ratc_ij;
+    
+    // normalize conserved quantity
+    //MACP0A1(ucons,i,j,k,B1) *= ratf1_ij;
+    //MACP0A1(ucons,i,j,k,B2) *= 0*ratf2_ij;
+    //MACP0A1(ucons,i,j,k,B3) *= 0*ratc_ij;
+    
+    // normalize staggered field primitive
+    if(FLUXB==FLUXCTSTAG){
+      MACP0A1(pstag,i,j,k,B1) *= ratf1_ij;
+      //  MACP0A1(pstag,i,j,k,B2) *= 0*ratf2_ij;
+      //  MACP0A1(pstag,i,j,k,B3) *= 0*ratc_ij;  //since assuming axisymmetry, ratc_ij is good enough
+    }
+    
+    // normalize higher-order field
+    // SASMARK: have no clue what Bhat is and where in the cell it is located
+    // SASMARK: therefore, will normalize it as if it were at the cell center
+    //if(HIGHERORDERMEM){
+    //  MACP0A1(Bhat,i,j,k,B1) *= ratc_ij;
+    //  MACP0A1(Bhat,i,j,k,B2) *= 0*ratc_ij;
+    //  MACP0A1(Bhat,i,j,k,B3) *= 0*ratc_ij;      
+    //}
+  }
+  
+  //bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+  
+  free(midnorm);
+  
+  return(0);
+}
+
+
+int compute_field_norm_midplane( FTYPE targbeta, FTYPE *midnorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+					   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+					   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+					   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  FTYPE compute_rat_noprofile(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE targbeta, int loc, int i, int j, int k);
+  int i,j,k;
+  int finalstep;
+  int cj;
+  FTYPE *midnorm_loc;
+  
+  midnorm_loc = (FTYPE*)calloc(N1*ncpux1,sizeof(FTYPE));
+  
+  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
+  
+  //FULLLOOP{
+  //THIS CHANGES IC's!
+  //firstly, decrease B2 by 2x -- this leads to a more uniform final beta distribution
+  //MACP0A1(prim,i,j,k,B2) *= 0.5;
+  //only need to do so on centered fields that bsq depends on
+  //}
+  
+  bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
+  
+  //Now rescale staggered field components (ucons)
+  //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
+  //ZLOOP{
+  for( cj = 0; cj < ncpux2; cj++ ) {
+    if( mycpupos[2] == cj && cj == ncpux2/2 ){ 
+      for(i=0,j=0,k=0; i < N1; i++) {
+	midnorm_loc[i+startpos[1]] = compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
+      }
+    }
+    //just in case, wait until all CPUs get here
+#if(USEMPI)
+    MPI_Barrier(MPI_COMM_GRMHD);
+#endif
+  }
+  
+#if(USEMPI)
+  MPI_Reduce(&(midnorm_loc[0]),&(midnorm[0]),ncpux1*N1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+#endif
+
+  free(midnorm_loc);
+  
+  return(0);
 }
 
 int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
