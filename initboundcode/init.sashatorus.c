@@ -736,8 +736,8 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 #define NSFIELDVAL (1.5*3.162277660168379332*2*3*3*0.5)
 
 //#define FIELDTYPE DISKBHFIELD
-//#define FIELDTYPE DISKFIELD
-#define FIELDTYPE NSFIELD
+#define FIELDTYPE DISKFIELD
+//#define FIELDTYPE NSFIELD
 
 FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
 {
@@ -997,6 +997,10 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 				   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 				   FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 				   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+  int normalize_field_local_nodivb_noprofile(FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+					     FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+					     FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+					     FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   FTYPE get_maxval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir );
   int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 			       FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
@@ -1032,7 +1036,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   //here need to 
   //1) compute bsq
   //2) rescale field components such that beta = p_g/p_mag is what I want (constant in the main disk body and tapered off to zero near torus edges)
-  normalize_field_local_nodivb( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
+  normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
   
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
@@ -1043,9 +1047,14 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   if(funreturn!=0) return(funreturn);
 #endif
 
+#if(OPTIMIZE_VERT_FLUX)
+  normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
+  
+#else
   //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
   normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
-
+#endif
+  
 #if( DOFREEZETORUS )
   //save the torus field: it will be added on later
   save_torus_allvars(prim, pstag, ucons, A );
@@ -1397,6 +1406,78 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
   return(0);
 }
 
+
+int normalize_field_local_nodivb_noprofile(FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+				 FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+{
+  FTYPE compute_rat_noprofile(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE targbeta, int loc, int i, int j, int k);
+  int i,j,k;
+  FTYPE ratc_ij, ratc_im1j, ratc_ijm1;
+  FTYPE ratf1_ij, ratf2_ij;
+  int finalstep;
+  
+  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
+  
+  //FULLLOOP{
+  //THIS CHANGES IC's!
+  //firstly, decrease B2 by 2x -- this leads to a more uniform final beta distribution
+  //MACP0A1(prim,i,j,k,B2) *= 0.5;
+  //only need to do so on centered fields that bsq depends on
+  //}
+  
+  bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
+  
+  //Now rescale staggered field components (ucons)
+  //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
+  //ZLOOP{
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1,0,N3-1) {
+    //cell centered ratio in this cell
+    ratc_ij   = compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
+    
+    //and in two neighboring cells
+    ratc_im1j = compute_rat_noprofile(prim, A, targbeta, CENT, im1mac(i), j, k);
+    ratc_ijm1 = compute_rat_noprofile(prim, A, targbeta, CENT, i, jm1mac(j), k);
+    
+    //ratios centered at FACE1 and FACE2, respectively:
+    ratf1_ij = 0.5*(ratc_im1j + ratc_ij);
+    ratf2_ij = 0.5*(ratc_ijm1 + ratc_ij);
+    
+    // normalize primitive
+    // DON'T DO THIS SO AS NOT TO INTRODUCE ORDER DEPENDENCE IN LOOP
+    //MACP0A1(prim,i,j,k,B1) *= ratc_ij;
+    //MACP0A1(prim,i,j,k,B2) *= ratc_ij;
+    //MACP0A1(prim,i,j,k,B3) *= ratc_ij;
+    
+    // normalize conserved quantity
+    //MACP0A1(ucons,i,j,k,B1) *= ratf1_ij;
+    //MACP0A1(ucons,i,j,k,B2) *= 0*ratf2_ij;
+    //MACP0A1(ucons,i,j,k,B3) *= 0*ratc_ij;
+    
+    // normalize staggered field primitive
+    if(FLUXB==FLUXCTSTAG){
+      MACP0A1(pstag,i,j,k,B1) *= ratf1_ij;
+      MACP0A1(pstag,i,j,k,B2) *= ratf2_ij;
+      //  MACP0A1(pstag,i,j,k,B3) *= 0*ratc_ij;  //since assuming axisymmetry, ratc_ij is good enough
+    }
+    
+    // normalize higher-order field
+    // SASMARK: have no clue what Bhat is and where in the cell it is located
+    // SASMARK: therefore, will normalize it as if it were at the cell center
+    //if(HIGHERORDERMEM){
+    //  MACP0A1(Bhat,i,j,k,B1) *= ratc_ij;
+    //  MACP0A1(Bhat,i,j,k,B2) *= 0*ratc_ij;
+    //  MACP0A1(Bhat,i,j,k,B3) *= 0*ratc_ij;      
+    //}
+  }
+  
+  //bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
+  
+  return(0);
+}
+
+
 //Returns: factor to multiply field components by to get the desired
 //value of beta: targbeta = p_g/p_mag
 FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
@@ -1438,6 +1519,34 @@ FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFT
   
   return(rat_ij);
 }
+
+//Returns: factor to multiply field components by to get the desired
+//value of beta: targbeta = p_g/p_mag
+FTYPE compute_rat_noprofile(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE targbeta, int loc, int i, int j, int k)
+{
+  FTYPE bsq_ij,pg_ij,beta_ij,rat_ij;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE rat, ratc;
+  FTYPE profile;
+  FTYPE r;
+  
+  get_geometry(i, j, k, loc, ptrgeom);
+  coord(i,j,k,loc,X);
+  bl_coord(X,V);
+  r = V[1];
+  
+  if( bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1 ){
+    FAILSTATEMENT("init.sashatorus.c:compute_rat()", "bsq_calc()", 1);
+  }
+  pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+  beta_ij=2*pg_ij/(bsq_ij+SMALL);
+  rat_ij = sqrt(beta_ij / targbeta); //ratio at CENT
+    
+  return(rat_ij);
+}
+
 
 FTYPE get_maxprimvalrpow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE rpow, int pl )
 {

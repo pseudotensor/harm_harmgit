@@ -423,13 +423,13 @@ struct Ccoordparams {
 #define USERESTARTFORPANALYTIC 0 //Sasha's behavior: when restarting, don't use the restarted prims for analytic solution since computing panalytic separately
 
 #undef USEKOMISWINDLE
-#define USEKOMISWINDLE 1
+#define USEKOMISWINDLE 0
 
 #undef ADDVPARSWINDLE
 #define ADDVPARSWINDLE 0
 
 #undef NSBC_ASSUME_DIPOLE_FIELD
-#define NSBC_ASSUME_DIPOLE_FIELD 1  //assumes dipolar field on the neutron star to simplify BC setting
+#define NSBC_ASSUME_DIPOLE_FIELD 0  //assumes dipolar field on the neutron star to simplify BC setting
 
 #undef DOPOLEDEATH
 #define DOPOLEDEATH 0
@@ -441,7 +441,7 @@ struct Ccoordparams {
 #define DOPOLESMOOTH 2
 
 #undef DONSEMFS
-#define DONSEMFS 1
+#define DONSEMFS 0
 
 #undef FRACBSQORHO
 #define FRACBSQORHO (1.0)
