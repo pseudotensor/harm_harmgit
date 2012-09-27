@@ -1037,7 +1037,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   //1) compute bsq
   //2) rescale field components such that beta = p_g/p_mag is what I want (constant in the main disk body and tapered off to zero near torus edges)
   normalize_field_local_nodivb( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
-  
+
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
 	
@@ -1120,58 +1120,28 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   int i,j,k;
   int finalstep;
   FTYPE midnorm;
+  int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+				      FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+				      FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+				      FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+  int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
-  midnorm = (FTYPE*) calloc(ncpux1*N1,sizeof(FTYPE));
+  aphinorm = (FTYPE*) calloc(ncpux1*N1+N1NOT1,sizeof(FTYPE));
 
   //gives field normalization at every value of i (at iglobal = ny/2)
-  compute_field_norm_midplane( targbeta, prim, midnorm, prim, pstag, ucons, A, Bhat );
+  compute_field_normaphi_midplane( targbeta, aphinorm, prim, pstag, ucons, A, Bhat );
 
-  if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
+  set_vert_vpot_user_allgrid( aphimid, A, prim );
   
-  //Now rescale staggered field components (ucons)
-  //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
-  //ZLOOP{
-  ZSLOOP(0,N1-1+SHIFT1,0,N2-1,0,N3-1) {
-    
-    // normalize primitive
-    // DON'T DO THIS SO AS NOT TO INTRODUCE ORDER DEPENDENCE IN LOOP
-    //MACP0A1(prim,i,j,k,B1) *= ratc_ij;
-    //MACP0A1(prim,i,j,k,B2) *= ratc_ij;
-    //MACP0A1(prim,i,j,k,B3) *= ratc_ij;
-    
-    // normalize conserved quantity
-    //MACP0A1(ucons,i,j,k,B1) *= ratf1_ij;
-    //MACP0A1(ucons,i,j,k,B2) *= 0*ratf2_ij;
-    //MACP0A1(ucons,i,j,k,B3) *= 0*ratc_ij;
-    
-    // normalize staggered field primitive
-    if(FLUXB==FLUXCTSTAG){
-      MACP0A1(pstag,i,j,k,B1) *= ratf1_ij;
-      //  MACP0A1(pstag,i,j,k,B2) *= 0*ratf2_ij;
-      //  MACP0A1(pstag,i,j,k,B3) *= 0*ratc_ij;  //since assuming axisymmetry, ratc_ij is good enough
-    }
-    
-    // normalize higher-order field
-    // SASMARK: have no clue what Bhat is and where in the cell it is located
-    // SASMARK: therefore, will normalize it as if it were at the cell center
-    //if(HIGHERORDERMEM){
-    //  MACP0A1(Bhat,i,j,k,B1) *= ratc_ij;
-    //  MACP0A1(Bhat,i,j,k,B2) *= 0*ratc_ij;
-    //  MACP0A1(Bhat,i,j,k,B3) *= 0*ratc_ij;      
-    //}
-  }
-  
-  //bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
-  
-  free(midnorm);
+  free(aphinorm);
   
   return(0);
 }
 
 
-int compute_field_norm_midplane( FTYPE targbeta, FTYPE *midnorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 					   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
@@ -1180,9 +1150,11 @@ int compute_field_norm_midplane( FTYPE targbeta, FTYPE *midnorm, FTYPE (*prim)[N
   int i,j,k;
   int finalstep;
   int cj;
-  FTYPE *midnorm_loc;
+  FTYPE *daphi_loc, *daphi;
+  int j0;
   
-  midnorm_loc = (FTYPE*)calloc(N1*ncpux1,sizeof(FTYPE));
+  daphi_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
+  daphi     = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   
   if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
   
@@ -1195,13 +1167,14 @@ int compute_field_norm_midplane( FTYPE targbeta, FTYPE *midnorm, FTYPE (*prim)[N
   
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
-  //Now rescale staggered field components (ucons)
-  //Only need to rescale B1cons since B2 will be reconstructed only from B1cons by integrating up vector potential
-  //ZLOOP{
+  //midplane index
+  j0 = (ncpux2>1)?(0):(N2/2);
   for( cj = 0; cj < ncpux2; cj++ ) {
-    if( mycpupos[2] == cj && cj == ncpux2/2 ){ 
-      for(i=0,j=0,k=0; i < N1; i++) {
-	midnorm_loc[i+startpos[1]] = compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
+    if( mycpupos[2] == cj && cj == ncpux2/2 && mycpupos[3] == 0){ 
+      for(i=0,j=j0,k=0; i < N1+N1NOT1; i++) {
+	daphi_loc[i+startpos[1]] = 
+	  MACP0A1(ucons,i,j,k,B2) 
+	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
       }
     }
     //just in case, wait until all CPUs get here
@@ -1210,13 +1183,65 @@ int compute_field_norm_midplane( FTYPE targbeta, FTYPE *midnorm, FTYPE (*prim)[N
 #endif
   }
   
+  //combine the vector potential deltas among different cpus
 #if(USEMPI)
-  MPI_Reduce(&(midnorm_loc[0]),&(midnorm[0]),ncpux1*N1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Reduce(&(daphi_loc[0]),&(daphi[0]),ncpux1*N1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
 #endif
-
-  free(midnorm_loc);
+  
+  //integrate up to obtain global vector potential
+  aphinorm[startpos[1]] = 0;
+  for(i=1,j=j0,k=0; i < N1+N1NOT1; i++) {
+     aphinorm[i+startpos[1]] = daphi[i+startpos[1]] + aphinorm[i-1+startpos[1]];
+  }
+  free(daphi_loc);
+  free(daphi);
   
   return(0);
+}
+
+
+int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i, j, k, loc, userdir, dir, whichcoord;
+  FTYPE vpotuser[NDIM];
+  FTYPE X[NDIM], V[NDIM];
+  FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y);
+  FTYPE aphi;
+  int dir;
+  FTYPE *rmid_alloc, *rmid;
+  FTYPE Rval;
+  
+  rmid_alloc = (FTYPE*) calloc(N1+2*MAXBND,sizeof(FTYPE));
+
+  //shift pointer
+  rmid = &(rmid_alloc[N1BND]);
+  
+  //compute radial grid
+  for(i = -N1BND,j=0,k=0; i < N1+N1BND; i++){
+    bl_coord_ijk_2(i, j, k, loc, X, V); 
+    rmid[i] = V[1];
+  }
+  
+  //add in bh field vpot -- call:
+  ZSLOOP(0,N1-1+SHIFT1,0,N2-1+SHIFT2,0,N3-1+SHIFT3) {
+    // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
+    dir = 3;
+    loc = CORN1 - 1 + userdir; //CORRECT?
+    bl_coord_ijk_2(i, j, k, loc, X, V); 
+    Rval = V[1]*sin(V[2]);
+    aphi = interp1d(Rval, rmid, &(aphimid[startpos[1]]) )
+    NOAVGCORN_1(A[dir],i,j,k) += aphi;
+  }
+  
+  free(rmid_alloc);
+  rmid_alloc = NULL;
+  rmid = NULL;
+  return(0);
+}
+
+FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y)
+{
+  return(0.0);
 }
 
 int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
@@ -1243,6 +1268,7 @@ int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFT
   }
   return(0);
 }
+
 
 //compute vector potential assuming B_\phi = 0 and zero flux at poles
 //(not tested in non-axisymmetric field distribution but in principle should work)
