@@ -1048,8 +1048,13 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 #endif
 
 #if(OPTIMIZE_VERT_FLUX)
-  //normalize_field_local_nodivb_noprofile( beta, rhomax, amax, prim, pstag, ucons, A, Bhat );
+  //find normalization of magnetic field such that beta = targbeta in the midplane,
+  //compute vector potential that corresponds to such normalized field,
+  //and return the computed vector potential as A
   normalize_midplane(targbeta, prim, pstag, ucons, A, Bhat);
+  //recompute magnetic field from A
+  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  if(funreturn!=0) return(funreturn);
 #else
   //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
   normalize_field_diskonly(prim, pstag, ucons, A, Bhat);
@@ -1205,7 +1210,7 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][
   int i, j, k, loc, userdir, dir, whichcoord;
   FTYPE vpotuser[NDIM];
   FTYPE X[NDIM], V[NDIM];
-  FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y);
+  FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y, int len);
   FTYPE aphi;
   int dir;
   FTYPE *rmid_alloc, *rmid;
@@ -1230,7 +1235,7 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][
     bl_coord_ijk_2(i, j, k, loc, X, V); 
     Rval = V[1]*sin(V[2]);
     aphi = interp1d(Rval, rmid, &(aphimid[startpos[1]]) )
-    NOAVGCORN_1(A[dir],i,j,k) += aphi;
+    NOAVGCORN_1(A[dir],i,j,k) = aphi;
   }
   
   free(rmid_alloc);
@@ -1239,9 +1244,29 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][
   return(0);
 }
 
-FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y)
+FTYPE interp1d(FTYPE xev, FTYPE *x, FTYPE *y, int len)
 {
-  return(0.0);
+  FTYPE yev;
+  int i;
+  if( x[0] >= x[len-1] ){
+    dualfprintf( fail_file, "interp1d(): x is out of order\n" );
+    myexit(3253);
+  }
+  //constant extrapolation if out of bounds
+  if( xev <= x[0] ) {
+    return( y[0] );
+  }
+  else if( xev >= x[len-1] ) {
+    return( y[len-1] );
+  }
+  //linear interpolation if in bounds
+  //simple sequential search; could be optimized knowing that r grid is exponential
+  for(i=0; i<len; i++){
+    if (x[i] > xev) {
+      yev = (y[i]*(xev-x[i-1]) + y[i-1]*(x[i]-xev)) / (x[i] - x[i-1])
+    }
+  }
+  return(yev);
 }
 
 int add_vpot_bhfield_user_allgrid( FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
