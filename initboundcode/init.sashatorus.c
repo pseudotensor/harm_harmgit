@@ -1043,7 +1043,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 	
   //4) call user1_init_vpot2field_user() again to recompute the fields
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(t, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
 #endif
 
@@ -1053,7 +1053,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   //and return the computed vector potential as A
   normalize_midplane(beta, prim, pstag, ucons, A, Bhat);
   //recompute magnetic field from A
-  funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
+  funreturn=user1_init_vpot2field_user(t, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
 #else
   //normalize disk field -- the usual normalize, just call it from here instead of the usual place in init.tools.c:user1_init_primitives()
