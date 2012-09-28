@@ -1130,6 +1130,7 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 				      FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 				      FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  FTYPE *aphinorm;
   
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
@@ -1138,7 +1139,7 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   //gives field normalization at every value of i (at iglobal = ny/2)
   compute_field_normaphi_midplane( targbeta, aphinorm, prim, pstag, ucons, A, Bhat );
 
-  set_vert_vpot_user_allgrid( aphimid, A, prim );
+  set_vert_vpot_user_allgrid( aphinorm, A, prim );
   
   free(aphinorm);
   
@@ -1212,7 +1213,6 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][
   FTYPE X[NDIM], V[NDIM];
   FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y, int len);
   FTYPE aphi;
-  int dir;
   FTYPE *rmid_alloc, *rmid;
   FTYPE Rval;
   
@@ -1234,7 +1234,7 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][
     loc = CORN1 - 1 + userdir; //CORRECT?
     bl_coord_ijk_2(i, j, k, loc, X, V); 
     Rval = V[1]*sin(V[2]);
-    aphi = interp1d(Rval, rmid, &(aphimid[startpos[1]]) )
+    aphi = interp1d(Rval, rmid, &(aphimid[startpos[1]]), N1+N1NOT1 );
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
   }
   
@@ -1263,7 +1263,7 @@ FTYPE interp1d(FTYPE xev, FTYPE *x, FTYPE *y, int len)
   //simple sequential search; could be optimized knowing that r grid is exponential
   for(i=0; i<len; i++){
     if (x[i] > xev) {
-      yev = (y[i]*(xev-x[i-1]) + y[i-1]*(x[i]-xev)) / (x[i] - x[i-1])
+      yev = (y[i]*(xev-x[i-1]) + y[i-1]*(x[i]-xev)) / (x[i] - x[i-1]);
     }
   }
   return(yev);
