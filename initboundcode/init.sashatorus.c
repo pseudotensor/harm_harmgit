@@ -957,6 +957,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
+//only modulate the field by density, etc. when not doing vertical flux optimization
+#if( !OPTIMIZE_VERT_FLUX )
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
       //SASMARK: since u was randomly perturbed, may need to sync the u across tiles to avoid monopoles
       if(r > STARTFIELD) q = (pow(r,aphipow)*(rho_av/rhomax));
@@ -971,6 +973,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       q = rho_av / rhomax - 0.2;
       if (q > 0.)      vpot += q;
 #endif
+#endif //end #if( !OPTIMIZE_VERT_FLUX )
     
     }
   }
