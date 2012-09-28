@@ -1051,7 +1051,7 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
   //find normalization of magnetic field such that beta = targbeta in the midplane,
   //compute vector potential that corresponds to such normalized field,
   //and return the computed vector potential as A
-  normalize_midplane(targbeta, prim, pstag, ucons, A, Bhat);
+  normalize_midplane(beta, prim, pstag, ucons, A, Bhat);
   //recompute magnetic field from A
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
