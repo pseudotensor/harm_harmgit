@@ -164,7 +164,7 @@
 #define LIMIT_FLUXC2A_PRIM_CHANGE 0
 
 
-#if(0)
+#if(1)
 //spherical polar rotating BH
 #define MCOORD KSCOORDS
 #else
