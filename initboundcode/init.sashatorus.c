@@ -736,7 +736,8 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 #define NSFIELDVAL (1.5*3.162277660168379332*2*3*3*0.5)
 
 //#define FIELDTYPE DISKBHFIELD
-#define FIELDTYPE DISKFIELD
+//#define FIELDTYPE DISKFIELD
+#define FIELDTYPE VERTFIELD
 //#define FIELDTYPE NSFIELD
 
 FTYPE vpotbh_normalized( FTYPE r, FTYPE th )
