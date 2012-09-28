@@ -336,7 +336,7 @@ int init_grid(void)
   rin = 1.;
 #endif
 
-#if(MCOORD!=KSCOORD)
+#if(MCOORD!=KSCOORDS)
   Rhor = rin;
   Risco = rin;
 #endif
