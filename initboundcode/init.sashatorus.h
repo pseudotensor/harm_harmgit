@@ -415,7 +415,7 @@ struct Ccoordparams {
 
 
 #undef DOADJUSTEMFS 
-#define DOADJUSTEMFS 1
+#define DOADJUSTEMFS 0
 
 #undef NORMALIZEBCCELLS
 #define NORMALIZEBCCELLS 1
