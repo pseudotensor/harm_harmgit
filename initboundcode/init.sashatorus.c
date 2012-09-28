@@ -1269,9 +1269,6 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+
     aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
   }
-  dualfprintf(fail_file,"got here 4\n");
-  
-  dualfprintf(fail_file,"got here 5\n");
   return(0);
 }
 
