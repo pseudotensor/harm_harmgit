@@ -1295,6 +1295,7 @@ FTYPE interp1d(FTYPE xev, FTYPE *x, FTYPE *y, int len)
   for(i=0; i<len; i++){
     if (x[i] > xev) {
       yev = (y[i]*(xev-x[i-1]) + y[i-1]*(x[i]-xev)) / (x[i] - x[i-1]);
+      break;
     }
   }
   return(yev);
