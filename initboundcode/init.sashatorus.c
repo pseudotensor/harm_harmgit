@@ -1125,26 +1125,27 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   int i,j,k;
   int finalstep;
   FTYPE midnorm;
-  int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+  int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				      FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 				      FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 				      FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  FTYPE *aphinorm;
+  int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  FTYPE *aphinorm, *rmid;
   
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
   aphinorm = (FTYPE*) calloc(ncpux1*N1+N1NOT1,sizeof(FTYPE));
+  rmid = (FTYPE*) calloc(ncpux1*N1+N1NOT1,sizeof(FTYPE));
   
-  if (NULL == aphinorm) {
-    dualfprintf(fail_file,"Could not allocate memory for aphinorm\n");
+  if (NULL == aphinorm || NULL == rmid) {
+    dualfprintf(fail_file,"Could not allocate memory for aphinorm or rmid\n");
     myexit(9653);
   }
 
   //gives field normalization at every value of i (at iglobal = ny/2)
-  compute_field_normaphi_midplane( targbeta, aphinorm, prim, pstag, ucons, A, Bhat );
+  compute_field_normaphi_midplane( targbeta, aphinorm, rmid, prim, pstag, ucons, A, Bhat );
 
-  set_vert_vpot_user_allgrid( aphinorm, A, prim );
+  set_vert_vpot_user_allgrid( aphinorm, rmid, A, prim );
   
   free(aphinorm);
   
@@ -1152,7 +1153,7 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 }
 
 
-int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 					   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
@@ -1161,11 +1162,20 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*pr
   int i,j,k;
   int finalstep;
   int cj;
-  FTYPE *daphi_loc, *daphi;
+  int loc;
+  int dir;
+  FTYPE *daphi_loc, *daphi, *rmid_loc;
   int j0;
+  FTYPE X[NDIM], V[NDIM];
   
+  rmid_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   daphi_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   daphi     = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
+
+  if (NULL == daphi_loc || NULL == daphi) {
+    dualfprintf(fail_file,"Could not allocate memory for daphi_loc or daphi\n");
+    myexit(9653);
+  }
   
   if(steppart==TIMEORDER-1) finalstep=1; else finalstep=0;
   
@@ -1186,6 +1196,11 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*pr
 	daphi_loc[i+startpos[1]] = 
 	  MACP0A1(ucons,i,j,k,B2) 
 	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
+	dir = 3;
+	loc = CORN1 - 1 + dir;
+	bl_coord_ijk_2(i, j, k, loc, X, V);
+	rmid_loc[i+startpos[1]] = V[1];
+	dualfprintf(fail_file,"rmid_loc[%d]=%g\n", i+startpos[1], rmid_loc[i+startpos[1]]);
       }
     }
     //just in case, wait until all CPUs get here
@@ -1196,13 +1211,14 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*pr
   
   //combine the vector potential deltas among different cpus
 #if(USEMPI)
-  MPI_Reduce(&(daphi_loc[0]),&(daphi[0]),ncpux1*N1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Reduce(&(daphi_loc[0]),&(daphi[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Reduce(&(rmid_loc[0]),&(rmid[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
 #endif
   
   //integrate up to obtain global vector potential
-  aphinorm[startpos[1]] = 0;
-  for(i=1,j=j0,k=0; i < N1+N1NOT1; i++) {
-     aphinorm[i+startpos[1]] = daphi[i+startpos[1]] + aphinorm[i-1+startpos[1]];
+  aphinorm[0] = 0;
+  for(i=1; i < ncpux1*N1+N1NOT1; i++) {
+     aphinorm[i] = daphi[i] + aphinorm[i-1];
   }
   free(daphi_loc);
   free(daphi);
@@ -1211,41 +1227,28 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE (*pr
 }
 
 
-int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int i, j, k, loc, userdir, dir, whichcoord;
+  int i, j, k, loc, dir, whichcoord;
   FTYPE vpotuser[NDIM];
   FTYPE X[NDIM], V[NDIM];
   FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y, int len);
   FTYPE aphi;
-  FTYPE *rmid_alloc, *rmid;
   FTYPE Rval;
-  
-  rmid_alloc = (FTYPE*) calloc(N1+2*MAXBND,sizeof(FTYPE));
-
-  //shift pointer
-  rmid = &(rmid_alloc[N1BND]);
-  
-  //compute radial grid
-  for(i = -N1BND,j=0,k=0; i < N1+N1BND; i++){
-    bl_coord_ijk_2(i, j, k, loc, X, V); 
-    rmid[i] = V[1];
-  }
   
   //add in bh field vpot -- call:
   ZSLOOP(0,N1-1+SHIFT1,0,N2-1+SHIFT2,0,N3-1+SHIFT3) {
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
     dir = 3;
-    loc = CORN1 - 1 + userdir; //CORRECT?
+    loc = CORN1 - 1 + dir; //CORRECT?
     bl_coord_ijk_2(i, j, k, loc, X, V); 
     Rval = V[1]*sin(V[2]);
-    aphi = interp1d(Rval, rmid, &(aphimid[startpos[1]]), N1+N1NOT1 );
+    aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
   }
+  dualfprintf(fail_file,"got here 4\n");
   
-  free(rmid_alloc);
-  rmid_alloc = NULL;
-  rmid = NULL;
+  dualfprintf(fail_file,"got here 5\n");
   return(0);
 }
 
@@ -1254,7 +1257,7 @@ FTYPE interp1d(FTYPE xev, FTYPE *x, FTYPE *y, int len)
   FTYPE yev;
   int i;
   if( x[0] >= x[len-1] ){
-    dualfprintf( fail_file, "interp1d(): x is out of order\n" );
+    dualfprintf( fail_file, "interp1d(): x is out of order: x[%d] = %g, x[%d] = %g\n", 0, x[0], len-1, x[len-1] );
     myexit(3253);
   }
   //constant extrapolation if out of bounds
