@@ -15,7 +15,7 @@ USEBG=0
 #QUEENBEE (avoids making directories or forking in general)
 USEQB=0
 USEUB=0
-USEOSX=1
+USEOSX=0
 # USEABE -> USEICCGENERIC is used
 USEICCGENERIC=0
 USEICCINTEL=0
@@ -31,7 +31,7 @@ USETACCRANGER=0
 USEPFE=0
 USENAU=0
 USEPFESGIMPT=0
-USEORB=0
+USEORB=1
 
 #####################
 #
