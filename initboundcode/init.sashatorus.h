@@ -457,7 +457,7 @@ struct Ccoordparams {
 #define VPARBND (0.9)
 
 #undef SET_FACE1DN
-#define SET_FACE1DN 1
+#define SET_FACE1DN 0
 
 // problem-dependent code activation
 #undef USERRESETREGION
