@@ -1135,6 +1135,11 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
   aphinorm = (FTYPE*) calloc(ncpux1*N1+N1NOT1,sizeof(FTYPE));
+  
+  if (NULL == aphinorm) {
+    dualfprintf(fail_file,"Could not allocate memory for aphinorm\n");
+    myexit(9653);
+  }
 
   //gives field normalization at every value of i (at iglobal = ny/2)
   compute_field_normaphi_midplane( targbeta, aphinorm, prim, pstag, ucons, A, Bhat );
