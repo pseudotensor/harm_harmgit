@@ -1241,7 +1241,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   //integrate up to obtain global vector potential
   aphinorm[0] = 0;
   for(i=1; i < ncpux1*N1+N1NOT1; i++) {
-     aphinorm[i] = daphi[i] + aphinorm[i-1];
+    aphinorm[i] = daphi[i] + aphinorm[i-1];
   }
   free(daphi_loc);
   free(daphi);
