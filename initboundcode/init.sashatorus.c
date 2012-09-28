@@ -1171,6 +1171,10 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   FTYPE *daphi_loc, *daphi, *rmid_loc;
   int j0;
   FTYPE X[NDIM], V[NDIM];
+  struct of_gdetgeom geomfdontuse[NDIM];
+  struct of_gdetgeom *ptrgeomf[NDIM];
+  FTYPE gdetnosing;
+  FTYPE igdetgnosing[NDIM];
   
   rmid_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   daphi_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
@@ -1197,14 +1201,29 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   for( cj = 0; cj < ncpux2; cj++ ) {
     if( mycpupos[2] == cj && cj == ncpux2/2 && mycpupos[3] == 0){ 
       for(i=0,j=j0,k=0; i < N1+N1NOT1; i++) {
-	daphi_loc[i+startpos[1]] = 
-	  MACP0A1(ucons,i,j,k,B2) 
-	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
 	dir = 3;
 	loc = CORN1 - 1 + dir;
-	bl_coord_ijk_2(i, j, k, loc, X, V);
+	//+1 is added to i to get the correct location for vector potential
+	bl_coord_ijk_2(i+1, j, k, loc, X, V);
 	rmid_loc[i+startpos[1]] = V[1];
-	dualfprintf(fail_file,"rmid_loc[%d]=%g\n", i+startpos[1], rmid_loc[i+startpos[1]]);
+	if (V[1] >= rin) {
+//	  daphi_loc[i+startpos[1]] = 
+//	    MACP0A1(ucons,i,j,k,B2) 
+//	    * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) * dx[1];
+	  dir = 2;
+	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	  set_igdetsimple(ptrgeomf[dir]);
+	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+	  gdetnosing = 1.0/igdetgnosing[dir];
+	  //take a loop along j-line at a fixed i,k and integrate up vpot
+	  daphi_loc[i+startpos[1]] = 
+	    MACP0A1(pstag,i,j,k,B2)*gdetnosing
+	    * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1];
+	  
+	}
+	else{
+	  daphi_loc[i+startpos[1]]=0;
+	}
       }
     }
     //just in case, wait until all CPUs get here
