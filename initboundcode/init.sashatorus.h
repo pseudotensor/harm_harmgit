@@ -436,7 +436,7 @@ struct Ccoordparams {
 #define NSBC_ASSUME_DIPOLE_FIELD 0  //assumes dipolar field on the neutron star to simplify BC setting
 
 #undef DOPOLEDEATH
-#define DOPOLEDEATH 0
+#define DOPOLEDEATH 2
 
 #undef DOPOLEGAMMADEATH
 #define DOPOLEGAMMADEATH 0
