@@ -1228,9 +1228,13 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
 	daphi_loc[i+startpos[1]] = 
 	  fabs(MACP0A1(pstag,i,j,k,B2)*gdetnosing
 	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1]);
-	if( V[1] >= startfield*rin && 0 == gotstartfield ){
+	//NOTE: overwriting V from above, so account for this if moving this line up
+	bl_coord_ijk_2(i, j, k, FACE2, X, V);
+	dxdxprim_ijk(i, j, k, FACE2, dxdxp);
+	if( 0 == gotstartfield && 
+	    V[1] <  startfield*rin && 
+	    V[1] >= startfield*rin-dxdxp[1][1]*dx[1] ){
 	  gotstartfield = 1;
-	  dxdxprim_ijk(i, j, k, FACE2, dxdxp);
 	  Bzstartfield = V[1] * fabs(MACP0A1(pstag,i,j,k,B2) * dxdxp[2][2]);
 	  istartfield = i+startpos[1];
 	}
@@ -1264,7 +1268,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   }
   delta_aphi = 0.5*Bzstartfield_tot*rmid[istartfield_tot]*rmid[istartfield_tot] - aphinorm[istartfield_tot];
   
-  for(i=1; i < ncpux1*N1+N1NOT1; i++) {
+  for(i=0; i < ncpux1*N1+N1NOT1; i++) {
     aphinorm[i] += delta_aphi;
   }
   *Bzstartfieldval = Bzstartfield_tot;
