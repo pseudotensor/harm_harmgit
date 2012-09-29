@@ -1264,6 +1264,9 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   }
   delta_aphi = 0.5*Bzstartfield_tot*rmid[istartfield_tot]*rmid[istartfield_tot] - aphinorm[istartfield_tot];
   
+  for(i=1; i < ncpux1*N1+N1NOT1; i++) {
+    aphinorm[i] += delta_aphi;
+  }
   *Bzstartfieldval = Bzstartfield_tot;
   
   free(daphi_loc);
@@ -1291,7 +1294,7 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE Bzstartfieldv
     Rval = V[1]*sin(V[2]);
     aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
     aphibh = 0.5*Bzstartfieldval*Rval*Rval;
-    if(aphi < aphibh) {
+    if(Rval <= 2*startfield*rin && aphi >= aphibh) {
       aphi = aphibh;
     }
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
