@@ -1198,44 +1198,44 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   
   //midplane index
   j0 = (ncpux2>1)?(0):(N2/2);
-  for( cj = 0; cj < ncpux2; cj++ ) {
-    if( mycpupos[2] == cj && cj == ncpux2/2 && mycpupos[3] == 0){ 
-      for(i=0,j=j0,k=0; i < N1+N1NOT1; i++) {
-	dir = 3;
-	loc = CORN1 - 1 + dir;
-	//+1 is added to i to get the correct location for vector potential
-	bl_coord_ijk_2(i+1, j, k, loc, X, V);
-	rmid_loc[i+startpos[1]] = V[1];
-	if (V[1] >= rin) {
+  if( mycpupos[2] == ncpux2/2 && mycpupos[3] == 0){ 
+    for(i=0,j=j0,k=0; i < N1+N1NOT1; i++) {
+      dir = 3;
+      loc = CORN1 - 1 + dir;
+      //+1 is added to i to get the correct location for vector potential
+      bl_coord_ijk_2(i+1, j, k, loc, X, V);
+      rmid_loc[i+startpos[1]] = V[1];
+      if (V[1] >= rin) {
 //	  daphi_loc[i+startpos[1]] = 
 //	    MACP0A1(ucons,i,j,k,B2) 
 //	    * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) * dx[1];
-	  dir = 2;
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	  set_igdetsimple(ptrgeomf[dir]);
-	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	  gdetnosing = 1.0/igdetgnosing[dir];
-	  //take a loop along j-line at a fixed i,k and integrate up vpot
-	  daphi_loc[i+startpos[1]] = 
-	    MACP0A1(pstag,i,j,k,B2)*gdetnosing
-	    * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1];
-	  
-	}
-	else{
-	  daphi_loc[i+startpos[1]]=0;
-	}
+	dir = 2;
+	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+	set_igdetsimple(ptrgeomf[dir]);
+	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+	gdetnosing = 1.0/igdetgnosing[dir];
+	//take a loop along j-line at a fixed i,k and integrate up vpot
+	daphi_loc[i+startpos[1]] = 
+	  fabs(MACP0A1(pstag,i,j,k,B2)*gdetnosing
+	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1]);
+	
+      }
+      else{
+	daphi_loc[i+startpos[1]]=0;
       }
     }
-    //just in case, wait until all CPUs get here
-#if(USEMPI)
-    MPI_Barrier(MPI_COMM_GRMHD);
-#endif
   }
+  //just in case, wait until all CPUs get here
+#if(USEMPI)
+  MPI_Barrier(MPI_COMM_GRMHD);
+#endif
   
   //combine the vector potential deltas among different cpus
 #if(USEMPI)
   MPI_Reduce(&(daphi_loc[0]),&(daphi[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&(daphi[0]),    ncpux1*N1+N1NOT1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Reduce(&(rmid_loc[0]),&(rmid[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&(rmid[0]), ncpux1*N1+N1NOT1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
 #endif
   
   //integrate up to obtain global vector potential
