@@ -61,6 +61,7 @@ static FTYPE rhodisk;
 static FTYPE toruskappa;   // AKMARK: entropy constant KK from mathematica file
 static FTYPE torusn;   // AKMARK: n from mathematica file (power of lambda in DHK03)
 extern FTYPE torusrmax;   // AKMARK: torus pressure max
+static FTYPE startfield;
 FTYPE t_transition;
 FTYPE global_vpar0;
 FTYPE global_dipole_alpha;
@@ -305,6 +306,7 @@ int init_grid(void)
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
   torusn = 2. - 1.55;   // AKMARK: n from mathematica file (power of lambda in DHK03)
   torusrmax = 44.8; //62.5; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  startfield = 1.5;
   
   beta = 0.5e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
@@ -1129,12 +1131,14 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   int i,j,k;
   int finalstep;
   FTYPE midnorm;
-  int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+  int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE *Bzstartfieldval,
+				      FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 				      FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 				      FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 				      FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
-  int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE Bzstartfieldval, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   FTYPE *aphinorm, *rmid;
+  FTYPE Bzstartfieldval;
   
   bound_allprim(STAGEM1,finalstep,t,prim,pstag,ucons, USEMPI);
   
@@ -1147,9 +1151,9 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   }
 
   //gives field normalization at every value of i (at iglobal = ny/2)
-  compute_field_normaphi_midplane( targbeta, aphinorm, rmid, prim, pstag, ucons, A, Bhat );
+  compute_field_normaphi_midplane( targbeta, aphinorm, rmid, &Bzstartfieldval, prim, pstag, ucons, A, Bhat );
 
-  set_vert_vpot_user_allgrid( aphinorm, rmid, A, prim );
+  set_vert_vpot_user_allgrid( aphinorm, rmid, Bzstartfieldval, A, prim );
   
   free(aphinorm);
   
@@ -1157,7 +1161,8 @@ int normalize_midplane( FTYPE targbeta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 }
 
 
-int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
+int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmid, FTYPE *Bzstartfieldval, 
+				     FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
 					   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
 					   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
@@ -1175,6 +1180,11 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   struct of_gdetgeom *ptrgeomf[NDIM];
   FTYPE gdetnosing;
   FTYPE igdetgnosing[NDIM];
+  int gotstartfield;
+  FTYPE Bzstartfield = 0,Bzstartfield_tot;
+  int istartfield = 0, istartfield_tot;
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE delta_aphi;
   
   rmid_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   daphi_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
@@ -1199,7 +1209,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   //midplane index
   j0 = (ncpux2>1)?(0):(N2/2);
   if( mycpupos[2] == ncpux2/2 && mycpupos[3] == 0){ 
-    for(i=0,j=j0,k=0; i < N1+N1NOT1; i++) {
+    for(i=0,j=j0,k=0,gotstartfield=0; i < N1+N1NOT1; i++) {
       dir = 3;
       loc = CORN1 - 1 + dir;
       //+1 is added to i to get the correct location for vector potential
@@ -1218,7 +1228,12 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
 	daphi_loc[i+startpos[1]] = 
 	  fabs(MACP0A1(pstag,i,j,k,B2)*gdetnosing
 	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1]);
-	
+	if( V[1] >= startfield*rin && 0 == gotstartfield ){
+	  gotstartfield = 1;
+	  dxdxprim_ijk(i, j, k, FACE2, dxdxp);
+	  Bzstartfield = V[1] * fabs(MACP0A1(pstag,i,j,k,B2) * dxdxp[2][2]);
+	  istartfield = i+startpos[1];
+	}
       }
       else{
 	daphi_loc[i+startpos[1]]=0;
@@ -1232,6 +1247,10 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   
   //combine the vector potential deltas among different cpus
 #if(USEMPI)
+  MPI_Reduce(&(Bzstartfield),&(Bzstartfield_tot),1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&(Bzstartfield_tot),1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  MPI_Reduce(&(istartfield),&(istartfield_tot),1,MPI_INT,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
+  MPI_Bcast(&(istartfield_tot),1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
   MPI_Reduce(&(daphi_loc[0]),&(daphi[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&(daphi[0]),    ncpux1*N1+N1NOT1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Reduce(&(rmid_loc[0]),&(rmid[0]),ncpux1*N1+N1NOT1,MPI_FTYPE,MPI_MAX,MPIid[0], MPI_COMM_GRMHD);
@@ -1243,6 +1262,10 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   for(i=1; i < ncpux1*N1+N1NOT1; i++) {
     aphinorm[i] = daphi[i] + aphinorm[i-1];
   }
+  delta_aphi = 0.5*Bzstartfield_tot*rmid[istartfield_tot]*rmid[istartfield_tot] - aphinorm[istartfield_tot];
+  
+  *Bzstartfieldval = Bzstartfield_tot;
+  
   free(daphi_loc);
   free(daphi);
   
@@ -1250,13 +1273,13 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
 }
 
 
-int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE Bzstartfieldval, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i, j, k, loc, dir, whichcoord;
   FTYPE vpotuser[NDIM];
   FTYPE X[NDIM], V[NDIM];
   FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y, int len);
-  FTYPE aphi;
+  FTYPE aphi, aphibh;
   FTYPE Rval;
   
   //add in bh field vpot -- call:
@@ -1267,6 +1290,10 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE (*A)[NSTORE1+
     bl_coord_ijk_2(i, j, k, loc, X, V); 
     Rval = V[1]*sin(V[2]);
     aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
+    aphibh = 0.5*Bzstartfieldval*Rval*Rval;
+    if(aphi < aphibh) {
+      aphi = aphibh;
+    }
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
   }
   return(0);
