@@ -1175,7 +1175,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   int dir;
   FTYPE *daphi_loc, *daphi, *rmid_loc;
   int j0;
-  FTYPE X[NDIM], V[NDIM];
+  FTYPE X[NDIM], V[NDIM], rprev = 0;
   struct of_gdetgeom geomfdontuse[NDIM];
   struct of_gdetgeom *ptrgeomf[NDIM];
   FTYPE gdetnosing;
@@ -1185,6 +1185,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   int istartfield = 0, istartfield_tot;
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE delta_aphi;
+  FTYPE newB2;
   
   rmid_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
   daphi_loc = (FTYPE*)calloc(N1*ncpux1+N1NOT1,sizeof(FTYPE));
@@ -1225,19 +1226,19 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
 	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
 	gdetnosing = 1.0/igdetgnosing[dir];
 	//take a loop along j-line at a fixed i,k and integrate up vpot
-	daphi_loc[i+startpos[1]] = 
-	  fabs(MACP0A1(pstag,i,j,k,B2)*gdetnosing
-	  * compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k) *	dx[1]);
+	newB2 = fabs(MACP0A1(pstag,i,j,k,B2))*compute_rat_noprofile(prim, A, targbeta, CENT, i, j, k);
+	daphi_loc[i+startpos[1]] = newB2 * gdetnosing * dx[1];
 	//NOTE: overwriting V from above, so account for this if moving this line up
 	bl_coord_ijk_2(i, j, k, FACE2, X, V);
 	dxdxprim_ijk(i, j, k, FACE2, dxdxp);
-	if( 0 == gotstartfield && 
-	    V[1] <  startfield*rin && 
-	    V[1] >= startfield*rin-dxdxp[1][1]*dx[1] ){
+	if( i > 0 && 0 == gotstartfield && 
+	    V[1] >= startfield*rin  && 
+	    rprev < startfield*rin){
 	  gotstartfield = 1;
-	  Bzstartfield = V[1] * fabs(MACP0A1(pstag,i,j,k,B2) * dxdxp[2][2]);
+	  Bzstartfield = V[1] * newB2 * dxdxp[2][2] * dxdxp[3][3];
 	  istartfield = i+startpos[1];
 	}
+	rprev = V[1];
       }
       else{
 	daphi_loc[i+startpos[1]]=0;
@@ -1266,6 +1267,7 @@ int compute_field_normaphi_midplane( FTYPE targbeta, FTYPE *aphinorm, FTYPE *rmi
   for(i=1; i < ncpux1*N1+N1NOT1; i++) {
     aphinorm[i] = daphi[i] + aphinorm[i-1];
   }
+
   delta_aphi = 0.5*Bzstartfield_tot*rmid[istartfield_tot]*rmid[istartfield_tot] - aphinorm[istartfield_tot];
   
   for(i=0; i < ncpux1*N1+N1NOT1; i++) {
@@ -1288,17 +1290,19 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE Bzstartfieldv
   FTYPE interp1d(FTYPE xeval, FTYPE *x, FTYPE *y, int len);
   FTYPE aphi, aphibh;
   FTYPE Rval;
+  FTYPE dxdxp[NDIM][NDIM];
   
   //add in bh field vpot -- call:
   ZSLOOP(0,N1-1+SHIFT1,0,N2-1+SHIFT2,0,N3-1+SHIFT3) {
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir})
     dir = 3;
-    loc = CORN1 - 1 + dir; //CORRECT?
+    loc = CORN1 - 1 + dir;
     bl_coord_ijk_2(i, j, k, loc, X, V); 
+    dxdxprim_ijk(i, k, k, loc, dxdxp);
     Rval = V[1]*sin(V[2]);
     aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
     aphibh = 0.5*Bzstartfieldval*Rval*Rval;
-    if(Rval <= 2*startfield*rin && aphi >= aphibh) {
+    if(Rval <= startfield*rin && aphi >= aphibh) {
       aphi = aphibh;
     }
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
