@@ -435,7 +435,7 @@ int init_grid(void)
   //should be roughly outer edge of the disk
   global_rdiskend = 300.;
   
-  global_x10 = 0.98;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
+  global_x10 = 3.0;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
     //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
     //This trick minimizes the resulting pole deresolution and relaxes the time step.
