@@ -1302,7 +1302,7 @@ int set_vert_vpot_user_allgrid( FTYPE *aphimid, FTYPE *rmid, FTYPE Bzstartfieldv
     Rval = V[1]*sin(V[2]);
     aphi = interp1d(Rval, rmid, aphimid, ncpux1*N1+N1NOT1 );
     aphibh = 0.5*Bzstartfieldval*Rval*Rval;
-    if(Rval <= startfield*rin && aphi >= aphibh) {
+    if(DOSTARTFIELDVERT && Rval <= startfield*rin && aphi >= aphibh) {
       aphi = aphibh;
     }
     NOAVGCORN_1(A[dir],i,j,k) = aphi;
