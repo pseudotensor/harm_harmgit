@@ -308,7 +308,7 @@ int init_grid(void)
   torusrmax = 44.8; //62.5; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   startfield = 2.0;
   
-  beta = 0.5e2 ;   // AKMARK: plasma beta (pgas/pmag)
+  beta = 2e2 ;   // AKMARK: plasma beta (pgas/pmag)
   randfact = 4.e-2; //sas: as Jon used for 3D runs but use it for 2D as well
   
 #if(MCOORD==KSCOORDS)
