@@ -118,9 +118,9 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // AKMARK: do full phi
+  dofull2pi = 1;   // AKMARK: do full phi
   
-  global_fracphi = 0.5;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
   
   binaryoutput=MIXEDOUTPUT;  //uncomment to have dumps, rdumps, etc. output in binary form with text header
    
@@ -304,8 +304,8 @@ int init_grid(void)
 #endif
   
   toruskappa = 0.01;   // AKMARK: entropy constant KK from mathematica file
-  torusn = 2. - 1.55;   // AKMARK: n from mathematica file (power of lambda in DHK03)
-  torusrmax = 44.8; //62.5; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
+  torusn = 2. - 1.75;   // AKMARK: n from mathematica file (power of lambda in DHK03)
+  torusrmax = 34.1; //44.8; //62.5; //22.7; //37.1; //22.82; //34.1;   // AKMARK: torus pressure max
   startfield = 2.0;
   
   beta = 2e2 ;   // AKMARK: plasma beta (pgas/pmag)
@@ -324,7 +324,7 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA)
   rin = 20. ;
 #elif(WHICHPROBLEM==THINTORUS)
-  rin = 10. ;
+  rin = 15. ;
 #elif(WHICHPROBLEM==KEPDISK)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
@@ -366,7 +366,7 @@ int init_grid(void)
   Rout = 200.;
 #elif(WHICHPROBLEM==THINTORUS)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  Rin = 0.64 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
+  Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
   R0 = 0.0;
   Rout = 1.e5;
 #elif(WHICHPROBLEM==GRBJET)
@@ -392,7 +392,7 @@ int init_grid(void)
     global_rbr = 100.;
   }
   else if(WHICHPROBLEM==THINTORUS) {
-    global_rbr = 200.;  //make it smaller than the default 1000. while trying to make thin disks work
+    global_rbr = 100.;  //make it smaller than the default 1000. while trying to make thin disks work
   }
   
   /////////////////////
@@ -416,7 +416,7 @@ int init_grid(void)
   //otherwise, near-uniform near jet axis but less resolution (much) further from it
   //the larger r0grid, the larger the thickness of the jet 
   //to resolve
-  global_r0grid = 25.0*Rin;    
+  global_r0grid = 5.0*Rin;    
 
   //distance at which jet part of the grid becomes monopolar
   //should be the same as r0disk to avoid cell crowding at the interface of jet and disk grids
@@ -424,7 +424,7 @@ int init_grid(void)
     
   //distance after which the jet grid collimates according to the usual jet formula
   //the larger this distance, the wider is the jet region of the grid
-  global_rjetend = 3*Rin;
+  global_rjetend = 5*Rin;
     
   //distance at which disk part of the grid becomes monopolar
   //the larger r0disk, the larger the thickness of the disk 
