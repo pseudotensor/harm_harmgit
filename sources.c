@@ -215,7 +215,7 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 	//     if(t > 0.){
 
 	//if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0.) {
-	if(r > rincool && t > 0. && enk > enk0) {
+	if(r < rincool && t > 0. && enk > enk0) {
 
 	  //       	  dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])*(q->ucov[TT])) ;
 
