@@ -380,11 +380,11 @@ $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc mak
 	# create list of prefixes
 	( for fil in `cat objsdepsbin2txt` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsbin2txt ; done )
 	# create list of commands
-	( for fil in `cat depsbin2txt` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) $(BIN2TXTLIBS) >> objsdepsbin2txt.cmd.list ; done )
+	( for fil in `cat depsbin2txt` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(BIN2TXTLIBS1) $(LDFLAGS) $(BIN2TXTLIBS2) >> objsdepsbin2txt.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsbin2txt.list ; touch deps.depsbin2txt.list )
 	# create new dependencies file
-	( for fil in `cat depsbin2txt` ; do  echo $$fil.c ; $(MMCOMP) $(BIN2TXTLIBS) -c -MM $$fil.c >> deps.depsbin2txt.list ; done )
+	( for fil in `cat depsbin2txt` ; do  echo $$fil.c ; $(MMCOMP) $(BIN2TXTLIBS1) -c -MM $$fil.c >> deps.depsbin2txt.list ; done )
 	#
   	# 	create prep file for make to know to recompile or prep again
 	( echo	$(OBJSBIN2TXT) > $(PREPBIN2TXT) )
@@ -455,7 +455,7 @@ $(JONINTERPCMD): $(PREPJONINTERP) $(OBJSJONINTERP) makefile
 
 
 $(BIN2TXTCMD): $(PREPBIN2TXT) $(OBJSBIN2TXT) makefile
-	       $(CC)  $(CFLAGS)  -o $(BIN2TXTCMD) $(OBJSBIN2TXT) $(LDFLAGS) $(LDFLAGSOTHER)  $(BIN2TXTLIBS)
+	       $(CC)  $(CFLAGS)  -o $(BIN2TXTCMD) $(OBJSBIN2TXT) $(LDFLAGS) $(LDFLAGSOTHER)  $(BIN2TXTLIBS2)
 
 
 $(SMCALCCMD): $(PREPSMCALC) $(OBJSSMCALC) makefile

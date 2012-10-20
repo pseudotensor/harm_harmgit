@@ -128,8 +128,8 @@ endif
 ifeq ($(USENAU),1)
 # uses -static for secure library usage
 # MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
-MCC=icc -O0 -lmpi
-COMP=icc -O0 -lmpi
+MCC=icc -lmpi
+COMP=icc -lmpi
 USELAPACK=0
 endif
 
@@ -235,6 +235,15 @@ USEGCC=1
 ECHOSWITCH=
 USELAPACK=0
 endif
+
+ifeq ($(USENAU),1)
+# uses -static for secure library usage
+# MCC=/usr/local/p4mpich-1.2.5-icc-noshmem/bin/mpicc
+MCC=icc
+COMP=icc
+USELAPACK=0
+endif
+
 
 endif    
 #################### DONE IF USEMPI
@@ -722,10 +731,20 @@ endif
 
 # for for normal installation of v5d and hdf
 BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -lv5d
+BIN2TXTLIBS1=$(BIN2TXTLIBS)
+BIN2TXTLIBS2=$(BIN2TXTLIBS)
+
 # below for ki-rh39 and likeness
 # BIN2TXTLIBS=-I/home/jmckinne/include/ -L/home/jmckinne/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
 # must also change #include "hdf" stuff to have the forward hdf/ removed
 
+#BIN2TXTLIBS=-ljpeg -lz -lv5d -ltcl8.5 -lGLU -lGL -lSM -luuid -lICE -lXext -lX11 -lxcb-xlib -lxcb -lXau -ldl -lpng12 -lm -lpthread
+
+#BIN2TXTLIBS1=-I/nics/b/home/jmckinne/include/ -I/sw/analysis/szip/2.1/sles11.1_intel11.1/include -I/sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/include $(BIN2TXTLIBS)
+
+
+#BIN2TXTLIBS2=$(BIN2TXTLIBS) -L/nics/b/home/jmckinne/lib/ -L/sw/analysis/szip/2.1/sles11.1_intel11.1/lib -L/sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib  /sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib/libmfhdf.a /sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib/libdf.a
+#  /nics/b/home/jmckinne/lib/libjpeg.a /nics/b/home/jmckinne/lib/libz.a /nics/b/home/jmckinne/lib/libvis5d.a
 
 #############################
 #

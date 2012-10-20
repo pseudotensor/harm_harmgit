@@ -1,13 +1,22 @@
+# !/bin/bash
+
 ##################
 # shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.
 
+# *can* just run this if system and whichmodel are correct
+# You can even run vis5d on Nautilus, just don't overwrite the export DISPLAY
+
+# see loopjoninterp.sh for how to loop over many files on Nautilus
+
+
 # choose which type of code/system setup
 #system=1   # lustre and reduced code on orange
-system=2   # ki-rh42
+#system=2   # ki-rh42
+system=3   # NICS Nautilus
 
 #whichmodel=0 # runlocal
 #whichmodel=1 # sashaa9b100t0.6
-whichmodel=2 # sasha99t1.5708
+whichmodel=2 # sashaa99t1.5708
 
 if [ $whichmodel -eq 0 ]
 then
@@ -30,6 +39,8 @@ then
     basedir=/lustre/ki/pfs/jmckinne/thickdisk7/
     iinterpprogname=~/bin/iinterp.orange.thickdisk7
     bin2txtprogname=~/bin/bin2txt.orange
+
+    cd $basedir/
 fi
 
 if [ $system -eq 2 ]
@@ -40,14 +51,42 @@ then
     bin2txtprogname=`pwd`/bin2txt
 fi
 
+if [ $system -eq 3 ]
+then
+    joninterpcodedir=/lustre/medusa/jmckinne/harmgit.verylatest/harmgit/
+    basedir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/$modelname/
+    iinterpprogname=~/bin/iinterp
+    bin2txtprogname=~/bin/bin2txt
+
+    # get needed v5d files
+    cd $basedir/
+
+    # THIS file:
+    # scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/docs/howtouse_joninterp.sh . ; scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/docs/loopjoninterp.sh . ; scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/batches/batch.loopjoninterp .
+
+    DOSCP=0
+    if [ $DOSCP -eq 1 ]
+    then
+	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/head*.v5d .
+	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.tcl  .  
+	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.set  .
+	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.save  .  
+	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.SAVE  .  
+    fi
+fi
+
 
 
 ###################################################
-# 1) make program
+# 1) make program (or do manually)
 
+
+DOMAKEIINTERPBIN2TXT=0
+
+if [ $DOMAKEIINTERPBIN2TXT -eq 1 ]
+then
 
 cd $joninterpcodedir
-
 if [ $system -eq 1 ]
 then
     # setup for reduced code set
@@ -77,6 +116,11 @@ make superclean ; make prepbin2txt ; make bin2txt
 cp iinterp $iinterpprogname
 cp bin2txt $bin2txtprogname
 
+
+fi
+
+
+
 #######################################################
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
@@ -96,8 +140,8 @@ OLDERHEADER=0
 
 # CHOOSE:
 if [ $whichmodel -eq 0 ]
-    dumpnum=2000
 then
+    dumpnum=2000
 fi
 if [ $whichmodel -eq 1 ]
 then
@@ -109,20 +153,33 @@ then
 fi
 
 
+# in case dumpnum has 0 in front, avoid bash interpretation as octal
+decidumpnum=`echo $(( 10#$dumpnum ))`
 
-dumpnumm1=$(($dumpnum-1))
+
+echo "dumpnum=$dumpnum and decidumpnum=$decidumpnum"
+
+
+
+
+
+
+
+decidumpnumm1=$(($decidumpnum-1))
+dumpnumm1=`printf "%04d" "$decidumpnumm1"`
 if [ -e dumps/fieldline$dumpnumm1.bin ]
 then
-    dumpnumm1=$(($dumpnum-1))
+    decidumpnumm1=$(($decidumpnum-1))
 else
-    dumpnumm1=$(($dumpnum))
+    decidumpnumm1=$(($decidumpnum))
 fi
-dumpnump1=$(($dumpnum+1))
+decidumpnump1=$(($decidumpnum+1))
+dumpnump1=`printf "%04d" "$decidumpnump1"`
 if [ -e dumps/fieldline$dumpnump1.bin ]
 then
-    dumpnump1=$(($dumpnum+1))
+    decidumpnump1=$(($decidumpnum+1))
 else
-    dumpnump1=$(($dumpnum))
+    decidumpnump1=$(($decidumpnum))
 fi
 
 #
@@ -158,10 +215,16 @@ defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`
 
 
 ######
-# COPY correct coordparms.dat to local dir.
-alias cp='cp'
-cp coordparms.dat.$modelname coordparms.dat
-alias cp='cp -i'
+# operating locally:
+if [ $system -eq 1 ] ||
+    [ $system -eq 2 ]
+then
+    # COPY correct coordparms.dat to local dir.
+    # Assumes many original coordparms.dat files with $modelname as extension to differentiate among all in the local directory
+    alias cp='cp'
+    cp coordparms.dat.$modelname coordparms.dat
+    alias cp='cp -i'
+fi
 ######
 
 #
@@ -179,8 +242,8 @@ alias cp='cp -i'
 # Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively
 #
 
-#whichres=0
-whichres=1
+whichres=0
+#whichres=1
 #whichres=2
 
 # box grid count
@@ -256,6 +319,10 @@ IDUMPDIR=$basedir/idumps/
 mkdir $IDUMPDIR
 #
 #
+# operating locally:
+if [ $system -eq 1 ] ||
+    [ $system -eq 2 ]
+then
 #
 if [ $whichmodel -eq 0 ]
 then
@@ -268,6 +335,17 @@ fi
 if [ $whichmodel -eq 2 ]
 then
     gdumpname=./dumps/gdump.bin.sashaa99t1.5708
+fi
+
+else
+
+    if [ $whichmodel -eq 2 ] &&
+	[ $dumpnum -le 2934 ]
+    then
+	gdumpname=./dumps/gdump.THETAROT0.bin
+    else
+	gdumpname=./dumps/gdump.bin
+    fi
 fi
 
 
@@ -295,6 +373,13 @@ then
     headv5d=headout18.v5d
 fi
 
+# override if no change to iinterp file and (e.g.) latest
+if [ $system -eq 3 ]
+then
+    iinterpprogname=~/bin/iinterp # default
+fi
+
+
 # non-vis5d
 #defaultvalue=0
 #doextrap=0
@@ -306,7 +391,29 @@ smoothpole=1
 
 outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.boxzh${boxzh}.box${boxnx}x${boxny}x${boxnz}.out${whichoutput}.model${modelname}
 
-$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap $doextrap -defaultvaluetype $defaultvalue -smoothpole $smoothpole -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
+
+DOINTERP=1
+
+# normally DO want to do this, but check if file already exists and bail if file exists so user must remove to redo.  This is because expensive if accidentally overwrite
+if [ -e $outfilename ]
+then
+    echo "File $outfilename already exists"
+    DOINTERP=0
+    # for now, just skip assuming user just changed things below the interp and rerunning script, so don't exit
+    #exit
+else
+    echo "Creating $outfilename"
+fi
+
+
+if [ $DOINTERP -eq 1 ]
+then
+
+    echo "$iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap $doextrap -defaultvaluetype $defaultvalue -smoothpole $smoothpole -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename"
+
+    $iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -headtype $OLDERHEADER -oN $nt $nx $ny $nz -numcolumns $numcolumns -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap $doextrap -defaultvaluetype $defaultvalue -smoothpole $smoothpole -gdump $gdumpname -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename
+
+fi
 
 
 # as a test, one can do just 1 variable (the density)
@@ -387,119 +494,123 @@ fi
 ############################################
 # can look in vis5d and see how looks
 
-[jon@ki-rh42 v5dfield]$ cat  head.v5d
-density 1E-4 1
-ug 1E-4 1
-negudt 1E-4 1
-mu 1E-4 1
-uut 1E-4 1
-vr 1E-4 1
-vh 1E-4 1
-vph 1E-4 1
-Br 1E-4 1
-Bh 1E-4 1
-Bp 1E-4 1
-0 1 0 1 0 1
+#[jon@ki-rh42 v5dfield]$ cat  head.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#negudt 1E-4 1
+#mu 1E-4 1
+#uut 1E-4 1
+#vr 1E-4 1
+#vh 1E-4 1
+#vph 1E-4 1
+#Br 1E-4 1
+#Bh 1E-4 1
+#Bp 1E-4 1
+#0 1 0 1 0 1
 
 
 # original SPC data cube
-# ./bin2txt 1 5 0 1 3 288 128 128 1 head.v5d fieldline4000.bin fieldline4000.v5d f 11
+# $bin2txtprogname 1 5 0 1 3 288 128 128 1 head.v5d fieldline4000.bin fieldline4000.v5d f 11
 
 # interpolated Cartesian data cube
-# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head.v5d $outfilename $outfilename.v5d f 14
+# $bin2txtprogname 1 5 0 1 3 $boxnx $boxny $boxnz 1 head.v5d $outfilename $outfilename.v5d f 14
 
 
-[jon@ki-rh42 v5dfield]$ cat  head14.v5d
-density 1E-4 1
-ug 1E-4 1
-vx 1E-4 1
-vy 1E-4 1
-vz 1E-4 1
-Bx 1E-4 1
-By 1E-4 1
-Bz 1E-4 1
-FEMrad 1E-4 1
-Bphi 1E-4 1
-Jt 1E-4 1
-Jx 1E-4 1
-Jy 1E-4 1
-Jz 1E-4 1
-0 1 0 1 0 1
+#[jon@ki-rh42 v5dfield]$ cat  head14.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#vx 1E-4 1
+#vy 1E-4 1
+#vz 1E-4 1
+#Bx 1E-4 1
+#By 1E-4 1
+#Bz 1E-4 1
+#FEMrad 1E-4 1
+#Bphi 1E-4 1
+#Jt 1E-4 1
+#Jx 1E-4 1
+#Jy 1E-4 1
+#Jz 1E-4 1
+#0 1 0 1 0 1
+#
+#[jon@ki-rh42 v5dfield]$ cat  head4.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsq 1E-4 1
+#0 1 0 1 0 1
+#
+#[jon@ki-rh42 v5dfield]$ cat head8.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsq 1E-4 1
+#lrho 1E-4 1
+#neglrho 1E-4 1
+#lbsq 1E-4 1
+#Rcyl 1E-4 1
+#0 1 0 1 0 1
+#
+#[jon@ki-rh42 v5dfield]$ cat headout16.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsq 1E-4 1
+#lrho 1E-4 1
+#Rcyl 1E-4 1
+#0 1 0 1 0 1
+#
+## using iinterp16
+#[jon@ki-rh42 v5dfield]$ cat headout16old.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsq 1E-4 1
+#lrho 1E-4 1
+#lbsq 1E-4 1
+#0 1 0 1 0 1
+#
+#
+#[jon@ki-rh42 v5dfield]$ cat headout17.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsqorho 1E-4 1
+#lrho 1E-4 1
+#neglrho 1E-4 1
+#lbsq 1E-4 1
+#Rcyl 1E-4 1
+#W 1E-4 1
+#V 1E-4 1
+#U 1E-4 1
+#W2 1E-4 1
+#V2 1E-4 1
+#U2 1E-4 1
+#0 1 0 1 0 1
+#
+#[jon@ki-rh42 v5dfield]$ cat headout18.v5d
+#density 1E-4 1
+#ug 1E-4 1
+#uu0 1E-4 1
+#bsqorho 1E-4 1
+#lrho 1E-4 1
+#neglrho 1E-4 1
+#lbsq 1E-4 1
+#Rcyl 1E-4 1
+#W 1E-4 1
+#V 1E-4 1
+#U 1E-4 1
+#W2 1E-4 1
+#V2 1E-4 1
+#U2 1E-4 1
+#posr 1E-4 1
+#posh 1E-4 1
+#posph 1E-4 1
+#0 1 0 1 0 1
+#
 
-[jon@ki-rh42 v5dfield]$ cat  head4.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsq 1E-4 1
-0 1 0 1 0 1
-
-[jon@ki-rh42 v5dfield]$ cat head8.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsq 1E-4 1
-lrho 1E-4 1
-neglrho 1E-4 1
-lbsq 1E-4 1
-Rcyl 1E-4 1
-0 1 0 1 0 1
-
-[jon@ki-rh42 v5dfield]$ cat headout16.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsq 1E-4 1
-lrho 1E-4 1
-Rcyl 1E-4 1
-0 1 0 1 0 1
-
-# using iinterp16
-[jon@ki-rh42 v5dfield]$ cat headout16old.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsq 1E-4 1
-lrho 1E-4 1
-lbsq 1E-4 1
-0 1 0 1 0 1
 
 
-[jon@ki-rh42 v5dfield]$ cat headout17.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsqorho 1E-4 1
-lrho 1E-4 1
-neglrho 1E-4 1
-lbsq 1E-4 1
-Rcyl 1E-4 1
-W 1E-4 1
-V 1E-4 1
-U 1E-4 1
-W2 1E-4 1
-V2 1E-4 1
-U2 1E-4 1
-0 1 0 1 0 1
-
-[jon@ki-rh42 v5dfield]$ cat headout18.v5d
-density 1E-4 1
-ug 1E-4 1
-uu0 1E-4 1
-bsqorho 1E-4 1
-lrho 1E-4 1
-neglrho 1E-4 1
-lbsq 1E-4 1
-Rcyl 1E-4 1
-W 1E-4 1
-V 1E-4 1
-U 1E-4 1
-W2 1E-4 1
-V2 1E-4 1
-U2 1E-4 1
-posr 1E-4 1
-posh 1E-4 1
-posph 1E-4 1
-0 1 0 1 0 1
 
 # Old iinterp + vis5d: v1,v2,v3 -> V,W,U because v1=vx, v2=vz, v3=vy
 
@@ -523,21 +634,49 @@ posph 1E-4 1
 
 
 # rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)
-# ./bin2txt 1 5 0 1 3 100 100 100 1 head14.v5d $outfilename $outfilename.v5d f 14
-# ./bin2txt 1 5 0 1 3 256 256 256 1 head14.v5d $outfilename $outfilename.v5d f 14
+# $bin2txtprogname 1 5 0 1 3 100 100 100 1 head14.v5d $outfilename $outfilename.v5d f 14
+# $bin2txtprogname 1 5 0 1 3 256 256 256 1 head14.v5d $outfilename $outfilename.v5d f 14
 
 # rho0,ug,uu0,bsq
-# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head4.v5d $outfilename $outfilename.v5d f 4
+# $bin2txtprogname 1 5 0 1 3 $boxnx $boxny $boxnz 1 head4.v5d $outfilename $outfilename.v5d f 4
 
 
 # rho0,ug,uu0,bsq,lrho,neglrho,lbsq,Rcyl
-# ./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 head8.v5d $outfilename $outfilename.v5d f 8
+# $bin2txtprogname 1 5 0 1 3 $boxnx $boxny $boxnz 1 head8.v5d $outfilename $outfilename.v5d f 8
 
 
 ############################
 
+DOV5D=1
 
-./bin2txt 1 5 0 1 3 $boxnx $boxny $boxnz 1 $headv5d $outfilename $outfilename.v5d f $numoutputcols
+
+if [ -e $outfilename.v5d ]
+then
+    echo "File $outfilename already exists"
+    DOV5D=0
+    # for now, just skip assuming user just changed things below the interp and rerunning script, so don't exit
+    #exit
+else
+    echo "Creating $outfilename.v5d"
+fi
+
+
+if [ $DOV5D -eq 1 ]
+then
+
+    echo "$bin2txtprogname 1 5 0 1 3 $boxnx $boxny $boxnz 1 $headv5d $outfilename $outfilename.v5d f $numoutputcols"
+
+    $bin2txtprogname 1 5 0 1 3 $boxnx $boxny $boxnz 1 $headv5d $outfilename $outfilename.v5d f $numoutputcols
+
+fi
+
+
+DOCHECKV5D=0
+
+if [ $DOCHECKV5D -eq 1 ]
+then
+
+
 
 # to just check (no script):
 #
@@ -556,8 +695,15 @@ posph 1E-4 1
 # ln -s $outfilename.v5d use.v5d
 # and then call vis5d with use.v5d instead.
 
+
+fi
+
+
+
 ############## create vis5d script (or see previous scripts already made):
 
+
+echo "Creating v5d tcl scripts using $outfilename"
 
 ixmin=$boxxl
 iymin=$boxyl
@@ -580,17 +726,71 @@ echo "set iymax [expr $iymax]" >> $outfilename.headscript.tcl
 #
 echo "set izmin [expr $izmin]" >> $outfilename.headscript.tcl
 echo "set izmax [expr $izmax]" >> $outfilename.headscript.tcl
+
+echo "set dumpnum" \"${dumpnum}\"  >> $outfilename.headscript.tcl
 #
 
 
 # create final v5d script
-cat $outfilename.headscript.tcl fulltiltmovie.tcl > $outfilename.v5d.3dmovie.tcl
+basescript=fulltiltmovie.tcl
+
+
+# do create script, no harm done.
+DOCREATESCRIPT=1
+
+
+if [ $DOCREATESCRIPT -eq 1 ]
+then
+
+cat $outfilename.headscript.tcl $basescript > $outfilename.v5d.3dmovie.tcl
+
+altbasescript=3dtry.tcl
+cat $outfilename.headscript.tcl $altbasescript > $outfilename.v5d.3dtry.tcl
+
+
+fi
+
+
+
+# don't normally want to automatically run full movie script
+DORUNSCRIPT=0
+
+if [ $DORUNSCRIPT -eq 1 ]
+then
 
 resx=800
 resy=800
 
 # -offscreen
 vis5d $outfilename.v5d -mbs 1000 -geometry ${resx}x${resy} -script $outfilename.v5d.3dmovie.tcl
+
+fi
+
+
+DORUNSCRIPT2=1
+
+if [ $DORUNSCRIPT2 -eq 1 ]
+then
+
+#resx=800
+#resy=800
+
+# -offscreen
+ln -s $outfilename.v5d currentout.$dumpnum.v5d
+#~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -script 3dtry.tcl
+
+if [ $system -eq 3 ]
+then
+    # on Nautilus in batch (even interactive) must use Xvfb -ac :2 & as in loopjoninterp.sh
+    ~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -framebuffer localhost:2  -script $outfilename.v5d.3dtry.tcl
+else
+    # no need to (but could) use framebuffer on other systems
+    ~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen  -script $outfilename.v5d.3dtry.tcl
+fi
+
+
+fi
+
 
 
 
@@ -608,10 +808,11 @@ vis5d $outfilename.v5d -mbs 1000 -geometry ${resx}x${resy} -script $outfilename.
 
 
 
+##########################################
+# old stuff
 
-
-
-
+if [ 1 -eq 0 ]
+then
 
 
 
@@ -660,7 +861,7 @@ GREPCOMMAND=""
 for fil in $CFILES ; do GREPCOMMAND=$GREPCOMMAND"|grep -v $fil " ; done
 
 
-ls -art *.c <PASTE echo $GREPCOMMAND here>
+# ls -art *.c <PASTE echo $GREPCOMMAND here>
 
 
 
@@ -721,11 +922,11 @@ $iinterpprogname -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -
 
 
 # MTB12 simulations have the following headers in fieldline and gdump files:
-tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
+# tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns
 
 
 # new tilted simulation header has extra THETAROT
-tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+# tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
 
 
 
@@ -752,3 +953,14 @@ awk '{print $7*$4}' fieldline5437.txt.data > fieldline5437.txt.data.uux3
 
 # -coord <Rin> <Rout> <R0> <hslope>
 #$iinterpprogname -binaryinput 0 -binaryoutput 0 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN 272 128 256 -refine 1.0 -filter 0 0 -grids 1 0 -nN $boxnx $boxny $boxnz -ibox -$boxx $boxx -$boxy $boxy -$boxz $boxz -coord 1.15256306940633 26000 0 1.04 -defcoord 1401 -dofull2pi 1 -extrap 1 -defaultvalue 0 -gdump ./gdump.txt < fieldline5437.rho.txt > fieldline5437.cart.rho.txt
+
+
+
+
+
+
+fi
+# DONE WITH OLD STUFF
+
+
+

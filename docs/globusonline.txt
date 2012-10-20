@@ -295,3 +295,38 @@ tarball of your directory tree and transfer the tarball in one
 command.
 ### from TACC
 
+
+
+
+
+
+
+
+
+################
+# from ranch to Nautilus (jmckinne) of thickdisk7 of only fieldline+gdump files for analysis.
+
+#ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#ranch:/home/01014/tg802609/thickdisk7nextnextnextk/dumps/fieldline*.bin xsede#nautilus:/lustre/medusa/jmckinne/jmckinne/thickdisk7nextnextnextk/dumps/ 
+
+
+rm -rf ~/globus1.txt
+for fil in `cat ~/list.txt`
+do
+    echo "xsede#ranch/home/01014/tg802609/thickdisk7nextnextnextk/dumps/$fil xsede#nautilus/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/thickdisk7/thickdisk7nextnextnextk/dumps/$fil" >> ~/globus1.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
+
+
+
+
+rm -rf ~/globus1.txt
+for fil in `cat ~/list.txt`
+do
+    echo "xsede#ranch/home/01014/tg802609/thickdisk7nextnextnextk/dumps/$fil pseudotensor#ki-jmck/data1/jmckinne/thickdisk7/thickdisk7nextnextnextk/dumps/$fil" >> ~/globus1.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
+
+
+  
