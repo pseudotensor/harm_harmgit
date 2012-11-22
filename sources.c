@@ -24,6 +24,9 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
   else if(cooling==COOLREBECCATHINDISK){
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
+  else if(cooling==KORAL){
+    return(0); // WORKING ON IT
+  }
 
   // random physics
   //misc_source(ph, geom, &q, dU, Dt) ;

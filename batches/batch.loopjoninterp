@@ -3,25 +3,53 @@
 #PBS -j oe
 #PBS -q analysis
 #PBS -A TG-PHY120005 
-#PBS -l ncpus=256,mem=1024GB,walltime=24:00:00
+##PBS -l ncpus=256,mem=1224GB,walltime=24:00:00
+#PBS -l ncpus=150,mem=1024GB,walltime=4:00:00
+##PBS -l ncpus=10,mem=40GB,walltime=4:00:00
+##PBS -l ncpus=256,mem=1024GB,walltime=12:00:00
+##PBS -l ncpus=512,mem=2048GB,walltime=24:00:00
 
 
 ####################
 cd /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/sashaa99t1.5708/
 
 
+
 #######################
-firstdump=0
-lastdump=5737
-skipdump=1
+#firstdump=0
+#lastdump=5737
+#skipdump=1
+
+#firstdump=2800
+#lastdump=5737
+#skipdump=1
 #########################
 
-stepdump=256
+#######################
+firstdump=2831
+lastdump=4607
+skipdump=1
+#firstdump=3000
+#lastdump=3004
+#skipdump=1
+#########################
+
+#stepdump=256
+#stepdump=200 # for extra memory
+stepdump=$(($lastdump-$firstdump+1))
+#stepdump=512
 startdump=$firstdump
 enddump=$(($firstdump+$stepdump-1))
 #########################
 
 rm -rf loopjon.out.txt
+
+
+echo "dumps: $startdump $enddump $stepdump" >> loopjon.out.txt
+
+# can't generally kill in case another job going already on Nautilus -- shared cores so if kill then kills for all jobs?
+#killall -s 9 Xvfb
+
 
 while  [ $enddump -le $lastdump ]
 do
@@ -32,7 +60,20 @@ do
 	#
 	startdump=$(($startdump + $stepdump))
 	enddump=$(($enddump + $stepdump))
+
+	# truncate end if last round but not entire stepdump size
+	if [ $enddump -gt $lastdump ] &&
+	   [ $startdump -le $lastdump ]
+	   then
+		enddump=$lastdump
+	   fi	
 done
 
 
 echo "Done All" >> loopjon.out.txt
+
+
+# to get rid of some files
+# for fil in `cat badlist.txt` ; do echo $fil ; rm -rf idumps/fieldline$fil*.v5d ; done
+
+# 

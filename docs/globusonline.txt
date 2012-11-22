@@ -232,7 +232,8 @@ alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
 otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
 dirlist1=`lssdir2 | grep 3d7`
 dirlist2=`lssdir2 | grep hr3tilt`
-dirlist="$dirlist1 $dirlist2"
+dirlist3=`lssdir2 | grep sashalow`
+dirlist="$dirlist1 $dirlist2 $dirlist3"
 for fil in $dirlist
 do
     echo "xsede#kraken$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist336.txt
@@ -246,6 +247,38 @@ do
 done
 
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist336.txt
+
+
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#nautilus:/lustre/medusa/jmckinne xsede#ranch:/home/01014/tg802609/
+
+################
+# from Nautilus (jmckinne) to Nautilus (jmckinne) for *sashalow* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/medusa/jmckinne/
+cd $mydir
+rm -rf $mydir/globuslist339.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep sashalow`
+dirlist2=`lssdir2 | grep sashalowlow`
+dirlist="$dirlist1 $dirlist2"
+for fil in $dirlist
+do
+    echo "xsede#nautilus$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist339.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "xsede#nautilus$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist339.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist339.txt
 
 
 ################

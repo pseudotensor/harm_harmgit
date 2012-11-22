@@ -194,6 +194,7 @@
 #define COOLGAMMIETHINDISK 1
 #define COOLEOSGENERAL 2
 #define COOLREBECCATHINDISK 3
+#define KORAL 101
 
 
 ////////////////////////////

@@ -14,7 +14,7 @@
 
 # http://stackoverflow.com/questions/10987246/xvfb-multiple-displays-for-parallel-processing
 
-(nohup Xvfb -noreset -ac :2 &)
+(nohup Xvfb -noreset -ac -shmem :2 &)
 
 cd /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/sashaa99t1.5708/
 
@@ -51,3 +51,20 @@ do
 done
 
 wait
+
+
+# once done:
+
+
+# rm -rf small3d.0.timedep.mov ; ffmpeg -y -fflags +genpts -r 30 -i small3d.0.%04d.ppm -sameq -qmax 5 small3d.0.timedep.mov
+
+####
+
+# for fil in small3d.0.????.ppm ; do echo $fil ; if [ -e $fil.jpg ] ; then echo "already done." ; else convert -geometry 50x50 $fil $fil.jpg ; fi ; done
+
+# for fil in small3d.0.????.ppm ; do echo $fil ; if [ -e $fil.jpg ] ; then echo "already done." ; else convert -geometry 800x800 $fil $fil.jpg ; fi ; done
+
+# ffmpeg -y -fflags +genpts -r 30 -i small3d.0.%04d.ppm.jpg -sameq -qmax 5 small3d.0.timedep.jpg.mov
+
+# for reduced movie, speed-up:
+# ffmpeg -y -fflags +genpts -r 100 -i small3d.0.%04d.ppm.jpg -sameq -qmax 5 -s 780x780 small3d.0.timedep.jpg.mov

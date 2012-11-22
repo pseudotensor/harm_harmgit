@@ -11,8 +11,8 @@
 
 # choose which type of code/system setup
 #system=1   # lustre and reduced code on orange
-#system=2   # ki-rh42
-system=3   # NICS Nautilus
+system=2   # ki-rh42
+#system=3   # NICS Nautilus
 
 #whichmodel=0 # runlocal
 #whichmodel=1 # sashaa9b100t0.6
@@ -124,11 +124,7 @@ fi
 #######################################################
 # 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)
 
-# CHOOSE correctly:
-# 0=NEWER header with 32 entries (tilted sims)
-# 1=OLDER header with 30 entries (thickdisk/sasha sims)
-# 2=VERYOLD header with 21 entries (runlocaldipole3dfiducial)
-OLDERHEADER=0
+
 
 # REQUIRED FILES:
 # 1) ensure dumps contains fieldline files
@@ -163,24 +159,45 @@ echo "dumpnum=$dumpnum and decidumpnum=$decidumpnum"
 
 
 
-
-
 decidumpnumm1=$(($decidumpnum-1))
-dumpnumm1=`printf "%04d" "$decidumpnumm1"`
 if [ -e dumps/fieldline$dumpnumm1.bin ]
 then
     decidumpnumm1=$(($decidumpnum-1))
 else
     decidumpnumm1=$(($decidumpnum))
 fi
+dumpnumm1=`printf "%04d" "$decidumpnumm1"`
+
+
 decidumpnump1=$(($decidumpnum+1))
-dumpnump1=`printf "%04d" "$decidumpnump1"`
 if [ -e dumps/fieldline$dumpnump1.bin ]
 then
     decidumpnump1=$(($decidumpnum+1))
 else
     decidumpnump1=$(($decidumpnum))
 fi
+dumpnump1=`printf "%04d" "$decidumpnump1"`
+
+
+
+
+# CHOOSE correctly:
+# 0=NEWER header with 32 entries (tilted sims)
+# 1=OLDER header with 30 entries (thickdisk/sasha sims)
+# 2=VERYOLD header with 21 entries (runlocaldipole3dfiducial)
+
+if [ $whichmodel -eq 2 ] &&
+#    [ $decidumpnum -le 2934 ] # change in N_\phi, not header size
+#    [ $decidumpnum -lt 3000 ] # tilt starts at 15000
+    [ $decidumpnum -lt 3005 ] # tilt starts at 15030 (lost 3001-3004)
+then
+    OLDERHEADER=1
+else
+    OLDERHEADER=0
+fi
+
+
+
 
 #
 # get times of dumps
@@ -242,9 +259,10 @@ fi
 # Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively
 #
 
-whichres=0
+#whichres=0
 #whichres=1
 #whichres=2
+whichres=3
 
 # box grid count
 boxnt=1
@@ -266,8 +284,62 @@ then
     boxny=512
     boxnz=512
 fi
+if [ $whichres -eq 3 ]
+then
+    boxnx=128
+    boxny=128
+    boxnz=128
+fi
 
-if [ 1 -eq 1 ]
+
+#whichbox=1
+whichbox=2
+baseres=512
+
+if [ $whichbox -eq 1 ]
+then
+    ratres=1
+fi
+if [ $whichbox -eq 2 ]
+then
+    ratres=2
+fi
+if [ $whichbox -eq 3 ]
+then
+    ratres=4
+fi
+if [ $whichbox -eq 4 ]
+then
+    ratres=8
+fi
+if [ $whichbox -eq 5 ]
+then
+    ratres=16
+fi
+if [ $whichbox -eq 6 ]
+then
+    ratres=32
+fi
+if [ $whichbox -eq 7 ]
+then
+    ratres=64
+fi
+if [ $whichbox -eq 8 ]
+then
+    ratres=128
+fi
+# box size
+boxxl=-$(($baseres/$ratres))
+boxyl=-$(($baseres/$ratres))
+boxzl=-$(($baseres/$ratres))
+boxxh=$(($baseres/$ratres))
+boxyh=$(($baseres/$ratres))
+boxzh=$(($baseres/$ratres))
+
+echo "box: $boxxl $boxyl $boxzl $boxxh $boxyh $boxzh"
+
+######## other boxes
+if [ $whichbox -eq 0 ]
 then
     #
     # box size
@@ -340,9 +412,18 @@ fi
 else
 
     if [ $whichmodel -eq 2 ] &&
-	[ $dumpnum -le 2934 ]
+	#[ $decidumpnum -lt 3000 ] # tilt
+	[ $decidumpnum -lt 3005 ] # tilt
     then
-	gdumpname=./dumps/gdump.THETAROT0.bin
+	if [ $decidumpnum -le 2934 ] # change in N_\phi
+	then
+	    # then Nphi=64
+	    gdumpname=./dumps/gdump.THETAROT0.bin
+	else
+	    # then Nphi=128, and just cat gdump
+	    gdumpnameorig=./dumps/gdump.THETAROT0.bin
+	    gdumpname=./dumps/gdump.THETAROT0.bin.double
+	fi
     else
 	gdumpname=./dumps/gdump.bin
     fi
@@ -769,6 +850,18 @@ fi
 
 DORUNSCRIPT2=1
 
+# SPECIFIC to small3d vs. large3d vs. longer file name
+ppmfilename=small3d.0.$dumpnum.ppm
+
+if [ -e $ppmfilename ]
+then
+    echo "File $ppmfilename already exists"
+    DORUNSCRIPT2=0
+else
+    echo "Creating $ppmfilename"
+fi
+
+
 if [ $DORUNSCRIPT2 -eq 1 ]
 then
 
@@ -776,16 +869,16 @@ then
 #resy=800
 
 # -offscreen
-ln -s $outfilename.v5d currentout.$dumpnum.v5d
-#~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -script 3dtry.tcl
+ln -s $outfilename.v5d currentout.$whichbox.$dumpnum.v5d
+#~/bin/vis5d currentout.$whichbox.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -script 3dtry.tcl
 
 if [ $system -eq 3 ]
 then
     # on Nautilus in batch (even interactive) must use Xvfb -ac :2 & as in loopjoninterp.sh
-    ~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -framebuffer localhost:2  -script $outfilename.v5d.3dtry.tcl
+    ~/bin/vis5d currentout.$whichbox.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen -framebuffer localhost:2  -script $outfilename.v5d.3dtry.tcl
 else
     # no need to (but could) use framebuffer on other systems
-    ~/bin/vis5d currentout.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen  -script $outfilename.v5d.3dtry.tcl
+    ~/bin/vis5d currentout.$whichbox.$dumpnum.v5d -mbs 2802 -geometry 1600x1600 -verylarge 0 -offscreen  -script $outfilename.v5d.3dtry.tcl
 fi
 
 
