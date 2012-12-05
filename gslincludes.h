@@ -1,0 +1,17 @@
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_roots.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_odeiv2.h>
+#include <gsl/gsl_odeiv.h>
+#include <gsl/gsl_spline.h>  
+#include <gsl/gsl_deriv.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_complex.h>
+#include <gsl/gsl_complex_math.h>
+#include <gsl/gsl_poly.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_multiroots.h>
