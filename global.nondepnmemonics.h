@@ -157,7 +157,7 @@
 
 // for RELTYPE
 #define RELEOM 0
-#define NONRELEOM 1 // NOT FINISHED // NOT RIGHT
+#define NONRELEOM 1 // NOT FINISHED // NOT RIGHT // NOT NEEDED
 // whether relativistic or nonrelativistic EOMs (speed of light limitation)
 
 // for EOMTYPE
@@ -165,6 +165,7 @@
 // 1 = cold GRMHD
 // 2 = entropy conservation version of GRMHD
 // 3 = GRMHD
+// 4 = GRMHDRAD
 // for force-free, must turn off:
 // ok now, but effectively setup already the below 2 lines implicitly
 // global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
@@ -173,6 +174,7 @@
 #define EOMCOLDGRMHD 1
 #define EOMENTROPYGRMHD 2
 #define EOMGRMHD 3
+#define EOMGRMHDRAD 4
 
 
 

@@ -400,7 +400,7 @@ void fix_primitive_eos_scalars_idealgas(FTYPE *EOSextra, FTYPE *pr)
 void getall_forinversion_idealgas(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
 {
 
-  if(eomtype==EOMGRMHD){
+  if(eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD){
     if(whichd==CHIDIFF){
       // PofRHOCHI
       *fun=pressure_wmrho0_idealgas(EOSextra, quant1, quant2);

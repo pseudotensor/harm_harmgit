@@ -219,7 +219,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   // Setup dimensionality of method for a given eomtype and choice if inverter
   //
   /////////////////
-  if(eomtype==EOMGRMHD){
+  if(eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD){
     if(WHICHHOTINVERTER==1) real_dimen_newton=1;
     else   if(WHICHHOTINVERTER==2) real_dimen_newton=2;
     else   if(WHICHHOTINVERTER==3) real_dimen_newton=1;
@@ -513,7 +513,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     // HOT GRMHD INVERTERS (obtain Wp)
     //
     /////////////////////////////////////////////////////////////////////////
-    if(eomtype==EOMGRMHD){
+    if(eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD){
 
       // METHOD specific:
 #if(WHICHHOTINVERTER==3)
@@ -2457,15 +2457,15 @@ static void pick_validate_x(int eomtype,void (**ptr_validate_x)(FTYPE x[NEWT_DIM
 {
 
   if(
-     (WHICHHOTINVERTER==1 && eomtype==EOMGRMHD) ||
-     (WHICHHOTINVERTER==3 && eomtype==EOMGRMHD) ||
+     (WHICHHOTINVERTER==1 && (eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD)  ) ||
+     (WHICHHOTINVERTER==3 && (eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD) ) ||
      ( (WHICHCOLDINVERTER==0 || WHICHCOLDINVERTER==1) && eomtype==EOMCOLDGRMHD) ||
      (WHICHCOLDINVERTER==2 && eomtype==EOMCOLDGRMHD)
      || (eomtype==EOMENTROPYGRMHD)
      ){
     *ptr_validate_x = &validate_x_1d;
   }
-  else if(WHICHHOTINVERTER==2 && eomtype==EOMGRMHD){
+  else if(WHICHHOTINVERTER==2 && (eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD)){
     *ptr_validate_x = &validate_x_2d;
   }
   else {
@@ -3015,6 +3015,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     //
     ////////////////
     FTYPE pofchi,dpdrho,dpdchi;
+    // EOMGRMHD here, but can be also EOMGRMHDRAD
     getall_forinversion(whicheos,EOMGRMHD,CHIDIFF,EOSextra,rho0,wmrho0,&pofchi,&dpdrho,&dpdchi);
 
     /////////////////

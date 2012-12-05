@@ -55,7 +55,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   loc=ptrgeom->p;
 
 
-#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
+#if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
 #define INVERTNPR (5) // always same
 #define STARTPINVERT (RHO) // where to start in primitive space
 #elif(EOMTYPE==EOMCOLDGRMHD)
@@ -79,7 +79,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   // check (disabled since should allow negative density so RK can recover)
   //
   ////////////
-  if(0&&( (EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) )){ // don't check for now, just fail later
+  if(0&&( (EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) )){ // don't check for now, just fail later
     if (U[RHO] < 0.) {
       if (fail(i,j,k,loc,FAIL_UTOPRIM_NEG) >= 1)
 	return (1);
@@ -137,7 +137,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 
   entropyversion=0;
 
-#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
+#if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
   PLOOP(pliter,pl) U_target[pl] = U[pl];
 
   //#define NORMMETHOD (-1)
@@ -262,7 +262,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   if(entropyversion==0){
 
 
-#if(DONONRELINV&&( (EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) ) )
+#if(DONONRELINV&&( (EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) ) )
 
     // get b^2 to check if b^2/rho_0<<1
     bsq = dot(q.bcon, q.bcov);
@@ -405,7 +405,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   //
   /////////////////////
 
-#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD || EOMTYPE==EOMCOLDGRMHD)
+#if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD || EOMTYPE==EOMCOLDGRMHD)
 
 
 
@@ -463,7 +463,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   }// otherwise got good solution
   else{
     // check densities for positivity
-    if( ( (EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD))&&((pr[RHO]<0.0)||(pr[UU]<0.0))){
+    if( ( (EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD))&&((pr[RHO]<0.0)||(pr[UU]<0.0))){
       // it doesn't seem reasonable to just "fix" negative densities since they could be arbitrarily negative and the other primitive variables depend on the negativity of the density which is unphysical.  So we fail if negative.  Could fail for a lower threshold on density than the floor to avoid those numbers as well.
       if((pr[RHO]<=0.)&&(pr[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
       if((pr[RHO]>=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILUNEG;
@@ -766,7 +766,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
     if(failreturn>=1)
       FAILSTATEMENT("utoprim.c:usrfun()", "primtoU()", 1);
 
-#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
+#if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
     PLOOP(pliter,pl) U_curr[pl]=U[pl];
 #elif(EOMTYPE==EOMFFDE)
     // convert from normal U to iterative U
@@ -780,7 +780,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
 
 
     // convert from normal alpha to iterative alpha
-#if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
+#if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
     for (j = 0; j < INVERTNPR ; j++){
       for (k = 0; k < INVERTNPR ; k++){
 	alpha[j+1][k+1]=alpha5[j+1][k+1];

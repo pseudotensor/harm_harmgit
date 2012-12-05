@@ -192,7 +192,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
-  if(EOMTYPE==EOMGRMHD){
+  if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD){
     ///////////////////////////////////////////////////
     //
     ///////////// HOT GRMHD
@@ -1168,6 +1168,17 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE
   /////////////
   myrhouu0=Ugeomfree[RHO];
   oneOmyrhouu0=sign(Ugeomfree[RHO])/(fabs(Ugeomfree[RHO])+SMALL);
+
+
+  ///////////////
+  //
+  // Invert U->direct Primitive for radiation
+  //
+  ///////////////
+
+  if(EOMTYPE==EOMGRMHDRAD){
+    // KORALTODO
+  }
 
 
 

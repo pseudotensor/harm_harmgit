@@ -718,7 +718,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   // returnfun, returndfunofrho, and returndfunofu are in "whichfun" format, not "coli" format
   //
   ///////////////
-  if(eomtype==EOMGRMHD){
+  if(eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD){
     // whichd==CHIDIFF
     whichtablesubtype=SUBTYPEPOFCHI;
     returnfun = PofRHOCHI;

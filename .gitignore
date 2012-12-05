@@ -1,3 +1,9 @@
+bin2txt
+deps.depsbin2txt.list
+depsbin2txt
+objsdepsbin2txt
+objsdepsbin2txt.cmd.list
+prepbin2txt
 *.o
 *.orig
 *BASE*

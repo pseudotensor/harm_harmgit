@@ -178,6 +178,14 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 
 
 
+
+  if(EOMTYPE==EOMGRMHDRAD){
+    // KORALTODO -- compute radiation wave speed and insert as second type of wave speed need to store, since need both types of speeds.
+  }
+
+
+
+
 #if(BOUNDARYSMOOTHER)
   boundary_smoother(geom,vmax,vmin,ignorecourant);
 #else

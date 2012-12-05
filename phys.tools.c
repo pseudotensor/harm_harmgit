@@ -169,6 +169,12 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
     *fluxdiag = fluxdiagpress[UU+dir];
   }
 
+  if(EOMTYPE==EOMGRMHDRAD){
+    // get flux or flux part of lab-frame radiation tensor
+    // KORALTODO
+  }
+
+
 #if(DOYL!=DONOYL)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)

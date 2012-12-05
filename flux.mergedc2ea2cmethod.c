@@ -900,6 +900,15 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 
   //////////
   //
+  // Setup radiation terms
+  //
+  //////////
+
+
+  // KORALTODO
+
+  //////////
+  //
   // setup Y_L and Y_\nu terms
   //
   //////////

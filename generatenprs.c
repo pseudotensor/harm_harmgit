@@ -20,6 +20,7 @@ int main(void)
   int npr,npr2interp,npr2notinterp,nprbound,nfluxbound,nprdump,nprinvert;
   int maxnpr;
   int yl,ynu,entropy,vsq;
+  int rad0,rad1,rad2,rad3;
   int orignprstart,orignprend,orignprlist[SUPERMAXNPR];
   int orignpr2interpstart,orignpr2interpend,orignpr2interplist[SUPERMAXNPR];
   int orignpr2notinterpstart,orignpr2notinterpend,orignpr2notinterplist[SUPERMAXNPR];
@@ -100,6 +101,48 @@ int main(void)
     orignprdumplist[i]=orignprlist[i];
   }
 
+
+
+  ///////////////////
+  //
+  // Radiation things
+  //
+  ////////////////////
+  if(EOMTYPE==EOMGRMHDRAD){
+    npr++; rad0 = npr-1;
+    orignprend++; orignprlist[orignprend]=rad0;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=rad0;
+    orignprboundend++; orignprboundlist[orignprboundend]=rad0;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=rad0;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=rad0;
+
+    npr++; rad1 = npr-1;
+    orignprend++; orignprlist[orignprend]=rad1;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=rad1;
+    orignprboundend++; orignprboundlist[orignprboundend]=rad1;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=rad1;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=rad1;
+
+    npr++; rad2 = npr-1;
+    orignprend++; orignprlist[orignprend]=rad2;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=rad2;
+    orignprboundend++; orignprboundlist[orignprboundend]=rad2;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=rad2;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=rad2;
+
+    npr++; rad3 = npr-1;
+    orignprend++; orignprlist[orignprend]=rad3;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=rad3;
+    orignprboundend++; orignprboundlist[orignprboundend]=rad3;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=rad3;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=rad3;
+  }
+  else{
+    rad0 = VARNOTDEFINED; // indicates not defined
+    rad1 = VARNOTDEFINED; // indicates not defined
+    rad2 = VARNOTDEFINED; // indicates not defined
+    rad3 = VARNOTDEFINED; // indicates not defined
+  }
 
 
   ///////////////////
@@ -217,6 +260,12 @@ int main(void)
   fprintf(defout,"#define NFLUXBOUND %d\n",nfluxbound);
   fprintf(defout,"#define NPR2INTERP %d\n",npr2interp);
   fprintf(defout,"#define NPRINVERT %d\n",nprinvert);
+
+  // define name of radiation terms
+  fprintf(defout,"#define RAD0 %d\n",rad0);
+  fprintf(defout,"#define RAD1 %d\n",rad1);
+  fprintf(defout,"#define RAD2 %d\n",rad2);
+  fprintf(defout,"#define RAD3 %d\n",rad3);
 
   // define name of extra variables
   fprintf(defout,"#define YL %d\n",yl);
