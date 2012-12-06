@@ -234,7 +234,7 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
   #error "primtoflux_rad not setup for SPLITNPR"
 #endif
 
-  if(EOMTYPE==EOMGRMHDRAD){
+  if(EOMRADTYPE!=EOMRADNONE){
     mhd_calc_rad(pr, dir, geom, q, &flux[RAD0]); // fills RAD0->RAD3
   }
 

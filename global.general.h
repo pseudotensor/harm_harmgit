@@ -4,7 +4,7 @@
 #include <string.h>
 #include <float.h>
 
-// only used for EOMTYPE==GRMHDRAD
+// only used for EOMRADTYPE==EOMRADM1CLOSURE
 #include "gslincludes.h"
 
 #ifdef _OPENMP

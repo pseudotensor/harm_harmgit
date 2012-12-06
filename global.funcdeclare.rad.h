@@ -31,7 +31,7 @@ extern int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct o
 extern int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f);
 extern int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
 
-
+extern int u2p_rad(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom);
 
 
 #if(0)

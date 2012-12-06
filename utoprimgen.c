@@ -37,7 +37,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   FTYPE pr0[NPR];
   FTYPE prother[NPR];
   int whichentropy;
-  struct of_state q;
+  //  struct of_state q;
   FTYPE Uold[NPR],Unew[NPR];
   int otherfail;
   extern void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
@@ -192,7 +192,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
-  if(EOMTYPE==EOMGRMHDRAD||EOMTYPE==EOMGRMHD){
+  if(EOMTYPE==EOMGRMHD){
     ///////////////////////////////////////////////////
     //
     ///////////// HOT GRMHD
@@ -440,6 +440,22 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
+
+  ///////////////
+  //
+  // Invert U->direct Primitive for radiation (must come after HD or MHD or whatever sets velocity of fluid)
+  //
+  ///////////////
+
+  if(EOMRADTYPE!=EOMRADNONE){
+    // KORALTODO
+    struct of_state qrad;
+    // this uses new pr to get only ucon and ucov
+    get_state_uconucovonly(pr, ptrgeom, &qrad);
+    // get new radiation primitives
+    u2p_rad(Ugeomfree,pr,&qrad,ptrgeom);// needs new ucon only.
+  }
+  
 
 
 
@@ -1169,16 +1185,6 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE
   myrhouu0=Ugeomfree[RHO];
   oneOmyrhouu0=sign(Ugeomfree[RHO])/(fabs(Ugeomfree[RHO])+SMALL);
 
-
-  ///////////////
-  //
-  // Invert U->direct Primitive for radiation
-  //
-  ///////////////
-
-  if(EOMTYPE==EOMGRMHDRAD){
-    // KORALTODO
-  }
 
 
 

@@ -260,7 +260,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   }
 
 
-  if(EOMTYPE==EOMGRMHDRAD){
+  if(EOMRADTYPE!=EOMRADNONE){
     if(whichtime==0) trifprintf("set_boostemu() BEGIN\n");
     set_boostemu();
     if(whichtime==0) trifprintf("set_boostemu() END\n");

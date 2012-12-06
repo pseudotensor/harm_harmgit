@@ -193,6 +193,6 @@
 
 
 
-#define EFLOOR 1.e-50
-#define UFLOOR 1.e-40
-#define RHOFLOOR 1.e-40
+//#define EFLOOR 1.e-50
+//#define UFLOOR 1.e-40
+//#define RHOFLOOR 1.e-40

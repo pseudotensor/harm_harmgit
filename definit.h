@@ -453,6 +453,8 @@
 #define EOMTYPE EOMGRMHD
 //#define EOMTYPE EOMCOLDGRMHD
 
+#define RADEOMTYPE EOMRADM1CLOSURE
+
 // whether to try other methods for the inversion if primary choices fails
 // created because utoprim_2d_final fails for large b^2/rho when other methods (even utoprim_2d) do not fail.
 // seems that in some cases causes code to stall while 1D method takes forever on many iterations

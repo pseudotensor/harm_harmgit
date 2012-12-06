@@ -108,7 +108,7 @@ int main(void)
   // Radiation things
   //
   ////////////////////
-  if(EOMTYPE==EOMGRMHDRAD){
+  if(EOMRADTYPE!=EOMRADNONE){
     npr++; rad0 = npr-1;
     orignprend++; orignprlist[orignprend]=rad0;
     orignpr2interpend++; orignpr2interplist[orignpr2interpend]=rad0;

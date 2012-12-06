@@ -823,6 +823,8 @@ int calc_LNRFes(struct of_geom *ptrgeom, ldouble emuup[][4], ldouble emulo[][4])
 //uses M1 closure in arbitrary frame/metric
 //**********************************************************************
 //**********************************************************************
+//
+// NOTEMARK: This u2p_rad() inversion of radiation conserved->primitives must come after hydro or MHD inversion that sets velocity so that q->ucon defined with updated hydro or MHD ucon.
 int u2p_rad(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom)
 {
   ldouble Rij[4][4];
@@ -871,6 +873,7 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeo
 
   //boosting to ff
   trans22_lab2zamo(Rij,Rij,eup);
+  // frame didn't change, so q->ucon same as at start of radiation inversion
   boost22_zamo2ff(Rij,Rij,pp,q,ptrgeom,eup);
 
   //reading primitives

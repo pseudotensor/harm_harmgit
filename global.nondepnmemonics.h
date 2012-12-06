@@ -160,12 +160,11 @@
 #define NONRELEOM 1 // NOT FINISHED // NOT RIGHT // NOT NEEDED
 // whether relativistic or nonrelativistic EOMs (speed of light limitation)
 
-// for EOMTYPE
+// for EOMTYPE for HYDRO OR MHD ONLY (not radiation)
 // 0 = FF(D)E force-free electrodynamics
 // 1 = cold GRMHD
 // 2 = entropy conservation version of GRMHD
 // 3 = GRMHD
-// 4 = GRMHDRAD
 // for force-free, must turn off:
 // ok now, but effectively setup already the below 2 lines implicitly
 // global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
@@ -174,10 +173,11 @@
 #define EOMCOLDGRMHD 1
 #define EOMENTROPYGRMHD 2
 #define EOMGRMHD 3
-#define EOMGRMHDRAD 4
 
-
-
+// radiation equations of motion
+#define EOMRADNONE 0
+#define EOMRADEDD 0
+#define EOMRADM1CLOSURE 1
 
 
 // macros for defining which fluxcalc method to use in flux.c

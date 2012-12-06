@@ -245,8 +245,8 @@
 //#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles. // still seems wrong -- need to test.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
-//#define EOMTYPE EOMGRMHD
-#define EOMTYPE EOMGRMHDRAD
+#define EOMTYPE EOMGRMHD
+#define EOMRADTYPE EOMRADM1CLOSURE
 //#define EOMTYPE EOMFFDE
 //#define EOMTYPE EOMCOLDGRMHD
 #define UTOPRIMTRYAGAIN 0

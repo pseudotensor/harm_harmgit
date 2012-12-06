@@ -411,7 +411,7 @@ void fix_primitive_eos_scalars_mignone(FTYPE *EOSextra, FTYPE *pr)
 void getall_forinversion_mignone(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
 {
 
-  if(eomtype==EOMGRMHDRAD||eomtype==EOMGRMHD){
+  if(eomtype==EOMGRMHD){
     if(whichd==CHIDIFF){
       // PofRHOCHI
       *fun=pressure_wmrho0_mignone(EOSextra, quant1, quant2);
