@@ -47,7 +47,7 @@
 
 #if (NUMERO==41)
 #define PP 100.
-#define CC 1.e2
+#define CCC 1.e2
 #undef KAPPA
 #define KAPPA 10.
 #define RHOFAC 0.01
@@ -68,7 +68,7 @@
 
 #if (NUMERO==11)
 #define PP 0.01
-#define CC 1.e2
+#define CCC 1.e2
 #undef KAPPA
 #define KAPPA 0.01
 #define RHOFAC 0.01
@@ -90,7 +90,7 @@
 
 #if (NUMERO==1)
 #define PP 0.01
-#define CC 1.e4
+#define CCC 1.e4
 #undef KAPPA
 #define KAPPA 0.01
 #define DRRE 1.e-3
@@ -110,10 +110,10 @@
 #define DTOUT1 1.e-2
 #endif
 
-#define RHO (ldouble)1.
-#define KK 2.*Pi
-#define UINT (ldouble)((1./CC/CC)*RHO/GAMMA/(GAMMA-1.-1./CC/CC)) //to get proper sound speed
-#define TEMP (ldouble)(calc_PEQ_Tfromurho(UINT,RHO)) //temperature from rho and uint
+#define RHORAD (ldouble)1.
+#define KKK 2.*Pi
+#define UINT (ldouble)((1./CCC/CCC)*RHORAD/GAMMA/(GAMMA-1.-1./CCC/CCC)) //to get proper sound speed
+#define TEMP (ldouble)(calc_PEQ_Tfromurho(UINT,RHORAD)) //temperature from rho and uint
 #define SIGMA_RAD (ldouble)((1./4.*PP*(GAMMA-1.)*UINT/TEMP/TEMP/TEMP/TEMP)) //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
 #define ERAD (ldouble)(calc_LTE_EfromT(TEMP)) //to get thermal equilibrium, E=4 sig T^4
 
@@ -124,44 +124,44 @@
 #if (NWAVE==1) //density wave advected with the gas
 //#define FLUXDISSIPATIONOFF //switches of the dissipative term in LAXF 
 #define PP 0.1
-#define CC 1.e6
+#define CCC 1.e6
 #define VX 1.e-3
 #define DTOUT1 (.05/VX)
-#define RHO 1.
+#define RHORAD 1.
 #define AAA 1.e-5
 #define ERAD 1.
-#define KK 2.*Pi
-#define UINT (1./CC/CC)*RHO/GAMMA/(GAMMA-1.-1./CC/CC)
-#define TEMP calc_PEQ_Tfromurho(UINT,RHO)
+#define KKK 2.*Pi
+#define UINT (1./CCC/CCC)*RHORAD/GAMMA/(GAMMA-1.-1./CCC/CCC)
+#define TEMP calc_PEQ_Tfromurho(UINT,RHORAD)
 #define SIGMA_RAD (1./4.*PP*(GAMMA-1.)*UINT/TEMP/TEMP/TEMP/TEMP)
 #endif
 
 #if (NWAVE==2) //hydro sound wave
 //#define FLUXDISSIPATIONOFF
 #define PP 0.01
-#define CC 1.e6
-#define DTOUT1 (.05*CC)
+#define CCC 1.e6
+#define DTOUT1 (.05*CCC)
 #define VX 0.
-#define RHO 1.
+#define RHORAD 1.
 #define AAA 1.e-5
 #define ERAD 1.
-#define KK 2.*Pi
-#define UINT (1./CC/CC)*RHO/GAMMA/(GAMMA-1.-1./CC/CC)
-#define TEMP calc_PEQ_Tfromurho(UINT,RHO)
+#define KKK 2.*Pi
+#define UINT (1./CCC/CCC)*RHORAD/GAMMA/(GAMMA-1.-1./CCC/CCC)
+#define TEMP calc_PEQ_Tfromurho(UINT,RHORAD)
 #define SIGMA_RAD (1./4.*PP*(GAMMA-1.)*UINT/TEMP/TEMP/TEMP/TEMP)
 #endif
 
 #if (NWAVE==3) //radiative density wave advected with the gas
 #define FLUXDISSIPATIONOFF
 #define PP 10.
-#define CC 1.e6
+#define CCC 1.e6
 #define VX 1.e-2
 #define DTOUT1 (.0005/VX)
-#define RHO 1.
+#define RHORAD 1.
 #define AAA 1.e-5
-#define KK 2.*Pi
-#define UINT (1./CC/CC)*RHO/GAMMA/(GAMMA-1.-1./CC/CC)
-#define TEMP calc_PEQ_Tfromurho(UINT,RHO)
+#define KKK 2.*Pi
+#define UINT (1./CCC/CCC)*RHORAD/GAMMA/(GAMMA-1.-1./CCC/CCC)
+#define TEMP calc_PEQ_Tfromurho(UINT,RHORAD)
 #define SIGMA_RAD (1./4.*PP*(GAMMA-1.)*UINT/TEMP/TEMP/TEMP/TEMP)
 #define ERAD calc_LTE_EfromT(TEMP)
 #define RADIATION
@@ -173,14 +173,14 @@
 #if (NWAVE==4) //sound wave with radiation, set up without the phase shifts etc.
 #define FLUXDISSIPATIONOFF
 #define PP 1.
-#define CC 1.e2
-#define DTOUT1 (.005*CC)
+#define CCC 1.e2
+#define DTOUT1 (.005*CCC)
 #define VX 0.
-#define RHO 1.
+#define RHORAD 1.
 #define AAA 1.e-1
-#define KK 2.*Pi
-#define UINT (1./CC/CC)*RHO/GAMMA/(GAMMA-1.-1./CC/CC)
-#define TEMP calc_PEQ_Tfromurho(UINT,RHO)
+#define KKK 2.*Pi
+#define UINT (1./CCC/CCC)*RHORAD/GAMMA/(GAMMA-1.-1./CCC/CCC)
+#define TEMP calc_PEQ_Tfromurho(UINT,RHORAD)
 #define SIGMA_RAD (1./4.*PP*(GAMMA-1.)*UINT/TEMP/TEMP/TEMP/TEMP)
 #define ERAD calc_LTE_EfromT(TEMP)
 #define RADIATION

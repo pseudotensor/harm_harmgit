@@ -31,16 +31,17 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 	       struct of_geom *geom, FTYPE *flux)
 {
   int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   void UtoU_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
-  VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputem[NPR];
+  VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputrad[NPR],fluxinputem[NPR];
   VARSTATIC FTYPE fluxdiag;
   VARSTATIC int pl,pliter;
 
 
 
   // initialize fluxinputma and fluxinputem so individual functions only have to define non-zero terms
-  PLOOP(pliter,pl) fluxinputma[pl]=fluxinputem[pl]=0.0;
+  PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
   fluxdiag=0.0;
 
 
@@ -48,11 +49,14 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
   primtoflux_ma(&returntype, pr, q, dir, geom, fluxinputma, &fluxdiag);
   fluxinputma[UU+dir]+=fluxdiag; // add back to normal term
 
+  // define RAD terms
+  primtoflux_rad(&returntype, pr, q, dir, geom, fluxinputrad);
+
   // define EM terms
   primtoflux_em(&returntype, pr, q, dir, geom, fluxinputem);
 
-  // add up MA+EM
-  PLOOP(pliter,pl) fluxinput[pl] = fluxinputma[pl] + fluxinputem[pl];
+  // add up MA+RAD+EM
+  PLOOP(pliter,pl) fluxinput[pl] = fluxinputma[pl] + fluxinputrad[pl] + fluxinputem[pl];
 
   // DEBUG:
   //  PALLLOOP(pl) dualfprintf(fail_file,"ALLBEFORE: pl=%d flux=%21.15g\n",pl,fluxinput[pl]);
@@ -81,16 +85,18 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *fluxma, FTYPE *fluxem)
 {
   int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   void UtoU_ma_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
+  void UtoU_rad_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   void UtoU_em_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
-  VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputem[NPR];
+  VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputrad[NPR],fluxinputem[NPR];
   VARSTATIC FTYPE fluxdiag;
   VARSTATIC int pl,pliter;
+  FTYPE fluxrad[NDIM];
 
-
-  // initialize fluxinputma and fluxinputem so individual functions only have to define non-zero terms
-  PLOOP(pliter,pl) fluxinputma[pl]=fluxinputem[pl]=0.0;
+  // initialize fluxinputma and fluxinputrad+fluxinputem so individual functions only have to define non-zero terms
+  PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
 
   // define MA terms
   primtoflux_ma(&returntype, pr, q, fundir, geom, fluxinputma, &fluxdiag);
@@ -117,6 +123,10 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   }
 #endif
 
+
+  // define RAD terms
+  primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad);
+
   // define EM terms
   primtoflux_em(&returntype, pr, q, fundir, geom, fluxinputem);
 
@@ -125,8 +135,14 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   //  UtoU_ma(UNOTHING,returntype,geom,fluxinputma,fluxma); // properly converts separate diagonal flux in FLUXSPLITPMA(fluxdir)
   UtoU_ma_fromunothing(returntype,geom,fluxinputma,fluxma);
 
+  //  UtoU_rad(UNOTHING,returntype,geom,fluxinputrad,fluxrad);
+  UtoU_rad_fromunothing(returntype,geom,fluxinputrad,fluxrad);
+
   //  UtoU_em(UNOTHING,returntype,geom,fluxinputem,fluxem);
   UtoU_em_fromunothing(returntype,geom,fluxinputem,fluxem);
+
+  int jj;
+  DLOOPA(jj) fluxem[jj]+=fluxrad[jj]; // KORAL: Just add RAD to EM for this split approach
 
 
   return(0);
@@ -169,11 +185,6 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
     *fluxdiag = fluxdiagpress[UU+dir];
   }
 
-  if(EOMTYPE==EOMGRMHDRAD){
-    // get flux or flux part of lab-frame radiation tensor
-    // KORALTODO
-  }
-
 
 #if(DOYL!=DONOYL)
 #if(SPLITNPR)
@@ -208,6 +219,24 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
   // DEBUG:
   //  PALLLOOP(pl) dualfprintf(fail_file,"ALL: pl=%d flux=%21.15g\n",pl,flux[pl]);
 
+
+  return (0);
+}
+
+
+
+// radiation terms (as if rho=u=p=0)
+int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux)
+{
+
+  // MHD stress-energy tensor w/ first index up, second index down.
+#if(SPLITNPR)
+  #error "primtoflux_rad not setup for SPLITNPR"
+#endif
+
+  if(EOMTYPE==EOMGRMHDRAD){
+    mhd_calc_rad(pr, dir, geom, q, &flux[RAD0]); // fills RAD0->RAD3
+  }
 
   return (0);
 }
@@ -780,6 +809,14 @@ void UtoU_ma(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, F
 
 }
 
+void UtoU_rad(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout)
+{
+  void UtoU_gen(int whichmaem, int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
+
+  UtoU_gen(ISRADONLY, inputtype, returntype, ptrgeom, Uin, Uout);
+
+}
+
 void UtoU_em(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout)
 {
   void UtoU_gen(int whichmaem, int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
@@ -802,6 +839,14 @@ void UtoU_ma_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTY
   void UtoU_gen_fromunothing(int whichmaem, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
 
   UtoU_gen_fromunothing(ISMAONLY, returntype, ptrgeom, Uin, Uout);
+
+}
+
+void UtoU_rad_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout)
+{
+  void UtoU_gen_fromunothing(int whichmaem, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
+
+  UtoU_gen_fromunothing(ISRADONLY, returntype, ptrgeom, Uin, Uout);
 
 }
 
@@ -982,17 +1027,19 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
 {
   void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
+  void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir);
   void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
   VARSTATIC int j;
-  VARSTATIC FTYPE mhdma[NDIM],mhdem[NDIM];
+  VARSTATIC FTYPE mhdma[NDIM],mhdrad[NDIM],mhdem[NDIM];
   VARSTATIC FTYPE mhddiagpress[NDIM];
 
 
   mhd_calc_0_ma(pr, dir, q, mhdma,mhddiagpress);
+  mhd_calc_rad(pr, dir, geom, q, mhdrad);
   mhd_calc_em(pr, dir, geom, q, mhdem);
 
-  // add up MA+EM
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j];
+  // add up MA+RAD+EM
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdrad[j] + mhdem[j];
 
 }
 
@@ -1070,15 +1117,17 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
   void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdma, FTYPE *mhddiagpress);
   void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdem);
   VARSTATIC FTYPE mhdma[NDIM];
+  VARSTATIC FTYPE mhdrad[NDIM];
   VARSTATIC FTYPE mhdem[NDIM];
   VARSTATIC int j;
   VARSTATIC FTYPE mhddiagpress[NDIM];
 
   mhd_calc_norestmass_ma(pr, dir, geom, q, mhdma, mhddiagpress);
+  mhd_calc_rad(pr, dir, geom, q, mhdrad);
   mhd_calc_em(pr, dir, geom, q, mhdem);
 
-  // add up MA and EM parts
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j];
+  // add up MA and RAD and EM parts
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdrad[j] + mhdem[j];
 
 }
 

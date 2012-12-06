@@ -1,3 +1,39 @@
+
+extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir);
+extern ldouble my_min(ldouble a, ldouble b);
+extern ldouble my_sign(ldouble x);
+extern int inverse_44matrix(ldouble a[][4], ldouble ia[][4]);
+extern int boost22_fforzamo(int whichdir, ldouble T1[][4],ldouble T2[][4],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+extern int boost22_zamo2ff(ldouble T1[][4],ldouble T2[][4],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+extern int boost22_ff2zamo(ldouble T1[][4],ldouble T2[][4],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+extern int trans22_zamo2lab(ldouble T1[][4],ldouble T2[][4],ldouble elo[][4]);
+extern int trans22_lab2zamo(ldouble T1[][4],ldouble T2[][4],ldouble eup[][4]);
+extern int trans2_lab2zamo(ldouble *u1,ldouble *u2,ldouble eup[][4]);
+extern int trans2_zamo2lab(ldouble *u1,ldouble *u2,ldouble elo[][4]);
+
+extern int boost2_zamo2ff(ldouble A1[],ldouble A2[],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+extern int boost2_ff2zamo(ldouble A1[],ldouble A2[],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom,ldouble eup[][4]);
+extern int boost2_fforzamo(int whichdir, ldouble A1[4],ldouble A2[4],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom,ldouble eup[][4]);
+
+extern int calc_Rij(ldouble *pp, ldouble Rij[][4]);
+
+extern int indices_2221(ldouble T1[][NDIM],ldouble T2[][NDIM], struct of_geom *ptrgeom);
+extern int indices_21(ldouble A1[NDIM],ldouble A2[NDIM],struct of_geom *ptrgeom);
+extern int indices_12(ldouble A1[NDIM],ldouble A2[NDIM],struct of_geom *ptrgeom);
+
+extern int calc_LNRFes(struct of_geom *ptrgeom, ldouble emuup[][4], ldouble emulo[][4]);
+
+
+extern int p2u_rad(ldouble *pr, ldouble *Urad, struct of_geom *ptrgeom, struct of_state *q);
+
+
+extern int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+extern int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f);
+extern int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
+
+
+
+
 #if(0)
 //misc.c
 int calc_stationary1d_solution()  ;
@@ -228,6 +264,7 @@ int prad_zamo2ff(ldouble *pp1, ldouble *pp2, ldouble gg[][5], ldouble eup[][4]);
 int prad_ff2zamo(ldouble *pp1, ldouble *pp, ldouble gg[][5], ldouble eup[][4]);
 #endif
 
+#if(0)
 //rad.c
 int calc_Rij(ldouble *pp, ldouble  Rij[][4]);
 int solve_explicit_ff(int ix,int iy,int iz,ldouble dt,ldouble* deltas);

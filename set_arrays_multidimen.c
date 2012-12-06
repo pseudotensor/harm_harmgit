@@ -22,6 +22,7 @@ void set_arrays_multidimen()
   int isleftright;
   struct of_state *myfluxstatetempptr;
   int firsttimeinloop;
+  extern void set_arrays_multidimen_rad(void);
 
 
 
@@ -562,7 +563,9 @@ void set_arrays_multidimen()
 #endif
   
   
-  
+  // initialize global pointers for multi-dimensional arrays for radiation
+  // KORAL
+  set_arrays_multidimen_rad();
   
 
 }

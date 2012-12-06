@@ -614,6 +614,24 @@
 #define PTRDEFGLOBALMETMACP1A2(name,argp1,i,j,k,arga1,arga2) (*GLOBALPOINT(name))[DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
 #define PTRDEFMETMACP1A2(name,argp1,i,j,k,arga1,arga2) (*PURENAME(name))[DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
 
+// P2A0
+#define GENMETMACP2A0(prefix,name,argp1,argp2,i,j,k) prefix##name[argp1][argp2][STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)]
+#define BASEMETMACP2A0(name,argp1,argp2,i,j,k) GENMETMACP2A0(a_,name,argp1,argp2,i,j,k)
+#define GLOBALMETMACP2A0(name,argp1,argp2,i,j,k) GENMETMACP2A0(a_s_,name,argp1,argp2,i,j,k)
+#define METMACP2A0(name,argp1,argp2,i,j,k) GENMETMACP2A0(,name,argp1,argp2,i,j,k)
+#define PTRMETMACP2A0(name,argp1,argp2,i,j,k) (*)[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)]
+#define PTRDEFGLOBALMETMACP2A0(name,argp1,argp2,i,j,k) (*GLOBALPOINT(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)]
+#define PTRDEFMETMACP2A0(name,argp1,argp2,i,j,k) (*PURENAME(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)]
+
+// P2A2
+#define GENMETMACP2A2(prefix,name,argp1,argp2,i,j,k,arga1,arga2) prefix##name[argp1][argp2][STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)][arga1][arga2]
+#define BASEMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) GENMETMACP2A2(a_,name,argp1,argp2,i,j,k,arga1,arga2)
+#define GLOBALMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) GENMETMACP2A2(a_s_,name,argp1,argp2,i,j,k,arga1,arga2)
+#define METMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) GENMETMACP2A2(,name,argp1,argp2,i,j,k,arga1,arga2)
+#define PTRMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) (*)[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
+#define PTRDEFGLOBALMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) (*GLOBALPOINT(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
+#define PTRDEFMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) (*PURENAME(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
+
 #define GENMETMACP0A3(prefix,name,i,j,k,arga1,arga2,arga3) prefix##name[STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)][arga1][arga2][arga3]
 #define BASEMETMACP0A3(name,i,j,k,arga1,arga2,arga3) GENMETMACP0A3(a_,name,i,j,k,arga1,arga2,arga3)
 #define GLOBALMETMACP0A3(name,i,j,k,arga1,arga2,arga3) GENMETMACP0A3(a_s_,name,i,j,k,arga1,arga2,arga3)

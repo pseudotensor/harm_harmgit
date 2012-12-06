@@ -338,7 +338,7 @@ extern int assert_func( int is_bad_val, char *s, ... );
 extern int assert_func_empty( int is_bad_val, char *s, ... );
 
 
-
+#include "global.funcdeclare.rad.h"
 
 #include "global.funcdeclare.user.h"
 

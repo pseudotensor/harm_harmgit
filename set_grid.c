@@ -12,6 +12,7 @@ static void symmetrize_gcov(void);
 static void set_grid_metrics_gcov(void);
 static void set_grid_metrics_others(void);
 static void symmetrize_X_V_dxdxp_idxdxp(void);
+static void set_boostemu(void);
 
 
 // not necessary to symmetrize except for testing/debugging asymmetries
@@ -259,6 +260,11 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   }
 
 
+  if(EOMTYPE==EOMGRMHDRAD){
+    if(whichtime==0) trifprintf("set_boostemu() BEGIN\n");
+    set_boostemu();
+    if(whichtime==0) trifprintf("set_boostemu() END\n");
+  }
 
 
 
@@ -1247,6 +1253,45 @@ static void set_idxvol(void)
 	 GLOBALMETMACP0A1(idxvol,i,j,k,RR)=1.0/dx[1];
 	 GLOBALMETMACP0A1(idxvol,i,j,k,TH)=1.0/dx[2];
 	 GLOBALMETMACP0A1(idxvol,i,j,k,PH)=1.0/dx[3];
+      }
+    }// end 3D LOOP
+  }// end parallel region
+
+}
+
+
+
+
+///////////////////
+//
+// Bardeen tensor transforming between ZAMO and LAB frames
+//
+//////////////////
+static void set_boostemu(void)
+{
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+
+
+#pragma omp parallel 
+  {
+    int i, j, k;
+
+    //////////    COMPZLOOP
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+#if(MCOORD==CARTMINKMETRIC)
+      // doesn't depend on position, only store/use 1 value
+      if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
+      int ll;
+      for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
+        get_geometry(i, j, k, ll, ptrgeom);
+        calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
       }
     }// end 3D LOOP
   }// end parallel region

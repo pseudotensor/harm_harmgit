@@ -405,3 +405,7 @@ struct Ccoordparams {
 #define DODEBUG 0
 #define DOFLOORDIAG 0
 #endif
+
+#include "koral.h" // KORAL
+
+

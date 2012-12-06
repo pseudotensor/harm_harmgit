@@ -1,5 +1,9 @@
+#include "decs.h"
+
 void set_arrays_multidimen_rad(void)
 {
+  int i,j,k;
+  int valueinit;
   // KORAL
 
 
@@ -11,11 +15,11 @@ void set_arrays_multidimen_rad(void)
   valueinit=0.0;
 #endif
 
-
-  GLOBALPOINT(pglobal) = (FTYPE PTRMACP0A1(pglobal,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(pglobal,N1BND,N2BND,N3BND,0)));
-  FULLLOOP PLOOP(pliter,pl){
-    GLOBALMACP0A1(pglobal,i,j,k,pl) = valueinit;
-  }
+  GLOBALPOINT(boostemu) = (FTYPE PTRMETMACP2A2(boostemu,BOOSTGRIDPOS,BOOSTDIRS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM)) (&(BASEMETMACP2A2(boostemu,CENT,0,N1BND,N2BND,N3BND,0,0)));
+  int ll,mm,nn,oo;
+  for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++) for(mm=0;mm<BOOSTDIRS;mm++) FULLLOOPP1 DLOOP(nn,oo){
+      GLOBALMETMACP2A2(boostemu,ll,mm,i,j,k,nn,oo) = valueinit;
+    }
 
 
 }

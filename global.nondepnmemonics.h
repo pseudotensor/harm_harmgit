@@ -399,6 +399,7 @@
 #define ISMAONLY 0
 #define ISEMONLY 1
 #define ISMAANDEM 2
+#define ISRADONLY 3
 
 
 
@@ -1123,6 +1124,7 @@
 
 
 
+#include "global.nondepnmemonics.rad.h" // KORAL
 
 
 

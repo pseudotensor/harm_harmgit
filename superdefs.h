@@ -436,6 +436,7 @@ FTYPE BASEMETMACP0A1(idxvol,N1M,N2M,N3M,NDIM); // volume regularization 1/dx for
 
 
 
+#include "superdefs.rad.h"
 
 
 

@@ -52,3 +52,5 @@ prep
 superdecs.h
 superdecs.pointers.h
 supermpidecs.h
+superdecs.pointers.rad.h
+superdecs.rad.h

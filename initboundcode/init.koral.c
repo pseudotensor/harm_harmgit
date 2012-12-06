@@ -17,6 +17,8 @@
 
 #include "decs.h"
 
+#include "problem.rad.h"// KORAL problem setup
+
 
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
