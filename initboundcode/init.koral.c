@@ -1,6 +1,8 @@
 
 #include "decs.h"
 
+FTYPE normglobal;
+
 int prepre_init_specific_init(void)
 {
   int funreturn;
@@ -176,7 +178,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   extern void check_spc_singularities_user(void);
 
 
-  beta = 1.e2 ;
 
   trifprintf("BEGIN check_rmin\n");
   // check rmin
@@ -213,7 +214,6 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
-  THETAROT = THETAROTMETRIC; // back to metric version
 
 
   return(0);
@@ -401,11 +401,6 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 // assumes we are fed the true densities
 int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int funreturn;
-  FTYPE parms[MAXPASSPARMS];
-  int eqline;
-
- 
 
   return(0);
 }
@@ -428,19 +423,7 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 // get maximum b^2 and p_g
 int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
 {
-  int funreturn;
-  int eqslice;
-  FTYPE parms[MAXPASSPARMS];
-  
-  eqslice=0;
-  
-
-  parms[0]=rin;
-
-  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
-  if(funreturn!=0) return(funreturn);
- 
-  return(0);
+   return(0);
 }
 
 
@@ -475,15 +458,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS ||WHICHPROBLEM==THICKDISK || WHICHPROBLEM==KEPDISK){
-    atmospheretype=1;
-  }
-  else if(WHICHPROBLEM==GRBJET){
-    atmospheretype=2;
-  }
-  else {
-    atmospheretype=1; // default
-  }
+  atmospheretype=1; // default
  
   funreturn=user1_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
   if(funreturn!=0) return(funreturn);
