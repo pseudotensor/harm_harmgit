@@ -171,7 +171,8 @@ USELAPACK=0
 endif
 
 ifeq ($(USEOSX),1)
-MCC=/usr/bin/mpicc
+GSLCFLAGS=`gsl-config --cflags`
+MCC=/usr/bin/mpicc ${GSLCFLAGS}
 USEGCC=1
 ECHOSWITCH=
 USELAPACK=0
