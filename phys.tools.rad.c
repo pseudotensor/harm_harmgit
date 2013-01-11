@@ -10,16 +10,14 @@ void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FT
 
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
 {
-  FTYPE vminmhd[NUMCS],vmaxmhd[NUMCS];
-  FTYPE vminrad[NUMCS],vmaxrad[NUMCS];
+  FTYPE vminmhd,vmaxmhd;
+  FTYPE vminrad,vmaxrad;
   
-  vchar_each(pr, q, dir, geom, vmaxmhd, vminmhd, vmaxrad, vminrad, ignorecourant);
+  vchar_each(pr, q, dir, geom, &vmaxmhd, &vminmhd, &vmaxrad, &vminrad, ignorecourant);
 
-  int qq;
-  for(qq=0;qq<NUMCS;qq++){
-    vminall[qq]=MIN(vminmhd[qq],vminrad[qq]);
-    vmaxall[qq]=MAX(vmaxmhd[qq],vmaxrad[qq]);
-  }
+  *vminall=MIN(vminmhd,vminrad);
+  *vmaxall=MAX(vmaxmhd,vmaxrad);
+  
 
   return(0);
 }

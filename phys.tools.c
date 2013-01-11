@@ -1881,8 +1881,13 @@ int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 {
   void compute_1plusud0(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0); // plus1ud0=(1+q->ucov[TT])
 
+  trifprintf("HERE1\n");
+
   // u^\mu
   MYFUN(ucon_calc(pr, ptrgeom, q->ucon,q->others) ,"phys.c:get_state()", "ucon_calc()", 1);
+
+  trifprintf("HERE2\n");
+
   // u_\mu
   lower_vec(q->ucon, ptrgeom, q->ucov);
 
@@ -2063,6 +2068,9 @@ int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *other
   uconrel[1]=pr[U1];
   uconrel[2]=pr[U2];
   uconrel[3]=pr[U3];
+
+  trifprintf("HERE0.5\n");
+
 
   //  SLOOPA(j) dualfprintf(fail_file,"ucon_calc_rel4vel: uconrel[%d]=%21.15g\n",j,uconrel[j]); // CHANGINGMARK
 
