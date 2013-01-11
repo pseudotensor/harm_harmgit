@@ -337,25 +337,25 @@ int inverse_44matrix(ldouble a[][4], ldouble ia[][4])
 /*****************************************************************/
 //radiative primitives fluid frame -> ZAMO
 // Use: Maybe dumping
-// Upp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
-// Upp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
-int prad_ff2zamo(ldouble *Upp1, ldouble *Upp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
+// pp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
+// pp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
+int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
 {
   ldouble Rij[4][4];
   int i,j;
 
   // set all (only non-rad needed) primitives
   int pliter,pl;
-  PLOOP(pliter,pl) Upp2[pl]=Upp1[pl];
+  PLOOP(pliter,pl) pp2[pl]=pp1[pl];
 
-  calc_Rij_ff(Upp1,Rij);
-  boost22_ff2zamo(Rij,Rij,Upp1,q,ptrgeom,eup);
+  calc_Rij_ff(pp1,Rij);
+  boost22_ff2zamo(Rij,Rij,pp1,q,ptrgeom,eup);
 
-  // overwrite Upp2 with new radiation primitives
-  Upp2[RAD0]=Rij[0][0];
-  Upp2[RAD1]=Rij[0][1];
-  Upp2[RAD2]=Rij[0][2];
-  Upp2[RAD3]=Rij[0][3];
+  // overwrite pp2 with new radiation primitives
+  pp2[PRAD0]=Rij[0][0];
+  pp2[PRAD1]=Rij[0][1];
+  pp2[PRAD2]=Rij[0][2];
+  pp2[PRAD3]=Rij[0][3];
 
   return 0;
 } 
@@ -373,10 +373,10 @@ int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of
   calc_Rij_ff(ppff,Rij);
   boost22_ff2zamo(Rij,Rij,ppff,q,ptrgeom,eup);
 
-  f[0]=-Rij[0][0]+ppzamo[RAD0];
-  f[1]=-Rij[0][1]+ppzamo[RAD1];
-  f[2]=-Rij[0][2]+ppzamo[RAD2];
-  f[3]=-Rij[0][3]+ppzamo[RAD3];
+  f[0]=-Rij[0][0]+ppzamo[PRAD0];
+  f[1]=-Rij[0][1]+ppzamo[PRAD1];
+  f[2]=-Rij[0][2]+ppzamo[PRAD2];
+  f[3]=-Rij[0][3]+ppzamo[PRAD3];
 
 
   return 0;
@@ -390,7 +390,7 @@ int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of
 // ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
 int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
 {
-  ldouble pp0[NV],pp[NV];
+  ldouble pp0[NPR],pp[NPR];
   ldouble J[4][4],iJ[4][4];
   ldouble x[4],f1[4],f2[4],f3[4];
   int i,j,k,iter=0;
@@ -398,7 +398,7 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 
   
   //initial guess
-  for(i=0;i<NV;i++)
+  for(i=0;i<NPR;i++)
     {
       pp[i]=ppzamo[i];
     }
@@ -408,13 +408,13 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
   f_prad_zamo2ff(ppzamo,pp,q,ptrgeom,eup,f1);
   for(i=0;i<4;i++)
     {
-      x[i]=pp[i+RAD0];
+      x[i]=pp[i+PRAD0];
     }  
  
   do
     {
       iter++;
-      for(i=RAD0;i<NV;i++)
+      for(i=PRAD0;i<NPR;i++)
 	{
 	  pp0[i]=pp[i];
 	}
@@ -427,13 +427,13 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 	{
 	  for(j=0;j<4;j++)
 	    {
-	      pp[j+RAD0]=pp[j+RAD0]+PRADEPS*pp[RAD0];
+	      pp[j+PRAD0]=pp[j+PRAD0]+PRADEPS*pp[PRAD0];
 	    
 	      f_prad_zamo2ff(pp,ppzamo,q,ptrgeom,eup,f2);
      
-	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[RAD0]);
+	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[PRAD0]);
 
-	      pp[j+RAD0]=pp0[j+RAD0];
+	      pp[j+PRAD0]=pp0[j+PRAD0];
 	    }
 	}
   
@@ -443,7 +443,7 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
       //updating unknowns
       for(i=0;i<4;i++)
 	{
-	  x[i]=pp0[i+RAD0];
+	  x[i]=pp0[i+PRAD0];
 	}      
 
       for(i=0;i<4;i++)
@@ -456,14 +456,14 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 
       for(i=0;i<4;i++)
 	{
-	  pp[i+RAD0]=x[i];
+	  pp[i+PRAD0]=x[i];
 	}
   
       //test convergence
       for(i=0;i<4;i++)
 	{
-	  f3[i]=(pp[i+RAD0]-pp0[i+RAD0]);
-	  f3[i]=fabs(f3[i]/pp0[RAD0]);
+	  f3[i]=(pp[i+PRAD0]-pp0[i+PRAD0]);
+	  f3[i]=fabs(f3[i]/pp0[PRAD0]);
 	}
 
       if(f3[0]<PRADCONV && f3[1]<PRADCONV && f3[2]<PRADCONV && f3[3]<PRADCONV)
@@ -480,7 +480,7 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 
 
   //returning prad
-  for(i=0;i<NV;i++)
+  for(i=0;i<NPR;i++)
     {
       ppzamo[i]=pp[i];
     }
@@ -958,7 +958,7 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
   ldouble Rij[NDIM][NDIM];
 
   //conserved - R^t_mu
-  ldouble Av[NDIM]={uu[RAD0],uu[RAD1],uu[RAD2],uu[RAD3]};
+  ldouble Av[NDIM]={uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3]};
   //indices up - R^tmu
   indices_12(Av,Av,ptrgeom);
 
@@ -1081,7 +1081,7 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
 int f_u2prad_num(ldouble *uu,ldouble *pp, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4], ldouble elo[][4],ldouble *f)
 {
   ldouble Rij[4][4];
-  ldouble ppp[NV];
+  ldouble ppp[NPR];
 
   calc_Rij_ff(pp,Rij);
   boost22_ff2zamo(Rij,Rij,pp,q,ptrgeom,eup);
@@ -1091,10 +1091,10 @@ int f_u2prad_num(ldouble *uu,ldouble *pp, struct of_state *q, struct of_geom *pt
   ldouble gdet=ptrgeom->gdet;
 
   // f = error
-  f[0]=-Rij[0][0]+uu[RAD0];
-  f[1]=-Rij[0][1]+uu[RAD1];
-  f[2]=-Rij[0][2]+uu[RAD2];
-  f[3]=-Rij[0][3]+uu[RAD3];
+  f[0]=-Rij[0][0]+uu[URAD0];
+  f[1]=-Rij[0][1]+uu[URAD1];
+  f[2]=-Rij[0][2]+uu[URAD2];
+  f[3]=-Rij[0][3]+uu[URAD3];
 
   return 0;
 } 
@@ -1103,14 +1103,14 @@ int f_u2prad_num(ldouble *uu,ldouble *pp, struct of_state *q, struct of_geom *pt
 // U->P inversion for Eddington approximation using Newton method.
 int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4], ldouble elo[][4])
 {
-  ldouble pp0[NV],pporg[NV];
+  ldouble pp0[NPR],pporg[NPR];
   ldouble J[4][4],iJ[4][4];
   ldouble x[4],f1[4],f2[4],f3[4];
   int i,j,k,iter=0;
 
 
 
-  for(i=RAD0;i<NV;i++)
+  for(i=PRAD0;i<=PRAD3;i++)
     {
       pporg[i]=pp[i];
     }
@@ -1118,7 +1118,7 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
   do
     {
       iter++;
-      for(i=RAD0;i<NV;i++)
+      for(i=PRAD0;i<NPR;i++)
 	{
 	  pp0[i]=pp[i];
 	}
@@ -1131,13 +1131,13 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
 	{
 	  for(j=0;j<4;j++)
 	    {
-	      pp[j+RAD0]=pp[j+RAD0]+PRADEPS*pp[RAD0];
+	      pp[j+PRAD0]=pp[j+PRAD0]+PRADEPS*pp[PRAD0];
 	    
 	      f_u2prad_num(uu,pp,q,ptrgeom,eup,elo,f2);
      
-	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[RAD0]);
+	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[PRAD0]);
 
-	      pp[j+RAD0]=pp0[j+RAD0];
+	      pp[j+PRAD0]=pp0[j+PRAD0];
 	    }
 	}
 
@@ -1147,7 +1147,7 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
       //updating x
       for(i=0;i<4;i++)
 	{
-	  x[i]=pp0[i+RAD0];
+	  x[i]=pp0[i+PRAD0];
 	}
 
       for(i=0;i<4;i++)
@@ -1160,14 +1160,14 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
 
       for(i=0;i<4;i++)
 	{
-	  pp[i+RAD0]=x[i];
+	  pp[i+PRAD0]=x[i];
 	}
   
       //test convergence
       for(i=0;i<4;i++)
 	{
-	  f3[i]=(pp[i+RAD0]-pp0[i+RAD0]);
-	  f3[i]=fabs(f3[i]/pp0[RAD0]);
+	  f3[i]=(pp[i+PRAD0]-pp0[i+PRAD0]);
+	  f3[i]=fabs(f3[i]/pp0[PRAD0]);
 	}
 
       if(f3[0]<RADCONV && f3[1]<RADCONV && f3[2]<RADCONV && f3[3]<RADCONV)
@@ -1177,7 +1177,7 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
 	{
 	  printf("iter exceeded in u2prad_num()\n");
 	  
-	  for(i=RAD0;i<NV;i++)
+	  for(i=PRAD0;i<NPR;i++)
 	    {
 	      pp[i]=pporg[i];
 	    }
@@ -1190,10 +1190,10 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
     }
   while(1);
   
-  if(pp[RAD0]<EFLOOR) 
+  if(pp[PRAD0]<EFLOOR) 
     {
       printf("enegative u2prad()\n");
-      pp[RAD0]=EFLOOR;
+      pp[PRAD0]=EFLOOR;
     }
   
 

@@ -47,6 +47,8 @@
 #if(1) // for now always control interpolated quantities (used to be only for SLPITNPR)
 
 #define PLOOP(pliter,pl) for(pliter=nprstart,pl=nprlist[pliter];pliter<=nprend;pliter++,pl=nprlist[pliter])
+//SUPERGODMARK
+#define PRIMLOOP(pliter,pl) PLOOP(pliter,pl)
 #define PINTERPLOOP(pliter,pl) for(pliter=npr2interpstart,pl=npr2interplist[pliter];pliter<=npr2interpend;pliter++,pl=npr2interplist[pliter])
 #define PNOTINTERPLOOP(pliter,pl) for(pliter=npr2notinterpstart,pl=npr2notinterplist[pliter];pliter<=npr2notinterpend;pliter++,pl=npr2notinterplist[pliter])
 
