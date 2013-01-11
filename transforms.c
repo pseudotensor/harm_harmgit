@@ -24,7 +24,7 @@ int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int k
 int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
   int k = 0;
-  FTYPE ucon[NDIM],uconrad[NDIM];
+  FTYPE ucon[NDIM],uradcon[NDIM];
   struct of_geom geomdontusebl;
   struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
@@ -46,7 +46,7 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
   if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc()", "pr2ucon()", 1);
   if(EOMRADTYPE!=EOMRADNONE){
-    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uconrad) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
+    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uradcon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
   }
 
   // convert field
@@ -60,8 +60,8 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
     mettometp_genloc(ii,jj,kk,loc,ucon);
 
     if(EOMRADTYPE!=EOMRADNONE){
-      coordtrans(whichcoord,MCOORD,ii,jj,kk,loc,uconrad);
-      mettometp_genloc(ii,jj,kk,loc,uconrad);
+      coordtrans(whichcoord,MCOORD,ii,jj,kk,loc,uradcon);
+      mettometp_genloc(ii,jj,kk,loc,uradcon);
     }
 
     // field
@@ -78,7 +78,7 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
   ucon2pr(WHICHVEL,ucon,ptrgeom,pr);
 
   if(EOMRADTYPE!=EOMRADNONE){
-    ucon2pr(WHICHVEL,uconrad,ptrgeom,&pr[URAD1-U1]);
+    ucon2pr(WHICHVEL,uradcon,ptrgeom,&pr[URAD1-U1]);
   }
 
   // convert field
@@ -95,7 +95,7 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
 int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *ucov)
 {
   int k = 0;
-  FTYPE ucon[NDIM],uconrad[NDIM];
+  FTYPE ucon[NDIM],uradcon[NDIM];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_geom geomprimedontuse;
@@ -131,7 +131,7 @@ int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc,
 int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int k = 0;
-  FTYPE ucon[NDIM],uconrad[NDIM];
+  FTYPE ucon[NDIM],uradcon[NDIM];
   struct of_geom geomdontusebl;
   struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
@@ -154,7 +154,7 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
   if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen()", "pr2ucon()", 1);
   if(EOMRADTYPE!=EOMRADNONE){
-    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uconrad) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen() for radiation", "pr2ucon()", 2);
+    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uradcon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen() for radiation", "pr2ucon()", 2);
   }
 
 
@@ -170,8 +170,8 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
     mettometp(ii,jj,kk,ucon);
 
     if(EOMRADTYPE!=EOMRADNONE){
-      coordtrans(whichcoord,newwhichcoord,ii,jj,kk,CENT,uconrad);
-      mettometp(ii,jj,kk,uconrad);
+      coordtrans(whichcoord,newwhichcoord,ii,jj,kk,CENT,uradcon);
+      mettometp(ii,jj,kk,uradcon);
     }
 
     coordtrans(whichcoord,newwhichcoord,ii,jj,kk,CENT,Bcon);
@@ -186,7 +186,7 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
   // convert from MCOORD prime 4-vel to MCOORD prime WHICHVEL-vel(i.e. primitive velocity of evolution)
   ucon2pr(newwhichvel,ucon,ptrgeom,pr);
   if(EOMRADTYPE!=EOMRADNONE){
-    ucon2pr(newwhichvel,uconrad,ptrgeom,&pr[URAD1-U1]);
+    ucon2pr(newwhichvel,uradcon,ptrgeom,&pr[URAD1-U1]);
   }
 
   // convert field
@@ -211,7 +211,7 @@ int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int pos)
 {
   int k;
-  FTYPE ucon[NDIM],uconrad[NDIM];
+  FTYPE ucon[NDIM],uradcon[NDIM];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_geom geomdontusebl;
@@ -236,7 +236,7 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
   //  if (pr2ucon(WHICHVEL,pr, ptrgeom ,ucon) >= 1) FAILSTATEMENT("transforms.c:metp2met2bl()", "pr2ucon()", 1);
   MYFUN(pr2ucon(WHICHVEL,pr, ptrgeom ,ucon),"transforms.c:pr2ucon()","metp2met2bl",0);
   if(EOMRADTYPE!=EOMRADNONE){
-    MYFUN(pr2ucon(WHICHVEL,&pr[URAD1-U1], ptrgeom ,uconrad),"transforms.c:pr2ucon() for radiation","metp2met2bl",1);
+    MYFUN(pr2ucon(WHICHVEL,&pr[URAD1-U1], ptrgeom ,uradcon),"transforms.c:pr2ucon() for radiation","metp2met2bl",1);
   }
 
   // field
@@ -252,8 +252,8 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
     coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,ucon);
 
     if(EOMRADTYPE!=EOMRADNONE){
-      metptomet_genloc(ii,jj,kk,pos,uconrad);
-      coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,uconrad);
+      metptomet_genloc(ii,jj,kk,pos,uradcon);
+      coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,uradcon);
     }
 
     // convert field
@@ -271,7 +271,7 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
   ucon2pr(whichvel,ucon,ptrgeombl,pr);
 
   if(EOMRADTYPE!=EOMRADNONE){
-    ucon2pr(whichvel,uconrad,ptrgeombl,&pr[URAD1-U1]);
+    ucon2pr(whichvel,uradcon,ptrgeombl,&pr[URAD1-U1]);
   }  
 
   // convert field

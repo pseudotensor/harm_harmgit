@@ -4,8 +4,7 @@
 // compute changes to U (both T and R) using implicit method
 void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
-
-
+  
 }
 
 //**********************************************************************
@@ -13,30 +12,26 @@ void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FT
 //****** and calculates contravariant four-force ***********************
 //**********************************************************************
 int calc_Gi(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi) 
-ldouble gg[][5], ldouble GG[][5], ldouble Gi[4])
 {
   int i,j,k;
   
   //radiative stress tensor in the lab frame
-  ldouble Rij[4][4];
-  calc_Rij(pp,gg,GG,Rij);
+  ldouble Rij[NDIM][NDIM];
 
-  mhd_calc_rad
+  //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
+  mhdfull_calc_rad(pr, ptrgeom, q, Rij)
   
   //the four-velocity of fluid in lab frame
-  ldouble ucon[4],ucov[4],vpr[3];
-  ucon[1]=pp[2];
-  ucon[2]=pp[3];
-  ucon[3]=pp[4];
-  conv_vels(ucon,ucon,VEL3,VEL4,gg,GG);
+  ldouble *ucon,*ucov;
+
+  ucon = qq->ucon;
+  ucov = qq->ucov;
   
-  //covariant four-velocity
-  indices_21(ucon,ucov,gg);  
   
   //gas properties
-  ldouble rho=pp[0];
-  ldouble u=pp[1];
-  ldouble p= (GAMMA-1.)*(ldouble)u;
+  ldouble rho=pp[RHO];
+  ldouble u=pp[UU];
+  ldouble p= pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->l,rho,u);
   ldouble T = p*MU_GAS*M_PROTON/K_BOLTZ/rho;
   ldouble B = SIGMA_RAD*pow(T,4.)/Pi;
   ldouble Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
@@ -48,16 +43,15 @@ ldouble gg[][5], ldouble GG[][5], ldouble Gi[4])
   
   //R^ab u_a u_b
   ldouble Ruu=0.;
-  for(i=0;i<4;i++)
-    for(j=0;j<4;j++)
-      Ruu+=Rij[i][j]*ucov[i]*ucov[j];
+  DLOOP(i,j)
+    Ruu+=Rij[i][j]*ucov[i]*ucon[j];
   
   ldouble Ru;
-  for(i=0;i<4;i++)
+  DLOOPA(i)
   {
     Ru=0.;
-    for(j=0;j<4;j++)
-      Ru+=Rij[i][j]*ucov[j];
+    DLOOPA(j)
+      Ru+=Rij[i][j]*ucon[j];
     Gi[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
   }
   
@@ -132,10 +126,10 @@ int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 }
 
 
-void mhdfull_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM])
+void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM])
 {
   DLOOPA(jj) {
-    mhd_calc_rad( pr, dir, ptrgeom, q, &(radstressdir[jj][0]) );
+    mhd_calc_rad( pr, jj, ptrgeom, q, &(radstressdir[jj][0]) );
   }
   
 }
