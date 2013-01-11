@@ -10,36 +10,46 @@ void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FT
 //******* the fiducial approach *****************************************
 //**********************************************************************
 
-int f_implicit_lab(ldouble *uu0,ldouble *uu,ldouble *pp,ldouble dt,ldouble gg[][5], ldouble GG[][5],ldouble *f)
+//uu0 - original cons. qty
+//uu -- current iteration
+//f - (returned) errors
+
+//NOTE: uu WILL be changed from inside this fcn
+int f_implicit_lab(ldouble *pp0, ldouble *uu0,ldouble *uu,ldouble realdt, struct of_geom *ptrgeom,  ldouble *f)
 {
-  ldouble Rij[4][4];
-  ldouble ppp[NV];
-  
-  ldouble pp2[NV];
+  struct of_state q;
+  ldouble pp[NPR];
+  int pliter, pl;
   int iv;
-  for(iv=0;iv<NV;iv++)
-    pp2[iv]=pp[iv];
-  
-  //opposite changes in gas quantities
-  uu[1] = uu0[1] - (uu[6]-uu0[6]);
-  uu[2] = uu0[2] - (uu[7]-uu0[7]);
-  uu[3] = uu0[3] - (uu[8]-uu0[8]);
-  uu[4] = uu0[4] - (uu[9]-uu0[9]);
+  struct of_newtonstats newtonstats;
+  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+
+  // initialize counters
+  newtonstats.nstroke=newtonstats.lntries=0;
+
+  PLOOP(pliter,pl)
+    pp[pl] = pp0[pl];
+
+  DLOOPA(iv)
+    uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
   
   //calculating primitives  
   int corr;
-  u2p(uu,pp2,gg,GG,&corr);
+  //u2p(uu,pp,gg,GG,&corr);
+
+  MYFUN(Utoprimgen(finalstep,EVOLVEUTOPRIM,UEVOLVE, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
+
+
+  get_state_uconucovonly(pp, ptrgeom, &q);
+  get_state_uradconuradcovonly(pp, ptrgeom, &q);
+
+  //radiative covariant four-force
+  ldouble Gd[NDIM];
+  calc_Gd(pp, ptrgeom, &q, Gd);
   
-  //radiative four-force
-  ldouble Gi[4];
-  calc_Gi(pp2,gg,GG,Gi); 
-  indices_21(Gi,Gi,gg);
-  
-  f[0] = uu[6] - uu0[6] + dt * Gi[0];
-  f[1] = uu[7] - uu0[7] + dt * Gi[1];
-  f[2] = uu[8] - uu0[8] + dt * Gi[2];
-  f[3] = uu[9] - uu0[9] + dt * Gi[3];
-  
+  DLOOPA(iv)
+    f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + realdt * Gd[iv];
+
   return 0;
 } 
 
@@ -69,57 +79,54 @@ FTYPE compute_dt()
 }
 
 // compute changes to U (both T and R) using implicit method
-void koral_implicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
-  int i1,i2,i3,iv,i,j;
+  FTYPE compute_dt();
+  int i1,i2,i3,iv,i,j,pliter;
   ldouble J[4][4],iJ[4][4];
-  ldouble pp[NV],uu[NV],uu0[NV],uup[NV]; 
+  ldouble uu0[NPR],uup[NPR],uu[NPR]; 
   ldouble f1[4],f2[4],f3[4],x[4];
-  ldouble gg[4][5];
-  ldouble GG[4][5];
-  pick_g(ix,iy,iz,gg);
-  pick_G(ix,iy,iz,GG);
-  
-  for(iv=0;iv<NV;iv++)
-  {
-    pp[iv]=get_u(p,iv,ix,iy,iz);      
-    uu[iv]=get_u(u,iv,ix,iy,iz);  
-    uu0[iv]=uu[iv];
-  }
+  ldouble realdt;
+
+  realdt = compute_dt();
+ 
+  //uu0 will hold original vector of conserved
+  PLOOP(pliter,iv)
+    uu[iv] = uu0[iv] = Uin[iv];
   
   ldouble EPS = 1.e-6;
   ldouble CONV = 1.e-6 ;
   
-  int verbose=0;
   int iter=0;
   
   do
   {
     iter++;
     
-    for(i=0;i<NV;i++)
-    {
+    //vector of conserved at the previous iteration
+    PLOOP(pliter,i)
       uup[i]=uu[i];
-    }
     
     //values at zero state
-    f_implicit_lab(uu0,uu,pp,dt,gg,GG,f1);
+    f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1);
     
     //calculating approximate Jacobian
-    for(i=0;i<4;i++)
-    {
-      for(j=0;j<4;j++)
+    DLOOPA(ii)
+      DLOOPA(jj)
       {
 	ldouble del;
-	if(uup[j+6]==0.) del=EPS*uup[6];
-	else del=EPS*uup[j+6];
-	uu[j+6]=uup[j+6]-del;
+	if(uup[jj+URAD0]==0.) 
+	  del=EPS*uup[URAD0];
+	else 
+	  del=EPS*uup[jj+URAD0];
+
+	uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
-	f_implicit_lab(uu0,uu,pp,dt,gg,GG,f2);
+	f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2);
 	
-	J[i][j]=(f2[i] - f1[i])/(uu[j+6]-uup[j+6]);
+	J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
 	
-	uu[j+6]=uup[j+6];
+	uu[jj+URAD0]=uup[jj+URAD0];
       }
     }
     
@@ -127,31 +134,23 @@ void koral_implicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
     inverse_44matrix(J,iJ);
     
     //updating x
-    for(i=0;i<4;i++)
-    {
-      x[i]=uup[i+6];
+    DLOOPA(ii){
+      x[ii]=uup[ii+URAD0];
     }
     
-    for(i=0;i<4;i++)
-    {
-      for(j=0;j<4;j++)
+    DLOOPA(ii)
+      DLOOPA(jj)
       {
-	x[i]-=iJ[i][j]*f1[j];
+	x[ii]-=iJ[ii][jj]*f1[jj];
       }
-    }
     
-    if(verbose>0)    print_state_implicit_lab (iter,x,f1); 
-    
-    for(i=0;i<4;i++)
-    {
-      uu[i+6]=x[i];
-    }
+    DLOOPA(ii){
+      uu[ii+URAD0]=x[ii];
     
     //test convergence
-    for(i=0;i<4;i++)
-    {
-      f3[i]=(uu[i+6]-uup[i+6]);
-      f3[i]=fabs(f3[i]/uup[6]);
+    DLOOPA(ii){
+      f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
+      f3[ii]=fabs(f3[ii]/uup[URAD0]);
     }
     
     if(f3[0]<CONV && f3[1]<CONV && f3[2]<CONV && f3[3]<CONV)
@@ -159,19 +158,18 @@ void koral_implicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
     
     if(iter>50)
     {
-      printf("iter exceeded in solve_implicit_lab()\n");	  
-      return -1;
+      dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");	  
+      myexit(21341);
     }
     
   }
   while(1);
   
-  deltas[0]=uu[6]-uu0[6];
-  deltas[1]=uu[7]-uu0[7];
-  deltas[2]=uu[8]-uu0[8];
-  deltas[3]=uu[9]-uu0[9];
+  DLOOPA(jj){
+    deltas[jj]=uu[URAD0+jj]-uu0[URAD0+jj];
+  }
   
-  return 0;
+  return(0);
 }
 
 
