@@ -107,8 +107,8 @@ FTYPE BASEMACP0A1(dtijk,N1M,N2M,N3M,COMPDIM);
 
 #if(STOREWAVESPEEDS>0)
 // below is used within substeps but not across
-FTYPE BASEMACP0A1(wspeedtemp,N1M,N2M,N3M,NUMCS); // temporarily store wspeed in case not just copying but averaging before putting into wspeed array
-FTYPE BASEMACP2A0(wspeed,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right)
+FTYPE BASEMACP1A1(wspeedtemp,NUMEOMSETS,N1M,N2M,N3M,NUMCS); // temporarily store wspeed in case not just copying but averaging before putting into wspeed array
+FTYPE BASEMACP3A0(wspeed,NUMEOMSETS,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right)
 #endif
 
 

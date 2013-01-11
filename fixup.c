@@ -2075,13 +2075,13 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
     // first get wave speed to check if superfast so need causal averaging
     MYFUN(get_state(MAC(ptoavg,i,j,k), ptrgeom, &state_pv),"fixup.c:fixup_utporim()", "get_state()", 1);
     if(N1NOT1){
-      MYFUN(vchar(MAC(ptoavg,i,j,k), &state_pv, 1, ptrgeom, &cminmax[1][CMAX], &cminmax[1][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar() dir=1or2", 1);
+      MYFUN(vchar_all(MAC(ptoavg,i,j,k), &state_pv, 1, ptrgeom, &cminmax[1][CMAX], &cminmax[1][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar_all() dir=1or2", 1);
     }
     if(N2NOT1){
-      MYFUN(vchar(MAC(ptoavg,i,j,k), &state_pv, 2, ptrgeom, &cminmax[2][CMAX], &cminmax[2][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar() dir=1or2", 2);
+      MYFUN(vchar_all(MAC(ptoavg,i,j,k), &state_pv, 2, ptrgeom, &cminmax[2][CMAX], &cminmax[2][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar_all() dir=1or2", 2);
     }
     if(N3NOT1){
-      MYFUN(vchar(MAC(ptoavg,i,j,k), &state_pv, 3, ptrgeom, &cminmax[3][CMAX], &cminmax[3][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar() dir=1or2", 3);
+      MYFUN(vchar_all(MAC(ptoavg,i,j,k), &state_pv, 3, ptrgeom, &cminmax[3][CMAX], &cminmax[3][CMIN],&ignorecourant),"fixup.c:fixup_utoprim()", "vchar_all() dir=1or2", 3);
     }
     SLOOPA(jjj){
       superfast[jjj]=0; // assume subfast

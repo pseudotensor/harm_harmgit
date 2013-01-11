@@ -1277,6 +1277,9 @@ int init_defglobal(void)
     GAMMAMAX=2000.0;
   }
 
+  GAMMAMAXRAD=1000.0; // maximum radiation frame lorentz factor
+
+
   GAMMAFAIL=100.0*GAMMAMAX; // when we think gamma is rediculous as to mean failure and solution is not accurate.
   prMAX[RHO]=20.0;
   prMAX[UU]=20.0;

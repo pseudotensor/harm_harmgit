@@ -205,7 +205,7 @@ int fluxcalc_fluxctstag(int stage,
 			FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
 			//			FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-			FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3],
+			FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3],
 			FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
 			FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
 			FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
@@ -231,7 +231,7 @@ int fluxcalc_fluxctstag(int stage,
   int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
 				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 				 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-				 FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3]);
+				 FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3]);
   int edgedir, odir1,odir2;
   //  static int firsttime=1;
   int i,j,k;
@@ -371,7 +371,7 @@ int fluxcalc_fluxctstag(int stage,
 //
 // 1) Wavespeed calculation:
 //
-//    MACP2A0(wspeed,dir,CMIN/CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
+//    MACP3A0(wspeed,EOMSETMHD,dir,CMIN/CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
 //
 //    CMIN,CMAX correspond to left,right going waves at FACEdir
 //    In Del Zanna et al. (2003) equation 43-45, we have
@@ -398,7 +398,7 @@ int fluxcalc_fluxctstag(int stage,
 int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
 			       //			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
 			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-			       FTYPE (*wspeed)[NUMCS][NSTORE1][NSTORE2][NSTORE3])
+			       FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
   int idel1,jdel1,kdel1;
   int idel2,jdel2,kdel2;
@@ -513,8 +513,8 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // -?del? since going from FACE to CORN
       // del2 for c2d[][0] since wspeed[odir1] is wave going in odir1-direction, whereas other wavespeed to MAX with is in other (odir2) direction
       if(Nvec[odir1]>1){
-	c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMIN,i,j,k),+MACP2A0(wspeed,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
-	c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir1,CMAX,i,j,k),+MACP2A0(wspeed,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
+        c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
+        c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
       }
       else{
 	// GODMARK: shoud just set the offending wavespeed (associated with non-existing dimensional direction) to 1.0 so don't have this conditional
@@ -524,8 +524,8 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
       
       if(Nvec[odir2]>1){
-	c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMIN,i,j,k),+MACP2A0(wspeed,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
-	c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP2A0(wspeed,odir2,CMAX,i,j,k),+MACP2A0(wspeed,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
+	c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
+	c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
       }
       else{
 	// then speed doesn't matter, not set, so scale-out

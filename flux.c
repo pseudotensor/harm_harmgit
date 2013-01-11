@@ -1052,7 +1052,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
     FTYPE pstore_l[NPR2INTERP],pstore_r[NPR2INTERP];
     FTYPE *p2interp_l,*p2interp_r;
     FTYPE dtij;
-    FTYPE ctop;
+    FTYPE ctop,ctoprad;
     int computewithleft,computewithright;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -2495,6 +2495,10 @@ int fluxcalc_donor
   int is,ie,js,je,ks,ke;
 
 
+#if(EOMRADTYPE!=EOMRADNONE)
+  dualfprintf(fail_file,"fluxcalc_donor not setup for radiation.");
+  myexit(1);
+#endif
 
 
 

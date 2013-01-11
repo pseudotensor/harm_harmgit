@@ -16,11 +16,13 @@ static void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r
 /////////////////////////////////
 
 // actually compute flux from given data
-int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopptr)
+int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopallptr)
 {
-  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
   int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
+  FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
+  FTYPE ctopmhd,ctoprad;
   struct of_state state_c, state_l, state_r;
   struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
   FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
@@ -45,9 +47,17 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 
   // usually "always" need cminmax_l cminmax_r and always need ctop
-  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, ctopptr);
+  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad);
 
-  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+  if(EOMRADTYPE!=EOMRADNONE){
+    // get maximum over both mhd and radiation 
+    *ctopallptr=MAX(ctopmhd,ctoprad);
+  }
+  else *ctopallptr=ctopmhd;
+
+
+  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, ctopmhd, cminmaxrad_l,cminmaxrad_r, cminmaxrad, ctoprad, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+
 
 
 #if(FLUXDUMP)
@@ -62,11 +72,13 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
 // actually compute flux from given data
 // here F is MA only and FEM is EM only
 // only should be needed for old a2c method
-int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopptr)
+int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopallptr)
 {
-  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
   int p2SFUevolve_splitmaem(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *FEM, FTYPE *U, FTYPE *UEM);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
+  FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
+  FTYPE ctopmhd,ctoprad;
   struct of_state state_c, state_l, state_r;
   struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
   FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
@@ -93,15 +105,20 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 
 
   // usually "always" need cminmax_l cminmax_r and always need ctop
-  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, ctopptr);
+  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad);
 
+  if(EOMRADTYPE!=EOMRADNONE){
+    // get maximum over both mhd and radiation 
+    *ctopallptr=MAX(ctopmhd,ctoprad);
+  }
+  else *ctopallptr=ctopmhd;
 
   // GODMARK:
   // below assumes flux_compute is linear in FMA and FEM, which it is right now
   // if used Riemann solver, would need to have it output FMA and FEM parts
-  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, ctopmhd, cminmaxrad_l,cminmaxrad_r, cminmaxrad, ctoprad, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
-  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, UEM_l, UEM_r, FEM_l, FEM_r, FEM),"step_ch.c:fluxcalc()", "flux_compute", 1);
+  MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, ctopmhd, cminmaxrad_l,cminmaxrad_r, cminmaxrad, ctoprad, CUf, p_l, p_r, UEM_l, UEM_r, FEM_l, FEM_r, FEM),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
 
   // Note that if splitmaem==1 then pressure term was moved as separate quasi-flux/conserved term.  flux remains, and conserved quantity not used
@@ -216,39 +233,57 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
 
 // actually compute flux from given data
 // GODMARK: right now if splitmaem==1 assumes F is linear in FMA and FEM. In general Riemann solver should return FMA and FEM in parts
-int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F)
+int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
-  FTYPE crus;
   void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac);
   FTYPE laxffrac[NPR],hllfrac[NPR];
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
-  FTYPE cforce;
-  int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int mustaflux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  FTYPE cmin_l, cmax_l, cmin_r, cmax_r, cmax, cmin;
+  int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int mustaflux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  FTYPE crus[NPR];
+  FTYPE cforce[NPR];
+  FTYPE cmin_l[NPR], cmax_l[NPR], cmin_r[NPR], cmax_r[NPR], cmax[NPR], cmin[NPR];
+  FTYPE ctop[NPR];
   FTYPE dPoP,f_s;
 
-  cmin_l = cminmax_l[CMIN];
-  cmax_l = cminmax_l[CMAX];
 
-  cmin_r = cminmax_r[CMIN];
-  cmax_r = cminmax_r[CMAX];
+  // assign cmin/cmax/ctop for each conserved quantity
+  int qq;
+  for(qq=0;qq<NUMEOMSETS;qq++){
+    if(qq<RAD0 || qq>RAD3){
+      cmin_l[qq] = cminmax_l[CMIN];
+      cmax_l[qq] = cminmax_l[CMAX];
+      cmin_r[qq] = cminmax_r[CMIN];
+      cmax_r[qq] = cminmax_r[CMAX];
+      cmin[qq] = cminmax[CMIN];
+      cmax[qq] = cminmax[CMAX];
+      ctop[qq] = ctopmhd;
+    }
+    else{
+      // radiation terms
+      cmin_l[qq] = cminmaxrad_l[CMIN];
+      cmax_l[qq] = cminmaxrad_l[CMAX];
+      cmin_r[qq] = cminmaxrad_r[CMIN];
+      cmax_r[qq] = cminmaxrad_r[CMAX];
+      cmin[qq] = cminmaxrad[CMIN];
+      cmax[qq] = cminmaxrad[CMAX];
+      ctop[qq] = ctoprad;
+    }
+    //	if(steppart==0) crus[qq]=dx[dir]/(dt*0.5);
+    //	else  crus[qq]=dx[dir]/(dt);
+    crus[qq]=dx[dir]/(dt*CUf);
+    //	crus[qq]=dx[dir]/(dt);
+    //	dualfprintf(fail_file,"CUf=%21.15g dt=%21.15g dx[%d]=%21.15g\n",CUf,dt,dir,dx[dir]);
+    //	crus[qq]=dx[dir]/(dt);
+  }
 
-  cmin = cminmax[CMIN];
-  cmax = cminmax[CMAX];
 
 
-  //	if(steppart==0) crus=dx[dir]/(dt*0.5);
-  //	else  crus=dx[dir]/(dt);
-  crus=dx[dir]/(dt*CUf);
-  //	crus=dx[dir]/(dt);
-  //	dualfprintf(fail_file,"CUf=%21.15g dt=%21.15g dx[%d]=%21.15g\n",CUf,dt,dir,dx[dir]);
-  //	crus=dx[dir]/(dt);
-  
+
   if(fluxmethod==LAXFFLUX){
-    PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
   }
   else if(fluxmethod==HLLFLUX){
     //////////////////////////////////
@@ -286,7 +321,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     // normal Rusanov speed
     //cforce=crus;
     // LAXF speed
-    cforce=ctop;
+    PLOOP(pliter,pl) cforce[pl]=ctop[pl];
 
 
     forceflux_compute(dir,geom,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
@@ -294,8 +329,10 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   }
   else if(fluxmethod==MUSTAFLUX){
 
-    //cforce=crus;
-    cforce=ctop;
+    PLOOP(pliter,pl) {
+      //cforce[pl]=crus[pl];
+      cforce[pl]=ctop[pl];
+    }
     mustaflux_compute(dir,geom,cmin_l,cmin_r,cmax_l,cmax_r,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
 
   }
@@ -309,10 +346,14 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     if(f_s>1.0) f_s=1.0;
     if(f_s<0.0) f_s=0.0;
 
-    if(cmax+cmin!=0.0){
-      PLOOP(pliter,pl) F[pl] = HLLLAXF1(cmin,cmax,ctop,f_s, U_l[pl], U_r[pl], F_l[pl], F_r[pl]);
+    PLOOP(pliter,pl){
+      if(cmax[pl]+cmin[pl]!=0.0){
+        F[pl] = HLLLAXF1(cmin[pl],cmax[pl],ctop[pl],f_s, U_l[pl], U_r[pl], F_l[pl], F_r[pl]);
+      }
+      else{
+        F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+      }
     }
-    else PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
   
     
     
@@ -333,45 +374,48 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 // e.g. double rarefaction Einfelt test (test2 in Liska & Wendroff 2003) leads to F at interface corresponding to negative pressure.  This is supposed to correct for that.  Leads to slightly better solution except for near center
 #define USE_CORRECTED_STATES 0
 
-int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
-  FTYPE vmin,vmax;
-  FTYPE cminreal,cmaxreal;
+  FTYPE vmin[NPR],vmax[NPR];
+  FTYPE cminreal[NPR],cmaxreal[NPR];
+
+  PLOOP(pliter,pl) {
+
 
 #if(USE_CORRECTED_STATES)
-  // get vmin/vmax
-  vmin=min(p_l[UU+dir],p_r[UU+dir]);
-  vmax=max(p_l[UU+dir],p_r[UU+dir]);
-  vmin = fabs(max(0., -vmin));
-  vmax = fabs(max(0., vmax));
+    // get vmin/vmax
+    vmin[pl]=min(p_l[UU+dir],p_r[UU+dir]);
+    vmax[pl]=max(p_l[UU+dir],p_r[UU+dir]);
+    vmin[pl] = fabs(max(0., -vmin[pl]));
+    vmax[pl] = fabs(max(0., vmax[pl]));
 
-  // get HLL+correction  
-  if(cmax+cmin!=0.0){
-    PLOOP(pliter,pl) {
-      if( pl == UU + dir && (vmin+vmax!=0.0) ) {
-	//      if(vmin+vmax!=0.0){
-	cminreal = vmin;
-	cmaxreal = vmax;
+    // get HLL+correction  
+    if(cmax[pl]+cmin[pl]!=0.0){
+      if( pl == UU + dir && (vmin[pl]+vmax[pl]!=0.0) ) {
+        //      if(vmin[pl]+vmax[pl]!=0.0){
+        cminreal[pl] = vmin[pl];
+        cmaxreal[pl] = vmax[pl];
       }
       else {
-	cminreal = cmin;
-	cmaxreal = cmax;
+        cminreal[pl] = cmin[pl];
+        cmaxreal[pl] = cmax[pl];
       }
-      F[pl] =  HLLCOMPUTE(cminreal,cmaxreal,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+      F[pl] =  HLLCOMPUTE(cminreal[pl],cmaxreal[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
     }
-  }
-  else PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    else F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
 
 #else
 
-  if(cmax+cmin!=0.0){
-    PLOOP(pliter,pl) F[pl] =  HLLCOMPUTE(cmin,cmax,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
-  }
-  else PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    if(cmax[pl]+cmin[pl]!=0.0){
+      F[pl] =  HLLCOMPUTE(cmin[pl],cmax[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    }
+    else F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
 
 #endif
-
+  
+  } // over pl's
+  
   return(0);
 
 }
@@ -409,17 +453,17 @@ int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE 
 // bit more oscillatory in flat region for Noh
 
 
-int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
   FTYPE umid[NPR],pmid[NPR],fmid[NPR];
   struct of_state state;
   struct of_state *ptrstate;
   int doforceflux;
-  FTYPE vmin,vmax;
-  FTYPE vminorig, vmaxorig;
-  FTYPE cminreal, cmaxreal;
-  int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F); 
+  FTYPE vmin[NPR],vmax[NPR];
+  FTYPE vminorig[NPR], vmaxorig[NPR];
+  FTYPE cminreal[NPR], cmaxreal[NPR];
+  int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F); 
   struct of_newtonstats newtonstats;
 
   ////////////////////////////
@@ -427,7 +471,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYP
   // get middle umid
   //
   ////////////////////////////
-  PLOOP(pliter,pl) umid[pl] = UHALF(cforce,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+  PLOOP(pliter,pl) umid[pl] = UHALF(cforce[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
 
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"%d : cforce=%21.15g : U_l[%d]=%21.15g U_r[%d]=%21.15g umid[%d]=%21.15g\n",geom->i,cforce,pl,U_l[pl],pl,U_r[pl],pl,umid[pl]);
   
@@ -467,7 +511,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYP
     
     // compute FORCE flux
     //    PLOOP(pliter,pl) F[pl] = FORCECOMPUTE(cforce,U_l[pl],U_r[pl],F_l[pl],fmid[pl],F_r[pl]);
-    PLOOP(pliter,pl) F[pl] = GFORCECOMPUTE(MUSTACOEF,cforce,U_l[pl],U_r[pl],F_l[pl],fmid[pl],F_r[pl]);
+    PLOOP(pliter,pl) F[pl] = GFORCECOMPUTE(MUSTACOEF,cforce[pl],U_l[pl],U_r[pl],F_l[pl],fmid[pl],F_r[pl]);
 
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"%d : F[%d]=%21.15g Fhll[%d]=%21.15g\n",geom->i,pl,F[pl],pl,HLLCOMPUTE(cmin,cmax,U_l[pl],U_r[pl],F_l[pl],F_r[pl]));
   }
@@ -511,13 +555,13 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYP
 #define HLLBOUNDMUSTA 0
 
 
-int mustaflux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+int mustaflux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
-  int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
   int domustaflux;
-  FTYPE cmaxorig,cminorig,ctoporig;
+  FTYPE cmaxorig[NPR],cminorig[NPR],ctoporig[NPR];
   FTYPE Uorig_l[NPR],Uorig_r[NPR],Forig_l[NPR],Forig_r[NPR],porig_l[NPR],porig_r[NPR];
   FTYPE Forig[NPR];
   FTYPE Fother[NPR];
@@ -545,10 +589,12 @@ int mustaflux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, 
 
 
   // keep original left/right states in case of musta failure
-  cmaxorig=cmax;
-  cminorig=cmin;
-  ctoporig=ctop;
   PLOOP(pliter,pl){
+
+    cmaxorig[pl]=cmax[pl];
+    cminorig[pl]=cmin[pl];
+    ctoporig[pl]=ctop[pl];
+
     Uorig_l[pl]=U_l[pl];
     Uorig_r[pl]=U_r[pl];
     Forig_l[pl]=F_l[pl];
@@ -643,17 +689,19 @@ int mustaflux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, 
 
 
 // first version of MUSTA flux
-int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
-  int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
   int pl,pliter;
   FTYPE umid[NPR],plnew[NPR],prnew[NPR],fmid[NPR];
   struct of_state state, state_l, state_r;
   struct of_state *ptrstate, *ptrstate_l, *ptrstate_r;
   int domustaflux;
   int mustaloop;
-  FTYPE cmusta;
+  FTYPE cmusta[NPR];
+  FTYPE cmineach_l[NUMEOMSETS],cmaxeach_l[NUMEOMSETS];
+  FTYPE cmineach_r[NUMEOMSETS],cmaxeach_r[NUMEOMSETS];
   int ignorecourant;
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   FTYPE Fother[NPR];
@@ -664,8 +712,14 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
   FTYPE fracl[NPR],fracr[NPR];
   FTYPE mustaf;
   struct of_newtonstats newtonstats;
+  FTYPE cminmhd,cmaxmhd,ctopmhd;
+  FTYPE cminrad,cmaxrad,ctoprad;
 
 
+#if(EOMRADTYPE!=EOMRADNONE)
+  dualfprintf(fail_file,"musta1flux_compute not setup for radiation.");
+  myexit(1);
+#endif
 
   // default
   ptrstate = &state;
@@ -679,14 +733,14 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 
   // get predictor flux
 #if(WHICHFLUX==MUSTAFORCE)
-  cmusta=ctop;
+  PLOOP(pliter,pl) cmusta[pl]=ctop[pl];
   forceflux_compute(dir,geom,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
 #elif(WHICHFLUX==MUSTAHLL)
-  cmusta=ctop;
+  PLOOP(pliter,pl) cmusta[pl]=ctop[pl];
   hllflux_compute(dir,geom,cmin,cmax,ctop,p_l,p_r,U_l,U_r,F_l,F_r,F);
 #elif(WHICHFLUX==MUSTALAXF)
-  cmusta=ctop;
-  PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+  PLOOP(pliter,pl) cmusta[pl]=ctop[pl];
+  PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
 #endif
 
 
@@ -694,15 +748,17 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
   // do musta stage loop
   for(mustaloop=0;mustaloop<NUMMUSTAITERS;mustaloop++){
 
-    // get wave speeds for opening Riemann fan
+    PLOOP(pliter,pl){
+      // get wave speeds for opening Riemann fan
 #if(WHICHFLUX==MUSTAFORCE)
-    //      cmusta=cforce;
-    cmusta=ctop;
+      //      cmusta[pl]=cforce[pl];
+      cmusta[pl]=ctop[pl];
 #elif(WHICHFLUX==MUSTAHLL)
-    cmusta=ctop;
+      cmusta[pl]=ctop[pl];
 #elif(WHICHFLUX==MUSTALAXF)
-    cmusta=ctop;
+      cmusta[pl]=ctop[pl];
 #endif
+    }
 
 
     ////////////////////////////////////////////
@@ -714,15 +770,15 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 #if(MUSTAVERSION==0)
     // does bad with Noh problem
     PLOOP(pliter,pl){
-      U_l[pl] -= MUSTACOEF*(F[pl]-F_l[pl])/cmusta;
-      U_r[pl] -= MUSTACOEF*(F_r[pl]-F[pl])/cmusta;
+      U_l[pl] -= MUSTACOEF*(F[pl]-F_l[pl])/cmusta[pl];
+      U_r[pl] -= MUSTACOEF*(F_r[pl]-F[pl])/cmusta[pl];
     }
 #elif(MUSTAVERSION==1)
     // does good with Noh problem
 
     PLOOP(pliter,pl){
-      correctionl[pl]=MUSTACOEF*(F[pl]-F_l[pl])/cmusta;
-      correctionr[pl]=MUSTACOEF*(F_r[pl]-F[pl])/cmusta;
+      correctionl[pl]=MUSTACOEF*(F[pl]-F_l[pl])/cmusta[pl];
+      correctionr[pl]=MUSTACOEF*(F_r[pl]-F[pl])/cmusta[pl];
       // check for monotonicity
       //      if(fabs(U_l[pl]-U_r[pl])<fabs((U_l[pl]-correctionl[pl])-(U_r[pl]-correctionr[pl]))) return(0);
       fracl[pl]=fabs(U_l[pl]-correctionl[pl])/(fabs(U_l[pl])+SMALL);
@@ -736,14 +792,14 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
     mymustacoeffinal=0.0;
     PLOOP(pliter,pl){
       if(pl==RHO){
-	if(mymustacoeffinal<=mymustacoef[pl]){
-	  mymustacoeffinal=mymustacoef[pl];
-	}
+        if(mymustacoeffinal<=mymustacoef[pl]){
+          mymustacoeffinal=mymustacoef[pl];
+        }
       }
     }
     if(mymustacoeffinal>1.0) mymustacoeffinal=1.0;
     if(mymustacoeffinal<0.9) mymustacoeffinal=0.9;
-
+    
     // find maximum fractional change
     //    mustaf=0.0;
     //    pllargest=-1;
@@ -768,13 +824,13 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
     }
 #elif(MUSTAVERSION==2)
     PLOOP(pliter,pl){
-      correctionl[pl]=MUSTACOEF*(F[pl]-F_l[pl])/cmusta;
-      correctionr[pl]=MUSTACOEF*(F_r[pl]-F[pl])/cmusta;
+      correctionl[pl]=MUSTACOEF*(F[pl]-F_l[pl])/cmusta[pl];
+      correctionr[pl]=MUSTACOEF*(F_r[pl]-F[pl])/cmusta[pl];
       // check for monotonicity
       //      if(fabs(U_l[pl]-U_r[pl])<fabs((U_l[pl]-correctionl[pl])-(U_r[pl]-correctionr[pl]))) return(0);
 
       if(fabs(correctionl[pl]-correctionr[pl])!=0.0){
-	mymustacoef[pl]=(U_l[pl]-U_r[pl])/(correctionl[pl]-correctionr[pl]);
+        mymustacoef[pl]=(U_l[pl]-U_r[pl])/(correctionl[pl]-correctionr[pl]);
       }
       else mymustacoef[pl]=BIG;
       // check that corrections are possibly tunable to be monotonic and so are at least in the right direction
@@ -805,7 +861,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       //      if(fabs(mymustacoef[RHO]-1.0)>2.0) return(0);
       //      if(mymustacoeffinal>1.0) mymustacoeffinal=1.0;
       PLOOP(pliter,pl){
-	mymustacoef[pl]=mymustacoeffinal;
+        mymustacoef[pl]=mymustacoeffinal;
       }
     }
 #elif(MUSTACOEFTYPE==1)
@@ -858,8 +914,8 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
     }
 #elif(MUSTAVERSION==3)
     PLOOP(pliter,pl){
-      correctionl=(F[pl]-F_l[pl])/cmusta;
-      correctionr=(F_r[pl]-F[pl])/cmusta;
+      correctionl=(F[pl]-F_l[pl])/cmusta[pl];
+      correctionr=(F_r[pl]-F[pl])/cmusta[pl];
       mymustacoef=MUSTACOEF;
 
       // fail      
@@ -873,8 +929,8 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       //U_l[pl] -= MUSTACOEF*(F[pl]-F_l[pl])/cmusta;
       //U_r[pl] -= MUSTACOEF*(F_r[pl]-F[pl])/cmusta;
 
-      //      U_l[pl] -= mymustacoef*(F[pl]-F_l[pl])/cmusta;
-      //      U_r[pl] -= mymustacoef*(F_r[pl]-F[pl])/cmusta;
+      //      U_l[pl] -= mymustacoef*(F[pl]-F_l[pl])/cmusta[pl];
+      //      U_r[pl] -= mymustacoef*(F_r[pl]-F[pl])/cmusta[pl];
 
     }
 #endif
@@ -913,21 +969,34 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 
 #if(1||((WHICHFLUX==MUSTAHLL)||(WHICHFLUX==MUSTALAXF)))
     // wave speeds for new left-right states
-    MYFUN(vchar(p_l, ptrstate_l, dir, geom, &cmax_l, &cmin_l,&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-    MYFUN(vchar(p_r, ptrstate_r, dir, geom, &cmax_r, &cmin_r,&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-    cminmax_calc(cmin_l,cmin_r,cmax_l,cmax_r,&cmin,&cmax,&ctop);
+    MYFUN(vchar_each(p_l, ptrstate_l, dir, geom, &cmaxeach_l[EOMSETMHD], &cmineach_l[EOMSETMHD], &cmaxeach_l[EOMSETRAD], &cmineach_l[EOMSETRAD],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+    MYFUN(vchar_each(p_r, ptrstate_r, dir, geom, &cmaxeach_r[EOMSETMHD], &cmineach_r[EOMSETMHD], &cmaxeach_r[EOMSETRAD], &cmineach_r[EOMSETRAD],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+    cminmax_calc(cmineach_l[EOMSETMHD],cmineach_r[EOMSETMHD],cmaxeach_l[EOMSETMHD],cmaxeach_r[EOMSETMHD],&cminmhd,&cmaxmhd,&ctopmhd);
+    cminmax_calc(cmineach_l[EOMSETRAD],cmineach_r[EOMSETRAD],cmaxeach_l[EOMSETRAD],cmaxeach_r[EOMSETRAD],&cminrad,&cmaxrad,&ctoprad);
+    PLOOP(pliter,pl){
+      if(pl<URAD0 || pl>URAD3){
+        cmin[pl]=cminmhd;
+        cmax[pl]=cmaxmhd;
+        ctop[pl]=ctopmhd;
+      }
+      else{
+        cmin[pl]=cminrad;
+        cmax[pl]=cmaxrad;
+        ctop[pl]=ctoprad;
+      }
+    }
 #endif
 
 
     // get F
     // get flux using corrected left/right states
 #if(WHICHFLUX==MUSTAFORCE)
-    cforce=ctop;
+    PLOOP(pliter,pl) cforce[pl]=ctop[pl];
     forceflux_compute(dir,geom,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
 #elif(WHICHFLUX==MUSTAHLL)
     hllflux_compute(dir,geom,cmin,cmax,ctop,p_l,p_r,U_l,U_r,F_l,F_r,F);
 #elif(WHICHFLUX==MUSTALAXF)
-    PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
+    PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
 #endif
 
   }// end musta loop
@@ -941,23 +1010,23 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 
 
 // second (multi-cell) version of MUSTA flux
-int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r, FTYPE cmax_l, FTYPE cmax_r, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
-  int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
-  int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
+  int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
   int pl,pliter;
   FTYPE umid[NPR],plnew[NPR],prnew[NPR],fmid[NPR];
   struct of_state state;
   struct of_state *ptrstate;
   int domustaflux;
   int mustaloop;
-  FTYPE cmusta;
+  FTYPE cmusta[NPR];
   FTYPE *Unow,*Fnow,*pnow;
   FTYPE *Unow_l, *Unow_r, *Fnow_l, *Fnow_r, *pnow_l, *pnow_r;
   FTYPE *cmaxnow,*cminnow,*ctopnow;
   FTYPE Umusta[2*(NUMLOCALCELLS+1)][NPR],Fmusta[2*(NUMLOCALCELLS+1)][NPR],Fmusta_edge[2*(NUMLOCALCELLS+1)][NPR],pmusta[2*(NUMLOCALCELLS+1)][NPR];
-  FTYPE cmaxmusta[2*(NUMLOCALCELLS+1)],cminmusta[2*(NUMLOCALCELLS+1)];
-  FTYPE cmaxnow_l, cmaxnow_r, cminnow_l, cminnow_r;
+  FTYPE cmaxmusta[2*(NUMLOCALCELLS+1)][NPR],cminmusta[2*(NUMLOCALCELLS+1)][NPR];
+  FTYPE cmaxnow_l[NPR], cmaxnow_r[NPR], cminnow_l[NPR], cminnow_r[NPR];
   int ignorecourant;
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   FTYPE otherF[NPR];
@@ -973,9 +1042,9 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       Umusta[mustacellloop][pl]=U_l[pl];
       Fmusta[mustacellloop][pl]=F_l[pl];
       pmusta[mustacellloop][pl]=p_l[pl];
+      cmaxmusta[mustacellloop][pl]=cmax_l[pl];
+      cminmusta[mustacellloop][pl]=cmin_l[pl];
     }
-    cmaxmusta[mustacellloop]=cmax_l;
-    cminmusta[mustacellloop]=cmin_l;
   }
   // right state
   for(mustacellloop=NUMLOCALCELLS+1;mustacellloop<=2*NUMLOCALCELLS+1;mustacellloop++){
@@ -983,9 +1052,9 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       Umusta[mustacellloop][pl]=U_r[pl];
       Fmusta[mustacellloop][pl]=F_r[pl];
       pmusta[mustacellloop][pl]=p_r[pl];
+      cmaxmusta[mustacellloop][pl]=cmax_r[pl];
+      cminmusta[mustacellloop][pl]=cmin_r[pl];
     }
-    cmaxmusta[mustacellloop]=cmax_r;
-    cminmusta[mustacellloop]=cmin_r;
   }
 
   
@@ -1031,27 +1100,32 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       pnow_l=pmusta[mustacellloop-1];
       pnow_r=pmusta[mustacellloop];
       // assignments GETS RETRIEVED
-      cmaxnow_l=cmaxmusta[mustacellloop-1];
-      cmaxnow_r=cmaxmusta[mustacellloop];
-      cminnow_l=cminmusta[mustacellloop-1];
-      cminnow_r=cminmusta[mustacellloop];
+      PLOOP(pliter,pl){
+        cmaxnow_l[pl]=cmaxmusta[mustacellloop-1][pl];
+        cmaxnow_r[pl]=cmaxmusta[mustacellloop][pl];
+        cminnow_l[pl]=cminmusta[mustacellloop-1][pl];
+        cminnow_r[pl]=cminmusta[mustacellloop][pl];
+      }
       // Fnow on edge GETS SET
       Fnow=Fmusta_edge[mustacellloop];
 
 
       // get wave speeds and min/max/top versions of left/right states GETS RETRIEVED
-      cminmax_calc(cminnow_l,cminnow_r,cmaxnow_l,cmaxnow_r,&cmin,&cmax,&ctop);
-
-
+      //      cminmax_calc(cminnow_l,cminnow_r,cmaxnow_l,cmaxnow_r,&cmin,&cmax,&ctop);
+      // SUPERGODMARK: Not setup for radiation
+      if(EOMRADTYPE!=EOMRADNONE){
+        dualfprintf(fail_file,"musta2 not setup for radiation\n");
+        myexit(1);
+      }
 #if(WHICHFLUX==MUSTAFORCE)
-      cmusta=cforce;
+      PLOOP(pliter,pl) cmusta[pl]=cforce[pl];
       forceflux_compute(dir,geom,cmin,cmax,ctop,cforce,pnow_l,pnow_r,Unow_l,Unow_r,Fnow_l,Fnow_r,Fnow);
 #elif(WHICHFLUX==MUSTAHLL)
-      cmusta=ctop;
+      PLOOP(pliter,pl) cmusta[pl]=ctop[pl];
       hllflux_compute(dir,geom,cmin,cmax,ctop,pnow_l,pnow_r,Unow_l,Unow_r,Fnow_l,Fnow_r,Fnow);
 #elif(WHICHFLUX==MUSTALAXF)
-      cmusta=ctop;
-      PLOOP(pliter,pl) Fnow[pl] = LAXFCOMPUTE(ctop,Unow_l[pl],Unow_r[pl],Fnow_l[pl],Fnow_r[pl]);
+      PLOOP(pliter,pl) cmusta[pl]=ctop[pl];
+      PLOOP(pliter,pl) Fnow[pl] = LAXFCOMPUTE(ctop[pl],Unow_l[pl],Unow_r[pl],Fnow_l[pl],Fnow_r[pl]);
 #endif
 
 
@@ -1077,8 +1151,10 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       Unow=Umusta[mustacellloop];
       pnow=pmusta[mustacellloop];
       Fnow=Fmusta[mustacellloop];
-      cmaxnow=&cmaxmusta[mustacellloop];
-      cminnow=&cminmusta[mustacellloop];
+      PLOOP(pliter,pl){
+        cmaxnow[pl]=cmaxmusta[mustacellloop][pl];
+        cminnow[pl]=cminmusta[mustacellloop][pl];
+      }
       // Fnow_l and Fnow_r on edge GETS RETRIEVED
       Fnow_l=Fmusta_edge[mustacellloop];
       Fnow_r=Fmusta_edge[mustacellloop+1];
@@ -1086,24 +1162,26 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 
 
       // set wave speed
+      PLOOP(pliter,pl){
 #if(WHICHFLUX==MUSTAFORCE)
-      cmusta=cforce;
+        cmusta[pl]=cforce[pl];
 #elif(WHICHFLUX==MUSTAHLL)
-      cmusta=ctop;
+        cmusta[pl]=ctop[pl];
 #elif(WHICHFLUX==MUSTALAXF)
-      cmusta=ctop;
+        cmusta[pl]=ctop[pl];
 #endif
+      }
 
       // Open Riemann fan
-      PLOOP(pliter,pl) Unow[pl] -= MULTIMUSTACOEF*(Fnow_r[pl]-Fnow_l[pl])/cmusta;
+      PLOOP(pliter,pl) Unow[pl] -= MULTIMUSTACOEF*(Fnow_r[pl]-Fnow_l[pl])/cmusta[pl];
 
 
       // get new primitive pnow from Unow
       MYFUN(Utoprimgen(0,EVOLVEUTOPRIM,UEVOLVE, Unow, geom, pnow,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
-	if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
-	domustaflux=0;
-	break;
+        if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
+        domustaflux=0;
+        break;
       }
       
 
@@ -1115,7 +1193,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 
       // get min and max wave speeds
       MYFUN(vchar(pnow, ptrstate, dir, geom, cmaxnow, cminnow, &ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-
+      // SUPERGODMARK: Not setup for radiation
 
     }// end loop over musta cells
 

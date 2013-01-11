@@ -176,8 +176,8 @@
 
 // radiation equations of motion
 #define EOMRADNONE 0
-#define EOMRADEDD 0
-#define EOMRADM1CLOSURE 1
+#define EOMRADEDD 1
+#define EOMRADM1CLOSURE 2
 
 
 // macros for defining which fluxcalc method to use in flux.c

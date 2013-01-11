@@ -24,7 +24,7 @@ int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int k
 int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
   int k = 0;
-  FTYPE ucon[NDIM];
+  FTYPE ucon[NDIM],uconrad[NDIM];
   struct of_geom geomdontusebl;
   struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
@@ -42,8 +42,12 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
   // pr is in whichcoord coordinates
   // get geometry (non-prime coords)
   gset_genloc(0,whichcoord,ii,jj,kk,loc,ptrgeombl);
+
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
   if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc()", "pr2ucon()", 1);
+  if(EOMRADTYPE!=EOMRADNONE){
+    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uconrad) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
+  }
 
   // convert field
   Bcon[0]=0.0;
@@ -55,6 +59,11 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
     // transform MCOORD ucon from MCOORD non-prime to MCOORD prime coords
     mettometp_genloc(ii,jj,kk,loc,ucon);
 
+    if(EOMRADTYPE!=EOMRADNONE){
+      coordtrans(whichcoord,MCOORD,ii,jj,kk,loc,uconrad);
+      mettometp_genloc(ii,jj,kk,loc,uconrad);
+    }
+
     // field
     coordtrans(whichcoord,MCOORD,ii,jj,kk,loc,Bcon);
     mettometp_genloc(ii,jj,kk,loc,Bcon);
@@ -64,8 +73,13 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
 
   // get prime geometry
   get_geometry(ii,jj,kk,loc,ptrgeom) ;
+
   // convert from MCOORD prime 4-vel to MCOORD prime WHICHVEL-vel(i.e. primitive velocity of evolution)
   ucon2pr(WHICHVEL,ucon,ptrgeom,pr);
+
+  if(EOMRADTYPE!=EOMRADNONE){
+    ucon2pr(WHICHVEL,uconrad,ptrgeom,&pr[URAD1-U1]);
+  }
 
   // convert field
   SLOOPA(k) pr[B1+k-1]=Bcon[k];
@@ -81,7 +95,7 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
 int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *ucov)
 {
   int k = 0;
-  FTYPE ucon[NDIM];
+  FTYPE ucon[NDIM],uconrad[NDIM];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_geom geomprimedontuse;
@@ -117,7 +131,7 @@ int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc,
 int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int k = 0;
-  FTYPE ucon[NDIM];
+  FTYPE ucon[NDIM],uconrad[NDIM];
   struct of_geom geomdontusebl;
   struct of_geom *ptrgeombl=&geomdontusebl;
   struct of_geom geomdontuse;
@@ -136,8 +150,12 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
   // pr is in whichcoord coordinates
   // get geometry (non-prime coords)
   gset(0,whichcoord,ii,jj,kk,ptrgeombl);
+
   // convert whichvel-pr in whichcoord coords to ucon in whichcoord coordinates
   if (pr2ucon(whichvel,pr, ptrgeombl ,ucon) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen()", "pr2ucon()", 1);
+  if(EOMRADTYPE!=EOMRADNONE){
+    if (pr2ucon(whichvel,&pr[URAD1-U1], ptrgeombl ,uconrad) >= 1) FAILSTATEMENT("transforms.c:bl2met2metp2v_gen() for radiation", "pr2ucon()", 2);
+  }
 
 
   // field
@@ -151,6 +169,11 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
     // transform MCOORD ucon from MCOORD non-prime to MCOORD prime coords
     mettometp(ii,jj,kk,ucon);
 
+    if(EOMRADTYPE!=EOMRADNONE){
+      coordtrans(whichcoord,newwhichcoord,ii,jj,kk,CENT,uconrad);
+      mettometp(ii,jj,kk,uconrad);
+    }
+
     coordtrans(whichcoord,newwhichcoord,ii,jj,kk,CENT,Bcon);
     mettometp(ii,jj,kk,Bcon);
 
@@ -159,8 +182,12 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 
   // get prime geometry
   get_geometry(ii,jj,kk,CENT,ptrgeom) ;
+
   // convert from MCOORD prime 4-vel to MCOORD prime WHICHVEL-vel(i.e. primitive velocity of evolution)
   ucon2pr(newwhichvel,ucon,ptrgeom,pr);
+  if(EOMRADTYPE!=EOMRADNONE){
+    ucon2pr(newwhichvel,uconrad,ptrgeom,&pr[URAD1-U1]);
+  }
 
   // convert field
   SLOOPA(k) pr[B1+k-1]=Bcon[k];
@@ -184,7 +211,7 @@ int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int pos)
 {
   int k;
-  FTYPE ucon[NDIM];
+  FTYPE ucon[NDIM],uconrad[NDIM];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_geom geomdontusebl;
@@ -205,8 +232,12 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
   // get prime MCOORD geometry
   get_geometry(ii,jj,kk,pos,ptrgeom) ;
   // transform prime MCOORD primitive to prim MCOORD 4-vel
+
   //  if (pr2ucon(WHICHVEL,pr, ptrgeom ,ucon) >= 1) FAILSTATEMENT("transforms.c:metp2met2bl()", "pr2ucon()", 1);
   MYFUN(pr2ucon(WHICHVEL,pr, ptrgeom ,ucon),"transforms.c:pr2ucon()","metp2met2bl",0);
+  if(EOMRADTYPE!=EOMRADNONE){
+    MYFUN(pr2ucon(WHICHVEL,&pr[URAD1-U1], ptrgeom ,uconrad),"transforms.c:pr2ucon() for radiation","metp2met2bl",1);
+  }
 
   // field
   Bcon[0]=0.0;
@@ -219,6 +250,11 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
     metptomet_genloc(ii,jj,kk,pos,ucon);
     // transform from non-prime MCOORD to non-prime whichcoord
     coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,ucon);
+
+    if(EOMRADTYPE!=EOMRADNONE){
+      metptomet_genloc(ii,jj,kk,pos,uconrad);
+      coordtrans(MCOORD,whichcoord,ii,jj,kk,pos,uconrad);
+    }
 
     // convert field
     metptomet_genloc(ii,jj,kk,pos,Bcon);
@@ -233,6 +269,10 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
   gset_genloc(0,whichcoord,ii,jj,kk,pos,ptrgeombl);
 
   ucon2pr(whichvel,ucon,ptrgeombl,pr);
+
+  if(EOMRADTYPE!=EOMRADNONE){
+    ucon2pr(whichvel,uconrad,ptrgeombl,&pr[URAD1-U1]);
+  }  
 
   // convert field
   SLOOPA(k) pr[B1+k-1]=Bcon[k];
@@ -535,6 +575,7 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 // all below stuff independent of metrics
 
 // convert primitive velocity to coordinate 4-velocity
+// KORALNOTEMARK: Use pr2ucon with shifted &pr[URAD1-U1] for radiation primitives
 int pr2ucon(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE*ucon)
 {
   FTYPE others[NUMOTHERSTATERESULTS];

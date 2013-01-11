@@ -54,6 +54,16 @@
 // rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
 #endif
 
+// how many sets of EOMs (MHD or MHD+RAD)
+#if(EOMRADTYPE!=EOMRADNONE)
+#define NUMEOMSETS 2 // MHD+RAD
+#else
+#define NUMEOMSETS 1 // MHD
+#endif
+
+#define EOMSETMHD 0
+#define EOMSETRAD 1
+
 
 #if((WHICHCURRENTCALC==0)||(WHICHCURRENTCALC==2))
 #define NUMCURRENTSLOTS 5

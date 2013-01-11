@@ -209,6 +209,10 @@ struct of_gdetgeom {
 struct of_state {
   FTYPE ucon[NDIM];
   FTYPE ucov[NDIM];
+#if(RADEOMTYPE!=EOMRADNONE)
+  FTYPE uradcon[NDIM];
+  FTYPE uradcov[NDIM];
+#endif
   FTYPE bcon[NDIM];
   FTYPE bcov[NDIM];
   FTYPE pressure; // aux thermodynamical quantity
@@ -218,6 +222,8 @@ struct of_state {
   // OPTMARK: If don't use bcon,bcov, store Bcon/u^t and Bcov/u^t so avoid catastrophic cancellation but still avoid divisions.
 
   FTYPE others[NUMOTHERSTATERESULTS];
+
+  FTYPE othersrad[NUMOTHERSTATERESULTS];
 
 
 

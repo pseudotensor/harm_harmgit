@@ -1601,12 +1601,17 @@ void raise_vec(FTYPE *ucov, struct of_geom *geom, FTYPE *ucon)
 int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
   get_state_bconbcovonly(pr, ptrgeom, q);
 
@@ -1622,12 +1627,17 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
   get_state_bconbcovonly(pr, ptrgeom, q);
 
@@ -1646,6 +1656,7 @@ int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
@@ -1665,6 +1676,10 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 #endif
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
 #if(MERGEDC2EA2CMETHOD)
   get_state_vcon_gdetBcon_overut(pr, ptrgeom, q);
@@ -1688,12 +1703,18 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
+
 
   // below needed for dUtodt() and compute_dt_fromsource()
 #if(COMPUTE4FIELDatALL)
@@ -1712,12 +1733,17 @@ int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
 #if(COMPUTE4FIELDatALL)
   get_state_bconbcovonly(pr, ptrgeom, q);
@@ -1735,12 +1761,17 @@ int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
 #if(COMPUTE4FIELDatALL)
   get_state_bconbcovonly(pr, ptrgeom, q);
@@ -1758,6 +1789,7 @@ int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct 
 int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
@@ -1777,6 +1809,10 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
 #endif
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
 #if(MERGEDC2EA2CMETHOD)
   get_state_vcon_gdetBcon_overut(pr, ptrgeom, q);
@@ -1801,12 +1837,17 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
 int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(RADEOMTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
 
 #if(COMPUTE4FIELDatALL)
   get_state_bconbcovonly(pr, ptrgeom, q);
@@ -1859,6 +1900,8 @@ int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 
   return (0);
 }
+
+
 
 
 // get v^i and \detg B^i used for EMF computations for FLUXB==FLUXCTSTAG

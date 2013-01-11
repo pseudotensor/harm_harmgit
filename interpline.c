@@ -2880,16 +2880,16 @@ static void causal_shift_order(int whichprimtype, int interporflux, int dir, int
     temporder=preforder;
 
     // get standard wavespeed (used by any method)
-    wspeed0l=GLOBALMACP2A0(wspeed,dir,0,i3,j3,k3);
-    wspeed1l=GLOBALMACP2A0(wspeed,dir,1,i3,j3,k3);			
+    wspeed0l=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,0,i3,j3,k3);
+    wspeed1l=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,1,i3,j3,k3);			
 
 
     if((interporflux==ENOINTERPTYPE)||(interporflux==ENOINTERPTYPE4EMF)||(interporflux==ENOFLUXSPLITTYPE)||(interporflux==ENOFLUXAVG1TYPE)||(interporflux==ENOFLUXAVG2TYPE)||(interporflux==ENOFLUXAVG3TYPE)){ // quantities are at CENT-dir (assumes ENOFLUXAVG?TYPE is orthogonal to dir)
 
 
       // get grid-on-right wavespeed
-      wspeed0r=GLOBALMACP2A0(wspeed,dir,0,i3+idel,j3+jdel,k3+kdel);
-      wspeed1r=GLOBALMACP2A0(wspeed,dir,1,i3+idel,j3+jdel,k3+kdel);
+      wspeed0r=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,0,i3+idel,j3+jdel,k3+kdel);
+      wspeed1r=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,1,i3+idel,j3+jdel,k3+kdel);
 
 
       // check for superfast divergence
@@ -2907,12 +2907,12 @@ static void causal_shift_order(int whichprimtype, int interporflux, int dir, int
     else if((interporflux==ENOFLUXRECONTYPE)||(interporflux==ENOFLUXRECONTYPEGHOSTACTIVE)||(interporflux==ENOQUASIFIELDFLUXRECONTYPE)||(interporflux==ENOAVG2CENTTYPE)||(interporflux==ENOCENT2AVGTYPE)){ // quantities are at FACE-dir
 
       // get grid-on-right wavespeed
-      wspeed0r=GLOBALMACP2A0(wspeed,dir,0,i3+idel,j3+jdel,k3+kdel);
-      wspeed1r=GLOBALMACP2A0(wspeed,dir,1,i3+idel,j3+jdel,k3+kdel);
+      wspeed0r=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,0,i3+idel,j3+jdel,k3+kdel);
+      wspeed1r=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,1,i3+idel,j3+jdel,k3+kdel);
 
       // get grid-on-left wavespeed
-      wspeed0ll=GLOBALMACP2A0(wspeed,dir,0,i3-idel,j3-jdel,k3-kdel);
-      wspeed1ll=GLOBALMACP2A0(wspeed,dir,1,i3-idel,j3-jdel,k3-kdel);
+      wspeed0ll=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,0,i3-idel,j3-jdel,k3-kdel);
+      wspeed1ll=GLOBALMACP2A0(wspeed,EOMSETMHD,dir,1,i3-idel,j3-jdel,k3-kdel);
 
 
       // check for superfast divergence

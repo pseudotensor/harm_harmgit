@@ -11,8 +11,8 @@
 #undef N3
 #endif
 
-#define N1 64
-#define N2 64
+#define N1 20
+#define N2 20
 #define N3 1
 
 // atch adjusts
@@ -166,8 +166,8 @@
 
 
 
-#define MCOORD KSCOORDS
-#define ALLOWMETRICROT 1
+#define MCOORD CARTMINKMETRIC
+#define ALLOWMETRICROT 0
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
@@ -221,7 +221,7 @@
 #define LIMITDTWITHSOURCETERM 0 // causes problems, drops dt too low
 #define USEGRAVITYDTINDTLIMIT 0
 #define RESTRICTDTSETTINGINSIDEHORIZON 2
-#define DODISS 1
+#define DODISS 0
 #define DOLUMVSR 0
 #define DODISSVSR 0
 #define DOSELFGRAVVSR 0

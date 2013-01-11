@@ -6,6 +6,7 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_neutrino(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
+  int koral_source_rad(FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
 
   
 
@@ -25,7 +26,7 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
   else if(cooling==KORAL){
-    return(0); // WORKING ON IT
+    return(koral_source_rad(pr, ptrgeom, q,dUcomp));
   }
 
   // random physics

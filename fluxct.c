@@ -920,6 +920,7 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
 	PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,i,jm1mac(j),k,pl)+MACP0A1(pb,i,j,km1mac(k),pl)+MACP0A1(pb,i,jm1mac(j),km1mac(k),pl));
 	get_geometry(i, j, k, CORN1, ptrgeomco1); // used here and below emf's
 	MYFUN(get_state(pbavg, ptrgeomco1, &state),"step_ch.c:flux_ct()", "get_state()", 1);
+    // KORALNOTE: Correct because this applies to the diffusive term only for the magnetic field evolution, so needs to stay vchar()
 	dir=2; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
 	dir=3; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
 	ctop1 = max(fabs(cmax1), fabs(cmin1));

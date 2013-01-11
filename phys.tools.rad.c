@@ -1,5 +1,53 @@
 #include "decs.h"
 
+
+// compute changes to U (both T and R) using implicit method
+void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+{
+
+
+}
+
+int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
+{
+  FTYPE vminmhd[NUMCS],vmaxmhd[NUMCS];
+  FTYPE vminrad[NUMCS],vmaxrad[NUMCS];
+  
+  vchar_each(pr, q, dir, geom, vmaxmhd, vminmhd, vmaxrad, vminrad, ignorecourant);
+
+  int qq;
+  for(qq=0;qq<NUMCS;qq++){
+    vminall[qq]=MIN(vminmhd[qq],vminrad[qq]);
+    vmaxall[qq]=MAX(vmaxmhd[qq],vmaxrad[qq]);
+  }
+
+  return(0);
+}
+
+int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxmhd, FTYPE *vminmhd, FTYPE *vmaxrad, FTYPE *vminrad,int *ignorecourant)
+{
+  
+  vchar(pr, q, dir, geom, vmaxmhd, vminmhd,ignorecourant);
+  vchar_rad(pr, q, dir, geom, vmaxrad, vminrad,ignorecourant);
+
+  return(0);
+}
+
+int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
+{
+
+  // SUPERGODMARK KORALTODO
+
+  FTYPE dxdxp[NDIM][NDIM];
+  dxdxprim_ijk(geom->i, geom->j, geom->k, geom->p, dxdxp);
+  // characeristic wavespeeds are 3-velocity in lab-frame
+  *vmin=-1.0/dxdxp[dir][dir]; // e.g. dxdxp = dr/dx1
+  *vmax=+1.0/dxdxp[dir][dir];
+
+  
+  return(0);
+}
+
 // convert primitives to conserved radiation quantities
 int p2u_rad(ldouble *pr, ldouble *Urad, struct of_geom *ptrgeom, struct of_state *q)
 {
@@ -12,37 +60,46 @@ int p2u_rad(ldouble *pr, ldouble *Urad, struct of_geom *ptrgeom, struct of_state
   return(0);
 }
 
+// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
+int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  void compute_1plusud0(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0); // plus1ud0=(1+q->ucov[TT])
+
+  // urad^\mu
+  // ucon_calc() assumes primitive velocities are in U1 through U3, but otherwise calculation is identical for radiation velocity, so just shift effective list of primitives so ucon_calc() operates on U1RAD through U3RAD
+  MYFUN(ucon_calc(&pr[URAD1-U1], ptrgeom, q->uradcon,q->othersrad) ,"phys.c:get_state()", "ucon_calc()", 1);
+  // urad_\mu
+  lower_vec(q->uradcon, ptrgeom, q->uradcov);
+
+
+  return (0);
+}
+
+
 // compute radiation stres-energy tensor
 void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir)
 {
-  FTYPE radT[NDIM][NDIM];
 
-
-  FTYPE (*eup)[4],(*elo)[4];
-  eup = GLOBALMETMACP2A0(boostemu,CENT,LAB2ZAMO,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  elo = GLOBALMETMACP2A0(boostemu,CENT,ZAMO2LAB,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
-  FTYPE Rij[NDIM][NDIM];
-  calc_Rij(pr,Rij);
-
-  boost22_ff2zamo(Rij,Rij,pr,q,ptrgeom,eup);
-  trans22_zamo2lab(Rij,Rij,elo);
-  indices_2221(Rij,radT,ptrgeom);
-
+  // R^{dir}_{jj} radiation stress-energy tensor
   int jj;
-  DLOOPA(jj) radstressdir[jj] = radT[dir][jj];
+  DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[RAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[RAD0]*delta(dir,jj));
+
 
 
 }
 
 //**********************************************************************
+//******* takes E and F^i from primitives (artificial) **********************
 //******* takes E and F^i from primitives and calculates radiation stress ****
 //******* tensor R^ij using M1 closure scheme *****************************
 //**********************************************************************
-int calc_Rij(ldouble *pp, ldouble Rij[][4])
+// Use: For initial conditions and dumping
+// Upp : fluid frame radiation conserved quantities
+// Rij : fluid frame radiation stress-energy tensor
+int calc_Rij_ff(ldouble *Upp, ldouble Rij[][4])
 {
-  ldouble E=pp[RAD0];
-  ldouble F[3]={pp[RAD1],pp[RAD2],pp[RAD3]};
+  ldouble E=Upp[RAD0];
+  ldouble F[3]={Upp[RAD1],Upp[RAD2],Upp[RAD3]};
 
   ldouble nx,ny,nz,nlen,f;
 
@@ -221,23 +278,26 @@ int inverse_44matrix(ldouble a[][4], ldouble ia[][4])
 /*****************************************************************/
 /*****************************************************************/
 //radiative primitives fluid frame -> ZAMO
-int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
+// Use: Maybe dumping
+// Upp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
+// Upp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
+int prad_ff2zamo(ldouble *Upp1, ldouble *Upp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
 {
   ldouble Rij[4][4];
   int i,j;
 
   // set all (only non-rad needed) primitives
   int pliter,pl;
-  PLOOP(pliter,pl) pp2[pl]=pp1[pl];
+  PLOOP(pliter,pl) Upp2[pl]=Upp1[pl];
 
-  calc_Rij(pp1,Rij);
-  boost22_ff2zamo(Rij,Rij,pp1,q,ptrgeom,eup);
+  calc_Rij_ff(Upp1,Rij);
+  boost22_ff2zamo(Rij,Rij,Upp1,q,ptrgeom,eup);
 
-  // overwrite pp2 with new radiation primitives
-  pp2[RAD0]=Rij[0][0];
-  pp2[RAD1]=Rij[0][1];
-  pp2[RAD2]=Rij[0][2];
-  pp2[RAD3]=Rij[0][3];
+  // overwrite Upp2 with new radiation primitives
+  Upp2[RAD0]=Rij[0][0];
+  Upp2[RAD1]=Rij[0][1];
+  Upp2[RAD2]=Rij[0][2];
+  Upp2[RAD3]=Rij[0][3];
 
   return 0;
 } 
@@ -246,10 +306,13 @@ int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom 
 /*****************************************************************/
 /*****************************************************************/
 //radiative primitives ZAMO -> fluid frame - numerical solver
+// Use: Error (f) for iteration
+// ppff : HD primitives (i.e. WHICHVEL velocity) and radiation primitives of \hat{E} and \hat{F} (i.e. fluid frame conserved quantities)
+// ppzamo : \hat{E} & \hat{F} -> E & F in ZAMO
 int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f)
 {
   ldouble Rij[4][4];
-  calc_Rij(ppff,Rij);
+  calc_Rij_ff(ppff,Rij);
   boost22_ff2zamo(Rij,Rij,ppff,q,ptrgeom,eup);
 
   f[0]=-Rij[0][0]+ppzamo[RAD0];
@@ -257,12 +320,16 @@ int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of
   f[2]=-Rij[0][2]+ppzamo[RAD2];
   f[3]=-Rij[0][3]+ppzamo[RAD3];
 
+
   return 0;
 } 
 
 
 
 // SUPERGODMARK: Is q constant ok?
+// numerical iteration to find ff from zamo
+// Use: Initial conditions
+// ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
 int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
 {
   ldouble pp0[NV],pp[NV];
@@ -824,63 +891,125 @@ int calc_LNRFes(struct of_geom *ptrgeom, ldouble emuup[][4], ldouble emulo[][4])
 //**********************************************************************
 //**********************************************************************
 //
-// NOTEMARK: This u2p_rad() inversion of radiation conserved->primitives must come after hydro or MHD inversion that sets velocity so that q->ucon defined with updated hydro or MHD ucon.
-int u2p_rad(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom)
+int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
 {
-  ldouble Rij[4][4];
+  //whether primitives corrected for caps, floors etc. - if so, conserved will be updated
+  int corrected=0;
 
-  FTYPE (*eup)[4],(*elo)[4];
-  eup = GLOBALMETMACP2A0(boostemu,CENT,LAB2ZAMO,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  elo = GLOBALMETMACP2A0(boostemu,CENT,ZAMO2LAB,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  int verbose=0,i;
+  ldouble Rij[NDIM][NDIM];
 
+  //conserved - R^t_mu
+  ldouble Av[NDIM]={uu[RAD0],uu[RAD1],uu[RAD2],uu[RAD3]};
+  //indices up - R^tmu
+  indices_12(Av,Av,ptrgeom);
 
-  //R^0_{mu}
-  ldouble A[4]={uu[RAD0],uu[RAD1],uu[RAD2],uu[RAD3]};
-  //indices up
-  indices_12(A,A,ptrgeom);
-
-  //covariant formulation
-  
-  //g_munu R^0mu R^0nu
-  ldouble gRR=ptrgeom->gcov[GIND(0,0)]*A[0]*A[0]+ptrgeom->gcov[GIND(0,1)]*A[0]*A[1]+ptrgeom->gcov[GIND(0,2)]*A[0]*A[2]+ptrgeom->gcov[GIND(0,3)]*A[0]*A[3]+
-    ptrgeom->gcov[GIND(1,0)]*A[1]*A[0]+ptrgeom->gcov[GIND(1,1)]*A[1]*A[1]+ptrgeom->gcov[GIND(1,2)]*A[1]*A[2]+ptrgeom->gcov[GIND(1,3)]*A[1]*A[3]+
-    ptrgeom->gcov[GIND(2,0)]*A[2]*A[0]+ptrgeom->gcov[GIND(2,1)]*A[2]*A[1]+ptrgeom->gcov[GIND(2,2)]*A[2]*A[2]+ptrgeom->gcov[GIND(2,3)]*A[2]*A[3]+
-    ptrgeom->gcov[GIND(3,0)]*A[3]*A[0]+ptrgeom->gcov[GIND(3,1)]*A[3]*A[1]+ptrgeom->gcov[GIND(3,2)]*A[3]*A[2]+ptrgeom->gcov[GIND(3,3)]*A[3]*A[3];
+  //g_munu R^tmu R^tnu
+  ldouble gRR=ptrgeom->gcov[GIND(0,0)]*Av[0]*Av[0]+ptrgeom->gcov[GIND(0,1)]*Av[0]*Av[1]+ptrgeom->gcov[GIND(0,2)]*Av[0]*Av[2]+ptrgeom->gcov[GIND(0,3)]*Av[0]*Av[3]+
+    ptrgeom->gcov[GIND(1,0)]*Av[1]*Av[0]+ptrgeom->gcov[GIND(1,1)]*Av[1]*Av[1]+ptrgeom->gcov[GIND(1,2)]*Av[1]*Av[2]+ptrgeom->gcov[GIND(1,3)]*Av[1]*Av[3]+
+    ptrgeom->gcov[GIND(2,0)]*Av[2]*Av[0]+ptrgeom->gcov[GIND(2,1)]*Av[2]*Av[1]+ptrgeom->gcov[GIND(2,2)]*Av[2]*Av[2]+ptrgeom->gcov[GIND(2,3)]*Av[2]*Av[3]+
+    ptrgeom->gcov[GIND(3,0)]*Av[3]*Av[0]+ptrgeom->gcov[GIND(3,1)]*Av[3]*Av[1]+ptrgeom->gcov[GIND(3,2)]*Av[3]*Av[2]+ptrgeom->gcov[GIND(3,3)]*Av[3]*Av[3];
  
   //the quadratic equation for u^t of the radiation rest frame (urf[0])
-  ldouble a,b,c;
+  //supposed to provide two roots for (u^t)^2 of opposite signs
+  ldouble a,b,c,delta,gamma2;
+  ldouble urfcon[4],urfcov[4],Erf;
   a=16.*gRR;
-  b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+A[0]*A[0]);
-  c=gRR*ptrgeom->gcon[GIND(0,0)]*ptrgeom->gcon[GIND(0,0)]-A[0]*A[0]*ptrgeom->gcon[GIND(0,0)];
-  ldouble delta=b*b-4.*a*c;
-  ldouble urf[4],Erf;
-  urf[0]=sqrt((-b-sqrt(delta))/2./a);
-  if(isnan(urf[0])) urf[0]=1.;
+  b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
+  c=gRR*ptrgeom->gcon[GIND(0,0)]*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]*ptrgeom->gcon[GIND(0,0)];
+  delta=b*b-4.*a*c;
+  gamma2=  (-b-sqrt(delta))/2./a;
+  //if unphysical try the other root
+  if(gamma2<0.) gamma2=  (-b+sqrt(delta))/2./a; 
 
-  //radiative energy density in the radiation rest frame
-  Erf=3.*A[0]/(4.*urf[0]*urf[0]+ptrgeom->gcon[GIND(0,0)]);
+  //cap on u^t
+  ldouble gammamax=GAMMAMAXRAD;
 
-  //four-velocity of the rest frame
-  urf[1]=3./(4.*Erf*urf[0])*(A[1]-1./3.*Erf*ptrgeom->gcon[GIND(0,1)]);
-  urf[2]=3./(4.*Erf*urf[0])*(A[2]-1./3.*Erf*ptrgeom->gcon[GIND(0,2)]);
-  urf[3]=3./(4.*Erf*urf[0])*(A[3]-1./3.*Erf*ptrgeom->gcon[GIND(0,3)]);
+  FTYPE gammarel2 = gamma2/(-ptrgeom->gcon[GIND(TT,TT)]);
+ 
 
-  //lab frame:
-  int i,j;
-  for(i=0;i<4;i++)
-    for(j=0;j<4;j++)
-      Rij[i][j]=4./3.*Erf*urf[i]*urf[j]+1./3.*Erf*ptrgeom->gcon[GIND(i,j)];
+  if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.) 
+    {
+      //top cap
+      corrected=1;
+      urfcon[0]=gammamax;
+      
+      //proper direction for the radiation rest frame, will be normalized later      
+      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
 
-  //boosting to ff
-  trans22_lab2zamo(Rij,Rij,eup);
-  // frame didn't change, so q->ucon same as at start of radiation inversion
-  boost22_zamo2ff(Rij,Rij,pp,q,ptrgeom,eup);
+      // lab-frame radiation 4-velocity
+      ldouble Arad[4];
+      for(i=1;i<4;i++)
+	{
+	  Arad[i]=(Av[i]-1./3.*Erf*ptrgeom->gcon[GIND(0,i)])/(4./3.*Erf*gammamax);
+	}
+      
+      //is normalized now
+      ldouble Afac;
+      c=0.; b=0.;
+      for(i=1;i<4;i++)
+	{
+	  a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
+	  b+=2.*Arad[i]*ptrgeom->gcov[GIND(0,i)]*gammamax;
+	}
+      c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax;
+      delta=b*b-4.*a*c;
+      Afac= (-b+sqrt(delta))/2./a;
 
-  //reading primitives
-  pp[RAD0]=Rij[0][0];
-  pp[RAD1]=Rij[0][1];
-  pp[RAD2]=Rij[0][2];
-  pp[RAD3]=Rij[0][3];
+      // lab-frame radiation 4-velocity
+      urfcon[0]=gammamax;
+      urfcon[1]=Afac*Arad[1];
+      urfcon[2]=Afac*Arad[2];
+      urfcon[3]=Afac*Arad[3];
+
+      // relative 4-velocity radiation frame
+      DLOOPA(i) urfcon[i]=urfcon[i]-urfcon[0]*ptrgeom->gcon[GIND(0,i)]/ptrgeom->gcon[GIND(0,0)];
+
+    }
+  else if(gammarel2<1.)
+    {
+      // override
+      gammarel2=1.0;
+      FTYPE gammarel=1.0;  // use this below
+
+      //low cap
+      corrected=1;
+
+      // relative 4-velocity radiation frame
+      urfcon[1]=urfcon[2]=urfcon[3]=0.;
+
+      // get lab-frame 4-velocity u^t
+      urfcon[0]=gammarel/ptrgeom->alphalapse;
+
+      //radiative energy density in the radiation rest frame
+      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+
+    }
+  else
+    {
+      //regular calculation
+      urfcon[0]=sqrt(gamma2);
+    
+      //radiative energy density in the radiation rest frame
+      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+      
+      //relative velocity
+      ldouble alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
+      ldouble gamma=urfcon[0]*alpha;
+      for(i=1;i<4;i++)
+	{	  
+	  urfcon[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
+	  urfcon[i]*=gamma;
+	}
+      urfcon[0]=0.;
+    }
+  
+  //new primitives (only uses urfcon[1-3])
+  pp[6]=Erf;
+  pp[7]=urfcon[1];
+  pp[8]=urfcon[2];
+  pp[9]=urfcon[3];
+
 
   return 0;
 }
@@ -896,13 +1025,14 @@ int f_u2prad_num(ldouble *uu,ldouble *pp, struct of_state *q, struct of_geom *pt
   ldouble Rij[4][4];
   ldouble ppp[NV];
 
-  calc_Rij(pp,Rij);
+  calc_Rij_ff(pp,Rij);
   boost22_ff2zamo(Rij,Rij,pp,q,ptrgeom,eup);
   trans22_zamo2lab(Rij,Rij,elo);
   indices_2221(Rij,Rij,ptrgeom);
 
   ldouble gdet=ptrgeom->gdet;
 
+  // f = error
   f[0]=-Rij[0][0]+uu[RAD0];
   f[1]=-Rij[0][1]+uu[RAD1];
   f[2]=-Rij[0][2]+uu[RAD2];
@@ -912,6 +1042,7 @@ int f_u2prad_num(ldouble *uu,ldouble *pp, struct of_state *q, struct of_geom *pt
 } 
 
 
+// U->P inversion for Eddington approximation using Newton method.
 int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4], ldouble elo[][4])
 {
   ldouble pp0[NV],pporg[NV];

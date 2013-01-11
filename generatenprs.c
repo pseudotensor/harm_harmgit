@@ -261,11 +261,17 @@ int main(void)
   fprintf(defout,"#define NPR2INTERP %d\n",npr2interp);
   fprintf(defout,"#define NPRINVERT %d\n",nprinvert);
 
-  // define name of radiation terms
+  // define name of radiation terms for general conserved quantities
   fprintf(defout,"#define RAD0 %d\n",rad0);
   fprintf(defout,"#define RAD1 %d\n",rad1);
   fprintf(defout,"#define RAD2 %d\n",rad2);
   fprintf(defout,"#define RAD3 %d\n",rad3);
+
+  // define name of radiation terms for primitives
+  fprintf(defout,"#define URAD0 %d\n",rad0);
+  fprintf(defout,"#define URAD1 %d\n",rad1);
+  fprintf(defout,"#define URAD2 %d\n",rad2);
+  fprintf(defout,"#define URAD3 %d\n",rad3);
 
   // define name of extra variables
   fprintf(defout,"#define YL %d\n",yl);

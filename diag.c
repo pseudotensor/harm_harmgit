@@ -1030,10 +1030,10 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
 	if (!failed) {
 	  if (get_state(MAC(prim,l,m,k), ptrgeom, &q) >= 1)
 	    FAILSTATEMENT("diag.c:areamap()", "get_state() dir=0", 1);
-	  if (vchar(MAC(prim,l,m,k), &q, 1, ptrgeom, &vmax1, &vmin1,&ignorecourant) >= 1)
-	    FAILSTATEMENT("diag.c:areamap()", "vchar() dir=1or2", 1);
-	  if (vchar(MAC(prim,l,m,k), &q, 2, ptrgeom, &vmax2, &vmin2,&ignorecourant) >= 1)
-	    FAILSTATEMENT("diag.c:areamap()", "vchar() dir=1or2", 2);
+	  if (vchar_all(MAC(prim,l,m,k), &q, 1, ptrgeom, &vmax1, &vmin1,&ignorecourant) >= 1)
+	    FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 1);
+	  if (vchar_all(MAC(prim,l,m,k), &q, 2, ptrgeom, &vmax2, &vmin2,&ignorecourant) >= 1)
+	    FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 2);
 	  // GODMARK: no 3-direction char.
 	}
 	
@@ -1828,12 +1828,12 @@ int set_varstavg(FTYPE tfrac)
       if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1)
 	FAILSTATEMENT("diag.c:set_varstavg()", "get_state() dir=0", 1);
 
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar() dir=1or2or3", 1);
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar() dir=1or2or3", 2);
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar() dir=1or2or3", 3);
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
+	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 1);
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
+	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 2);
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
+	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 3);
     }
     else {// do a per zone check, otherwise set to 0
       whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
@@ -1847,15 +1847,15 @@ int set_varstavg(FTYPE tfrac)
 	for (iii = 0; iii < NDIM; iii++)
 	  q.bcov[iii]=0;
       }
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
 	vmax[1]=vmin[1]=0;
       }
 	
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1){
 	vmax[2]=vmin[2]=0;
       }
 
-      if (vchar(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1){
 	vmax[3]=vmin[3]=0;
       }
 

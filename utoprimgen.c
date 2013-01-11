@@ -443,17 +443,17 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
   ///////////////
   //
-  // Invert U->direct Primitive for radiation (must come after HD or MHD or whatever sets velocity of fluid)
+  // Invert U->direct Primitive for radiation (must come after HD or MHD or whatever sets velocity of fluid, because radiation needs to have updated velocity so that can define fluid frame)
   //
   ///////////////
 
   if(EOMRADTYPE!=EOMRADNONE){
-    // KORALTODO
-    struct of_state qrad;
+    // KORAL
+    //    struct of_state qrad;
     // this uses new pr to get only ucon and ucov
-    get_state_uconucovonly(pr, ptrgeom, &qrad);
+    //get_state_uconucovonly(pr, ptrgeom, &qrad);
     // get new radiation primitives
-    u2p_rad(Ugeomfree,pr,&qrad,ptrgeom);// needs new ucon only.
+    u2p_rad(Ugeomfree,pr,ptrgeom);// needs new ucon only.
   }
   
 

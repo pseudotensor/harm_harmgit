@@ -153,8 +153,8 @@ extern int primtoflux(int returntype, FTYPE *pa, struct of_state *q, int dir,
 extern int primtoflux_splitmaem(int returntype, FTYPE *pa, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *flma, FTYPE *flem);
 
 
-extern int flux_compute_general(int i, int j, int k, int dir, struct of_geom *geom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctop);
-extern int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *geom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctop);
+extern int flux_compute_general(int i, int j, int k, int dir, struct of_geom *geom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopall);
+extern int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *geom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopall);
 
 extern void mks_source_conn(FTYPE *ph, struct of_geom *ptrgeom,
 		     struct of_state *q,FTYPE *dU);

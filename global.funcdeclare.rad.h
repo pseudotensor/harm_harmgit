@@ -31,7 +31,17 @@ extern int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct o
 extern int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f);
 extern int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4]);
 
-extern int u2p_rad(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *ptrgeom);
+extern int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom);
+
+
+extern int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+
+extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
+		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
+extern int vchar_all(FTYPE *pr, struct of_state *q, int dir,
+		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
+extern int vchar_each(FTYPE *pr, struct of_state *q, int dir,
+		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad,int *ignorecourant);
 
 
 #if(0)
