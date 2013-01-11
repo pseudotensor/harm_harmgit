@@ -1,3 +1,5 @@
+#define WHICHPROBLEM 1
+
 //undefine the grid size parameters if they have already been defined
 #ifdef N1 
 #undef N1
