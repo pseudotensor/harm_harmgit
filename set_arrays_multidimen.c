@@ -183,7 +183,7 @@ void set_arrays_multidimen()
 #if(STOREWAVESPEEDS>0)
   GLOBALPOINT(wspeedtemp) = (FTYPE PTRMACP1A1(wspeedtemp,NUMEOMSETS,N1M,N2M,N3M,NUMCS)) (&(BASEMACP1A1(wspeedtemp,0,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(wspeed) = (FTYPE PTRMACP3A0(wspeed,FILL,COMPDIM,NUMCS,N1M,N2M,N3M)) (&(BASEMACP3A0(wspeed,0,-1,0,N1BND,N2BND,N3BND))); // shifted so wspeed[1,2,3] accesses the memory
-  FULLLOOP for(qq=0;qq<NUMEOMSETS;qq++) PLOOP(pliter,pl) for(l=1;l<=COMPDIM;l++) for(m=0;m<NUMCS;m++) GLOBALMACP3A0(wspeed,qq,l,m,i,j,k) = valueinit;
+  FULLLOOP for(qq=0;qq<NUMEOMSETS;qq++) for(l=1;l<=COMPDIM;l++) for(m=0;m<NUMCS;m++) GLOBALMACP3A0(wspeed,qq,l,m,i,j,k) = valueinit;
 #endif
   
 #if(STORESHOCKINDICATOR)

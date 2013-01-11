@@ -80,8 +80,11 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
   int enerregion;
   int *localenerpos;
   int dir;
+  int donebc[COMPDIM*2];
 
 
+
+  DIRLOOP(dir) donebc[dir]=0; // assume BC not done yet
 
 
   ////////////////////////
@@ -109,36 +112,47 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 
   if(whichdir==1){
 
+    if((dosetbc[X1DN] || dosetbc[X1UP]) && (donebc[X1DN]==0 && donebc[X1UP]==0)){
+      if( (BCtype[X1DN]==PERIODIC)&&(BCtype[X1UP]==PERIODIC) ){
+        bound_x1_periodic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[X1DN]=donebc[X1UP]=1;
+      }
+    }
+
     dir=X1DN;
-    if(dosetbc[dir]){
+    if(dosetbc[dir] && donebc[dir]==0){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
-	bound_x1dn_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x1dn_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else if((BCtype[dir]==R0SING)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x1dn_sym(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
-
+        bound_x1dn_sym(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
-	bound_x1dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        bound_x1dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
       }
       else{
-	dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
-	myexit(7598730);
+        dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
+        myexit(7598730);
       }
     }
 
 
     dir=X1UP;
-    if(dosetbc[dir]){
+    if(dosetbc[dir] && donebc[dir]==0){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
-	bound_x1up_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x1up_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
-	bound_x1up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        bound_x1up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
       }
       else{
-	dualfprintf(fail_file,"No x1up boundary condition specified: %d\n",BCtype[dir]);
-	myexit(7598731);
+        dualfprintf(fail_file,"No x1up boundary condition specified: %d\n",BCtype[dir]);
+        myexit(7598731);
       }
     }
 
@@ -146,36 +160,50 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
   }
   else if(whichdir==2){
 
+
+    if((dosetbc[X2DN] || dosetbc[X2UP]) && (donebc[X2DN]==0 && donebc[X2UP]==0)){
+      if( (BCtype[X2DN]==PERIODIC)&&(BCtype[X2UP]==PERIODIC) ){
+        bound_x2_periodic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[X2DN]=donebc[X2UP]=1;
+      }
+    }
+
+
     dir=X2DN;
-    if(dosetbc[dir]){
+    if(dosetbc[dir] && donebc[dir]==0){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	int whichcall=1;
-	bound_x2dn_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        int whichcall=1;
+        bound_x2dn_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x2dn_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x2dn_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else{
-	dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
-	myexit(7598732);
+        dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
+        myexit(7598732);
       }
     }
 
 
     dir=X2UP;
-    if(dosetbc[dir]){
+    if(dosetbc[dir] && donebc[dir]==0){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	int whichcall=1;
-	bound_x2up_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        int whichcall=1;
+        bound_x2up_polaraxis_full3d(whichcall,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
-	bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
       }
       else{
-	dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
-	myexit(7598733);
+        dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
+        myexit(7598733);
       }
     }
+
 
 
 
@@ -183,13 +211,14 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
   else if(whichdir==3){
 
 
-    if(dosetbc[X3DN] || dosetbc[X3UP]){
+    if((dosetbc[X3DN] || dosetbc[X3UP]) && (donebc[X3DN]==0 && donebc[X3UP]==0)){
       if( (BCtype[X3DN]==PERIODIC)&&(BCtype[X3UP]==PERIODIC) ){
-	bound_x3_periodic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x3_periodic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[X3DN]=donebc[X3UP]=1;
       }
       else{
-	dualfprintf(fail_file,"No x3 boundary condition specified: %d %d\n",BCtype[X3DN],BCtype[X3UP]);
-	myexit(7598734);
+        dualfprintf(fail_file,"No x3 boundary condition specified: %d %d\n",BCtype[X3DN],BCtype[X3UP]);
+        myexit(7598734);
       }
     }
     else{
@@ -199,6 +228,8 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 
 
   }
+
+
 
 
 
@@ -240,7 +271,7 @@ int flip_y(int nprlocalstart, int nprlocalend, int*nprlocallist, int iterdir, in
   if( iterdir == WENO_DIR_FLIP_CONS_SIGN_DN && (recontype == CVT_C2A || recontype == CVT_A2C) && mycpupos[iterdir] == 0 ) { 
     NUMPRIMLOOP(pllocal,pl) 
       for( myi = bs; myi < 0; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
@@ -249,7 +280,7 @@ int flip_y(int nprlocalstart, int nprlocalend, int*nprlocallist, int iterdir, in
   if( iterdir == WENO_DIR_FLIP_CONS_SIGN_UP && (recontype == CVT_C2A || recontype == CVT_A2C)  && mycpupos[iterdir] == numbercpu[iterdir] - 1 ) { 
     NUMPRIMLOOP(pllocal,pl) 
       for( myi = N1*(iterdir==1) + N2*(iterdir==2) + N3*(iterdir==3); myi <= be; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
@@ -260,15 +291,15 @@ int flip_y(int nprlocalstart, int nprlocalend, int*nprlocallist, int iterdir, in
 }
 
 void remapdq( int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], 
-             FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-             FTYPE *p2interp_l, FTYPE *p2interp_r )
+              FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+              FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
 }
 
 void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k, 
-               FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE *p2interp_l, FTYPE *p2interp_r )
+                FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
 }
 
@@ -332,7 +363,7 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
     dir=X2DN;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2dn_polaraxis_full3d(2,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x2dn_polaraxis_full3d(2,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
     }
 
@@ -340,7 +371,7 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
     dir=X2UP;
     if(dosetbc[dir]){
       if(BCtype[dir]==POLARAXIS && special3dspc){
-	bound_x2up_polaraxis_full3d(2,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        bound_x2up_polaraxis_full3d(2,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
       }
     }
 

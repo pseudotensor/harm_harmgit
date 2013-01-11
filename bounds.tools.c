@@ -1169,6 +1169,198 @@ int bound_x2up_polaraxis(
 
 
 
+// X1 periodic
+int bound_x1_periodic(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    int locali1,globali1;
+    int locali2,globali2;
+    int ri1,ri2;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int horizonti;
+    int jj,kk;
+
+
+    if( (BCtype[X1DN]==PERIODIC)&&(BCtype[X1UP]==PERIODIC) ){
+
+
+      // periodic x1
+      if ( (totalsize[1]>1) && (mycpupos[1] == 0)&&(mycpupos[1] == ncpux1 - 1) ) {
+	// just copy from one side to another
+
+	////	LOOPX1dir{
+
+	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(i,j);
+
+
+	  // copy from upper side to lower boundary zones
+	  ri=riout;
+	  rj=j;
+	  rk=k;
+	  LOOPBOUND1IN PBOUNDLOOP(pliter,pl){
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri+1+i,rj,rk,pl);
+
+	    
+#if(DEBUGINOUTLOOPS)		
+	    dualfprintf(fail_file,"INNER X1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (otherri=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,ri+SHIFT1+i,i,j,k);
+	    if(!isfinite(MACP0A1(prim,ri+SHIFT1+i,rj,rk,pl))){
+	      dualfprintf(fail_file,"INNER X1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+	    }
+#endif
+
+	  }
+
+	  // copy from lower side to upper boundary zones
+	  ri=riin;
+	  rj=j;
+	  rk=k;
+	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl){
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri+(i-N1),rj,rk,pl);
+
+#if(DEBUGINOUTLOOPS)		
+	    dualfprintf(fail_file,"OUTER X1: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (otherri=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,ri+(i-N1),rk,i,j,k);
+	    if(!isfinite(MACP0A1(prim,ri+(i-N1),rj,rk,pl))){
+	      dualfprintf(fail_file,"INNER X1: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+	    }
+#endif
+
+	  }
+	}
+      }
+
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(1946844);
+    }
+
+
+  }// end parallel region
+
+  return(0);
+}
+
+// X2 inner periodic
+int bound_x2_periodic(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    int locali1,globali1;
+    int locali2,globali2;
+    int ri1,ri2;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int horizonti;
+    int jj,kk;
+
+
+    if( (BCtype[X2DN]==PERIODIC)&&(BCtype[X2UP]==PERIODIC) ){
+
+
+      // periodic x2
+      if ( (totalsize[2]>1) && (mycpupos[2] == 0)&&(mycpupos[2] == ncpux2 - 1) ) {
+	// just copy from one side to another
+
+	////	LOOPX2dir{
+
+	OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,j);
+
+
+	  // copy from upper side to lower boundary zones
+	  ri=i;
+	  rj=rjout;
+	  rk=k;
+	  LOOPBOUND2IN PBOUNDLOOP(pliter,pl){
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+1+j,rk,pl);
+
+	    
+#if(DEBUGINOUTLOOPS)		
+	    dualfprintf(fail_file,"INNER X2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (otherrj=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rj+SHIFT2+j,i,j,k);
+	    if(!isfinite(MACP0A1(prim,ri,rj+SHIFT2+j,rk,pl))){
+	      dualfprintf(fail_file,"INNER X2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+	    }
+#endif
+
+	  }
+
+	  // copy from lower side to upper boundary zones
+	  ri=i;
+	  rj=rjin;
+	  rk=k;
+	  LOOPBOUND2OUT PBOUNDLOOP(pliter,pl){
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(j-N2),rk,pl);
+
+#if(DEBUGINOUTLOOPS)		
+	    dualfprintf(fail_file,"OUTER X2: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (otherrj=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rj+(j-N2),i,j,k);
+	    if(!isfinite(MACP0A1(prim,ri,rj+(j-N2),rk,pl))){
+	      dualfprintf(fail_file,"INNER X2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+	    }
+#endif
+
+	  }
+	}
+      }
+
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(2946844);
+    }
+
+
+  }// end parallel region
+
+  return(0);
+}
+
 // X3 inner periodic
 int bound_x3_periodic(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -1226,7 +1418,7 @@ int bound_x3_periodic(
 
 	    
 #if(DEBUGINOUTLOOPS)		
-	    dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+SHIFT3+k,i,j,k);
+	    dualfprintf(fail_file,"INNER X3: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (otherrk=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+SHIFT3+k,i,j,k);
 	    if(!isfinite(MACP0A1(prim,ri,rj,rk+SHIFT3+k,pl))){
 	      dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
 	    }
@@ -1242,7 +1434,7 @@ int bound_x3_periodic(
 	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
 
 #if(DEBUGINOUTLOOPS)		
-	    dualfprintf(fail_file,"OUTER X3: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+(k-N3),i,j,k);
+	    dualfprintf(fail_file,"OUTER X3: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (otherrk=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rk+(k-N3),i,j,k);
 	    if(!isfinite(MACP0A1(prim,ri,rj,rk+(k-N3),pl))){
 	      dualfprintf(fail_file,"INNER X3: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
 	    }

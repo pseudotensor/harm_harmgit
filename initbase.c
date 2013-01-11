@@ -144,9 +144,13 @@ int init(int *argc, char **argv[])
 
     if(RESTARTMODE==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
 
+
+
     // get grid
     // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
     set_grid(0,0,0);
+
+
 
     if(RESTARTMODE==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
 

@@ -209,7 +209,7 @@ struct of_gdetgeom {
 struct of_state {
   FTYPE ucon[NDIM];
   FTYPE ucov[NDIM];
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   FTYPE uradcon[NDIM];
   FTYPE uradcov[NDIM];
 #endif

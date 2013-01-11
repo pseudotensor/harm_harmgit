@@ -1609,7 +1609,7 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1635,7 +1635,7 @@ int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1677,7 +1677,7 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1711,7 +1711,7 @@ int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1741,7 +1741,7 @@ int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1769,7 +1769,7 @@ int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct 
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1810,7 +1810,7 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
@@ -1845,7 +1845,7 @@ int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
   get_state_uconucovonly(pr, ptrgeom, q);
 
-#if(RADEOMTYPE!=EOMRADNONE)
+#if(EOMRADTYPE!=EOMRADNONE)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 

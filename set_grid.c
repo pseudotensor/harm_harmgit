@@ -1,4 +1,3 @@
-
 #include "decs.h"
 
 
@@ -122,11 +121,12 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   extern int bound_spacetime_inside_horizon(void);
   extern int store_old_metric(void);
 
-
+  int pliter,pl;
 
   // NOTE:
   // don't assume we enter here with whichtime==0 only once since may have to "iteratively" obtain metric from stress-energy tensor and metric
   // this happens at t=0 in init() when DOSELFGRAVVSR==1
+
 
 
   // choose time of metric and whether to store metric before overwritten
@@ -170,6 +170,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
     if(ATTEMPTSYMMETRIZATION){
       trifprintf("Will attempt to symmetrize coordinate/metric/connection type quantities\n");
     }
+
 
     //////////////
     //
@@ -260,6 +261,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
   }
 
 
+
   if(EOMRADTYPE!=EOMRADNONE){
     if(whichtime==0) trifprintf("set_boostemu() BEGIN\n");
     set_boostemu();
@@ -283,7 +285,6 @@ static void set_position_stores(void)
 
 
 
-
   // separately store X since over different domain in i,j,k and no MCOORD dependency
 #pragma omp parallel 
   {
@@ -300,6 +301,10 @@ static void set_position_stores(void)
       OPENMP3DLOOPBLOCK{
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 	
+#if(MCOORD==CARTMINKMETRIC)
+	// doesn't depend on position, only store/use 1 value
+	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+#endif
 	
 	// store X since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
 	// X must be always allowed to vary in space
@@ -378,6 +383,8 @@ static void set_position_stores(void)
       }// end internal loop block
     }// end over locations
   }// end parallel region (and implied barrier)
+
+
 
 
   if(ATTEMPTSYMMETRIZATION) symmetrize_X_V_dxdxp_idxdxp();
@@ -1278,7 +1285,7 @@ static void set_boostemu(void)
     int i, j, k;
 
     //////////    COMPZLOOP
-    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -1291,7 +1298,7 @@ static void set_boostemu(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
-        calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
+        //calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
       }
     }// end 3D LOOP
   }// end parallel region

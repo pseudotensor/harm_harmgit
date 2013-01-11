@@ -339,9 +339,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   for(pliter=nprstart;pliter<=nprend;pliter++){
     trifprintf("pliter=%d nprlist=%d\n",pliter,nprlist[pliter]);
   }
-  PLOOP(pliter,pl){
-    trifprintf("pliter=%d pl=%d\n",pliter,pl);
-  }
+  PLOOP(pliter,pl)  trifprintf("pliter=%d pl=%d\n",pliter,pl);
 
 
   // assume we start in bl coords and convert to KSprim
