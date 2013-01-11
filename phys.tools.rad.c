@@ -4,13 +4,23 @@
 // compute changes to U (both T and R) using implicit method
 void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
-  ldouble Gi[NDIM];
-  int pliter;
-  calc_Gi(pr, ptrgeom, q, Gi)
+  ldouble Gd[NDIM], radsource[NPR];
+  int pliter, pl, jj, sc;
+
+  calc_Gd(pr, ptrgeom, q, Gd)
 
   sc = RADSOURCE;
   
-  PLOOP(pliter,pl) dUcomp[sc][jj] = -Gi[jj]*dt;
+  PLOOP(pliter,pl){
+    radsource[NPR] = 0;
+  }
+
+  DLOOPA(jj) radsource[UU+jj] = -Gd[jj];
+  DLOOPA(jj) radsource[URAD0+jj] = Gd[jj];
+
+  PLOOP(pliter,pl){
+    dUcomp[sc][pl] += radsource[pl];
+  }
   
 }
 
@@ -38,9 +48,10 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 }
 
 
-int calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi) 
+void calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G) 
 {
-
+  calc_Gu(pp, ptregeom, q, G);
+  indices_21(G, G, ptrgeom);
 }
 
 
@@ -48,7 +59,7 @@ int calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi)
 //****** takes radiative stress tensor and gas primitives **************
 //****** and calculates contravariant four-force ***********************
 //**********************************************************************
-int calc_Gi(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi) 
+int calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu) 
 {
   int i,j,k;
   
@@ -58,7 +69,7 @@ int calc_Gi(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi)
   //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
   mhdfull_calc_rad(pr, ptrgeom, q, Rij)
   
-  //the four-velocity of fluid in lab frame
+  //the four-ve locity of fluid in lab frame
   ldouble *ucon,*ucov;
 
   ucon = qq->ucon;
@@ -89,7 +100,7 @@ int calc_Gi(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi)
     Ru=0.;
     DLOOPA(j)
       Ru+=Rij[i][j]*ucon[j];
-    Gi[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
+    Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
   }
   
   return 0;
