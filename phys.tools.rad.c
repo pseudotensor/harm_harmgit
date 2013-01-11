@@ -8,6 +8,62 @@ void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FT
 
 }
 
+//**********************************************************************
+//****** takes radiative stress tensor and gas primitives **************
+//****** and calculates contravariant four-force ***********************
+//**********************************************************************
+int calc_Gi(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi) 
+ldouble gg[][5], ldouble GG[][5], ldouble Gi[4])
+{
+  int i,j,k;
+  
+  //radiative stress tensor in the lab frame
+  ldouble Rij[4][4];
+  calc_Rij(pp,gg,GG,Rij);
+
+  mhd_calc_rad
+  
+  //the four-velocity of fluid in lab frame
+  ldouble ucon[4],ucov[4],vpr[3];
+  ucon[1]=pp[2];
+  ucon[2]=pp[3];
+  ucon[3]=pp[4];
+  conv_vels(ucon,ucon,VEL3,VEL4,gg,GG);
+  
+  //covariant four-velocity
+  indices_21(ucon,ucov,gg);  
+  
+  //gas properties
+  ldouble rho=pp[0];
+  ldouble u=pp[1];
+  ldouble p= (GAMMA-1.)*(ldouble)u;
+  ldouble T = p*MU_GAS*M_PROTON/K_BOLTZ/rho;
+  ldouble B = SIGMA_RAD*pow(T,4.)/Pi;
+  ldouble Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
+  ldouble kappa=calc_kappa(rho,Tgas,-1.,-1.,-1.);
+  ldouble kappaes=calc_kappaes(rho,Tgas,-1.,-1.,-1.);
+  ldouble chi=kappa+kappaes;
+  
+  //contravariant four-force in the lab frame
+  
+  //R^ab u_a u_b
+  ldouble Ruu=0.;
+  for(i=0;i<4;i++)
+    for(j=0;j<4;j++)
+      Ruu+=Rij[i][j]*ucov[i]*ucov[j];
+  
+  ldouble Ru;
+  for(i=0;i<4;i++)
+  {
+    Ru=0.;
+    for(j=0;j<4;j++)
+      Ru+=Rij[i][j]*ucov[j];
+    Gi[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
+  }
+  
+  return 0;
+}
+
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
 {
   FTYPE vminmhd[NUMCS],vmaxmhd[NUMCS];
@@ -75,6 +131,14 @@ int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   return (0);
 }
 
+
+void mhdfull_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM])
+{
+  DLOOPA(jj) {
+    mhd_calc_rad( pr, dir, ptrgeom, q, &(radstressdir[jj][0]) );
+  }
+  
+}
 
 // compute radiation stres-energy tensor
 void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir)
