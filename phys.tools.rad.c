@@ -4,8 +4,45 @@
 // compute changes to U (both T and R) using implicit method
 void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
+  ldouble Gi[NDIM];
+  int pliter;
+  calc_Gi(pr, ptrgeom, q, Gi)
+
+  sc = RADSOURCE;
+  
+  PLOOP(pliter,pl) dUcomp[sc][jj] = -Gi[jj]*dt;
   
 }
+
+//**********************************************************************
+//******* opacities ****************************************************
+//**********************************************************************
+//absorption
+void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
+{
+#if(0)
+  //user_calc_kappa()
+#elif(1)
+  *kappa = 0.;
+#endif  
+}
+
+//scattering
+void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
+{  
+#if(0)
+  //user_calc_kappaes()
+#elif(1)
+  *kappa = 0.;
+#endif  
+}
+
+
+int calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gi) 
+{
+
+}
+
 
 //**********************************************************************
 //****** takes radiative stress tensor and gas primitives **************
@@ -140,7 +177,7 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 
   // R^{dir}_{jj} radiation stress-energy tensor
   int jj;
-  DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[RAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[RAD0]*delta(dir,jj));
+  DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[PRAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[PRAD0]*delta(dir,jj));
 
 
 
@@ -152,12 +189,12 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 //******* tensor R^ij using M1 closure scheme *****************************
 //**********************************************************************
 // Use: For initial conditions and dumping
-// Upp : fluid frame radiation conserved quantities
+// pp : fluid frame radiation conserved quantities
 // Rij : fluid frame radiation stress-energy tensor
-int calc_Rij_ff(ldouble *Upp, ldouble Rij[][4])
+int calc_Rij_ff(ldouble *pp, ldouble Rij[][NDIM])
 {
-  ldouble E=Upp[RAD0];
-  ldouble F[3]={Upp[RAD1],Upp[RAD2],Upp[RAD3]};
+  ldouble E=pp[PRAD0];
+  ldouble F[3]={pp[PRAD1],pp[PRAD2],pp[PRAD3]};
 
   ldouble nx,ny,nz,nlen,f;
 
