@@ -235,7 +235,7 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
 #endif
 
   if(EOMRADTYPE!=EOMRADNONE){
-    mhd_calc_rad(pr, dir, geom, q, &flux[RAD0]); // fills RAD0->RAD3
+    mhd_calc_rad(pr, dir, geom, q, &flux[URAD0]); // fills URAD0->URAD3
   }
 
   return (0);

@@ -28,21 +28,6 @@
 //passive definitions
 /*********************/
 
-#ifndef NOUTSTOP
-#define NOUTSTOP 1e7 //max n of outputs
-#endif
-
-#ifndef NSTEPSTOP
-#define NSTEPSTOP 1e7 //max n of steps
-#endif
-
-#ifndef TMAX
-#define TMAX 1.e50  //max time
-#endif
-
-#ifndef VERBOSE0
-#define VERBOSE0 0 //verbose level
-#endif
 
 #ifndef IMPLABPREC
 #define IMPLABPREC 1.e-7 //precision for the numerical solver in solve_implicit_lab()
@@ -55,49 +40,3 @@
 #endif
 #endif
 #endif
-
-
-
-#ifndef INT_ORDER
-#define INT_ORDER 1 //reconstruction order
-#endif
-
-
-#ifndef NG
-#if (INT_ORDER==1)
-#define NG 3 //number of ghost cells
-#endif
-#if (INT_ORDER==2)
-#define NG 3
-#endif
-#if (INT_ORDER==4)
-#define NG 4
-#endif
-#endif
-
-#ifndef RK2STEPPING
-#ifndef RK3STEPPING
-#ifndef RK4STEPPING
-#define RK2STEPPING //time stepping
-#endif
-#endif
-#endif
-
-
-#ifndef NUM_INPUTARG
-#define NUM_INPUTARG 0 //number of input arguments in the command line
-#endif
-
-#define NV 10 //number of variables
-
-
-//#ifndef GAMMA
-//#define GAMMA (5./3.) //gamma
-//#endif
-
-//#define GAMMAM1 (GAMMA-1.) //gamma - 1
-
-#define NFLAGS 1 //number of cell flags
-
-//#define SMALL 1.e-50 //small number 
-

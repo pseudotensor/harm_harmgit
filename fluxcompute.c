@@ -252,7 +252,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   // assign cmin/cmax/ctop for each conserved quantity
   int qq;
   for(qq=0;qq<NUMEOMSETS;qq++){
-    if(qq<RAD0 || qq>RAD3){
+    if(qq<URAD0 || qq>URAD3){
       cmin_l[qq] = cminmax_l[CMIN];
       cmax_l[qq] = cminmax_l[CMAX];
       cmin_r[qq] = cminmax_r[CMIN];
