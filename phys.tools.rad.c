@@ -1,5 +1,8 @@
 #include "decs.h"
 
+void calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G);
+void calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu);
+void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
 // compute changes to U (both T and R) using implicit method
 void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
@@ -7,7 +10,7 @@ void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FT
   ldouble Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
 
-  calc_Gd(pr, ptrgeom, q, Gd)
+  calc_Gd(pr, ptrgeom, q, Gd);
 
   sc = RADSOURCE;
   
@@ -50,7 +53,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 
 void calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G) 
 {
-  calc_Gu(pp, ptregeom, q, G);
+  calc_Gu(pp, ptrgeom, q, G);
   indices_21(G, G, ptrgeom);
 }
 
@@ -59,7 +62,7 @@ void calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G)
 //****** takes radiative stress tensor and gas primitives **************
 //****** and calculates contravariant four-force ***********************
 //**********************************************************************
-int calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu) 
+void calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu) 
 {
   int i,j,k;
   
@@ -67,24 +70,25 @@ int calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   ldouble Rij[NDIM][NDIM];
 
   //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
-  mhdfull_calc_rad(pr, ptrgeom, q, Rij)
+  mhdfull_calc_rad(pp, ptrgeom, q, Rij);
   
   //the four-ve locity of fluid in lab frame
   ldouble *ucon,*ucov;
 
-  ucon = qq->ucon;
-  ucov = qq->ucov;
+  ucon = q->ucon;
+  ucov = q->ucov;
   
   
   //gas properties
   ldouble rho=pp[RHO];
   ldouble u=pp[UU];
-  ldouble p= pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->l,rho,u);
+  ldouble p= pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
   ldouble T = p*MU_GAS*M_PROTON/K_BOLTZ/rho;
   ldouble B = SIGMA_RAD*pow(T,4.)/Pi;
   ldouble Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
-  ldouble kappa=calc_kappa(rho,Tgas,-1.,-1.,-1.);
-  ldouble kappaes=calc_kappaes(rho,Tgas,-1.,-1.,-1.);
+  ldouble kappa,kappaes;
+  calc_kappa(pp,ptrgeom,&kappa);
+  calc_kappaes(pp,ptrgeom,&kappaes);
   ldouble chi=kappa+kappaes;
   
   //contravariant four-force in the lab frame
@@ -102,8 +106,6 @@ int calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
       Ru+=Rij[i][j]*ucon[j];
     Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
   }
-  
-  return 0;
 }
 
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
@@ -176,10 +178,10 @@ int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM])
 {
+  int jj;
   DLOOPA(jj) {
     mhd_calc_rad( pr, jj, ptrgeom, q, &(radstressdir[jj][0]) );
-  }
-  
+  }  
 }
 
 // compute radiation stres-energy tensor
