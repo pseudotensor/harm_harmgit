@@ -1,21 +1,7 @@
-#define WHICHPROBLEM 1
+#define FLATNESS (1)
+#define RADBEAMFLAT (2)
 
-//undefine the grid size parameters if they have already been defined
-#ifdef N1 
-#undef N1
-#endif
-
-#ifdef N2 
-#undef N2
-#endif
-
-#ifdef N3 
-#undef N3
-#endif
-
-#define N1 20
-#define N2 20
-#define N3 1
+#define WHICHPROBLEM FLATNESS
 
 // atch adjusts
 #undef MAXWELL
@@ -26,7 +12,6 @@
 #undef MERGEDC2EA2CMETHODMA
 #undef MERGEDC2EA2CMETHOD
 #undef ACCURATESINCOS
-
 #undef REMOTEHOST
 #undef WENO_REDUCE_A2C_LOOK_OTHER_DIRECTIONS
 #undef WENO_USE_PRIM_REDUCTION
@@ -120,7 +105,6 @@
 #undef WHICHCURRENTCALC
 #undef FARADAYT0
 #undef CURRENTST0
-
 #undef EVOLVECHECKS
 #undef FIXUPZONES
 #undef HLLBOUNDARY
@@ -132,7 +116,6 @@
 #undef HYPERHLL
 #undef HORIZONSUPERFAST
 #undef VARTOINTERP
-
 #undef USEAVGPRIMITIVEFORWENOFLAT
 #undef USEPRIMITIVEFROMAVGCONSERVED
 #undef CONTACTINDICATOR
@@ -145,30 +128,49 @@
 #undef HOT2COLD
 #undef ENTROPY2COLD
 
+//undefine the grid size parameters if they have already been defined
+#ifdef N1 
+#undef N1
+#endif
+
+#ifdef N2 
+#undef N2
+#endif
+
+#ifdef N3 
+#undef N3
+#endif
+
+#if(WHICHPROBLEM==FLATNESS)
+
+#define N1 20
+#define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC
+
+#endif
+
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+
+
 
 #define MAXWELL PRIMMAXWELL
-
-
 #define TRACKVPOT 1 // now on by default
 #define EVOLVEWITHVPOT 0 // not on by default
-
 #define DOGRIDSECTIONING 0 // not on by default
-
 #define MERGEDC2EA2CMETHODEM 0
 #define MERGEDC2EA2CMETHODMA 0
 #define MERGEDC2EA2CMETHOD 0
-
-// jon adjusts
 #define WENO_REDUCE_A2C_LOOK_OTHER_DIRECTIONS 1
 //#define WENO_USE_LIM_PRIM_CORRECTION_FOR_FLUX_LIMITING 1
-
 #define WENO_USE_PRIM_REDUCTION 1
-
 #define LIMIT_FLUXC2A_PRIM_CHANGE 0
 
-
-
-#define MCOORD CARTMINKMETRIC
 #define ALLOWMETRICROT 0
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
@@ -176,7 +178,6 @@
 #undef DOMIXTHETAPHI
 #define DOMIXTHETAPHI 1
 #endif
-
 
 #undef DOPOLEDEATH
 #undef DOPOLESMOOTH
@@ -186,15 +187,10 @@
 #define DOPOLEGAMMADEATH 0
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
-
 #undef IF3DSPCTHENMPITRANSFERATPOLE
 #define IF3DSPCTHENMPITRANSFERATPOLE 1
 
-
-
 #define PERCELLDT 0
-
-
 #define COMPDIM 3
 #define SPLITNPR 0 // TESTING
 #define FIELDSTAGMEM 1 // testing
@@ -203,7 +199,6 @@
 #define PRODUCTION 0
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
-
 
 #define MAILWHENDONE 1
 #define MAILFROMREMOTE 0
@@ -239,7 +234,6 @@
 #endif
 
 #define USESTOREDSPEEDSFORFLUX (STOREWAVESPEEDS>0) // choice really
-
 #define VCHARTYPE VERYLOCALVCHAR
 #define PRECISEINVERSION 1
 #define WHICHVEL VELREL4
@@ -257,7 +251,6 @@
 
 #define CHECKONINVERSION 0 // can slow things down
 
-
 #if(DODISS || DOLUMVSR || DODISSVSR)
 // for diss: testing CHANGINGMARK
 #define DOENTROPY DOEVOLVEENTROPY
@@ -271,7 +264,6 @@
 // force entropy variable enabled so can use HOT2ENTROPY
 #undef DOENTROPY
 #define DOENTROPY DOEVOLVEENTROPY
-
 
 #define FIXUPAFTERINIT 1
 #define FIXUPAFTERRESTART 1
@@ -409,6 +401,12 @@ struct Ccoordparams {
 #define DOFLOORDIAG 0
 #endif
 
+
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
 #include "koral.h" // KORAL
 
 

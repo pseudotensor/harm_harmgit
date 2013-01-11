@@ -11,9 +11,14 @@ int prepre_init_specific_init(void)
   if(funreturn!=0) return(funreturn);
 
   periodicx1=periodicx2=periodicx3=1;
-
+  
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==FLATNESS)  
   gam = 4./3.;
   cooling=KORAL;
+#endif
 
   return(0);
 
@@ -87,7 +92,12 @@ int init_consts(void)
 
 int init_defcoord(void)
 {
-  
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==FLATNESS)  
+
   defcoord = UNIFORMCOORDS;
   Rin_array[1]=0;
   Rin_array[2]=0;
@@ -96,6 +106,8 @@ int init_defcoord(void)
   Rout_array[1]=1.0;
   Rout_array[2]=1.0;
   Rout_array[3]=1.0;
+
+#endif
 
   return(0);
 }
@@ -115,25 +127,14 @@ int init_global(void)
   int pl,pliter;
   int funreturn;
 
-
   funreturn=user1_init_global();
   if(funreturn!=0) return(funreturn);
 
-
   //////////////////
   // overrides for more detailed problem dependence
-
-
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
-
-  BCtype[X1UP]=PERIODIC; // OUTFLOW;
-  BCtype[X1DN]=PERIODIC;
-  BCtype[X2UP]=PERIODIC; // OUTFLOW;
-  BCtype[X2DN]=PERIODIC;
-  BCtype[X3UP]=PERIODIC; // OUTFLOW;
-  BCtype[X3DN]=PERIODIC;
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
@@ -141,19 +142,28 @@ int init_global(void)
   UORHOLIMIT=1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
+  //OSMARK: where is DTr1 defined? what is DTfake?
+  //DTfake=MAX(1,DTr1/10); 
+  DTfake=1.;
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==FLATNESS)  
 
-  // default dumping period
+  BCtype[X1UP]=PERIODIC; // OUTFLOW;
+  BCtype[X1DN]=PERIODIC;
+  BCtype[X2UP]=PERIODIC; // OUTFLOW;
+  BCtype[X2DN]=PERIODIC;
+  BCtype[X3UP]=PERIODIC; // OUTFLOW;
+  BCtype[X3DN]=PERIODIC;
+
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
 
-  DTr = 100;
-  DTfake=MAX(1,DTr/10);
-
-
-  tf = 10.0;
-
-
+  DTr = 100; //number of time steps for restart dumps
+  tf = 10.0; //final time
+#endif
 
   return(0);
 
@@ -245,13 +255,15 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   struct of_geom *ptrrealgeom=&realgeomdontuse;
   int pl,pliter;
 
+  //  coord(i, j, k, CENT, X);
+  //  bl_coord(X, V);
+  //  r=V[1];
+  //  th=V[2];
 
-
-  coord(i, j, k, CENT, X);
-  bl_coord(X, V);
-  r=V[1];
-  th=V[2];
-
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==FLATNESS)  
 
   // outsideness
   if (0) {
@@ -292,11 +304,9 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     *whichcoord=CARTMINKMETRIC;
     return(0);
   }
+#endif
+
 }
-
-
-
-
 
 
 #define NOFIELD -1
@@ -308,11 +318,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
 
-
 #define FIELDTYPE NOFIELD
-
-
-
 
 
 // assumes normal field in pr
@@ -323,10 +329,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE r,th,ph;
   FTYPE vpot;
 
-
-
   vpot=0.0;
-
 
 
   // since init_vpot() is called for all i,j,k, can't use
