@@ -4,8 +4,179 @@ void calc_Gd(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G)
 void calc_Gu(ldouble *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
+//**********************************************************************
+//******* solves implicitidly four-force source terms *********************
+//******* in the lab frame, returns ultimate deltas ***********************
+//******* the fiducial approach *****************************************
+//**********************************************************************
+
+int f_implicit_lab(ldouble *uu0,ldouble *uu,ldouble *pp,ldouble dt,ldouble gg[][5], ldouble GG[][5],ldouble *f)
+{
+  ldouble Rij[4][4];
+  ldouble ppp[NV];
+  
+  ldouble pp2[NV];
+  int iv;
+  for(iv=0;iv<NV;iv++)
+    pp2[iv]=pp[iv];
+  
+  //opposite changes in gas quantities
+  uu[1] = uu0[1] - (uu[6]-uu0[6]);
+  uu[2] = uu0[2] - (uu[7]-uu0[7]);
+  uu[3] = uu0[3] - (uu[8]-uu0[8]);
+  uu[4] = uu0[4] - (uu[9]-uu0[9]);
+  
+  //calculating primitives  
+  int corr;
+  u2p(uu,pp2,gg,GG,&corr);
+  
+  //radiative four-force
+  ldouble Gi[4];
+  calc_Gi(pp2,gg,GG,Gi); 
+  indices_21(Gi,Gi,gg);
+  
+  f[0] = uu[6] - uu0[6] + dt * Gi[0];
+  f[1] = uu[7] - uu0[7] + dt * Gi[1];
+  f[2] = uu[8] - uu0[8] + dt * Gi[2];
+  f[3] = uu[9] - uu0[9] + dt * Gi[3];
+  
+  return 0;
+} 
+
+int print_state_implicit_lab (int iter, ldouble *x, ldouble *f)
+{
+  printf ("iter = %3d x = % .3Le % .3Le % .3Le % .3Le "
+	  "f(x) = % .3Le % .3Le % .3Le % .3Le\n",
+	  iter,
+	  x[0],x[1]/x[0],x[2]/x[0],x[3]/x[0],f[0],f[1],f[2],f[3]);
+}
+
+
+//SUPERGODMARK only for RK2
+FTYPE compute_dt()
+{
+  if( steppart == 0 ) {
+    return( 0.5 * dt );
+  }
+  else if( steppart == 1 ) {
+    return( dt );
+  }
+  else {
+    dualfprintf(fail_file,"Should not get here: compute_dt()\n");
+    myexit(12112);
+  }
+
+}
+
 // compute changes to U (both T and R) using implicit method
-void koral_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+void koral_implicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+{
+  int i1,i2,i3,iv,i,j;
+  ldouble J[4][4],iJ[4][4];
+  ldouble pp[NV],uu[NV],uu0[NV],uup[NV]; 
+  ldouble f1[4],f2[4],f3[4],x[4];
+  ldouble gg[4][5];
+  ldouble GG[4][5];
+  pick_g(ix,iy,iz,gg);
+  pick_G(ix,iy,iz,GG);
+  
+  for(iv=0;iv<NV;iv++)
+  {
+    pp[iv]=get_u(p,iv,ix,iy,iz);      
+    uu[iv]=get_u(u,iv,ix,iy,iz);  
+    uu0[iv]=uu[iv];
+  }
+  
+  ldouble EPS = 1.e-6;
+  ldouble CONV = 1.e-6 ;
+  
+  int verbose=0;
+  int iter=0;
+  
+  do
+  {
+    iter++;
+    
+    for(i=0;i<NV;i++)
+    {
+      uup[i]=uu[i];
+    }
+    
+    //values at zero state
+    f_implicit_lab(uu0,uu,pp,dt,gg,GG,f1);
+    
+    //calculating approximate Jacobian
+    for(i=0;i<4;i++)
+    {
+      for(j=0;j<4;j++)
+      {
+	ldouble del;
+	if(uup[j+6]==0.) del=EPS*uup[6];
+	else del=EPS*uup[j+6];
+	uu[j+6]=uup[j+6]-del;
+	
+	f_implicit_lab(uu0,uu,pp,dt,gg,GG,f2);
+	
+	J[i][j]=(f2[i] - f1[i])/(uu[j+6]-uup[j+6]);
+	
+	uu[j+6]=uup[j+6];
+      }
+    }
+    
+    //inversion
+    inverse_44matrix(J,iJ);
+    
+    //updating x
+    for(i=0;i<4;i++)
+    {
+      x[i]=uup[i+6];
+    }
+    
+    for(i=0;i<4;i++)
+    {
+      for(j=0;j<4;j++)
+      {
+	x[i]-=iJ[i][j]*f1[j];
+      }
+    }
+    
+    if(verbose>0)    print_state_implicit_lab (iter,x,f1); 
+    
+    for(i=0;i<4;i++)
+    {
+      uu[i+6]=x[i];
+    }
+    
+    //test convergence
+    for(i=0;i<4;i++)
+    {
+      f3[i]=(uu[i+6]-uup[i+6]);
+      f3[i]=fabs(f3[i]/uup[6]);
+    }
+    
+    if(f3[0]<CONV && f3[1]<CONV && f3[2]<CONV && f3[3]<CONV)
+      break;
+    
+    if(iter>50)
+    {
+      printf("iter exceeded in solve_implicit_lab()\n");	  
+      return -1;
+    }
+    
+  }
+  while(1);
+  
+  deltas[0]=uu[6]-uu0[6];
+  deltas[1]=uu[7]-uu0[7];
+  deltas[2]=uu[8]-uu0[8];
+  deltas[3]=uu[9]-uu0[9];
+  
+  return 0;
+}
+
+
+// compute changes to U (both T and R) using implicit method
+void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   ldouble Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
