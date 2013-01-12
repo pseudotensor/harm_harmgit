@@ -8,6 +8,9 @@
 #define ZAMO2FF (0)
 #define FF2ZAMO (1)
 
+#define LAB2FF (0)
+#define FF2LAB (1)
+
 
 
 #define my_max(x,y) (x>y?x:y)

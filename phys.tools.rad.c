@@ -759,6 +759,76 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 }
 
 
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+//calculates Lorenz matrix for lab -> ff
+int
+calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom *ptrgeom,ldouble L[][4])
+{
+  int ii,jj,kk;
+  int verbose=0;
+
+  //"to" frame 4-velocity
+  ldouble ucon[NDIM],ucov[NDIM];
+  //"from" frame 4-velocity
+  ldouble wcon[NDIM],wcov[NDIM];
+
+  if(whichdir==LAB2FF)
+    {
+      //fluid frame
+      DLOOPA(ii) 
+      {
+	ucon[ii]=q->ucon[ii];
+	ucov[ii]=q->ucov[ii];
+      }
+      
+      //lab frame
+      wcon[0]=1./sqrt(-ptrgeom->gcov[GIND(0,0)]);
+      wcon[1]=wcon[2]=wcon[3]=0.;
+      indices_21(wcon,wcov,ptrgeom);
+    }
+  else if(whichdir==FF2LAB)
+    {
+      //fluid frame
+      DLOOPA(ii) 
+      {
+	wcon[ii]=q->ucon[ii];
+	wcov[ii]=q->ucov[ii];
+      }
+
+      //lab frame
+      ucon[0]=1./sqrt(-ptrgeom->gcov[GIND(0,0)]);
+      ucon[1]=ucon[2]=ucon[3]=0.;
+      indices_21(ucon,ucov,ptrgeom);
+    }
+
+  //temporary Om matrix
+  ldouble Om[4][4];
+
+  DLOOP(ii,jj)
+      Om[ii][jj]=ucon[ii]*wcov[jj]-wcon[ii]*ucov[jj];
+  
+  //Lorentz factor = -w^mu u_mu
+  ldouble gam=0.;
+  DLOOPA(ii)
+    gam+=wcon[ii]*ucov[ii];
+
+  ldouble Omsum;
+  //Lorentz matrix components
+  DLOOP(ii,jj)
+    {
+      Omsum=0.;
+      DLOOPA(kk)
+	Omsum+=Om[ii][kk]*Om[kk][jj];
+	
+      L[ii][jj]=delta(ii,jj)+1./(1.+gam)*Omsum+Om[ii][jj];
+    }
+
+  return 0;
+}
+
+//simple Lorentz boosts between ortonormal frames
 
 int boost2_zamo2ff(ldouble A1[],ldouble A2[],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
 { 
