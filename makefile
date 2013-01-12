@@ -226,6 +226,8 @@ ifeq ($(USEORANGE),1)
 endif
 
 ifeq ($(USEGCC),1)
+GSLCFLAGS=`gsl-config --cflags`
+COMP=gcc ${GSLCFLAGS}
 endif
 
 ifeq ($(USEPGCC),1)
@@ -370,8 +372,8 @@ COMP=gcc $(DFLAGS)
 #
 #
 
-CFLAGSPRE = -Wall -O3 $(DFLAGS)
-CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
+CFLAGSPRE = -Wall -O0 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
 
 #
 #CFLAGS = -Wall -mpentium -O3 -pipe  -malign-loops=2 -malign-jumps=2 -malign-functions=2 -DCPU=686 -DNEED_GETOPT -DLINUX -ffast-math -pg

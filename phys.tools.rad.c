@@ -80,7 +80,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   ldouble uu0[NPR],uup[NPR],uu[NPR]; 
   ldouble f1[4],f2[4],f3[4],x[4];
   ldouble realdt;
-  ldouble radsource[NDIM], deltas[NDIM]; 
+  ldouble radsource[NPR], deltas[NDIM]; 
   int pl;
 
   realdt = compute_dt();
@@ -207,8 +207,9 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 {
 #if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT)
   koral_explicit_source_rad( pin, ptrgeom, q, dUcomp);
-#else
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
   koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE)
 #endif
 }
 
@@ -1356,7 +1357,6 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
   pp[PRAD1]=urfcon[1];
   pp[PRAD2]=urfcon[2];
   pp[PRAD3]=urfcon[3];
-
 
   return 0;
 }
