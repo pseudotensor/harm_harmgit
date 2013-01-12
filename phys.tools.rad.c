@@ -37,7 +37,7 @@ int f_implicit_lab(ldouble *pp0, ldouble *uu0,ldouble *uu,ldouble realdt, struct
   int corr;
   //u2p(uu,pp,gg,GG,&corr);
 
-  MYFUN(Utoprimgen(finalstep,EVOLVEUTOPRIM,UEVOLVE, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
+  MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
 
 
   get_state_uconucovonly(pp, ptrgeom, &q);
@@ -203,10 +203,10 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
 void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
-#if(RADSOURCE==EXPLICIT)
-  koral_explicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
+#if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT)
+  koral_explicit_source_rad( pin, ptrgeom, q, dUcomp);
 #else
-  koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
+  koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
 #endif
 }
 
