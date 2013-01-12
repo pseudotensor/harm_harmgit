@@ -78,6 +78,8 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   ldouble uu0[NPR],uup[NPR],uu[NPR]; 
   ldouble f1[4],f2[4],f3[4],x[4];
   ldouble realdt;
+  ldouble radsource[NDIM], deltas[NDIM]; 
+  int pl;
 
   realdt = compute_dt();
  
