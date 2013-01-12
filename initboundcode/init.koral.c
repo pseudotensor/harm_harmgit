@@ -15,16 +15,6 @@ int prepre_init_specific_init(void)
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   binaryoutput=TEXTOUTPUT;
 
-  
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
-
-  gam = 4./3.;
-  cooling=KORAL;
-#endif
-
   return(0);
 
 }
@@ -150,6 +140,13 @@ int init_global(void)
   //OSMARK: where is DTr1 defined? what is DTfake?
   DTfake=MAX(1,DTr/10); 
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
+  gam = 4./3.;
+  cooling=KORAL;
+#endif  
 
   /*************************************************/
   /*************************************************/
