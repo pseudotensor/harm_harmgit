@@ -761,7 +761,7 @@ void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
   else if(whichcoord==CYLMINKMETRIC){
     set_conn_cylminkmetric(X,geom,conn,conn2);
   }
-  else if(whichcoord==CARTMINKMETRIC){
+  else if(whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2){
     set_conn_cartminkmetric(X,geom,conn,conn2);
   }
   else{
