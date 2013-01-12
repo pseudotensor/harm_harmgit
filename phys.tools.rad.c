@@ -836,7 +836,7 @@ calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom
 //T^ij Lorentz boost lab <-> fluid frame
 //whichdir: [LAB2FF, FF2LAB]
 int
-boost22_lab2ff(int whichdir, ldouble T1[][NDIM],ldouble T2[][NDIM],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom)
+boost22_laborff(int whichdir, ldouble T1[][NDIM],ldouble T2[][NDIM],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom)
 { 
   int ii,jj,kk,ll;
   ldouble Tt[NDIM][NDIM];
@@ -858,6 +858,36 @@ boost22_lab2ff(int whichdir, ldouble T1[][NDIM],ldouble T2[][NDIM],ldouble *pp,s
     }
 
   return 0;
+}
+
+
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+//A^i Lorentz boost from lab to fluid frame
+int
+boost2_laborff(int whichdir, ldouble A1[NDIM],ldouble A2[NDIM],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom)
+{ 
+  int ii,jj,kk,ll;
+  ldouble At[NDIM];
+
+  //general Lorentz transformation matrix
+  ldouble L[NDIM][NDIM];
+  calc_Lorentz_laborff(whichdir,pp,q,ptrgeom,L);
+
+  //copying
+  DLOOPA(ii)
+    At[ii]=A1[ii];
+  
+  //boosting
+  DLOOPA(ii)
+    {
+      A2[ii]=0.;
+      DLOOPA(kk)
+	A2[ii]+=L[ii][kk]*At[kk];
+    }
+
+  return 0; 
 }
 
 /*****************************************************************/
