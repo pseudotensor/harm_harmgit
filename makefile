@@ -171,7 +171,8 @@ USELAPACK=0
 endif
 
 ifeq ($(USEOSX),1)
-MCC=/usr/bin/mpicc
+GSLCFLAGS=`gsl-config --cflags`
+MCC=/usr/bin/mpicc ${GSLCFLAGS}
 USEGCC=1
 ECHOSWITCH=
 USELAPACK=0
@@ -369,8 +370,8 @@ COMP=gcc $(DFLAGS)
 #
 #
 
-CFLAGSPRE = -Wall -O3 $(DFLAGS)
-CFLAGSPRENONPRECISE=-O3 $(DFLAGS)
+CFLAGSPRE = -Wall -O0 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
 
 #
 #CFLAGS = -Wall -mpentium -O3 -pipe  -malign-loops=2 -malign-jumps=2 -malign-functions=2 -DCPU=686 -DNEED_GETOPT -DLINUX -ffast-math -pg

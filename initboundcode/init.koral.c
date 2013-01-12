@@ -406,7 +406,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     pr[URAD3] = 0 ;
 
     *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC;
+    *whichcoord=CARTMINKMETRIC2;
     return(0);
   }
 }
