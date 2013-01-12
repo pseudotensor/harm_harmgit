@@ -616,9 +616,9 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
 
 
-      if(!isfinite(emffinal)){
-        trifprintf("NANJON: i=%d j=%d k=%d dir=%d odir1=%d odir2=%d: emffinal=%g emf2d00=%g emf2d01=%g emf2d10=%g emf2d11=%g ctop0=%g dB1=%g ctop1=%g dB0=%g\n",i,j,k,dir,odir1,odir2,emf2d[0][0],emf2d[0][1],emf2d[1][0],emf2d[1][1],ctop[0],dB[1],ctop[1],dB[0]);
-      }
+      //      if(!isfinite(emffinal)){
+      //        trifprintf("NANJON: i=%d j=%d k=%d dir=%d odir1=%d odir2=%d: emffinal=%g emf2d00=%g emf2d01=%g emf2d10=%g emf2d11=%g ctop0=%g dB1=%g ctop1=%g dB0=%g\n",i,j,k,dir,odir1,odir2,emf2d[0][0],emf2d[0][1],emf2d[1][0],emf2d[1][1],ctop[0],dB[1],ctop[1],dB[0]);
+      //}
 
 
 
@@ -2272,12 +2272,12 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1) = p2interp_r[npr2interplist[0]]*igdetgnosing;
 
 
-      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0))){
-        trifprintf("NANJON1: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
-      }
-      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1))){
-        trifprintf("NANJON2: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
-      }
+      //      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0))){
+      //        trifprintf("NANJON1: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
+      //}
+      // if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1))){
+      //  trifprintf("NANJON2: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
+      // }
 
 
 	  ////////////////////
@@ -2336,6 +2336,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
   }// end over parallel region (and implied barrier)
 
+#if(0)
   {
     int dir=1;
     int odir1=2;
@@ -2352,7 +2353,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
     }
     else trifprintf("GOD2=%g\n",MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l));
   }
-
+#endif
 
 
   ////////////////////////////////////////////
