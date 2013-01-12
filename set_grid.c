@@ -1297,6 +1297,7 @@ static void set_boostemu(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
+        // SUPERGODMARK: use jon tetrads
         calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
       }
     }// end 3D LOOP

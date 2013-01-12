@@ -644,6 +644,7 @@ int prad_fforlab(int whichdir, ldouble *pp1, ldouble *pp2,struct of_state *q, st
 /*****************************************************************/
 //calculates general Lorenz matrix for lab <-> ff
 //whichdir: [LAB2FF, FF2LAB]
+// SUPERGODMARK: What is lab frame velocity?
 int
 calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom *ptrgeom,ldouble L[][4])
 {
