@@ -616,6 +616,9 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
 
 
+      if(!isfinite(emffinal)){
+        trifprintf("NANJON: i=%d j=%d k=%d dir=%d odir1=%d odir2=%d: emffinal=%g emf2d00=%g emf2d01=%g emf2d10=%g emf2d11=%g ctop0=%g dB1=%g ctop1=%g dB0=%g\n",i,j,k,dir,odir1,odir2,emf2d[0][0],emf2d[0][1],emf2d[1][0],emf2d[1][1],ctop[0],dB[1],ctop[1],dB[0]);
+      }
 
 
 
@@ -651,7 +654,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     }
 #endif
 
-
+    
 
 
       // see fluxct.c for definitions of signature
@@ -2269,6 +2272,12 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1) = p2interp_r[npr2interplist[0]]*igdetgnosing;
 
 
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0))){
+        trifprintf("NANJON1: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
+      }
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1))){
+        trifprintf("NANJON2: i=%d j=%d k=%d edgedir=%d dir=%d\n",i,j,k,edgedir,dir);
+      }
 
 
 	  ////////////////////
@@ -2301,6 +2310,21 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]] *= igdetgnosingvel; // current p_r for previous p_l
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]] *= igdetgnosingvel; // current p_l for previous p_r
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]] *= igdetgnosingvel; // current p_r for previous p_r
+
+
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2))){
+        trifprintf("NANJON3: i=%d j=%d k=%d edgedir=%d interpdir=%d Aodir1=%d Aodir2=%d\n",i,j,k,edgedir,interpdir,Aodir1,Aodir2);
+      }
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2))){
+        trifprintf("NANJON4: i=%d j=%d k=%d edgedir=%d interpdir=%d Bodir1=%d Bodir2=%d\n",i,j,k,edgedir,interpdir,Bodir1,Bodir2);
+      }
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2))){
+        trifprintf("NANJON5: i=%d j=%d k=%d edgedir=%d interpdir=%d Codir1=%d Codir2=%d\n",i,j,k,edgedir,interpdir,Codir1,Codir2);
+      }
+      if(!isfinite(MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2))){
+        trifprintf("NANJON5: i=%d j=%d k=%d edgedir=%d interpdir=%d Dodir1=%d Dodir2=%d\n",i,j,k,edgedir,interpdir,Dodir1,Dodir2);
+      }
+
 	}// endCOMPZSLOOP
   
       }// end loop over (whichodir) other directions // at end of loop, have pbcorn,pvcorn for this 1 face interpolated to 2 corners
@@ -2312,7 +2336,22 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
   }// end over parallel region (and implied barrier)
 
-
+  {
+    int dir=1;
+    int odir1=2;
+    int odir2=3;
+    int i=1,j=1,k=0;
+    int m=1;
+    int l=1;
+    if(!isfinite(MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l))){
+      trifprintf("FAIL0\n");
+    }
+    else trifprintf("GOD=%g\n",MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l));
+    if(!isfinite(MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l))){
+      trifprintf("FAIL1\n");
+    }
+    else trifprintf("GOD2=%g\n",MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l));
+  }
 
 
 

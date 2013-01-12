@@ -124,6 +124,9 @@ int prepre_init_specific_init(void)
 
   periodicx1=periodicx2=periodicx3=1;
 
+  // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
+  binaryoutput=TEXTOUTPUT;
+
   gam = 4./3.;
   cooling=KORAL;
 

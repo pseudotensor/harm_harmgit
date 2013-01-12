@@ -423,8 +423,8 @@ FTYPE BASEMETMACP1A0(alphalapselast,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 FTYPE BASEMETMACP1A2(dxdxpstore,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
 FTYPE BASEMETMACP1A2(idxdxpstore,NPG,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
 // the belo2 Xstore and Vstore exist on +-1 larger domain than even stored metric/etc., since metric requires +-1 in differencing coordinates (e.g. to determine dxdxp's or metric)
-FTYPE BASEMETMACP1A1(Xstore,NPG,N1M+SHIFT1*3,N2M+SHIFT2*3,N3M+SHIFT3*3,NDIM);
-FTYPE BASEMETMACP1A1(Vstore,NPG,N1M+SHIFT1*3,N2M+SHIFT2*3,N3M+SHIFT3*3,NDIM);
+FTYPE BASEMACP1A1(Xstore,NPG,N1M+SHIFT1*3,N2M+SHIFT2*3,N3M+SHIFT3*3,NDIM);
+FTYPE BASEMACP1A1(Vstore,NPG,N1M+SHIFT1*3,N2M+SHIFT2*3,N3M+SHIFT3*3,NDIM);
 #endif
 
 // rest of grid functions always at center
