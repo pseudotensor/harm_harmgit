@@ -3290,7 +3290,7 @@ void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V)
   
 
   if(didstorepositiondata && loc!=NOWHERE){
-    DLOOPA(jj) V[jj] = GLOBALMETMACP1A1(Vstore,loc,i,j,k,jj);
+    DLOOPA(jj) V[jj] = GLOBALMACP1A1(Vstore,loc,i,j,k,jj);
 #if(PRODUCTION==0)
     if(i<-N1BND-SHIFT1 || i>N1-1+SHIFT1*2+N1BND || j<-N2BND-SHIFT2 || j>N2-1+SHIFT2*2+N2BND || k<-N3BND-SHIFT3 || k>N3-1+SHIFT3*2+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);
@@ -3330,7 +3330,7 @@ void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 
     coord_ijk(i,j,k,loc,X); // get X
 
-    DLOOPA(jj) V[jj] = GLOBALMETMACP1A1(Vstore,loc,i,j,k,jj);
+    DLOOPA(jj) V[jj] = GLOBALMACP1A1(Vstore,loc,i,j,k,jj);
 #if(PRODUCTION==0)
     if(i<-N1BND-SHIFT1 || i>N1-1+SHIFT1*2+N1BND || j<-N2BND-SHIFT2 || j>N2-1+SHIFT2*2+N2BND || k<-N3BND-SHIFT3 || k>N3-1+SHIFT3*2+N3BND){
       dualfprintf(fail_file,"Beyond stored location: %d %d %d\n",i,j,k);

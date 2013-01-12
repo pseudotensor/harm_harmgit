@@ -41,22 +41,27 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 
 
   // initialize fluxinputma and fluxinputem so individual functions only have to define non-zero terms
-  PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
+  PLOOP(pliter,pl) fluxinput[pl]=fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
   fluxdiag=0.0;
 
 
   // define MA terms
   primtoflux_ma(&returntype, pr, q, dir, geom, fluxinputma, &fluxdiag);
   fluxinputma[UU+dir]+=fluxdiag; // add back to normal term
+  // add up MA
+  PLOOP(pliter,pl) fluxinput[pl] += fluxinputma[pl];
 
-  // define RAD terms
-  primtoflux_rad(&returntype, pr, q, dir, geom, fluxinputrad);
+  if(EOMRADTYPE!=EOMRADNONE){
+    // define RAD terms
+    primtoflux_rad(&returntype, pr, q, dir, geom, fluxinputrad);
+    // add up RAD
+    PLOOP(pliter,pl) fluxinput[pl] += fluxinputrad[pl];
+  }
 
   // define EM terms
   primtoflux_em(&returntype, pr, q, dir, geom, fluxinputem);
-
-  // add up MA+RAD+EM
-  PLOOP(pliter,pl) fluxinput[pl] = fluxinputma[pl] + fluxinputrad[pl] + fluxinputem[pl];
+  // add up EM
+  PLOOP(pliter,pl) fluxinput[pl] += fluxinputem[pl];
 
   // DEBUG:
   //  PALLLOOP(pl) dualfprintf(fail_file,"ALLBEFORE: pl=%d flux=%21.15g\n",pl,fluxinput[pl]);
@@ -93,7 +98,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputrad[NPR],fluxinputem[NPR];
   VARSTATIC FTYPE fluxdiag;
   VARSTATIC int pl,pliter;
-  FTYPE fluxrad[NDIM];
+  FTYPE fluxrad[NPR];
 
   // initialize fluxinputma and fluxinputrad+fluxinputem so individual functions only have to define non-zero terms
   PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
@@ -122,27 +127,28 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
     fluxinputma[FLUXSPLITPMA(fluxdir)]=0.5*fluxdiag;
   }
 #endif
-
-
-  // define RAD terms
-  primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad);
-
-  // define EM terms
-  primtoflux_em(&returntype, pr, q, fundir, geom, fluxinputem);
-
   // convert from UNOTHING->returntype
   // notice that geometry comes after subtractions/additions of EOMs
   //  UtoU_ma(UNOTHING,returntype,geom,fluxinputma,fluxma); // properly converts separate diagonal flux in FLUXSPLITPMA(fluxdir)
   UtoU_ma_fromunothing(returntype,geom,fluxinputma,fluxma);
 
-  //  UtoU_rad(UNOTHING,returntype,geom,fluxinputrad,fluxrad);
-  UtoU_rad_fromunothing(returntype,geom,fluxinputrad,fluxrad);
 
+  if(EOMRADTYPE!=EOMRADNONE){
+
+    // define RAD terms
+    primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad);
+
+    //  UtoU_rad(UNOTHING,returntype,geom,fluxinputrad,fluxrad);
+    UtoU_rad_fromunothing(returntype,geom,fluxinputrad,fluxrad);
+
+    PLOOP(pliter,pl) fluxma[pl]+=fluxrad[pl]; // KORAL: Just add RAD to MA for this split approach
+  }
+
+  // define EM terms
+  primtoflux_em(&returntype, pr, q, fundir, geom, fluxinputem);
   //  UtoU_em(UNOTHING,returntype,geom,fluxinputem,fluxem);
   UtoU_em_fromunothing(returntype,geom,fluxinputem,fluxem);
 
-  int jj;
-  DLOOPA(jj) fluxem[jj]+=fluxrad[jj]; // KORAL: Just add RAD to EM for this split approach
 
 
   return(0);
@@ -229,7 +235,7 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux)
 {
 
-  // MHD stress-energy tensor w/ first index up, second index down.
+  // Radiation stress-energy tensor w/ first index up, second index down.
 #if(SPLITNPR)
   #error "primtoflux_rad not setup for SPLITNPR"
 #endif
@@ -237,6 +243,8 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
   if(EOMRADTYPE!=EOMRADNONE){
     mhd_calc_rad(pr, dir, geom, q, &flux[URAD0]); // fills URAD0->URAD3
   }
+  // else don't fill flux[RAD0->RAD3] since assume entries don't exist
+
 
   return (0);
 }
@@ -1038,6 +1046,7 @@ void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FT
   mhd_calc_rad(pr, dir, geom, q, mhdrad);
   mhd_calc_em(pr, dir, geom, q, mhdem);
 
+  
   // add up MA+RAD+EM
   DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdrad[j] + mhdem[j];
 
@@ -1881,12 +1890,10 @@ int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 {
   void compute_1plusud0(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0); // plus1ud0=(1+q->ucov[TT])
 
-  trifprintf("HERE1\n");
 
   // u^\mu
   MYFUN(ucon_calc(pr, ptrgeom, q->ucon,q->others) ,"phys.c:get_state()", "ucon_calc()", 1);
 
-  trifprintf("HERE2\n");
 
   // u_\mu
   lower_vec(q->ucon, ptrgeom, q->ucov);
@@ -2069,7 +2076,6 @@ int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *other
   uconrel[2]=pr[U2];
   uconrel[3]=pr[U3];
 
-  trifprintf("HERE0.5\n");
 
 
   //  SLOOPA(j) dualfprintf(fail_file,"ucon_calc_rel4vel: uconrel[%d]=%21.15g\n",j,uconrel[j]); // CHANGINGMARK

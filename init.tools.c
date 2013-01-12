@@ -56,6 +56,7 @@ int user1_prepre_init_specific_init(void)
 #endif
 
 
+
   if(PRODUCTION){
     // assume if production always want binary data with text header
     binaryoutput=MIXEDOUTPUT; // choice: mixed or binary
@@ -334,12 +335,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   ///////////////////////////////////
   trifprintf("Assign primitives\n");
 
-  trifprintf("IT=%d\n",NPR,NPR);
-  trifprintf("nprstart=%d nprend=%d\n",nprstart,nprend);
-  for(pliter=nprstart;pliter<=nprend;pliter++){
-    trifprintf("pliter=%d nprlist=%d\n",pliter,nprlist[pliter]);
-  }
-  PLOOP(pliter,pl)  trifprintf("pliter=%d pl=%d\n",pliter,pl);
 
 
   // assume we start in bl coords and convert to KSprim

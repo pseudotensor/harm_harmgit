@@ -40,3 +40,6 @@
 #endif
 #endif
 #endif
+
+#define RADSOURCEMETHODEXPLICIT 1
+#define RADSOURCEMETHODIMPLICIT 2

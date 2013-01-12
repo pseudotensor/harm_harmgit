@@ -301,10 +301,7 @@ static void set_position_stores(void)
       OPENMP3DLOOPBLOCK{
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 	
-#if(MCOORD==CARTMINKMETRIC)
-	// doesn't depend on position, only store/use 1 value
-	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
-#endif
+    // Want X vs. i,j,k
 	
 	// store X since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
 	// X must be always allowed to vary in space
@@ -333,16 +330,17 @@ static void set_position_stores(void)
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
+    // Want V vs. i,j,k
 #if(MCOORD==CARTMINKMETRIC)
 	// doesn't depend on position, only store/use 1 value
-	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
+    //	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
 #endif
       
       
 
 	// store V since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
-	bl_coord(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMETMACP1A0(Vstore,loc,i,j,k));
-	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMETMACP1A0(Vstore,loc,i,j,k)[jj]);
+	bl_coord(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMACP1A0(Vstore,loc,i,j,k));
+	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMACP1A0(Vstore,loc,i,j,k)[jj]);
       }// end internal loop block
     }// end over locations
   }// end parallel region (and implied barrier)
@@ -367,6 +365,7 @@ static void set_position_stores(void)
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
+    // dxdxp and idxdxp are only different if non-Minkowski non-Cartesian
 #if(MCOORD==CARTMINKMETRIC)
 	// doesn't depend on position, only store/use 1 value
 	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
@@ -375,9 +374,9 @@ static void set_position_stores(void)
       
 
 	// store dxdxp since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
-	dxdxprim(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMETMACP1A0(Vstore,loc,i,j,k),GLOBALMETMACP1A0(dxdxpstore,loc,i,j,k));
+	dxdxprim(GLOBALMACP1A0(Xstore,loc,i,j,k),GLOBALMACP1A0(Vstore,loc,i,j,k),GLOBALMETMACP1A0(dxdxpstore,loc,i,j,k));
 
-	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMETMACP1A0(Vstore,loc,i,j,k)[jj]);
+	//	SLOOPA(jj) dualfprintf(fail_file,"loc=%d i=%d j=%d k=%d :: V[%d]=%21.15g\n",loc,i,j,k,jj,GLOBALMACP1A0(Vstore,loc,i,j,k)[jj]);
 
 	matrix_inverse(PRIMECOORDS, GLOBALMETMACP1A0(dxdxpstore,loc,i,j,k),GLOBALMETMACP1A0(idxdxpstore,loc,i,j,k));
       }// end internal loop block
@@ -432,8 +431,8 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 
 	    if(j>=N2/2){
 
-	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-j,k,TH);
-	      GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMETMACP1A1(Xstore,loc,i,N2-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
+	      GLOBALMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMACP1A1(Vstore,loc,i,N2-j,k,TH);
+	      GLOBALMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMACP1A1(Xstore,loc,i,N2-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
 
 	    }// end over upper hemisphere
 	  
@@ -454,8 +453,8 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
     
 	    if(j>=N2/2){
 
-	      GLOBALMETMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMETMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
-              GLOBALMETMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMETMACP1A1(Xstore,loc,i,N2-1-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
+	      GLOBALMACP1A1(Vstore,loc,i,j,k,TH)=M_PI-GLOBALMACP1A1(Vstore,loc,i,N2-1-j,k,TH);
+              GLOBALMACP1A1(Xstore,loc,i,j,k,TH)=endx[TH]-(GLOBALMACP1A1(Xstore,loc,i,N2-1-j,k,TH)-startx[TH]); //Sasha corrected to work correctly in case startx[TH]!=0
 
 
 	    }// end over upper hemisphere
@@ -1298,7 +1297,7 @@ static void set_boostemu(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
-        //calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
+        calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
       }
     }// end 3D LOOP
   }// end parallel region

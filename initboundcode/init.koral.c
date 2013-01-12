@@ -11,11 +11,16 @@ int prepre_init_specific_init(void)
   if(funreturn!=0) return(funreturn);
 
   periodicx1=periodicx2=periodicx3=1;
+
+  // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
+  binaryoutput=TEXTOUTPUT;
+
   
   /*************************************************/
   /*************************************************/
   /*************************************************/
 #if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
+
   gam = 4./3.;
   cooling=KORAL;
 #endif
@@ -143,8 +148,7 @@ int init_global(void)
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
   //OSMARK: where is DTr1 defined? what is DTfake?
-  //DTfake=MAX(1,DTr1/10); 
-  DTfake=1.;
+  DTfake=MAX(1,DTr/10); 
 
 
   /*************************************************/
@@ -320,7 +324,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     pr[URAD3] = 0 ;
 
     *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC;
+    *whichcoord=CARTMINKMETRIC2;
     return(0);
   }
 #endif 

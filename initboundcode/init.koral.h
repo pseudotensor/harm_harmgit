@@ -143,9 +143,6 @@
 #undef N3
 #endif
 
-#define RADSOURCEMETHODEXPLICIT 1
-#define RADSOURCEMETHODIMPLICIT 2
-
 //****************************************//
 //****************************************//
 //****************************************//
@@ -160,7 +157,7 @@
 #define N2 20
 #define N3 1
 
-#define MCOORD CARTMINKMETRIC
+#define MCOORD CARTMINKMETRIC2
 
 #endif
 
@@ -175,7 +172,7 @@
 #define N2 20
 #define N3 1
 
-#define MCOORD CARTMINKMETRIC
+#define MCOORD CARTMINKMETRIC2
 #define RADBEAMFLAT_FRATIO 0.95
 #define RADBEAMFLAT_ERAD 1.
 #define RADBEAMFLAT_RHO 1.
@@ -202,6 +199,9 @@
 //#define WENO_USE_LIM_PRIM_CORRECTION_FOR_FLUX_LIMITING 1
 #define WENO_USE_PRIM_REDUCTION 1
 #define LIMIT_FLUXC2A_PRIM_CHANGE 0
+
+
+
 
 #define ALLOWMETRICROT 0
 #if(ALLOWMETRICROT==1)

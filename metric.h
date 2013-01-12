@@ -12,6 +12,7 @@
 #define KS_TOV_COORDS 9 // KS TOV metric
 #define BL_TOV_COORDS 10 // BL TOV metric
 #define KS_JP1_COORDS 11 // KS Johannsen & Psaltis metric 2011
+#define CARTMINKMETRIC2 100
 
 
 // 0 : Boyer-Lindquist (based on r theta)

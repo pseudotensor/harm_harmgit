@@ -250,33 +250,32 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 
 
   // assign cmin/cmax/ctop for each conserved quantity
-  int qq;
-  for(qq=0;qq<NUMEOMSETS;qq++){
-    if(qq<URAD0 || qq>URAD3){
-      cmin_l[qq] = cminmax_l[CMIN];
-      cmax_l[qq] = cminmax_l[CMAX];
-      cmin_r[qq] = cminmax_r[CMIN];
-      cmax_r[qq] = cminmax_r[CMAX];
-      cmin[qq] = cminmax[CMIN];
-      cmax[qq] = cminmax[CMAX];
-      ctop[qq] = ctopmhd;
+  PLOOP(pliter,pl){
+    if(pl<URAD0 || pl>URAD3){
+      cmin_l[pl] = cminmax_l[CMIN];
+      cmax_l[pl] = cminmax_l[CMAX];
+      cmin_r[pl] = cminmax_r[CMIN];
+      cmax_r[pl] = cminmax_r[CMAX];
+      cmin[pl] = cminmax[CMIN];
+      cmax[pl] = cminmax[CMAX];
+      ctop[pl] = ctopmhd;
     }
     else{
       // radiation terms
-      cmin_l[qq] = cminmaxrad_l[CMIN];
-      cmax_l[qq] = cminmaxrad_l[CMAX];
-      cmin_r[qq] = cminmaxrad_r[CMIN];
-      cmax_r[qq] = cminmaxrad_r[CMAX];
-      cmin[qq] = cminmaxrad[CMIN];
-      cmax[qq] = cminmaxrad[CMAX];
-      ctop[qq] = ctoprad;
+      cmin_l[pl] = cminmaxrad_l[CMIN];
+      cmax_l[pl] = cminmaxrad_l[CMAX];
+      cmin_r[pl] = cminmaxrad_r[CMIN];
+      cmax_r[pl] = cminmaxrad_r[CMAX];
+      cmin[pl] = cminmaxrad[CMIN];
+      cmax[pl] = cminmaxrad[CMAX];
+      ctop[pl] = ctoprad;
     }
-    //	if(steppart==0) crus[qq]=dx[dir]/(dt*0.5);
-    //	else  crus[qq]=dx[dir]/(dt);
-    crus[qq]=dx[dir]/(dt*CUf);
-    //	crus[qq]=dx[dir]/(dt);
+    //	if(steppart==0) crus[pl]=dx[dir]/(dt*0.5);
+    //	else  crus[pl]=dx[dir]/(dt);
+    crus[pl]=dx[dir]/(dt*CUf);
+    //	crus[pl]=dx[dir]/(dt);
     //	dualfprintf(fail_file,"CUf=%21.15g dt=%21.15g dx[%d]=%21.15g\n",CUf,dt,dir,dx[dir]);
-    //	crus[qq]=dx[dir]/(dt);
+    //	crus[pl]=dx[dir]/(dt);
   }
 
 

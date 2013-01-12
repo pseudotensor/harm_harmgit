@@ -651,7 +651,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     }
 #endif
 
-
+    
 
 
       // see fluxct.c for definitions of signature
@@ -2301,6 +2301,9 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]] *= igdetgnosingvel; // current p_r for previous p_l
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]] *= igdetgnosingvel; // current p_l for previous p_r
 	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]] *= igdetgnosingvel; // current p_r for previous p_r
+
+
+
 	}// endCOMPZSLOOP
   
       }// end loop over (whichodir) other directions // at end of loop, have pbcorn,pvcorn for this 1 face interpolated to 2 corners
@@ -2311,8 +2314,6 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
   }// end over parallel region (and implied barrier)
-
-
 
 
 

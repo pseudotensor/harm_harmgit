@@ -209,9 +209,13 @@ struct of_gdetgeom {
 struct of_state {
   FTYPE ucon[NDIM];
   FTYPE ucov[NDIM];
+  //SUPERGODMARK
 #if(EOMRADTYPE!=EOMRADNONE)
   FTYPE uradcon[NDIM];
   FTYPE uradcov[NDIM];
+#else
+  FTYPE *uradcon;
+  FTYPE *uradcov;
 #endif
   FTYPE bcon[NDIM];
   FTYPE bcov[NDIM];
@@ -223,8 +227,12 @@ struct of_state {
 
   FTYPE others[NUMOTHERSTATERESULTS];
 
+  //SUPERGODMARK
+#if(EOMRADTYPE!=EOMRADNONE)
   FTYPE othersrad[NUMOTHERSTATERESULTS];
-
+#else
+  FTYPE *othersrad;
+#endif
 
 
 #if(MERGEDC2EA2CMETHOD)
