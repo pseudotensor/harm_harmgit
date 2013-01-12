@@ -1464,7 +1464,6 @@ int eosdump(long dump_cnt)
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
 
-  return(0);
   
   trifprintf("begin dumping eosdump# %ld ... ",dump_cnt);
 
