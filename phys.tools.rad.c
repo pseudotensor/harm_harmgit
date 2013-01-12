@@ -82,7 +82,7 @@ FTYPE compute_dt()
 void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE compute_dt();
-  int i1,i2,i3,iv,i,j,pliter;
+  int i1,i2,i3,iv,i,j,pliter,sc;
   ldouble J[4][4],iJ[4][4];
   ldouble uu0[NPR],uup[NPR],uu[NPR]; 
   ldouble f1[4],f2[4],f3[4],x[4];
@@ -166,7 +166,20 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   while(1);
   
   DLOOPA(jj){
-    deltas[jj]=uu[URAD0+jj]-uu0[URAD0+jj];
+    deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/dt;
+  }
+
+  PLOOP(pliter,pl){
+    radsource[NPR] = 0;
+  }
+
+  DLOOPA(jj) radsource[UU+jj] = -deltas[jj];
+  DLOOPA(jj) radsource[URAD0+jj] = deltas[jj];
+
+  sc = RADSOURCE;
+
+  PLOOP(pliter,pl){
+    dUcomp[sc][pl] += radsource[pl];
   }
   
   return(0);
