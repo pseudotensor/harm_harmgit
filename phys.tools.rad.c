@@ -405,7 +405,7 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 
   if(EOMRADTYPE!=EOMRADNONE){
     // R^{dir}_{jj} radiation stress-energy tensor
-    DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[RAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[RAD0]*delta(dir,jj));
+    DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[PRAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[PRAD0]*delta(dir,jj));
   }
   else DLOOPA(jj) radstressdir[jj]=0.0; // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
 
