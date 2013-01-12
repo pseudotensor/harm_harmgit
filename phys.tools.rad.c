@@ -53,15 +53,6 @@ int f_implicit_lab(ldouble *pp0, ldouble *uu0,ldouble *uu,ldouble realdt, struct
   return 0;
 } 
 
-int print_state_implicit_lab (int iter, ldouble *x, ldouble *f)
-{
-  printf ("iter = %3d x = % .3Le % .3Le % .3Le % .3Le "
-	  "f(x) = % .3Le % .3Le % .3Le % .3Le\n",
-	  iter,
-	  x[0],x[1]/x[0],x[2]/x[0],x[3]/x[0],f[0],f[1],f[2],f[3]);
-}
-
-
 //SUPERGODMARK only for RK2
 FTYPE compute_dt()
 {
@@ -82,7 +73,7 @@ FTYPE compute_dt()
 void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE compute_dt();
-  int i1,i2,i3,iv,i,j,pliter;
+  int i1,i2,i3,iv,ii,jj,pliter;
   ldouble J[4][4],iJ[4][4];
   ldouble uu0[NPR],uup[NPR],uu[NPR]; 
   ldouble f1[4],f2[4],f3[4],x[4];
@@ -104,8 +95,8 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     iter++;
     
     //vector of conserved at the previous iteration
-    PLOOP(pliter,i)
-      uup[i]=uu[i];
+    PLOOP(pliter,ii)
+      uup[ii]=uu[ii];
     
     //values at zero state
     f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1);
@@ -128,7 +119,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 	
 	uu[jj+URAD0]=uup[jj+URAD0];
       }
-    }
+    
     
     //inversion
     inverse_44matrix(J,iJ);
@@ -144,7 +135,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 	x[ii]-=iJ[ii][jj]*f1[jj];
       }
     
-    DLOOPA(ii){
+    DLOOPA(ii)
       uu[ii+URAD0]=x[ii];
     
     //test convergence
@@ -169,7 +160,6 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     deltas[jj]=uu[URAD0+jj]-uu0[URAD0+jj];
   }
   
-  return(0);
 }
 
 
