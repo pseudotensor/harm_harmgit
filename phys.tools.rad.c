@@ -201,6 +201,16 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   
 }
 
+void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+{
+#if(RADSOURCE==EXPLICIT)
+  koral_explicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
+#else
+  koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
+#endif
+}
+
+
 //**********************************************************************
 //******* opacities ****************************************************
 //**********************************************************************
