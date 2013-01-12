@@ -602,161 +602,41 @@ int inverse_44matrix(ldouble a[][4], ldouble ia[][4])
 
 
 
-/*****************************************************************/
-/*****************************************************************/
-/*****************************************************************/
-//radiative primitives fluid frame -> ZAMO
-// Use: Maybe dumping
-// pp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
-// pp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
-int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
+/*********************************************************************************/
+/****** radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame  *******/
+/*********************************************************************************/
+int prad_fforlab(int whichdir, ldouble *pp1, ldouble *pp2,struct of_state *q, struct of_geom *ptrgeom)
 {
-  ldouble Rij[4][4];
-  int i,j;
-
-  // set all (only non-rad needed) primitives
+  ldouble Rij[NDIM][NDIM];
   int pliter,pl;
-  PLOOP(pliter,pl) pp2[pl]=pp1[pl];
 
+  //radiative stress tensor in the fluid frame
   calc_Rij_ff(pp1,Rij);
-  boost22_ff2zamo(Rij,Rij,pp1,q,ptrgeom,eup);
 
-  // overwrite pp2 with new radiation primitives
+  //transforming from ortonormal coordinates to code coordinates
+  //trans22_on2cc(Rij,Rij,tlo);
+
+  //boosting the tensor to the lab frame
+  boost22_laborff(whichdir,Rij,Rij,pp1,q,ptrgeom);
+
+  //R^munu -> R^mu_nu
+  indices_2221(Rij,Rij,ptrgeom);
+
+  PLOOP(pliter,pl)
+    pp2[pl]=pp1[pl];
+
+  //temporarily store conserved in pp2[]
   pp2[PRAD0]=Rij[0][0];
   pp2[PRAD1]=Rij[0][1];
   pp2[PRAD2]=Rij[0][2];
   pp2[PRAD3]=Rij[0][3];
 
-  return 0;
-} 
-
-/*****************************************************************/
-/*****************************************************************/
-/*****************************************************************/
-//radiative primitives ZAMO -> fluid frame - numerical solver
-// Use: Error (f) for iteration
-// ppff : HD primitives (i.e. WHICHVEL velocity) and radiation primitives of \hat{E} and \hat{F} (i.e. fluid frame conserved quantities)
-// ppzamo : \hat{E} & \hat{F} -> E & F in ZAMO
-int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f)
-{
-  ldouble Rij[4][4];
-  calc_Rij_ff(ppff,Rij);
-  boost22_ff2zamo(Rij,Rij,ppff,q,ptrgeom,eup);
-
-  f[0]=-Rij[0][0]+ppzamo[PRAD0];
-  f[1]=-Rij[0][1]+ppzamo[PRAD1];
-  f[2]=-Rij[0][2]+ppzamo[PRAD2];
-  f[3]=-Rij[0][3]+ppzamo[PRAD3];
-
+  //convert to real primitives - conversion does not care about MHD only about radiative conserved
+  int corrected;
+  u2p_rad(pp2,pp2,ptrgeom);
 
   return 0;
 } 
-
-
-
-// SUPERGODMARK: Is q constant ok?
-// numerical iteration to find ff from zamo
-// Use: Initial conditions
-// ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
-int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
-{
-  ldouble pp0[NPR],pp[NPR];
-  ldouble J[4][4],iJ[4][4];
-  ldouble x[4],f1[4],f2[4],f3[4];
-  int i,j,k,iter=0;
-
-
-  
-  //initial guess
-  for(i=0;i<NPR;i++)
-    {
-      pp[i]=ppzamo[i];
-    }
-
-
-  //debug
-  f_prad_zamo2ff(ppzamo,pp,q,ptrgeom,eup,f1);
-  for(i=0;i<4;i++)
-    {
-      x[i]=pp[i+PRAD0];
-    }  
- 
-  do
-    {
-      iter++;
-      for(i=PRAD0;i<NPR;i++)
-	{
-	  pp0[i]=pp[i];
-	}
-
-      //valueas at zero state
-      f_prad_zamo2ff(pp,ppzamo,q,ptrgeom,eup,f1);
- 
-      //calculating approximate Jacobian
-      for(i=0;i<4;i++)
-	{
-	  for(j=0;j<4;j++)
-	    {
-	      pp[j+PRAD0]=pp[j+PRAD0]+PRADEPS*pp[PRAD0];
-	    
-	      f_prad_zamo2ff(pp,ppzamo,q,ptrgeom,eup,f2);
-     
-	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[PRAD0]);
-
-	      pp[j+PRAD0]=pp0[j+PRAD0];
-	    }
-	}
-  
-      //inversion
-      inverse_44matrix(J,iJ);
-
-      //updating unknowns
-      for(i=0;i<4;i++)
-	{
-	  x[i]=pp0[i+PRAD0];
-	}      
-
-      for(i=0;i<4;i++)
-	{
-	  for(j=0;j<4;j++)
-	    {
-	      x[i]-=iJ[i][j]*f1[j];
-	    }
-	}
-
-      for(i=0;i<4;i++)
-	{
-	  pp[i+PRAD0]=x[i];
-	}
-  
-      //test convergence
-      for(i=0;i<4;i++)
-	{
-	  f3[i]=(pp[i+PRAD0]-pp0[i+PRAD0]);
-	  f3[i]=fabs(f3[i]/pp0[PRAD0]);
-	}
-
-      if(f3[0]<PRADCONV && f3[1]<PRADCONV && f3[2]<PRADCONV && f3[3]<PRADCONV)
-	break;
-
-      if(iter>50)
-	{
-	  printf("iter exceeded in prad_zamo2ff()\n");
-	  break;
-	}
-    }
-  while(1);
-
-
-
-  //returning prad
-  for(i=0;i<NPR;i++)
-    {
-      ppzamo[i]=pp[i];
-    }
-
-  return 0;
-}
 
 
 /*****************************************************************/
@@ -1606,3 +1486,161 @@ int u2p_rad_num(ldouble *uu, ldouble *pp, struct of_state *q, struct of_geom *pt
 }
 
  
+
+
+
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+//radiative primitives fluid frame -> ZAMO
+// Use: Maybe dumping
+// pp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
+// pp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
+int prad_ff2zamo(ldouble *pp1, ldouble *pp2, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
+{
+  ldouble Rij[4][4];
+  int i,j;
+
+  // set all (only non-rad needed) primitives
+  int pliter,pl;
+  PLOOP(pliter,pl) pp2[pl]=pp1[pl];
+
+  calc_Rij_ff(pp1,Rij);
+  boost22_ff2zamo(Rij,Rij,pp1,q,ptrgeom,eup);
+
+  // overwrite pp2 with new radiation primitives
+  pp2[PRAD0]=Rij[0][0];
+  pp2[PRAD1]=Rij[0][1];
+  pp2[PRAD2]=Rij[0][2];
+  pp2[PRAD3]=Rij[0][3];
+
+  return 0;
+} 
+
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+//radiative primitives ZAMO -> fluid frame - numerical solver
+// Use: Error (f) for iteration
+// ppff : HD primitives (i.e. WHICHVEL velocity) and radiation primitives of \hat{E} and \hat{F} (i.e. fluid frame conserved quantities)
+// ppzamo : \hat{E} & \hat{F} -> E & F in ZAMO
+int f_prad_zamo2ff(ldouble *ppff, ldouble *ppzamo, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4],ldouble *f)
+{
+  ldouble Rij[4][4];
+  calc_Rij_ff(ppff,Rij);
+  boost22_ff2zamo(Rij,Rij,ppff,q,ptrgeom,eup);
+
+  f[0]=-Rij[0][0]+ppzamo[PRAD0];
+  f[1]=-Rij[0][1]+ppzamo[PRAD1];
+  f[2]=-Rij[0][2]+ppzamo[PRAD2];
+  f[3]=-Rij[0][3]+ppzamo[PRAD3];
+
+
+  return 0;
+} 
+
+
+
+// SUPERGODMARK: Is q constant ok?
+// numerical iteration to find ff from zamo
+// Use: Initial conditions
+// ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
+int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
+{
+  ldouble pp0[NPR],pp[NPR];
+  ldouble J[4][4],iJ[4][4];
+  ldouble x[4],f1[4],f2[4],f3[4];
+  int i,j,k,iter=0;
+
+
+  
+  //initial guess
+  for(i=0;i<NPR;i++)
+    {
+      pp[i]=ppzamo[i];
+    }
+
+
+  //debug
+  f_prad_zamo2ff(ppzamo,pp,q,ptrgeom,eup,f1);
+  for(i=0;i<4;i++)
+    {
+      x[i]=pp[i+PRAD0];
+    }  
+ 
+  do
+    {
+      iter++;
+      for(i=PRAD0;i<NPR;i++)
+	{
+	  pp0[i]=pp[i];
+	}
+
+      //valueas at zero state
+      f_prad_zamo2ff(pp,ppzamo,q,ptrgeom,eup,f1);
+ 
+      //calculating approximate Jacobian
+      for(i=0;i<4;i++)
+	{
+	  for(j=0;j<4;j++)
+	    {
+	      pp[j+PRAD0]=pp[j+PRAD0]+PRADEPS*pp[PRAD0];
+	    
+	      f_prad_zamo2ff(pp,ppzamo,q,ptrgeom,eup,f2);
+     
+	      J[i][j]=(f2[i] - f1[i])/(PRADEPS*pp[PRAD0]);
+
+	      pp[j+PRAD0]=pp0[j+PRAD0];
+	    }
+	}
+  
+      //inversion
+      inverse_44matrix(J,iJ);
+
+      //updating unknowns
+      for(i=0;i<4;i++)
+	{
+	  x[i]=pp0[i+PRAD0];
+	}      
+
+      for(i=0;i<4;i++)
+	{
+	  for(j=0;j<4;j++)
+	    {
+	      x[i]-=iJ[i][j]*f1[j];
+	    }
+	}
+
+      for(i=0;i<4;i++)
+	{
+	  pp[i+PRAD0]=x[i];
+	}
+  
+      //test convergence
+      for(i=0;i<4;i++)
+	{
+	  f3[i]=(pp[i+PRAD0]-pp0[i+PRAD0]);
+	  f3[i]=fabs(f3[i]/pp0[PRAD0]);
+	}
+
+      if(f3[0]<PRADCONV && f3[1]<PRADCONV && f3[2]<PRADCONV && f3[3]<PRADCONV)
+	break;
+
+      if(iter>50)
+	{
+	  printf("iter exceeded in prad_zamo2ff()\n");
+	  break;
+	}
+    }
+  while(1);
+
+
+
+  //returning prad
+  for(i=0;i<NPR;i++)
+    {
+      ppzamo[i]=pp[i];
+    }
+
+  return 0;
+}
