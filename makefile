@@ -466,7 +466,7 @@ COMP=icc $(DFLAGS) $(OPMPFLAGS)
 #CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -parallel -par-report=2 -par-threshold=10 -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 # NORMAL:
-CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+#CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 
 #FOR CHECKING OPTIMIZATIONS:
@@ -475,7 +475,7 @@ CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -fin
 #########################
 # DEBUG BELOW
 #########################
-#CFLAGSPRENONPRECISE=-O0 -g -openmp $(DFLAGS)
+CFLAGSPRENONPRECISE=-O0 -g  $(DFLAGS)
 
 
 #
