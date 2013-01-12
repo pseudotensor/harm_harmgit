@@ -141,7 +141,12 @@
 #undef N3
 #endif
 
+#define EXPLICIT 1
+#define IMPLICIT 2
+
 #if(WHICHPROBLEM==FLATNESS)
+
+#define RADSOURCE EXPLICIT
 
 #define N1 20
 #define N2 20
