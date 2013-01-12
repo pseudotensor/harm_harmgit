@@ -14,7 +14,7 @@ int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   FTYPE vminrad,vmaxrad;
   
   vchar_each(pr, q, dir, geom, &vmaxmhd, &vminmhd, &vmaxrad, &vminrad, ignorecourant);
-
+  // below correct even if EOMRADTYPE==EOMRADNONE because vchar_each() sets both mhd and rad to be mhd and so below always chooses the mhd values.
   *vminall=MIN(vminmhd,vminrad);
   *vmaxall=MAX(vmaxmhd,vmaxrad);
   
@@ -26,7 +26,13 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 {
   
   vchar(pr, q, dir, geom, vmaxmhd, vminmhd,ignorecourant);
-  vchar_rad(pr, q, dir, geom, vmaxrad, vminrad,ignorecourant);
+  if(EOMRADTYPE!=EOMRADNONE){
+    vchar_rad(pr, q, dir, geom, vmaxrad, vminrad,ignorecourant);
+  }
+  else{// default as if no other values for wave speeds
+    *vmaxrad=*vmaxmhd;
+    *vminrad=*vminmhd;
+  }
 
   return(0);
 }
@@ -77,11 +83,13 @@ int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 // compute radiation stres-energy tensor
 void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir)
 {
-
-  // R^{dir}_{jj} radiation stress-energy tensor
   int jj;
-  DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[RAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[RAD0]*delta(dir,jj));
 
+  if(EOMRADTYPE!=EOMRADNONE){
+    // R^{dir}_{jj} radiation stress-energy tensor
+    DLOOPA(jj) radstressdir[jj]=THIRD*(4.0*pr[RAD0]*q->uradcon[dir]*q->uradcov[jj] + pr[RAD0]*delta(dir,jj));
+  }
+  else DLOOPA(jj) radstressdir[jj]=0.0; // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
 
 
 }

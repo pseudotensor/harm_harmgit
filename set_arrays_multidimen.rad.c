@@ -19,11 +19,11 @@ void set_arrays_multidimen_rad(void)
   GLOBALPOINT(boostemu) = 
     (FTYPE PTRMETMACP2A2(boostemu,BOOSTGRIDPOS,BOOSTDIRS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM)) 
     (&(BASEMETMACP2A2(boostemu,-CENT,0,N1BND,N2BND,N3BND,0,0)));
-#endif
   int ll,mm,nn,oo;
   for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++) for(mm=0;mm<BOOSTDIRS;mm++) FULLLOOPP1 DLOOP(nn,oo){
       GLOBALMETMACP2A2(boostemu,ll,mm,i,j,k,nn,oo) = valueinit;
     }
+#endif
 
 
 }
