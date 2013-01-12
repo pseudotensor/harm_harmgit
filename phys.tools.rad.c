@@ -762,7 +762,8 @@ int prad_zamo2ff(ldouble *ppzamo, ldouble *ppff, struct of_state *q, struct of_g
 /*****************************************************************/
 /*****************************************************************/
 /*****************************************************************/
-//calculates Lorenz matrix for lab -> ff
+//calculates general Lorenz matrix for lab <-> ff
+//whichdir: [LAB2FF, FF2LAB]
 int
 calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom *ptrgeom,ldouble L[][4])
 {
@@ -828,6 +829,40 @@ calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom
   return 0;
 }
 
+
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+//T^ij Lorentz boost lab <-> fluid frame
+//whichdir: [LAB2FF, FF2LAB]
+int
+boost22_lab2ff(int whichdir, ldouble T1[][NDIM],ldouble T2[][NDIM],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom)
+{ 
+  int ii,jj,kk,ll;
+  ldouble Tt[NDIM][NDIM];
+
+  //general Lorentz transformation matrix
+  ldouble L[NDIM][NDIM];
+  calc_Lorentz_laborff(whichdir,pp,q,ptrgeom,L);
+
+  //copying
+  DLOOP(ii,jj)
+    Tt[ii][jj]=T1[ii][jj];
+  
+  //boosting
+  DLOOP(ii,jj)
+    {
+      T2[ii][jj]=0.;
+      DLOOP(kk,ll)
+	T2[ii][jj]+=L[ii][kk]*L[jj][ll]*Tt[kk][ll];
+    }
+
+  return 0;
+}
+
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
 //simple Lorentz boosts between ortonormal frames
 
 int boost2_zamo2ff(ldouble A1[],ldouble A2[],ldouble *pp,struct of_state *q, struct of_geom *ptrgeom, ldouble eup[][4])
@@ -1403,10 +1438,10 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
     }
   
   //new primitives (only uses urfcon[1-3])
-  pp[6]=Erf;
-  pp[7]=urfcon[1];
-  pp[8]=urfcon[2];
-  pp[9]=urfcon[3];
+  pp[PRAD0]=Erf;
+  pp[PRAD1]=urfcon[1];
+  pp[PRAD2]=urfcon[2];
+  pp[PRAD3]=urfcon[3];
 
 
   return 0;
