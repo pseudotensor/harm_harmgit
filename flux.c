@@ -2482,12 +2482,19 @@ int fluxcalc_donor
   FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
   FTYPE U_c[NPR], U_l[NPR], U_r[NPR];
   FTYPE ocminmax_l[NUMCS], ocminmax_r[NUMCS], ocminmax[NUMCS];
-  extern int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  FTYPE ocminmaxrad_l[NUMCS], ocminmaxrad_r[NUMCS], ocminmaxrad[NUMCS];
+  extern   int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
   extern int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
   FTYPE ctopother[NDIM];
   FTYPE *ctopptr=&ctopother[0];
   FTYPE ctopother2[NDIM];
   FTYPE *ctopptr2=&ctopother2[0];
+
+  FTYPE ctopradother[NDIM];
+  FTYPE *ctopradptr=&ctopradother[0];
+  FTYPE ctopradother2[NDIM];
+  FTYPE *ctopradptr2=&ctopradother2[0];
+
   FTYPE F[NPR];
   FTYPE p_l[NPR],p_r[NPR];
   FTYPE pvec_l[NDIM][NPR],pvec_r[NDIM][NPR];
@@ -2628,7 +2635,7 @@ int fluxcalc_donor
       c2d[CMAX][0] = ocminmax[CMAX];
  
       // now get flux
-      MYFUN(flux_compute(i, j, k, dir, ptrgeomf1, ocminmax_l,ocminmax_r, ocminmax, ctopptr[1], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+      MYFUN(flux_compute(i, j, k, dir, ptrgeomf1, ocminmax_l,ocminmax_r, ocminmax, ctopptr[1], ocminmaxrad_l,ocminmaxrad_r, ocminmaxrad, ctopradptr[1], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
       PLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl)=F[pl];
 
 #if(0)
@@ -2748,7 +2755,7 @@ int fluxcalc_donor
 
 
       // now get flux
-      MYFUN(flux_compute(i, j, k, dir, ptrgeomf2, ocminmax_l,ocminmax_r, ocminmax, ctopptr[2], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
+      MYFUN(flux_compute(i, j, k, dir, ptrgeomf2, ocminmax_l,ocminmax_r, ocminmax, ctopptr[2], ocminmaxrad_l,ocminmaxrad_r, ocminmaxrad, ctopradptr[2], CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
       PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)=F[pl];
 
 #if(0)

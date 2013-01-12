@@ -18,7 +18,7 @@ static void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r
 // actually compute flux from given data
 int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopallptr)
 {
-  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
   int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
   FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
@@ -74,7 +74,7 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
 // only should be needed for old a2c method
 int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopallptr)
 {
-  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
+  int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
   int p2SFUevolve_splitmaem(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *FEM, FTYPE *U, FTYPE *UEM);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
   FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
