@@ -1334,12 +1334,11 @@ int u2p_rad(ldouble *uu, ldouble *pp, struct of_geom *ptrgeom)
     }
   
   //new primitives (only uses urfcon[1-3])
-  pp[6]=Erf;
-  pp[7]=urfcon[1];
-  pp[8]=urfcon[2];
-  pp[9]=urfcon[3];
-
-
+  pp[PRAD0]=Erf;
+  pp[PRAD1]=urfcon[1];
+  pp[PRAD2]=urfcon[2];
+  pp[PRAD3]=urfcon[3];
+  
   return 0;
 }
 
