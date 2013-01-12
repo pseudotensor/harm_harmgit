@@ -226,6 +226,8 @@ ifeq ($(USEORANGE),1)
 endif
 
 ifeq ($(USEGCC),1)
+GSLCFLAGS=`gsl-config --cflags`
+COMP=gcc ${GSLCFLAGS}
 endif
 
 ifeq ($(USEPGCC),1)
