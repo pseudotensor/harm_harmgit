@@ -610,6 +610,8 @@ int prad_fforlab(int whichdir, ldouble *pp1, ldouble *pp2,struct of_state *q, st
   ldouble Rij[NDIM][NDIM];
   int pliter,pl;
 
+  //TODO : no distinction basing on whichdir!
+
   //radiative stress tensor in the fluid frame
   calc_Rij_ff(pp1,Rij);
 
@@ -666,6 +668,7 @@ calc_Lorentz_laborff(int whichdir,ldouble *pp,struct of_state *q, struct of_geom
       }
       
       //lab frame
+      //TODO: KerrShild???
       wcon[0]=1./sqrt(-ptrgeom->gcov[GIND(0,0)]);
       wcon[1]=wcon[2]=wcon[3]=0.;
       indices_21(wcon,wcov,ptrgeom);
