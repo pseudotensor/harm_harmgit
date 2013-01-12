@@ -302,10 +302,6 @@ static void set_position_stores(void)
 	OPENMP3DLOOPBLOCK2IJK(i,j,k);
 	
     // Want X vs. i,j,k
-#if(MCOORD==CARTMINKMETRIC)
-	// doesn't depend on position, only store/use 1 value
-    //	if(i!=0 || j!=0 || k!=0) continue; // simple way to avoid other i,j,k when doing OpenMP
-#endif
 	
 	// store X since can be expensive to keep recomputing these things, esp. if bl_coord() involves alot of complicated functions
 	// X must be always allowed to vary in space
