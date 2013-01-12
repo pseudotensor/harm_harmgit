@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# run using "bash" not "sh"
+
+# then do (and look for non-standard warnings)
+# grep -i "warning" make.log | grep -v "unrecognized" | grep -v "subscript out of range" | grep -v "may lose significant bits" |less -S
 
 ####################
 # get list of extern declarations to add to global.h to check declaration consistency

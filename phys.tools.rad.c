@@ -67,6 +67,8 @@ FTYPE compute_dt()
     myexit(12112);
   }
 
+  return(0.0);
+
 }
 
 // compute changes to U (both T and R) using implicit method
@@ -323,6 +325,8 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
 {
+  extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
+
   //characterisitic wavespeed in the radiation rest frame
   FTYPE vrad2=THIRD;
   
