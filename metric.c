@@ -165,7 +165,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 	else if(whichcoord==HTMETRICACCURATE){
 	  set_gcov_htmetric_accurate(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
-	else if(whichcoord==CARTMINKMETRIC){
+	else if(whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2){
 	  set_gcov_cartminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
 	}
 	else if(whichcoord==UNIGRAVITY){
@@ -712,7 +712,7 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       // since don't have gcon and want to keep things simple by only having to specify gcov 
       else matrix_inverse_metric(whichcoord,gcov,gcon);
     }
-    else if(whichcoord==KS_JP1_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==CARTMINKMETRIC || whichcoord==UNIGRAVITY || whichcoord==CYLMINKMETRIC || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS){
+    else if(whichcoord==KS_JP1_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2 || whichcoord==UNIGRAVITY || whichcoord==CYLMINKMETRIC || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS){
       // do not have analytic gcon, so invert numerically
       matrix_inverse_metric(whichcoord,gcov,gcon);
     }
