@@ -1,9 +1,11 @@
+//problem names
 #define FLATNESS (1)
 #define RADBEAMFLAT (2)
 
+//problem choice
 #define WHICHPROBLEM FLATNESS
 
-// atch adjusts
+//undefs
 #undef MAXWELL
 #undef TRACKVPOT
 #undef EVOLVEWITHVPOT
@@ -144,6 +146,12 @@
 #define RADSOURCEMETHODEXPLICIT 1
 #define RADSOURCEMETHODIMPLICIT 2
 
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+
 #if(WHICHPROBLEM==FLATNESS)
 
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
@@ -153,6 +161,25 @@
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+
+#define N1 20
+#define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC
+#define RADBEAMFLAT_FRATIO 0.95
+#define RADBEAMFLAT_ERAD 1.
+#define RADBEAMFLAT_RHO 1.
+#define RADBEAMFLAT_UU 0.1
 
 #endif
 

@@ -317,8 +317,6 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
 {
-  int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
-
   //characterisitic wavespeed in the radiation rest frame
   FTYPE vrad2=THIRD;
   

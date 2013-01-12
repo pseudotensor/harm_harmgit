@@ -15,7 +15,7 @@ int prepre_init_specific_init(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS)  
+#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
   gam = 4./3.;
   cooling=KORAL;
 #endif
@@ -96,7 +96,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS)  
+#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
 
   defcoord = UNIFORMCOORDS;
   Rin_array[1]=0;
@@ -146,6 +146,7 @@ int init_global(void)
   //DTfake=MAX(1,DTr1/10); 
   DTfake=1.;
 
+
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -156,6 +157,24 @@ int init_global(void)
   BCtype[X2UP]=PERIODIC; // OUTFLOW;
   BCtype[X2DN]=PERIODIC;
   BCtype[X3UP]=PERIODIC; // OUTFLOW;
+  BCtype[X3DN]=PERIODIC;
+
+  int idt;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+
+  DTr = 100; //number of time steps for restart dumps
+  tf = 10.0; //final time
+#endif
+
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADBEAMFLAT)  
+
+  BCtype[X1UP]=OUTFLOW;
+  BCtype[X1DN]=RADBEAMFLATINFLOW;
+  BCtype[X2UP]=OUTFLOW;
+  BCtype[X2DN]=OUTFLOW;
+  BCtype[X3UP]=PERIODIC; 
   BCtype[X3DN]=PERIODIC;
 
   int idt;
@@ -278,7 +297,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   else {
     
     
-    pr[RHO] = 1.0 ;
+    pr[RHO] = 1. ;
     pr[UU] = 0.1;
     pr[U1] = 0 ;
     pr[U2] = 0 ;    
@@ -295,7 +314,51 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     }
 
 
-    pr[URAD0] = 1.0;
+    pr[URAD0] = 1.;
+    pr[URAD1] = 0 ;
+    pr[URAD2] = 0 ;    
+    pr[URAD3] = 0 ;
+
+    *whichvel=WHICHVEL;
+    *whichcoord=CARTMINKMETRIC;
+    return(0);
+  }
+#endif 
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADBEAMFLAT)  
+
+  // outsideness
+  if (0) {
+
+    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+  else {
+    
+    
+    pr[RHO] = RADBEAMFLAT_RHO ;
+    pr[UU] = RADBEAMFLAT_UU;
+    pr[U1] = 0 ;
+    pr[U2] = 0 ;    
+    pr[U3] = 0 ;
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+
+    pr[URAD0] = RADBEAMFLAT_ERAD;
     pr[URAD1] = 0 ;
     pr[URAD2] = 0 ;    
     pr[URAD3] = 0 ;

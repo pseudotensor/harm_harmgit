@@ -1,6 +1,18 @@
 
 #include "decs.h"
 
+int bound_x1dn_radbeamflatinflow(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+				 );
 
 /* bound array containing entire set of primitive variables */
 
@@ -133,6 +145,12 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x1dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
         donebc[dir]=1;
       }
+
+      else if(BCtype[dir]==RADBEAMFLATINFLOW){
+        bound_x1dn_radbeamflatinflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
+
       else{
         dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
         myexit(7598730);
@@ -385,12 +403,110 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
   }
 
 
-
-
   return(0);
 }
 
 
 
 
+
+// X1 outer OUTFLOW/FIXEDOUTFLOW
+int bound_x1dn_radbeamflatinflow(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+
+{
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    int locali1,globali1;
+    int locali2,globali2;
+    int ri1,ri2;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int horizonti;
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if((BCtype[X1DN]==RADBEAMFLATINFLOW)){
+
+      // innner x BC:
+      if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) {
+
+
+	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+	  ri=riin;
+	  rj=j;
+	  rk=k;
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  //initially copying everything
+	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  
+	  //coordinates of the ghost cell
+	  bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+	  if(V[1]>.4 && V[1]<.6) //beam to be imposed
+	    {
+	      //E, F^i
+	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
+	      MACP0A1(prim,i,j,k,URAD1) = 0.;
+	      MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
+	      MACP0A1(prim,i,j,k,URAD3) = 0.;
+	    }
+	  else //no beam
+	    {
+	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
+	      MACP0A1(prim,i,j,k,URAD1) = 0.;
+	      MACP0A1(prim,i,j,k,URAD2) = 0.;
+	      MACP0A1(prim,i,j,k,URAD3) = 0.;
+	    }
+	}
+      }
+    }
+  }// end parallel region
+
+#else
+
+  dualfprintf(fail_file,"RADBEAMFLATINFLOW BC works only for RADBEAMFLAT\n");
+  myexit(3263664);
+
+#endif
+  return(0);
+} 
 
