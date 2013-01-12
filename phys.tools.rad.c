@@ -207,8 +207,9 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 {
 #if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT)
   koral_explicit_source_rad( pin, ptrgeom, q, dUcomp);
-#else
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
   koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE)
 #endif
 }
 
