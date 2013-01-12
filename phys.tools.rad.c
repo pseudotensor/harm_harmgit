@@ -317,15 +317,31 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
 {
+  int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
-  // SUPERGODMARK KORALTODO
+  //characterisitic wavespeed in the radiation rest frame
+  FTYPE vrad2=THIRD;
+  
+  //need to substitute ucon,ucov with uradcon,uradcov to fool simplefast
+  FTYPE ucon[NDIM],ucov[NDIM];
+  int ii;
+  DLOOPA(ii)
+  {
+    ucon[ii]=q->ucon[ii];
+    ucov[ii]=q->ucov[ii];
+    q->ucon[ii]=q->uradcon[ii];
+    q->ucov[ii]=q->uradcov[ii];
+  }
 
-  FTYPE dxdxp[NDIM][NDIM];
-  dxdxprim_ijk(geom->i, geom->j, geom->k, geom->p, dxdxp);
-  // characeristic wavespeeds are 3-velocity in lab-frame
-  *vmin=-1.0/dxdxp[dir][dir]; // e.g. dxdxp = dr/dx1
-  *vmax=+1.0/dxdxp[dir][dir];
+  //calculating vmin, vmax
+  simplefast(dir,geom,q,vrad2,vmin,vmax);
 
+  //restoring gas 4-velocities
+  DLOOPA(ii)
+  {
+    q->ucon[ii]=ucon[ii];
+    q->ucov[ii]=ucov[ii];
+  }
   
   return(0);
 }
