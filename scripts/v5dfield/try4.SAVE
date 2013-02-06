@@ -1,0 +1,941 @@
+#Vis5D 4.3 Tcl save file
+
+
+#Box color
+vis5d_set_color $dtx VIS5D_BOX 0               1               1               1               1
+
+#Light map color
+vis5d_set_color $dtx VIS5D_LIGHT_MAP 0               1               1               1               1
+
+#Dark map color
+vis5d_set_color $dtx VIS5D_DARK_MAP 0               0               0               0               1
+
+#Background color
+vis5d_set_color $dtx VIS5D_BACKGROUND 0               0               0               0               1
+
+#Text labels
+
+#Viewing matrix
+vis5d_set_matrix $dtx { -0.0779272 -0.57584 0.81384 0 0.911271 0.289959 0.292419 0 -0.404368 0.764417 0.502151 0 0 0 0 1 }
+
+#Camera
+vis5d_set_camera $dtx 0 0.1625 0.720095
+
+#Cloned or computed variables
+
+#Isosurfaces
+vis5d_set_isosurface $ctx "density" 0.330016
+vis5d_make_isosurface $ctx VIS5D_ALL_TIMES "density" 0
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 0 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 1 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 2 VIS5D_OFF
+vis5d_set_isosurface $ctx "bsqorho" 67.3561
+vis5d_make_isosurface $ctx VIS5D_ALL_TIMES "bsqorho" 0
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 3 VIS5D_ON
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 4 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 5 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 6 VIS5D_OFF
+vis5d_set_isosurface $ctx "Rcyl" 1.62559
+vis5d_make_isosurface $ctx VIS5D_ALL_TIMES "Rcyl" 0
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 7 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 8 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 9 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 10 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 11 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 12 VIS5D_OFF
+vis5d_enable_graphics $ctx VIS5D_ISOSURF 13 VIS5D_OFF
+
+#Horizontal contour slices
+vis5d_set_hslice $ctx "density" 3 9.62725e-13 25.7413 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 0 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 0 VIS5D_OFF
+vis5d_set_hslice $ctx "ug" 5 3.29637e-17 45.9571 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 1 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 1 VIS5D_OFF
+vis5d_set_hslice $ctx "uu0" 1 0.949407 12.981 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 2 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 2 VIS5D_OFF
+vis5d_set_hslice $ctx "bsqorho" 10 -3.92745 100 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 3 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 3 VIS5D_OFF
+vis5d_set_hslice $ctx "lrho" 1 -12.0165 1.41063 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 4 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 4 VIS5D_OFF
+vis5d_set_hslice $ctx "neglrho" 1 -1.41063 12.0165 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 5 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 5 VIS5D_OFF
+vis5d_set_hslice $ctx "lbsq" 2 -12.0165 4.51153 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 6 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 6 VIS5D_OFF
+vis5d_set_hslice $ctx "Rcyl" 6 0 56.3537 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 7 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 7 VIS5D_OFF
+vis5d_set_hslice $ctx "W" 0.2 -0.898886 0.860537 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 8 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 8 VIS5D_OFF
+vis5d_set_hslice $ctx "V" 0.2 -0.861852 0.908159 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 9 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 9 VIS5D_OFF
+vis5d_set_hslice $ctx "U" 0.2 -0.89264 1.06194 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 10 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 10 VIS5D_OFF
+vis5d_set_hslice $ctx "W2" 3 -20.6821 5.50408 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 11 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 11 VIS5D_OFF
+vis5d_set_hslice $ctx "V2" 6 -26.646 30.1904 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 12 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 12 VIS5D_OFF
+vis5d_set_hslice $ctx "U2" 5 -26.5116 25.4275 127.5
+vis5d_enable_graphics $ctx VIS5D_HSLICE 13 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSLICE 13 VIS5D_OFF
+
+#Vertical contour slices
+vis5d_set_vslice $ctx "density" 3 9.62725e-13 25.7413  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 0 VIS5D_OFF
+vis5d_set_vslice $ctx "ug" 5 3.29637e-17 45.9571  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 1 VIS5D_OFF
+vis5d_set_vslice $ctx "uu0" 1 0.949407 12.981  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 2 VIS5D_OFF
+vis5d_set_vslice $ctx "bsqorho" 10 -3.92745 100  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 3 VIS5D_OFF
+vis5d_set_vslice $ctx "lrho" 1 -12.0165 1.41063  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 4 VIS5D_OFF
+vis5d_set_vslice $ctx "neglrho" 1 -1.41063 12.0165  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 5 VIS5D_OFF
+vis5d_set_vslice $ctx "lbsq" 2 -12.0165 4.51153  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 6 VIS5D_OFF
+vis5d_set_vslice $ctx "Rcyl" 6 0 56.3537  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 7 VIS5D_OFF
+vis5d_set_vslice $ctx "W" 0.2 -0.898886 0.860537  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 8 VIS5D_OFF
+vis5d_set_vslice $ctx "V" 0.2 -0.861852 0.908159  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 9 VIS5D_OFF
+vis5d_set_vslice $ctx "U" 0.2 -0.89264 1.06194  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 10 VIS5D_OFF
+vis5d_set_vslice $ctx "W2" 3 -20.6821 5.50408  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 11 VIS5D_OFF
+vis5d_set_vslice $ctx "V2" 6 -26.646 30.1904  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 12 VIS5D_OFF
+vis5d_set_vslice $ctx "U2" 5 -26.5116 25.4275  127.5 0  127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSLICE 13 VIS5D_OFF
+
+#Horizontal colored slices
+vis5d_set_chslice $ctx "density" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 0 VIS5D_OFF
+vis5d_set_chslice $ctx "ug" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 1 VIS5D_OFF
+vis5d_set_chslice $ctx "uu0" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 2 VIS5D_OFF
+vis5d_set_chslice $ctx "bsqorho" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 3 VIS5D_OFF
+vis5d_set_chslice $ctx "lrho" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 4 VIS5D_OFF
+vis5d_set_chslice $ctx "neglrho" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 5 VIS5D_OFF
+vis5d_set_chslice $ctx "lbsq" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 6 VIS5D_OFF
+vis5d_set_chslice $ctx "Rcyl" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 7 VIS5D_OFF
+vis5d_set_chslice $ctx "W" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 8 VIS5D_OFF
+vis5d_set_chslice $ctx "V" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 9 VIS5D_OFF
+vis5d_set_chslice $ctx "U" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 10 VIS5D_OFF
+vis5d_set_chslice $ctx "W2" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 11 VIS5D_OFF
+vis5d_set_chslice $ctx "V2" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 12 VIS5D_OFF
+vis5d_set_chslice $ctx "U2" 127.5
+vis5d_enable_graphics $ctx VIS5D_CHSLICE 13 VIS5D_OFF
+
+#Vertical colored slices
+vis5d_set_cvslice $ctx "density" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 0 VIS5D_OFF
+vis5d_set_cvslice $ctx "ug" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 1 VIS5D_OFF
+vis5d_set_cvslice $ctx "uu0" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 2 VIS5D_OFF
+vis5d_set_cvslice $ctx "bsqorho" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 3 VIS5D_OFF
+vis5d_set_cvslice $ctx "lrho" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 4 VIS5D_OFF
+vis5d_set_cvslice $ctx "neglrho" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 5 VIS5D_OFF
+vis5d_set_cvslice $ctx "lbsq" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 6 VIS5D_OFF
+vis5d_set_cvslice $ctx "Rcyl" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 7 VIS5D_OFF
+vis5d_set_cvslice $ctx "W" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 8 VIS5D_OFF
+vis5d_set_cvslice $ctx "V" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 9 VIS5D_OFF
+vis5d_set_cvslice $ctx "U" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 10 VIS5D_OFF
+vis5d_set_cvslice $ctx "W2" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 11 VIS5D_OFF
+vis5d_set_cvslice $ctx "V2" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 12 VIS5D_OFF
+vis5d_set_cvslice $ctx "U2" 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_CVSLICE 13 VIS5D_OFF
+
+#Current Display Volume
+vis5d_set_volume_and_owner $dtx -1 -1
+
+#Horizontal wind vector slices
+vis5d_set_hwindslice $dtx 0  0.25 300 223.227
+vis5d_enable_graphics $ctx VIS5D_HWIND 0 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HWIND 0 VIS5D_OFF
+vis5d_set_hwindslice $dtx 1  1 1 127.5
+vis5d_enable_graphics $ctx VIS5D_HWIND 1 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HWIND 1 VIS5D_OFF
+
+#Vertical wind vector slices
+vis5d_set_vwindslice $dtx 0  1 1  127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_VWIND 0 VIS5D_OFF
+vis5d_set_vwindslice $dtx 1  1 1  127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_VWIND 1 VIS5D_OFF
+
+#Horizontal stream slices
+vis5d_set_hstreamslice $dtx 0  1 127.5
+vis5d_enable_graphics $ctx VIS5D_HSTREAM 0 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSTREAM 0 VIS5D_OFF
+vis5d_set_hstreamslice $dtx 1  1 127.5
+vis5d_enable_graphics $ctx VIS5D_HSTREAM 1 VIS5D_OFF
+vis5d_enable_sfc_graphics $ctx VIS5D_HSTREAM 1 VIS5D_OFF
+
+#Vertical stream slices
+vis5d_set_vstreamslice $dtx 0  1 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSTREAM 0 VIS5D_OFF
+vis5d_set_vstreamslice $dtx 1  1 127.5 0 127.5 255
+vis5d_enable_graphics $ctx VIS5D_VSTREAM 1 VIS5D_OFF
+
+#Trajectories
+vis5d_set_traj $dtx 1 1 0
+vis5d_make_traj $dtx 172.886 204.144 39.0511 0 0
+vis5d_make_traj $dtx 199.163 159.884 51.9836 0 0
+vis5d_make_traj $dtx 207.302 167.076 56.8127 0 0
+vis5d_make_traj $dtx 98.1719 90.2746 201.846 0 0
+vis5d_make_traj $dtx 79.5239 98.3482 179.793 0 0
+vis5d_enable_graphics $ctx VIS5D_TRAJ 0 VIS5D_ON
+
+#Isosurface colors
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "density"               1               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "ug"               0               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "uu0"               1       0.5019608               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "bsqorho"               0       0.5019608               1       0.8352941
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "lrho"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "neglrho"               1               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "lbsq"               0               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "Rcyl"               1       0.5019608               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "W"               0       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "V"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "U"               1               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "W2"               0               1               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "V2"               1       0.5019608               0               1
+vis5d_set_color $dtx VIS5D_ISOSURF $ctx "U2"               0       0.5019608               1               1
+
+#Horizontal contour slice colors
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "density"               1               1               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "ug"               0       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "uu0"               1               0       0.5019608               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "bsqorho"       0.7529412       0.7529412       0.2509804               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "lrho"       0.7529412               1       0.7529412               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "neglrho"               1               1               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "lbsq"               0       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "Rcyl"               1               0       0.5019608               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "W"       0.7529412       0.7529412       0.2509804               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "V"       0.7529412               1       0.7529412               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "U"               1               1               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "W2"               0       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "V2"               1               0       0.5019608               1
+vis5d_set_color $dtx VIS5D_HSLICE $ctx "U2"       0.7529412       0.7529412       0.2509804               1
+
+#Vertical contour slice colors
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "density"               1               0               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "ug"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "uu0"       0.5019608               1               0               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "bsqorho"       0.7529412       0.2509804       0.7529412               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "lrho"       0.2509804       0.7529412               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "neglrho"               1               0               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "lbsq"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "Rcyl"       0.5019608               1               0               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "W"       0.7529412       0.2509804       0.7529412               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "V"       0.2509804       0.7529412               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "U"               1               0               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "W2"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "V2"       0.5019608               1               0               1
+vis5d_set_color $dtx VIS5D_VSLICE $ctx "U2"       0.7529412       0.2509804       0.7529412               1
+
+#Horizontal colored slice tickmark colors
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "density"               0               1               1               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "ug"       0.5019608               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "uu0"               0               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "bsqorho"       0.2509804       0.7529412       0.7529412               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "lrho"      0.01568628               1       0.7529412               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "neglrho"               0               1               1               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "lbsq"       0.5019608               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "Rcyl"               0               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "W"       0.2509804       0.7529412       0.7529412               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "V"      0.01568628               1       0.7529412               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "U"               0               1               1               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "W2"       0.5019608               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "V2"               0               1       0.5019608               1
+vis5d_set_color $dtx VIS5D_CHSLICE $ctx "U2"       0.2509804       0.7529412       0.7529412               1
+
+#Vertical colored slice tickmark colors
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "density"               1       0.3137255       0.3137255               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "ug"               1       0.5019608       0.5019608               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "uu0"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "bsqorho"       0.2509804       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "lrho"               1       0.2509804       0.7529412               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "neglrho"               1       0.3137255       0.3137255               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "lbsq"               1       0.5019608       0.5019608               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "Rcyl"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "W"       0.2509804       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "V"               1       0.2509804       0.7529412               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "U"               1       0.3137255       0.3137255               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "W2"               1       0.5019608       0.5019608               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "V2"       0.5019608       0.5019608               1               1
+vis5d_set_color $dtx VIS5D_CVSLICE $ctx "U2"       0.2509804       0.5019608               1               1
+
+#Horizontal wind slice colors
+vis5d_set_color $dtx VIS5D_HWIND 0               0               1               1               1
+vis5d_set_color $dtx VIS5D_HWIND 1               0               1               0               1
+
+#Vertical wind slice colors
+vis5d_set_color $dtx VIS5D_VWIND 0               0       0.5333334               1               1
+vis5d_set_color $dtx VIS5D_VWIND 1               1               0               1               1
+
+#Horizontal stream slice colors
+vis5d_set_color $dtx VIS5D_HSTREAM 0               1       0.5333334               0               1
+vis5d_set_color $dtx VIS5D_HSTREAM 1               1               1               0               1
+
+#Vertical stream slice colors
+vis5d_set_color $dtx VIS5D_VSTREAM 0               1               1               0               1
+vis5d_set_color $dtx VIS5D_VSTREAM 1               1       0.5333334               0               1
+
+#Trajectory colors
+vis5d_set_color $dtx VIS5D_TRAJ 0               1               1               1               1
+vis5d_set_color $dtx VIS5D_TRAJ 1               1               1               0               1
+vis5d_set_color $dtx VIS5D_TRAJ 2               1               0               1               1
+vis5d_set_color $dtx VIS5D_TRAJ 3               0               1               0               1
+vis5d_set_color $dtx VIS5D_TRAJ 4               0       0.5333334               1               1
+vis5d_set_color $dtx VIS5D_TRAJ 5               1               0       0.5333334               1
+vis5d_set_color $dtx VIS5D_TRAJ 6               1       0.5333334               0               1
+vis5d_set_color $dtx VIS5D_TRAJ 7               0       0.5333334       0.5333334               1
+
+#Isosurface color tables
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "density"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "ug"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "uu0"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "bsqorho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "lrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "neglrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "lbsq"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "Rcyl"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "W"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "V"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "U"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "W2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "V2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_ISOSURF $ctx "U2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.5115891      25.4274826       0.0000000 
+
+#Horizontal color slice color tables
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "density"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "ug"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "uu0"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "bsqorho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "lrho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "neglrho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "lbsq"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "Rcyl"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "W"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "V"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "U"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "W2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "V2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CHSLICE $ctx "U2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -26.5115891      25.4274826       0.0000000 
+
+#Vertical color slice color tables
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "density"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "ug"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "uu0"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "bsqorho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "lrho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "neglrho"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "lbsq"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "Rcyl"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "W"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "V"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "U"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "W2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "V2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_CVSLICE $ctx "U2"       1.4000000       1.0000000       0.0000000      -1.0000000       0.0000000     255.0000000     255.0000000     -26.5115891      25.4274826       0.0000000 
+
+#Volume color tables
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "density"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "ug"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "uu0"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "bsqorho"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "lrho"       1.4000000       1.3642859       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 0 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 1 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 2 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 3 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 4 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 5 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 6 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 7 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 8 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 9 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 10 13 1 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 11 13 2 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 12 13 2 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 13 13 2 242 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 14 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 15 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 16 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 17 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 18 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 19 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 20 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 21 14 2 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 22 14 3 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 23 14 3 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 24 14 3 241 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 25 15 3 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 26 15 3 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 27 15 3 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 28 15 4 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 29 15 4 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 30 15 4 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 31 15 4 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 32 15 4 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 33 15 5 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 34 15 5 240 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 35 16 5 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 36 16 5 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 37 16 6 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 38 16 6 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 39 16 6 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 40 16 7 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 41 16 7 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 42 16 7 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 43 16 8 239 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 44 17 8 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 45 17 9 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 46 17 9 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 47 17 9 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 48 17 10 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 49 17 10 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 50 17 11 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 51 17 12 238 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 52 18 12 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 53 18 13 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 54 18 13 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 55 18 14 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 56 18 15 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 57 18 15 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 58 18 16 237 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 59 19 17 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 60 19 18 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 61 19 19 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 62 19 19 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 63 19 20 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 64 19 21 236 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 65 20 22 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 66 20 23 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 67 20 24 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 68 20 25 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 69 20 26 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 70 20 28 235 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 71 21 29 234 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 72 21 30 234 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 73 21 31 234 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 74 21 33 234 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 75 21 34 234 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 76 22 35 233 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 77 22 37 233 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 78 22 38 233 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 79 22 40 233 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 80 23 42 232 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 81 23 43 232 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 82 23 45 232 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 83 23 47 232 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 84 23 48 232 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 85 24 50 231 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 86 24 52 231 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 87 24 54 231 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 88 24 56 231 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 89 25 58 230 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 90 25 60 230 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 91 25 62 230 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 92 26 64 229 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 93 26 66 229 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 94 26 69 229 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 95 26 71 229 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 96 27 73 228 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 97 27 76 228 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 98 27 78 228 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 99 28 81 227 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 100 28 83 227 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 101 29 86 226 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 102 29 88 226 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 103 29 91 226 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 104 30 94 225 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 105 30 96 225 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 106 30 99 225 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 107 31 102 224 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 108 31 105 224 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 109 32 108 223 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 110 32 111 223 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 111 33 114 222 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 112 33 117 222 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 113 34 119 221 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 114 34 123 221 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 115 35 126 220 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 116 35 129 220 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 117 36 132 219 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 118 36 135 219 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 119 37 138 218 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 120 37 141 218 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 121 38 144 217 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 122 39 147 216 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 123 39 151 216 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 124 40 154 215 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 125 41 157 214 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 126 41 160 214 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 127 42 163 213 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 128 43 166 212 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 129 44 169 211 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 130 44 173 211 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 131 45 176 210 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 132 46 179 209 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 133 47 182 208 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 134 48 185 207 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 135 49 188 206 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 136 50 191 205 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 137 51 194 204 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 138 52 197 203 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 139 53 200 202 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 140 55 203 200 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 141 56 205 199 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 142 57 208 198 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 143 58 211 197 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 144 60 213 195 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 145 61 216 194 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 146 63 218 192 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 147 64 221 191 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 148 66 223 189 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 149 67 226 188 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 150 69 228 186 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 151 71 230 184 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 152 73 232 182 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 153 75 234 180 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 154 77 236 178 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 155 79 238 176 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 156 81 240 174 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 157 83 241 172 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 158 85 243 170 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 159 88 244 167 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 160 90 246 165 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 161 93 247 162 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 162 95 248 160 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 163 98 249 157 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 164 101 250 154 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 165 104 251 151 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 166 106 252 149 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 167 109 253 146 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 168 112 253 143 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 169 115 254 140 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 170 118 254 137 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 171 121 254 134 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 172 125 254 130 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 173 128 254 127 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 174 131 254 124 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 175 134 254 121 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 176 137 254 118 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 177 140 254 115 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 178 143 253 112 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 179 146 253 109 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 180 149 252 106 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 181 152 251 103 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 182 155 250 100 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 183 157 249 98 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 184 160 248 95 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 185 163 247 92 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 186 165 246 90 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 187 168 244 87 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 188 170 243 85 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 189 172 241 83 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 190 174 239 81 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 191 177 238 78 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 192 179 236 76 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 193 181 234 74 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 194 183 232 72 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 195 184 230 71 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 196 186 228 69 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 197 188 225 67 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 198 190 223 65 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 199 191 221 64 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 200 193 218 62 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 201 194 216 61 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 202 195 213 60 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 203 197 210 58 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 204 198 208 57 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 205 199 205 56 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 206 201 202 54 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 207 202 199 53 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 208 203 196 52 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 209 204 194 51 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 210 205 191 50 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 211 206 188 49 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 212 207 185 48 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 213 208 182 47 4
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 214 209 178 46 3
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 215 210 175 45 3
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 216 211 172 44 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 217 211 169 44 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 218 212 166 43 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 219 213 163 42 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 220 214 160 41 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 221 214 157 41 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 222 215 153 40 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 223 216 150 39 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 224 216 147 39 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 225 217 144 38 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 226 218 141 37 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 227 218 138 37 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 228 219 134 36 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 229 219 131 36 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 230 220 128 35 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 231 220 125 35 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 232 221 122 34 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 233 221 119 34 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 234 222 116 33 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 235 222 113 33 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 236 223 110 32 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 237 223 107 32 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 238 224 105 31 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 239 224 102 31 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 240 225 99 30 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 241 225 96 30 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 242 225 93 30 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 243 226 91 29 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 244 226 88 29 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 245 227 85 28 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 246 227 83 28 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 247 227 80 28 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 248 228 78 27 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 249 228 75 27 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 250 228 73 27 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 251 229 71 26 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 252 229 68 26 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 253 229 66 26 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 254 229 66 26 0
+vis5d_set_color_table_entry $dtx VIS5D_VOLUME $ctx "lrho" 255 0 0 0 0
+
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "neglrho"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "lbsq"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "Rcyl"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "W"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "V"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "U"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "W2"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "V2"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_VOLUME $ctx "U2"       1.4000000       1.0000000       2.0000000      -1.0000000       0.0000000       0.0000000     253.0000000     -26.5115891      25.4274826       0.0000000 
+
+#Trajectory color tables
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "density"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "ug"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "uu0"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "bsqorho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "lrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "neglrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "lbsq"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "Rcyl"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "W"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "V"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "U"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "W2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "V2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TRAJ $ctx "U2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.5115891      25.4274826       0.0000000 
+
+#Topography color tables
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "-1"       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000 
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 0 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 1 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 2 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 3 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 4 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 5 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 6 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 7 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 8 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 9 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 10 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 11 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 12 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 13 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 14 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 15 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 16 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 17 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 18 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 19 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 20 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 21 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 22 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 23 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 24 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 25 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 26 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 27 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 28 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 29 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 30 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 31 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 32 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 33 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 34 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 35 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 36 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 37 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 38 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 39 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 40 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 41 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 42 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 43 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 44 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 45 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 46 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 47 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 48 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 49 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 50 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 51 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 52 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 53 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 54 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 55 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 56 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 57 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 58 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 59 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 60 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 61 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 62 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 63 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 64 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 65 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 66 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 67 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 68 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 69 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 70 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 71 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 72 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 73 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 74 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 75 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 76 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 77 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 78 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 79 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 80 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 81 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 82 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 83 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 84 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 85 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 86 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 87 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 88 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 89 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 90 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 91 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 92 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 93 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 94 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 95 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 96 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 97 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 98 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 99 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 100 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 101 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 102 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 103 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 104 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 105 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 106 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 107 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 108 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 109 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 110 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 111 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 112 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 113 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 114 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 115 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 116 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 117 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 118 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 119 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 120 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 121 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 122 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 123 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 124 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 125 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 126 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 127 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 128 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 129 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 130 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 131 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 132 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 133 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 134 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 135 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 136 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 137 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 138 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 139 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 140 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 141 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 142 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 143 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 144 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 145 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 146 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 147 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 148 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 149 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 150 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 151 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 152 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 153 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 154 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 155 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 156 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 157 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 158 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 159 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 160 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 161 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 162 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 163 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 164 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 165 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 166 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 167 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 168 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 169 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 170 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 171 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 172 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 173 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 174 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 175 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 176 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 177 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 178 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 179 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 180 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 181 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 182 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 183 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 184 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 185 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 186 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 187 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 188 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 189 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 190 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 191 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 192 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 193 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 194 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 195 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 196 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 197 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 198 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 199 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 200 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 201 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 202 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 203 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 204 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 205 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 206 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 207 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 208 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 209 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 210 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 211 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 212 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 213 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 214 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 215 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 216 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 217 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 218 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 219 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 220 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 221 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 222 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 223 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 224 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 225 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 226 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 227 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 228 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 229 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 230 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 231 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 232 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 233 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 234 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 235 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 236 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 237 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 238 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 239 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 240 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 241 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 242 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 243 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 244 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 245 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 246 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 247 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 248 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 249 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 250 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 251 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 252 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 253 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 254 255 255 255 255
+vis5d_set_color_table_entry $dtx VIS5D_TOPO $ctx "-1" 255 25 25 255 255
+
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "density"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      25.7412663       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "ug"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      45.9570770       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "uu0"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.9494075      12.9809542       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "bsqorho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -3.9274511     100.0000000       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "lrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       1.4106299       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "neglrho"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -1.4106299      12.0164976       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "lbsq"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -12.0164976       4.5115252       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "Rcyl"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000       0.0000000      56.3537407       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "W"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8988862       0.8605375       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "V"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8618520       0.9081588       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "U"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000      -0.8926404       1.0619358       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "W2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -20.6820621       5.5040774       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "V2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.6460018      30.1903973       0.0000000 
+vis5d_set_color_table_params $dtx VIS5D_TOPO $ctx "U2"       1.4000000       1.0000000       2.0000000     255.0000000       0.0000000     255.0000000     255.0000000     -26.5115891      25.4274826       0.0000000 
+
+vis5d_set_topo_color_var_and_owner $dtx 0 -1
+
+vis5d_draw_frame 0

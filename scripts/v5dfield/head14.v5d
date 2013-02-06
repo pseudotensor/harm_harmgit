@@ -1,0 +1,15 @@
+density 1E-4 1
+ug 1E-4 1
+vx 1E-4 1
+vy 1E-4 1
+vz 1E-4 1
+Bx 1E-4 1
+By 1E-4 1
+Bz 1E-4 1
+FEMrad 1E-4 1
+Bphi 1E-4 1
+Jt 1E-4 1
+Jx 1E-4 1
+Jy 1E-4 1
+Jz 1E-4 1
+0 1 0 1 0 1
