@@ -23,6 +23,7 @@
 
 //#define THETAROTMETRIC (0.5*0.7)
 #define THETAROTMETRIC (0.0)
+#define THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -116,7 +117,14 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 int prepre_init_specific_init(void)
 {
   int funreturn;
-  
+
+  if(ALLOWMETRICROT){
+    THETAROTPRIM=THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIM=0.0; // DO NOT CHANGE
+  }
+
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -492,7 +500,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   int inittype;
 
 
-  THETAROT = 0.0; // define rho,u,v,B as if no rotation
+  THETAROT = THETAROTPRIM; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
 
 
   inittype=1;
