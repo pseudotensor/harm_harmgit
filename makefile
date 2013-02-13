@@ -730,7 +730,7 @@ GCCCFLAGS=$(GCCCFLAGSPRE)
 endif
 
 # for for normal installation of v5d and hdf
-BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -lv5d
+BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -L /home/mavara/lib -lv5d -I /home/mavara/include
 BIN2TXTLIBS1=$(BIN2TXTLIBS)
 BIN2TXTLIBS2=$(BIN2TXTLIBS)
 
