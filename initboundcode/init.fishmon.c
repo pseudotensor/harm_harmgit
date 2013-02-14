@@ -21,9 +21,8 @@
 #define SLOWFAC 1.0		/* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
-//#define THETAROTMETRIC (0.5*0.7)
-#define THETAROTMETRIC (0.0)
-#define THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
+#define USER_THETAROTMETRIC (0.0)
+#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -118,12 +117,21 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
 
+  // set global THETAROTPRIMITIVES
   if(ALLOWMETRICROT){
-    THETAROTPRIM=THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
   }
   else{
-    THETAROTPRIM=0.0; // DO NOT CHANGE
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
   }
+
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
+
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -241,12 +249,6 @@ int init_grid(void)
   // metric stuff first
   a = 0.9375 ;
 
-  if(ALLOWMETRICROT){
-    THETAROT = THETAROTMETRIC; // defines metric generally
-  }
-  else{
-    THETAROT = 0.0;
-  }
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -498,9 +500,11 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
   int inittype;
+  FTYPE thetarotorig;
 
 
-  THETAROT = THETAROTPRIM; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
+  thetarotorig=THETAROT;
+  THETAROT = THETAROTPRIMITIVES; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
 
 
   inittype=1;
@@ -508,7 +512,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
-  THETAROT = THETAROTMETRIC; // back to metric version
+  THETAROT = thetarotorig; // back to previous version
 
 
   return(0);
