@@ -2161,6 +2161,10 @@ void check_bnd_num(void)
   }
 
 
+  if(EOMRADTYPE!=EOMRADNONE && URAD0<0){
+    dualfprintf(fail_file,"You seem to have not turned on radiation, causing URAD0<0 and so not part of a normal evolved quantity\n");
+    myexit(373472252);
+  }
 
 
 
