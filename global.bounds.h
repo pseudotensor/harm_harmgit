@@ -22,6 +22,72 @@ extern int bound_x1up_outflow(
 		       int enerregion,
 		       int *localenerpos
 		       );
+extern int bound_x1dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
+extern int bound_x1up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
+extern int bound_x2dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
+extern int bound_x2up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
+extern int bound_x3dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
+extern int bound_x3up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout, int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       );
 extern int bound_x1dn_sym(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,

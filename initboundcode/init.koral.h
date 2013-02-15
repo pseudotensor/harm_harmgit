@@ -3,7 +3,8 @@
 #define RADBEAMFLAT (2)
 
 //problem choice
-#define WHICHPROBLEM FLATNESS
+//#define WHICHPROBLEM FLATNESS
+#define WHICHPROBLEM RADBEAMFLAT
 
 //undefs
 #undef MAXWELL

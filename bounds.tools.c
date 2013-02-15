@@ -196,6 +196,268 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
+
+
+// X1 inner OUTFLOW/FIXEDOUTFLOW
+int bound_x1dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    struct of_geom geom[NPR],rgeom[NPR];
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+
+
+      if ( (totalsize[1]>1) && (mycpupos[1] <= 0)) {
+	/* inner r boundary condition: u, just copy */
+
+	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+
+	  ri=riin;
+	  rj=j;
+	  rk=k;
+
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND1IN{ // bound entire region inside non-evolved portion of grid
+	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  }
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)){
+	      // GODMARK: assume all velocities at same location when doing inflow check
+	      LOOPBOUND1INSPECIAL{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+		inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+		inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
+		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
+#endif	
+	      }
+	    } // end if not allowing inflow
+	  }
+
+
+	}// end 2 3
+
+      }// end if mycpupos[1]==0
+
+
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(3946836);
+    }
+
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+// X1 outer OUTFLOW/FIXEDOUTFLOW
+int bound_x1up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
+
+      // outer r BC:
+      if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
+
+
+	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+	  ri=riout;
+	  rj=j;
+	  rk=k;
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)){
+
+	      LOOPBOUND1OUT{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+		inflow_check_4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U1], ptrgeom[U1]);
+		inflow_check_3vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
+		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+		// 	      dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+		//	      DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
+		inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
+		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+		// 	      dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
+		//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
+		//	      dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
+#endif	
+	      }// end over i
+	    }// end if not allowing inflow
+
+	  }
+
+
+
+	}// end 2 3
+      }// end if mycpu is correct
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(3946838);
+    }
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // X1 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x1dn_outflow(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -216,9 +478,6 @@ int bound_x1dn_outflow(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     struct of_geom geom[NPR],rgeom[NPR];
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
@@ -361,6 +620,14 @@ int bound_x1dn_outflow(
 
 
 
+
+
+
+
+
+
+
+
 // X1 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x1up_outflow(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -383,16 +650,12 @@ int bound_x1up_outflow(
   {
 
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
     struct of_geom geomdontuse[NPR];
     struct of_geom *ptrgeom[NPR];
@@ -527,6 +790,8 @@ int bound_x1up_outflow(
 
 
 
+
+
 // X1 inner R0SING
 int bound_x1dn_sym(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -546,16 +811,12 @@ int bound_x1dn_sym(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -642,6 +903,266 @@ int bound_x1dn_sym(
 
 
 
+
+// X2 inner OUTFLOW/FIXEDOUTFLOW
+int bound_x2dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    int localj1,globalj1;
+    int localj2,globalj2;
+    int rj1,rj2;
+    struct of_geom geom[NPR],rgeom[NPR];
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+    if((BCtype[X2DN]==OUTFLOW)||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+
+
+      if ( (totalsize[2]>1) && (mycpupos[2] <= 0)) {
+	/* inner r boundary condition: u, just copy */
+
+	OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+	////////	LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(j,k);
+
+
+
+	  ri=i;
+	  rj=rjin;
+	  rk=k;
+
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND2IN{ // bound entire region inside non-evolved portion of grid
+	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  }
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X2DN]==OUTFLOW)||(BCtype[X2DN]==FIXEDOUTFLOW)){
+	      // GODMARK: assume all velocities at same location when doing inflow check
+	      LOOPBOUND2IN{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U2], ptrgeom[U2]);
+		inflow_check_4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2], 0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U2], ptrgeom[U2]);
+		inflow_check_3vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2], 0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U2],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U2],ptrgeom[U2]) ;
+		inflow_check_rel4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U2],0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
+#endif	
+	      }
+	    } // end if not allowing inflow
+	  }
+
+
+	}// end 2 3
+
+      }// end if mycpupos[2]==0
+
+
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(39377836);
+    }
+
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+// X2 outer OUTFLOW/FIXEDOUTFLOW
+int bound_x2up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    int localj1,globalj1;
+    int localj2,globalj2;
+    int rj1,rj2;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if((BCtype[X2UP]==OUTFLOW)||(BCtype[X2UP]==FIXEDOUTFLOW)||(BCtype[X2UP]==FREEOUTFLOW)){
+
+      // outer r BC:
+      if ( (totalsize[2]>1) && (mycpupos[2] == ncpux2 - 1) ) {
+
+
+	OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+	////////	LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(j,k);
+
+
+	  ri=riout;
+	  rj=j;
+	  rk=k;
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X2UP]==OUTFLOW)||(BCtype[X2UP]==FIXEDOUTFLOW)){
+
+	      LOOPBOUND2OUT{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U2], ptrgeom[U2]);
+		inflow_check_4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U2], ptrgeom[U2]);
+		inflow_check_3vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U2],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U2],ptrgeom[U2]) ;
+		inflow_check_rel4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U2], 0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
+#endif	
+	      }// end over i
+	    }// end if not allowing inflow
+
+	  }
+
+
+
+	}// end 2 3
+      }// end if mycpu is correct
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(39324838);
+    }
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // X2 inner POLARAXIS
 // with full3d, flip sign of both B2 and B3
 // Flip B2 because ghost cells will then be same sign if pointing in same physical location, and opposite sign if pointing opposite physical location across the pole.
@@ -667,16 +1188,12 @@ int bound_x2dn_polaraxis_full3d(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -809,16 +1326,12 @@ int bound_x2dn_polaraxis(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -935,16 +1448,12 @@ int bound_x2up_polaraxis_full3d(
 #pragma omp parallel  // assume don't require EOSs
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -1069,16 +1578,12 @@ int bound_x2up_polaraxis(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -1189,16 +1694,12 @@ int bound_x1_periodic(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -1285,16 +1786,12 @@ int bound_x2_periodic(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
@@ -1361,6 +1858,274 @@ int bound_x2_periodic(
   return(0);
 }
 
+
+
+
+
+
+// X3 inner OUTFLOW/FIXEDOUTFLOW
+int bound_x3dn_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    int localj1,globalj1;
+    int localk2,globalk2;
+    int rk1,rk2;
+    struct of_geom geom[NPR],rgeom[NPR];
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+    if((BCtype[X3DN]==OUTFLOW)||(BCtype[X3DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+
+
+      if ( (totalsize[3]>1) && (mycpupos[3] <= 0)) {
+	/* inner r boundary condition: u, just copy */
+
+	OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
+	////////	LOOPX3dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(j,k);
+
+
+
+	  ri=i;
+	  rj=rjin;
+	  rk=k;
+
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND3IN{ // bound entire region inside non-evolved portion of grid
+	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  }
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X3DN]==OUTFLOW)||(BCtype[X3DN]==FIXEDOUTFLOW)){
+	      // GODMARK: assume all velocities at same location when doing inflow check
+	      LOOPBOUND3IN{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U3], ptrgeom[U3]);
+		inflow_check_4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3], 0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U3], ptrgeom[U3]);
+		inflow_check_3vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3], 0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U3],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U3],ptrgeom[U3]) ;
+		inflow_check_rel4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U3],0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
+#endif	
+	      }
+	    } // end if not allowing inflow
+	  }
+
+
+	}// end 1 2
+
+      }// end if mycpupos[2]==0
+
+
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(312475836);
+    }
+
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+// X3 outer OUTFLOW/FIXEDOUTFLOW
+int bound_x3up_outflow_simple(
+		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+		       int *inboundloop,
+		       int *outboundloop,
+		       int *innormalloop,
+		       int *outnormalloop,
+		       int (*inoutlohi)[NUMUPDOWN][NDIM],
+		       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+		       int *dosetbc,
+		       int enerregion,
+		       int *localenerpos
+		       )
+{
+
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    int localk1,globalk1;
+    int localk2,globalk2;
+    int rk1,rk2;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if((BCtype[X3UP]==OUTFLOW)||(BCtype[X3UP]==FIXEDOUTFLOW)||(BCtype[X3UP]==FREEOUTFLOW)){
+
+      // outer r BC:
+      if ( (totalsize[3]>1) && (mycpupos[3] == ncpux3 - 1) ) {
+
+
+	OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
+	////////	LOOPX3dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	OPENMPBCLOOPBLOCK{
+	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(j,k);
+
+
+	  ri=riout;
+	  rj=j;
+	  rk=k;
+
+	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+
+
+
+
+	  if(ispstag==0){
+
+	    if((BCtype[X3UP]==OUTFLOW)||(BCtype[X3UP]==FIXEDOUTFLOW)){
+
+	      LOOPBOUND3OUT{
+#if(WHICHVEL==VEL4)
+		get_geometry(i, j, k, dirprim[U3], ptrgeom[U3]);
+		inflow_check_4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
+#elif(WHICHVEL==VEL3)
+		get_geometry(i, j, k, dirprim[U3], ptrgeom[U3]);
+		inflow_check_3vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
+		// projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+#if(JONCHECKS)
+		if(jonchecks){
+		  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U3],0);
+		  failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
+		  if(failreturn){
+		    dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+		    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+		  }
+		}
+#endif
+#elif(WHICHVEL==VELREL4)
+		get_geometry(i,j,k,dirprim[U3],ptrgeom[U3]) ;
+		inflow_check_rel4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
+		if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U3], 0)>=1)
+		  FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
+#endif	
+	      }// end over i
+	    }// end if not allowing inflow
+
+	  }
+
+
+
+	}// end 1 2
+      }// end if mycpu is correct
+
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(315875838);
+    }
+
+  }// end parallel region
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // X3 inner periodic
 int bound_x3_periodic(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -1381,16 +2146,12 @@ int bound_x3_periodic(
 #pragma omp parallel  // assume don't require EOS
   {
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM]; // coordinate basis vcon
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
 
 
