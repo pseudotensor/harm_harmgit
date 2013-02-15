@@ -145,7 +145,6 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x1dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
         donebc[dir]=1;
       }
-
       else if(BCtype[dir]==RADBEAMFLATINFLOW){
         bound_x1dn_radbeamflatinflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
@@ -440,7 +439,7 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
-// X1 outer OUTFLOW/FIXEDOUTFLOW
+// X1 lower for radiation beam injection
 int bound_x1dn_radbeamflatinflow(
 		       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 		       int *inboundloop,
@@ -456,22 +455,25 @@ int bound_x1dn_radbeamflatinflow(
 
 {
 
-#if(WHICHPROBLEM==RADBEAMFLAT)
+
+  if(WHICHPROBLEM!=RADBEAMFLAT){
+    dualfprintf(fail_file,"RADBEAMFLATINFLOW BC works only for RADBEAMFLAT\n");
+    myexit(3263664);
+  }
+
+
+
 
 #pragma omp parallel  // assume don't require EOS
   {
 
     int i,j,k,pl,pliter;
-    int locali1,globali1;
-    int locali2,globali2;
-    int ri1,ri2;
     FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
 #if(WHICHVEL==VEL3)
     int failreturn;
 #endif
     int ri, rj, rk; // reference i,j,k
     FTYPE prescale[NPR];
-    int horizonti;
     int jj,kk;
     struct of_geom geomdontuse[NPR];
     struct of_geom *ptrgeom[NPR];
@@ -492,6 +494,7 @@ int bound_x1dn_radbeamflatinflow(
       if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) {
 
 
+
 	OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
 	////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
@@ -499,44 +502,46 @@ int bound_x1dn_radbeamflatinflow(
 	  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
+
 	  ri=riin;
 	  rj=j;
 	  rk=k;
 
+
+	  // ptrrgeom : i.e. ref geom
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  //initially copying everything
-	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 	  
-	  //coordinates of the ghost cell
-	  bl_coord_ijk_2(i,j,k,CENT,X, V);
+	  LOOPBOUND1IN{
+    
+	    //initially copying everything
+	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  
+	    //coordinates of the ghost cell
+	    bl_coord_ijk_2(i,j,k,CENT,X, V);
 
-	  if(V[1]>.4 && V[1]<.6) //beam to be imposed
-	    {
+	    if(V[2]>.4 && V[2]<.6){//beam to be imposed
+
 	      //E, F^i
 	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
-	      MACP0A1(prim,i,j,k,URAD1) = 0.;
-	      MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
+	      //	      MACP0A1(prim,i,j,k,URAD1) = 0.;
+	      MACP0A1(prim,i,j,k,URAD1) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
+	      //	      MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
+	      MACP0A1(prim,i,j,k,URAD2) = 0.;
 	      MACP0A1(prim,i,j,k,URAD3) = 0.;
 	    }
-	  else //no beam
-	    {
+	    else{ //no beam
 	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
 	      MACP0A1(prim,i,j,k,URAD1) = 0.;
 	      MACP0A1(prim,i,j,k,URAD2) = 0.;
 	      MACP0A1(prim,i,j,k,URAD3) = 0.;
 	    }
+	  }// end loop over inner i's
 	}
       }
     }
   }// end parallel region
 
-#else
-
-  dualfprintf(fail_file,"RADBEAMFLATINFLOW BC works only for RADBEAMFLAT\n");
-  myexit(3263664);
-
-#endif
   return(0);
 } 
 

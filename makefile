@@ -317,6 +317,14 @@ endif
 
 
 
+ifeq ($(USEPTHREAD),1)
+	PTHREADFLAGS=-pthread
+	LIBPTHREAD=-lpthread
+else
+	PTHREADFLAGS=
+	LIBPTHREAD=
+endif
+
 
 
 ifeq ($(USEOPENMP),1)
@@ -410,7 +418,6 @@ endif
 
 
 
-
 ifeq ($(USEICCGENERIC),1)
 
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
@@ -419,14 +426,14 @@ LONGDOUBLECOMMAND=-long_double
 
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
 
-CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O2 -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 
 GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 
-
-LDFLAGS=-lm  $(LAPACKLDFLAGS)
+# regarding compiler error "undefined reference to `pthread_mutex_trylock'" : http://stackoverflow.com/questions/2009625/undefined-reference-to-pthread-mutex-trylock
+LDFLAGS=-lm $(LIBPTHREAD) $(PTHREADFLAGS) $(LAPACKLDFLAGS)
 LDFLAGSOTHER=
 
 endif
@@ -465,11 +472,11 @@ COMP=icc $(DFLAGS) $(OPMPFLAGS)
 #CFLAGSPRENONPRECISE=-O2 -finline -finline-functions -ip -fno-alias -unroll -openmp -Wall -Wcheck -Wshadow -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572 $(DFLAGS)
 # new normal:
 #CFLAGSPRENONPRECISE=-O2 -static -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -openmp -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
-#CFLAGSPRENONPRECISE=-O2 -static -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -pthread -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+#CFLAGSPRENONPRECISE=-O2 -static -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 #CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -parallel -par-report=2 -par-threshold=10 -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 # NORMAL:
-CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 
 #FOR CHECKING OPTIMIZATIONS:
@@ -478,7 +485,9 @@ CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -fin
 #########################
 # DEBUG BELOW
 #########################
-#CFLAGSPRENONPRECISE=-O0 -g -openmp $(DFLAGS)
+
+
+#CFLAGSPRENONPRECISE=-O0 -g $(OPMPFLAGS) $(DFLAGS)
 
 
 #
@@ -515,9 +524,7 @@ GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 # CFLAGS = -O3 -ipo
 
 
-
-
-LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGS=-lm $(LIBPTHREAD) $(LAPACKLDFLAGS)
 LDFLAGSOTHER=
 
 

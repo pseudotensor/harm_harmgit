@@ -17,8 +17,8 @@ USEQB=0
 USEUB=0
 USEOSX=0
 # USEABE -> USEICCGENERIC is used
-USEICCGENERIC=1
-USEICCINTEL=0
+USEICCGENERIC=0
+USEICCINTEL=1
 USEGCC=0
 USECCC=0
 USEORANGE=0
@@ -127,7 +127,7 @@ endif
 ifneq ($(filter $(MPITARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
 # i.e. MPI is only for grmhd, grmhdldouble, and liaison codes
-USEMPI=1
+USEMPI=0
 
 else
 
@@ -146,6 +146,14 @@ endif
 #
 ########################
 USEOPENMP=0
+
+
+########################
+#
+# Pthread CHOICE
+#
+########################
+USEPTHREAD=1
 
 
 
@@ -214,6 +222,7 @@ endif
 
 $(warning USEMPI is $(USEMPI))
 $(warning USEOPENMP is $(USEOPENMP))
+$(warning USEPTHREAD is $(USEPTHREAD))
 $(warning USELAPACK is $(USELAPACK))
 $(warning USELAPACKNEW is $(USELAPACKNEW))
 $(warning ENFORCEPRECISION is $(ENFORCEPRECISION))

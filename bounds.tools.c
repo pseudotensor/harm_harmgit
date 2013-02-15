@@ -958,7 +958,7 @@ int bound_x2dn_outflow_simple(
 	////////	LOOPX2dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
 	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(j,k);
+	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
 
@@ -970,7 +970,10 @@ int bound_x2dn_outflow_simple(
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
 	  LOOPBOUND2IN{ // bound entire region inside non-evolved portion of grid
-	    PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	    PBOUNDLOOP(pliter,pl){
+	      //	      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d : ri=%d rj=%d rk=%d\n",pl,i,j,k,ri,rj,rk);
+	      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	    }
 	  }
 
 
@@ -1083,11 +1086,11 @@ int bound_x2up_outflow_simple(
 	////////	LOOPX2dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
 	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(j,k);
+	  OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-	  ri=riout;
-	  rj=j;
+	  ri=i;
+	  rj=rjout;
 	  rk=k;
 
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
@@ -1917,13 +1920,13 @@ int bound_x3dn_outflow_simple(
 	////////	LOOPX3dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
 	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(j,k);
+	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
 
 
 	  ri=i;
-	  rj=rjin;
-	  rk=k;
+	  rj=j;
+	  rk=rkin;
 
 
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
@@ -2042,12 +2045,12 @@ int bound_x3up_outflow_simple(
 	////////	LOOPX3dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
 	OPENMPBCLOOPBLOCK{
-	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(j,k);
+	  OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
 
-	  ri=riout;
+	  ri=i;
 	  rj=j;
-	  rk=k;
+	  rk=rkout;
 
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
