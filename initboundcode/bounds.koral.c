@@ -523,7 +523,7 @@ int bound_x1dn_radbeamflatinflow(
 	    if(V[2]>.4 && V[2]<.6){//beam to be imposed
 
 	      //E, F^i
-	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
+	      MACP0A1(prim,i,j,k,URAD0) = 1000.*RADBEAMFLAT_ERAD;
 	      //	      MACP0A1(prim,i,j,k,URAD1) = 0.;
 	      MACP0A1(prim,i,j,k,URAD1) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
 	      //	      MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
