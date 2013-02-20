@@ -1,36 +1,46 @@
 #~/bin/bash
 
 # check for existence of arguments
-if ([ -z $1 ] || [ -z $2 ] || [ -z $3 ]) ; then {
-        echo "usage: sh r8ras2ppm2mpeg.sh which doimages nx ny"
-	echo "which: 0=all 1=fli only 2=mp4 only"
+if ([ -z $1 ] || [ -z $2 ] || [ -z $3 ] || [ -z $4 ] || [ -z $5 ] || [ -z $6 ]) ; then {
+        echo "usage: sh r8ras2ppm2mpeg.sh doimages dogif dofli domp4 nx ny"
 	echo "doimages: 0=no 1=yes.  If 0, assume they were already created and just redoing movie part of script."
+	echo "dogif: 0=no 1=yes"
+	echo "dofli: 0=no 1=yes"
+	echo "domp4: 0=no 1=yes"
         exit
 } ; fi
 
-which=$1
-doimages=$2
-nx=$3
-ny=$4
+doimages=$1
+dogif=$2
+dofli=$3
+domp4=$4
+nx=$5
+ny=$6
 
 # start in run/images/
 
 if [ $doimages -eq 1 ]
 then
-if [ $which -eq 0 ] ||
-    [ $which -eq 2 ]
-then
-    # for avconv:
-    
-    # r8 2 ras
-    rm -rf *.ras
-    for fil in `ls *.r8` ; do echo $fil ; r8torasjon 0 ~/bin/john.pal $fil ; done
-    
-    # ras to lossless png
-    rm -rf *.png
-    for fil in `ls *.ras` ; do echo $fil ; convert $fil $fil.png ; done
+
+    if [ $dogif -eq 1 ]||
+	[ $domp4 -eq 1 ]
+    then
+	
+        # r8 2 ras
+	rm -rf *.ras
+	for fil in `ls *.r8` ; do echo $fil ; r8torasjon 0 ~/bin/john.pal $fil ; done
+    fi
+
+    if [ $domp4 -eq 1 ]
+    then
+        # for avconv:
+        # ras to lossless png
+	rm -rf *.png
+	for fil in `ls *.ras` ; do echo $fil ; convert $fil $fil.png ; done
+    fi
 fi
-fi
+
+
 
 
 # png 2 mpg
@@ -44,14 +54,18 @@ fi
 options1="-vcodec mpeg4 -threads 8 -r 30 -b 65536k"
 #options1="-vcodec ljpeg -threads 8 -r 30 -b 65536k"
 
-if [ $nx -lt 50 ] ||
-    [ $ny -lt 50 ]
+if [ $nx -lt 256 ] ||
+    [ $ny -lt 256 ]
 then
     # avconv screws up if too small in resolution for unknown reason.  Generates boundary artifacts, for example.
     options2="-s 50x50"
+#    optionsgif="-loop 0 -resize 256x256" # interpolates non-constantly
+    optionsgif="-loop 0 -sample 512x512" # just fast constant interpolation so just bigger version of same data.  Still keeps gif small and quick to make.
 else
     options2=""
+    optionsgif="-loop 0"
 fi
+
 
 
 for (( i=0 ; i < 12 ; i++ ))
@@ -63,8 +77,18 @@ do
     # make a list file
     echo "doing $i $j $k"
 
-    if [ $which -eq 0 ] ||
-	[ $which -eq 2 ]
+
+    if [ $dogif -eq 1 ]
+    then
+	rm -rf  im${i}p${j}s${k}l.gif
+	convert $optionsgif im${i}p${j}s${k}l*.ras im${i}p${j}s${k}l.gif
+	rm -rf  im${i}c${j}s${k}l.gif
+	convert $optionsgif im${i}c${j}s${k}l*.ras im${i}c${j}s${k}l.gif
+    fi
+
+
+
+    if [ $domp4 -eq 1 ]
     then
         # avconv
 	rm -rf im${i}p${j}s${k}l.mp4
@@ -81,8 +105,7 @@ do
 
 
 
-    if [ $which -eq 0 ] ||
-	[ $which -eq 1 ]
+    if [ $dofli -eq 1 ]
     then
         #ppm2fli
 	ls im${i}p${j}s${k}l????.r8 > tmp.lis
@@ -109,4 +132,19 @@ done
 done
 done
 
+
+# http://www.multipole.org/discourse-server/viewtopic.php?f=1&t=22117
+# http://www.imagemagick.org/Usage/anim_basics/#montage
+# http://www.imagemagick.org/Usage/montage/
+# http://www.imagemagick.org/Usage/resize/
+#
+if [ $dogif -eq 1 ]
+then
+    rm -rf  immerge1.gif immerge1_sidebyside1.gif immerge1_sidebyside2.gif
+    convert im8p1s0l.gif im8c1s0l.gif +append immerge1_sidebyside1.gif
+    convert im9p1s0l.gif im9c1s0l.gif +append immerge1_sidebyside2.gif
+    convert immerge1_sidebyside1.gif immerge1_sidebyside2.gif -append immerge1.gif
+
+    #convert im8p1s0l.gif im8c1s0l.gif im9p1s0l.gif im9c1s0l.gif -append immerge1.gif
+fi
 
