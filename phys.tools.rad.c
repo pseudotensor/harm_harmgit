@@ -1295,7 +1295,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
       
       //is normalized now
       FTYPE Afac;
-      c=0.; b=0.;
+      a=0.; c=0.; b=0.;
       for(i=1;i<4;i++)
 	{
 	  a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
