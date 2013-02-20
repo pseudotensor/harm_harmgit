@@ -22,8 +22,8 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define THETAROTMETRIC (1.4)
-#define THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
+#define USER_THETAROTMETRIC (1.4)
+#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define THINBP 1
@@ -52,12 +52,18 @@ int prepre_init_specific_init(void)
   int funreturn;
   
   if(ALLOWMETRICROT){
-    THETAROTPRIM=THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
   }
   else{
-    THETAROTPRIM=0.0; // DO NOT CHANGE
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
   }
 
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
 
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -171,7 +177,7 @@ int init_defcoord(void)
   defcoord = JET6COORDS;
 #elif(WHICHPROBLEM==THINBP)
   // define coordinate type
-  defcoord = JET6COORDS;
+  defcoord = BPTHIN1;
 #endif
 
   return(0);
@@ -183,13 +189,6 @@ int init_grid(void)
   
   // metric stuff first
   a = 0.9375 ;
-
-  if(ALLOWMETRICROT){
-    THETAROT = THETAROTMETRIC; // defines metric generally
-  }
-  else{
-    THETAROT = 0.0;
-  }
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -204,6 +203,10 @@ int init_grid(void)
 #elif(WHICHPROBLEM==GRBJET)
   R0 = -3.0;
   Rout = 1E5;
+#elif(WHICHPROBLEM==THINBP)
+  // make changes to primary coordinate parameters R0, Rin, Rout, hslope
+  R0 = 0.0;
+  Rout = 40.0;
 #endif
 
  
@@ -243,6 +246,16 @@ int init_global(void)
   FLUXB=FLUXCTSTAG;
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
+  BCtype[X1UP]=OUTFLOW;
+  BCtype[X1DN]=FREEOUTFLOW;
+  //  rescaletype=1;
+  rescaletype=4;
+  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1E3;
+  RHOMIN = 1E-4;
+  UUMIN = 1E-6;
+#elif(WHICHPROBLEM==THINBP)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
@@ -296,11 +309,12 @@ int init_global(void)
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
 /* output choices */
   tf = 4000.0;
+#elif(WHICHPROBLEM==THINBP)
+/* output choices */
+  tf = 4000.0
 #elif(WHICHPROBLEM==THICKDISK)
   /* output choices */
   tf = 1.3E4*2.0;
-
-
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
   tf = 5E5;
@@ -352,6 +366,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 #if(WHICHPROBLEM==NORMALTORUS)
+  //rin = Risco;
+  rin = 6. ;
+#elif(WHICHPROBLEM==THINBP)
   //rin = Risco;
   rin = 6. ;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -441,10 +458,11 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
   int inittype;
+  FTYPE thetarotorig;
 
 
-
-  THETAROT = THETAROTPRIM; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
+  thetarotorig=THETAROT;
+  THETAROT = THETAROTPRIMITIVES; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
 
 
   inittype=1;
@@ -452,7 +470,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
-  THETAROT = THETAROTMETRIC; // back to metric version
+  THETAROT = thetarotorig; // back to previous version
 
 
   return(0);
@@ -471,6 +489,8 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 
 #if(WHICHPROBLEM==NORMALTORUS||WHICHPROBLEM==THICKDISK)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
+#elif(WHICHPROBLEM==BPTHIN)
+  return(init_dsandvels_bpthin(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #endif
@@ -500,6 +520,7 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   // default
   kappa = 1.e-3 ;
   rmax = 12. ;
+
 
 #if(WHICHPROBLEM==THICKDISK)
   kappa = 1.e-3 ;
@@ -615,6 +636,79 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+{
+  SFTYPE sth, cth;
+  SFTYPE ur, uh, up, u, rho;
+  FTYPE X[NDIM],V[NDIM],r,th,ph;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  /* for disk interior */
+  FTYPE R,H,nz,z,S,cs ;
+  SFTYPE rh;
+  int pl,pliter;
+
+
+  
+
+  coord(i, j, k, CENT, X);
+  bl_coord(X, V);
+  r=V[1];
+  th=V[2];
+  ph=V[3];
+
+
+
+
+  /* region outside disk */
+  R = r*sin(th) ;
+
+  if(R < rin) {
+
+    get_geometry(i, j, k, CENT, ptrgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+  else {
+
+    H = h_over_r*R ;
+    nz = nz_func(R) ;
+    z = r*cos(th) ;
+    S = 1./(H*H*nz) ;
+    cs = H*nz ;
+
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin) ;
+    u = rho*cs*cs/(gam - 1.) ;
+    ur = 0. ;
+    uh = 0. ;
+    up = 1./(pow(r,1.5) + a) ;
+    // solution for 3-vel
+
+
+    
+    
+    pr[RHO] = rho ;
+    pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5));
+
+    pr[U1] = ur ;
+    pr[U2] = uh ;    
+    pr[U3] = SLOWFAC * up;
+
+    if(FLUXB==FLUXCTSTAG){
+      PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
+    }
+
+    *whichvel=VEL3;
+    *whichcoord=BLCOORDS;
+    return(0);
+  }
+}
+
+
+
+int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   SFTYPE sth, cth;
   SFTYPE ur, uh, up, u, rho;
