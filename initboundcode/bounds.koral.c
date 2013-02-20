@@ -520,18 +520,25 @@ int bound_x1dn_radbeamflatinflow(
 	    //coordinates of the ghost cell
 	    bl_coord_ijk_2(i,j,k,CENT,X, V);
 
+	    FTYPE ERAD;
+	    ERAD=1000.0*RADBEAMFLAT_ERAD; // making like problem24 in koral code
+	    FTYPE FxRAD;
+	    FxRAD=RADBEAMFLAT_FRATIO*ERAD;
+
 	    if(V[2]>.4 && V[2]<.6){//beam to be imposed
 
+
 	      //E, F^i
-	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
+	      MACP0A1(prim,i,j,k,URAD0) = ERAD;
 	      //	      MACP0A1(prim,i,j,k,URAD1) = 0.;
-	      MACP0A1(prim,i,j,k,URAD1) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
+	      MACP0A1(prim,i,j,k,URAD1) = FxRAD;
 	      //	      MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
 	      MACP0A1(prim,i,j,k,URAD2) = 0.;
 	      MACP0A1(prim,i,j,k,URAD3) = 0.;
 	    }
 	    else{ //no beam
-	      MACP0A1(prim,i,j,k,URAD0) = RADBEAMFLAT_ERAD;
+	      MACP0A1(prim,i,j,k,URAD0) = ERAD;
+	      //MACP0A1(prim,i,j,k,URAD0) = 1E-1*ERAD;
 	      MACP0A1(prim,i,j,k,URAD1) = 0.;
 	      MACP0A1(prim,i,j,k,URAD2) = 0.;
 	      MACP0A1(prim,i,j,k,URAD3) = 0.;

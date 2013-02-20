@@ -380,7 +380,9 @@ int bound_x1up_outflow_simple(
 
 	  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  LOOPBOUND1OUT PBOUNDLOOP(pliter,pl){
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+	  }
 
 
 

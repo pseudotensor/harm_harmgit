@@ -130,6 +130,9 @@ int init_global(void)
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
+  
+  //  lim[1]=lim[2]=lim[3]=MINM;
+
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
@@ -179,7 +182,8 @@ int init_global(void)
   BCtype[X3DN]=PERIODIC;
 
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
 
   DTr = 100; //number of time steps for restart dumps
   tf = 10.0; //final time
