@@ -117,6 +117,19 @@ int init_defcoord(void)
 
 #endif
 
+#if(WHICHPROBLEM==RADPULSE3D)
+
+  defcoord = UNIFORMCOORDS;
+  Rin_array[1]=-50.0;
+  Rin_array[2]=-50.0;
+  Rin_array[3]=-50.0;
+
+  Rout_array[1]=50.0;
+  Rout_array[2]=50.0;
+  Rout_array[3]=50.0;
+
+#endif
+
   return(0);
 }
 
@@ -144,7 +157,6 @@ int init_global(void)
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
   
-  //  lim[1]=lim[2]=lim[3]=MINM;
 
   //  rescaletype=1;
   rescaletype=4;
@@ -162,9 +174,19 @@ int init_global(void)
 #if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
   gam = 4./3.;
   cooling=KORAL;
+
+  //  lim[1]=lim[2]=lim[3]=MINM;
+
+  // maximum radiation frame lorentz factor
+  GAMMAMAXRAD=100.0;
+  //GAMMAMAXRAD=10000.0;
+  // NOTEMARK: GAMMAMAXRAD=1000 doesn't work with RADBEAMFLAT in init.koral.c when using PARAFLAT (the default), but likely a problem with velocity limiter that kills energy conservation.
+
+
+
 #endif  
 
-#if(WHICHPROBLEM==RADPULSE)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
   gam = 5./3.;
   cooling=KORAL;
 #endif  
@@ -190,20 +212,21 @@ int init_global(void)
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADPULSE)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
 
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=OUTFLOW;
   BCtype[X2UP]=OUTFLOW;
   BCtype[X2DN]=OUTFLOW;
-  BCtype[X3UP]=PERIODIC; 
-  BCtype[X3DN]=PERIODIC;
+  BCtype[X3UP]=OUTFLOW; 
+  BCtype[X3DN]=OUTFLOW;
 
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
+  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
   DTr = 100; //number of time steps for restart dumps
-  tf = 1E5; //final time
+  tf = 1E2; //final time
 #endif
 
   /*************************************************/
@@ -369,9 +392,59 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
 
 
+
+
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADPULSE)
+#if(WHICHPROBLEM==RADBEAMFLAT)  
+
+  // outsideness
+  if (0) {
+
+    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+  else {
+    
+    
+    pr[RHO] = RADBEAMFLAT_RHO ;
+    pr[UU] = RADBEAMFLAT_UU;
+    pr[U1] = 0 ;
+    pr[U2] = 0 ;    
+    pr[U3] = 0 ;
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+
+    pr[URAD0] = RADBEAMFLAT_ERAD;
+    pr[URAD1] = 0 ;
+    pr[URAD2] = 0 ;    
+    pr[URAD3] = 0 ;
+
+    *whichvel=WHICHVEL;
+    *whichcoord=CARTMINKMETRIC2;
+    return(0);
+  }
+#endif
+
+
+
+
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
 
   // outsideness
   if (0) {
@@ -435,50 +508,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
 
 
-  /*************************************************/
-  /*************************************************/
-#if(WHICHPROBLEM==RADBEAMFLAT)  
 
-  // outsideness
-  if (0) {
-
-    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
-    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
-
-    *whichvel=WHICHVEL;
-    *whichcoord=PRIMECOORDS;
-    return(0);
-  }
-  else {
-    
-    
-    pr[RHO] = RADBEAMFLAT_RHO ;
-    pr[UU] = RADBEAMFLAT_UU;
-    pr[U1] = 0 ;
-    pr[U2] = 0 ;    
-    pr[U3] = 0 ;
-
-    // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
-    pr[B3]=0.0;
-
-    if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-      PLOOPBONLY(pl) pstag[pl]=pr[pl];
-    }
-
-
-    pr[URAD0] = RADBEAMFLAT_ERAD;
-    pr[URAD1] = 0 ;
-    pr[URAD2] = 0 ;    
-    pr[URAD3] = 0 ;
-
-    *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC2;
-    return(0);
-  }
-#endif
 
 }
 

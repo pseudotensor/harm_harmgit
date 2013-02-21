@@ -242,10 +242,6 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x3_periodic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[X3DN]=donebc[X3UP]=1;
       }
-      else{
-        dualfprintf(fail_file,"No x3 boundary condition specified: %d %d\n",BCtype[X3DN],BCtype[X3UP]);
-        myexit(7598734);
-      }
     }
 
 
@@ -255,6 +251,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 	bound_x3dn_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	donebc[dir]=1;
       }
+      else{
+        dualfprintf(fail_file,"No x3dn boundary condition specified: %d\n",BCtype[dir]);
+        myexit(34672546);
+      }
     }
 
 
@@ -263,6 +263,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
 	bound_x3up_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 	donebc[dir]=1;
+      }
+      else{
+        dualfprintf(fail_file,"No x3up boundary condition specified: %d\n",BCtype[dir]);
+        myexit(34672547);
       }
     }
 

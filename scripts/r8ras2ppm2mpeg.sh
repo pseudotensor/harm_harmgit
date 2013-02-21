@@ -17,6 +17,19 @@ domp4=$4
 nx=$5
 ny=$6
 
+echo "nx=$nx ny=$ny"
+
+# force 2 lines of data so can see image of results even if 1D
+if [ $ny -eq 1 ]
+then
+    force2=1
+    ny=10
+else
+    force2=0
+fi
+
+echo "new nx=$nx ny=$ny"
+
 # start in run/images/
 
 if [ $doimages -eq 1 ]
@@ -25,10 +38,33 @@ then
     if [ $dogif -eq 1 ]||
 	[ $domp4 -eq 1 ]
     then
+
+	rm -rf *.new.r8 *.ras
 	
         # r8 2 ras
-	rm -rf *.ras
-	for fil in `ls *.r8` ; do echo $fil ; r8torasjon 0 ~/bin/john.pal $fil ; done
+	for fil in `ls *.r8`
+	do
+	    echo $fil
+
+	    if [ $force2 -eq 1 ]
+	    then
+		echo "force2=$force2"
+		rm -rf $fil.new.r8
+		#head -4 $fil >> $fil.new.r8
+		# STACK 1D images to get at least $ny in size
+		for ii in `seq 0 $ny`
+		do
+		    tail -n +5 $fil >> $fil.new.r8
+		done
+		r8torasjon 0 ~/bin/john.pal $fil.new.r8 $nx $ny
+	    else
+		cp $fil $fil.new.r8
+		r8torasjon 0 ~/bin/john.pal $fil.new.r8
+	    fi
+
+	    mv $fil.new.ras $fil.ras
+	   
+	done
     fi
 
     if [ $domp4 -eq 1 ]
@@ -92,9 +128,9 @@ do
     then
         # avconv
 	rm -rf im${i}p${j}s${k}l.mp4
-	avconv -i im${i}p${j}s${k}l%04d.ras.png $options1 $options2 im${i}p${j}s${k}l.mp4
+	avconv -i im${i}p${j}s${k}l%04d.r8.ras.png $options1 $options2 im${i}p${j}s${k}l.mp4
 	rm -rf im${i}c${j}s${k}l.mp4
-	avconv -i im${i}c${j}s${k}l%04d.ras.png $options1 $options2 im${i}c${j}s${k}l.mp4
+	avconv -i im${i}c${j}s${k}l%04d.r8.ras.png $options1 $options2 im${i}c${j}s${k}l.mp4
 
         # view with smplayer:
         # smplayer <moviename>
@@ -108,12 +144,13 @@ do
     if [ $dofli -eq 1 ]
     then
         #ppm2fli
-	ls im${i}p${j}s${k}l????.r8 > tmp.lis
+	# $fil.new.r8
+	ls im${i}p${j}s${k}l????.r8.new.r8 > tmp.lis
 	rm -rf im${i}p${j}s${k}l.fli
 	ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}p${j}s${k}l.fli
 	rm -rf tmp.lis
 	#
-	ls im${i}c${j}s${k}l????.r8 > tmp.lis
+	ls im${i}c${j}s${k}l????.r8.new.r8 > tmp.lis
 	rm -rf im${i}c${j}s${k}l.fli
 	ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}c${j}s${k}l.fli
 	rm -rf tmp.lis

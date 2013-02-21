@@ -1,12 +1,14 @@
 //problem names
 #define FLATNESS (0) // not in Koral
 #define RADPULSE (10)
+#define RADPULSE3D (16)
 #define RADBEAMFLAT (24)
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
-//#define WHICHPROBLEM RADBEAMFLAT
-#define WHICHPROBLEM RADPULSE
+#define WHICHPROBLEM RADBEAMFLAT
+//#define WHICHPROBLEM RADPULSE
+//#define WHICHPROBLEM RADPULSE3D
 
 
 //undefs
@@ -188,6 +190,9 @@
 #define RADBEAMFLAT_RHO 1.
 #define RADBEAMFLAT_UU 0.1
 
+#define KAPPA 0.
+#define KAPPAES 0.
+
 #endif
 
 //****************************************//
@@ -195,12 +200,25 @@
 
 #if(WHICHPROBLEM==RADPULSE)
 
-//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
-#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
-
 #define N1 100
 #define N2 1 
 #define N3 1
+
+#endif
+
+#if(WHICHPROBLEM==RADPULSE3D)
+
+// due to memory per core limited by many variables, can't do 50^3.  Roughly can't do more than 32^3 per core.
+#define N1 32
+#define N2 32
+#define N3 32
+
+#endif
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
 
 #define MCOORD CARTMINKMETRIC2
 
@@ -215,6 +233,7 @@
 //#define KAPPAES 1.e-6
 
 #endif
+
 
 //****************************************//
 //****************************************//
