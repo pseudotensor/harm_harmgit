@@ -57,11 +57,11 @@ static void *SwapEndian(void* Addr, const int Nb);
 // so a loop like for(k) for(j) for(i) would be used on array[k][j][i]
 // so i is actually dim2, j is dim1, and k is dim0
 
-// ki-rh42:
+// SOMETIMES SYSTEM USER OR INSTALLATION TYPE (e.g. ki-rh42,physics-179.umd.edu)
 #include "hdf/hdf.h"
 #include "hdf/mfhdf.h"
 
-// ki-rh39:
+// SOMETIMES USER INSTALLATION TYPE (e.g. ki-rh39)
 //#include "hdf.h"
 //#include "mfhdf.h"
 

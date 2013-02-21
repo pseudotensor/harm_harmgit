@@ -83,6 +83,10 @@
 #define FLB1 8
 #define FLB2 9
 #define FLB3 10
+#define FLURAD0 11
+#define FLVRAD1 12
+#define FLVRAD2 13
+#define FLVRAD3 14
 
 // FL's to skip when storing
 #define SKIPFL2STORE(x) (x==FLNEGUD0 || x==FLMUCONST)

@@ -694,6 +694,31 @@ static void readdata_preprocessdata(void)
 	defaultvalue[15]=0.0; // posh
 	defaultvalue[16]=0.0; // posph
       }
+      else if(DATATYPE==19){ // then select per output variable
+	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+	// now set
+	defaultvalue[0]=totalmin[0]; // rho0
+	defaultvalue[1]=totalmin[1]; // ug
+	defaultvalue[2]=1.0; // uu0
+	defaultvalue[3]=0.0; // bsq
+	defaultvalue[4]=log10(totalmin[0]); // lrho
+	defaultvalue[5]=-log10(totalmin[0]); // -lrho
+	defaultvalue[6]=log10(totalmin[0]); // lbsq
+	defaultvalue[7]=0.0; // R
+	defaultvalue[8]=0.0; // vx
+	defaultvalue[9]=0.0; // vy
+	defaultvalue[10]=0.0; // vz
+	defaultvalue[11]=0.0; // bx
+	defaultvalue[12]=0.0; // by
+	defaultvalue[13]=0.0; // bz
+	defaultvalue[14]=0.0; // posr
+	defaultvalue[15]=0.0; // posh
+	defaultvalue[16]=0.0; // posph
+	defaultvalue[17]=0.0; // PRAD0
+	defaultvalue[18]=0.0; // PRAD1
+	defaultvalue[19]=0.0; // PRAD2
+	defaultvalue[20]=0.0; // PRAD3
+      }
       else{
 	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
 	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
@@ -894,6 +919,7 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
     if(DATATYPE==16 && coli==7) continue;
     if(DATATYPE==17 && coli==7) continue;
     if(DATATYPE==18 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
+    if(DATATYPE==19 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
     
 
 
@@ -2600,6 +2626,13 @@ void interpret_commandlineresults_subpart1(void)
       immediateoutput=0;
       vectorcomponent=-1;
       numoutputcols=17;
+    }
+    else if(DATATYPE==19){
+      fprintf(stderr,"input field line file with radiation and output a few things\n");
+      outputvartype=19;
+      immediateoutput=0;
+      vectorcomponent=-1;
+      numoutputcols=17+4;
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;

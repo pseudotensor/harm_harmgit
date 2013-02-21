@@ -729,22 +729,43 @@ CFLAGSNONPRECISE=$(CFLAGSPRENONPRECISE)
 GCCCFLAGS=$(GCCCFLAGSPRE)
 endif
 
-# for for normal installation of v5d and hdf
-BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -L /home/mavara/lib -lv5d -I /home/mavara/include
+###########################################
+# for system type installation of v5d and hdf (ki-rh42)
+# BEGIN SYSTEM TYPE
+#BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -L /home/mavara/lib -lv5d -I /home/mavara/include
+#BIN2TXTLIBS1=$(BIN2TXTLIBS)
+#BIN2TXTLIBS2=$(BIN2TXTLIBS)
+# DONE SYSTEM TYPE
+###########################################
+
+
+
+###########################################
+# below for USER type installation (ki-rh39 and likeness)
+# BEGIN USER TYPE
+TOPDIR := $(HOME)/
+BIN2TXTLIBS=-I$(TOPDIR)/include/ -L$(TOPDIR)/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
 BIN2TXTLIBS1=$(BIN2TXTLIBS)
 BIN2TXTLIBS2=$(BIN2TXTLIBS)
-
-# below for ki-rh39 and likeness
-# BIN2TXTLIBS=-I/home/jmckinne/include/ -L/home/jmckinne/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
 # must also change #include "hdf" stuff to have the forward hdf/ removed
 
+
+#############################################
+# BEGIN for Nautilus or Kraken
 #BIN2TXTLIBS=-ljpeg -lz -lv5d -ltcl8.5 -lGLU -lGL -lSM -luuid -lICE -lXext -lX11 -lxcb-xlib -lxcb -lXau -ldl -lpng12 -lm -lpthread
+BIN2TXTLIBS1=$(BIN2TXTLIBS)
+BIN2TXTLIBS2=$(BIN2TXTLIBS)
+# END for Nautilus or Kraken
+############################################
 
+###########################################
+# BEGIN another version for Nautilus or Kraken that works
 #BIN2TXTLIBS1=-I/nics/b/home/jmckinne/include/ -I/sw/analysis/szip/2.1/sles11.1_intel11.1/include -I/sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/include $(BIN2TXTLIBS)
-
-
 #BIN2TXTLIBS2=$(BIN2TXTLIBS) -L/nics/b/home/jmckinne/lib/ -L/sw/analysis/szip/2.1/sles11.1_intel11.1/lib -L/sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib  /sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib/libmfhdf.a /sw/analysis/hdf4/4.2.5/sles11.1_intel11.1/lib/libdf.a
 #  /nics/b/home/jmckinne/lib/libjpeg.a /nics/b/home/jmckinne/lib/libz.a /nics/b/home/jmckinne/lib/libvis5d.a
+# END another version for Nautilus or Kraken that works
+###########################################
+
 
 #############################
 #
