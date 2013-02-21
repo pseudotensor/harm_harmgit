@@ -221,7 +221,9 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 //absorption
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {
+
 #if(1)
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
@@ -245,6 +247,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {  
 #if(1)
+  extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappaes()
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
@@ -1721,6 +1724,8 @@ int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom 
 int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tautot)
 {
 #if(0)
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+  extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   FTYPE rho=pp[0];
   FTYPE u=pp[1];  
   FTYPE pr=(gamideal-1.)*(u);
@@ -1749,6 +1754,7 @@ int
 calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
 {
 #if(0)
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   FTYPE rho=pp[0];
   FTYPE u=pp[1];  
   FTYPE pr=(gamideal-1.)*(u);
@@ -1771,20 +1777,6 @@ calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
 
 
 
-//**********************************************************************
-//******* opacities ****************************************************
-//**********************************************************************
-//absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
-{
-  return(KAPPA*rho);
-}
-
-//scattering
-FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
-{  
-  return(KAPPAES*rho);
-}
 
 //**********************************************************************
 //suplementary routines for conversions

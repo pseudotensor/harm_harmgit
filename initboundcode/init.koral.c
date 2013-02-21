@@ -784,3 +784,19 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   // not used
 }
 
+
+//**********************************************************************
+//******* user opacities ****************************************************
+//**********************************************************************
+//absorption
+FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+{
+  return(KAPPA*rho);
+}
+
+//scattering
+FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+{  
+  return(KAPPAES*rho);
+}
+
