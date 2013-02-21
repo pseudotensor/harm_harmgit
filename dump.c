@@ -1160,14 +1160,15 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   else {// do a per zone check, otherwise set to 0
     whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1){
-      for (pl = 0; pl < NDIM; pl++)
-	q.ucon[pl]=0;
-      for (pl = 0; pl < NDIM; pl++)
-	q.ucov[pl]=0;
-      for (pl = 0; pl < NDIM; pl++)
-	q.bcon[pl]=0;
-      for (pl = 0; pl < NDIM; pl++)
-	q.bcov[pl]=0;
+      for (pl = 0; pl < NDIM; pl++) q.ucon[pl]=0;
+      for (pl = 0; pl < NDIM; pl++) q.ucov[pl]=0;
+      for (pl = 0; pl < NDIM; pl++) q.bcon[pl]=0;
+      for (pl = 0; pl < NDIM; pl++) q.bcov[pl]=0;
+
+      if(EOMRADTYPE!=EOMRADNONE){
+	for (pl = 0; pl < NDIM; pl++) q.uradcon[pl]=0;
+	for (pl = 0; pl < NDIM; pl++) q.uradcov[pl]=0;
+      }
     }
     whocalleducon=0; // return to normal state
     
