@@ -58,9 +58,9 @@ if [ $nx -lt 256 ] ||
     [ $ny -lt 256 ]
 then
     # avconv screws up if too small in resolution for unknown reason.  Generates boundary artifacts, for example.
-    options2="-s 50x50"
+    options2="-s 256x256"
 #    optionsgif="-loop 0 -resize 256x256" # interpolates non-constantly
-    optionsgif="-loop 0 -sample 512x512" # just fast constant interpolation so just bigger version of same data.  Still keeps gif small and quick to make.
+    optionsgif="-loop 0 -sample 256x256" # just fast constant interpolation so just bigger version of same data.  Still keeps gif small and quick to make.
 else
     options2=""
     optionsgif="-loop 0"
@@ -133,18 +133,51 @@ done
 done
 
 
-# http://www.multipole.org/discourse-server/viewtopic.php?f=1&t=22117
-# http://www.imagemagick.org/Usage/anim_basics/#montage
-# http://www.imagemagick.org/Usage/montage/
-# http://www.imagemagick.org/Usage/resize/
 #
 if [ $dogif -eq 1 ]
 then
-    rm -rf  immerge1.gif immerge1_sidebyside1.gif immerge1_sidebyside2.gif
-    convert im8p1s0l.gif im8c1s0l.gif +append immerge1_sidebyside1.gif
-    convert im9p1s0l.gif im9c1s0l.gif +append immerge1_sidebyside2.gif
-    convert immerge1_sidebyside1.gif immerge1_sidebyside2.gif -append immerge1.gif
-
+    #try1
     #convert im8p1s0l.gif im8c1s0l.gif im9p1s0l.gif im9c1s0l.gif -append immerge1.gif
+
+    #try2
+    # http://www.multipole.org/discourse-server/viewtopic.php?f=1&t=22117
+    # http://www.imagemagick.org/Usage/anim_basics/#montage
+    # http://www.imagemagick.org/Usage/montage/
+    # http://www.imagemagick.org/Usage/resize/
+    #
+    #rm -rf  immerge1.gif immerge1_sidebyside1.gif immerge1_sidebyside2.gif
+    #convert im8p1s0l.gif im8c1s0l.gif +append immerge1_sidebyside1.gif
+    #convert im9p1s0l.gif im9c1s0l.gif +append immerge1_sidebyside2.gif
+    #convert immerge1_sidebyside1.gif immerge1_sidebyside2.gif -append immerge1.gif
+
+    
+    #try3
+    # http://www.imagemagick.org/Usage/anim_mods/
+    FINAL=immerge1.gif
+    #
+    LEFT=im8p1s0l.gif
+    RIGHT=im8c1s0l.gif
+    TOP=immerge1_sidebyside1.gif
+    convert $LEFT'[0]' -coalesce \( $RIGHT'[0]' -coalesce \) \
+          +append -channel A -evaluate set 0 +channel \
+          $LEFT -coalesce -delete 0 \
+          null: \( $RIGHT -coalesce \) \
+          -gravity East  -layers Composite  $TOP
+    #
+    LEFT=im9p1s0l.gif
+    RIGHT=im9c1s0l.gif
+    BOTTOM=immerge1_sidebyside2.gif
+    convert $LEFT'[0]' -coalesce \( $RIGHT'[0]' -coalesce \) \
+          +append -channel A -evaluate set 0 +channel \
+          $LEFT -coalesce -delete 0 \
+          null: \( $RIGHT -coalesce \) \
+          -gravity East  -layers Composite  $BOTTOM
+    #
+    convert $TOP'[0]' -coalesce \( $BOTTOM'[0]' -coalesce \) \
+          -append -channel A -evaluate set 0 +channel \
+          $TOP -coalesce -delete 0 \
+          null: \( $BOTTOM -coalesce \) \
+          -gravity South  -layers Composite  $FINAL
+
 fi
 
