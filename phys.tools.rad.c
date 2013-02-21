@@ -670,8 +670,8 @@ int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct
   pp2[PRAD3]=Rij[0][3];
 
   //convert to real primitives - conversion does not care about MHD only about radiative conserved
-  int corrected;
-  u2p_rad(pp2,pp2,ptrgeom);
+  int corrected=0;
+  u2p_rad(pp2,pp2,ptrgeom, &corrected);
 
   return 0;
 } 
@@ -1286,7 +1286,7 @@ int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emulo[][NDIM
 // NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
 //
 ///////////////
-int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
+int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 {
   
   if(WHICHVEL!=VELREL4){
@@ -1294,8 +1294,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
     myexit(137432636);
   }
 
-  //whether primitives corrected for caps, floors etc. - if so, conserved will be updated
-  int corrected=0;
 
   int verbose=0,i;
   FTYPE Rij[NDIM][NDIM];
@@ -1336,7 +1334,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
 #endif
 
       //top cap
-      corrected=1;
+      *corrected=1;
       urfcon[0]=gammamax;
       
       //proper direction for the radiation rest frame, will be normalized later      
@@ -1381,7 +1379,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
       FTYPE gammarel=1.0;  // use this below
 
       //low cap
-      corrected=1;
+      *corrected=1;
 
       // relative 4-velocity radiation frame
       urfcon[1]=urfcon[2]=urfcon[3]=0.;
