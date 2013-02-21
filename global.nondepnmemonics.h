@@ -527,6 +527,10 @@
 #define UTOPRIM5D2 7
 // 8: Jon 1D/2D final version -- can handle non-rel problems
 #define UTOPRIMJONNONRELCOMPAT 8
+// 20: COLDGRMHD
+#define UTOPRIMCOLDGRMHD 20
+// 21: FFDE
+#define UTOPRIMFFDE 21
 // 100: use 5D, but compare with ldz in runtime
 #define UTOPRIMCOMPARE 100
 

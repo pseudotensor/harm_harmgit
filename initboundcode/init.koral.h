@@ -1,10 +1,13 @@
 //problem names
-#define FLATNESS (1)
-#define RADBEAMFLAT (2)
+#define FLATNESS (0) // not in Koral
+#define RADPULSE (10)
+#define RADBEAMFLAT (24)
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
-#define WHICHPROBLEM RADBEAMFLAT
+//#define WHICHPROBLEM RADBEAMFLAT
+#define WHICHPROBLEM RADPULSE
+
 
 //undefs
 #undef MAXWELL
@@ -184,6 +187,32 @@
 #define RADBEAMFLAT_ERAD 1.
 #define RADBEAMFLAT_RHO 1.
 #define RADBEAMFLAT_UU 0.1
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADPULSE)
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+
+#define N1 100
+#define N2 1 
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#define RHO_AMB 1.e0
+#define T_AMB 1.e6
+
+#define BLOBP 100.
+#define BLOBW 5.
+
+#define KAPPA 0.
+#define KAPPAES 0.
+//#define KAPPAES 1.e-6
 
 #endif
 

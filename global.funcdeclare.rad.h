@@ -44,6 +44,29 @@ extern int vchar_each(FTYPE *pr, struct of_state *q, int dir,
 		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad,int *ignorecourant);
 
 
+extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);
+extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
+extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dl, FTYPE *tautot);
+extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dl, FTYPE *tauabs);
+extern FTYPE calc_LTE_EfromT(FTYPE);
+extern FTYPE calc_LTE_TfromE(FTYPE);
+extern FTYPE calc_LTE_Efromurho(FTYPE E,FTYPE);
+extern FTYPE calc_PEQ_ufromTrho(FTYPE,FTYPE);
+extern FTYPE calc_PEQ_Tfromurho(FTYPE,FTYPE);
+extern FTYPE calc_LTE_EfromT(FTYPE);
+extern FTYPE calc_LTE_TfromE(FTYPE);
+extern FTYPE calc_LTE_Efromurho(FTYPE E,FTYPE);
+extern FTYPE calc_PEQ_ufromTrho(FTYPE,FTYPE);
+extern FTYPE calc_PEQ_Tfromurho(FTYPE,FTYPE);
+
+
+
+
+
+
+
 #if(0)
 //misc.c
 int calc_stationary1d_solution()  ;
@@ -182,8 +205,6 @@ int gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
 
 #if(0)
 FTYPE f_der_hlle         (int ix,int iy,int iz, FTYPE *fd_der);
-FTYPE calc_kappa(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
-FTYPE calc_kappaes(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
 FTYPE calc_ufromS(FTYPE S,FTYPE rho);
 FTYPE calc_Sfromu(FTYPE S,FTYPE u);
 int
@@ -279,17 +300,12 @@ int prad_ff2zamo(FTYPE *pp1, FTYPE *pp, FTYPE gg[][5], FTYPE eup[][4]);
 int calc_Rij(FTYPE *pp, FTYPE  Rij[][4]);
 int solve_explicit_ff(int ix,int iy,int iz,FTYPE dt,FTYPE* deltas);
 int solve_implicit_ff(int ix,int iy,int iz,FTYPE dt,FTYPE* deltas);
-FTYPE calc_LTE_EfromT(FTYPE);
-FTYPE calc_LTE_TfromE(FTYPE);
-FTYPE calc_LTE_Efromurho(FTYPE E,FTYPE);
-FTYPE calc_PEQ_ufromTrho(FTYPE,FTYPE);
-FTYPE calc_PEQ_Tfromurho(FTYPE,FTYPE);
 int calc_LTE_ff(FTYPE,FTYPE*,FTYPE*,FTYPE,int);
 int solve_LTE_ff(int ix,int iy,int iz,FTYPE dt);
 int solve_LTE(int ix,int iy,int iz,FTYPE dt);
 int solve_radforce_ff(int ix,int iy,int iz,FTYPE dt);
 int solve_radforce(int ix,int iy,int iz,FTYPE dt);
-int calc_tautot(FTYPE *pp, FTYPE *xx, FTYPE *dl, FTYPE *tautot);
-int calc_tauabs(FTYPE *pp, FTYPE *xx, FTYPE *dl, FTYPE *tauabs);
 int calc_Gi(FTYPE *pp, FTYPE Gi[4]);
 #endif
+
+

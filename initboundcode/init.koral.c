@@ -91,7 +91,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
+#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
 
   defcoord = UNIFORMCOORDS;
   Rin_array[1]=0;
@@ -99,6 +99,19 @@ int init_defcoord(void)
   Rin_array[3]=0;
 
   Rout_array[1]=1.0;
+  Rout_array[2]=1.0;
+  Rout_array[3]=1.0;
+
+#endif
+
+#if(WHICHPROBLEM==RADPULSE)
+
+  defcoord = UNIFORMCOORDS;
+  Rin_array[1]=-50.0;
+  Rin_array[2]=-1.0;
+  Rin_array[3]=-1.0;
+
+  Rout_array[1]=50.0;
   Rout_array[2]=1.0;
   Rout_array[3]=1.0;
 
@@ -146,8 +159,13 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)  
+#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
   gam = 4./3.;
+  cooling=KORAL;
+#endif  
+
+#if(WHICHPROBLEM==RADPULSE)
+  gam = 5./3.;
   cooling=KORAL;
 #endif  
 
@@ -168,6 +186,24 @@ int init_global(void)
 
   DTr = 100; //number of time steps for restart dumps
   tf = 10.0; //final time
+#endif
+
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADPULSE)
+
+  BCtype[X1UP]=OUTFLOW;
+  BCtype[X1DN]=OUTFLOW;
+  BCtype[X2UP]=OUTFLOW;
+  BCtype[X2DN]=OUTFLOW;
+  BCtype[X3UP]=PERIODIC; 
+  BCtype[X3DN]=PERIODIC;
+
+  int idt;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
+
+  DTr = 100; //number of time steps for restart dumps
+  tf = 1E5; //final time
 #endif
 
   /*************************************************/
@@ -329,6 +365,76 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     return(0);
   }
 #endif 
+
+
+
+
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADPULSE)
+
+  // outsideness
+  if (0) {
+
+    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
+  else {
+
+    FTYPE Tgas,ERAD,uint;
+    FTYPE xx,yy,zz;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    xx=V[1];
+    yy=V[2];
+    zz=V[3];
+
+
+    Tgas=T_AMB*(1.+BLOBP*exp(-((xx)*(xx)+(yy)*(yy)+(zz)*(zz))/BLOBW/BLOBW));
+    ERAD=calc_LTE_EfromT(Tgas);
+    //flat gas profiles
+    Tgas=T_AMB;
+    rho=RHO_AMB;
+    uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+    
+    pr[RHO] = rho;
+    pr[UU] = uint;
+    pr[U1] = 0 ;
+    pr[U2] = 0 ;    
+    pr[U3] = 0 ;
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    FTYPE Fx,Fy,Fz;
+    Fx=Fy=Fz=0.0;
+
+    pr[URAD0] = ERAD ;
+    pr[URAD1] = Fx ;
+    pr[URAD2] = Fy ;    
+    pr[URAD3] = Fz ;
+
+    *whichvel=WHICHVEL;
+    *whichcoord=CARTMINKMETRIC2;
+    return(0);
+  }
+#endif
+
+
+
+
   /*************************************************/
   /*************************************************/
 #if(WHICHPROBLEM==RADBEAMFLAT)  

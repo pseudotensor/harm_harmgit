@@ -77,9 +77,9 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 {
   FTYPE compute_dt();
   int i1,i2,i3,iv,ii,jj,pliter,sc;
-  FTYPE J[4][4],iJ[4][4];
+  FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uu[NPR]; 
-  FTYPE f1[4],f2[4],f3[4],x[4];
+  FTYPE f1[NDIM],f2[NDIM],f3[NDIM],x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
@@ -221,9 +221,22 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 //absorption
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {
-#if(0)
+#if(1)
   //user_calc_kappa()
-#elif(1)
+  FTYPE rho=pr[RHO];
+  FTYPE u=pr[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
+  FTYPE V[NDIM],xx,yy,zz;
+  bl_coord_ijk(ii,jj,kk,loc,V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+  calc_kappa_user(rho,T,xx,yy,zz);
+#else
   *kappa = 0.;
 #endif  
 }
@@ -231,9 +244,22 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 //scattering
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {  
-#if(0)
+#if(1)
   //user_calc_kappaes()
-#elif(1)
+  FTYPE rho=pr[RHO];
+  FTYPE u=pr[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
+  FTYPE V[NDIM],xx,yy,zz;
+  bl_coord_ijk(ii,jj,kk,loc,V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+  calc_kappaes_user(rho,T,xx,yy,zz);
+#else
   *kappa = 0.;
 #endif  
 }
@@ -268,12 +294,16 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   
   
   //gas properties
+#if(0)
   FTYPE rho=pp[RHO];
   FTYPE u=pp[UU];
   FTYPE p= pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
   FTYPE T = p*MU_GAS*M_PROTON/K_BOLTZ/rho;
   FTYPE B = SIGMA_RAD*pow(T,4.)/Pi;
   FTYPE Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
+#else
+  FTYPE B=1.0; // new HARM units?  KORALTODO SUPERGODMARK
+#endif
   FTYPE kappa,kappaes;
   calc_kappa(pp,ptrgeom,&kappa);
   calc_kappaes(pp,ptrgeom,&kappaes);
@@ -503,7 +533,7 @@ FTYPE my_sign(FTYPE x)
 //**********************************************************************
 //**********************************************************************
 //inverse 4by4 matrix
-int inverse_44matrix(FTYPE a[][4], FTYPE ia[][4])
+int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 {
   FTYPE mat[16],dst[16];
   int i,j;
@@ -651,7 +681,7 @@ int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct
 //whichdir: [LAB2FF, FF2LAB]
 // SUPERGODMARK: What is lab frame velocity?
 int
-calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE L[][4])
+calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE L[][NDIM])
 {
   int ii,jj,kk;
   int verbose=0;
@@ -692,7 +722,7 @@ calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_geom *
     }
 
   //temporary Om matrix
-  FTYPE Om[4][4];
+  FTYPE Om[NDIM][NDIM];
 
   DLOOP(ii,jj)
       Om[ii][jj]=ucon[ii]*wcov[jj]-wcon[ii]*ucov[jj];
@@ -781,14 +811,14 @@ boost2_laborff(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_s
 /*****************************************************************/
 //simple Lorentz boosts between ortonormal frames
 
-int boost2_zamo2ff(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4])
+int boost2_zamo2ff(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 { 
   boost2_fforzamo(ZAMO2FF, A1, A2, pp,q, ptrgeom,  eup);
 
  return 0;
 }
 
-int boost2_ff2zamo(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][4])
+int boost2_ff2zamo(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 { 
   boost2_fforzamo(FF2ZAMO, A1, A2, pp,q, ptrgeom,  eup);
 
@@ -799,11 +829,11 @@ int boost2_ff2zamo(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of
 /*****************************************************************/
 /*****************************************************************/
 //A^i Lorentz boost fluid frame -> ZAMO
-int boost2_fforzamo(int whichdir, FTYPE A1[4],FTYPE A2[4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][4])
+int boost2_fforzamo(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 {
   // ptrgeom not used for now
   int i,j,k,l;
-  FTYPE At[4];
+  FTYPE At[NDIM];
   FTYPE *ulab = q->ucon;
   FTYPE uzamo[NDIM];
 
@@ -823,7 +853,7 @@ int boost2_fforzamo(int whichdir, FTYPE A1[4],FTYPE A2[4],FTYPE *pp,struct of_st
   }
 
   //Lorentz transformation matrix
-  FTYPE L[4][4];
+  FTYPE L[NDIM][NDIM];
   
   //Lorentz factor
   FTYPE vpr2=dot3(vpr,vpr); 
@@ -875,14 +905,14 @@ int boost2_fforzamo(int whichdir, FTYPE A1[4],FTYPE A2[4],FTYPE *pp,struct of_st
 /*****************************************************************/
 /*****************************************************************/
 //T^ij Lorentz boost ZAMO -> fluid frame
-int boost22_zamo2ff(FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4])
+int boost22_zamo2ff(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 { 
   boost22_fforzamo(ZAMO2FF, T1, T2, pp,q, ptrgeom,  eup);
 
  return 0;
 }
 
-int boost22_ff2zamo(FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][4])
+int boost22_ff2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 { 
   boost22_fforzamo(FF2ZAMO, T1, T2, pp,q, ptrgeom,  eup);
 
@@ -893,11 +923,11 @@ int boost22_ff2zamo(FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, st
 /*****************************************************************/
 /*****************************************************************/
 //T^ij Lorentz boost fluid frame -> ZAMO
-int boost22_fforzamo(int whichdir, FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4])
+int boost22_fforzamo(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
   // ptrgeom not used for now
   int i,j,k,l;
-  FTYPE Tt[4][4];
+  FTYPE Tt[NDIM][NDIM];
   FTYPE *ulab = q->ucon;
   FTYPE uzamo[NDIM];
 
@@ -917,7 +947,7 @@ int boost22_fforzamo(int whichdir, FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct 
   }
 
   //Lorentz transformation matrix
-  FTYPE L[4][4];
+  FTYPE L[NDIM][NDIM];
   
   //Lorentz factor
   FTYPE vpr2=dot3(vpr,vpr); 
@@ -976,10 +1006,10 @@ int boost22_fforzamo(int whichdir, FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct 
 /*****************************************************************/
 /*****************************************************************/
 //T^ij transfromation ZAMO -> lab
-int trans22_zamo2lab(FTYPE T1[][4],FTYPE T2[][4],FTYPE elo[][4])
+int trans22_zamo2lab(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE elo[][NDIM])
 {
   int i,j,k,l;
-  FTYPE Tt[4][4];
+  FTYPE Tt[NDIM][NDIM];
 
   for(i=0;i<4;i++)
     {
@@ -1011,10 +1041,10 @@ int trans22_zamo2lab(FTYPE T1[][4],FTYPE T2[][4],FTYPE elo[][4])
 /*****************************************************************/
 /*****************************************************************/
 //T^ij transfromation lab -> ZAMO
-int trans22_lab2zamo(FTYPE T1[][4],FTYPE T2[][4],FTYPE eup[][4])
+int trans22_lab2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE eup[][NDIM])
 {
   int i,j,k,l;
-  FTYPE Tt[4][4];
+  FTYPE Tt[NDIM][NDIM];
 
   for(i=0;i<4;i++)
     {
@@ -1046,10 +1076,10 @@ int trans22_lab2zamo(FTYPE T1[][4],FTYPE T2[][4],FTYPE eup[][4])
 /*****************************************************************/
 /*****************************************************************/
 //u^i transfromation lab -> ZAMO
-int trans2_lab2zamo(FTYPE *u1,FTYPE *u2,FTYPE eup[][4])
+int trans2_lab2zamo(FTYPE *u1,FTYPE *u2,FTYPE eup[][NDIM])
 {
   int i,j,k;
-  FTYPE ut[4];
+  FTYPE ut[NDIM];
 
   for(i=0;i<4;i++)
     ut[i]=u1[i];
@@ -1070,10 +1100,10 @@ int trans2_lab2zamo(FTYPE *u1,FTYPE *u2,FTYPE eup[][4])
 /*****************************************************************/
 /*****************************************************************/
 //u^i transfromation ZAMO -> lab
-int trans2_zamo2lab(FTYPE *u1,FTYPE *u2,FTYPE elo[][4])
+int trans2_zamo2lab(FTYPE *u1,FTYPE *u2,FTYPE elo[][NDIM])
 {
   int i,j,k;
-  FTYPE ut[4];
+  FTYPE ut[NDIM];
 
   for(i=0;i<4;i++)
     ut[i]=u1[i];
@@ -1181,14 +1211,14 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 //**********************************************************************
 //**********************************************************************
 //calculates base vectors and 1-forms of LNRF to transform lab <--> LNRF
-int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][4], FTYPE emulo[][4])
+int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emulo[][NDIM])
 {
   FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
   FTYPE gtt,gtph,gphph,grr,gthth;
   int i,j;
-  // recast as [4][4] matrix
-  //  FTYPE emuup[][4]=(FTYPE (*)[4])(&ptremuup[0]);
-  //FTYPE emulo[][4]=(FTYPE (*)[4])(&ptremulo[0]);
+  // recast as [NDIM][NDIM] matrix
+  //  FTYPE emuup[][NDIM]=(FTYPE (*)[NDIM])(&ptremuup[0]);
+  //FTYPE emulo[][NDIM]=(FTYPE (*)[NDIM])(&ptremulo[0]);
 
   // SUPERGODMARK: Only applies for Boyer-Lindquist coordinates
 
@@ -1240,8 +1270,27 @@ int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][4], FTYPE emulo[][4])
 //**********************************************************************
 //**********************************************************************
 //
+///////////////
+//
+// Invert U->direct Primitive for radiation
+// OLD (i.e. no longer true): (must come after HD or MHD or whatever sets velocity of fluid, because radiation needs to have updated velocity so that can define fluid frame)
+// old code inside utoprimgen.c was:
+//    struct of_state qrad;
+// this uses new pr to get only ucon and ucov
+//get_state_uconucovonly(pr, ptrgeom, &qrad); // OLD
+// get new radiation primitives
+//
+// NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
+//
+///////////////
 int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
 {
+  
+  if(WHICHVEL!=VELREL4){
+    dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
+    myexit(137432636);
+  }
+
   //whether primitives corrected for caps, floors etc. - if so, conserved will be updated
   int corrected=0;
 
@@ -1262,7 +1311,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
   //the quadratic equation for u^t of the radiation rest frame (urf[0])
   //supposed to provide two roots for (u^t)^2 of opposite signs
   FTYPE a,b,c,delta,gamma2;
-  FTYPE urfcon[4],urfcov[4],Erf;
+  FTYPE urfcon[NDIM],urfcov[NDIM],Erf;
   a=16.*gRR;
   b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
   c=gRR*ptrgeom->gcon[GIND(0,0)]*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]*ptrgeom->gcon[GIND(0,0)];
@@ -1279,6 +1328,10 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
 
   if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.) 
     {
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"topcap: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+
       //top cap
       corrected=1;
       urfcon[0]=gammamax;
@@ -1287,21 +1340,20 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
       Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
 
       // lab-frame radiation 4-velocity
-      FTYPE Arad[4];
-      for(i=1;i<4;i++)
-	{
-	  Arad[i]=(Av[i]-1./3.*Erf*ptrgeom->gcon[GIND(0,i)])/(4./3.*Erf*gammamax);
-	}
+      FTYPE Arad[NDIM];
+      SLOOPA(i){
+	Arad[i]=(Av[i]-1./3.*Erf*ptrgeom->gcon[GIND(0,i)])/(4./3.*Erf*gammamax);
+      }
       
       //is normalized now
       FTYPE Afac;
       a=0.; c=0.; b=0.;
-      for(i=1;i<4;i++)
-	{
-	  a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
-	  b+=2.*Arad[i]*ptrgeom->gcov[GIND(0,i)]*gammamax;
-	}
-      c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax;
+      SLOOPA(i){
+	a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
+	b+=2.*Arad[i]*ptrgeom->gcov[GIND(0,i)]*gammamax;
+      }
+
+      c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax+1.0;
       delta=b*b-4.*a*c;
       Afac= (-b+sqrt(delta))/2./a;
 
@@ -1312,7 +1364,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
       urfcon[3]=Afac*Arad[3];
 
       // relative 4-velocity radiation frame
-      DLOOPA(i) urfcon[i]=urfcon[i]-urfcon[0]*ptrgeom->gcon[GIND(0,i)]/ptrgeom->gcon[GIND(0,0)];
+      DLOOPA(i) urfcon[i]=urfcon[i] - urfcon[0]*ptrgeom->gcon[GIND(0,i)]/ptrgeom->gcon[GIND(0,0)];
+
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"topcap: Erf=%g Afac=%g Arad123=%g %g %g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
 
     }
   else if(gammarel2<1.)
@@ -1345,11 +1401,10 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
       //relative velocity
       FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
       FTYPE gamma=urfcon[0]*alpha;
-      for(i=1;i<4;i++)
-	{	  
-	  urfcon[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
-	  urfcon[i]*=gamma;
-	}
+      SLOOPA(i){	  
+	urfcon[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
+	urfcon[i]*=gamma;
+      }
       urfcon[0]=0.;
     }
   
@@ -1368,9 +1423,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom)
 //numerical conserved to primitives solver for radiation
 //used e.g. for not-frame-invariant  Eddington apr. 
 //solves in 4dimensions using frame boosts etc.
-int f_u2prad_num(FTYPE *uu,FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4], FTYPE elo[][4],FTYPE *f)
+int f_u2prad_num(FTYPE *uu,FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM], FTYPE elo[][NDIM],FTYPE *f)
 {
-  FTYPE Rij[4][4];
+  FTYPE Rij[NDIM][NDIM];
   FTYPE ppp[NPR];
 
   calc_Rij_ff(pp,Rij);
@@ -1391,11 +1446,11 @@ int f_u2prad_num(FTYPE *uu,FTYPE *pp, struct of_state *q, struct of_geom *ptrgeo
 
 
 // U->P inversion for Eddington approximation using Newton method.
-int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4], FTYPE elo[][4])
+int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM], FTYPE elo[][NDIM])
 {
   FTYPE pp0[NPR],pporg[NPR];
-  FTYPE J[4][4],iJ[4][4];
-  FTYPE x[4],f1[4],f2[4],f3[4];
+  FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
+  FTYPE x[NDIM],f1[NDIM],f2[NDIM],f3[NDIM];
   int i,j,k,iter=0;
 
 
@@ -1501,9 +1556,9 @@ int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeo
 // Use: Maybe dumping
 // pp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
 // pp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
-int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4])
+int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
-  FTYPE Rij[4][4];
+  FTYPE Rij[NDIM][NDIM];
   int i,j;
 
   // set all (only non-rad needed) primitives
@@ -1529,9 +1584,9 @@ int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptr
 // Use: Error (f) for iteration
 // ppff : HD primitives (i.e. WHICHVEL velocity) and radiation primitives of \hat{E} and \hat{F} (i.e. fluid frame conserved quantities)
 // ppzamo : \hat{E} & \hat{F} -> E & F in ZAMO
-int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4],FTYPE *f)
+int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM],FTYPE *f)
 {
-  FTYPE Rij[4][4];
+  FTYPE Rij[NDIM][NDIM];
   calc_Rij_ff(ppff,Rij);
   boost22_ff2zamo(Rij,Rij,ppff,q,ptrgeom,eup);
 
@@ -1550,11 +1605,11 @@ int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geo
 // numerical iteration to find ff from zamo
 // Use: Initial conditions
 // ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
-int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4])
+int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
   FTYPE pp0[NPR],pp[NPR];
-  FTYPE J[4][4],iJ[4][4];
-  FTYPE x[4],f1[4],f2[4],f3[4];
+  FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
+  FTYPE x[NDIM],f1[NDIM],f2[NDIM],f3[NDIM];
   int i,j,k,iter=0;
 
 
@@ -1649,3 +1704,127 @@ int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom 
 
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+//*********************************************************************
+//******* calculates total opacity over dx[] ***************************
+//**********************************************************************
+int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tautot)
+{
+#if(0)
+  FTYPE rho=pp[0];
+  FTYPE u=pp[1];  
+  FTYPE pr=(gamideal-1.)*(u);
+  FTYPE T=pr*MU_GAS*M_PROTON/K_BOLTZ/rho;
+
+  FTYPE kappa=calc_kappa_user(rho,T,xx[1],xx[2],xx[3]);
+  FTYPE chi=kappa+calc_kappaes_user(rho,T,xx[1],xx[2],xx[3]);
+#endif
+  //xx[0] holds time
+  FTYPE kappa,kappaes,chi;
+  calc_kappa(pp,ptrgeom,&kappa);
+  calc_kappaes(pp,ptrgeom,&kappaes);
+  chi=kappa+kappaes;
+
+  tautot[0]=chi*dx[0];
+  tautot[1]=chi*dx[1];
+  tautot[2]=chi*dx[2];
+
+  return 0;
+}
+
+//**********************************************************************
+//******* calculates abs opacity over dx[] ***************************
+//**********************************************************************
+int
+calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
+{
+#if(0)
+  FTYPE rho=pp[0];
+  FTYPE u=pp[1];  
+  FTYPE pr=(gamideal-1.)*(u);
+  FTYPE T=pr*MU_GAS*M_PROTON/K_BOLTZ/rho;
+
+  //xx[0] holds time
+  FTYPE kappa=calc_kappa_user(rho,T,xx[1],xx[2],xx[3]);
+#endif
+  FTYPE kappa;
+  calc_kappa(pp,ptrgeom,&kappa);
+
+  tauabs[0]=kappa*dx[0];
+  tauabs[1]=kappa*dx[1];
+  tauabs[2]=kappa*dx[2];
+
+  return 0;
+}
+
+
+
+
+
+//**********************************************************************
+//******* opacities ****************************************************
+//**********************************************************************
+//absorption
+FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+{
+  return(KAPPA*rho);
+}
+
+//scattering
+FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+{  
+  return(KAPPAES*rho);
+}
+
+//**********************************************************************
+//suplementary routines for conversions
+//**********************************************************************
+FTYPE calc_PEQ_ufromTrho(FTYPE T,FTYPE rho)
+{
+  //  FTYPE p=K_BOLTZ*rho*T/MU_GAS/M_PROTON;
+  FTYPE p=rho*T/MU_GAS; // KORALTODO  HARMUNITS? SUPERGODMARK
+  FTYPE u=p/(gamideal-1.);
+  return u;
+}
+
+FTYPE calc_PEQ_Tfromurho(FTYPE u,FTYPE rho)
+{
+  FTYPE p=u*(gamideal-1.);
+  //  FTYPE T=p/(K_BOLTZ*rho/MU_GAS/M_PROTON);
+  FTYPE T=p/(rho/MU_GAS); // KORALTODO  HARMUNITS? SUPERGODMARK
+  return T;
+}
+
+FTYPE calc_LTE_EfromT(FTYPE T)
+{
+  return 4.*SIGMA_RAD*T*T*T*T;
+}
+
+FTYPE calc_LTE_TfromE(FTYPE E )
+{
+  return sqrt(sqrt((E/4./SIGMA_RAD)));
+}
+
+
+FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
+{
+  FTYPE p=(gamideal-1.)*(u);
+  //  FTYPE T=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
+  FTYPE T=p*MU_GAS/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
+
+  return calc_LTE_EfromT(T);
+}
+
+
+
+

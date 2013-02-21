@@ -432,6 +432,7 @@
 // whether to check on inversion and report problem
 // Also, use diag_fixup() to account for changes in U when inversion success (tracks changes due to Newton iteration error and machine error)
 #define CHECKONINVERSION 1
+#define CHECKONINVERSIONRAD 0 // check on radiation inversion.  Default 0 because generally limiters on |v| mean not the same, so only use for debugging.
 
 #define PRECISEINVERSION 1
 // whether we use ultimately precise inversion or "workable" inversion precision (see utoprim's for how defined)

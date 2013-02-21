@@ -438,6 +438,15 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
+// DUMMY GLOBAL VALUES for cases when *not* choosing that problem (so set to something when that problem for dummy values)
+#if(WHICHPROBLEM!=RADBEAMFLAT)
+
+#define RADBEAMFLAT_FRATIO 0.995
+#define RADBEAMFLAT_ERAD 1.
+#define RADBEAMFLAT_RHO 1.
+#define RADBEAMFLAT_UU 0.1
+
+#endif
 
 // X1 lower for radiation beam injection
 int bound_x1dn_radbeamflatinflow(
@@ -454,14 +463,6 @@ int bound_x1dn_radbeamflatinflow(
 		       )
 
 {
-
-
-  if(WHICHPROBLEM!=RADBEAMFLAT){
-    dualfprintf(fail_file,"RADBEAMFLATINFLOW BC works only for RADBEAMFLAT\n");
-    myexit(3263664);
-  }
-
-
 
 
 #pragma omp parallel  // assume don't require EOS
