@@ -1274,6 +1274,26 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //ftemp=(float)(v3-B3*v1/(B1+SMALL));
   // myset(datatype,&ftemp,0,1,writebuf);
 
+
+  if(EOMRADTYPE!=EOMRADNONE){
+    // urad^t [ in grid frame]
+    ftemp=(float)(q.uradcon[0]);
+    myset(datatype,&ftemp,0,1,writebuf);
+
+    // vrad^r [ in grid frame]
+    ftemp=(float)(q.uradcon[1]/q.uradcon[0]);
+    myset(datatype,&ftemp,0,1,writebuf);
+    
+    // vrad^\theta
+    ftemp=(float)(q.uradcon[2]/q.uradcon[0]);
+    myset(datatype,&ftemp,0,1,writebuf);
+    
+    // vrad^\phi
+    ftemp=(float)(q.uradcon[3]/q.uradcon[0]);
+    myset(datatype,&ftemp,0,1,writebuf);
+  }
+
+
   return(0);
 
 }
