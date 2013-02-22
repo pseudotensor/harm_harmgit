@@ -1374,12 +1374,12 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     }// end else if Erf>0
   }
   else if(gammarel2<1.){
+    *corrected=1;
+
     // override
     gammarel2=1.0;
     FTYPE gammarel=1.0;  // use this below
 
-    //low cap
-    *corrected=1;
 
     // get lab-frame 4-velocity u^t
     //    urfcon[0]=gammarel/ptrgeom->alphalapse;
@@ -1414,13 +1414,14 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   }
   else{
     //regular calculation
-    //    urfcon[0]=sqrt(gamma2);
     
     //radiative energy density in the radiation rest frame based upon lab-frame u^t
+    //    urfcon[0]=sqrt(gamma2);
     //    Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
     Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
     if(Erf<ERADLIMIT){ // JCM
+      *corrected=1;
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
       urfconrel[1]=0.0;
