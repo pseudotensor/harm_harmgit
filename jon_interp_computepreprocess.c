@@ -460,7 +460,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
       // already stored in fvar
     }
   }
-  else if(outputvartypelocal==15 || outputvartypelocal==16  || outputvartypelocal==17  || outputvartypelocal==18){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
+  else if(outputvartypelocal==15 || outputvartypelocal==16  || outputvartypelocal==17  || outputvartypelocal==18 || outputvartypelocal==19){ // reading in field line data and outputting "numoutputcols" columns of results for interpolation
 
     if(docurrent==1){
       dualfprintf(fail_file,"Can't do outputvartypelocal==15 with docurrent=1\n");
@@ -662,7 +662,11 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
   SLOOPA(jj) vecv[jj]*=vecv[TT]; // now uu[jj]
   vecB[TT]=0.0; SLOOPA(jj) vecB[jj]=val[FLB1+jj-1];
 
-  
+  FTYPE vecvrad[NDIM];
+  if(outputvartypelocal==19){
+    vecvrad[0]=val[FLURAD0]; vecvrad[1]=val[FLVRAD1]; vecvrad[2]=val[FLVRAD2]; vecvrad[3]=val[FLVRAD3];
+    SLOOPA(jj) vecvrad[jj]*=vecvrad[TT]; // now uu[jj]
+  }
 
 
   // DEBUG:
@@ -677,6 +681,13 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
   FTYPE vecvortho[NDIM];
   concovtype=1; // contravariant
   vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecv, vecvortho);
+
+  FTYPE vecvradortho[NDIM];
+  if(outputvartypelocal==19){
+    // do vecvrad
+    concovtype=1; // contravariant
+    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vecvrad, vecvradortho);
+  }
 
   // do vecB
   FTYPE vecBortho[NDIM];
@@ -724,6 +735,8 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
   FTYPE rho=val[FLRHO];
   FTYPE ug=val[FLU];
   FTYPE uu0ortho=vecvortho[TT];
+
+  FTYPE prad0=val[FLURAD0];
 
 #if(0)
   // not necessary for Sasha models
@@ -791,6 +804,30 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[14]=V[1]; // spherical polar radius r
     fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
     fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
+  }
+  else if(outputvartypelocal==19){
+    fvar[0]=rho; // rest-mass density
+    fvar[1]=ug;  // internal energy density
+    fvar[2]=uu0ortho; // Lorentz factor
+    //    fvar[3]=bsq;
+    fvar[3]=MIN(bsq/rho,1E2); // limited bsq/rho
+    fvar[4]=log10(rho);
+    fvar[5]=-log10(rho);
+    fvar[6]=log10(bsq);
+    fvar[7]=Rcyl; // Cylindrical radius
+    fvar[8]=vecvortho[1]/vecvortho[TT]; // vx
+    fvar[9]=vecvortho[2]/vecvortho[TT]; // vy
+    fvar[10]=vecvortho[3]/vecvortho[TT]; // vz
+    fvar[11]=vecBortho[1]; // Bx
+    fvar[12]=vecBortho[2]; // By
+    fvar[13]=vecBortho[3]; // Bz
+    fvar[14]=V[1]; // spherical polar radius r
+    fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
+    fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
+    fvar[17]=prad0;
+    fvar[18]=vecvradortho[1]/vecvradortho[TT]; // vradx
+    fvar[19]=vecvradortho[2]/vecvradortho[TT]; // vrady
+    fvar[20]=vecvradortho[3]/vecvradortho[TT]; // vradz
   }
   else{
     dualfprintf(fail_file,"No such outputvartypelocal=%d\n",outputvartypelocal);

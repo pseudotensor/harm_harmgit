@@ -59,9 +59,9 @@
 #define sign(a) (copysign(1.0,a))
 
 // maximum number of columns for memory allocation of some things
-#define MAXCOLS 20
+#define MAXCOLS 40
 
-#define MAXINCOLS 20
+#define MAXINCOLS 30
 
 #define MAXBC 2
 // whether to treat \phi direction as periodic (used when N3>1 and oldgridtype==1)
@@ -83,6 +83,10 @@
 #define FLB1 8
 #define FLB2 9
 #define FLB3 10
+#define FLURAD0 11
+#define FLVRAD1 12
+#define FLVRAD2 13
+#define FLVRAD3 14
 
 // FL's to skip when storing
 #define SKIPFL2STORE(x) (x==FLNEGUD0 || x==FLMUCONST)
