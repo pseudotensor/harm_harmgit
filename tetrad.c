@@ -397,6 +397,12 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
 
   // now assume no mixing in r-\theta
   // Right now, only works for a=0 KS or BL
+  // But, even for a\neq 0, the order is found correctly since spherical polar and KS gtr terms dominate
+
+  if(THETAROT!=0.0){
+    dualfprintf(fail_file,"compute_tetrcon_frommetric_mathematica() needs to have rotation added (see jon_interp stuff) so can handle tilts that mix theta and phi.  Then can trust picking up dominate terms.\n");
+    myexit(546292153);
+  }
 
   gtt=generalmatrix[0][0];
   grr=generalmatrix[1][1];
@@ -444,4 +450,142 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
   eigenvalues[3]=gpp;
 
   return(0);
+}
+
+
+
+
+// Use as, e.g.:
+//    FTYPE vecvortho[NDIM];
+//    concovtype=1; // contravariant input in vec[0-3]
+//    vecX2vecVortho(concovtype,V,gcov,dxdxp, tetrcov, tetrcon, vecv, vecvortho);
+
+// converts contravariant (concovtype=1 using tetrcov) or covariant (concovtype=2 using tetrcon) X-based vector into orthonormal V-based vector
+void vecX2vecVortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], FTYPE (*tetrcov)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE *vec, FTYPE *vecortho)
+{
+  int jj,kk;
+  //  FTYPE tetrcov[NDIM][NDIM],tetrcon[NDIM][NDIM],eigenvalues[NDIM];
+  FTYPE tempcomp[NDIM];
+  FTYPE finalvec[NDIM];
+
+
+  // vector here is in original X coordinates
+  DLOOPA(jj) finalvec[jj]=vec[jj];
+
+  // transform from X to V for contravariant vector
+  DLOOPA(jj) tempcomp[jj]=0.0;
+  DLOOP(jj,kk){
+    tempcomp[jj] += dxdxp[jj][kk]*finalvec[kk];
+  }
+  DLOOPA(jj) finalvec[jj]=tempcomp[jj];
+
+
+  DLOOPA(jj) tempcomp[jj]=0.0;
+
+  if(concovtype==1){
+    // transform to orthonormal basis for contravariant vector in V coordinates
+    DLOOP(jj,kk){
+      tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
+    }
+  }
+  else if(concovtype==2){
+    // transform to orthonormal basis for covariant vector in V coordinates (GODMARK: unsure about tetrcon[kk][jj] vs. tetrcon[jj][kk])
+    DLOOP(jj,kk){
+      tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
+    }
+  }
+  else{
+    dualfprintf(fail_file,"No such concovtype=%d\n",concovtype);
+    myexit(1);
+  }
+  DLOOPA(jj) finalvec[jj]=tempcomp[jj];
+
+
+  // Could now apply lambda that transforms from (e.g.) SPC to Cart using normal orthonormal type transformation for both coordinates to get that transformation
+
+  // final answer:
+  DLOOPA(jj) vecortho[jj]=finalvec[jj];
+
+
+}
+
+
+
+//**********************************************************************
+//**********************************************************************
+//**********************************************************************
+//calculates base vectors and 1-forms of LNRF to transform lab <--> LNRF
+int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emulo[][NDIM])
+{
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE tetrcov[NDIM][NDIM];
+  FTYPE tetrcon[NDIM][NDIM];
+  FTYPE eigenvalues[NDIM];
+
+  // get dxdxp
+  dxdxprim_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,dxdxp);
+
+  // get tetrad (uses dxdxp so that tetrcon and tetrcon and eigenvalues are using V metric not X metric
+  tetr_func_frommetric(dxdxp, ptrgeom->gcov, tetrcov, tetrcon, eigenvalues);
+
+  int jj,kk;
+  DLOOP(jj,kk) emuup[jj][kk]=tetrcon[jj][kk]; // KORALTODO SUPERGODMARK : what is emuup?  tetrcon or tetrcov?
+  DLOOP(jj,kk) emulo[jj][kk]=tetrcov[jj][kk]; // KORALTODO SUPERGODMARK : what is emuup?  tetrcon or tetrcov?
+
+  return(0);
+}
+
+
+//**********************************************************************
+// Bardeen tensor transforming between ZAMO and LAB frames
+//**********************************************************************
+//**********************************************************************
+//calculates base vectors and 1-forms of LNRF to transform lab <--> LNRF
+// Here, LNRF is ZAMO frame, and this function only works for BL coords
+int calc_LNRFes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emulo[][NDIM])
+{
+  FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
+  FTYPE gtt,gtph,gphph,grr,gthth;
+  int i,j;
+  // recast as [NDIM][NDIM] matrix
+  //  FTYPE emuup[][NDIM]=(FTYPE (*)[NDIM])(&ptremuup[0]);
+  //FTYPE emulo[][NDIM]=(FTYPE (*)[NDIM])(&ptremulo[0]);
+
+  // SUPERGODMARK: Only applies for Boyer-Lindquist coordinates
+
+  gtt=ptrgeom->gcov[GIND(0,0)];
+  gtph=ptrgeom->gcov[GIND(0,3)];
+  gphph=ptrgeom->gcov[GIND(3,3)];
+  grr=ptrgeom->gcov[GIND(1,1)];
+  gthth=ptrgeom->gcov[GIND(2,2)];
+
+  //Bardeen's 72 coefficients:
+  e2nu=-gtt+gtph*gtph/gphph;
+  e2psi=gphph;
+  e2mu1=grr;
+  e2mu2=gthth;
+  omega=-gtph/gphph;
+
+  for(i=0;i<4;i++)
+    for(j=0;j<4;j++)
+      {
+	emuup[i][j]=0.;
+	emulo[i][j]=0.;
+      }
+
+  emuup[0][0]=sqrt(e2nu);
+  emuup[1][1]=sqrt(e2mu1);
+  emuup[2][2]=sqrt(e2mu2);
+  emuup[0][3]=-omega*sqrt(e2psi);
+  emuup[3][3]=sqrt(e2psi);
+
+  emulo[3][0]=omega*1./sqrt(e2nu);
+  emulo[0][0]=1./sqrt(e2nu);
+  emulo[1][1]=1./sqrt(e2mu1);
+  emulo[2][2]=1./sqrt(e2mu2);
+  emulo[3][3]=1./sqrt(e2psi);
+
+  // need to return Kerr-Schild prime transformations
+
+  return 0;
 }

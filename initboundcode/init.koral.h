@@ -6,9 +6,9 @@
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
-//#define WHICHPROBLEM RADBEAMFLAT
+#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
-#define WHICHPROBLEM RADPULSE3D
+//#define WHICHPROBLEM RADPULSE3D
 
 
 //undefs
@@ -338,7 +338,7 @@
 #define WHICHEOS IDEALGAS
 
 #define CHECKONINVERSION 0 // can slow things down
-#define CHECKONINVERSIONRAD 0
+#define CHECKONINVERSIONRAD 1 // can independently check radiation inversion when no corrections
 
 #if(DODISS || DOLUMVSR || DODISSVSR)
 // for diss: testing CHANGINGMARK

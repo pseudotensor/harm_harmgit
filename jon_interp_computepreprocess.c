@@ -1486,15 +1486,6 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
   DLOOPA(jj) finalvec[jj]=vec[jj];
 
 
-  // get SPC -> Cart transformation
-  generate_lambdacoord(oldgridtype, newgridtype, V, lambdacoord);
-
-  // DEBUG
-  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
-  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d lambdacoord=%21.15g\n",jj,kk,lambdacoord[jj][kk]);
-  //  }
-
-
   // get tetrad (uses dxdxp so that tetrcon and tetrcon and eigenvalues are using V metric not X metric
   tetr_func_frommetric(dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
 
@@ -1547,6 +1538,15 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
   //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
   //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d finalvec(tetrcov)=%21.15g\n",jj,finalvec[jj]);
   //  }
+
+  // get SPC -> Cart transformation
+  generate_lambdacoord(oldgridtype, newgridtype, V, lambdacoord);
+
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d lambdacoord=%21.15g\n",jj,kk,lambdacoord[jj][kk]);
+  //  }
+
 
   // transform from spherical polar to Cartesian coordinates (assumes vector is in orthonormal basis)
   DLOOPA(jj) tempcomp[jj]=0.0;

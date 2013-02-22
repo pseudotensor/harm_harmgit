@@ -1210,58 +1210,6 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 
 
-//**********************************************************************
-//**********************************************************************
-//**********************************************************************
-//calculates base vectors and 1-forms of LNRF to transform lab <--> LNRF
-int calc_LNRFes(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emulo[][NDIM])
-{
-  FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
-  FTYPE gtt,gtph,gphph,grr,gthth;
-  int i,j;
-  // recast as [NDIM][NDIM] matrix
-  //  FTYPE emuup[][NDIM]=(FTYPE (*)[NDIM])(&ptremuup[0]);
-  //FTYPE emulo[][NDIM]=(FTYPE (*)[NDIM])(&ptremulo[0]);
-
-  // SUPERGODMARK: Only applies for Boyer-Lindquist coordinates
-
-  gtt=ptrgeom->gcov[GIND(0,0)];
-  gtph=ptrgeom->gcov[GIND(0,3)];
-  gphph=ptrgeom->gcov[GIND(3,3)];
-  grr=ptrgeom->gcov[GIND(1,1)];
-  gthth=ptrgeom->gcov[GIND(2,2)];
-
-  //Bardeen's 72 coefficients:
-  e2nu=-gtt+gtph*gtph/gphph;
-  e2psi=gphph;
-  e2mu1=grr;
-  e2mu2=gthth;
-  omega=-gtph/gphph;
-
-  for(i=0;i<4;i++)
-    for(j=0;j<4;j++)
-      {
-	emuup[i][j]=0.;
-	emulo[i][j]=0.;
-      }
-
-  emuup[0][0]=sqrt(e2nu);
-  emuup[1][1]=sqrt(e2mu1);
-  emuup[2][2]=sqrt(e2mu2);
-  emuup[0][3]=-omega*sqrt(e2psi);
-  emuup[3][3]=sqrt(e2psi);
-
-  emulo[3][0]=omega*1./sqrt(e2nu);
-  emulo[0][0]=1./sqrt(e2nu);
-  emulo[1][1]=1./sqrt(e2mu1);
-  emulo[2][2]=1./sqrt(e2mu2);
-  emulo[3][3]=1./sqrt(e2psi);
-
-  // need to return Kerr-Schild prime transformations
-
-  return 0;
-}
-
 
 
 

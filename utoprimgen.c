@@ -776,7 +776,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
   
 
   // see if should check at all
-  if(CHECKONINVERSION==0) return(0);
+  if(CHECKONINVERSION==0 && CHECKONINVERSIONRAD==0) return(0);
 
 
 
@@ -845,6 +845,10 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     //////////////////////////////
     PLOOP(pliter,pl){
 
+      if(CHECKONINVERSION==0 && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
+      if(CHECKONINVERSIONRAD==0 && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
+  
+
       // default is to assume nothing wrong
       fdiff[pl]=0.0;
 
@@ -857,7 +861,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       if(usedentropyinversion  && (pl==UU )) continue;
       if(usedhotinversion && (pl==ENTROPY )) continue;
 
-      if(CHECKONINVERSIONRAD==0 || (EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || (EOMRADTYPE!=EOMRADNONE && (*corrected==1)) )  continue; // if no radiation, then really shouldn't ever reach these, but check anyways
+      //(EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || // no need to check pl if no such pl's
+      if(EOMRADTYPE!=EOMRADNONE && (*corrected==1)) continue;
       // corrected: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
 
 
@@ -872,8 +877,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
-      if(pl==RHO || pl==UU || pl==URAD0&&CHECKONINVERSIONRAD==1&&(*corrected==0) || pl==ENTROPY) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
-      else if(pl==U1 || pl==U2 || pl==U3 || (pl==URAD1 || pl==URAD2 || pl==URAD3)&&CHECKONINVERSION==1&&(*corrected==0) ){
+      if(pl==RHO || pl==UU || pl==URAD0&&(*corrected==0) || pl==ENTROPY) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+      else if(pl==U1 || pl==U2 || pl==U3 || (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*corrected==0) ){
 
 	errornorm  = THIRD*(fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
 #if(REMOVERESTMASSFROMUU==2)
@@ -897,7 +902,11 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     int plcheck;
     PLOOP(pliter,pl){
 
-      plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || CHECKONINVERSIONRAD==1&&(*corrected==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)));
+      if(CHECKONINVERSION==0 && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
+      if(CHECKONINVERSIONRAD==0 && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
+
+
+      plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*corrected==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)));
 
       if(IFUTOPRIMFAIL(*lpflag) || fdiff[pl]>CHECKONINVFRAC){
 	if(
@@ -1526,7 +1535,7 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
 
   // KORAL
   if(EOMRADTYPE!=EOMRADNONE) u2p_rad(Ugeomfree,pr,ptrgeom,corrected);
-  //  *corrected=0; // test that check_on_inversion triggered where velocity limiter applies
+  //*corrected=0; // test that check_on_inversion triggered where velocity limiter applies
 
 
   

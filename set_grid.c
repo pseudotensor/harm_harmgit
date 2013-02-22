@@ -1270,14 +1270,13 @@ static void set_idxvol(void)
 
 ///////////////////
 //
-// Bardeen tensor transforming between ZAMO and LAB frames
+// Get tetrads that convert between X-lab frame basis to V-orthonormal basis
 //
 //////////////////
 static void set_boostemu(void)
 {
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
-
 
 #pragma omp parallel 
   {
@@ -1297,10 +1296,19 @@ static void set_boostemu(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
-        // SUPERGODMARK: use jon tetrads
         calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
+
+	// DEBUG:
+	//	int jj,kk;
+	//	dualfprintf(fail_file,"TEST ijkll=%d %d %d : %d\n",i,j,k,ll);
+	//	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d : boostup=%g boostdown=%g\n",jj,kk,GLOBALMETMACP2A2(boostemu,ll,LAB2ZAMO,i,j,k,jj,kk),GLOBALMETMACP2A2(boostemu,ll,ZAMO2LAB,i,j,k,jj,kk));
+
+
       }
     }// end 3D LOOP
   }// end parallel region
 
+
 }
+
+
