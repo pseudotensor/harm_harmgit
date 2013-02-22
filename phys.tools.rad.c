@@ -1279,6 +1279,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
  
 
+  /*
   if(gammarel2<0.0 || delta<0.){
 
     // can't assume this conditions means large gamma, because if not, then leads to crazy boost of energy.
@@ -1292,8 +1293,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 #if(PRODUCTION==0)
     dualfprintf(fail_file,"topcapbad: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
-  }
-  else if(gammarel2>gammamax*gammamax){
+}*/
+  //else if(gammarel2>gammamax*gammamax){
+  if(gammarel2>gammamax*gammamax){
 
     //top cap
     *corrected=1;
@@ -1390,7 +1392,8 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 	
     }// end else if Erf>0
   }
-  else if(gammarel2<1.){
+  //  else if(gammarel2<1.){
+  else if(gammarel2<1. || delta<0.){
     *corrected=1;
 
     FTYPE gammarel2orig=gammarel2;
