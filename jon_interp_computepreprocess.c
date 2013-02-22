@@ -825,9 +825,9 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
     fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
     fvar[17]=prad0;
-    fvar[8]=vecvradortho[1]/vecvradortho[TT]; // vradx
-    fvar[9]=vecvradortho[2]/vecvradortho[TT]; // vrady
-    fvar[10]=vecvradortho[3]/vecvradortho[TT]; // vradz
+    fvar[18]=vecvradortho[1]/vecvradortho[TT]; // vradx
+    fvar[19]=vecvradortho[2]/vecvradortho[TT]; // vrady
+    fvar[20]=vecvradortho[3]/vecvradortho[TT]; // vradz
   }
   else{
     dualfprintf(fail_file,"No such outputvartypelocal=%d\n",outputvartypelocal);
