@@ -1280,9 +1280,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
  
 
   if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.){
-#if(PRODUCTION==0)
-    dualfprintf(fail_file,"topcap: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-#endif
 
     //top cap
     *corrected=1;
@@ -1302,6 +1299,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
       urfconrel[1]=0.0;
       urfconrel[2]=0.0;
       urfconrel[3]=0.0;
+
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"topcapErfneg: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+
     }
     else{ // JCM
 
@@ -1322,7 +1324,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 	// check that gamma really correctly gammamax
 	FTYPE gammatemp2,qsqtemp2;
 	MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-	dualfprintf(fail_file,"MAXCHECK: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
+	dualfprintf(fail_file,"topcapgamma: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
 #endif
 
 
@@ -1365,7 +1367,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 	DLOOPA(jj) udotu += urfcon[jj]*urfcov[jj];
 	
 	
-	dualfprintf(fail_file,"topcap: Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+	dualfprintf(fail_file,"topcapolek: Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
       }// end Olek method
 	
@@ -1393,10 +1395,20 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
       urfconrel[1]=0.0;
       urfconrel[2]=0.0;
       urfconrel[3]=0.0;
+
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"midcapErfneg: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+
     }
     else{
       // relative 4-velocity radiation frame
       urfconrel[1]=urfconrel[2]=urfconrel[3]=0.;
+
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"midcapalt: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+
     }
 
   }
@@ -1423,9 +1435,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     else{
       //relative velocity
       FTYPE gammarel=sqrt(gammarel2);
-#if(1)
+#if(1) // JCM
       SLOOPA(i) urfconrel[i] = alpha * (Av[i] + 1./3.*Erf*ptrgeom->gcon[GIND(0,i)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
-#else
+#else // Olek
       SLOOPA(i){
 	urfconrel[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
 	urfconrel[i]*=gammarel;
@@ -1433,7 +1445,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 #endif
 
 #if(PRODUCTION==0)
-    dualfprintf(fail_file,"nocapgood: Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
+      //    dualfprintf(fail_file,"nocapgood: Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
 #endif
 
     }
