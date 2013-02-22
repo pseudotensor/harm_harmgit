@@ -1283,6 +1283,7 @@ int init_defglobal(void)
 
   GAMMAMAXRAD=100.0; // maximum radiation frame lorentz factor
   // NOTEMARK: GAMMAMAXRAD=1000 doesn't work with RADBEAMFLAT in init.koral.c
+  ERADLIMIT=UUMIN; // set same for now
 
 
   GAMMAFAIL=100.0*GAMMAMAX; // when we think gamma is rediculous as to mean failure and solution is not accurate.

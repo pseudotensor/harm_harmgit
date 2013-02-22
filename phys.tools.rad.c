@@ -1233,6 +1233,8 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 //
 // NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
 //
+// ERADLIMIT applied here, but (SUPERGODMARK KORALTODO) should in general treat Erf<something as failure in inversion and try to average-out first before reducing to ERf=something and zero relative velocity.  And not sure what that something should be except as relative to other energy densities like how handle UU and BSQ relative to RHO.  Should do that instead and just have very small floor. 
+//
 ///////////////
 int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 {
@@ -1260,108 +1262,191 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   //the quadratic equation for u^t of the radiation rest frame (urf[0])
   //supposed to provide two roots for (u^t)^2 of opposite signs
   FTYPE a,b,c,delta,gamma2;
-  FTYPE urfcon[NDIM],urfcov[NDIM],Erf;
+  FTYPE urfcon[NDIM],urfconrel[NDIM],Erf;
   a=16.*gRR;
   b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
   c=gRR*ptrgeom->gcon[GIND(0,0)]*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]*ptrgeom->gcon[GIND(0,0)];
   delta=b*b-4.*a*c;
-  gamma2=  (-b-sqrt(delta))/2./a;
+  gamma2=  (-b-sqrt(delta))/2./a; // lab-frame gamma^2
   //if unphysical try the other root
   if(gamma2<0.) gamma2=  (-b+sqrt(delta))/2./a; 
 
   //cap on u^t
   FTYPE gammamax=GAMMAMAXRAD;
 
-  FTYPE gammarel2 = gamma2/(-ptrgeom->gcon[GIND(TT,TT)]);
+  FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
+
+  FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
  
 
-  if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.) 
-    {
+  if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.){
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"topcap: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    dualfprintf(fail_file,"topcap: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
-      //top cap
-      *corrected=1;
-      urfcon[0]=gammamax;
+    //top cap
+    *corrected=1;
+    //    urfcon[0]=gammamax;
+    FTYPE gammarel=gammamax;
+    gammarel2=gammamax*gammamax;
       
-      //proper direction for the radiation rest frame, will be normalized later      
-      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+    //proper radiation energy density in the radiation rest frame
+    //    Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+    Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
-      // lab-frame radiation 4-velocity
-      FTYPE Arad[NDIM];
-      SLOOPA(i){
-	Arad[i]=(Av[i]-1./3.*Erf*ptrgeom->gcon[GIND(0,i)])/(4./3.*Erf*gammamax);
-      }
-      
-      //is normalized now
-      FTYPE Afac;
-      a=0.; c=0.; b=0.;
-      SLOOPA(i){
-	a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
-	b+=2.*Arad[i]*ptrgeom->gcov[GIND(0,i)]*gammamax;
-      }
 
-      c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax+1.0;
-      delta=b*b-4.*a*c;
-      Afac= (-b+sqrt(delta))/2./a;
+    if(Erf<ERADLIMIT){ // JCM
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+      urfconrel[0]=0.0;
+      urfconrel[1]=0.0;
+      urfconrel[2]=0.0;
+      urfconrel[3]=0.0;
+    }
+    else{ // JCM
 
-      // lab-frame radiation 4-velocity
-      urfcon[0]=gammamax;
-      urfcon[1]=Afac*Arad[1];
-      urfcon[2]=Afac*Arad[2];
-      urfcon[3]=Afac*Arad[3];
+      if(1){
+	// lab-frame radiation relative 4-velocity
+	FTYPE Aradrel[NDIM];
+	SLOOPA(i) Aradrel[i] = alpha * (Av[i] + 1./3.*Erf*ptrgeom->gcon[GIND(0,i)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 
-      // relative 4-velocity radiation frame
-      DLOOPA(i) urfcon[i]=urfcon[i] - urfcon[0]*ptrgeom->gcon[GIND(0,i)]/ptrgeom->gcon[GIND(0,0)];
+	// compute \gammarel using this
+	FTYPE gammatemp,qsqtemp;
+	int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
+	MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+
+	// now rescale Aradrel[i] so will give desired \gammamax
+	SLOOPA(i) Aradrel[i] *= (gammamax/gammatemp);
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"topcap: Erf=%g Afac=%g Arad123=%g %g %g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],ptrgeom->i,ptrgeom->j,ptrgeom->k);
+	// check that gamma really correctly gammamax
+	FTYPE gammatemp2,qsqtemp2;
+	MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+	dualfprintf(fail_file,"MAXCHECK: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
 #endif
 
+
+      }
+      else if(0){
+	
+	// lab-frame radiation 4-velocity
+	FTYPE Arad[NDIM];
+	SLOOPA(i) Arad[i]=(Av[i]-1./3.*Erf*ptrgeom->gcon[GIND(0,i)])/(4./3.*Erf*gammamax);
+      
+	//is normalized now
+	FTYPE Afac;
+	a=0.; c=0.; b=0.;
+	SLOOPA(i){
+	  a+=Arad[i]*Arad[i]*ptrgeom->gcov[GIND(i,i)];
+	  b+=2.*Arad[i]*ptrgeom->gcov[GIND(0,i)]*gammamax;
+	}
+
+	c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax+1.0;
+	delta=b*b-4.*a*c;
+	Afac= (-b+sqrt(delta))/2./a;
+
+	// lab-frame radiation 4-velocity
+	urfcon[0]=gammamax;
+	urfcon[1]=Afac*Arad[1];
+	urfcon[2]=Afac*Arad[2];
+	urfcon[3]=Afac*Arad[3];
+
+	// relative 4-velocity radiation frame
+	DLOOPA(i) urfconrel[i]=urfcon[i] - urfcon[0]*ptrgeom->gcon[GIND(0,i)]/ptrgeom->gcon[GIND(0,0)];
+	
+#if(PRODUCTION==0)
+	
+	// check that u.u=-1 (seems to be true)
+	int jj,kk;
+	FTYPE urfcov[NDIM];
+	DLOOPA(jj) urfcov[jj]=0.0;
+	DLOOP(jj,kk) urfcov[jj] += urfcon[kk]*ptrgeom->gcov[GIND(jj,kk)];
+	FTYPE udotu=0.0;
+	DLOOPA(jj) udotu += urfcon[jj]*urfcov[jj];
+	
+	
+	dualfprintf(fail_file,"topcap: Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+      }// end Olek method
+	
+    }// end else if Erf>0
+  }
+  else if(gammarel2<1.){
+    // override
+    gammarel2=1.0;
+    FTYPE gammarel=1.0;  // use this below
+
+    //low cap
+    *corrected=1;
+
+    // get lab-frame 4-velocity u^t
+    //    urfcon[0]=gammarel/ptrgeom->alphalapse;
+
+    //radiative energy density in the radiation rest frame
+    //    Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+    Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
+
+    if(Erf<ERADLIMIT){ // JCM
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+      urfconrel[0]=0.0;
+      urfconrel[1]=0.0;
+      urfconrel[2]=0.0;
+      urfconrel[3]=0.0;
     }
-  else if(gammarel2<1.)
-    {
-      // override
-      gammarel2=1.0;
-      FTYPE gammarel=1.0;  // use this below
-
-      //low cap
-      *corrected=1;
-
+    else{
       // relative 4-velocity radiation frame
-      urfcon[1]=urfcon[2]=urfcon[3]=0.;
-
-      // get lab-frame 4-velocity u^t
-      urfcon[0]=gammarel/ptrgeom->alphalapse;
-
-      //radiative energy density in the radiation rest frame
-      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
-
+      urfconrel[1]=urfconrel[2]=urfconrel[3]=0.;
     }
-  else
-    {
-      //regular calculation
-      urfcon[0]=sqrt(gamma2);
+
+  }
+  else{
+    //regular calculation
+    //    urfcon[0]=sqrt(gamma2);
     
-      //radiative energy density in the radiation rest frame
-      Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
-      
-      //relative velocity
-      FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
-      FTYPE gamma=urfcon[0]*alpha;
-      SLOOPA(i){	  
-	urfcon[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
-	urfcon[i]*=gamma;
-      }
-      urfcon[0]=0.;
+    //radiative energy density in the radiation rest frame based upon lab-frame u^t
+    //    Erf=3.*Av[0]/(4.*urfcon[0]*urfcon[0]+ptrgeom->gcon[GIND(0,0)]);
+    Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
+
+    if(Erf<ERADLIMIT){ // JCM
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+      urfconrel[1]=0.0;
+      urfconrel[2]=0.0;
+      urfconrel[3]=0.0;
+
+#if(PRODUCTION==0)
+    dualfprintf(fail_file,"nocapbad\n");
+#endif
+
     }
+    else{
+      //relative velocity
+      FTYPE gammarel=sqrt(gammarel2);
+#if(1)
+      SLOOPA(i) urfconrel[i] = alpha * (Av[i] + 1./3.*Erf*ptrgeom->gcon[GIND(0,i)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+#else
+      SLOOPA(i){
+	urfconrel[i]=(3.*Av[i]-Erf*ptrgeom->gcon[GIND(0,i)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,i)]/alpha;
+	urfconrel[i]*=gammarel;
+      }
+#endif
+
+#if(PRODUCTION==0)
+    dualfprintf(fail_file,"nocapgood: Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
+#endif
+
+    }
+
+
+  }
+
   
   //new primitives (only uses urfcon[1-3])
   pp[PRAD0]=Erf;
-  pp[PRAD1]=urfcon[1];
-  pp[PRAD2]=urfcon[2];
-  pp[PRAD3]=urfcon[3];
+  pp[PRAD1]=urfconrel[1];
+  pp[PRAD2]=urfconrel[2];
+  pp[PRAD3]=urfconrel[3];
 
   return 0;
 }
@@ -1765,4 +1850,45 @@ FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 
 
 
+/*
 
+Currently KORAL uses two sets of tetrads:
+
+tmuup, tmudn - transforming between lab non-ortonormal (no) and ZAMO
+ortonormal (on)
+
+and
+
+tmuup, tmulo - transforming between lab non-ortonormal and lab ortonormal
+
+The second set is the one we need to implement (there is nothing
+special about ZAMO but for the purpose of dumping).
+
+So let's forget tmuups (for clarity it would be helpful to change the
+name in HARM from emu to tmu).
+
+* tmuup is used in the following pipeflow:
+
+lab (no) -> ff (no) -> ff (on)
+
+To get to the ff (no) we use the general Lorentz boost.
+
+To get to ff (on) we use tmuup:
+
+u^mu_(on) = tmuup^mu_nu u^nu_(no)
+
+where _(on) defines 4-vector in ortonormal frame and _(no) in
+non-ortonormal frame, and
+
+tmuup^mu_nu = tmuup[mu][nu]
+
+* tmulo is used in the opposite direction:
+
+ff (on) -> ff (no)
+
+u^mu_(no) = tmulo^mu_nu u^nu_(on)
+
+tmulo^mu_nu = tmulo[mu][nu]
+
+
+*/

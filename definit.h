@@ -559,6 +559,9 @@
 #define DOSTOREPOSITIONDATA 1
 // whether to store X,V,dxdxp in case are expensive to compute
 
+// whether to store tetrads (uses tons of memory, and so far not needed -- shouldn't be needed in general if do things covariantly)
+#define STORETLAB2ORTHO 0
+
 // which derivative type to use when computing connection coefficients
 //#define CONNDERTYPE DIFFGAMMIE
 #define CONNDERTYPE DIFFNUMREC // improved now and much more accurate then DIFFGAMMIE in general. However this is too slow to be used when time-dependent metric is cycling near substeps.

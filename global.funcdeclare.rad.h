@@ -216,7 +216,7 @@ int pr_tophat_inside(FTYPE x,FTYPE y,FTYPE z);
 int my_finger(FTYPE);
 
 //metric.c
-int calc_LNRFes(FTYPE g[][5], FTYPE emuup[][4], FTYPE emulo[][4]);
+int calc_ORTHOes(FTYPE g[][5], FTYPE tmuup[][4], FTYPE tmudn[][4]);
 int calc_g(FTYPE*,FTYPE[][5]);
 int calc_G(FTYPE*,FTYPE[][5]);
 int calc_Krzysie(FTYPE*,FTYPE[][4][4]);

@@ -11,7 +11,7 @@ static void symmetrize_gcov(void);
 static void set_grid_metrics_gcov(void);
 static void set_grid_metrics_others(void);
 static void symmetrize_X_V_dxdxp_idxdxp(void);
-static void set_boostemu(void);
+static void set_tlab2ortho(void);
 
 
 // not necessary to symmetrize except for testing/debugging asymmetries
@@ -262,10 +262,10 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
 
 
 
-  if(EOMRADTYPE!=EOMRADNONE){
-    if(whichtime==0) trifprintf("set_boostemu() BEGIN\n");
-    set_boostemu();
-    if(whichtime==0) trifprintf("set_boostemu() END\n");
+  if(EOMRADTYPE!=EOMRADNONE && STORETLAB2ORTHO==1){
+    if(whichtime==0) trifprintf("set_tlab2ortho() BEGIN\n");
+    set_tlab2ortho();
+    if(whichtime==0) trifprintf("set_tlab2ortho() END\n");
   }
 
 
@@ -1273,7 +1273,7 @@ static void set_idxvol(void)
 // Get tetrads that convert between X-lab frame basis to V-orthonormal basis
 //
 //////////////////
-static void set_boostemu(void)
+static void set_tlab2ortho(void)
 {
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
@@ -1296,12 +1296,12 @@ static void set_boostemu(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
-        calc_LNRFes(ptrgeom, GLOBALMETMACP2A0(boostemu,ll,LAB2ZAMO,i,j,k),GLOBALMETMACP2A0(boostemu,ll,ZAMO2LAB,i,j,k));// pass [4][4] array
+        calc_ORTHOes(ptrgeom, GLOBALMETMACP2A0(tlab2ortho,ll,LAB2ORTHO,i,j,k),GLOBALMETMACP2A0(tlab2ortho,ll,ORTHO2LAB,i,j,k));// pass [4][4] array
 
 	// DEBUG:
 	//	int jj,kk;
 	//	dualfprintf(fail_file,"TEST ijkll=%d %d %d : %d\n",i,j,k,ll);
-	//	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d : boostup=%g boostdown=%g\n",jj,kk,GLOBALMETMACP2A2(boostemu,ll,LAB2ZAMO,i,j,k,jj,kk),GLOBALMETMACP2A2(boostemu,ll,ZAMO2LAB,i,j,k,jj,kk));
+	//	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d : boostup=%g boostdown=%g\n",jj,kk,GLOBALMETMACP2A2(tlab2ortho,ll,LAB2ORTHO,i,j,k,jj,kk),GLOBALMETMACP2A2(tlab2ortho,ll,ORTHO2LAB,i,j,k,jj,kk));
 
 
       }

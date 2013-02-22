@@ -1486,7 +1486,7 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
   DLOOPA(jj) finalvec[jj]=vec[jj];
 
 
-  // get tetrad (uses dxdxp so that tetrcon and tetrcon and eigenvalues are using V metric not X metric
+  // get tetrad (uses dxdxp so that tetrcov and tetrcon and eigenvalues are using V metric not X metric)
   tetr_func_frommetric(dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
 
   // DEBUG
@@ -1516,13 +1516,14 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
   if(concovtype==1){
     // transform to orthonormal basis for contravariant vector in V coordinates
     DLOOP(jj,kk){
-      //    tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
+      // u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
       tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
     }
   }
   else if(concovtype==2){
-    // transform to orthonormal basis for covariant vector in V coordinates (GODMARK: unsure about tetrcon[kk][jj] vs. tetrcon[jj][kk])
+    // transform to orthonormal basis for covariant vector in V coordinates
     DLOOP(jj,kk){
+      // u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
       tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
     }
   }

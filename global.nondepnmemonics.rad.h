@@ -2,8 +2,8 @@
 // KORAL
 #define BOOSTGRIDPOS (NDIM) // CENT,FACE1,FACE2,FACE3 == assumes they are 0,1,2,3
 #define BOOSTDIRS (2)
-#define ZAMO2LAB (0) // elo
-#define LAB2ZAMO (1) // eup
+#define ORTHO2LAB (0) // elo
+#define LAB2ORTHO (1) // eup
 
 #define ZAMO2FF (0)
 #define FF2ZAMO (1)
