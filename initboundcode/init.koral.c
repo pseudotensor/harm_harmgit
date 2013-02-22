@@ -150,6 +150,8 @@ int init_global(void)
 
   //  ERADLIMIT=UUMIN; // set same for now
   ERADLIMIT=UUMINLIMIT; // seems fine.
+  // maximum radiation frame lorentz factor
+  GAMMAMAXRAD=10000.0;
 
 
   funreturn=user1_init_global();
@@ -181,11 +183,6 @@ int init_global(void)
 
   //  lim[1]=lim[2]=lim[3]=MINM;
 
-  // maximum radiation frame lorentz factor
-  //  GAMMAMAXRAD=100.0;
-  GAMMAMAXRAD=10000.0; // test
-  // NOTEMARK: GAMMAMAXRAD=1000 doesn't work with RADBEAMFLAT in init.koral.c when using PARAFLAT (the default), but likely a problem with velocity limiter that kills energy conservation.
-  //  ERADLIMIT=UUMIN;
 
 
 

@@ -242,8 +242,8 @@ int user1_init_global(void)
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 
-  GAMMAMAXRAD=100.0;
-  ERADLIMIT=UUMIN; // set same for now
+  GAMMAMAXRAD=10000.0;
+  ERADLIMIT=UUMINLIMIT;
 
 
   // below floor model is only used if rescaletype!=4
