@@ -143,10 +143,12 @@
 #define USEOPENMP 0
 
 
-
-#undef MCOORD
+// let init.h define this until add MCOORD to header of input files.
+// describes original metric.  Only used for coord.c polar axis issue.
+//#undef MCOORD
 //#define MCOORD CYLMINKMETRIC          // coordinates for some metric
-#define MCOORD SPCMINKMETRIC
+//#define MCOORD CARTMINKMETRIC2          // coordinates for some metric
+//#define MCOORD SPCMINKMETRIC
 
 #undef DOSTOREPOSITIONDATA
 #define DOSTOREPOSITIONDATA 0

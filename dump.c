@@ -390,6 +390,8 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
     fwrite(&hslope,sizeof(FTYPE),1,headerptr);
     fwrite(&localdt,sizeof(FTYPE),1,headerptr);
     fwrite(&defcoord,sizeof(int),1,headerptr);
+    // SUPERGODMARK: For jon_interp to not need init.h specific stuff, need to at least add MCOORD so knows if spherical polar coordinates or not.  defcoord is insufficient in general.
+    // Maybe also: COMPDIM, WHICHVEL, WHICHEOM, REMOVERESTMASSFROMUU, EOMTYPE, NPR, DOENTROPY, 
     fwrite(&MBH,sizeof(FTYPE),1,headerptr);
     fwrite(&QBH,sizeof(FTYPE),1,headerptr);
     fwrite(&EP3,sizeof(FTYPE),1,headerptr);
