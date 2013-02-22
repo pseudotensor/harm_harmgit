@@ -470,6 +470,8 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   // for now only report if not just negative density failure
   lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
+  // KORALTODO: Need to set pflag when corrected=1 so that fixups know to look for neighboars to average before just using zero ZAMO velocity and zero Erf as dont currently.  Also need to understand how fixups handle non-MHD stuff (even scalars).
+
 
   if(IFUTOPRIMFAILSOFT(lpflag)){
     // then don't report info for now SUPERGODMARK

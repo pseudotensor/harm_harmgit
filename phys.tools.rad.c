@@ -1279,7 +1279,21 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
  
 
-  if(gammarel2<0.0 || gammarel2>gammamax*gammamax || delta<0.){
+  if(gammarel2<0.0 || delta<0.){
+
+    // can't assume this conditions means large gamma, because if not, then leads to crazy boost of energy.
+
+    Erf=ERADLIMIT;
+    urfconrel[0]=0.0;
+    urfconrel[1]=0.0;
+    urfconrel[2]=0.0;
+    urfconrel[3]=0.0;
+    
+#if(PRODUCTION==0)
+    dualfprintf(fail_file,"topcapbad: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+  }
+  else if(gammarel2>gammamax*gammamax){
 
     //top cap
     *corrected=1;
@@ -1438,7 +1452,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     else{
       //relative velocity
       FTYPE gammarel=sqrt(gammarel2);
-#if(0) // JCM
+#if(1) // JCM
       SLOOPA(i) urfconrel[i] = alpha * (Av[i] + 1./3.*Erf*ptrgeom->gcon[GIND(0,i)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 #else // Olek
       SLOOPA(i){
