@@ -1376,6 +1376,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   else if(gammarel2<1.){
     *corrected=1;
 
+    FTYPE gammarel2orig=gammarel2;
     // override
     gammarel2=1.0;
     FTYPE gammarel=1.0;  // use this below
@@ -1403,10 +1404,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     }
     else{
       // relative 4-velocity radiation frame
+      Erf=ERADLIMIT;
       urfconrel[1]=urfconrel[2]=urfconrel[3]=0.;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"midcapalt: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"midcapalt: gammamax=%g gammarel2orig=%g gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
@@ -1436,7 +1438,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     else{
       //relative velocity
       FTYPE gammarel=sqrt(gammarel2);
-#if(1) // JCM
+#if(0) // JCM
       SLOOPA(i) urfconrel[i] = alpha * (Av[i] + 1./3.*Erf*ptrgeom->gcon[GIND(0,i)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 #else // Olek
       SLOOPA(i){

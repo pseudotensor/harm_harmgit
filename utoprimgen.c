@@ -877,10 +877,12 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
-      if(pl==RHO || pl==UU || pl==URAD0&&(*corrected==0) || pl==ENTROPY) fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
-      else if(pl==U1 || pl==U2 || pl==U3 || (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*corrected==0) ){
+      if(pl==RHO || pl==UU || pl==URAD0&&(*corrected==0) || pl==ENTROPY){
+	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+      }
+      else if(pl==U1 || pl==U2 || pl==U3){
 
-	errornorm  = THIRD*(fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
+	errornorm  = THIRD*(fabs(Unormalnew[U1])+fabs(Unormalold[U1])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
 #if(REMOVERESTMASSFROMUU==2)
 	// only valid comparison if rest-mass taken out of energy term and modify U_i term to be comparable with U_t term
 	errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
@@ -888,6 +890,10 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 			  
 	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
 
+      }
+      else if( (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*corrected==0) ){
+	errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
+	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
       else if(pl==B1 || pl==B2 || pl==B3){
 	fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
@@ -928,9 +934,10 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     // change failure flag if really bad check
     //
     /////////////
-    if(FAILIFBADCHECK && badinversionfail){
+    if(CHECKONINVERSION==1 && FAILIFBADCHECK && badinversionfail){
       (*lpflag)=UTOPRIMFAILCONVBADINVERTCOMPARE;
     }
+    // CHECKONINVERSIONRAD==1 case: No, would not redo inversion since no reduction to another inversion.
 
 
 

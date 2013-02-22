@@ -148,14 +148,17 @@ int init_global(void)
   int pl,pliter;
   int funreturn;
 
+  funreturn=user1_init_global();
+  if(funreturn!=0) return(funreturn);
+
+
   //  ERADLIMIT=UUMIN; // set same for now
   ERADLIMIT=UUMINLIMIT; // seems fine.
   // maximum radiation frame lorentz factor
   GAMMAMAXRAD=10000.0;
+  //  GAMMAMAXRAD=100.0;
 
 
-  funreturn=user1_init_global();
-  if(funreturn!=0) return(funreturn);
 
   //////////////////
   // overrides for more detailed problem dependence
