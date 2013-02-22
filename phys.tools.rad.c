@@ -1333,6 +1333,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 
 	// now rescale Aradrel[i] so will give desired \gammamax
 	SLOOPA(i) Aradrel[i] *= (gammamax/gammatemp);
+	
+	// copying to urfconrel
+	SLOOPA(i) urfconrel[i]=Aradrel[i];
 
 #if(PRODUCTION==0)
 	// check that gamma really correctly gammamax
