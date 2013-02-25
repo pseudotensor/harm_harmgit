@@ -723,7 +723,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0?
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -2562,9 +2562,9 @@ void set_points()
 #if(1)
     startx[1] = log(Rin-R0)/bp_npow;
 
-    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,bp_npow,bp_cpow2,bp_npow2,bp_x1br,bp_rbr);
+    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g bp_npow=%21.15g bp_cpow2=%21.15g bp_npow2=%21.15g bp_x1br=%21.15g bp_rbr=%21.15g\n",Rout,R0,bp_npow,bp_cpow2,bp_npow2,bp_x1br,bp_rbr);
 
-    if( Rout < rbr ) {
+    if( Rout < bp_rbr ) {
       x1max = log(Rout-R0)/bp_npow;
     }
     else {
@@ -2826,7 +2826,7 @@ FTYPE setRin(int ihor)
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,bp_npow,Rout);
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g bp_npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,bp_npow,Rout);
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/bp_npow) - ihoradjust*pow(log(Rout-R0),1.0/bp_npow))/(totalsize[1]-ihoradjust),bp_npow)));
     }
   }

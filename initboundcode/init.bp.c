@@ -26,10 +26,10 @@
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
-#define THINBP 1
+#define GRBJET 1
 #define KEPDISK 2
 #define THICKDISK 3 // very similar to NORMALTORUS
-
+#define THINBP 4
 
 
 #define WHICHPROBLEM THINBP
@@ -311,7 +311,7 @@ int init_global(void)
   tf = 4000.0;
 #elif(WHICHPROBLEM==THINBP)
 /* output choices */
-  tf = 4000.0
+  tf = 4000.0;
 #elif(WHICHPROBLEM==THICKDISK)
   /* output choices */
   tf = 1.3E4*2.0;
@@ -369,8 +369,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = Risco;
   rin = 6. ;
 #elif(WHICHPROBLEM==THINBP)
-  //rin = Risco;
-  rin = 6. ;
+  //rin = (1. + h_over_r)*Risco;
+  rin = Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
   //  beta = 20.0;
@@ -484,12 +484,13 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 {
   int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+  int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
 
   // assume inittype not used, pos==CENT, and time doesn't matter (e.g. only used at t=0)
 
 #if(WHICHPROBLEM==NORMALTORUS||WHICHPROBLEM==THICKDISK)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
-#elif(WHICHPROBLEM==BPTHIN)
+#elif(WHICHPROBLEM==THINBP)
   return(init_dsandvels_bpthin(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
   return(init_dsandvels_thindisk(whichvel, whichcoord,  i,  j,  k, pr, pstag));
@@ -683,7 +684,7 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
-    up = 1./(pow(r,1.5) + a) ;
+    up = 1./(pow(r,1.5) + a) ; 
     // solution for 3-vel
 
 
@@ -756,7 +757,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
-    up = 1./(pow(r,1.5) + a) ;
+    up = 1./(pow(r,1.5) + a) ;     // MARKNOTE  angular, not linear
     // solution for 3-vel
 
 
@@ -793,11 +794,14 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 #define DISK2VERT 4
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
+#define DISKVERTBP 7
 
 
 #if(WHICHPROBLEM==THICKDISK)
 //#define FIELDTYPE TOROIDALFIELD
 #define FIELDTYPE DISK2FIELD
+#elif(WHICHPROBLEM==THINBP)
+#define FIELDTYPE DISKVERTBP
 #else
 #define FIELDTYPE DISK1FIELD
 #endif
@@ -931,7 +935,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
   FTYPE rpow;
-  rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+  rpow=3.3/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
@@ -946,6 +950,9 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     /* vertical field version*/
     if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
+      vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+    }
+    if(FIELDTYPE==DISKVERTBP){
       vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
 
@@ -969,7 +976,11 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
       vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
     }
-
+ 
+    if(FIELDTYPE==DISKVERTBP){
+      //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
+      vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+    }
 
     /* field-in-disk version */
     if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
@@ -1085,6 +1096,9 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
   if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
     eqslice=1;
   }
+  else if(FIELDTYPE==DISKVERTBP){
+    eqslice=1;
+  }
   else{
     eqslice=0;
   }
@@ -1151,13 +1165,16 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   int funreturn;
   int atmospheretype;
 
-  if(WHICHPROBLEM==NORMALTORUS ||WHICHPROBLEM==THICKDISK || WHICHPROBLEM==KEPDISK){
+  if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==THICKDISK || WHICHPROBLEM==KEPDISK){
     atmospheretype=1;
   }
   else if(WHICHPROBLEM==GRBJET){
     atmospheretype=2;
   }
-  else {
+  else if(WHICHPROBLEM==THINBP){
+    atmospheretype=1;
+  }
+  else{
     atmospheretype=1; // default
   }
  
