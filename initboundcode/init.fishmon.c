@@ -1256,3 +1256,136 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   // not used
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// User's cooling function:
+
+#define USERTHETACOOL       (h_over_r)	/* should be same as h_over_r */
+#define USERTAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
+
+
+int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
+{
+        FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,P,w,wcirc,dUcool;
+	FTYPE taper0;
+	int ii,jj, kk, pp;
+	FTYPE pressure;
+	FTYPE enk, enk0;
+        
+        FTYPE rpho;      
+	FTYPE photoncapture;
+	FTYPE rincool;
+	FTYPE nocoolthetafactor,thetacool,taucool;
+
+
+
+	// setup for macros
+	nocoolthetafactor=USERNOCOOLTHETAFACT;
+	thetacool=USERTHETACOOL;
+	taucool=USERTAUCOOL;
+
+	ii=geom->i;
+	jj=geom->j;
+	kk=geom->k;
+	pp=geom->p;
+
+        /* cooling function for maintaining fixed H/R */
+        rho = pr[RHO] ;
+        u = pr[UU] ;
+	P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
+        w = rho + u + P ;
+
+        bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
+	r=V[1];
+	th=V[2];
+ 
+      	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
+
+	//	trifprintf("rphoton=%lf\n", rpho);
+	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
+	  photoncapture=1.0 ;
+	  //  trifprintf("r=%lf, photoncapture=%lf, rph=%lf \ n", r, photoncapture, rpho); 
+	}
+	else{
+	  photoncapture=0.0 ;
+	}
+
+
+        R = r*sin(th) ;
+	enk=u*(gam-1.)/(pow(rho, gam));
+	//enk0 = 1.e-3; //same as kappa in init.fishmon.c -- somehow wrong, is it because of wrong gam?!
+	enk0 = 0.0043; //as read from ic's for thick torus
+	//enk0=0.00016; //User's version
+		//	enk0=0.00161;
+	//	rin = (1. + h_over_r)*Risco;
+	rincool=10.;
+        /* crude approximation */
+        Wcirc = 1./(a + pow(R,1.5)) ;
+        cs_circ = thetacool/sqrt(R) ;
+	//        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+        wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+
+
+	//	trifprintf("photoncapture=%lf, r=%lf, rpho=%lf \n", photoncapture, r, rpho);
+
+	//  if(t > 0.){
+	// dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])) ;
+	//     if(t > 0.){
+
+
+	if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0.) {
+
+	  //       	  dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])*(q->ucov[TT])) ;
+
+
+	 
+
+	  // dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*(q->ucon[TT])*photoncapture;
+
+
+
+	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
+
+	  //	  dUcool*=COOLTAPER1(th);
+	  //  dUcool*=taper_func(R,Rhor);
+
+	  // shape function to avoid problems near pole
+	  //taper0=COOLTAPER(0);
+	  //dUcool*=1./(1.-1./taper0)+1./(1.-taper0)*COOLTAPER(th);
+	  //dUcool*=COOLTAPER2(th);
+	  // dUcool*=COOLTAPER3(th);
+	  // dUcool*=taper_func(R,Rhor); // don't cool inside horizon
+	}
+        else{
+	    dUcool = 0. ;
+	  // dUcool = (-u*log(enk/enk0)/dt)*(q->ucon[TT]) ;
+
+	}
+
+	//	dUcomp[RADSOURCE][UU]=dUcool;
+
+
+	dUcomp[RADSOURCE][UU]=dUcool*(q->ucov[TT]);
+	dUcomp[RADSOURCE][U1]=dUcool*(q->ucov[RR]);
+	dUcomp[RADSOURCE][U2]=dUcool*(q->ucov[TH]);
+	dUcomp[RADSOURCE][U3]=dUcool*(q->ucov[PH]);
+
+	//			trifprintf("ducomps are %g %g %g %g \n", dUcomp[RADSOURCE][UU], dUcomp[RADSOURCE][U1], dUcomp[RADSOURCE][U2],	dUcomp[RADSOURCE][U3]); 
+        return(0) ;
+}
+
+

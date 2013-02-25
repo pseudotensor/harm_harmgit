@@ -27,3 +27,7 @@ extern int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 extern int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3]);
+
+
+
+extern int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);

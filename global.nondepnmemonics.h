@@ -194,6 +194,7 @@
 #define COOLGAMMIETHINDISK 1
 #define COOLEOSGENERAL 2
 #define COOLREBECCATHINDISK 3
+#define COOLUSER 10 // user-defined cooling function
 
 
 ////////////////////////////
