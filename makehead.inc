@@ -4,32 +4,95 @@
 #
 ###################
 
+#####################
+#
+# AUTO PICK SYSTEM TO COMPILE ON
+#
+#####################
 
-#####################
+# for this to work, should put in .bashrc or at command-line before running make:
+#export HOSTNAME
+
+
+$(warning HOSTNAME is $(HOSTNAME))
+$(warning CFLAGS is $(CFLAGS))
+
+
+#############################
 #
-# PICK SYSTEM TO COMPILE ON
+# Default is all compilers are not used, so can reference (e.g.) OSX being set to 0 or not.
+# DO NOT CHANGE THESE ZEROS!  Just use these as reference for what to add or change in the next section when you pick your system or compiler.
 #
-#####################
+#############################
+
 # WATCH OUT FOR SPACES, etc. AFTER ASSIGNMENTS!!!!
+USEGCC=0
+USEICCGENERIC=0
+USEICCINTEL=0
 USEBG=0
 #QUEENBEE (avoids making directories or forking in general)
 USEQB=0
 USEUB=0
 USEOSX=0
 # USEABE -> USEICCGENERIC is used
-USEICCGENERIC=0
-USEICCINTEL=0
-USEGCC=0
 USECCC=0
 USEORANGE=0
 USENERSC=0
-USEKRAKEN=1
+USEKRAKEN=0
 USEKRAKENICC=0
 USETACCLONESTAR4=0
 USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
 USENAU=0
+
+
+
+#####################
+#
+# PICK SYSTEM TO COMPILE ON.  Only should change "HOSTNAME->COMPILER" section below, not default!
+#
+#####################
+
+
+ifeq ($(HOSTNAME),)
+#############
+# default compiler is GCC that will always be present on linux
+#############
+USEGCC=1
+$(warning USEcompiler is set arbitrarily in makehead.inc.  Put your system into makehead.inc to get specific compiler.)
+
+
+else
+#####################
+# HOSTNAME->COMPILER: system name (HOSTNAME) chooses compiler to use.  So don't have to have git repo keep changing for each user.
+####################
+
+ifeq ($(HOSTNAME),physics-179)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),ki-rh42)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),ki-rh39)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),ki-jmck)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
+else
+$(error USEcompiler never set!.  Need to choose for your system: $(HOSTNAME) in makehead.inc .)
+endif
+
+
+############
+# end else if having HOSTNAME choose compiler.
+############
+endif
+
+
+
+
 
 ########################
 #
