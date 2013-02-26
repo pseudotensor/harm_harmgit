@@ -19,6 +19,7 @@ extern int tensor_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrge
 extern void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *vec, FTYPE *vecortho);
 
 
+extern int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out);
 
 
 

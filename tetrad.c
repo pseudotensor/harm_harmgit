@@ -731,6 +731,72 @@ int transboost_lab2fluid(struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transb
 }
 
 
+
+
+// Wrapper for vector_lab2orthofluidorback()
+//
+// Correct for HARM tensor quantities that have implicit component set to (e.g.) t, which makes it ambiguous what frame that was measured in.
+//
+// whichvector:
+//
+// 0 : T^t_\nu type,  so that T^t_\nu  = -[E_\nu]/(-\alpha) = -[-\eta_\mu T^\mu_\nu] /(-\alpha) . So that E_t is negative definite in Minkowski.
+//     T^{t\nu} type, so that T^{t\nu} = -[E^\nu]/(-\alpha) = -[-\eta_\mu T^{\mu\nu}]/(-\alpha) . So that E^t is positive definite in Minkowski.
+
+// 1 : B^i = *F^{it} type, so that B^i = *F^{it}[HARMLAB]  = -[B^\nu]/(-\alpha) = -[\eta_\mu *F^{\mu\nu}]/(-\alpha)
+//     B_i = *F_i^t type , so that B_i = *F_i^t[HARMLAB]   = -[B_\nu]/(-\alpha) = -[\eta_\mu *F^\mu_\nu] /(-\alpha)
+int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out)
+{
+  int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out);
+  int jj;
+  FTYPE vector4incopy[NPR];
+
+
+  // preserve vector4in
+  DLOOPA(jj) vector4incopy[jj]=vector4in[jj];
+
+
+  // harmlab to ortho fluid
+  if(harm2orthofluid==1){
+    // correct "t" component
+    if(whichvector==0){ // u_\mu type
+      DLOOPA(jj) vector4incopy[jj] *= (ptrgeom->alphalapse); // gets E_\nu from T^t_\nu or T^{t\nu} from E^\nu
+    }
+    else if(whichvector==2){ // u^\nu type
+      DLOOPA(jj) vector4incopy[jj] *= (ptrgeom->alphalapse); // gets B^\nu from B^i or B_i from B_\nu
+    }
+
+    // transform+boost
+    vector_lab2orthofluidorback(harm2orthofluid, ptrgeom, uconcovtype, uconcov, v4concovtype, vector4incopy, vector4out);
+    // vector4out is not orthonormalized and boosted into fluid frame
+  }
+
+
+  // ortho fluid to harmlab
+  if(harm2orthofluid==0){
+
+    // transform+boost
+    vector_lab2orthofluidorback(harm2orthofluid, ptrgeom, uconcovtype, uconcov, v4concovtype, vector4incopy, vector4out);
+    // vector4out is not orthonormalized and boosted into fluid frame
+
+
+    // correct "t" component
+    if(whichvector==0){ // u_\mu type
+      DLOOPA(jj) vector4out[jj] /= (ptrgeom->alphalapse); // gets T^t_\nu from E_\nu or T^{t\nu} from E^\nu
+    }
+    else if(whichvector==2){ // u^\nu type
+      DLOOPA(jj) vector4out[jj] /= (ptrgeom->alphalapse); // gets B^i from B^\nu or B_i from B_\nu
+    }
+
+  }
+    
+  
+  return(0);
+
+}
+
+
+
+
 // convert 4-vector to/from lab-frame coordinate basis to fluid frame orthonormal basis
 //
 // lab2orthofluid : 1 = then vector4 is lab and vector4out is fluid ortho.  0 = orthofluid 2 lab
@@ -740,6 +806,15 @@ int transboost_lab2fluid(struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transb
 // vector4in : inserted 4-vector to transform
 // vector4out : returned orthonormal fluid frame 4-vector (returned as same concov as input vector4in)
 // NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
+// NOTES:
+// 1) "Lab" corresponds to value of uconcov in \eta_\mu = (-\alpha,0,0,0) frame.
+// 2) "HARMLAB" corresponds to "frame" used by harm.
+// E.g.
+//       \rho_harmlab = -\eta_\mu \rho_0 u^\mu /\alpha
+//       E_\nu[harm] = -\eta_\mu T^\mu_\nu/\alpha [MA or EM or RAD]
+//       B^\nu[harm] = +\eta_\mu *F^{\mu\nu}/\alpha  [i.e. B^i [lab] = *F^{it} is our choice of sign for the magnetic field]
+//       [[Note these are without \sqrt{-g}]]
+//
 int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out)
 {
   int mu,nu;
