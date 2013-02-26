@@ -362,14 +362,39 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
 {
   extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
+  
+  // compute kappa (assume computed as d\tau/dorthonormallength as defined by user.
+  FTYPE kappa;
+  calc_kappa(pr,geom,&kappa);
+
   //characterisitic wavespeed in the radiation rest frame
   FTYPE vrad2=THIRD;
+  FTYPE vrad2limited;
+
+  if(kappa>0.0){
+    // NOT DOING THIS:
+    // compute tautot assuming kappa is optical depth per unit grid dx[1-3].  I.e. calc_kappa() computes grid-based opacity
+    // tautot is the total optical depth of the cell in dim dimension
+    //  tautot = kappa * dx[dir];
+
+    // DOING THIS:
+    // KORALTODO: Approximation to any true path, but approximation is sufficient for approximate wave speeds.
+    // \tau_{\rm tot}^2 \approx \kappa^2 [dx^{dir} \sqrt{g_{dirdir}}]^2 
+    FTYPE tautotsq,vrad2tau;
+    tautotsq = kappa*kappa * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
   
+    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?
+    vrad2limited=MIN(vrad2,vrad2tau);
+  }
+  else{
+    vrad2limited=vrad2;
+  }
+
+
   //need to substitute ucon,ucov with uradcon,uradcov to fool simplefast
   FTYPE ucon[NDIM],ucov[NDIM];
   int ii;
-  DLOOPA(ii)
-  {
+  DLOOPA(ii){
     ucon[ii]=q->ucon[ii];
     ucov[ii]=q->ucov[ii];
     q->ucon[ii]=q->uradcon[ii];
@@ -377,7 +402,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   }
 
   //calculating vmin, vmax
-  simplefast(dir,geom,q,vrad2,vmin,vmax);
+  simplefast(dir,geom,q,vrad2limited,vmin,vmax);
 
 #if(0)
  FTYPE dxdxp[NDIM][NDIM];
@@ -388,8 +413,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
 #endif
 
   //restoring gas 4-velocities
-  DLOOPA(ii)
-  {
+  DLOOPA(ii){
     q->ucon[ii]=ucon[ii];
     q->ucov[ii]=ucov[ii];
   }
