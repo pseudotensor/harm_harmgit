@@ -1242,6 +1242,11 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // ptrgeom: Standard pointer to geometry
 // lpflag: see gobal.nondepnmemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
 // lpflagrad: Should be set to indicate success of u2p_rad() inversion
+//
+// NOTES:
+//
+// Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
+//
 ///////////////
 int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
@@ -1504,7 +1509,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 #endif
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
+      //      dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
 #endif
 
     }

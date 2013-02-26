@@ -1,0 +1,7 @@
+
+#Cloned or computed variables
+vis5d_make_expr_var $dtx "vsq=vx**2+vy**2+vz**2"
+vis5d_make_expr_var $dtx "vsqlim=MIN(vsq,1.0-5E-2)"
+vis5d_make_expr_var $dtx "gamma=1.0/sqrt(1.0-vsqlim)"
+vis5d_make_expr_var $dtx "lrho=log(density)"
+
