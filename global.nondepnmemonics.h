@@ -883,6 +883,7 @@
 #define UTOPRIMFAILFAKEVALUE 18
 #define UTOPRIMFAILCONVRET   50
 
+
 #define IFUTOPRIMFAILSOFTRHORELATED(pflag) (pflag==UTOPRIMFAILRHONEG || pflag==UTOPRIMFAILRHOUNEG)
 
 #define IFUTOPRIMFAILSOFTNOTRHORELATED(pflag) (pflag==UTOPRIMFAILUNEG || pflag==UTOPRIMFAILGAMMAPERC  || pflag==UTOPRIMFAILUPERC  || pflag==UTOPRIMFAILU2AVG1  || pflag==UTOPRIMFAILU2AVG2 || pflag==UTOPRIMFAILU2AVG1FROMCOLD  || pflag==UTOPRIMFAILU2AVG2FROMCOLD)
@@ -896,6 +897,34 @@
 #define IFUTOPRIMNOFAIL(pflag) (pflag==UTOPRIMNOFAIL)
 
 #define IFUTOPRIMFAIL(pflag) (pflag>UTOPRIMNOFAIL)
+
+
+#define UTOPRIMRADFAILFIXEDUTOPRIMRAD -1
+#define UTOPRIMRADNOFAIL 0 // no radiation inversion failure
+// locally fixed inversion problems (as possible sometimes with radiation):
+// see phys.tools.rad.c:u2p_rad()
+#define UTOPRIMRADFAILCASE1A 1 // 
+#define UTOPRIMRADFAILCASE1B 2 //
+#define UTOPRIMRADFAILCASE2A 3 //
+#define UTOPRIMRADFAILCASE2B 4 //
+#define UTOPRIMRADFAILCASE3A 5 //
+#define UTOPRIMRADFAILCASE3B 6 //
+// unfixable inversion problems
+#define UTOPRIMRADFAILBAD1 7 // not used yet
+
+// for radiation terms
+#define COUNTRADNOTHING -1
+#define NUMRADFAILFLOORFLAGS 2  // no array for storage yet (or maybe ever)
+#define COUNTRADLOCAL 0
+#define COUNTRADNONLOCAL 1
+
+#define IFUTOPRIMRADFAIL(pflagrad) (pflagrad>UTOPRIMRADNOFAIL)
+
+#define IFUTOPRIMRADFAILFIXED(pflagrad) (pflagrad==UTOPRIMRADFAILFIXEDUTOPRIMRAD)
+#define IFUTOPRIMRADNOFAIL(pflagrad) (pflagrad==UTOPRIMRADNOFAIL)
+
+#define IFUTOPRIMRADNOFAILORFIXED(pflagrad) (pflagrad==UTOPRIMRADFAILFIXEDUTOPRIMRAD || pflagrad==UTOPRIMRADNOFAIL)
+
 
 
 /* failure modes */
@@ -952,15 +981,23 @@
 #define SYMMATRIXNDIM 10 // total number of independent elements of a symmetric matrix
 
 // flag failures/problems for correction/check in fixup
-#define NUMPFLAGS (5)
+#define NUMPFLAGS (6)
+
+#define NUMFAILPFLAGS (2)
+
+// FAILURE FLAGS (always should be listed first starting from 0 and NUMFAILPFLAGS should be number of them.
+
 // the below needs to be bounded since one CPU doesn't know if the other failed, and neighbor failure determines nature of how failure is treated
 // also, bounded values at real boundaries need to identify if bad copy
-#define FLAGUTOPRIMFAIL 0 // changes behavior of fixup()
+#define FLAGUTOPRIMFAIL 0 // changes behavior of fixup() on MHD quantities
+#define FLAGUTOPRIMRADFAIL 1 // changes behavior of fixup() on radiation quantities
+
+// NON-FAILURE FLAGS
 // the below flags are done after bound_prim, and can be determined at any time, so just come after bound.
-#define FLAGREALLIM 1 // value of limiter to be used
-#define FLAGBSQORHO 2 // set when B^2/RHO > BSQORHOLIMIT ; currently changes  behavior of slope_lim
-#define FLAGBSQOU 3 // set when B^2/u > BSQOULIMIT
-#define FLAGREALFLUX 4 // type of flux to use
+#define FLAGREALLIM 2 // value of limiter to be used
+#define FLAGBSQORHO 3 // set when B^2/RHO > BSQORHOLIMIT ; currently changes  behavior of slope_lim
+#define FLAGBSQOU 4 // set when B^2/u > BSQOULIMIT
+#define FLAGREALFLUX 5 // type of flux to use
 
 
 

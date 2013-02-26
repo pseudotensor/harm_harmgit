@@ -481,7 +481,9 @@
 
 // checks if solution is reasonble and fails a point if not
 // only checks if b^2/\rho>>BSQORHOMAX, etc.
-#define CHECKSOLUTION 1
+// can cause erratic issues near BH, so default is turned off
+// KORALNOTEMARK: Not setup for radiation, but ok since not generally used.
+#define CHECKSOLUTION 0
 
 
 

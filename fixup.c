@@ -4,11 +4,11 @@
 #include "decs.h"
 
 
-static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR]);
-static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE mypflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom);
+static int simple_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR]);
+static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom);
 static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
-static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
-static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mypflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 
 static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, int whocalled);
 
@@ -472,7 +472,7 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
 // this modifies unew if on finalstep to be consistent with floor-limited primitive
 // diagnostics only for actions on conservative quantities
 // assume COUNT types are of PFTYPE
-int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int whocalled)
+int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled)
 {
   struct of_state q;
   FTYPE Uicent[NPR],Ufcent[NPR];
@@ -492,7 +492,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
 
 
   // count whocalled diag_fixup()
-  count_whocalled(ptrgeom, finalstep, whocalled);
+  if(doingmhdfixup) count_whocalled(ptrgeom, finalstep, whocalled);
 
 
 
@@ -890,7 +890,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // get primitive associated with new conserved quantities
       struct of_newtonstats newtonstats;
       failreturn=Utoprimgen(finalstep,OTHERUTOPRIM,UNOTHING,U,ptrgeom,pr,&newtonstats);
-      badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));
+      badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL))); // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
 
       if(badinversion){
 	if(debugfail>=2) dualfprintf(fail_file,"Utoprimgen failed in fixup.c");
@@ -923,7 +923,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   ///////////////////////////////
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
     int docorrectucons=1;
-    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTFLOORACT);
+    int doingmhdfixup=1;
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
     // now prdiag=pr as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to pr each time) would add each prior change to each next change)
     PALLLOOP(pl) prdiag[pl]=pr[pl];
   }
@@ -944,7 +945,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   if(failreturn==-1) didchangeprim=1;
 
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    int doingmhdfixup=1;
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
     PALLLOOP(pl) prdiag[pl]=pr[pl];
   }
 
@@ -986,6 +988,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 // if true, then flag as failure, else reasonable solution and keep
 // can't assume failed zones are reasonably set
 // fixup_checksolution() currently only uses pflag[FLAGUTOPRIMFAIL]
+// KORALNOTEMARK: So far fixup_checksolution() only setup for MHD fluid, but ok since don't use this function anymore (i.e. CHECKSOLUTION set to 0 usually because this function can cause problems).
 int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep)
 {
   //  int inboundloop[NDIM];
@@ -1290,8 +1293,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     FTYPE gamma,alpha,vsq,ucon[NDIM],others[NUMOTHERSTATERESULTS];
     FTYPE qsq;
     FTYPE pr0[NPR];
-    PFTYPE mypflag;
-    int fixed;
+    PFTYPE mhdlpflag,radlpflag;
+    int fixedmhd,fixedrad;
     int startpl,endpl;
     FTYPE ftemp;
     FTYPE D0;
@@ -1300,20 +1303,27 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     int nogood;
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
+    int fixingmhd,fixingrad;
 
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      
 
-
+     
       // get failure flag
-      mypflag=GLOBALMACP0A0(pflagfailorig,i,j,k);
+      mhdlpflag=GLOBALMACP0A1(pflagfailorig,i,j,k,FLAGUTOPRIMFAIL);
+      radlpflag=GLOBALMACP0A1(pflagfailorig,i,j,k,FLAGUTOPRIMRADFAIL);
 
+      // assume not fixing anything
+      fixingmhd=IFUTOPRIMFAIL(mhdlpflag);
+      fixingrad=IFUTOPRIMRADFAIL(radlpflag);
 
-
-      if(IFUTOPRIMFAILFIXED(mypflag)){
+      
+      
+      if(IFUTOPRIMFAILFIXED(mhdlpflag) && IFUTOPRIMFAILFIXED(radlpflag)){ // IF BOTH MHD AND RAD FIXED-UP ELSEWHERE
 	/////////////////
 	//
 	// see if utoprim() previously fixed so can do diagnostics
@@ -1330,219 +1340,381 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	// ACCOUNTING (static or average)
 	//
 	/////////////////////////////////
-	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+	fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
 
       }
-      else if( IFUTOPRIMFAIL(mypflag)){
-	/////////////////
-	//
-	// see if utoprim() failed
-	//
-	//////////////////
+      else if(fixingmhd || fixingrad){
 
-	fixed=0; // assume not fixed yet
 
-	// set pre-fixed primitives
-	// put back inside "if" when not superdebugging since wasteful of cpu
-	PALLLOOP(pl)    pr0[pl]=MACP0A1(ptoavg,i,j,k,pl);
-	get_geometry(i,j,k,CENT,ptrgeom);
 
-	
-	/////////////////////////////
-	//
-	// Check if want to average
-	//
-	// only modified if doing some kind of averaging, else static since already kept old value in inversion method
-	//
-	//////////////////////////////
-	if(UTOPRIMADJUST==UTOPRIMAVG){
 
+
+	if(fixingmhd){
+
+	  ///////////////////////////////////////////////////////////
 	  /////////////////
 	  //
-	  // choose which range of quantities to average
+	  // see if MHD utoprim() failed
 	  //
+	  ///////////////////////////////////////////////////////////
 	  //////////////////
-	  // field is evolved fine, so only average non-field
- 	  if(mypflag==UTOPRIMFAILRHOUNEG && HANDLERHOUNEG==1){
-	    startpl=RHO;
-	    endpl=UU;
-	  }
- 	  else if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD || mypflag==UTOPRIMFAILUPERC || mypflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
-	    startpl=UU;
-	    endpl=UU;
-	  }
- 	  else if(mypflag==UTOPRIMFAILRHONEG && HANDLERHONEG==1){
-	    startpl=RHO;
-	    endpl=RHO;
-	  }
-	  else{
-	    // then presume inversion failure with no solution or assuming rho<=0 or u<=zerouuperbaryon*prim[RHO] is bad inversion if HANDLE?NEG==0
-	    startpl=RHO;
-	    endpl=U3;
-	  }
 
+	  fixedmhd=0; // assume not fixed yet
 
+	  // set pre-fixed primitives
+	  // put back inside "if" when not superdebugging since wasteful of cpu
+	  PALLLOOP(pl)    pr0[pl]=MACP0A1(ptoavg,i,j,k,pl);
+	  get_geometry(i,j,k,CENT,ptrgeom);
 
-
-
-	  //////////////////////////////
+	
+	  /////////////////////////////
 	  //
-	  // fixup negative densities
+	  // Check if want to average
+	  //
+	  // only modified if doing some kind of averaging, else static since already kept old value in inversion method
 	  //
 	  //////////////////////////////
-	  fixup_negdensities(&fixed, startpl, endpl, i, j, k, mypflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+	  if(UTOPRIMADJUST==UTOPRIMAVG){
 
-	  if(fixed==1 && (startpl<=RHO && endpl>=U1)){
-	    // then fixup but only changed densities, so still need to process non-densities
-	    startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
-	    fixed=0; // then reset fixed->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
-	  }
-
-
-	  //////////////////////////////
-	  //
-	  // other kinds of failures not caught by above (inversion convergence type failures)
-	  //
-	  //////////////////////////////
-	  if(fixed==0){
-
-
-	    /////////////////////
+	    /////////////////
 	    //
-	    // fix using average of surrounding good values, if they exist
+	    // choose which range of quantities to average
 	    //
-	    //////////////////////
-	    nogood=0;
-#if(GENERALAVERAGE==1)
-	    nogood=general_average(startpl, endpl, i, j, k, mypflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
-#else
-	    nogood=simple_average(startpl,endpl,i,j,k, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
-#endif
-
-	    /////////////////////
-	    //
-	    // If no good surrounding value found, then average bad values in some way
-	    //
-	    //////////////////////
-	    if(nogood){
-	      fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
+	    //////////////////
+	    // field is evolved fine, so only average non-field
+	    if(mhdlpflag==UTOPRIMFAILRHOUNEG && HANDLERHOUNEG==1){
+	      startpl=RHO;
+	      endpl=UU;
+	    }
+	    else if(mhdlpflag==UTOPRIMFAILU2AVG1 || mhdlpflag==UTOPRIMFAILU2AVG2 || mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD || mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD || mhdlpflag==UTOPRIMFAILUPERC || mhdlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
+	      startpl=UU;
+	      endpl=UU;
+	    }
+	    else if(mhdlpflag==UTOPRIMFAILRHONEG && HANDLERHONEG==1){
+	      startpl=RHO;
+	      endpl=RHO;
+	    }
+	    else{
+	      // then presume inversion failure with no solution or assuming rho<=0 or u<=zerouuperbaryon*prim[RHO] is bad inversion if HANDLE?NEG==0
+	      startpl=RHO;
+	      endpl=U3;
 	    }
 
 
-	    /////////////////////
+
+
+
+	    //////////////////////////////
 	    //
-	    // Things to do only if modifying density
+	    // fixup negative densities
 	    //
-	    //////////////////////
-	    if(startpl<=RHO && endpl>=RHO){
+	    //////////////////////////////
+	    fixup_negdensities(&fixedmhd, startpl, endpl, i, j, k, mhdlpflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+
+	    if(fixedmhd==1 && (startpl<=RHO && endpl>=U1)){
+	      // then fixup but only changed densities, so still need to process non-densities
+	      startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+	      fixedmhd=0; // then reset fixedmhd->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
+	    }
+
+
+	    //////////////////////////////
+	    //
+	    // other kinds of failures not caught by above (inversion convergence type failures)
+	    //
+	    //////////////////////////////
+	    if(fixedmhd==0){
+
+
+	      /////////////////////
+	      //
+	      // fix using average of surrounding good values, if they exist
+	      //
+	      //////////////////////
+	      nogood=0;
+	      int doingmhd=1;
+#if(GENERALAVERAGE==1)
+	      nogood=general_average(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+#else
+	      nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
+#endif
+
+	      /////////////////////
+	      //
+	      // If no good surrounding value found, then average bad values in some way
+	      //
+	      //////////////////////
+	      if(nogood){
+		fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
+	      }
+
+
+	      /////////////////////
+	      //
+	      // Things to do only if modifying density
+	      //
+	      //////////////////////
+	      if(startpl<=RHO && endpl>=RHO){
 
 
 #if(DO_CONSERVE_D_INFAILFIXUPS)
 
-	      if(mypflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
-		// Use D0 to constrain how changing u^t changes rho
-		// GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
-		// GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
-		// Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
-		// This is probably not necessary or useful
-		D0 = MACP0A1(ptoavg,i,j,k,RHO)*ucon[TT];
+		if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+		  // Use D0 to constrain how changing u^t changes rho
+		  // GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
+		  // GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
+		  // Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
+		  // This is probably not necessary or useful
+		  D0 = MACP0A1(ptoavg,i,j,k,RHO)*ucon[TT];
 
-		///////////////////////////////////////////
-		//
-		// constrain change in density so conserve particle number
-		// always do it?
-		//
-		//////////////////////////////////////////
-		if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
-		MACP0A1(pv,i,j,k,RHO) = D0/ucon[TT];
-	      }
+		  ///////////////////////////////////////////
+		  //
+		  // constrain change in density so conserve particle number
+		  // always do it?
+		  //
+		  //////////////////////////////////////////
+		  if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+		  MACP0A1(pv,i,j,k,RHO) = D0/ucon[TT];
+		}
 #endif
 
-	    }// end over density
+	      }// end over density
 
 
 
 
-
-	    /////////////////////
-	    //
-	    // Things to do only if modifying velocity
-	    //
-	    //////////////////////
-	    if(startpl<=U1 && endpl>=U3){
+	      /////////////////////
+	      //
+	      // Things to do only if modifying velocity
+	      //
+	      //////////////////////
+	      if(startpl<=U1 && endpl>=U3){
 
 #if(WHICHVEL==VELREL4)
-	      //////////////
-	      //
-	      // check gamma to so calibrate new gamma to no larger than previous gamma
-	      /////////////
-	      MYFUN(gamma_calc(MAC(ptoavg,i,j,k),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",1);
-	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon, others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
-	      //	  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);
-	      alpha = ptrgeom->alphalapse;
-	      vsq = 1. - 1. / (alpha * alpha * ucon[0] * ucon[0]);
+		//////////////
+		//
+		// check gamma to so calibrate new gamma to no larger than previous gamma
+		/////////////
+		MYFUN(gamma_calc(MAC(ptoavg,i,j,k),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",1);
+		if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon, others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+		//	  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);
+		alpha = ptrgeom->alphalapse;
+		vsq = 1. - 1. / (alpha * alpha * ucon[0] * ucon[0]);
 
-	      limitedgamma=0;
-	      if(gamma>GAMMAMAX){
-		limitedgamma=1;
-		if(debugfail>=2) dualfprintf(fail_file,"initial gamma: %21.15g,  max: %21.15g, initial vsq: %21.15g\n",gamma,GAMMAMAX,vsq);
-		// limit:
-		gamma=GAMMAMAX;
-	      }
+		limitedgamma=0;
+		if(gamma>GAMMAMAX){
+		  limitedgamma=1;
+		  if(debugfail>=2) dualfprintf(fail_file,"MHD: initial gamma: %21.15g,  max: %21.15g, initial vsq: %21.15g\n",gamma,GAMMAMAX,vsq);
+		  // limit:
+		  gamma=GAMMAMAX;
+		}
 #else
-	      limitedgamma=0;
-	      if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+		limitedgamma=0;
+		if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
 #endif
 	  
 
-	    /////////////
-	    //
-	    // check new gamma to make sure smaller than original (i.e. for pv, not original ptoavg)
-	    //
-	    /////////////
+		/////////////
+		//
+		// check new gamma to make sure smaller than original (i.e. for pv, not original ptoavg)
+		//
+		/////////////
 	    
 #if(WHICHVEL==VELREL4)
-	    if(limit_gamma(gamma,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+		if(limit_gamma(gamma,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
 
-	    if(debugfail>=3){
-	      if(limitedgamma){
-		// check gamma
-		MYFUN(gamma_calc(MAC(pv,i,j,k),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",2);
-		dualfprintf(fail_file,"final gamma: %21.15g\n",gamma);
-	      }
-	    }
+		if(debugfail>=3){
+		  if(limitedgamma){
+		    // check gamma
+		    MYFUN(gamma_calc(MAC(pv,i,j,k),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",2);
+		    dualfprintf(fail_file,"MHD: final gamma: %21.15g\n",gamma);
+		  }
+		}
 #endif
 
-	    }// end if dealing with velocity
+	      }// end if dealing with velocity
 
 
 
 
 #if(0)
-	    // DEBUG problem of launch with pressureless stellar model collapse
-	    PALLLOOP(pl) dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g ptoavg=%21.15g\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),MACP0A1(ptoavg,i,j,k,pl));
+	      // DEBUG problem of launch with pressureless stellar model collapse
+	      PALLLOOP(pl) dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g ptoavg=%21.15g\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),MACP0A1(ptoavg,i,j,k,pl));
 #endif
 
 
 
-	  } // end if fixed==0
+	    } // end if fixedmhd==0
 
-	}// end if not keeping static
-	// else kept static
+	  }// end if not keeping static
+	}// end if mhd failed
+
+
+
+
+
+
+      
+	if(fixingrad){ // RAD FAILED
+
+	  ///////////////////////////////////////////////////////////
+	  ////////////////////
+	  //
+	  // see if u2p_rad() failed in some way
+	  //
+	  ////////////////////
+	  ///////////////////////////////////////////////////////////
+
+	  fixedrad=0; // assume not fixedrad yet
+
+	  // set pre-fixedrad primitives
+	  // put back inside "if" when not superdebugging since wasteful of cpu
+	  PALLLOOP(pl)    pr0[pl]=MACP0A1(ptoavg,i,j,k,pl);
+	  get_geometry(i,j,k,CENT,ptrgeom);
+
 	
+	  /////////////////////////////
+	  //
+	  // Check if want to average
+	  //
+	  // only modified if doing some kind of averaging, else static since already kept old value in inversion method
+	  //
+	  //////////////////////////////
+	  if(UTOPRIMADJUST==UTOPRIMAVG){
+
+	    /////////////////
+	    //
+	    // choose which range of quantities to average
+	    //
+	    //////////////////
+	    // field is evolved fine, so only average non-field
+	    if(radlpflag!=UTOPRIMRADNOFAIL){
+	      startpl=PRAD0;
+	      endpl=PRAD3;
+	    }
+	    else{
+	      // then presume inversion failure with no solution
+	      startpl=PRAD0;
+	      endpl=PRAD3;
+	    }
+
+
+
+
+
+	    //////////////////////////////
+	    //
+	    // other kinds of failures not caught by above (inversion convergence type failures)
+	    //
+	    //////////////////////////////
+	    if(fixedrad==0){
+
+
+	      /////////////////////
+	      //
+	      // fix using average of surrounding good values, if they exist
+	      //
+	      //////////////////////
+	      nogood=0;
+	      int doingmhd=0;
+#if(GENERALAVERAGE==1)
+	      nogood=general_average(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+#else
+	      nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
+#endif
+
+	      /////////////////////
+	      //
+	      // If no good surrounding value found, then average bad values in some way
+	      //
+	      //////////////////////
+	      if(0){
+		if(nogood){
+		  fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
+		}
+	      }
+	      else{
+		// normally assume u2p_rad() did ok local fixup if non-local fixup doesn't work out.
+	      }
+
+
+	      /////////////////////
+	      //
+	      // Things to do only if modifying radiation velocity
+	      //
+	      //////////////////////
+	      if(startpl<=PRAD1 && endpl>=PRAD3){
+
+#if(WHICHVEL==VELREL4)
+		//////////////
+		//
+		// check gamma to so calibrate new gamma to no larger than previous gamma
+		/////////////
+		MYFUN(gamma_calc(&MACP0A1(ptoavg,i,j,k,URAD1-U1),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",1);
+		if (ucon_calc(&MACP0A1(ptoavg,i,j,k,URAD1-U1), ptrgeom, ucon, others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+		//	  alpha = 1. / sqrt(-ptrgeom->gcon[GIND(0,0)]);
+		alpha = ptrgeom->alphalapse;
+		vsq = 1. - 1. / (alpha * alpha * ucon[0] * ucon[0]);
+
+		limitedgamma=0;
+		if(gamma>GAMMAMAXRAD){
+		  limitedgamma=1;
+		  if(debugfail>=2) dualfprintf(fail_file,"RAD: initial gamma: %21.15g,  max: %21.15g, initial vsq: %21.15g\n",gamma,GAMMAMAXRAD,vsq);
+		  // limit:
+		  gamma=GAMMAMAXRAD;
+		}
+#else
+		limitedgamma=0;
+		if (ucon_calc(&MACP0A1(ptoavg,i,j,k,URAD1-U1), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+#endif
+	  
+
+		/////////////
+		//
+		// check new gamma to make sure smaller than original (i.e. for pv, not original ptoavg)
+		//
+		/////////////
+	    
+#if(WHICHVEL==VELREL4)
+		if(limit_gamma(gamma,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+
+		if(debugfail>=3){
+		  if(limitedgamma){
+		    // check gamma
+		    MYFUN(gamma_calc(&MACP0A1(pv,i,j,k,URAD1-U1),ptrgeom,&gamma,&qsq),"fixup_utoprim: gamma calc failed\n","fixup.c",2);
+		    dualfprintf(fail_file,"RAD: final gamma: %21.15g\n",gamma);
+		  }
+		}
+#endif
+
+	      }// end if dealing with velocity
+
+
+
+
+#if(0)
+	      // DEBUG problem of launch with pressureless stellar model collapse
+	      PALLLOOP(pl) dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g ptoavg=%21.15g\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),MACP0A1(ptoavg,i,j,k,pl));
+#endif
+
+
+
+	    } // end if fixedrad==0
+	  }// end if not keeping static
+	}// end if radiation failed	
 	
-	
+
 	/////////////////////////////////
 	//
 	// ACCOUNTING (static or average)
 	//
 	/////////////////////////////////
-	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+	fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+
+
+      }// if fixing mhd or fixing radiation  
 	  
-	  
-	  
-      }// end if failure
     }// end over COMPZLOOP loop
   }// end over parallel region
 
@@ -1582,7 +1754,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
   {
     int i,j,k,pl,pliter;
     FTYPE pr0[NPR];
-    PFTYPE mypflag;
+    PFTYPE mhdlpflag,radlpflag;
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
 
@@ -1594,10 +1766,11 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
       // get failure flag
-      mypflag=GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL);
+      mhdlpflag=GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL);
+      radlpflag=GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMRADFAIL);
 
 
-      if( IFUTOPRIMFAIL(mypflag)){
+      if(IFUTOPRIMFAIL(mhdlpflag)||IFUTOPRIMFAIL(radlpflag)){
 	
 	PALLLOOP(pl)    pr0[pl]=MACP0A1(ptoavg,i,j,k,pl);
 	get_geometry(i,j,k,CENT,ptrgeom);
@@ -1607,7 +1780,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 	// ACCOUNTING (static or average)
 	//
 	/////////////////////////////////
-	fixuputoprim_accounting(i, j, k, mypflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+	fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 	  
       }// end if failure
     }// end over COMPZLOOP loop
@@ -1625,7 +1798,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 // fixup negative densities
-static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mypflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE prguess[NPR];
 
@@ -1635,7 +1808,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   //
 
   if(*fixed!=0){
-    if(mypflag==UTOPRIMFAILUNEG){
+    if(mhdlpflag==UTOPRIMFAILUNEG){
 	  
       if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
       else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
@@ -1669,7 +1842,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   //
 
   if(*fixed!=0){
-    if(mypflag==UTOPRIMFAILRHONEG){
+    if(mhdlpflag==UTOPRIMFAILRHONEG){
 	  
       if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ if(HANDLERHONEG) *fixed=1; }
       else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
@@ -1704,7 +1877,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
   //
 
   if(*fixed!=0){
-    if(mypflag==UTOPRIMFAILRHOUNEG){
+    if(mhdlpflag==UTOPRIMFAILRHOUNEG){
 
       if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ if(HANDLERHOUNEG) *fixed=1; }
       // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
@@ -1763,9 +1936,9 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 #define ADJUSTCONSERVEDQUANTITY 0
 
 // ACCOUNTING (under any circumstance, static or average)
-static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
-  PFTYPE utoprimfailtype;
+  PFTYPE mhdutoprimfailtype,radutoprimfailtype;
   int doadjustcons;
   struct of_state q;
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
@@ -1773,67 +1946,74 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
   int pliter,pl;
 
 
+
+  //////////////////////
+  //
+  // MHD
+  //
+  //////////////////////
+
   // account for changes by tracking conserved quantities
   // note that if new utoprim solution was impossible, we are using here prior solution as new state, which means the diagnostics won't be acccurate.  There's no way to fix this unless the fluxes always give a well-defined new primitive variable.
-  // specific value of the mypflag>0 communicates the type of failure
-  if(IFUTOPRIMNOFAIL(mypflag)){
-    utoprimfailtype=-1;
+  // specific value of the mhdlpflag>0 communicates the type of failure
+  if(IFUTOPRIMNOFAIL(mhdlpflag)){
+    mhdutoprimfailtype=-1;
     docorrectucons=0;
   }
   else if(
-	  (mypflag==UTOPRIMFAILCONV)|| // only used by 5D method currently
-	  (mypflag==UTOPRIMFAILCONVGUESSUTSQ)|| // rest are only used by 1D/2D method currently
-	  (mypflag>=UTOPRIMFAILCONVRET)||
-	  (mypflag==UTOPRIMFAILCONVW)||
-	  (mypflag==UTOPRIMFAILCONVUTSQVERYBAD)||
-	  (mypflag==UTOPRIMFAILNANGUESS)||
-	  (mypflag==UTOPRIMFAILNANRESULT)||
-	  (mypflag==UTOPRIMFAILCONVBADINVERTCOMPARE)||
-	  (mypflag==UTOPRIMFAILCONVUTSQ)||
-	  (mypflag==UTOPRIMFAILFAKEVALUE) // fake value for avoiding MPI boundary call and so MPI boundary values for fixup
+	  (mhdlpflag==UTOPRIMFAILCONV)|| // only used by 5D method currently
+	  (mhdlpflag==UTOPRIMFAILCONVGUESSUTSQ)|| // rest are only used by 1D/2D method currently
+	  (mhdlpflag>=UTOPRIMFAILCONVRET)||
+	  (mhdlpflag==UTOPRIMFAILCONVW)||
+	  (mhdlpflag==UTOPRIMFAILCONVUTSQVERYBAD)||
+	  (mhdlpflag==UTOPRIMFAILNANGUESS)||
+	  (mhdlpflag==UTOPRIMFAILNANRESULT)||
+	  (mhdlpflag==UTOPRIMFAILCONVBADINVERTCOMPARE)||
+	  (mhdlpflag==UTOPRIMFAILCONVUTSQ)||
+	  (mhdlpflag==UTOPRIMFAILFAKEVALUE) // fake value for avoiding MPI boundary call and so MPI boundary values for fixup
 	  ){
-    utoprimfailtype=COUNTUTOPRIMFAILCONV;
+    mhdutoprimfailtype=COUNTUTOPRIMFAILCONV;
     docorrectucons=1;
   }
-  else if(mypflag==UTOPRIMFAILRHONEG){
+  else if(mhdlpflag==UTOPRIMFAILRHONEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHO==1){
 	if(finalstep){
-	  utoprimfailtype=COUNTUTOPRIMFAILRHONEG;
+	  mhdutoprimfailtype=COUNTUTOPRIMFAILRHONEG;
 	  docorrectucons=1;
 	}
 	else{
-	  utoprimfailtype=-1;
+	  mhdutoprimfailtype=-1;
 	  docorrectucons=0;
 	}
       }
       else if(DOCOUNTNEGRHO==2){
-	utoprimfailtype=COUNTUTOPRIMFAILRHONEG;
+	mhdutoprimfailtype=COUNTUTOPRIMFAILRHONEG;
 	docorrectucons=1;
       }
       else{
-	utoprimfailtype=-1;
+	mhdutoprimfailtype=-1;
 	docorrectucons=0;
       }
     }	
     else if((STEPOVERNEGRHO)&&(!finalstep)){
-      utoprimfailtype=-1;
+      mhdutoprimfailtype=-1;
 	docorrectucons=0;
     }
     else{
-      utoprimfailtype=COUNTUTOPRIMFAILRHONEG;
+      mhdutoprimfailtype=COUNTUTOPRIMFAILRHONEG;
       docorrectucons=1;
     }
   }
-  else if(mypflag==UTOPRIMFAILUNEG || mypflag==UTOPRIMFAILU2AVG1|| mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD){ // GODMARK: maybe want separate accounting
+  else if(mhdlpflag==UTOPRIMFAILUNEG || mhdlpflag==UTOPRIMFAILU2AVG1|| mhdlpflag==UTOPRIMFAILU2AVG2 || mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD|| mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
 
     // default counting:
-    if(mypflag==UTOPRIMFAILU2AVG1FROMCOLD|| mypflag==UTOPRIMFAILU2AVG2FROMCOLD) utoprimfailtype=COUNTCOLD;
-    else utoprimfailtype=COUNTUTOPRIMFAILUNEG;
+    if(mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD|| mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD) mhdutoprimfailtype=COUNTCOLD;
+    else mhdutoprimfailtype=COUNTUTOPRIMFAILUNEG;
 
     // now set whether to ucons correction or override counting
     if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){
@@ -1842,7 +2022,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 	  docorrectucons=1;
 	}
 	else{
-	  utoprimfailtype=-1;
+	  mhdutoprimfailtype=-1;
 	  docorrectucons=0;
 	}
       }
@@ -1850,95 +2030,127 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 	docorrectucons=1;
       }
       else{
-	utoprimfailtype=-1;
+	mhdutoprimfailtype=-1;
 	docorrectucons=0;
       }
     }	
     else if((STEPOVERNEGU)&&(!finalstep)){
-      utoprimfailtype=-1;
+      mhdutoprimfailtype=-1;
       docorrectucons=0;
     }
     else{
       docorrectucons=1;
     }
   }
-  else if(mypflag==UTOPRIMFAILRHOUNEG){
+  else if(mhdlpflag==UTOPRIMFAILRHOUNEG){
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
     if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){
       if(DOCOUNTNEGRHOU==1){
 	if(finalstep){
-	  utoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
+	  mhdutoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
 	  docorrectucons=1;
 	}
 	else{
-	  utoprimfailtype=-1;
+	  mhdutoprimfailtype=-1;
 	  docorrectucons=0;
 	}
       }
       else if(DOCOUNTNEGRHOU==2){
-	utoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
+	mhdutoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
 	docorrectucons=1;
       }
       else{
-	utoprimfailtype=-1;
+	mhdutoprimfailtype=-1;
 	docorrectucons=0;
       }
     }	
     else if((STEPOVERNEGRHOU)&&(!finalstep)){
-      utoprimfailtype=-1;
+      mhdutoprimfailtype=-1;
       docorrectucons=0;
     }
     else{
-      utoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
+      mhdutoprimfailtype=COUNTUTOPRIMFAILRHOUNEG;
       docorrectucons=1;
     }
   }
-  else if(mypflag==UTOPRIMFAILGAMMAPERC){
-    utoprimfailtype=COUNTGAMMAPERC;
+  else if(mhdlpflag==UTOPRIMFAILGAMMAPERC){
+    mhdutoprimfailtype=COUNTGAMMAPERC;
     docorrectucons=1;
   }
-  else if(mypflag==UTOPRIMFAILUPERC){
-    utoprimfailtype=COUNTUPERC;
+  else if(mhdlpflag==UTOPRIMFAILUPERC){
+    mhdutoprimfailtype=COUNTUPERC;
     docorrectucons=1;
   }
-  else if(mypflag==UTOPRIMFAILFIXEDENTROPY){
-    utoprimfailtype=COUNTENTROPY;
+  else if(mhdlpflag==UTOPRIMFAILFIXEDENTROPY){
+    mhdutoprimfailtype=COUNTENTROPY;
     docorrectucons=0; // account, but don't change conserved quantities
   }
-  else if(mypflag==UTOPRIMFAILFIXEDCOLD){
-    utoprimfailtype=COUNTCOLD;
+  else if(mhdlpflag==UTOPRIMFAILFIXEDCOLD){
+    mhdutoprimfailtype=COUNTCOLD;
     docorrectucons=0; // account, but don't change conserved quantities
   }
-  else if(mypflag==UTOPRIMFAILFIXEDBOUND1){
-    utoprimfailtype=COUNTBOUND1;
+  else if(mhdlpflag==UTOPRIMFAILFIXEDBOUND1){
+    mhdutoprimfailtype=COUNTBOUND1;
     docorrectucons=0; // account, but don't change conserved quantities
   }
-  else if(mypflag==UTOPRIMFAILFIXEDBOUND2){
-    utoprimfailtype=COUNTBOUND2;
+  else if(mhdlpflag==UTOPRIMFAILFIXEDBOUND2){
+    mhdutoprimfailtype=COUNTBOUND2;
     docorrectucons=0; // account, but don't change conserved quantities
   }
-  else if(mypflag==UTOPRIMFAILFIXEDONESTEP){
-    utoprimfailtype=COUNTONESTEP;
+  else if(mhdlpflag==UTOPRIMFAILFIXEDONESTEP){
+    mhdutoprimfailtype=COUNTONESTEP;
     docorrectucons=0; // account, but don't change conserved quantities
   }
-  else if(mypflag==UTOPRIMFAILFIXEDUTOPRIM){
+  else if(mhdlpflag==UTOPRIMFAILFIXEDUTOPRIM){
     dualfprintf(fail_file,"prior pflag not cleared: nstep=%ld steppart=%d t=%21.15g i=%d j=%d k=%d \n",nstep,steppart,t,i,j,k);
-    utoprimfailtype=-1;
+    mhdutoprimfailtype=-1;
     docorrectucons=0;
   }
   else{
-    dualfprintf(fail_file,"No such pflag failure type: %d for t=%21.15g nstep=%ld steppart=%d i=%d j=%d k=%d\n",mypflag,t,nstep,steppart,i,j,k);
+    dualfprintf(fail_file,"No such pflag failure type: %d for t=%21.15g nstep=%ld steppart=%d i=%d j=%d k=%d\n",mhdlpflag,t,nstep,steppart,i,j,k);
     myexit(1);
   }
 
 
+  //////////////////////
+  //
+  // RADIATION
+  //
+  //////////////////////
 
-  if(utoprimfailtype!=-1){
+  if(IFUTOPRIMNOFAIL(radlpflag)){
+    radutoprimfailtype=-1;
+    docorrectucons=0;
+  }
+  else if(radlpflag>=UTOPRIMRADFAILCASE1A || radlpflag<=UTOPRIMRADFAILCASE3B){
+    radutoprimfailtype=COUNTRADLOCAL;
+    docorrectucons=1;
+  }
+  else if(radlpflag>=UTOPRIMRADFAILBAD1){
+    radutoprimfailtype=COUNTRADNONLOCAL;
+    docorrectucons=1;
+  }
+  else if(radlpflag==UTOPRIMRADFAILFIXEDUTOPRIMRAD){
+    dualfprintf(fail_file,"prior rad pflag not cleared: nstep=%ld steppart=%d t=%21.15g i=%d j=%d k=%d \n",nstep,steppart,t,i,j,k);
+    radutoprimfailtype=-1;
+    docorrectucons=0;
+  }
+
+
+
+  //////////////////////
+  //
+  // Check if either MHD or RADIATION was corrected
+  //
+  //////////////////////
+
+  if(mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1){ 
     // diagnostics
     FTYPE prdiag[NPR],pr[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep,(int)utoprimfailtype);
+    int doingmhdfixup=(mhdutoprimfailtype!=-1); // diag_fixup() accounting diagnostics part doesn't have radiation yet
+    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep, doingmhdfixup, (int)mhdutoprimfailtype); // do corrections in general, but only include accounting for MHD case so far (KORALTODO, not too crucial, just diags).
     PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
 
     ////////////////
@@ -1947,6 +2159,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     //
     ////////////////
     MACP0A1(lpflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDUTOPRIM;
+    MACP0A1(lpflag,i,j,k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADFAILFIXEDUTOPRIMRAD;
 
 
     // now adjust uf or ucum so agrees [already done in diag_fixup() but only if final step.  This allows one to do it on any step in case want to control behavior of conserved quantities or primitive quantities used to create fluxes.
@@ -1970,14 +2183,14 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
     }
 
 
-  }// end if utoprimfailtype!=-1
+  }// end if mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1
 
 
 
 #if(DOSUPERDEBUG)
   // only used to keep track of normal non-failure points
   // some non-utoprim-failure points will be picked up by this.  I.E. those with limitgammaact/flooract/inflowact
-  if(utoprimfailtype==-1) superdebug_utoprim(pr0,MAC(pv,i,j,k),ptrgeom,utoprimfailtype);
+  if(mhdutoprimfailtype==-1) superdebug_utoprim(pr0,MAC(pv,i,j,k),ptrgeom,mhdutoprimfailtype);
   // collect values for non-failed and failed zones
 #endif
 
@@ -2017,7 +2230,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mypflag, PFTYPE (
 //#define HOWTOAVG_WHEN_U2AVG CAUSAL_THENMIN_WHEN_U2AVG
 
 // more general averaging procedure that tries to pick best from surrounding good values
-static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE mypflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
+static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
 {
   int doavgcausal,failavglooptype;
   int pl,pliter;
@@ -2035,38 +2248,53 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   FTYPE lastmin[NPR],avganswer0[NPR],avganswer1[NPR];
   int ignorecourant=0;
   int factor;
+  PFTYPE lpflag;
+  int whichpflag;
 
 
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: doingmhd=%d mhdlpflag=%d radlpflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",doingmhd,mhdlpflag,radlpflag,startpl,endpl,i,j,k); // not too much
+  //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalSTART: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,startpl,endpl,i,j,k); // not too much
 
+  if(doingmhd==1){ // if MHD
+    whichpflag=FLAGUTOPRIMFAIL;
+    lpflag=mhdlpflag;
 
-  if(mypflag==UTOPRIMFAILU2AVG1 || mypflag==UTOPRIMFAILU2AVG2 || mypflag==UTOPRIMFAILU2AVG1FROMCOLD || mypflag==UTOPRIMFAILU2AVG2FROMCOLD){
-    if(HOWTOAVG_WHEN_U2AVG==CAUSALAVG_WHEN_U2AVG){ // causal type
-      doavgcausal=1;
+    if(mhdlpflag==UTOPRIMFAILU2AVG1 || mhdlpflag==UTOPRIMFAILU2AVG2 || mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD || mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD){
+      if(HOWTOAVG_WHEN_U2AVG==CAUSALAVG_WHEN_U2AVG){ // causal type
+	doavgcausal=1;
+	failavglooptype=0;
+      }
+      else if(HOWTOAVG_WHEN_U2AVG==MAXUPOSAVG_WHEN_U2AVG){ // Sasha type
+	doavgcausal=0; // doesn't hurt, it's just wasted process
+	failavglooptype=1;
+      }
+      else if(HOWTOAVG_WHEN_U2AVG==SIMPLEAVG_WHEN_U2AVG){ // simple type
+	doavgcausal=0;
+	failavglooptype=0;
+      }
+      else if(HOWTOAVG_WHEN_U2AVG==CAUSAL_THENMIN_WHEN_U2AVG){ // Jon's mixed type
+	doavgcausal=1;
+	failavglooptype=2; // do both loops
+      }
+    }
+    else if(CAUSALAVG){ // other types of failures besides U2AVG
       failavglooptype=0;
+      doavgcausal=1;
     }
-    else if(HOWTOAVG_WHEN_U2AVG==MAXUPOSAVG_WHEN_U2AVG){ // Sasha type
-      doavgcausal=0; // doesn't hurt, it's just wasted process
-      failavglooptype=1;
-    }
-    else if(HOWTOAVG_WHEN_U2AVG==SIMPLEAVG_WHEN_U2AVG){ // simple type
+    else{
       doavgcausal=0;
-      failavglooptype=0;
-    }
-    else if(HOWTOAVG_WHEN_U2AVG==CAUSAL_THENMIN_WHEN_U2AVG){ // Jon's mixed type
-      doavgcausal=1;
-      failavglooptype=2; // do both loops
-    }
+      failavglooptype=0; // must stay 0 since can't assume a density of some kind with min value
+    }  
   }
-  else if(CAUSALAVG){ // other types of failures besides U2AVG
-    failavglooptype=0;
-    doavgcausal=1;
-  }
-  else{
+  else{ // if RAD
+    whichpflag=FLAGUTOPRIMRADFAIL;
+    lpflag=radlpflag;
     doavgcausal=0;
-    failavglooptype=0;
-  }  
+    failavglooptype=0; // must stay 0
+  }
+
+
 
 
  
@@ -2112,7 +2340,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   for(pl=startpl;pl<=endpl;pl++){
     mysum[0][pl]=0.0;
     mysum[1][pl]=0.0;
-    lastmin[pl]=1E50;
+    lastmin[pl]=VERYBIG;
   }
   // size of little averaging box
   rnx=(SHIFT1==1) ? 3*SHIFT1 : 1;
@@ -2129,9 +2357,15 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
     ii=(int)(qq%rnx)-SHIFT1;
     jj=(int)((qq%(rnx*rny))/rnx)-SHIFT2;
     kk=(int)(qq/(rnx*rny))-SHIFT3;
-	      
-    thisnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i+ii,j+jj,k+kk));
-    thatnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i-ii,j-jj,k-kk));
+
+    if(doingmhd){
+      thisnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
+      thatnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+    }
+    else{
+      thisnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
+      thatnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+    }
 
     if(doavgcausal){
 #if(1)
@@ -2152,7 +2386,8 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
 
 #if(1)
     // bigger than myself
-    ref=MACP0A1(ptoavg,i,j,k,UU);
+    if(doingmhd) ref=MACP0A1(ptoavg,i,j,k,UU); // MHD
+    else ref=MACP0A1(ptoavg,i,j,k,URAD0); // RAD
 #elif(0)
     // bigger than 0
     ref=0.0;
@@ -2164,6 +2399,9 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
     numavg0+=thisnotfail+thatnotfail;
 	    
     if(failavglooptype==0 || failavglooptype==2){
+      //////////
+      // NORMAL:
+      //////////
       if(debugfail>=3) dualfprintf(fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d (e.g.) pl=%d pv=%21.15g\n",i,i+ii,j,j+jj,k,k+kk,RHO,MACP0A1(pv,i,j,k,RHO)); // still bit much
       for(pl=startpl;pl<=endpl;pl++){
 	mysum[qq%2][pl]+=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl)*thisnotfail + MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl)*thatnotfail;
@@ -2211,6 +2449,9 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   //
   ////////////////////////
   if(failavglooptype==0 || failavglooptype==2){	      
+    //////////
+    // NORMAL:
+    //////////
     if(numavg0!=0) for(pl=startpl;pl<=endpl;pl++){
 	avganswer0[pl]=(mysum[0][pl]+mysum[1][pl])/((FTYPE)(numavg0));
       }
@@ -2228,6 +2469,9 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   //
   ///////////////
   if(failavglooptype==0 || ((failavglooptype==2)&&(numavg1==0)) ){  
+    //////////
+    // NORMAL:
+    //////////
     if(numavg0!=0) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
     numavg=numavg0;
   }
@@ -2255,10 +2499,11 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
   }
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mypflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mypflag,numavg,startpl,endpl,i,j,k);
+  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
+  //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalFINISH: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
       	  
-  if( mypflag==UTOPRIMFAILU2AVG2){
+  if( lpflag==UTOPRIMFAILU2AVG2){ // lpflag here is either for MHD or RAD depending upon doingmhd=1 or 0
     numavg++; // assume at least always one good one so don't treat as real failure if no good values surrounding
   }
   // else use real numavg
@@ -2276,12 +2521,21 @@ static int general_average(int startpl, int endpl, int i, int j, int k, PFTYPE m
 
 
 // simple average of good surrounding zones
-static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR])
+static int simple_average(int startpl, int endpl, int i, int j, int k,int doingmhd, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
+  int whichpflag;
 
   if(debugfail>=2) dualfprintf(fail_file,"uc2simple: i=%d j=%d k=%d\n",i,j,k); // not too much
 
+
+
+  if(doingmhd==1){ // if MHD
+    whichpflag=FLAGUTOPRIMFAIL;
+  }
+  else{ // if RAD
+    whichpflag=FLAGUTOPRIMRADFAIL;
+  }
 
 
   /////////////
@@ -2290,10 +2544,10 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
   //
   /////////////
   if( // but if surrounded by good values
-     (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jp1mac(j),k)))&&
-     (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jm1mac(j),k)))&&
-     (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),j,k)))&&  
-     (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),j,k)))    
+     (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jp1mac(j),k,whichpflag)))&&
+     (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jm1mac(j),k,whichpflag)))&&
+     (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),j,k,whichpflag)))&&  
+     (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),j,k,whichpflag)))    
       ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected1\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2304,10 +2558,10 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if surrounded by good values
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jp1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jm1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jp1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jp1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jm1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jp1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected2\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2322,8 +2576,8 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
   //
   /////////////
   else if( // but if "surrounded" by good values
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jp1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jp1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected3\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2333,8 +2587,8 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good values
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),j,k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),j,k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),j,k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),j,k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected4\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2344,8 +2598,8 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good values
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jp1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jp1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected5\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2355,8 +2609,8 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good values
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jm1mac(j),k)))&&
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jp1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jm1mac(j),k,whichpflag)))&&
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jp1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected6\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
@@ -2371,7 +2625,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
   //
   /////////////
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jp1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jp1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2381,7 +2635,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),j,k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),j,k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2391,7 +2645,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,ip1mac(i),jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,ip1mac(i),jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2401,7 +2655,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2411,7 +2665,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jm1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jm1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2421,7 +2675,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),j,k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),j,k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2431,7 +2685,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,im1mac(i),jp1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,im1mac(i),jp1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2441,7 +2695,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,PFTYPE (*l
     }
   }
   else if( // but if "surrounded" by good value
-	  (IFUTOPRIMNOFAILORFIXED(MACP0A0(lpflagfailorig,i,jp1mac(j),k)))
+	  (IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i,jp1mac(j),k,whichpflag)))
 	   ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
@@ -2788,7 +3042,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
   FTYPE gamma,X[NDIM],V[NDIM];
   FTYPE qsq;
   FTYPE prfloor[NPR];
-  int flags[NUMBSQFLAGS]={0};
+  PFTYPE flags[NUMBSQFLAGS]={0};
   int limgen;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
@@ -3082,7 +3336,8 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   if(didchange){
     FTYPE prdiag[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    int doingmhdfixup=1;
+    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     return(-1);// indicates did change primitive
   }
@@ -3345,7 +3600,8 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
   // account for changes
   FTYPE prdiag[NPR];
   PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-  diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+  int doingmhdfixup=1;
+  diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
   PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
 #endif
@@ -3388,7 +3644,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if( 
@@ -3402,7 +3659,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
       // below never really accounted for since on boundary zones
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -3424,7 +3682,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -3446,7 +3705,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -3618,7 +3878,8 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     pr[U3] *= gamma ;
 
     // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
-    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,COUNTINFLOWACT);
+    int doingmhdfixup=1;
+    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
     /* done */

@@ -769,12 +769,13 @@ void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sou
 
 // general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
 // put as function because then wrap-up OpenMP stuff
-void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3])
+void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3][NUMFAILPFLAGS])
 {
 
 
 #pragma omp parallel
   {
+    int pf;
     int i,j,k;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -782,7 +783,7 @@ void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      MACP0A0(destspecial,i,j,k)=MACP0A1(source,i,j,k,FLAGUTOPRIMFAIL); // only copy fail flag
+      FAILPFLAGLOOP(pf) MACP0A1(destspecial,i,j,k,pf)=MACP0A1(source,i,j,k,pf);
 
     }// end 3D loop
 
@@ -792,7 +793,7 @@ void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE
 
 // general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
 // put as function because then wrap-up OpenMP stuff
-void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3])
+void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3][NUMFAILPFLAGS])
 {
   int is=-N1BND;
   int ie=N1-1+N1BND;

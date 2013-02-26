@@ -42,7 +42,9 @@ then
 	rm -rf *.new.r8 *.ras
 	
         # r8 2 ras
-	for fil in `ls *.r8`
+# BELOW OPTIMIZED FOR WHAT RECENTLY ONLY NEED
+#	for fil in `ls *.r8`
+	for fil in `ls im8p*.r8 im9p*.r8 ls im8c*.r8 im9c*.r8`
 	do
 	    echo $fil
 

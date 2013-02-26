@@ -289,7 +289,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   dualfprintf(fail_file,"WARNING: check_spc_singularities_user() oddly stalls sometimes...\n");
   check_spc_singularities_user();
   trifprintf("END check_spc_singularities_user\n");
-  dualfprintf(fail_file,"WARNUNG: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.");
+  dualfprintf(fail_file,"WARNING: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.");
 
   
   return(0);

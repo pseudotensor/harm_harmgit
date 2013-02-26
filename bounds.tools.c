@@ -3708,7 +3708,8 @@ int poledeath(int whichx2,
 	    break;
 	  }
 	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	  int doingmhdfixup=1;
+	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND1);
 	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 	}
 
@@ -3940,7 +3941,8 @@ int poledeath(int whichx2,
 	  }
 
 	  PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND1);
+	  int doingmhdfixup=1;
+	  diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND1);
 	  PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 	}
 
@@ -4050,7 +4052,8 @@ int poledeath(int whichx2,
 	    //	    }
 	    
 	    PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
-	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,COUNTBOUND2);
+	    int doingmhdfixup=1;
+	    diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND2);
 	    PLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
 
 	  }

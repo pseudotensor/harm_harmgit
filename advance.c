@@ -1667,7 +1667,7 @@ static int prepare_globaldt(
 static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpflag, FTYPE *pb, FTYPE *pf, FTYPE *upoint, FTYPE *uavg, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
 {
   FTYPE pavg[NPR];  //atch for temporary storage of primitives obtained from inverting the averaged conserved quantities
-  int invert_from_point_flag, invert_from_average_flag;
+  PFTYPE invert_from_point_flag, invert_from_average_flag;
   FTYPE frac_avg_used;  //this is be used for flux interpolation limiting
   int pl,pliter;
   int is_convergence_failure;

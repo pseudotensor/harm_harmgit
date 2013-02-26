@@ -198,6 +198,9 @@
 // loop over pflag flags
 #define PFLAGLOOP(pf) for(pf=0;pf<NUMPFLAGS;pf++)
 
+// loop over fail pflag flags
+#define FAILPFLAGLOOP(pf) for(pf=0;pf<NUMFAILPFLAGS;pf++)
+
 // for USEMPI&&USEROMIO==1
 #define ROMIOCOLLOOP(romiocoliter) for(romiocoliter=0;romiocoliter<romiocloopend;romiocoliter++)
 

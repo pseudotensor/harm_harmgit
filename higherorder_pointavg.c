@@ -3129,8 +3129,8 @@ FTYPE limit_fluxc2a_prim_change(
   FTYPE delta_u[2][NPR];
   FTYPE Upoint[NPR], Upoint_updated[NPR];
   FTYPE pr_updated[NPR];
-  int pflag_current;
-  int pflag_backup;
+  PFTYPE pflag_current;
+  PFTYPE pflag_backup;
   FTYPE frac_point_flux_used_array[2];
   FTYPE frac_point_flux_used;
   struct of_geom geomdontuse;

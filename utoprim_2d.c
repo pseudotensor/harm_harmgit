@@ -28,7 +28,8 @@ int Utoprim_2d(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *p
 {
 
   FTYPE U_tmp[NPR], U_tmp2[NPR], prim_tmp[NPR];
-  int i, j, k, ret; 
+  int i, j, k;
+  PFTYPE ret; 
   FTYPE gcov[SYMMATRIXNDIM], gcon[SYMMATRIXNDIM], alpha;
   const int ltrace = 0;
 

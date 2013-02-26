@@ -303,7 +303,7 @@ FTYPE BASEMACP0A1(fluxdump,N1M,N2M,N3M,NUMFLUXDUMP);
 
 PFTYPE BASEMACP0A1(pflag,N1M,N2M,N3M,NUMPFLAGS);	/* space for flag */
 
-PFTYPE BASEMACP0A0(pflagfailorig,N1M,N2M,N3M);	/* used to keep original pflag so don't induce order-dependence when doing fixup_utoprim() and changing pflag */
+PFTYPE BASEMACP0A1(pflagfailorig,N1M,N2M,N3M,NUMFAILPFLAGS);	/* used to keep original pflag so don't induce order-dependence when doing fixup_utoprim() and changing pflag */
 
 /* for debug */
 #if(DODEBUG)

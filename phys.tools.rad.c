@@ -670,8 +670,9 @@ int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct
   pp2[PRAD3]=Rij[0][3];
 
   //convert to real primitives - conversion does not care about MHD only about radiative conserved
-  int corrected=0;
-  u2p_rad(pp2,pp2,ptrgeom, &corrected);
+  PFTYPE lpflag=UTOPRIMNOFAIL,lpflagrad=UTOPRIMRADNOFAIL;
+  // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pp2 primitives for velocity to maybe be used in local reductions to fluid frame.
+  u2p_rad(pp2,pp2,ptrgeom, &lpflag, &lpflagrad);
 
   return 0;
 } 
@@ -1210,9 +1211,10 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 
 
+#define TOZAMOFRAME 0 // reduce to ZAMO gammarel=1 frame (e.g. in non-GR that would be grid frame or v=0 frame or gammarel=1).
+#define TOFLUIDFRAME 1 // reduce to using fluid frame (probably more reasonable in general).
 
-
-
+#define M1REDUCE TOFLUIDFRAME // choose
 
 //**********************************************************************
 //**********************************************************************
@@ -1235,14 +1237,28 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 //
 // ERADLIMIT applied here, but (SUPERGODMARK KORALTODO) should in general treat Erf<something as failure in inversion and try to average-out first before reducing to ERf=something and zero relative velocity.  And not sure what that something should be except as relative to other energy densities like how handle UU and BSQ relative to RHO.  Should do that instead and just have very small floor. 
 //
+// uu: Conserved quantities with URAD0,1,2,3 as radiation conserved quantities
+// pp: primitives with PRAD0,1,2,3 as radiation primitive quantities
+// ptrgeom: Standard pointer to geometry
+// lpflag: see gobal.nondepnmemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
+// lpflagrad: Should be set to indicate success of u2p_rad() inversion
 ///////////////
-int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
+int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
     myexit(137432636);
   }
+
+
+  //////////////////////
+  //
+  // Prepare inversion from U->p for radiation assuming M1 closure
+  //
+  //////////////////////
+
+  *lpflagrad=UTOPRIMRADNOFAIL;
 
 
   int verbose=0,i;
@@ -1279,27 +1295,28 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
   FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
  
 
-  /*
-  if(gammarel2<0.0 || delta<0.){
 
-    // can't assume this conditions means large gamma, because if not, then leads to crazy boost of energy.
 
-    Erf=ERADLIMIT;
-    urfconrel[0]=0.0;
-    urfconrel[1]=0.0;
-    urfconrel[2]=0.0;
-    urfconrel[3]=0.0;
-    
-#if(PRODUCTION==0)
-    dualfprintf(fail_file,"topcapbad: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-#endif
-}*/
-  //else if(gammarel2>gammamax*gammamax){
+
+  //////////////////////
+  //
+  // Perform regular inversion
+  // Or Fix-up inversion if problem with gamma (i.e. velocity) or energy density in radiation rest-frame (i.e. Erf)
+  //
+  //////////////////////
+  int jj,kk;
+
+
+
+  //////////////////////
+  //
+  // First case is if gammarel>gammamax, then set gammarel=gammamax unless Erf<ERADLIMIT (~0) in which case set Erf=ERADLIMIT and gammarel=1.
+  // Note, can't set urfcon[0]=gammamax in case gammamax still remains space-like, e.g. inside horizon if gammamax isn't big enough.
+  //
+  //////////////////////
   if(gammarel2>gammamax*gammamax){
 
-    //top cap
-    *corrected=1;
-    //    urfcon[0]=gammamax;
+    //    urfcon[0]=gammamax; // ba
     FTYPE gammarel=gammamax;
     gammarel2=gammamax*gammamax;
       
@@ -1308,20 +1325,27 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 
-    if(Erf<ERADLIMIT){ // JCM
+    if(Erf<ERADLIMIT){ // Erf too small
+      *lpflagrad=UTOPRIMRADFAILCASE1A;
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
-      urfconrel[0]=0.0;
-      urfconrel[1]=0.0;
-      urfconrel[2]=0.0;
-      urfconrel[3]=0.0;
+
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"topcapErfneg: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
-    else{ // JCM
+    else{ // Erf normal
+      
+      // check if just near gammamax, in which case don't need to worry about fixing
+      //      if(fabs(gammarel2-gammamax*gammamax)>1E-12*gammamax*gammamax){
+      //	*lpflagrad=UTOPRIMRADFAILCASE1B;
+      //      }
+      *lpflagrad=UTOPRIMRADFAILCASE1B;
+
 
       if(1){
 	// lab-frame radiation relative 4-velocity
@@ -1343,12 +1367,12 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 	// check that gamma really correctly gammamax
 	FTYPE gammatemp2,qsqtemp2;
 	MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-	dualfprintf(fail_file,"topcapgamma: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
+	dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
 #endif
 
 
       }
-      else if(0){
+      else if(0){ // Olek way
 	
 	// lab-frame radiation 4-velocity
 	FTYPE Arad[NDIM];
@@ -1378,7 +1402,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 #if(PRODUCTION==0)
 	
 	// check that u.u=-1 (seems to be true)
-	int jj,kk;
 	FTYPE urfcov[NDIM];
 	DLOOPA(jj) urfcov[jj]=0.0;
 	DLOOP(jj,kk) urfcov[jj] += urfcon[kk]*ptrgeom->gcov[GIND(jj,kk)];
@@ -1386,15 +1409,20 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 	DLOOPA(jj) udotu += urfcon[jj]*urfcov[jj];
 	
 	
-	dualfprintf(fail_file,"topcapolek: Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+	dualfprintf(fail_file,"CASE1B(Olek): Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
       }// end Olek method
 	
     }// end else if Erf>0
   }
-  //  else if(gammarel2<1.){
+  //////////////////////
+  //
+  // Second case is if gammarel<1 or delta<0, then set gammarel=1.  If Erf<ERADLIMIT (~0), then set Erf=ERADLIMIT and gammarel=1.
+  // Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
+  //
+  //////////////////////
   else if(gammarel2<1. || delta<0.){
-    *corrected=1;
+
 
     FTYPE gammarel2orig=gammarel2;
     // override
@@ -1410,32 +1438,40 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
     if(Erf<ERADLIMIT){ // JCM
+      *lpflagrad=UTOPRIMRADFAILCASE2A;
+
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
-      urfconrel[0]=0.0;
-      urfconrel[1]=0.0;
-      urfconrel[2]=0.0;
-      urfconrel[3]=0.0;
+
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"midcapErfneg: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
     else{
-      // relative 4-velocity radiation frame
-      Erf=ERADLIMIT;
-      urfconrel[1]=urfconrel[2]=urfconrel[3]=0.;
+      *lpflagrad=UTOPRIMRADFAILCASE2B;
+      // relative 4-velocity radiation frame.  Might want to reset Erf to ERADLIMIT to be more strictly avoiding energy runaway problems.
+      //      Erf=ERADLIMIT;
+
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"midcapalt: gammamax=%g gammarel2orig=%g gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%g gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
 
   }
+  //////////////////////
+  //
+  // Third case is if no bad conditions, then try regular calculation.  If Erf<ERADLIMIT, then reset Erf=ERADLIMIT and set gammarel=1
+  //
+  //////////////////////
   else{
-    //regular calculation
     
     //radiative energy density in the radiation rest frame based upon lab-frame u^t
     //    urfcon[0]=sqrt(gamma2);
@@ -1443,19 +1479,19 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
     Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
     if(Erf<ERADLIMIT){ // JCM
-      *corrected=1;
+      *lpflagrad=UTOPRIMRADFAILCASE3A;
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
-      urfconrel[1]=0.0;
-      urfconrel[2]=0.0;
-      urfconrel[3]=0.0;
+
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-    dualfprintf(fail_file,"nocapbad\n");
+    dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT.\n");
 #endif
 
     }
-    else{
+    else{ // no failure yet for *lpflagrad=UTOPRIMRADFAILCASE3B;
       //relative velocity
       FTYPE gammarel=sqrt(gammarel2);
 #if(1) // JCM
@@ -1468,7 +1504,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,int *corrected)
 #endif
 
 #if(PRODUCTION==0)
-      //    dualfprintf(fail_file,"nocapgood: Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
+      dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
 #endif
 
     }
