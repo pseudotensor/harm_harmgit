@@ -155,8 +155,13 @@
 //****************************************//
 //****************************************//
 //****************************************//
+// If set any dimensional constants, should not convert to code units here since conversion not yet defined.  Just set MPERSUN here and convert in init.c
 //****************************************//
 //****************************************//
+
+#define MPERSUN (1.0) // number of solar masses to define units
+
+
 
 #if(WHICHPROBLEM==FLATNESS)
 
@@ -187,14 +192,6 @@
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC2
-//#define RADBEAMFLAT_FRATIO 0.95
-#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
-#define RADBEAMFLAT_ERAD 1.
-#define RADBEAMFLAT_RHO 1.
-#define RADBEAMFLAT_UU 0.1
-
-#define KAPPA 0.
-#define KAPPAES 0.
 
 #endif
 
@@ -226,22 +223,11 @@
 
 #define MCOORD CARTMINKMETRIC2
 
-#define RHO_AMB 1.e0
-#define T_AMB 1.e6
-
-#define BLOBP 100.
-#define BLOBW 5.
-
 #if(WHICHPROBLEM==RADPULSEPLANAR)
 
-#define KAPPA 0.
-#define KAPPAES 1.0E3
 
 #else // PULSE and PULSE3D
 
-#define KAPPA 0.
-//#define KAPPAES 0.
-#define KAPPAES 1.e-6
 
 #endif
 

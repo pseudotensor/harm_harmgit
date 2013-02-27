@@ -54,8 +54,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   FTYPE *pressure=&pressuremem;
 
 
-
-  
+ 
   ////////////////////////
   //
   // INVERT Magnetic field or restore magnetic field for SPLITNPR case

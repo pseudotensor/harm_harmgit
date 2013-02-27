@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
   timecheck(STARTTIME,comptstart);
 	  
 
+
   //////////////////////
   //
   // Do initial diagnostics
@@ -85,7 +86,6 @@ int main(int argc, char *argv[])
 
   //  testffdeinversion();
   //  myexit(0);
-
 
 
 

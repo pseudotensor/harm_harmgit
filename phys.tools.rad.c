@@ -28,16 +28,15 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
 
-  PLOOP(pliter,pl)
-    pp[pl] = pp0[pl];
+  PLOOP(pliter,pl) pp[pl] = pp0[pl];
 
-  DLOOPA(iv)
-    uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
+  DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
   
   //calculating primitives  
   int corr;
   //u2p(uu,pp,gg,GG,&corr);
 
+  // OPTMARK: Should optimize this to  not try to get down to machine precision
   MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
 
 
@@ -48,8 +47,7 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   FTYPE Gd[NDIM];
   calc_Gd(pp, ptrgeom, &q, Gd);
   
-  DLOOPA(iv)
-    f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + realdt * Gd[iv];
+  DLOOPA(iv) f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + realdt * Gd[iv];
 
   return 0;
 } 
@@ -100,8 +98,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     iter++;
     
     //vector of conserved at the previous iteration
-    PLOOP(pliter,ii)
-      uup[ii]=uu[ii];
+    PLOOP(pliter,ii)  uup[ii]=uu[ii];
     
     //values at zero state
     f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1);
@@ -111,10 +108,8 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
       DLOOPA(jj)
       {
 	FTYPE del;
-	if(uup[jj+URAD0]==0.) 
-	  del=EPS*uup[URAD0];
-	else 
-	  del=EPS*uup[jj+URAD0];
+	if(uup[jj+URAD0]==0.) del=EPS*uup[URAD0];
+	else del=EPS*uup[jj+URAD0];
 
 	uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
@@ -140,8 +135,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 	x[ii]-=iJ[ii][jj]*f1[jj];
       }
     
-    DLOOPA(ii)
-      uu[ii+URAD0]=x[ii];
+    DLOOPA(ii) uu[ii+URAD0]=x[ii];
     
     //test convergence
     DLOOPA(ii){
@@ -149,11 +143,9 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
       f3[ii]=fabs(f3[ii]/uup[URAD0]);
     }
     
-    if(f3[0]<CONV && f3[1]<CONV && f3[2]<CONV && f3[3]<CONV)
-      break;
+    if(f3[0]<CONV && f3[1]<CONV && f3[2]<CONV && f3[3]<CONV) break;
     
-    if(iter>50)
-    {
+    if(iter>50){
       dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");	  
       myexit(21341);
     }
@@ -171,6 +163,9 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 
   DLOOPA(jj) radsource[UU+jj] = -deltas[jj];
   DLOOPA(jj) radsource[URAD0+jj] = deltas[jj];
+
+  // DEBUG:
+  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,radsource[URAD0+jj]);
 
   sc = RADSOURCE;
 
@@ -190,18 +185,16 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
   calc_Gd(pr, ptrgeom, q, Gd);
 
+  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d explicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,Gd[jj]);
+
   sc = RADSOURCE;
   
-  PLOOP(pliter,pl){
-    radsource[pl] = 0;
-  }
+  PLOOP(pliter,pl) radsource[pl] = 0;
 
   DLOOPA(jj) radsource[UU+jj] = -Gd[jj];
   DLOOPA(jj) radsource[URAD0+jj] = Gd[jj];
 
-  PLOOP(pliter,pl){
-    dUcomp[sc][pl] += radsource[pl];
-  }
+  PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
   
 }
 
@@ -238,7 +231,8 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   xx=V[1];
   yy=V[2];
   zz=V[3];
-  calc_kappa_user(rho,T,xx,yy,zz);
+  *kappa = calc_kappa_user(rho,T,xx,yy,zz);
+  //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 #else
   *kappa = 0.;
 #endif  
@@ -262,7 +256,8 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   xx=V[1];
   yy=V[2];
   zz=V[3];
-  calc_kappaes_user(rho,T,xx,yy,zz);
+  *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
+  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 #else
   *kappa = 0.;
 #endif  
@@ -290,7 +285,7 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
   mhdfull_calc_rad(pp, ptrgeom, q, Rij);
   
-  //the four-ve locity of fluid in lab frame
+  //the four-velocity of fluid in lab frame
   FTYPE *ucon,*ucov;
 
   ucon = q->ucon;
@@ -306,8 +301,12 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   FTYPE B = SIGMA_RAD*pow(T,4.)/Pi;
   FTYPE Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
 #else
-  FTYPE B=1.0; // new HARM units?  KORALTODO SUPERGODMARK
+  FTYPE rho=pp[RHO];
+  FTYPE u=pp[UU];
+  FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
+  FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi; // KORALTODO: Why Pi here?
   // Also, doesn't this only allow for thermal black body emission?
+  dualfprintf(fail_file,"rho=%g u=%g T=%g B=%g\n",rho,u,T,B);
 #endif
   FTYPE kappa,kappaes;
   calc_kappa(pp,ptrgeom,&kappa);
@@ -316,18 +315,16 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   
   //contravariant four-force in the lab frame
   
-  //R^ab u_a u_b
-  FTYPE Ruu=0.;
-  DLOOP(i,j)
-    Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+  //R^a_b u_a u^b
+  FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
   
   FTYPE Ru;
-  DLOOPA(i)
-  {
-    Ru=0.;
-    DLOOPA(j)
-      Ru+=Rij[i][j]*ucon[j];
-    Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i];
+  DLOOPA(i){
+
+    Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
+
+    Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i]; // KORALTODO: Is 4*Pi here ok?
+
   }
 }
 
@@ -675,6 +672,10 @@ int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct
   FTYPE Rij[NDIM][NDIM];
   int pliter,pl;
   int boost22_laborff(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom);
+
+
+  dualfprintf(fail_file,"WHY HERE\n");
+  myexit(252526);
 
   //TODO : no distinction basing on whichdir!
 
@@ -1280,7 +1281,8 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 ///////////////
 int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
-  
+
+ 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
     myexit(137432636);
@@ -1403,6 +1405,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	FTYPE gammatemp2,qsqtemp2;
 	MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
 	dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
+	DLOOPA(jj) dualfprintf(fail_file,"CASE1B: uu[%d]=%g\n",jj,uu[jj]);
 #endif
 
 
@@ -1923,7 +1926,7 @@ FTYPE calc_PEQ_ufromTrho(FTYPE T,FTYPE rho)
 {
 #if(0)
   //  FTYPE p=K_BOLTZ*rho*T/MU_GAS/M_PROTON;
-  FTYPE p=rho*T; // /MU_GAS; // KORALTODO  HARMUNITS? SUPERGODMARK
+  FTYPE p=rho*T; // /MU_GAS;
   FTYPE u=p/(gamideal-1.);
 #else
   // if use local function function instead of below directly,
@@ -1938,24 +1941,26 @@ FTYPE calc_PEQ_Tfromurho(FTYPE u,FTYPE rho)
 #if(0)
   FTYPE p=u*(gamideal-1.);
   //  FTYPE T=p/(K_BOLTZ*rho/MU_GAS/M_PROTON);
-  //  FTYPE T=p/(rho/MU_GAS); // KORALTODO  HARMUNITS? SUPERGODMARK
-  FTYPE T=p/(rho); // KORALTODO  HARMUNITS? SUPERGODMARK
+  //  FTYPE T=p/(rho/MU_GAS);
+  FTYPE T=p/(rho);
 #else
   FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);
 #endif
   return T;
 }
 
+// E=urad=arad T^4
 FTYPE calc_LTE_EfromT(FTYPE T)
 {
   //  return 4.*SIGMA_RAD*T*T*T*T;
-  return 4.*T*T*T*T; // KORALTODO: HARMUNITS? SUPERGODMARK
+  return (ARAD_CODE*T*T*T*T);
 }
 
+// E=urad=arad T^4 and just solve for T
 FTYPE calc_LTE_TfromE(FTYPE E )
 {
   //  return sqrt(sqrt((E/4./SIGMA_RAD)));
-  return sqrt(sqrt((E/4.)));
+  return (sqrt(sqrt((E/ARAD_CODE))));
 }
 
 
@@ -1964,13 +1969,13 @@ FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 #if(0)
   FTYPE p=(gamideal-1.)*(u);
   //  FTYPE T=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
-  //  FTYPE T=p*MU_GAS/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
-  FTYPE T=p/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
+  //  FTYPE T=p*MU_GAS/rho;
+  FTYPE T=p/rho;
 #else
   FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);
 #endif
 
-  return calc_LTE_EfromT(T);
+  return (calc_LTE_EfromT(T));
 }
 
 

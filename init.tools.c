@@ -442,24 +442,27 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // Also setup pre_fixup() type quantities
   //
   /////////////////////////////// 
-  trifprintf("Fixup and Bound #1\n");
 
+  trifprintf("Fixup #1\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
 
   {
+    trifprintf("Bound #1\n");
     int finalstep=1; //  modifies initial ucum-like-primitives
     if (bound_prim(STAGEM1,finalstep,t,prim, pstag, Bhat, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
   }
 
 
+  trifprintf("pre_interpolate_and_advance #1\n");
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
 
 
 
+  trifprintf("pre_fixup #1\n");
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
 
@@ -470,11 +473,15 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // Initialize field from vector potential
   //
   /////////////////////////////// 
+
 #if(1)
+  trifprintf("init_vpot #1\n");
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
+  trifprintf("normalize_field #1\n");
   normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
 #else
   // no field
+  trifprintf("init_zero_field #1\n");
   init_zero_field(prim,pstag,ucons,vpot,Bhat);
 #endif
 
@@ -483,6 +490,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #if(ANALYTICMEMORY)
   // copy over initial solution as analytic solution
   // NEEDED FOR BOUND in case uses panalytic
+  trifprintf("copy_prim2panalytic #1\n");
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
 
@@ -498,13 +506,14 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // BOUND AGAIN IN CASE USING PANALYTIC TO BOUND!
   //
   /////////////////////////////// 
-  trifprintf("Fixup and Bound #2\n");
 
+  trifprintf("Fixup #2\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
   {
+    trifprintf("Bound #2\n");
     int finalstep=1; //  modifies initial ucum-like-primitives
     if (bound_allprim(STAGEM1,finalstep,0.0,prim,pstag,ucons, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
   }
@@ -519,6 +528,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   /////////////////////////////// 
 
   if(WHICHEOS==KAZFULL){
+    trifprintf("EOSextra\n");
     FULLLOOP{
       // then store pressure
       // assume standard inversion at loc=CENT
@@ -528,9 +538,11 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
+  trifprintf("pre_interpolate_and_advance #2\n");
   pre_interpolate_and_advance(prim);
 
 
+  trifprintf("pre_fixup #2\n");
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 
 

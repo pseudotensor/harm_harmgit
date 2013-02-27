@@ -727,7 +727,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   FTYPE prfloor[NPR];
   FTYPE prdiag[NPR];
   FTYPE pr0[NPR];
-  FTYPE prnew[NPR];
+  FTYPE prmhdnew[NPR];
   FTYPE U[NPR];
   int checkfl[NPR];
   int failreturn;
@@ -735,12 +735,13 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   FTYPE scalemin[NPR];
   //  FTYPE ucovzamo[NDIM];
   //  FTYPE uconzamo[NDIM];
-  FTYPE dpr[NPR];
+  FTYPE dprmhd[NPR];
+  FTYPE prmhd[NPR];
   FTYPE dU[NPR];
   //  FTYPE P,Pnew;
   int jj;
   int badinversion;
-
+  int oldmhdpflag,oldradpflag;
 
 
   
@@ -749,6 +750,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   PALLLOOP(pl){
     checkfl[pl]=0;
     pr0[pl]=pr[pl];
+    prmhd[pl]=pr0[pl];
     prdiag[pl]=pr0[pl];
   }
 
@@ -786,7 +788,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     // get floor value
     //
     //////////////
-    set_density_floors(ptrgeom,pr,prfloor);
+    set_density_floors(ptrgeom,prmhd,prfloor);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
     
@@ -804,7 +806,6 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     }
     
 
-
     /////////////////////////////
     //
     // Get new primitive if went beyond floow
@@ -812,16 +813,14 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     /////////////////////////////
 
     PALLLOOP(pl){
-      if ( checkfl[pl]&&(prfloor[pl] > pr[pl]) ){
+      if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl]) ){
 	didchangeprim=1;
 	//dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],pr[pl]); 
 	// only add on full step since middle step is not really updating primitive variables
-	prnew[pl]=prfloor[pl];
+	prmhdnew[pl]=prfloor[pl];
       }
-      else prnew[pl]=pr[pl];
+      else prmhdnew[pl]=prmhd[pl];
     }
-
-
 
 
     //////////////////////////
@@ -836,7 +835,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // For example, occurs on poles where u^r\sim 0 (stagnation surface) which launches artificially high u^t stuff only because goes below floor for a range of radii and so adds momentum to low density material
       // 
       PALLLOOP(pl){
-	pr[pl]=prnew[pl];
+	prmhd[pl]=prmhdnew[pl];
       }
 
 
@@ -848,20 +847,20 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // FIXUPTYPE==2 models a local injection of baryons/energy with momentum conserved and energy-momentum conserved if mass injected.  Injection will slow flow.  Essentially there is an ad hoc conversion of kinetic/thermal energy into mass energy.
 
       // compute original conserved quantities
-      failreturn=get_state(pr,ptrgeom,&q);
+      failreturn=get_state(prmhd,ptrgeom,&q);
       if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-      failreturn=primtoU(UNOTHING,pr,&q,ptrgeom,U);
+      failreturn=primtoU(UNOTHING,prmhd,&q,ptrgeom,U);
       if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
 
       // get change in primitive quantities
-      PALLLOOP(pl) dpr[pl]=0.0; // default
+      PALLLOOP(pl) dprmhd[pl]=0.0; // default
       // use ZAMO velocity as velocity of inserted fluid
-      for(pl=RHO;pl<=UU;pl++) dpr[pl]=prnew[pl]-pr[pl];
-      set_zamo_velocity(WHICHVEL,ptrgeom,dpr);
+      for(pl=RHO;pl<=UU;pl++) dprmhd[pl]=prmhdnew[pl]-prmhd[pl];
+      set_zamo_velocity(WHICHVEL,ptrgeom,dprmhd);
 
       // get change in conserved quantities
-      failreturn=get_state(dpr,ptrgeom,&dq);
-      failreturn=primtoU(UNOTHING,dpr,&dq,ptrgeom,dU);
+      failreturn=get_state(dprmhd,ptrgeom,&dq);
+      failreturn=primtoU(UNOTHING,dprmhd,&dq,ptrgeom,dU);
       if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
 
@@ -871,9 +870,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       else if(FIXUPTYPE==2){
 	// then don't allow momentum to change regardless of meaning for implied rho,u
 	dU[U1]=dU[U2]=dU[U3]=0.0;
+	dU[URAD0]=dU[URAD1]=dU[URAD2]=dU[URAD3]=0.0;
 
 	pl=UU;
-	if ( checkfl[pl]&&(prfloor[pl] > pr[pl]) ){
+	if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl]) ){
 	  // then must change dU[UU]
 	}
 	else dU[UU]=0.0; // if only mass added, then no change needed to energy-momentum
@@ -888,17 +888,26 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
       // pr finally changes here
       // get primitive associated with new conserved quantities
+      oldmhdpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+      oldradpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+
       struct of_newtonstats newtonstats;
-      failreturn=Utoprimgen(finalstep,OTHERUTOPRIM,UNOTHING,U,ptrgeom,pr,&newtonstats);
-      badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL))); // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
+      failreturn=Utoprimgen(finalstep,OTHERUTOPRIM,UNOTHING,U,ptrgeom,prmhd,&newtonstats);
+      // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
+      badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));
 
       if(badinversion){
 	if(debugfail>=2) dualfprintf(fail_file,"Utoprimgen failed in fixup.c");
 	// if problem with Utoprim, then just modify primitive quantities as normal without any special constraints
 	PALLLOOP(pl){
-	  pr[pl]=prnew[pl];
+	  prmhd[pl]=prmhdnew[pl];
 	}
       }
+
+      // in any case, this is not normal inversion procedure, so clear the flags
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=oldmhdpflag;
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=oldradpflag;
+
 #endif
 
 
@@ -924,9 +933,9 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
     int docorrectucons=1;
     int doingmhdfixup=1;
-    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
-    // now prdiag=pr as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to pr each time) would add each prior change to each next change)
-    PALLLOOP(pl) prdiag[pl]=pr[pl];
+    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
+    // now prdiag=prmhd as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to prmhd each time) would add each prior change to each next change)
+    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
   }
 
 
@@ -940,14 +949,14 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   int docorrectucons=1;
   didchangeprim=0;
 
-  failreturn=limit_gamma(GAMMAMAX,pr,ucons,ptrgeom,-1);
+  failreturn=limit_gamma(GAMMAMAX,prmhd,ucons,ptrgeom,-1);
   if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
   if(failreturn==-1) didchangeprim=1;
 
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
     int doingmhdfixup=1;
-    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
-    PALLLOOP(pl) prdiag[pl]=pr[pl];
+    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
+    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
   }
 
 #endif// end if WHICHVEL==VEL4REL
@@ -965,6 +974,18 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     // i.e. consider this a failure
     //GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)= 1;
   //  }
+
+
+  ///////////////
+  //
+  // Only changed mhd quantities with this floor approach, now return pr with prmhd for those MHD quantities.
+  PALLLOOP(pl){
+    if(!(pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)){
+      pr[pl]=prmhd[pl];
+    }
+  }
+  //
+  ///////////////
 
   
 

@@ -1,12 +1,24 @@
 
 #include "decs.h"
 
+
+// NOTE on units:
+// Many things below are so far in code units, not physical units, so they don't need conversion.  This includes:
+//
+// Rin, Rout, tf, DTdumpgen
+
+
+
+
+
+
 FTYPE normglobal;
 
 int prepre_init_specific_init(void)
 {
   int funreturn;
-  
+
+
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -22,6 +34,12 @@ int prepre_init_specific_init(void)
 
 int pre_init_specific_init(void)
 {
+
+  // print out units and some constants
+  trifprintf("Constants\n");
+  trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
+  trifprintf("ARAD_CODE=%g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1)=%g KAPPA_BF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1),KAPPA_BF_CODE(1,1));
+
 
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
 
@@ -93,6 +111,7 @@ int init_defcoord(void)
   /*************************************************/
 #if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
 
+
   defcoord = UNIFORMCOORDS;
   Rin_array[1]=0;
   Rin_array[2]=0;
@@ -107,11 +126,11 @@ int init_defcoord(void)
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
   defcoord = UNIFORMCOORDS;
-  Rin_array[1]=-50.0;
+  Rin_array[1]=-50.0; 
   Rin_array[2]=-1.0;
   Rin_array[3]=-1.0;
 
-  Rout_array[1]=50.0;
+  Rout_array[1]=50.0; 
   Rout_array[2]=1.0;
   Rout_array[3]=1.0;
 
@@ -120,13 +139,13 @@ int init_defcoord(void)
 #if(WHICHPROBLEM==RADPULSE3D)
 
   defcoord = UNIFORMCOORDS;
-  Rin_array[1]=-50.0;
-  Rin_array[2]=-50.0;
-  Rin_array[3]=-50.0;
+  Rin_array[1]=-50.0; 
+  Rin_array[2]=-50.0; 
+  Rin_array[3]=-50.0; 
 
-  Rout_array[1]=50.0;
-  Rout_array[2]=50.0;
-  Rout_array[3]=50.0;
+  Rout_array[1]=50.0; 
+  Rout_array[2]=50.0; 
+  Rout_array[3]=50.0; 
 
 #endif
 
@@ -298,6 +317,75 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
+//****************************************//
+//****************************************//
+//****************************************//
+// Problem setup constants that only modifies things in init.c (not init.h)
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==FLATNESS)
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+//#define RADBEAMFLAT_FRATIO 0.95
+#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
+#define RADBEAMFLAT_RHO 1. // 1g/cm^3
+#define RADBEAMFLAT_ERAD 1. // 1g/cm^3 worth of energy density in radiation
+#define RADBEAMFLAT_UU 0.1 // 0.1g/cm^3 worth of energy density in fluid
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+
+#define RHO_AMB (1.e0) // in grams per cm^3
+#define T_AMB (1.0E6) // in Kelvin
+
+#define BLOBP 100.
+#define BLOBW 5.
+
+
+
+#if(WHICHPROBLEM==RADPULSEPLANAR)
+
+#define KAPPA 0.
+//#define KAPPAES (1E-10)
+//#define KAPPAES (1E-7)
+#define KAPPAES (1E-4)
+
+#else // PULSE and PULSE3D
+
+// KAPPAs are fraction of physical FF and ES opacities
+#define KAPPA 0.
+#define KAPPAES 1.e-10
+
+#endif
+
+
+#endif
+
+
+
+
+
+
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int funreturn;
@@ -366,8 +454,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   else {
     
     
-    pr[RHO] = 1. ;
-    pr[UU] = 0.1;
+    pr[RHO] = 1./RHOBAR ; // i.e. 1g/cm^3
+    pr[UU] = 0.1/UBAR;
     pr[U1] = 0 ;
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
@@ -383,7 +471,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     }
 
 
-    pr[URAD0] = 1.;
+    pr[URAD0] = 1./UBAR;
     pr[URAD1] = 0 ;
     pr[URAD2] = 0 ;    
     pr[URAD3] = 0 ;
@@ -416,8 +504,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   else {
     
     
-    pr[RHO] = RADBEAMFLAT_RHO ;
-    pr[UU] = RADBEAMFLAT_UU;
+    pr[RHO] = RADBEAMFLAT_RHO/RHOBAR ;
+    pr[UU] = RADBEAMFLAT_UU/UBAR;
     pr[U1] = 0 ;
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
@@ -433,7 +521,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     }
 
 
-    pr[URAD0] = RADBEAMFLAT_ERAD;
+    pr[URAD0] = RADBEAMFLAT_ERAD/UBAR;
     pr[URAD1] = 0 ;
     pr[URAD2] = 0 ;    
     pr[URAD3] = 0 ;
@@ -463,7 +551,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   }
   else {
 
-    FTYPE Tgas,ERAD,uint;
+    FTYPE Trad,Tgas,ERAD,uint;
     FTYPE xx,yy,zz,rsq;
     coord(i, j, k, CENT, X);
     bl_coord(X, V);
@@ -480,17 +568,16 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
     }
 
-    Tgas=T_AMB*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+    // radiation temperature is distributed
+    Trad=(T_AMB/TEMPBAR)*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+    ERAD=calc_LTE_EfromT(Trad);
 
-
-    ERAD=calc_LTE_EfromT(Tgas);
     //flat gas profiles
-    Tgas=T_AMB;
-    rho=RHO_AMB;
+    Tgas=(T_AMB/TEMPBAR);
+    rho=(RHO_AMB/RHOBAR);
     uint=calc_PEQ_ufromTrho(Tgas,rho);
-    
 
-    
+   
     pr[RHO] = rho;
     pr[UU] = uint;
     pr[U1] = 0 ;
@@ -696,7 +783,17 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
   int funreturn;
   
-  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+  // default is for spherical flow near BH
+  //  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+
+  int pliter,pl;
+  PLOOP(pliter,pl){
+    prfloor[RHO]=1E-10*RHOMIN;
+    prfloor[UU]=1E-10*UUMIN;
+
+    prfloor[PRAD0]=ERADLIMIT;
+  }
+
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -805,15 +902,26 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //******* user opacities ****************************************************
 //**********************************************************************
 
+// \kappa is optical depth per unit length per unit rest-mass energy density
+
 //absorption
 FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {
-  return(KAPPA*rho);
+  // assume kappa is given in physical units as other things, while inputs are in code units
+  //  return(rho*KAPPA/OPACITY);
+
+  // assume KAPPA defines fraction of FF opacity
+  return(rho*KAPPA*KAPPA_FF_CODE(rho,T));
 }
 
 //scattering
 FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {  
-  return(KAPPAES*rho);
+  //  return(rho*KAPPAES/OPACITY);
+
+  // assume KAPPAES defines fractoin of ES opacity
+  return(rho*KAPPAES*KAPPA_ES_CODE(rho,T));
+
+
 }
 

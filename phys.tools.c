@@ -1388,8 +1388,7 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
-int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *dUriemann,
-	   FTYPE (*dUcomp)[NPR], FTYPE *dU)
+int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
@@ -1399,6 +1398,7 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
   VARSTATIC FTYPE Ugeomfree[NPR];
 
 
+  // initialize source terms to be zero
   PLOOP(pliter,pl){
     SCLOOP(sc) dUcomp[sc][pl] = 0.;
     dU[pl] = 0.;
