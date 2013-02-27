@@ -8,6 +8,8 @@
 //
 // u_rho0_p : used by initial conditions
 //
+// u_rho0_T : used by initial conditions
+//
 // pressure_rho0_u : used by inversion for initial guess and by rest of code to set pressure as functions of rho0 and u
 // 
 // dpdu_rho0_u  dpdrho0_rho0_u : used by sources or other such derivatives
@@ -68,6 +70,12 @@ FTYPE pressure_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 FTYPE u_rho0_p(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
   return( (*(ptr_u_rho0_p[whicheos]))(EOSextra,rho0,p) );
+}
+
+// u(rho0, T) (used for initial conditions)
+FTYPE u_rho0_T(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  return( (*(ptr_u_rho0_T[whicheos]))(EOSextra,rho0,T) );
 }
 
 // dp(rho0, u)/du
@@ -292,6 +300,7 @@ int initeos_eomtype(void)
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_idealgas;
   ptr_compute_u_from_entropy[whicheos] = &compute_u_from_entropy_idealgas;
   ptr_u_rho0_p[whicheos] = &u_rho0_p_idealgas;
+  ptr_u_rho0_T[whicheos] = &u_rho0_T_idealgas;
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_idealgas;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_idealgas;
   ptr_cs2_compute[whicheos] = &cs2_compute_idealgas;
@@ -327,7 +336,7 @@ int initeos_eomtype(void)
   whicheos=MIGNONE;
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_mignone;
   ptr_compute_u_from_entropy[whicheos] = &compute_u_from_entropy_mignone;
-  ptr_u_rho0_p[whicheos] = &u_rho0_p_mignone;
+  ptr_u_rho0_T[whicheos] = &u_rho0_T_mignone;
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_mignone;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_mignone;
   ptr_cs2_compute[whicheos] = &cs2_compute_mignone;
@@ -362,7 +371,7 @@ int initeos_eomtype(void)
   whicheos=GRBPWF99;
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_grbpwf99;
   ptr_compute_u_from_entropy[whicheos] = &compute_u_from_entropy_grbpwf99;
-  ptr_u_rho0_p[whicheos] = &u_rho0_p_grbpwf99;
+  ptr_u_rho0_T[whicheos] = &u_rho0_T_grbpwf99;
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_grbpwf99;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_grbpwf99;
   ptr_cs2_compute[whicheos] = &cs2_compute_grbpwf99;
@@ -399,7 +408,7 @@ int initeos_eomtype(void)
   whicheos=KAZFULL;
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_kazfull;
   ptr_compute_u_from_entropy[whicheos] = &compute_u_from_entropy_kazfull;
-  ptr_u_rho0_p[whicheos] = &u_rho0_p_kazfull;
+  ptr_u_rho0_T[whicheos] = &u_rho0_T_kazfull;
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_kazfull;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_kazfull;
   ptr_cs2_compute[whicheos] = &cs2_compute_kazfull;
@@ -436,7 +445,7 @@ int initeos_eomtype(void)
   whicheos=COLDEOS;
   ptr_pressure_rho0_u[whicheos] = &pressure_rho0_u_coldgrmhd;
   ptr_compute_u_from_entropy[whicheos] = &compute_u_from_entropy_coldgrmhd;
-  ptr_u_rho0_p[whicheos] = &u_rho0_p_coldgrmhd;
+  ptr_u_rho0_T[whicheos] = &u_rho0_T_coldgrmhd;
   ptr_dpdu_rho0_u[whicheos] = &dpdu_rho0_u_coldgrmhd;
   ptr_dpdrho0_rho0_u[whicheos] = &dpdrho0_rho0_u_coldgrmhd;
   ptr_cs2_compute[whicheos] = &cs2_compute_coldgrmhd;

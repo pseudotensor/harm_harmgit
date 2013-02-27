@@ -352,6 +352,7 @@ static int usereduced_eos(int domod, int whichfun, int whichd, FTYPE *EOSextra, 
 #if(REDUCE2WHICHEOS==MIGNONE)
     if(whichfun==PofRHOU)        *final = pressure_rho0_u_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==UofRHOP)   *final = u_rho0_p_mignone(EOSextra,quant1, quant2mod);
+    else if(whichfun==UofRHOT)   *final = u_rho0_T_mignone(EOSextra,quant1, quant2mod);// SUPERGODMARK: NOT setup yet
     else if(whichfun==UofRHOS)   *final = compute_u_from_entropy_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==SofRHOU)   *final = compute_entropy_mignone(EOSextra,quant1, quant2mod);
     else if(whichfun==SSofRHOCHI)   *final = compute_specificentropy_wmrho0_mignone(EOSextra,quant1, quant2mod);
@@ -369,6 +370,7 @@ static int usereduced_eos(int domod, int whichfun, int whichd, FTYPE *EOSextra, 
     // use ideal EOS
     if(whichfun==PofRHOU)        *final = pressure_rho0_u_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==UofRHOP)   *final = u_rho0_p_idealgas(EOSextra,quant1, quant2mod);
+    else if(whichfun==UofRHOT)   *final = u_rho0_T_idealgas(EOSextra,quant1, quant2mod);// SUPERGODMARK: NOT setup yet
     else if(whichfun==UofRHOS)   *final = compute_u_from_entropy_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==SofRHOU)   *final = compute_entropy_idealgas(EOSextra,quant1, quant2mod);
     else if(whichfun==SSofRHOCHI)   *final = compute_specificentropy_wmrho0_idealgas(EOSextra,quant1, quant2mod);
@@ -949,6 +951,14 @@ FTYPE u_rho0_p_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
   FTYPE du;
   return(dfun2fun_kazfull(UofRHOP, PTOTDIFF, EOSextra, rho0, p, &du));
+}
+
+// u(rho0, T) (used for initial conditions)
+// SUPERGODMARK: NOT setup yet
+FTYPE u_rho0_T_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  FTYPE dT; // maybe not right.
+  return(dfun2fun_kazfull(UofRHOT, TTOTDIFF, EOSextra, rho0, T, &dT));
 }
 
 

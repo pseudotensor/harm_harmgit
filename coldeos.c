@@ -20,6 +20,12 @@ FTYPE u_rho0_p_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
   return(0.0) ;
 }
 
+// u(rho0, T) (used for initial conditions)
+FTYPE u_rho0_T_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  return(0.0) ;
+}
+
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_coldgrmhd(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {

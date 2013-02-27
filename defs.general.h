@@ -342,6 +342,7 @@ FTYPE nu,ss,ucrit,Ttpow,jetalpha;
 FTYPE (*ptr_pressure_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_compute_u_from_entropy[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
 FTYPE (*ptr_u_rho0_p[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE p);
+FTYPE (*ptr_u_rho0_T[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE T);
 FTYPE (*ptr_dpdu_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_dpdrho0_rho0_u[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 FTYPE (*ptr_cs2_compute[NUMEOSS])(FTYPE *EOSextra, FTYPE rho0, FTYPE u);

@@ -3440,6 +3440,7 @@ int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *en
 }
 
 
+
 // wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
@@ -3461,6 +3462,22 @@ FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTY
     // then didn't store anything
     return(pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));
   }
+
+}
+
+// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+FTYPE u_rho0_p_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE p)
+{
+
+  return(u_rho0_p(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,p));
+
+}
+
+// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+FTYPE u_rho0_T_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE T)
+{
+
+  return(u_rho0_T(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,T));
 
 }
 

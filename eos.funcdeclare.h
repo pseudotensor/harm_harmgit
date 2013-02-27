@@ -1,6 +1,8 @@
 // some useful wrappers for user simplicity:
 extern FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
+extern FTYPE u_rho0_p_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE p);
+extern FTYPE u_rho0_T_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE T);
 extern FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
@@ -40,6 +42,7 @@ extern int initeos_eomtype(void);
 extern FTYPE pressure_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE compute_u_from_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE entropy);
 extern FTYPE u_rho0_p(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE p);
+extern FTYPE u_rho0_T(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE T);
 extern FTYPE dpdu_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE dpdrho0_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 extern FTYPE cs2_compute(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u);

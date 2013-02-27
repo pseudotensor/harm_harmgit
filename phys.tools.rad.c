@@ -182,6 +182,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 
 
 // compute changes to U (both T and R) using implicit method
+// NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
 void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE Gd[NDIM], radsource[NPR];
@@ -306,6 +307,7 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   FTYPE Tgas=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
 #else
   FTYPE B=1.0; // new HARM units?  KORALTODO SUPERGODMARK
+  // Also, doesn't this only allow for thermal black body emission?
 #endif
   FTYPE kappa,kappaes;
   calc_kappa(pp,ptrgeom,&kappa);
@@ -373,7 +375,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   FTYPE vrad2=THIRD;
   FTYPE vrad2limited;
 
-  if(kappa>0.0){
+  if(kappa>0.0){// && WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
     // NOT DOING THIS:
     // compute tautot assuming kappa is optical depth per unit grid dx[1-3].  I.e. calc_kappa() computes grid-based opacity
     // tautot is the total optical depth of the cell in dim dimension
@@ -1915,84 +1917,61 @@ calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
 
 //**********************************************************************
 //suplementary routines for conversions
+// SUPERGODMARK: KORALTODO: These should all be replaced or wrapped with HARM's eos.c functions, but they only appear to be used for initial conditions.  So for now, assume ideal gas.
 //**********************************************************************
 FTYPE calc_PEQ_ufromTrho(FTYPE T,FTYPE rho)
 {
+#if(0)
   //  FTYPE p=K_BOLTZ*rho*T/MU_GAS/M_PROTON;
-  FTYPE p=rho*T/MU_GAS; // KORALTODO  HARMUNITS? SUPERGODMARK
+  FTYPE p=rho*T; // /MU_GAS; // KORALTODO  HARMUNITS? SUPERGODMARK
   FTYPE u=p/(gamideal-1.);
+#else
+  // if use local function function instead of below directly,
+  // then assume user doesn't care about position for EOS.
+  FTYPE u=u_rho0_T_simple(0, 0, 0, CENT, rho, T);
+#endif
   return u;
 }
 
 FTYPE calc_PEQ_Tfromurho(FTYPE u,FTYPE rho)
 {
+#if(0)
   FTYPE p=u*(gamideal-1.);
   //  FTYPE T=p/(K_BOLTZ*rho/MU_GAS/M_PROTON);
-  FTYPE T=p/(rho/MU_GAS); // KORALTODO  HARMUNITS? SUPERGODMARK
+  //  FTYPE T=p/(rho/MU_GAS); // KORALTODO  HARMUNITS? SUPERGODMARK
+  FTYPE T=p/(rho); // KORALTODO  HARMUNITS? SUPERGODMARK
+#else
+  FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);
+#endif
   return T;
 }
 
 FTYPE calc_LTE_EfromT(FTYPE T)
 {
-  return 4.*SIGMA_RAD*T*T*T*T;
+  //  return 4.*SIGMA_RAD*T*T*T*T;
+  return 4.*T*T*T*T; // KORALTODO: HARMUNITS? SUPERGODMARK
 }
 
 FTYPE calc_LTE_TfromE(FTYPE E )
 {
-  return sqrt(sqrt((E/4./SIGMA_RAD)));
+  //  return sqrt(sqrt((E/4./SIGMA_RAD)));
+  return sqrt(sqrt((E/4.)));
 }
 
 
 FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 {
+#if(0)
   FTYPE p=(gamideal-1.)*(u);
   //  FTYPE T=p*MU_GAS*M_PROTON/K_BOLTZ/rho;
-  FTYPE T=p*MU_GAS/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
+  //  FTYPE T=p*MU_GAS/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
+  FTYPE T=p/rho; // KORALTODO  HARMUNITS? SUPERGODMARK
+#else
+  FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);
+#endif
 
   return calc_LTE_EfromT(T);
 }
 
 
 
-/*
-
-Currently KORAL uses two sets of tetrads:
-
-tmuup, tmudn - transforming between lab non-ortonormal (no) and ZAMO
-ortonormal (on)
-
-and
-
-tmuup, tmulo - transforming between lab non-ortonormal and lab ortonormal
-
-The second set is the one we need to implement (there is nothing
-special about ZAMO but for the purpose of dumping).
-
-So let's forget tmuups (for clarity it would be helpful to change the
-name in HARM from emu to tmu).
-
-* tmuup is used in the following pipeflow:
-
-lab (no) -> ff (no) -> ff (on)
-
-To get to the ff (no) we use the general Lorentz boost.
-
-To get to ff (on) we use tmuup:
-
-u^mu_(on) = tmuup^mu_nu u^nu_(no)
-
-where _(on) defines 4-vector in ortonormal frame and _(no) in
-non-ortonormal frame, and
-
-tmuup^mu_nu = tmuup[mu][nu]
-
-* tmulo is used in the opposite direction:
-
-ff (on) -> ff (no)
-
-u^mu_(no) = tmulo^mu_nu u^nu_(on)
-
-tmulo^mu_nu = tmulo[mu][nu]
-
-
-*/

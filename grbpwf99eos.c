@@ -15,6 +15,12 @@ FTYPE u_rho0_p_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
   return(u_rho0_p_idealgas(EOSextra,rho0,p));
 }
 
+// u(rho0, T) (used for initial conditions)
+FTYPE u_rho0_T_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  return(u_rho0_T_idealgas(EOSextra,rho0,T));
+}
+
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {

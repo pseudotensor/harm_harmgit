@@ -1,5 +1,7 @@
 
 
+#define Pi (M_PI)     
+
 ///////////////
 // below 6 should only be used for initial condition setup for HARMUNITS
 #define GGG_IC (6.674e-8)
@@ -13,16 +15,20 @@
 /////////////
 // Dimensionless things or (e.g. sigma) sets scale for density that would be otherwise invariant without radiation
 ////////////
+
+// SIGMA_RAD set to 1 now (i.e not used)
 #define SIGMA_RAD (1.0) // KORALTODO: HARMUNITS?  SUPERGODMARK.
 //efine A_RAD (4.*5.67e-5/CCCTRUE * GGG / CCCTRUE / CCCTRUE / CCCTRUE / CCCTRUE)
+// MU_GAS not used (absorbed into density)
 #define MU_GAS 1.
+// Z_RATIO not used
 #define Z_RATIO (1.0)
-#define Pi (3.141592654)     
 
 #define EFLOOR SMALL
+
+// KORALTODO: The below need to be chosen intelligently
 #define RADEPS (1.e-6)
 #define RADCONV (1.e-7)
-
 #define PRADEPS (1.e-6)
 #define PRADCONV (1.e-8)
 
@@ -33,6 +39,7 @@
 #define CCCFAKE (1.0)
 #define GGGFAKE (1.0)
 
+// MASS is not used in evolution at least
 #ifndef MASS
 #define MASS 1./MSUNCMFAKE //default mass of the BH used to calibrate radiation constant, Solar mass units
 #endif

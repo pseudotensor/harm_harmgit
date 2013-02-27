@@ -1,13 +1,15 @@
 //problem names
 #define FLATNESS (0) // not in Koral
 #define RADPULSE (10)
+#define RADPULSEPLANAR (1000)
 #define RADPULSE3D (16)
 #define RADBEAMFLAT (24)
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
-#define WHICHPROBLEM RADBEAMFLAT
+//#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
+#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
 
 
@@ -199,7 +201,7 @@
 //****************************************//
 //****************************************//
 
-#if(WHICHPROBLEM==RADPULSE)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
 #define N1 100
 #define N2 1 
@@ -216,10 +218,11 @@
 
 #endif
 
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
 
 #define MCOORD CARTMINKMETRIC2
 
@@ -229,11 +232,22 @@
 #define BLOBP 100.
 #define BLOBW 5.
 
+#if(WHICHPROBLEM==RADPULSEPLANAR)
+
 #define KAPPA 0.
-#define KAPPAES 0.
-//#define KAPPAES 1.e-6
+#define KAPPAES 1.0E3
+
+#else // PULSE and PULSE3D
+
+#define KAPPA 0.
+//#define KAPPAES 0.
+#define KAPPAES 1.e-6
 
 #endif
+
+
+#endif
+
 
 
 //****************************************//

@@ -96,6 +96,8 @@
 #define CHIDIFF  (CHIEOS-1) // :2
 #define STOTDIFF (SEOS-1)   // :3
 
+#define TTOTDIFF (-1) // SUPERGODMARK: Not yet.
+
 #define SSPECTOTDIFF (STOTDIFF+1) // :4 : just label, not used except as label and not used for memory items since nothing is function of SSPECTOTDIFF
 
 // fastest indexed quantities in degen table
@@ -338,6 +340,8 @@
 #define UofRHOP (LASTEOSSTANDARD+1)
 #define FIRSTEOSGUESS UofRHOP
 #define LASTEOSGUESS UofRHOP
+
+#define UofRHOT -1 // SUPERGODMARK: Not setup yet.
 
 #define NUMEOSDISSQUANTITIESMEM 1
 #define UofRHOS (LASTEOSGUESS+1)

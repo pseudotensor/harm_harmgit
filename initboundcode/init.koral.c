@@ -104,7 +104,7 @@ int init_defcoord(void)
 
 #endif
 
-#if(WHICHPROBLEM==RADPULSE)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
   defcoord = UNIFORMCOORDS;
   Rin_array[1]=-50.0;
@@ -191,7 +191,7 @@ int init_global(void)
 
 #endif  
 
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
   gam = 5./3.;
   cooling=KORAL;
 #endif  
@@ -217,7 +217,7 @@ int init_global(void)
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=OUTFLOW;
@@ -449,7 +449,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D)
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
   // outsideness
   if (0) {
@@ -464,7 +464,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   else {
 
     FTYPE Tgas,ERAD,uint;
-    FTYPE xx,yy,zz;
+    FTYPE xx,yy,zz,rsq;
     coord(i, j, k, CENT, X);
     bl_coord(X, V);
     xx=V[1];
@@ -472,12 +472,23 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     zz=V[3];
 
 
-    Tgas=T_AMB*(1.+BLOBP*exp(-((xx)*(xx)+(yy)*(yy)+(zz)*(zz))/BLOBW/BLOBW));
+    if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D){
+      rsq=(xx)*(xx)+(yy)*(yy)+(zz)*(zz);
+    }
+    else if(WHICHPROBLEM==RADPULSEPLANAR){
+      rsq=(xx)*(xx);
+
+    }
+
+    Tgas=T_AMB*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+
+
     ERAD=calc_LTE_EfromT(Tgas);
     //flat gas profiles
     Tgas=T_AMB;
     rho=RHO_AMB;
     uint=calc_PEQ_ufromTrho(Tgas,rho);
+    
 
     
     pr[RHO] = rho;
@@ -793,6 +804,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //**********************************************************************
 //******* user opacities ****************************************************
 //**********************************************************************
+
 //absorption
 FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {

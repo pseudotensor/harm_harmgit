@@ -32,6 +32,12 @@ FTYPE u_rho0_p_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 	return(p/GAMMAM1) ;
 }
 
+// u(rho0, T) (used for initial conditions)
+FTYPE u_rho0_T_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  return((rho0*T)/GAMMAM1) ;
+}
+
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {

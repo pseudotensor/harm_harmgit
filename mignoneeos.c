@@ -21,6 +21,13 @@ FTYPE u_rho0_p_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
   return( 1.5*(p + 3.0*p*p/(2.0*rho0+sqrt(9.0*p*p+4.0*rho0*rho0))) );
 }
 
+// u(rho0, T) (used for initial conditions)
+FTYPE u_rho0_T_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
+{
+  // solve from u(rho0,p) and T(rho0,p)
+  return(0.5*(-2.*rho0 + 3.*rho0*T + sqrt(4.*rho0*rho0 + 9.*rho0*rho0*T*T)));
+}
+
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
