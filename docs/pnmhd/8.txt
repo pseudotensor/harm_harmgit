@@ -1,0 +1,43 @@
+More on BCs
+Version 1 Created by Jonathan M. on 30 May 2009.
+1) PUREBC:
+
+PUREBC (as it says in global.h) means all boundaries are the same type, but it still uses some specialized boundary code. If you are using your own boundary code then it shouldn’t matter what PUREBC is as you can check by looking for the few instances of PUREBC in the .h and .c files. BTW, I assume you wrote your own boundary code and then in global.h there’s the code segment:
+
+#if(BOUNDTYPE==1)
+
+#define init_bc init_bc_rect1
+
+#elif((BOUNDTYPE==2)||(BOUNDTYPE==3))
+
+#define init_bc init_bc_gen1
+
+#endif
+
+that chooses the function. You should have chosen (say) BOUNDTYPE==1 above this code segment and then put your function name in there or just make your function name that one and change files to your file.
+
+PUREBC=0 or 1 just chooses whether to allow definition of the boundaries in terms of on-off switches. However, you shouldn’t be using the bcs/bcv’s.
+
+So it shouldn’t have mattered if PUREBC is on or off. You should make sure you see why it did.
+
+2) While there exists some code like that already, as many things in this code it’s quite complicated. The simplest thing to do is create your own function. It’s very easy so don’t worry — you’ll learn fast.
+
+You want to do something like this:
+
+a) Write a function that does the local integral on a single CPU (i.e. no references to CPUs at all).
+
+b) If you are integrating and need the result to file, then just use CPU=0 to write to file and do:
+
+MPI_Reduce(&value,&value_summed,numberelements,MPI_FTYPE,MPI_SUM,0, MPI_COMM_WORLD);
+
+If you are integrating and need all CPUs to ALL have the result, then do:
+
+MPI_Allreduce(&value,&value_summed,numberelements,MPI_FTYPE,MPI_SUM, MPI_COMM_WORLD);
+
+If you are averaging then just also sum-up the denominator and then after “reducing” both just divide them.
+
+Note in this case there is no need to know anything about the CPU layout.
+
+Also, when making these MPI calls, make sure to make the code so that if #define USEMPI 0, then the code still compiles and works. This means putting #if(USEMPI) #endif around the MPI calls and then making sure the code STILL works correctly.
+
+You can see diag.c in diag_ener() for this type of thing being done, although again the code is complicated in there. I highly recommend making things as modular as possible — which I did not do.

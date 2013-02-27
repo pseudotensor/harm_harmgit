@@ -1,0 +1,70 @@
+Dealing with 2D simulation (e.g.) for r-\phi or R-\phi
+Version 1 Created by Jonathan M. on 31 May 2009.
+Zhaohuan,
+
+Yes, one should be able to just set N2 to 1. I do recall doing r-\phi simulations, but I’m not sure about R-\phi simulations. That is, I am not sure how well-tested the cylindrical coordinates version is. It’s just a matter of geometry terms that are fairly well-encapsulated so if there is a problem it should be relatively easy to fix.
+
+If you use N2=1, then the code forces there to be no boundary condition cells in the direction related to N2. This means one shouldn’t set any boundary conditions. The code basically assumes that all quantities in the 2nd direction are constant.
+
+Now, one should be careful. I’m pretty sure that all accesses to j+1 and j-1 and such things are avoided, but only if one uses the jm1, jp1, jm1mac(j), jp1mac(j) macros. If you manually added code with j+1 and j-1 or other offsets, then they should be fixed to be a macro like those so that no out-of-bound accesses occur.
+
+The only trick to worry about is that even within a single cell there are multiple locations. I think that one should set the physical size of the cell to be rather small in the 2nd direction so that all geometry terms that may exist at different locations are constant. Otherwise the cell would represent a large wedge that could have (e.g.) a gradient in gravity across the cell that might introduce fluxes of matter in one direction. Usually if you are evolving a setup (e.g.) at the equator, this isn’t a problem. But if the x2 positions are not symmetric in some way, then those non-symmetric positions come into the positions that come into the geometric terms. This is the correct behavior, but it may not be obvious otherwise why one should set the x2 physical size to be rather small.
+
+Best!
+Jon
+
+____________________________________
+From: Zhaohuan Zhu [mailto:zhuzh@umich.edu] 
+Sent: Wednesday, May 27, 2009 6:24 PM
+To: Jonathan McKinney
+Subject: RE: 3-D code
+
+Hello Jonathan,
+I have one question about r-phi 2D. I am trying a R-phi 2-D disk simulation with your code. In my understanding, what I should do is just using the 3-D code and setting N2=1. Am I correct? What boundary condition should I use for Z direction (N2), or it doesn’t matter. Is there anything else I should be aware of if I try R-phi 2-D simulation? I really appreciate your help.
+
+Thanks,
+Zhaohuan
+
+Quoting Jonathan McKinney <jmckinne@stanford.edu>:
+
+> Dear Zhaohuan,
+>
+>
+>
+> I would think that self-gravity would be very easy. One would just use the
+> standard FFTW-based algorithms and self-gravity forces would just enter as a
+> source term in the end. Charles Gammie would know very well which algorithm
+> to use and he may even be able to provide you code that could be inserted
+> (although the code would be fairly straight-forward).
+>
+>
+>
+> Best!
+>
+> Jon
+>
+>
+>
+> _
+>
+> From: Zhaohuan Zhu [mailto:zhuzh@umich.edu]
+> Sent: Wednesday, May 27, 2009 12:27 PM
+> To: Jonathan Christopher McKinney
+> Subject: 3-D code
+>
+>
+>
+> Hello Jonathan,
+>
+> How are you recently? Hope everything went well for you. Recently I am
+> thinking some projects I could do in future (could be a project for my
+> postdoc proposal). One of the projects relates with the viscous-hydro code I
+> got from you. We are thinking to do a longterm GI disk evolution. Could your
+> code do a self-gravitating R-phi-2-D (non-axisymmetry, no-vertical
+> structure)accretion disk? Or will it be very complicated to include
+> self-gravity in your code?
+>
+> Thanks,
+> Zhaohuan
+>
+>

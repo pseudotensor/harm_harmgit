@@ -1,0 +1,29 @@
+How to use "svn checkout" and "svn export"
+Version 1 Created by Jonathan M. on 24 Jun 2009.
+Apart from checking out the latest repository, you can checkout any revision. See “svn help checkout”.
+
+1) Equivalent to without @HEAD, which checks out latest in repository:
+
+svn checkout https://harm.unfuddle.com/svn/harm_harm/@HEAD .
+
+2) Checking out a particular revision number 72:
+
+svn checkout https://harm.unfuddle.com/svn/harm_harm/@72 .
+
+So one can always revert to a prior revision.
+
+Thus, it may be a good idea to (when posting a commit) to state clearly how well tested that revision being committed is. For example, one should do:
+
+svn commit -m “FULLY TESTED: Normal comments”
+svn commit -m “PARTIALLY TESTED: Normal comments”
+svn commit -m “NOT TESTED: Normal comments”
+
+This way one can expect whether or not the code should work when looking at a prior revision when, e.g., debugging why something doesn’t work anymore.
+
+————————
+
+The “svn export” is useful when you don’t want to ever edit the code or keep track of revisions. Just do:
+
+svn export https://harm.unfuddle.com/svn/harm_harm/@HEAD .
+
+Then there will be no “.svn” files, etc.

@@ -1,0 +1,5 @@
+Avery Wind grid notes
+Version 1 Created by Jonathan M. on 20 Jun 2009.
+http:www.cfa.harvard.edu/~jmckinney/windgrid/averywind_grid.pdf
+http:www.cfa.harvard.edu/~jmckinney/windgrid/averywind_grid.zip
+http:www.cfa.harvard.edu/~jmckinney/windgrid/averywind_trueaverywindproblemsetup.tgz

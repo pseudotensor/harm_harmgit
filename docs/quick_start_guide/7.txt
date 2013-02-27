@@ -1,0 +1,55 @@
+7) In SM look at basic output
+Version 3 Created by Jonathan M. on 05 Feb 2013. Previous Version
+1) Enter run directory
+2) Load SM and macros:
+jsm
+gogrmhd
+
+2) Read-in data file and grid file:
+
+jrdp3du dump0000
+grid3d gdump
+
+3) Plot some things:
+
+# log of rest-mass density:
+plc 0 lrho
+
+# log of internal energy density:
+plc 0 lu
+
+# radial 4-velocity in PRIMECOORDS:
+
+plc 0 uu1
+
+# radial 4-velocity in MCOORD:
+
+plc 0 (uu1*dxdxp11)
+
+# plot Lorentz factor w.r.t. grid
+plc 0 uu0
+image cursor
+# then pick point on screen to get value of Lorentz factor
+
+
+# Check theta 4-velocity:
+plc 0 (uu2*dxdxp22)
+image cursor
+# then pick point on screen to get value
+
+# plot 3-velocity magnitude (not really correct, just approximately correct):
+set vcon1 = uu1/uu0
+set vcon2 = uu2/uu0
+set vcon3 = uu3/uu0
+set vel3sq = vcon1*vcon1*gv311 + vcon2*vcon1*gv321 + vcon3*vcon1*gv331 +\
+vcon1*vcon2*gv312 + vcon2*vcon2*gv322 + vcon3*vcon2*gv332 +\
+vcon1*vcon3*gv313 + vcon2*vcon3*gv323 + vcon3*vcon3*gv333
+set absv3=abs(vel3sq)
+plc 0 absv3
+image cursor
+
+# One can obtain the correct 3-velocity magnitude just by doing:
+set absv3 = sqrt(1-1/(uu0*dxdxp00)**2)
+plc 0 absv3
+# So just be careful that things are computed exactly correctly.  Sometimes the exactly correct expression may be easily obtained from existing diagnostics.  In some cases exactly correct expressions may be more complicated.
+

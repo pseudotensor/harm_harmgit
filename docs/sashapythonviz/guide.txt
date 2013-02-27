@@ -1,0 +1,68 @@
+Sasha's Python viz1 Pages
+HomePage IndexRecent Activity
+View PageEdit PageDelete
+Sasha's email to Jon about using python for viz
+Version 1 Created by Jonathan M. on 07 Jul 2011.
+Hi Jon,
+
+I finally got around to updating unfuddle with python macros. Feel free to look around… At the very end of mread/__init__.py, which is the main macro file, you can find a short tutorial. In order to run it interactively, you need to have ipython installed with modules: matplotlib, numpy; scipy (optional). One way to neatly install python with necessary mathematical modules is to install Sage. I have not tried it, however, and installed a 3rd party pack. (The reason it makes sense to install a pack, e.g., Sage, is that getting the modules to work together is a pain, so it is good if someone takes care of it). If you install Python, go for versions 2.6 or 2.7. Python version 3 and higher has stricter syntax requirements, and I will need to port my macros there one day.
+
+Python is installed on nautilus (you can get access there if you have access to Kraken — just request the access). So it might be easiest to just use it from there. Do in the command line:
+
+export MKL_NUM_THREADS=8
+export MKL_DYNAMIC=FALSE
+module load python/2.7.1
+
+Include the folder containing mread/ and streamlines/ directories into PYTHONPATH, e.g., if you place them into ~/py folder, then add the following to your .bashrc file:
+
+export PYTHONPATH=$HOME/py:$PYTHONPATH
+
+Then you can run from the command line (instead of the usual ’jsm’):
+
+ipython
+
+and from there do:
+
+%run ~/py/mread/__init__.py
+
+This will run the function ’main’ of that file (which is defined to be after ’if name == __main__ directive). In that main function only one part of the code is enabled, which is the tutorial located at the very end of that file:
+
+if True:
+#Short tutorial. Some of the names will sound familiar :)
+print( “Running a short tutorial: read in grid, 0th dump, plot and compute some things.” )
+#1 read in gdump (specifying “use2d=True” reads in just one r-theta slice to save memory)
+grid3d(“gdump.bin”, use2d = True)
+#2 read in dump0000
+rd(“dump0000.bin”)
+# or, instead of dump, you could read in fieldline0000.bin
+rfd(“fieldline0000.bin”)
+#3 compute extra things
+cvel()
+Tcalcud()
+faraday()
+#4 compute vector potential
+aphi = fieldcalc()
+#5 plot density and overplotted vector potential
+plt.figure(1) #open figure 1
+plco(lrho,cb=True,nc=25) #plco — erases and plots; cb=True tells it to draw color bar, nc = number of contours
+plc(aphi,colors=’k’) #plc — overplots without erasing; colors=’k’ says plot in blac’k’
+#6 compute u^\phi
+uuphi = uu3 * dxdxp[3,3]
+#7 compute u_\phi
+# first, lower the index
+ud_computed = mdot(gv3,uu) #<— this is already computed as ’ud’ inside of cvel() call
+# then, take 3rd component and convert to phi from x3
+udphi = (ud_computed/dxdxp[3,3])3
+#8 phi-average density
+rhophiavg = rho.mean(axis=-1) #-1 says to average over the last dimension
+#9 clean up some memory
+ud_computed = None
+uuphi = None
+udphi = None
+aphi = None
+gc.collect()
+
+Python syntax is quite simple and intuitive. It uses indentation instead of curly braces. It also uses range specification for arrays similar to that in Matlab, so should feel like home to you. Let me know if you find something confusing or unclear. Also, of course, in any of the macros there could be bugs, so please do let me know if you think something is not right. If you changed the format of data files, that could be accommodated on the fly, especially if there is a one-to-one correspondence between the number of columns and the data format. Then, when reading in the file, we can count the columns and deduce the format version. Or, other things could be done.
+
+Cheers!
+Sasha

@@ -1,0 +1,106 @@
+dr8, ppm2fli, xanim, vis5d+, and mpeg2encode
+Version 1 Created by Jonathan M. on 30 May 2009.
+Avery and Manuel,
+
+—————
+
+2D:
+
+—————
+
+First, one can view rather small 3D cubes as single large 2D panels, and even animate this. This can be quite useful for our first testing purposes. The base program is r8torasjon and a script that uses it is dr8, both in /usr/local/bin/ and called from anywhere. We may want to modify this program so one can also see more square panels. For example 32^3 = (32*8)X = 256x128 .
+
+For now, consider the MHD3D BOMB example, which is a 32^3 model, which can be made 2D with 32X = 32x1024. This forces a break every 32, so it works to view the correct slices. To view the image one does to view the density
+
+start in the bin directory
+cd i/imx0-0-0-s1
+
+dr8 imx0-0-0-s1-0000.dat.r8.gz 32 1024
+
+which shows the single density spike. Later times can be viewed like:
+
+dr8 imx0-0-0-s1-0010.dat.r8.gz 32 1024
+
+A movie of the sequence can be made by using my modified ppm2fli program by doing:
+
+ls .r8 > list.txt
+
+ppm2fli p/usr/local/bin/john.pal N g 32x1024 z 32x1024 -s 0 list.txt movie.fli
+
+The files can be gzipped or not, doesn’t matter.
+
+To view this, one should use a LOCAL copy of “xanim” (NOT ON RELATIVITY) and do:
+
+xanim -WrT2 movie.fli
+
+For the BOMB test, I made the final time way too long. Only the first 30 frames or so are recognizable. The outflow boundary conditions and the asymmetric position of the bomb lead to reflections ad nauseum.
+
+————
+
+3D:
+
+————
+
+Avery and I were talking about visualizing things in real 3D (rather than just 1D or 2D slices in SM, which can be ok). I did this with a program called vis5d+ while Avery did this with a package called VTK. I mentioned to Avery that I didn’t have vis5d+ installed, but I actually do have it installed on relativity. At the time when I was working on vis5d+, I also made a program to make v5d files, which are the files that vis5d+ uses. The format allows for movies and all sorts of things.
+
+On relativity this program is a very general program I made called “bin2txt”. It converts back and forth between various binary and text formats. Just type “bin2txt” and it gives you some info on what can be done and how to do it. The default version is a “double” version. The bin2txtf is a float version. Since the MHD3D bomb was run in floats, one should use the float version of bin2txt.
+
+——-
+
+Consider the MHD3D BOMB example. To make a 3D v5d file that can later be viewed within vis5d+ or processed by vis5d+ to make a volumetric movie or whatever, one does the following:
+
+First, let’s create a single image file for viewing:
+
+1) Create a vis5d.head file that contains the following:
+
+density 1E-4 1
+
+0 1 0 1 0 1
+
+2) Run the bin2txtf program:
+
+bin2txtf 0 5 0 0 3 32 32 32 1 imx0-0-0-s1-0010.dat.r8.gz density0010.v5d b 1
+
+vis5d density0010.v5d
+
+then, say, click on one of the renderings of density in the bottom box, such as “Slice Vert” by clicking on the box saying “density” below that label. Rotate the graphic on the right with the mouse. Default mouse action is “normal” in the middle of the control panel. Choose “slice” and use the right mouse button to grab the nobs on the slice to move the slice up and down.
+Use the “sounding” to get cords through the box. Use the “probe” to get values in the box. Use the “clipping” to slice through renderings of the box.
+
+3) To make a movie, one needs to first make a v5d file that contains all the images one wants. For example:
+
+ls imx0-0-0-s1-00[0-2][0-9]* > inputfilenames.head
+
+With vis5d one doesn’t need an outputfilenames.head file since it puts them all in one file.
+bin2txtf 0 5 0 0 3 32 32 32 30 blah densitymovie.v5d b 1
+
+then load vis5d:
+vis5d densitymovie.v5d
+
+then adjust your viewing angle and such things and click “animate” to see the animation, or just run the script as below.
+then run a script (e.g. /usr/local/bin/movie.tcl) by clicking on script in top control panel box, choosing that script, and clicking ok. Let the program generate the files, and hopefully it doesn’t crash.
+that particular script makes an ugly movie for this model, but it’s a start.
+Now you have some images called “frame????.ppm.gz” . Let’s make it into a fli movie:
+ls frame????.ppm.gz > list.txt
+
+ppm2fli N g 1121x1121 -s 0 list.txt moviev5d.fli
+
+I think the vis5d command line options control the size of the movie.
+————-
+
+Making MPG files instead:
+
+————
+
+Anywhere one can make fli’s one can make mpg’s instead. For example, for the 2D movie described above, one can grab the /usr/local/bin/MPEG-1.par file:
+
+cp /usr/local/bin/MPEG-1.par .
+
+mpeg2encode MPEG-1.par movie.mpg
+
+and to view:
+xine movie.mpg
+
+and that’s about all I know how to do!
+—————————
+
+-Jon

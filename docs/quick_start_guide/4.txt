@@ -1,0 +1,100 @@
+4) Compile and Run Vis5dPlus
+Version 17 Created by Jonathan M. on 21 Feb 2013. Previous Version
+1) 
+
+1a) If can use proprietary drivers:
+
+
+i) Go to: www.nvidia.com and Download driver for your computer (e.g. Quadro 6000)
+
+ii) Switch to text terminal by hitting CTRL-ALT-F1
+
+iib) login
+
+iic) sudo service lightdm stop  OR sudo service gdm stop
+
+iid) You may have to install packages for ubuntu, and you may have to use gdm instead of lightdm:
+
+sudo apt-get install build-essential linux-headers-`uname -r`
+
+sudo aptitude install gdm [ Choose gdm]
+
+sudo dpkg-reconfigure gdm [ Choose gdm]
+
+sudo aptitude install kubuntu-desktop
+
+iie) Go to directory where NVIDIA file is.
+
+iif) Run: sudo bash NVIDIA-linux-x86_64-310.32.run
+
+iig) Say yes to every question (including not defaults).  
+
+iih) sudo reboot
+
+
+1c) NOTE: Geforce 630M on Dell XPS 15 also has Intel video chip, and apparently can't use proprietary drivers.  Can use something called bumblebee *or* ironhide to *run* OpenGL things.
+
+Bumblebee:
+https://wiki.ubuntu.com/Bumblebee
+http://askubuntu.com/questions/174062/how-do-i-get-ubuntu-working-on-a-dell-xps-15
+https://wiki.ubuntu.com/HardwareSupport/Machines/Laptops/Dell/XPS/15
+http://hanynowsky.wordpress.com/2012/04/07/dell-xps-15-l502x-ubuntu-linux/
+How well do laptops with Nvidia Optimus work? (http://askubuntu.com/questions/36930/how-well-do-laptops-with-nvidia-optimus-work)
+Ironhide:
+http://askubuntu.com/questions/108648/bumblebee-or-ironhide
+http://ubuntuforums.org/showthread.php?t=1681917
+
+
+2) Be in some directory (e.g. cd ~)
+
+2a) mkdir vis5dplus
+
+2b) Goto: https://github.com/pseudotensor/Vis5dPlus
+
+2c) git clone https://github.com/pseudotensor/Vis5dPlus.git
+
+
+3) Pre-Compile1:
+
+Mesa Pre-Compile: ONLY If not using proprietary NVIDIA driver, then Mesa required to *compile* OpenGL programs.  This requires installing many things related to Mesa, GL, GLU, etc., including -dev packages in ubuntu.
+
+3a) Install GL, GLU Mesa stuff, e.g. something like:
+
+aptitude install libgl
+
+and then choose to install all Mesa and gl related things according to "mesa" or "gl" being in package name.  Maybe also install glew or glw or other similar names with "gl" in it.
+
+3b) Also do:
+
+aptitude install libglu
+
+and again, install all packages related to Mesa or "glu" -- especially "-dev" stuff.
+
+3c) Then, vis5d+ needs a corrected link for the GLU library.  When one does ldconfig -v | less , it'll show what paths it goes through and what libraries are in those paths.  This is how binaries know which library files are really to be used, while "ldd binaryfilename" shows what the binary thinks the libraries are, but it may not know the full path.
+
+vis5d+ requires an old style link to the library without any version information.  One does something like (works on ubuntu):
+
+cd /usr/lib/x86_64-linux-gnu/
+ln -s libGLU.so.1 libGLU.so
+
+4) Pre-Compile2:
+
+Need various packages, but make sure you have tcl and Imagemagik installed
+
+E.g., for tcl, you can do on Ubuntu: aptitude install tcl8.5-dev blt-dev tk8.5-dev libtclcl1-dev tcl-memchan-dev tcl-trf-dev tcl-trf-doc tclxml-dev tdom-dev tkcon xotcl-dev
+
+5) Compile:
+
+5a) Follow step-by-step the jonconfigure.sh instructions.  Line by line, to ensure all packages are really installed.  Install any needed packages.
+
+5b) If repeat after all packages are present, then can just do: bash ./jonconfigure.sh
+
+NOTES: Had to follow (http://byeworld.blogspot.com/2009/01/libf2cso-undefined-reference-to-main.html) and do:  sudo rm /usr/lib/libf2c.so && sudo ln -s /usr/lib/libf2c.a /usr/lib/libf2c.so   when wanting to use gcc's parallelization (i.e. -fopenmp -floop-parallelize-all -ftree-loop-distribution), but core dumps then.
+
+NOTES: had to reorder line 172 in util/igmk3d.f so DATA was last (i.e. after line below it), else compile error when using gcc's parallelization.
+
+6) Post-Compile:
+
+One thing is missing from the include directory, so it needs to be copied over.  Copy src/vis5d.h to ~/include .  E.g.:
+
+jon@physics-179:/data/jon/Vis5dPlus$ cp src/vis5d.h ~/include/

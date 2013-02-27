@@ -1,0 +1,43 @@
+More Details on Code
+Version 1 Created by Jonathan M. on 30 May 2009.
+Yes, I didn’t explain the code at all so we could reach this point of you plotting at least.
+
+The code isn’t that clean, and I suggest making your own boundary and initial conditions that are simplified/specialized to your problem. These are the ugliest parts of the code by far. Now that you have a starting point that works, you should be able to do this.
+
+Attached is a very brief explanation of each file.
+
+You are right that setting rgp=0.0 will turn off the pseudo-Newtonian potential and make it Newtonian. Once you’ve done this the units of, e.g., density, velocity, time are all arbitrary unlike when rgp is nonzero.
+
+I suggest starting with the tori1sol or something similar and cleaning it up for your purposes. This initial condition routine has basically every parameter one would need to set, so cleaning it up is good practice for setting what you want. Feel free to ask what something does.
+
+I don’t have real documentation on the code, so please just ask. Here are some important parameters:
+
+global.h:
+
+1) N1,N2,N3 in global.h : used to set per-CPU size of grid
+
+2) USEMPI in global.h, mympi.h, and makefile : used to turn on/off MPI — must have MPI compiler and set makefile up correctly to point to MPI libraries, etc.
+
+3) COORD : determines which coordinate system to use:
+
+4) VISCMEM: Needs to be on to allocate memory for viscosity stuff
+
+5) BOUNDTYPE: and see how used in global.h later: used to set which boundary code to use
+
+gpar.c:
+
+1) analoutput: which analytic solution to use
+
+analsol.c:
+
+1) Look at tori1sol and see if you can figure out what everything is. All those parameters are useful. The organization of the “analytical” solution creator is basically the following: I need parameters to setup the grid, so I call the analytic solution with callcode==100 to set those. Then I setup the grid and other things in init.c. Once all that’s setup, I can setup the solution that required those grid parameters, and this is done during callcode==0 || callcode==2.
+
+See the bottom of analsol.c, the function analsolve_normal(), for how I control whether the solution is called. You would add your own analytical solution to this list. Keep the other analytical solutions around if you can so the code remains similar.
+
+I highly recommend you create your own FILE.c that is added to the makefile and put your own analytical solution setup in there, where you can use the tori1sol() function as a template.
+
+I’m sure there are tons of things I’m not telling you, so let me know….
+
+Cheers!
+
+Jon

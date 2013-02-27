@@ -1,0 +1,50 @@
+Plotting Vectors
+Version 1 Created by Jonathan M. on 30 May 2009.
+Zhaohuan,
+
+Yes, use the vpl macro. I don’t know if the twod.m file I gave you has the updated version of vpl or not. I recall making changes to vpl so it’s more like plc in it’s ability to handle 3D, etc.
+
+You use it by doing, e.g.,
+
+set vx = vectorx
+
+set vy = vectory
+
+vpl 0 v 1 12
+
+I think in the code you have that vx and vy already exist, so it’s ready to be used immediately without setting anything first.
+
+If you want to see a log type plot do:
+
+vpl 0 v 1 12 100
+
+and you can overlay or choose “limits” for the range you want to show.
+
+Some interesting global parameters to define:
+
+PLANE : usually 3 for you since 2D
+
+WHICHLEV : usually 1 since you are 2D
+
+SKIPFACTOR: factor of points skipped in plot (often too many vectors)
+
+UNITVECTOR: if defined to 1, then ignore length of vector and just plot direction.
+
+I’ll get to your other question at some point…I’ve been busy preparing and giving a talk.
+
+-Jon
+
+————————————————————————————————————————
+
+From: zhuzhumich.edu [mailto:zhuzhumich.edu] 
+Sent: Friday, December 07, 2007 9:10 AM
+To: Jonathan McKinney
+Subject: vector plot
+
+Hello Jon,
+
+I wonder do you have sm programs to plot vector velocity (small arrows) in a plot together with density contour as you did in your 2002 paper.
+
+Thanks,
+
+Zhaohuan

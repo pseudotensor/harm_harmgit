@@ -1,0 +1,24 @@
+Notes on Intel compiler
+Version 1 Created by Jonathan M. on 01 Feb 2013.
+
+------------
+**DETAILS**
+------------
+
+More Details on makefile for different machines:
+
+
+Inside the makefile, there are several USE???? type settings that control which compiler and/or compiler settings are used. For Orange I have USEORANGE. Set that to 1 and set USEICC to 0. You should only have a single USE??? set to 1 at any one time. Orange doesn't have lapack setup because of the license rules with Intel's lapack and SLAC. You should disable lapack use (not needed for default HARM) or install lapack (Intel's MKL really):
+
+http://software.intel.com/en-us/articles/non-commercial-software-development/
+
+https://registrationcenter.intel.com/RegCenter/AutoGen.aspx?ProductID=1160&AccountID=&EmailID=&ProgramID=&RequestDt=&rm=NCOM〈=
+
+and then "source" the environment variables as mentioned in makehead.inc:
+
+#on ki-rh39 and orange:
+#source /u/ki/jmckinne/intel/mkl/10.0.5.025/tools/environment/mklvarsem64t.sh
+
+Or wherever you installed Intel's MKL package.  Here you can see I installed it in my home directory as /home/intel/mkl, where normally it might be in /opt/intel/mkl .
+
+NOTE: One doesn't need to use lapack.  Try without lapack first.

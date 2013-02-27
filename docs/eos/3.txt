@@ -1,0 +1,93 @@
+3) Running HARM with EOS/nu
+Version 1 Created by Jonathan M. on 13 Jul 2009.
+1) Get HARM, Make the EOS files (eosnew.dat, eosnew.head, eosdegennew.dat), Make the stellar model (stellar1.txt)
+2) Set EOSN? in kazfulleos.global.h to be consistent with kazeos.loopparms.dek table size
+3) Copy stellar1.txt to HARM directory
+4) Copy (or link) eosnew.dat, eosnew.head, eosdegennew.dat to HARM directory.  For example:
+
+#full
+rm -rf eosnew.dat eosdegennew.dat eosnew.head eosextranew.dat eosextradegennew.dat eosextranew.head
+ln -s /data/jon/testfulleostablesuperye1_normaltable/eosnew.dat eosnew.dat
+ln -s /data/jon/testfulleostablesuperye1_normaltable/eosdegennew.dat eosdegennew.dat
+ln -s /data/jon/testfulleostablesuperye1_normaltable/eosnew.head eosnew.head
+
+ln -s /data/jon/testfulleostablesuperye1_neutrinotable/eosextranew.dat eosextranew.dat
+ln -s /data/jon/testfulleostablesuperye1_neutrinotable/eosextradegennew.dat eosextradegennew.dat
+ln -s /data/jon/testfulleostablesuperye1_neutrinotable/eosextranew.head eosextranew.head
+
+#simple
+rm -rf eossimplenew.dat eossimpledegennew.dat eossimplenew.head eossimpleextranew.dat eossimpleextradegennew.dat eossimpleextranew.head
+ln -s /data/jon/testfulleostableexpanded/eosnew.dat eossimplenew.dat
+ln -s /data/jon/testfulleostableexpanded/eosdegennew.dat eossimpledegennew.dat
+ln -s /data/jon/testfulleostableexpanded/eosnew.head eossimplenew.head
+
+ln -s /data/jon/testfulleostableexpanded/eosextranew.dat eossimpleextranew.dat
+ln -s /data/jon/testfulleostableexpanded/eosextradegennew.dat eossimpleextradegennew.dat
+ln -s /data/jon/testfulleostableexpanded/eosextranew.head eossimpleextranew.head
+
+rm -rf stellar1.txt
+ln -s /data/jon/svngrbmodel/stellar1.txt .
+
+5) In HARM directory, link to the correct problem type:
+
+rm -rf init.c init.h bounds.c
+ln -s initboundcode/init.grb.c init.c
+ln -s initboundcode/init.grb.h init.h
+ln -s initboundcode/bounds.grb.c bounds.c
+
+
+
+6) Compile HARM as in the HARM instructions, but ensure that:
+
+Run: "rmallsvndots" to remove any SVN implications
+
+a) makehead.inc: USEOPENMP 0 # for now so can get debug tracking
+b) makehead.inc: USEMPI 0  # for now in case segfaults will produce core dump
+c) kazfulleos.global.h: #define ALLOWKAZEOS 1
+d) kazfulleos.global.h:#define EOSN1,2,3,4,5 : Set as consistent with *.head table size
+e) kazfulleos.global.h:#define ALLOWSIMPLETABLE 1
+f) init.h: #define FULLOUTPUT 0
+
+make superclean ; make prep ; make
+
+7) Run code:
+
+mkdir run ; rm -rf run/* ; cp grmhd run ; cd run
+ln -s ../stellar1.txt .
+ln -s ../eosnew.dat . ; ln -s ../eosnew.head .  ; ln -s ../eosdegennew.dat .
+ln -s ../eosextranew.dat . ; ln -s ../eosextranew.head .  ; ln -s ../eosextradegennew.dat .
+ln -s ../eossimplenew.dat . ; ln -s ../eossimplenew.head .  ; ln -s ../eossimpledegennew.dat .
+ln -s ../eossimpleextranew.dat . ; ln -s ../eossimpleextranew.head .  ; ln -s ../eossimpleextradegennew.dat .
+nohup ./grmhd &
+
+
+8) Review 1D results in SM (assumes no entropy evolution since otherwise there are more variables):
+
+gogrmhd
+gogrb
+
+jrdpallgrb 0000
+# plot pressure:
+pl 0 r p 1100
+
+9) Load ener-type files
+
+# surface and volume and dissipation type integrals
+jrdpgrbener
+pl 0 t u0
+
+# debug info in time as spatially integrated compared to debug???? dump files
+debugener
+pl 0 t eosfailt0
+
+
+
+
+[In multi-D, gdump won't be outputted with dumps, so just ignore error related to no existing gdump???? file if doing multi-D problems.]
+
+
+** Currently code does NOT crash **
+
+** However, some things are probably wrong:
+1) need to fix creation of BH
+2) Evolution of ye and ynu needs checking

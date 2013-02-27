@@ -1,0 +1,29 @@
+4) Notes about meaning of Ynu variable
+Version 1 Created by Jonathan M. on 30 Jul 2009.
+Ynu0 is obtained using Newton's method, where the Newton derivative is obtained after two iterations.
+
+R = -Ynu + Ynu[Ynu0old]
+
+dR/dYnu0 = dYnu[Ynu0old]/dYnu0 \approx (Ynuold[Ynu0old] - Ynuolder[Ynu0older])
+
+Ynu0 = Ynu0[old] - damp*R/(dR/dYnu0)
+
+where damp=1.0 unless drops out of table, in which case we restrict Ynu0 to within the table.
+
+If I were to iterate this many times it would converge to the true result that Ynu[old]-Ynu[new]->0, so it would make sense.  As I argued, all the neutrino stuff is iterated on a hydro-wave speed substep already, which is excessive.  So it should be close to accurate.
+
+Now, it's true that pr[YNU] (primitive) is full Ynu.  I input that from the stellar model, which again is the full Ynu.  So that is consistently read-in and used.  However, I assign this Ynu to EOSextra[YNUGLOBAL] that is Ynu0.  So at t=0, I assume Ynu0 and Ynu are about the same.  Another way to put it is that I've yet to do any iterations so they are assumed as same as required to start the iterations.
+
+In reality, this "compute_EOS_parms()" that calls that procedure that  updates Ynu0 is done iteratively during the iterations seeking converence of the metric with self-gravity.  So actually it could have been iterated a few times already.  It turns out that I reset YNU when reading the stellar model, so it's not really iterating.  This is consistent since I really want Ynu to be as the stellar model.  The only goal of the iteration is to setup Ynu0 so that if it looks up things and computes Ynu it gets back the original result.  This will only be true if the Ynu table is resolved.
+
+Finally, that "YNU" from jrdpeos is actually from EOSextra[YNUGLOBAL], so that's Ynu0.  The full Ynu is actually in the primitives read-in from the *normal* dump file using jrdpcf3dugrb (one could also use jrdp3dugrb, but jrdpallgrb uses jrdpcf3dugrb).  So one has to really plot 4 types of Ynu's.
+
+1) Ynu=pr[YNU] : SM: ynu
+2) Ynu0=EOSextra[YNUGLOBAL]: SM: YNU
+3) Ynu=ynulocal: SM: ynulocal
+4) Ynu=ynustar: SM: ynustar after using plotstarharm macro in phivsr.m
+
+So #1 and #4 agree very closely!  So that confirms the value of Ynu is the same in the dump file and the stellar model.  This has to be true because Ynu has not  yet been evolved.  The value of #2 is not available in the stellar model, but it looks like Ynu but shifted upwards.  This means that Ynu is smaller than Ynu0, which is as it should be since Ynu always involves optical-depth supression factors on the number densities.  It would be more contrivted to have Ynu>Ynu0 since it would require supression of one number density much more than the other (neutrinos vs. anti-neutrinos).  So that all makes sense.
+
+The value of #3 is the post-iterative processed value of Ynu.  Note that currently the pr[YNU] read-in is forced every metric/neutrino iteration step during initialization.  If I really wanted neutrinos to be iterated, I should only assign Ynu on the first read-in of the stellar model file, with later iterations evolving Ynu.  Anyways, #3 is very rough, as expected after only really doing 1 iteration with an unresolved Ynu table.
+

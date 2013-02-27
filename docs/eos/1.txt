@@ -1,0 +1,132 @@
+1) Installing EOS and compiling EOS ; Generating stellar model with EOS
+Version 1 Created by Jonathan M. on 22 Jun 2009.
+BASEDIR=`pwd`
+1) mkdir svneos ; cd svneos
+2) svn checkout https://harm.unfuddle.com/svn/harm_joneos/ .    
+3) cd joneoscode/jonmod
+4) make clean ; make
+  #Done with test of compile jonmod
+
+5) cd $BASEDIR
+mkdir sheneos.tables.orig_and_processed
+6) Download http://www.slac.stanford.edu/~jmckinne/sheneos.tables.orig_and_processed.tgz
+7) tar xvzf sheneos.tables.orig_and_processed.tgz
+8) rm sheneos.tables.orig_and_processed.tgz
+9) cd .. ; cd svneos/helmeoscode
+10) *in bash:*
+   export shenhelmteostabledir=../../sheneos.tables.orig_and_processed/
+   ln -s $shenhelmteostabledir/helm_table.dat
+   ln -s $shenhelmteostabledir/sheneos.dat
+   ln -s $shenhelmteostabledir/sheneosnonan.dat
+   ln -s $shenhelmteostabledir/sheneos.tab
+   ln -s $shenhelmteostabledir/sheneos.head
+   ln -s $shenhelmteostabledir/sheneos.t00
+   ln -s $shenhelmteostabledir/sheneos.yp0
+   ln -s $shenhelmteostabledir/ls220_guesses.dat
+
+   export joneos=../joneoscode/jonmod/
+   ln -s $joneos/kazeos.parms.dek
+   ln -s $joneos/kazeos.loopvars.dek
+   ln -s $joneos/kazeos.loopvars2.dek
+   ln -s $joneos/kazeos.loopvars1.dek
+   ln -s $joneos/kazeos.loopparms.dek
+   ln -s $joneos/kazeos.dek
+   ln -s $joneos/kazeos3.dek
+   ln -s $joneos/kazeos2.dek
+   ln -s $joneos/kazeos1.dek 
+   ln -s $joneos/const.dek
+
+13) In kazeos.parms.dek:
+SIMPLE Ynu quasi-thermalization table has [also used for stellar model compilation]
+parameter (whichrnpmethod = 1)
+parameter (whichynumethod = 0)
+parameter (whichhcmmethod = 3)
+
+14) kazeos.loopparms.dek: Sets ranges of table in rho,T,(H if whichhcmmethod==1), Y_e, Y_nu space
+For whichynumethod==0, must set ntydynorynu=1 and probably set value range from 1 to 1
+
+15) cd ../joneoscode/jonmod/ ; make clean ; make ; cd ../../helmeoscode/ ; make clean ; make
+16) sh copy2grbmodel.sh svngrbmodel
+17) cd svngrbmodel
+18) Download: http://www.slac.stanford.edu/~jmckinne/grb_stellarmodels.tgz
+19) tar xvzf grb_stellarmodels.tgz
+20) cp u/ki/jmckinne/research/ww95_stars/www.supersci.org/data/pre_sn_models/sol_metal/s251s7b\@14233.gz  . 
+21) gunzip s251s7b\@14233.gz
+
+
+*****Look at data and/or create EOS-processed versions of stellar model to be ready for HARM*******
+1) jsm
+2) gogrmhd
+3) jre grbmodel.m
+4) jre kaz.m
+5) *Try doing plots related to Jon's modification of stellar model (even if dostandard 0 fails at end, will certainly load unmodified stellar model if it's been installed):*
+   *HELM call can take a little while*
+      dostandard 0
+      plot1
+      plot2
+      plot3
+      plot3b
+      plot3c
+      plot3d
+      plot3e
+      plot4
+      plotmvsrs
+      checkforcebal
+      checkvel
+6) Try doing for real generation of stellar model for HARM:
+   *Repeat >=3 times: [each call should take about 1 minute]:*
+      dostandard 0
+   *and note that if you wish to avoid iterating and start it fresh, do first the 2 below lines, which will force the iteration to begin fresh:*
+      set lambdatot=1
+      set utot=1
+      dostandard 0
+      dostandard 0
+      dostandard 0
+   *Now repeat above macro plots*
+7) Look at neutrino-related things:
+      checktaus
+      plotgamma
+      plotqminus
+      plotqrat
+      plotnminus
+      plotnumev
+      plotqtau
+   *Below is thing that shows how \tau [neutrino optical depth] is converging as one repeats "dostandard" call:*
+      plottauafter
+      plotqdtau
+      plotntau
+      plotdyedt
+      plottauphoton
+      plotTdiff
+      checkgraddot
+      checkenergy
+      Ynuratcheck
+8) Check some \eta related things:
+      checketas
+      checketasdebug
+      checkeosetas
+      nbarcheck
+9) Compare stellar models (need to find and place other models first):
+      compareheger
+      hegwwplots
+10) Look at different rotation profiles (ultimately set inside HARM, not SM):
+      checkrot
+      jbhfromstar
+11) Some things that may not work anymore or are tests:
+      comparepwf
+      comparepress0
+      compareu0
+      comparemutot
+      comparemutot2
+      simplemutot
+      compareabar
+      utotdiffcompute
+      utotdiffplot
+      checktaunse
+      Yecheck
+      checkpressures
+      checkbind
+      compareubind
+      restmassfix
+
+

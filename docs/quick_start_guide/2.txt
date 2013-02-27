@@ -1,0 +1,59 @@
+2) Compile r8toras/r8toras.c in HARMJON tree to quickly view .r8 files (uses Imagemagick's display program)
+Version 6 Created by Jonathan M. at 6:14pm. Previous Version
+*Compile r8toras:*
+
+1) Go to primary HARM directory
+
+2) cd r8toras
+
+3) gcc -lm -O3 -Wall -o r8toras r8toras.c
+
+[On some computers, apparently gcc doesn't work with -lm for unknown reason.  If that happens, then use g++ seems to work fine.]
+
+4) Move "r8toras" binary to somewhere in your path (e.g. ~/bin/ if that's in your path. In bash, add something like: export PATH=~/bin/:$PATH to .profile or .bash_profile or .bashrc).
+
+mv r8toras ~/bin/
+
+5) Change name of "r8toras":
+
+mv ~/bin/r8toras ~/bin/r8torasjon
+
+6) Also copy "dr8" and "dr82" to somewhere in your path (e.g. ~/bin/)
+
+7) 
+
+7a) IF ON UBUNTU: Install Imagemagik packages (binary, libs, and dev stuff).
+
+7b) IF NOT ON UBUNTU: Download and install "Imagemagik" so you have "display" binary
+
+http://www.imagemagick.org/script/index.php
+
+a) If you install as your own user:
+
+i) Run with <homedir> replaced with your absolute (and don't use ~) home directory path:
+
+./configure --prefix=<homedir> --exec-prefix=<homedir> --oldincludedir=<homedir>/oldinclude/ --without-perl
+make
+make install
+
+ii) This requires changes to your file called ~/.profile or similar start-up shell file (e.g. ~/.bashrc ):
+
+export PATH=~/bin/:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/lib/
+
+b) If you can install as root, then just run:
+
+./configure
+make
+make install
+
+8) Unzip r8toras/pal.zip to ~/bin/
+
+
+*View first log(rest-mass) image:*
+
+1) Run HARM code as from SVN as in Quick Start Guide
+
+2) cd images
+
+3) dr8 im0p0s0l0000.r8

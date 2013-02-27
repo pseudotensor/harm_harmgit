@@ -1,0 +1,242 @@
+Quick Start Guide
+Version 1 Created by Jonathan M. on 30 May 2009.
+——-
+
+You can find the code at:
+
+http://www.stanford.edu/~jmckinne/pnmhd/pnmhd3d_clean.tgz
+
+Looking back at the code it’s certainly lacks modularity and has tons of extra pieces due to various projects, but we’ll see if that becomes a problem.
+
+At least at first, I suggest using supermongo to work with the code’s data. The macros to use are:
+
+http://www.stanford.edu/~jmckinne/pnmhd/smmacros_twod.tgz
+
+Undo this in you home directory and it’ll create a “.sm” file and a “sm” directory. Modify the .sm to be correct. Some directories are hard coded into the SM macros, so look for “/home/maguilar” and change it to wherever the “sm” directory is located. If your SM doesn’t seem to work to load some files, then probably it’s too limited. My SM is modified to remove many restrictions (e.g. on number of columns), and you can then try that if yours doesn’t work:
+
+http://www.stanford.edu/~jmckinne/pnmhd/sm_32.tgz
+
+I suggest just trying to go into the sm2_4_1 directory and do:
+
+make clean ; make
+
+You might have to change the makefile and where it points to the X11 directory.
+
+Then copy the src/sm file to where “jsm” is looking for it:
+
+http://www.stanford.edu/~jmckinne/pnmhd/jsm
+
+This is just a script to run sm in a reasonable way with my macros. Modify it as necessary. In the end you’ll be running “jsm” to look at the data the code produces.
+
+—-
+
+Here are some instructions on how to compile, run, and view the data using SM:
+
+1) Look at the makefile. Right now it’s setup for GCC since I assume you at least have that. You can use ICC if you have Intel’s compiler.
+
+2) put the code tarball in some folder and do:
+
+tar xvzf pnmhd3d_clean.tgz
+
+cd pnmhd3d_clean
+
+This gives the code, run-time directory structure, and provides some random little files and other scripts that are useful. I only cleaned things up a little bit. I suggest leaving things in place since many things are for visualizations you might want later.
+
+3) Compile the code:
+
+make
+
+4) Change to run directory
+
+cd bin
+
+everything below assumes one is in this directory
+5) clean things (can obviously make everything simpler…overkill for any scenario)
+
+ls | egrep ’\.dat\ | xargs rm
+
+ls | egrep ’0_’ | xargs rm
+
+sh rmdatmcpus.sh
+
+cd i
+
+sh rmimages.sh
+
+sh rmallgz.sh
+
+sh rmmcpuall.sh
+
+sh rmmcpugzip.sh
+
+sh rmmcpus.sh
+
+run code
+./mhd3d
+
+And let go.
+6) run the script:
+
+jsm
+
+7) in SM:
+
+gopnmhd
+
+#This loads all the macros one needs for reading the files. The macro file that has alot of reading stuff is in ~/sm/rdreads.m . I went crazy with version numbers and file types and such, so a single macro reads in all files and accounts for the column #numbers and such by the file type and version.
+
+#The interesting files are:
+
+A) 0_gparam.par : parameter file. This should always be done first before anything else. Rest of files don’t depend on each other.
+
+#2D or 3D:
+
+rdbasic 0 0 -1
+
+#if doing 3D Cartesian also do:
+
+jre cartonly.m
+
+cartgrid
+
+#rdbasic loads everything except grid, which isn’t written for 3D Cartesian, so ignore the errors related to 0_gridact1.par and 0_gridact2.par. Normally those would be the centered and staggered grid positions, metric values, etc. The cartonly.m macro #file has the “cartgrid” macro that makes the grid for the uniform Cartesian grid.
+
+B) 0_loss.dat : integrated surface fluxes, for example to plot the surface flux through the outer-1 surface:
+
+rd 0_loss.dat
+
+pl 0 t min1
+
+#See rdreads.m , macro named rdreads3 under LOSSTYPE
+
+C) 0_ener.dat : volume integrals
+
+rd 0_ener.dat
+
+pl 0 t m
+
+#See rdreads.m, macro named rdreads2 under ENERTYPE
+
+D) 0_mode.dat : mode structure for 3D model. $\phi$ Fourier modes? myplots.m uses it. For example, the 5th order density mode is:
+
+rd 0_mode.m
+
+pl 0 t rm5
+
+#Presently NOT dumped, but can.
+
+E) 0_analdata.dat : output during run of the init code in analsol.c
+
+!less 0_analdata.dat
+
+F) 0_logdt.out : logs time and dt calculation related stuff during run. So one knows what limits Courant factor. Seems broken.
+
+rd 0_logdt.out
+
+pl 0 t dt
+
+#See rdreads.m, macro named rdreads32 under LOGDTTYPE
+
+G) 0_logfl.out : Reports when floor activated and where in code that switched was activated and how many times.
+
+!less 0_logfl.out
+
+H) 0_logfull.out : Report on time step progress for all CPUs
+
+!less 0_logfull.out
+
+I) 0_log.out : Report on time step progress for each CPU (would have CPU “myid” attached if in MPI)
+
+!less 0_log.out
+
+J) 0_logperf.out : performance of code
+
+rd 0_logperf.out
+
+pl 0 t zc # shows zone cycles per second. Should be around 250k for 1 CPU in 3D.
+
+#See rdreads.m, macro named rdreads32 under PERFTYPE
+
+K) 0_logstep.out : various stepping counters
+
+rd 0_logstep.out
+
+pl 0 t n
+
+#See rdreads.m, macro named rdreads32 under STEPTYPE
+
+L) 0_numadumps.dat : number of analytic dumps, this is loaded during rdbasic, as is rest of counters for dumps
+
+!cat 0_numadumps.dat
+
+M) 0_numdumps.dat : number of dump files
+
+!cat 0_numdumps.dat
+
+N) 0_numfloordumps.dat : number of “floor” dump files, should be relevant for us
+
+!cat 0_numfloordumps.dat
+
+O) 0_numnpdumps.dat : other primitives, other calculations besides primitive quantities.
+
+!cat 0_numnpdumps.dat
+
+P) dump????.dat : actual 3D dump files, presently in text so can read in SM. Default for 1 CPU. Default for >1 CPU is binary.
+
+rd dump0000.dat
+
+define PLANE 3 # chooses plane to be for z=constant.
+
+define WHICHLEV 0 # chooses index for k = 0 (only an issue if doing 3D)
+
+plc 0 r # density contour plot.
+
+#See rdreads.m macro rdreads1 under DTYPE
+
+#For uniform function it returns an error about “lev”, just ignore. One can still see the value by doing:
+
+image cursor
+
+#and moving over the plot and also clicking on the plot.
+
+Q) For 3D, one can also view “animation” of slices
+
+contour slices (ctrl-C when want the loop to stop)
+rd dump0000.dat
+
+animzplc 0 r
+
+or directly do
+animzplc dump0001.dat r
+
+where iitemp shows the slice #
+or surface slices
+animzpls 0 r
+
+for the test problem I created (the bomb), an interesting plot is:
+rd dump0001.dat
+
+animzpls 0 r
+
+R) ./i/imx0-0-0-s1/s2/s3/etc. These are 2D or 3D images (1 byte per data point) for each primitive variable.
+
+You can use a program Charles/I wrote to view these either indirectly using any image viewer or directly using “display” from ImageMagik.
+
+http://www.stanford.edu/~jmckinne/pnmhd/r8toras_all.tgz
+
+You should compile the r8toras.c program and copy it to somewhere in your path, copy the “dr8*” files to somewhere in your path, and put the *.pal files somewhere the dr8 files points to (you should modify where dr8 looks for the .pal file).
+
+I have lots of complicated utilities to make movies and such out of these in vis5d+, but until you do 3D that won’t be necessary.
+jsm is just a script to run sm. In particular, it sets up the terminal to be vt100 so keyboard behavior with SM is more normal. The “dsm” is just sm with a “d” in front to indicate it’s the “double precision” version. You can either rename that to “sm” or copy your sm (or a compiled sm) to dsm in your path. The “-m smstart” loads some needed macros. Leave the rest.
+
+When making sm, you should also have “lib” related things. You install these by doing “make install” as root or by copying them manually.
+
+I can give you mine that may work:
+
+http://www.stanford.edu/~jmckinne/pnmhd/smlib.tgz
+
+Untar this so that it creates a directory: ~/sm/lib (i.e. /home//sm/lib)
+
+Then make sure your .sm is changed so anything that looks like “/usr/local/lib” is then “/home//sm/lib”
+
+-Jon

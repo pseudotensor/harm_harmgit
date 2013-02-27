@@ -1,0 +1,36 @@
+6) How to setup new problem
+Version 3 Created by Jonathan M. on 05 Feb 2013. Previous Version
+1) For example, copy existing problem to new problem code.  Start in HARM directory tree and do:
+
+cd initboundcode
+cp init.fishmon.c init.subkep.c
+cp init.fishmon.h init.subkep.h
+cp bounds.fishmon.c bounds.subkep.c
+
+2) Edit the new files.  For changes in physics, focus on init.subkep.c .  Look for the function init_dsandvels() to setup the initial density, u, v^i, and B^i.  Look for init_vpot_user() and change the initial vector potential.
+
+Note that for the fishmon code that $GM=c=1$.
+
+
+3) Can add new problem by adding another WHICHPROBLEM type.  Do this by introducing a new problem type (e.g.):
+
+#define SUBKEP 3
+
+4) Change #define WHICHPROBLEM to:
+
+#define WHICHPROBLEM SUBKEP
+
+5) Anywhere you see "WHICHPROBLEM" identify if you want to do something new or just repeat the prior problem setup (e.g. just add ||WHICHPROBLEM==SUBKEP).
+
+6) 
+
+3) Redo the soft links to init.c, init.h, and bounds.c:
+
+cd ..
+rm -rf init.c init.h bounds.c
+ln -s initboundcode/init.subkep.c init.c
+ln -s initboundcode/init.subkep.h init.h
+ln -s initboundcode/bounds.subkep.c bounds.c
+
+4) Now follow directions in Quick Start Guide: Notebook #1 to compile and run code.
+

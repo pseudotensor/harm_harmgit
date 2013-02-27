@@ -1,0 +1,78 @@
+3) Description of diagnostics files and files inside dump and image directories
+Version 2 Created by Jonathan M. on 05 Feb 2013. Previous Version
+*Diagnostics files: All viewable in SM*:
+
+
+Detailed failure and warnings info: 0_fail.out.grmhd.0000
+
+Detailed general information over all CPUs: 0_logfull.grmhd.out
+
+Detailed general information per CPU: 0_log.out.grmhd.0000
+
+Detailed step information: 0_logdtfull.grmhd.out
+
+Detailed step information for each CPU: 0_logdt.grmhd.0000
+
+Performance diagnostics: 0_logperf.grmhd.out
+
+Step diagnostics: 0_logstep.grmhd.out
+
+?ener?.out : Surface and Volume integrated conserved and other quantities for different grid regions (numbers) and different formats (gener = gammie format vs. flener =  vs. ener = normal Jon file)
+
+probe.dat.grmhd.0000: Probe data
+
+debug.out : time-based debug info
+
+done.grmhd.txt : Generated when simulation finishes
+
+coordparms.dat : coord.c output
+
+
+
+*Dump files*
+
+
+1) dump???? : Primary dump files: Inludes primitives, conservatives, and many associatied quantities like u^\mu, u_\mu, b^\mu, b_\mu, to construct most things without need for metric.
+
+2) gdump : Grid dump: Includes metric (upper and lower), connection coefficients, transformation matrix, etc.
+
+3) rdump--???? : Restart file that coincides with dump???? period and file numbers
+
+4) rdump-0 and rdump-1 : Restart file dumped on step period (about every 1000 steps by default).  Code cycles between 0 and 1 to avoid destroying restart file if crash while dumping restart file itself.
+
+5) fieldline????.bin : Binary containing enough information to plot field lines in 3D and to trace their motion in 3D.
+
+
+NOTE: For full details of format for gdump and fieldline files, the files mostly used for analysis, see: ./docs/tousedata.txt in the harmgit tree.
+
+
+
+*Image files:*
+
+im?p?s?l????.r8 : Primitive quantities: 
+
+im?p: ? = 0-7 : (\rho_0,u,\tilde{u}^i, B^i)
+
+im0p?s : ?=0: log scale   ?=1: linear scale
+
+im0p0s?l : ?=0: not limited ?=1 limited
+
+--------------------------------------------
+im?c?s?l????.r8 : Conserved quantities:
+
+im?c: ? = 0-7 : (\rho_0 u^t, T^t_\mu, B^i)
+
+im0c?s : ?=0: log scale   ?=1: linear scale
+
+im0c0s?l : ?=0: not limited ?=1 limited
+
+--------------------------------------------
+im?f?s?l????.r8 : Debug flag quantities:
+
+im?f: ? = 0-7 : Flags (see global.nondepnmenomics.h just after NUMFAILFLOORFLAGS.  For example, 0=fail to converge in inversion, 1=floor activated, 2=gamma limiter activated, 5=negative internal energy density activated)
+
+im0f?s : ?=0: log scale   ?=1: linear scale
+
+im0f0s?l : ?=0: not limited ?=1 limited
+
+

@@ -1,0 +1,119 @@
+1) Compile and Run HARM (using latest git version)
+Version 26 Created by Jonathan M. at 7:52pm. Previous Version
+1) *Be in Linux*
+
+1a) Install emacs and other packages necessary along the way or now.
+
+1b) Install vis5d+, HDF, etc.
+
+**See new notebook for vis5dPlus installation instructions**
+
+
+2) *Create directory for git code tree:* Command: "mkdir harm ; cd harm"
+
+2b) Copy ssh public key from your linux into unfuddle for your user:
+
+ssh-keygen [hit enter if any questions]
+
+2c) Copy that the contents of the public key (e.g. ~/.ssh/id_rsa.pub) to unfuddle in your personal settings.
+
+3) *Get Code:* Command: "git clone git@harm.unfuddle.com:harm/harmgit.git"
+
+cd harmgit
+
+4) *Setup links to desired simulation model initializations and boundary condition files:* Command (E.g.):
+
+ln -s initboundcode/init.fishmon.c init.c
+
+ln -s initboundcode/init.fishmon.h init.h
+
+ln -s initboundcode/bounds.fishmon.c bounds.c
+
+
+5) Pre-compile stuff:
+
+5a) *Source any libraries:* E.g. Command: "source /opt/intel/mkl/10.0.3.020/tools/environment/mklvarsem64t.sh"
+
+If no icc, then download:
+
+e.g. http://software.intel.com/en-us/non-commercial-software-development and choose the one with both Intel and Fortran compilers (e.g. Intel® Parallel Studio XE 2013 for Linux)
+
+If you don't want to get icc (Intel compiler), then set USEICCINTEL=0 and USEGCC=1 in makehead.inc
+
+If no lapack, then set USELAPACK=0 and USELAPACKNEW=0 in makehead.inc
+
+If no MPI, set USEMPI=0 (for first setting which is a choice) in makehead.inc
+
+If no OpenMP (or problems compiling on MAC), set USEOPENMP=0 in makehead.inc
+
+
+5b) Install packages like hdf4 (several things for ubuntu packages, including dev stuff).
+
+e.g. in ubuntu: sudo aptitude install libhdf4g-dev libhdf4g-doc libhdf4-0 libhdf4-dev libhdf4-doc hdf4-tools
+
+Also in makefile, search for "bin2txt" and either choose block of code for "system" type installation or "user" type installation.
+In bin2txt.c, choose same case for how hdf.h and mfhdf.h are included, but sometimes just "hdf/*" is correct.
+
+5c) Also ensure you have installed vis5d+ as in other guide before bin2txt will compile.
+
+5d) To get MPI, goto: http://www.mpich.org/downloads/ and Get the "mpich-3.0.2 (stable release)" version to install from source.  Look at the README, follow "bash" versions of "configure" "make" "make install" with your username instead of <USERNAME>
+
+
+
+
+
+6) *Compile Codes:*
+
+# CAREFUL!
+sudo bash
+cd /bin
+rm -f sh
+ln -s bash sh
+exit  # to get back to your user
+
+6a) Command: "make superclean ; make prepsmcalc ; make smcalc ; cp smcalc ~/bin/"
+
+6b) Command: "make superclean ; make prepiinterp ; make iinterp ; cp iinterp ~/bin/"
+
+Edit makefile and do 2 things:
+
+i) search -lv5d .  Before that, add "-L /home/<username>/lib"  without quotes and with <username> replaced by your user name.
+ii) Also, add "-I /home/<username>/include"  (-I is a capital i and not a capital l) to the end of that same line.
+
+6c) Command: "make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt ~/bin/"
+
+6d) Command: "make superclean ; make prep ; make"
+
+**NOTE**: Default compiler is typical ICC using USEICC=1 in the file "makefile".  See bottom of this document for notes on changing this for other machines.
+
+
+7) *Make directory for run code:* Command: "mkdir run ; cp grmhd run ; cd run"
+
+
+8) *If OpenMP and MPI, then Run Code with 4 OpemMP threads per node in 1x1x1 MPI matrix:* "./grmhd 4 1 1 1"
+
+*If turned off MPI and OPENMP, do: "nohup ./grmhd &"*
+
+
+9a) *Look at results with SM (Supermongo) using SM project.*
+
+9b) Or use vis5d+
+
+
+
+10) IF YOU ARE ON A REMOTE COMPUTER:  *Standard permissions on many servers is that anyone can read your files.  Wherever you place the *code* or move it to (e.g. some supercomputer or other server), PLEASE change the permissions of that directory so noone else can access (i.e. copy) the code.  I don't want just anybody being able to copy HARM.  Please do this for each and every machine you place the code onto.  The command you should run is:*
+
+chmod -R og-rwx <dir>
+
+*For example, do:*
+
+a) mkdir harmcode
+
+b) chmod -R og-rwx harmcode
+
+*Again, do this no matter where you copy the code to.*
+
+
+11) Finally, this is not a shared code.  Only you are allowed access to this code.  Do not share it or share your access to this site.  Thank you for understanding!
+
+-Jonathan McKinney

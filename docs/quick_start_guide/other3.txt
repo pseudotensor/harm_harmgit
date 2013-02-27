@@ -1,0 +1,53 @@
+How to use SVN
+Version 2 Created by Jonathan M. on 31 May 2009. Previous Version
+1) http://svnbook.red-bean.com/
+
+2) See quick start guide notebook.
+
+After checking out the harm.unfuddle repository related to HARMJON, you’ll have a special directory and auto-authentication stored for that user for that directory. Use this directory for all future changes that you want to eventually commit back to the repository. If you want to branch off and make several deviations for a semi-independent project, then just copy that tree to somewhere else and work locally. If that semi-independent project is useful to the community, then ask for a new repository so you can track your changes.
+
+3) If you want an updated copy from harm.unfuddle, do in your previously-used directory:
+
+svn update
+
+If you’ve changed files, it will not necessarily update your local files. Allow it to if just want a new copy to overwrite what you have. Or just create a new directory and start over as in the quick start guide notebook.
+
+Note that this “svn update” relies upon the client having a self-consistent date-time stamp for files. If some files happen to get boosted to the future for some reason, then “svn update” won’t update those because the client will think the local copy is newer than the svn copy. To ensure that “svn update” does what you expect, it’s good to do:
+
+svn update
+svn diff -r HEAD
+
+This will check differences with the latest svn copy to ensure you understand what’s still different after doing the update.
+
+4) If you want to see if your copy is consistent with harm.unfuddle, do:
+
+svn status
+
+5) If you want to make a code change (and have permissions to do so), then make the changes in the previously-used directory where you downloaded the SVN tree and do:
+
+svn commit -m “ADD DETAILED SENTENCE COMMENT HERE ON YOUR CHANGES”
+
+6) To ensure your copy is up to date after any revisions you make and to ensure that your copy is tagged as the correct revision, you need to do after any commit:
+
+svn update
+
+7) To tar-up your SVN tree without getting the hidden .svn related files, do:
+
+tar —exclude=’.svn’ -cvzf harmnew.tgz *
+
+8) If you did: “svn update” and some files are listed as C = conflict, or you tried to commit but it said files are in conflict, then do:
+
+svn diff
+
+Then it reports the differences in files, putting those different sections of code within each file with extra characters so it probably won’t compile. You should choose which code is correct (“mine” version = your version or the repository — which could be better if newer).
+
+Then once all normal files are settled in your working directory, then do:
+
+svn resolved
+
+for each file that has a resolved conflict. This will clear the conflict flag and allow you to commit changes (if any in end as compared to the latest repository revision).
+
+So if still have changes, then do:
+
+svn commit -m “your comment”
+svn update

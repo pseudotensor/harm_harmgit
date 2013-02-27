@@ -1,0 +1,65 @@
+Quick Start Guide
+Version 2 Created by Jonathan M. on 22 Jun 2009. Previous Version
+1) Get the harm_sm repository:
+
+mkdir mysm ; cd mysm
+svn checkout https://harm.unfuddle.com/svn/harm_sm/ .
+
+2) Edit the Makefile and change “/home/jon/research/utils/sm/sm2_4_1” to the directory you have chosen and attach “/src” to the end
+
+3) Edit the Makefile and change “DEST = /usr/local” to where you want to install SM
+
+4) The code should be setup already for good settings, but if you have problems compiling in the next step, you can try following the instructions in “sm.install”.
+
+5) make clean ; make
+
+6) If you get an error about “cannot find lX11” then you should open the Makefile and edit the CC= line so the L/usr/X11R6/lib points to your library. For example, for 64-bit computers it needs to be /usr/X11R6/lib64/
+
+7) make clean ; make again if you did #6
+
+8) Make the DEST directory
+
+9) You may be required to remove all “.svn” directories or else the installer gets confused.
+
+rm rf `find . name .svn`
+
+10) make install [and note the things it installed since you want to make sure SM (and the .sm file’s uses those path’s instead of yours—or overwrite your old SM stuff with the new stuff]. I’m most worried about the binaries it compiles that were in “lib”
+
+11) Move the SM macros file from the HARM_SM macros repository: mydotsm/.sm to ~/ (i.e. your home directory). Edit the file to be consistent with the installed files, such as the “lib/sm/” directory and the “/home/jon” directory and the “/home/jon/sm” directory should point to the location where the SM macros are.
+
+12) The installation directory (if it’s not /usr/local/ or /usr when you are root) will contain “man” “emacs” “bin” and “lib” directories.
+
+a) Copy the contents of those files to your user-located data. For example, you should have a ~/bin/ and so put the contents of “bin/” in there:
+
+cp -a /bin/* ~/bin/
+
+and ensure that /bin/ is in your path. For example, for bash, ensure in /.bashrc you have:
+
+PATH=~/bin:$PATH
+export PATH
+
+b) For the “lib” contents, you need to do 2 things. First, for bash, in ~/.bashrc you should have (obviously replace with the true DEST dir used above):
+
+if [ -z $LD_LIBRARY_PATH ]; then
+LD_LIBRARY_PATH=/lib/
+else
+LD_LIBRARY_PATH=/lib:${LD_LIBRARY_PATH}
+fi
+#for user libs
+export LD_LIBRARY_PATH
+
+Second, the /lib/sm/ directory should be pointed to within the “.sm” file.
+
+c) There is also probably a way to assign user man pages pointing to the “man” dir. See google.
+
+d) The “emacs” directory’s contents could be copied to ~/.emacs/ or somewhere. See google or sm docs.
+
+13) When running sm, I suggest creating a script in ~/bin/jsm
+
+The jsm file should contain:
+
+#!/bin/bash
+export TERM=vt100
+/bin/sm m smstart q $@
+
+14) Run: jsm

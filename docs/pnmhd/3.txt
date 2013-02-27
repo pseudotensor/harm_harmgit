@@ -1,0 +1,44 @@
+Gravity Potential
+Version 1 Created by Jonathan M. on 30 May 2009.
+In short, yes, you should set these in your analsol-type file. These are redundant objects because with different problems we would use different variables. I suggest just setting GM=GRAVC*MASSBH in your own analsol file for now. Later you can define your own code that uses those things. See below for what code I’m referring to:
+
+—- Details —-
+
+What matters is of course how these are used, but GRAVC is supposed to be the gravitational constant and MBH is supposed to be the mass of the object. I used GM sometimes for some problems when I didn’t care about the other constants. There are presently 3 ways these are used:
+
+1) The gravitational potential:
+
+s3[k][j][i] = GRAVC*MASSBH/(x21[i]rgp) ;
+
+2) GM is used to set the viscosity:
+
+init.c: nu_fact[k][j][i]=pow(x21[i],1.5)*(1.0-rgp/x21[i])/sqrt(GM);
+
+init.c: nu_fact[k][j][i]=pow(x21[i]*G4(2,j),1.5)/sqrt(GM);
+
+3) stepgen.c for initialize_gravity() for setting gravitational acceleration
+
+gravacc1[k][j][i]=-GRAVC*MASSBH/(pow(vx31[k][j][i]-rgp,2.0));
+
+Note that in the code there are 2 approaches to setting gravity: 1) Set the potential in s3 and numerically difference it ; 2) Set the gravitational acceleration in gravacc and use it directly as an acceleration
+
+All of these are really considered “user” type objects, even if they aren’t organized well.
+
+Eventually, I suggest setting the acceleration directly by turning on GRAVACC=1 in global.h and setting the “gravacc” arrays or using the existing initialize_gravity() function.
+
+-Jon
+
+————————————————————————————————————————
+
+From: zhuzhumich.edu [mailto:zhuzhumich.edu] 
+Sent: Friday, November 09, 2007 9:37 PM
+To: McKinney, Jonathan Christopher
+Subject: One question
+
+Hello Jon,
+
+One quick question: I think in the code you already set GM=1. But in init.c you set GRAVC=1. and MASSBH=1 again. Are they redundant? or just MASSBH=1. is enough and GRAVC can be derived by GM/MASSBH? I think I can set these values in my own analsol file, right?
+
+Thanks,
+
+Zhaohuan

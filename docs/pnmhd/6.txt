@@ -1,0 +1,41 @@
+Modifying Viscosity
+Version 1 Created by Jonathan M. on 30 May 2009.
+BTW,
+
+I forgot to mention how to modify the viscosity in case that’s needed.
+
+1)
+
+In global.h there is also:
+
+// turn on/off different terms (1 or 0)
+
+#define VISCE11 1
+
+#define VISCE22 1
+
+#define VISCE33 1
+
+#define VISCE12 1
+
+#define VISCE21 VISCE12
+
+#define VISCE13 1
+
+#define VISCE31 VISCE13
+
+#define VISCE23 1
+
+#define VISCE32 VISCE23
+
+These turn on/off each component of the viscous stress tensor, where in spherical polar coordinates 1=r 2=theta 3=phi. Often people only use VISCE13=r\phi. I tried both all and only r\phi as in my paper.
+
+2) Next, in init.c there is a function called init_visc(void). This sets the functional form of the viscosity, where “vreal” determines which one is used. You are using vreal==4. Make sure you understand whether the GM, etc. are correctly chosen.
+
+3) Next, in init.c there is a parameter called alpha_real0 that sets the coefficient of the viscosity. Also see in stepgen.c where alpha_real itself is set (no 0 at end) based upon the time of the simulation. This turns on/off viscosity. It’s often useful to avoid having viscosity turned on right at t=0 due to the initial conditions often having very sharp edges that the viscosity tensor triggers too strongly on.
+
+4) Finally, see in stepgen.c how nu_real is finally computed from alpha_real and nu_fact in the function void nu_compute(void). Since you are using vreal==4, this gives $\nu = \alpha c_s^2/\Omega_{Keplerian}$. So that means the thing in nu_fact was $1/\Omega_K$. Make sure it is correct!
+
+Cheers!
+
+Jon
