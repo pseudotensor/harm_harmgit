@@ -712,4 +712,4 @@ god=deathadflkjasdflkjasdlfkja242424
 
 
 
-#include "global.depnmemonics.rad.h" // KORAL
+#include "global.depmnemonics.rad.h" // KORAL

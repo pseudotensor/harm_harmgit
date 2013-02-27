@@ -54,7 +54,7 @@ geodesic.c
 global.bounds.h
 global.comploops.h
 global.defnprs.h
-global.depnmemonics.h
+global.depmnemonics.h
 global.dump.h
 global.fieldmacros.h
 global.funcdeclare.h
@@ -73,7 +73,7 @@ global.loops.manypoints.h
 global.loops.manypoints1d.h
 global.loops.perpoint.h
 global.mpi_grmhd_grray_liaison.h
-global.nondepnmemonics.h
+global.nondepmnemonics.h
 global.openmploops.h
 global.openmpthreadprivates.h
 global.other.h
@@ -158,10 +158,10 @@ mpidecs.mpi_grmhd_grray_liaison.h
 mpidefs.h
 mpidefs.mpi_grmhd_grray_liaison.h
 mympi.definit.h
-mympi.global.depnmemonics.h
+mympi.global.depmnemonics.h
 mympi.global.funcdeclare.h
 mympi.global.loops.h
-mympi.global.nondepnmemonics.h
+mympi.global.nondepmnemonics.h
 mympi.h
 mympi.simulbccalcstuff.h
 mytime.c

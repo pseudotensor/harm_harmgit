@@ -28,7 +28,7 @@
 
 2) set_array???.c : shift variable if necessary (follow examples)
 
-3) global.nondepnmemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
+3) global.nondepmnemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
 
 4) global.???.h change NUMDUMPTYPES and add another entry if want separate timing of output
 
@@ -249,7 +249,7 @@ void init_dnumcolumns_dnumversion(void)
 
 
 
-  trifprintf("dump number of columns(see global.nondepnmemonics.h)\n");
+  trifprintf("dump number of columns(see global.nondepmnemonics.h)\n");
   for(i=0;i<NUMDUMPTYPES;i++){
     trifprintf("%s dnumcolumns[%d]=%d\n",dumpnamelist[i],i,dnumcolumns[i]);
   }

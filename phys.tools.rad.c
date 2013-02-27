@@ -363,7 +363,9 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
   
-  // compute kappa (assume computed as d\tau/dorthonormallength as defined by user.
+  // compute kappa
+  // Assume computed as d\tau/dorthonormallength as defined by user.
+  // Assume \kappa defined in fluid frame (i.e. not radiation frame).
   FTYPE kappa;
   calc_kappa(pr,geom,&kappa);
 
@@ -381,6 +383,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     // KORALTODO: Approximation to any true path, but approximation is sufficient for approximate wave speeds.
     // \tau_{\rm tot}^2 \approx \kappa^2 [dx^{dir} \sqrt{g_{dirdir}}]^2 
     FTYPE tautotsq,vrad2tau;
+    // Note that tautot is frame independent once multiple \kappa by the cell length.  I.e. it's a Lorentz invariant.
     tautotsq = kappa*kappa * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
   
     vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?
@@ -405,6 +408,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   simplefast(dir,geom,q,vrad2limited,vmin,vmax);
 
 #if(0)
+  // Cartesian-Minkowski speed-of-light limit of radiation velocity
  FTYPE dxdxp[NDIM][NDIM];
   dxdxprim_ijk(geom->i, geom->j, geom->k, geom->p, dxdxp);
   // characeristic wavespeeds are 3-velocity in lab-frame
@@ -1264,7 +1268,7 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // uu: Conserved quantities with URAD0,1,2,3 as radiation conserved quantities
 // pp: primitives with PRAD0,1,2,3 as radiation primitive quantities
 // ptrgeom: Standard pointer to geometry
-// lpflag: see gobal.nondepnmemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
+// lpflag: see gobal.nondepmnemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
 // lpflagrad: Should be set to indicate success of u2p_rad() inversion
 //
 // NOTES:

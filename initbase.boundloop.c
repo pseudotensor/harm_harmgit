@@ -135,7 +135,7 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
 
 // the resulting shifts should include shift due to GRIDSECTION *and* due to normal boundaries
 // so specifies really is,ie,js,je,ks,ke for normal loop
-// boundvartype is one of NUMBOUNDTYPES in global.nondepnmemonics.h
+// boundvartype is one of NUMBOUNDTYPES in global.nondepmnemonics.h
 // This sets up both LOOPBOUND?IN loops *and* LOOPX?dir loops
 // Notes:
 // 1) Assume set_boundloop() is called each time needed since BCs could change with time

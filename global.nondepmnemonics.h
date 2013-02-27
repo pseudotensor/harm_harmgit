@@ -1165,7 +1165,7 @@
 
 
 
-#include "global.nondepnmemonics.rad.h" // KORAL
+#include "global.nondepmnemonics.rad.h" // KORAL
 
 
 

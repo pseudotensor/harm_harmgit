@@ -172,7 +172,7 @@ ultraclean: superclean
 ########################
 
 	# make defnprs.h
-global.defnprs.h : global.realdef.h global.nondepnmemonics.h definit.h init.h generatenprs.c
+global.defnprs.h : global.realdef.h global.nondepmnemonics.h definit.h init.h generatenprs.c
 	$(CCGENERATEFINAL) -o generatenprs generatenprs.c ; ./generatenprs
 
 

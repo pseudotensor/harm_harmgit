@@ -6,7 +6,7 @@ int BEGINOPENMPSHAREDLIST;
 #include "mpidefs.h"
 
 
-#include "kazfulleos.defsglobalprivate.h" // put here so OpenMP private globals are defined before global.nondepnmemonics.h sets up thread private pragma's
+#include "kazfulleos.defsglobalprivate.h" // put here so OpenMP private globals are defined before global.nondepmnemonics.h sets up thread private pragma's
 
 
 
