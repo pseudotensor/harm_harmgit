@@ -123,6 +123,10 @@ int init_defcoord(void)
 
 #endif
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
   defcoord = UNIFORMCOORDS;
@@ -135,6 +139,10 @@ int init_defcoord(void)
   Rout_array[3]=1.0;
 
 #endif
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
 
 #if(WHICHPROBLEM==RADPULSE3D)
 
@@ -196,30 +204,19 @@ int init_global(void)
   //OSMARK: where is DTr1 defined? what is DTfake?
   DTfake=MAX(1,DTr/10); 
 
+
+
+
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
-  cooling=KORAL;
-  //  lim[1]=lim[2]=lim[3]=MINM;
-  gam=gamideal=5.0/3.0;
-#endif  
-
-  ///////////////////////////////////////
-  ///////////////////////////////////////
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-  //  lim[1]=lim[2]=lim[3]=MINM;
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
-  //  cour=0.5;
-  cour=0.8;
-#endif  
-
-  ///////////////////////////////////////
-  ///////////////////////////////////////
 
 #if(WHICHPROBLEM==FLATNESS)  
+
+  //  lim[1]=lim[2]=lim[3]=MINM;
+  cour=0.8;
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
 
   BCtype[X1UP]=PERIODIC; // OUTFLOW;
   BCtype[X1DN]=PERIODIC;
@@ -235,11 +232,18 @@ int init_global(void)
   tf = 10.0; //final time
 #endif
 
-  ///////////////////////////////////////
-  ///////////////////////////////////////
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
 
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+
+  //  lim[1]=lim[2]=lim[3]=MINM;
+  //  cour=0.5;
+  cour=0.8;
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
 
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=OUTFLOW;
@@ -255,13 +259,16 @@ int init_global(void)
   DTr = 100; //number of time steps for restart dumps
   tf = 1E2; //final time
 
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
 #endif
 
   /*************************************************/
   /*************************************************/
+  /*************************************************/
+
 #if(WHICHPROBLEM==RADBEAMFLAT)  
+  cour=0.8;
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
 
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=RADBEAMFLATINFLOW;
@@ -277,9 +284,11 @@ int init_global(void)
   DTr = 100; //number of time steps for restart dumps
   tf = 10.0; //final time
 
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
 #endif
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
 
   return(0);
 

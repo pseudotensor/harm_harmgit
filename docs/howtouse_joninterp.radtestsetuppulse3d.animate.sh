@@ -172,7 +172,9 @@ inputlist="list.txt"
 rm -rf $inputlist
 numinlist=0
 
-for decidumpnum in `seq 0 118`
+#for decidumpnum in `seq 0 118`
+for decidumpnum in `seq 0 90`
+#for decidumpnum in `seq 0 50`
 #for decidumpnum in `seq 0 1`
 do
 
