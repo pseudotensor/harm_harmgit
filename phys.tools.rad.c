@@ -93,7 +93,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 
   realdt = compute_dt();
 
-#if(1)
+#if(0)
   // DEBUG
 #define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
   dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d\n",nstep,steppart,dt,ptrgeom->i);
