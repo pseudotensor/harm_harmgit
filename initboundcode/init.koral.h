@@ -9,8 +9,8 @@
 //#define WHICHPROBLEM FLATNESS
 //#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
-#define WHICHPROBLEM RADPULSEPLANAR
-//#define WHICHPROBLEM RADPULSE3D
+//#define WHICHPROBLEM RADPULSEPLANAR
+#define WHICHPROBLEM RADPULSE3D
 
 
 //undefs
@@ -209,7 +209,8 @@
 
 
 #undef FORCESOLVEL
-#define FORCESOLVEL 1 // for testing against koral
+#define FORCESOLVEL 0 // for testing against koral
+
 #define N1 100
 #define N2 1 
 #define N3 1

@@ -1377,7 +1377,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
 
   if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
-	dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
+	//	dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
 	gammarel2=1.0; // force machine error floor on gammarel2
   }
 

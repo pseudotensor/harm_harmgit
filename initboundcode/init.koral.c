@@ -209,10 +209,11 @@ int init_global(void)
   ///////////////////////////////////////
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-  lim[1]=lim[2]=lim[3]=MINM;
+  //  lim[1]=lim[2]=lim[3]=MINM;
   gam=gamideal=5.0/3.0;
   cooling=KORAL;
-  cour=0.5;
+  //  cour=0.5;
+  cour=0.8;
 #endif  
 
   ///////////////////////////////////////
