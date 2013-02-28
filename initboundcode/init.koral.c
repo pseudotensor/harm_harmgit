@@ -376,7 +376,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==RADPULSEPLANAR)
 
 #define KAPPA 0.
-//#define KAPPAES (1E-10)
+//#define KAPPAES (0.0)
 //#define KAPPAES (1E-7)
 #define KAPPAES (1E-4*1.09713E-18*1E3)
 //#define KAPPAES (1E-4*1.09713E-18*1E-0)
@@ -390,7 +390,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // KAPPAs are fraction of physical FF and ES opacities
 #define KAPPA 0.
-#define KAPPAES 1.e-10
+#define KAPPAES 1.e-30
 
 #endif
 
@@ -812,7 +812,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
     prfloor[PRAD0]=ERADLIMIT;
   }
 
-  if(funreturn!=0) return(funreturn);
+  //  if(funreturn!=0) return(funreturn);
 
   return(0);
 }
