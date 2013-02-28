@@ -11,6 +11,14 @@ void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FT
 //**********************************************************************
 
 
+// sign of G that goes between Koral determination of G and HARM source term.
+#define SIGNGD (-1.0)
+//#define SIGNGD 1.0
+
+#define SIGNGD2 (1.0) // sign that goes into implicit differencer
+
+#define SIGNGD3 (1.0) // sign that goes into implicit solver
+
 //uu0 - original cons. qty
 //uu -- current iteration
 //f - (returned) errors
@@ -28,18 +36,18 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
 
+  // get primitive
   PLOOP(pliter,pl) pp[pl] = pp0[pl];
 
+  // get change in conserved quantity between fluid and radiation
   DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
   
   //calculating primitives  
-  int corr;
-  //u2p(uu,pp,gg,GG,&corr);
-
   // OPTMARK: Should optimize this to  not try to get down to machine precision
+  // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
   MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
 
-
+  // re-get needed q's
   get_state_uconucovonly(pp, ptrgeom, &q);
   get_state_uradconuradcovonly(pp, ptrgeom, &q);
 
@@ -47,7 +55,8 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   FTYPE Gd[NDIM];
   calc_Gd(pp, ptrgeom, &q, Gd);
   
-  DLOOPA(iv) f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + realdt * Gd[iv];
+  // compute difference function
+  DLOOPA(iv) f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + SIGNGD2 * realdt * Gd[iv];
 
   return 0;
 } 
@@ -85,16 +94,12 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   realdt = compute_dt();
  
   //uu0 will hold original vector of conserved
-  PLOOP(pliter,iv)
-    uu[iv] = uu0[iv] = Uin[iv];
+  PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uin[iv];
   
-  FTYPE EPS = 1.e-6;
-  FTYPE CONV = 1.e-6 ;
   
   int iter=0;
   
-  do
-  {
+  do{
     iter++;
     
     //vector of conserved at the previous iteration
@@ -104,36 +109,33 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1);
     
     //calculating approximate Jacobian
-    DLOOPA(ii)
-      DLOOPA(jj)
-      {
-	FTYPE del;
-	if(uup[jj+URAD0]==0.) del=EPS*uup[URAD0];
-	else del=EPS*uup[jj+URAD0];
-
-	uu[jj+URAD0]=uup[jj+URAD0]-del;
-	
-	f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2);
-	
-	J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
-	
-	uu[jj+URAD0]=uup[jj+URAD0];
-      }
-    
-    
-    //inversion
-    inverse_44matrix(J,iJ);
-    
-    //updating x
     DLOOPA(ii){
-      x[ii]=uup[ii+URAD0];
+	  DLOOPA(jj){
+		FTYPE del;
+		if(uup[jj+URAD0]==0.) del=IMPEPS*uup[URAD0];
+		else del=IMPEPS*uup[jj+URAD0];
+
+		uu[jj+URAD0]=uup[jj+URAD0]-del;
+	
+		f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2);
+	
+		J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
+	
+		uu[jj+URAD0]=uup[jj+URAD0];
+      }
     }
     
-    DLOOPA(ii)
-      DLOOPA(jj)
-      {
-	x[ii]-=iJ[ii][jj]*f1[jj];
+	//inversion
+	inverse_44matrix(J,iJ);
+    
+    //updating x
+    DLOOPA(ii) x[ii]=uup[ii+URAD0];
+    
+    DLOOPA(ii){
+      DLOOPA(jj){
+		x[ii]-=iJ[ii][jj]*f1[jj];
       }
+	}
     
     DLOOPA(ii) uu[ii+URAD0]=x[ii];
     
@@ -143,35 +145,29 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
       f3[ii]=fabs(f3[ii]/uup[URAD0]);
     }
     
-    if(f3[0]<CONV && f3[1]<CONV && f3[2]<CONV && f3[3]<CONV) break;
+    if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV) break;
     
-    if(iter>50){
+    if(iter>IMPMAXITER){
       dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");	  
       myexit(21341);
     }
     
-  }
+  }// end do
   while(1);
   
-  DLOOPA(jj){
-    deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/dt;
-  }
 
-  PLOOP(pliter,pl){
-    radsource[pl] = 0;
-  }
+  DLOOPA(jj) deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/dt;
 
-  DLOOPA(jj) radsource[UU+jj] = -deltas[jj];
-  DLOOPA(jj) radsource[URAD0+jj] = deltas[jj];
+  PLOOP(pliter,pl) radsource[pl] = 0;
+
+  DLOOPA(jj) radsource[UU+jj]    = -SIGNGD3*deltas[jj];
+  DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD3*deltas[jj];
 
   // DEBUG:
-  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,radsource[URAD0+jj]);
+  //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,radsource[URAD0+jj]);
 
   sc = RADSOURCE;
-
-  PLOOP(pliter,pl){
-    dUcomp[sc][pl] += radsource[pl];
-  }
+  PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
   
 }
 
@@ -185,14 +181,22 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
   calc_Gd(pr, ptrgeom, q, Gd);
 
-  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d explicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,Gd[jj]);
+
+#if(1)
+#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
+  // DEBUG
+  FTYPE dxdxp[NDIM][NDIM];
+  dxdxprim_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,dxdxp);
+  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d explicitGd[%d]=%g vs=%g\n",nstep,steppart,ptrgeom->i,jj,Gd[jj]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])),dx[1]/(dt/cour)*dxdxp[1][1]);
+#endif
 
   sc = RADSOURCE;
   
   PLOOP(pliter,pl) radsource[pl] = 0;
 
-  DLOOPA(jj) radsource[UU+jj] = -Gd[jj];
-  DLOOPA(jj) radsource[URAD0+jj] = Gd[jj];
+  // equal and opposite forces
+  DLOOPA(jj) radsource[UU+jj]    = -SIGNGD*Gd[jj];
+  DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD*Gd[jj];
 
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
   
@@ -200,6 +204,8 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
 void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
+  // KORALTODO: Should be able to choose explicit if locally works fine by some condition
+
 #if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT)
   koral_explicit_source_rad( pin, ptrgeom, q, dUcomp);
 #elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
@@ -257,7 +263,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   yy=V[2];
   zz=V[3];
   *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
-  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
+  //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 #else
   *kappa = 0.;
 #endif  
@@ -306,7 +312,7 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
   FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi; // KORALTODO: Why Pi here?
   // Also, doesn't this only allow for thermal black body emission?
-  dualfprintf(fail_file,"rho=%g u=%g T=%g B=%g\n",rho,u,T,B);
+  //  dualfprintf(fail_file,"rho=%g u=%g T=%g B=%g Erad=%g\n",rho,u/rho,T*TEMPBAR,B/rho,pp[PRAD0]/rho);
 #endif
   FTYPE kappa,kappaes;
   calc_kappa(pp,ptrgeom,&kappa);
@@ -317,6 +323,20 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
   
   //R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+
+#if(0) // DEBUG
+  DLOOPA(j) dualfprintf(fail_file,"ucov[%d]=%g ucon[%d]=%g\n",j,ucov[j],j,ucon[j]);
+  FTYPE *uradcon,*uradcov;
+  uradcon=q->uradcon;
+  uradcov=q->uradcov;
+  DLOOPA(j) dualfprintf(fail_file,"uradcov[%d]=%g uradcon[%d]=%g\n",j,uradcov[j]*sqrt(fabs(ptrgeom->gcon[GIND(j,j)])),j,uradcon[j]*sqrt(fabs(ptrgeom->gcov[GIND(j,j)])));
+  FTYPE Rijuu[NDIM][NDIM];
+  DLOOP(i,j) Rijuu[i][j]=0.0;
+  int b;
+  DLOOP(i,j) DLOOPA(b) Rijuu[i][j]+=Rij[i][b]*ptrgeom->gcon[GIND(b,j)];
+
+  DLOOP(i,j) dualfprintf(fail_file,"i=%d j=%d Rij=%g Rijuu=%g\n",i,j,Rij[i][j]/rho,Rijuu[i][j]/rho);
+#endif
   
   FTYPE Ru;
   DLOOPA(i){
@@ -324,6 +344,10 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
 
     Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i]; // KORALTODO: Is 4*Pi here ok?
+
+#if(0)
+	dualfprintf(fail_file,"i=%d : Ruu=%g Ru=%g chi=%g Gu=%g\n",i,Ruu/rho,Ru/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])),chi,Gu[i]/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])));
+#endif
 
   }
 }
@@ -1492,7 +1516,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
     else{
       *lpflagrad=UTOPRIMRADFAILCASE2B;
       // relative 4-velocity radiation frame.  Might want to reset Erf to ERADLIMIT to be more strictly avoiding energy runaway problems.
-      //      Erf=ERADLIMIT;
+	  //Erf=ERADLIMIT;
 
       if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
       else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
@@ -1678,10 +1702,10 @@ int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeo
     }
   while(1);
   
-  if(pp[PRAD0]<EFLOOR) 
+  if(pp[PRAD0]<ERADLIMIT) 
     {
-      printf("enegative u2prad()\n");
-      pp[PRAD0]=EFLOOR;
+      printf("%g=PRAD0<ERADLIMIT=%g u2prad()\n",pp[PRAD0],ERADLIMIT);
+      pp[PRAD0]=ERADLIMIT;
     }
   
 

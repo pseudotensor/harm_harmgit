@@ -52,9 +52,16 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   if(EOMRADTYPE!=EOMRADNONE){
     // get maximum over both mhd and radiation 
     *ctopallptr=MAX(ctopmhd,ctoprad);
+
+	if(FORCESOLVEL){
+	  *ctopallptr=1.0/sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+	}
+
   }
   else *ctopallptr=ctopmhd;
 
+
+  //  dualfprintf(fail_file,"ctopmhdprim=%g ctopradprim=%g\n",ctopmhd*sqrt(ptrgeom->gcov[GIND(dir,dir)]),ctoprad*sqrt(ptrgeom->gcov[GIND(dir,dir)]));
 
   MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, ctopmhd, cminmaxrad_l,cminmaxrad_r, cminmaxrad, ctoprad, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
@@ -108,7 +115,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
   get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad);
 
   if(EOMRADTYPE!=EOMRADNONE){
-    // get maximum over both mhd and radiation 
+    // get maximum over both mhd and radiation for setting dt later
     *ctopallptr=MAX(ctopmhd,ctoprad);
   }
   else *ctopallptr=ctopmhd;
@@ -280,7 +287,6 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 
 
 
-
   if(fluxmethod==LAXFFLUX){
     PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
   }
@@ -364,6 +370,48 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     
 
   }
+
+
+
+
+
+
+
+
+#if(0)
+  // for koral testing
+#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
+  //1.34583e+18
+  FTYPE Ufactor,Ffactor;
+
+  PLOOP(pliter,pl){
+
+	Ufactor=Ffactor=1.0;
+#if(1)
+	if(pl==RHO){
+	  Ufactor=(1.0/RHO_AMB)/geom->gdet;
+	  Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))/geom->gdet;
+	}
+	else if(pl>=UU && pl<=U3){
+	  Ufactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcon[GIND(pl-UU,pl-UU)]))/geom->gdet;
+	  Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))*sqrt(fabs(geom->gcon[GIND(pl-UU,pl-UU)]))/geom->gdet;
+	}
+	else if(pl>=URAD0 && pl<=URAD3){
+	  Ufactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcon[GIND(pl-URAD0,pl-URAD0)]))/geom->gdet;
+	  Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))*sqrt(fabs(geom->gcon[GIND(pl-URAD0,pl-URAD0)]))/geom->gdet;
+	}
+#endif
+	dualfprintf(fail_file,"i=%d pl=%d ctoppl=%g U_l=%g U_r=%g F_l=%g F_r=%g F=%g\n",
+				i,pl,ctop[pl]*sqrt(geom->gcov[GIND(dir,dir)]),
+				U_l[pl]*Ufactor,
+				U_r[pl]*Ufactor,
+				F_l[pl]*Ffactor,
+				F_r[pl]*Ffactor,
+				F[pl]*Ffactor
+				);
+  }
+#endif
+
 
   return(0);
 }

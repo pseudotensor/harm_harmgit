@@ -42,11 +42,11 @@
 // below are non-conditional ways of getting same result as:
 //#define GCOVI(i,j) (i>=j) ? i : j
 //#define GCOVJ(i,j) (i>=j) ? j : i
-#define GCOVI(i,j) ((i>=j)*(i-j) + j)
-#define GCOVJ(i,j) ((i>=j)*(j-i) + i)
+#define GCOVI(i,j) (((i)>=(j))*((i)-(j)) + (j))
+#define GCOVJ(i,j) (((i)>=(j))*((j)-(i)) + (i))
 #define GIND(i,j) GCOVJ(i,j)*4 + GCOVI(i,j) - MAX(GCOVJ(i,j),0) - MAX(GCOVJ(i,j)-1,0) - MAX(GCOVJ(i,j)-2,0)
 // must multiply assignments by the below so don't duplicate sums
-#define GINDASSIGNFACTOR(i,j) (1.0*(i>=j))
+#define GINDASSIGNFACTOR(i,j) (1.0*((i)>=(j)))
 //#if(PRODUCTION==0)
 //#define GINDASSIGNMAC(name,i,j) (i>=j ? name[GIND(i,j)] : SHOULDNOTREACHHEREEVERBUGYOUHAVE())
 //#else

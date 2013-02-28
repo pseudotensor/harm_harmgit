@@ -446,9 +446,9 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 #if(WHICHPROBLEM!=RADBEAMFLAT)
 
 #define RADBEAMFLAT_FRATIO (0.995) // FRATIO=Flux/(U*c)
-#define RADBEAMFLAT_ERAD (1. /UBAR) 
+#define RADBEAMFLAT_ERAD (1. /RHOBAR) // i.e. c^2 * 1g/cm^3 of energy density
 #define RADBEAMFLAT_RHO (1. / RHOBAR)
-#define RADBEAMFLAT_UU (0.1 / UBAR)
+#define RADBEAMFLAT_UU (0.1 / RHOBAR) // i.e. c^2 * 1g/cm^3 of energy density
 
 #endif
 

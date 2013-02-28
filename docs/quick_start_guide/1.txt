@@ -84,6 +84,11 @@ ii) Also, add "-I /home/<username>/include"  (-I is a capital i and not a capita
 
 6d) Command: "make superclean ; make prep ; make"
 
+**NOTE**: If have N cores, can vastly speed-up compile by doing:
+
+6d(e.g. 16 cores)) Command: "make superclean ; make prep ; make -j 16"
+
+
 **NOTE**: Default compiler is typical ICC using USEICC=1 in the file "makefile".  See bottom of this document for notes on changing this for other machines.
 
 

@@ -428,6 +428,10 @@
 // TRUEFAST=1 : use true phase velocity (has problems with catastrophic cancellation)
 #define TRUEFAST 0
 
+// whether to force dt to use velocity based upon speed of light
+// Doesn't change how fluxes are computed!
+#define FORCESOLVEL 0
+
 
 // whether to check on inversion and report problem
 // Also, use diag_fixup() to account for changes in U when inversion success (tracks changes due to Newton iteration error and machine error)

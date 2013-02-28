@@ -159,7 +159,14 @@
 //****************************************//
 //****************************************//
 
-#define MPERSUN (1.0) // number of solar masses to define units
+// number of solar masses to define units
+
+//#define MPERSUN (1.0)
+
+// odd default choice by koral that gives Mass in cm as 1cm.
+#define MPERSUN (6.77255E-1)
+//#define MPERSUN (67725.2) // GM/c^2=1cm if gTILDA=1E-10 and cTILDA=1
+//#define MPERSUN (6.77255E-11) // with koral's gTILDA=1E-10
 
 
 
@@ -200,6 +207,9 @@
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 1 // for testing against koral
 #define N1 100
 #define N2 1 
 #define N3 1
@@ -218,8 +228,8 @@
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
-#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
 
 #define MCOORD CARTMINKMETRIC2
 

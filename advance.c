@@ -2268,6 +2268,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=1;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax1, &cmin1,&ignorecourant),"advance.c:set_dt()", "vchar_all() dir=1", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax1),fabs(cmin1));
+	if(FORCESOLVEL){
+	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+	}
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2280,6 +2283,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=2;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax2, &cmin2,&ignorecourant),"advance.c:set_dt()", "vchar_all() dir=2", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax2),fabs(cmin2));
+	if(FORCESOLVEL){
+	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+	}
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2292,6 +2298,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=3;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax3, &cmin3,&ignorecourant),"restart.c:set_dt()", "vchar_all() dir=3", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax3),fabs(cmin3));
+	if(FORCESOLVEL){
+	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+	}
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2414,6 +2423,8 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 #endif
 
   *dt = ndtfinal;
+
+
   // don't step beyond end of run
   if (t + *dt > tf) *dt = tf - t;
   

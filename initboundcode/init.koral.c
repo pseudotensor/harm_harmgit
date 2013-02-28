@@ -82,7 +82,7 @@ int post_init_specific_init(void)
   if(funreturn!=0) return(funreturn);
 
 
-  cour=0.8;
+  //  cour=0.8;
   
 
   return(0);
@@ -200,24 +200,24 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 #if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
-  gam = 4./3.;
   cooling=KORAL;
-
   //  lim[1]=lim[2]=lim[3]=MINM;
-
-
-
-
+  gam=gamideal=5.0/3.0;
 #endif  
+
+  ///////////////////////////////////////
+  ///////////////////////////////////////
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-  gam = 5./3.;
+  lim[1]=lim[2]=lim[3]=MINM;
+  gam=gamideal=5.0/3.0;
   cooling=KORAL;
+  cour=0.5;
 #endif  
 
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
+  ///////////////////////////////////////
+  ///////////////////////////////////////
+
 #if(WHICHPROBLEM==FLATNESS)  
 
   BCtype[X1UP]=PERIODIC; // OUTFLOW;
@@ -234,8 +234,10 @@ int init_global(void)
   tf = 10.0; //final time
 #endif
 
-  /*************************************************/
-  /*************************************************/
+  ///////////////////////////////////////
+  ///////////////////////////////////////
+
+
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
   BCtype[X1UP]=OUTFLOW;
@@ -251,6 +253,9 @@ int init_global(void)
 
   DTr = 100; //number of time steps for restart dumps
   tf = 1E2; //final time
+
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
 #endif
 
   /*************************************************/
@@ -270,6 +275,9 @@ int init_global(void)
 
   DTr = 100; //number of time steps for restart dumps
   tf = 10.0; //final time
+
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
 #endif
 
   return(0);
@@ -308,7 +316,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   dualfprintf(fail_file,"WARNING: check_spc_singularities_user() oddly stalls sometimes...\n");
   check_spc_singularities_user();
   trifprintf("END check_spc_singularities_user\n");
-  dualfprintf(fail_file,"WARNING: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.");
+  dualfprintf(fail_file,"WARNING: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.\n");
 
   
   return(0);
@@ -355,7 +363,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
-#define RHO_AMB (1.e0) // in grams per cm^3
+//#define RHO_AMB (1.e0) // in grams per cm^3
+#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
 #define T_AMB (1.0E6) // in Kelvin
 
 #define BLOBP 100.
@@ -368,7 +377,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPA 0.
 //#define KAPPAES (1E-10)
 //#define KAPPAES (1E-7)
-#define KAPPAES (1E-4)
+//#define KAPPAES (1E-4*1.09713E-18*1E-0)
+#define KAPPAES (1E-4*1.09713E-18*0.5)
+//#define KAPPAES (1E-4*1.09713E-18*1E-1)
+//#define KAPPAES (1E-4*1.09713E-18*1E-2)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
 
 #else // PULSE and PULSE3D
 
@@ -455,7 +469,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     
     
     pr[RHO] = 1./RHOBAR ; // i.e. 1g/cm^3
-    pr[UU] = 0.1/UBAR;
+    pr[UU] = 0.1/RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
     pr[U1] = 0 ;
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
@@ -471,7 +485,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     }
 
 
-    pr[URAD0] = 1./UBAR;
+    pr[URAD0] = 1./RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
     pr[URAD1] = 0 ;
     pr[URAD2] = 0 ;    
     pr[URAD3] = 0 ;
@@ -505,7 +519,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     
     
     pr[RHO] = RADBEAMFLAT_RHO/RHOBAR ;
-    pr[UU] = RADBEAMFLAT_UU/UBAR;
+    pr[UU] = RADBEAMFLAT_UU/RHOBAR; // RADBEAMFLAT_UU was set in per c^2 units
     pr[U1] = 0 ;
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
@@ -521,7 +535,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     }
 
 
-    pr[URAD0] = RADBEAMFLAT_ERAD/UBAR;
+    pr[URAD0] = RADBEAMFLAT_ERAD/RHOBAR; // RADBEAMFLAT_ERAD was set in per c^2 units
     pr[URAD1] = 0 ;
     pr[URAD2] = 0 ;    
     pr[URAD3] = 0 ;
@@ -576,6 +590,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     Tgas=(T_AMB/TEMPBAR);
     rho=(RHO_AMB/RHOBAR);
     uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+	//	dualfprintf(fail_file,"IC i=%d Trad=%g ERAD=%g Tgas=%g rho=%g uint=%g\n",i,Trad,ERAD,Tgas,rho,uint);
 
    
     pr[RHO] = rho;
