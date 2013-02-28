@@ -92,6 +92,21 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   int pl;
 
   realdt = compute_dt();
+
+#if(1)
+  // DEBUG
+#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
+  dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d\n",nstep,steppart,dt,ptrgeom->i);
+  pl=RHO; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
+  pl=UU;    jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
+  pl=U1;    jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=U2;    jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=U3;    jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD0; jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
+  pl=URAD1; jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD2; jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD3; jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+#endif
  
   //uu0 will hold original vector of conserved
   PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uin[iv];
@@ -145,12 +160,17 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
       f3[ii]=fabs(f3[ii]/uup[URAD0]);
     }
     
-    if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV) break;
+    if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV){
+	  dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
+	  break;
+	}
     
     if(iter>IMPMAXITER){
       dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");	  
       myexit(21341);
     }
+
+	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
     
   }// end do
   while(1);
@@ -1354,7 +1374,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
 
   FTYPE gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
- 
+
+  if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
+	dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
+	gammarel2=1.0; // force machine error floor on gammarel2
+  }
 
 
 
@@ -1522,7 +1546,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
       else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%g gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
