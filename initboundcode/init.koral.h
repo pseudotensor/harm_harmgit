@@ -1,7 +1,8 @@
 //problem names
 #define FLATNESS (0) // not in Koral
+#define RADTUBE (6)
 #define RADPULSE (10)
-#define RADPULSEPLANAR (1000)
+#define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
 #define RADPULSE3D (16)
 #define RADBEAMFLAT (24)
 
