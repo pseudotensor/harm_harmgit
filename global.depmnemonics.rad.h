@@ -29,7 +29,9 @@
 //
 ////////////////
 // Below to be used in formula for Urad_{code} = arad_{code} * Tcode^4
+#ifndef ARAD_CODE
 #define ARAD_CODE (ARAD*(TEMPBAR*TEMPBAR*TEMPBAR*TEMPBAR)/UBAR)
+#endif
 
 
 //////////////

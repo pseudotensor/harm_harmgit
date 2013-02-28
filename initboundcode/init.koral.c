@@ -180,14 +180,26 @@ int init_defcoord(void)
 #if(WHICHPROBLEM==RADTUBE)
 
 
-  defcoord = UNIFORMCOORDS;
-  Rin_array[1]=0;
-  Rin_array[2]=0;
-  Rin_array[3]=0;
+  if(NTUBE==5){
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-20.0;
+	Rin_array[2]=-1.0;
+	Rin_array[3]=-1.0;
 
-  Rout_array[1]=1.0;
-  Rout_array[2]=1.0;
-  Rout_array[3]=1.0;
+	Rout_array[1]=20.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
+  else{
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-15.0;
+	Rin_array[2]=-1.0;
+	Rin_array[3]=-1.0;
+
+	Rout_array[1]=15.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
 
 #endif
 
@@ -328,7 +340,7 @@ int init_global(void)
 
 #if(WHICHPROBLEM==RADTUBE)
   cour=0.8;
-  gam=gamideal=5.0/3.0;
+  gam=gamideal=GAMMATUBE;
   cooling=KORAL;
 
   BCtype[X1UP]=OUTFLOW;
@@ -339,8 +351,12 @@ int init_global(void)
   BCtype[X3DN]=PERIODIC;
 
   int idt;
-  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
+  if(NTUBE==5){
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+  }
+  else{
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2.0;
+  }
 
   DTr = 100; //number of time steps for restart dumps
   tf = 10.0; //final time
@@ -408,6 +424,11 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPA 0.
 #define KAPPAES 0.
 
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
 
 #endif
 
@@ -439,11 +460,23 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1E-4*1.09713E-18*1E-3)
 //#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
 
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
 #else // PULSE and PULSE3D
 
 // KAPPAs are fraction of physical FF and ES opacities
 #define KAPPA 0.
 #define KAPPAES 1.e-30
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
 
 #endif
 
@@ -463,6 +496,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPA 0.
 #define KAPPAES 0.
 
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
 #endif
 
 //****************************************//
@@ -471,8 +510,24 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADTUBE)
 
-#define KAPPA 0.
-#define KAPPAES 0.
+#define KAPPAESUSER(rho,T) (0.0)
+
+#if(NTUBE==1)
+#define KAPPAUSER(rho,T) (0.4*rho)
+#elif(NTUBE==2)
+#define KAPPAUSER(rho,T) (0.2*rho)
+#elif(NTUBE==3)
+#define KAPPAUSER(rho,T) (0.3*rho)
+#elif(NTUBE==31)
+#define KAPPAUSER(rho,T) (25*rho)
+#elif(NTUBE==4)
+#define KAPPAUSER(rho,T) (0.08*rho)
+#elif(NTUBE==41)
+#define KAPPAUSER(rho,T) (0.7*rho)
+#elif(NTUBE==5)
+#define KAPPAUSER(rho,T) (1000*rho)
+#endif
+
 
 #endif
 
@@ -521,9 +576,7 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 // unnormalized density
 int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
-  SFTYPE sth, cth;
-  SFTYPE ur, uh, up, u, rho;
-  FTYPE X[NDIM],V[NDIM],r,th;
+  FTYPE X[NDIM],V[NDIM];
   struct of_geom realgeomdontuse;
   struct of_geom *ptrrealgeom=&realgeomdontuse;
   int pl,pliter;
@@ -671,6 +724,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
     //flat gas profiles
     Tgas=(T_AMB/TEMPBAR);
+	FTYPE rho;
     rho=(RHO_AMB/RHOBAR);
     uint=calc_PEQ_ufromTrho(Tgas,rho);
 
@@ -714,7 +768,63 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   /*************************************************/
 #if(WHICHPROBLEM==RADTUBE)
 
-  // TODO
+  FTYPE rho,mx,my,mz,m,ERAD,uint,E0,Fx,Fy,Fz,pLTE;  
+  FTYPE rho0,Tgas0,ur,Tgas,Trad,r,rcm,prad,pgas,vx,ut,ux;
+  FTYPE xx,yy,zz;
+  coord(i, j, k, CENT, X);
+  bl_coord(X, V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+  
+
+  if(xx<(Rout_array[1]+Rin_array[1])/2.){
+    rho=1.;
+    if(NTUBE==1) {uint = 3.e-5 / (GAMMATUBE - 1.); ERAD=1.e-8; Fx=1.e-2*ERAD;ux=0.015;}
+    if(NTUBE==2) {uint = 4.e-3 / (GAMMATUBE - 1.);ERAD=2.e-5; Fx=1.e-2*ERAD;ux=0.25;}
+    if(NTUBE==3 || NTUBE==31) {uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=10.;}
+    if(NTUBE==4 || NTUBE==41) {uint = 6.e-3 / (GAMMATUBE - 1.);ERAD=0.18; Fx=1.e-2*ERAD;ux=0.69;}	  
+    if(NTUBE==5) {uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.25;}
+  }
+  else{
+	if(NTUBE==1) {rho=2.4;uint = 1.61e-4/ (GAMMATUBE - 1.); ERAD=2.51e-7; Fx=1.e-2*ERAD;ux=6.25e-3;}
+	if(NTUBE==2) {rho=3.11;uint = 0.04512 / (GAMMATUBE - 1.);ERAD=3.46e-3; Fx=1.e-2*ERAD;ux=0.0804;}
+	if(NTUBE==3 || NTUBE==31) {rho=8.0;uint = 2.34e3 / (GAMMATUBE - 1.);ERAD=1.14e3; Fx=1.e-2*ERAD;ux=1.25;}
+	if(NTUBE==4 || NTUBE==41) {rho=3.65;uint =3.59e-2 / (GAMMATUBE - 1.);ERAD=1.30; Fx=1.e-2*ERAD;ux=0.189;}	  
+	if(NTUBE==5) {rho=1.0;uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.10;}
+  }
+
+  
+  pr[RHO] = rho;
+  pr[UU] = uint;
+  pr[U1] = ux ; // ux is 4-velocity
+  pr[U2] = 0 ;    
+  pr[U3] = 0 ;
+
+  // just define some field
+  pr[B1]=0.0;
+  pr[B2]=0.0;
+  pr[B3]=0.0;
+  
+  if(FLUXB==FLUXCTSTAG){
+	// assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	PLOOPBONLY(pl) pstag[pl]=pr[pl];
+  }
+
+  pr[URAD0] = ERAD ;
+  pr[URAD1] = Fx ;
+  pr[URAD2] = Fy ;    
+  pr[URAD3] = Fz ;
+
+  // TODO: need to conver these radiation things from the fluid frame (as defined) to the lab-frame
+  // make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
+  // But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
+  
+  *whichvel=WHICHVEL;
+  *whichcoord=CARTMINKMETRIC2;
+  return(0);
+  
+
 
 #endif 
 
@@ -1015,21 +1125,13 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //absorption
 FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {
-  // assume kappa is given in physical units as other things, while inputs are in code units
-  //  return(rho*KAPPA/OPACITY);
-
-  // assume KAPPA defines fraction of FF opacity
-  return(rho*KAPPA*KAPPA_FF_CODE(rho,T));
+  return(KAPPAUSER(rho,T));
 }
 
 //scattering
 FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {  
-  //  return(rho*KAPPAES/OPACITY);
-
-  // assume KAPPAES defines fractoin of ES opacity
-  return(rho*KAPPAES*KAPPA_ES_CODE(rho,T));
-
+  return(KAPPAESUSER(rho,T));
 
 }
 

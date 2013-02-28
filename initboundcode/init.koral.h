@@ -253,16 +253,42 @@
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
 
-//#define N1 20
-//#define N2 20
-#define N1 30 // making like problem24 in koral code
-#define N2 30 // making like problem24 in koral code
+#define N1 800
+#define N2 1
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC2
 
+// 1,2,3,31,4,41,5
+#define NTUBE 1
+
+
+#undef ARAD_CODE
+#if (NTUBE==1)
+#define GAMMATUBE 5.l/3.l
+#define ARAD_CODE (1e-8/powl(calc_PEQ_Tfromurho(3.e-5/(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==2)
+#define GAMMATUBE 5.l/3.l
+#define ARAD_CODE (2e-5/powl(calc_PEQ_Tfromurho(4.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==3)
+#define GAMMATUBE 2.l
+#define ARAD_CODE (2./powl(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==31)
+#define GAMMATUBE 2.l
+#define ARAD_CODE (2./powl(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==4)
+#define GAMMATUBE 5.l/3.l
+#define ARAD_CODE (.18/powl(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==41)
+#define GAMMATUBE 5.l/3.l
+#define ARAD_CODE (.18/powl(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#elif (NTUBE==5)
+#define GAMMATUBE 2.l
+#define ARAD_CODE (2./powl(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
 #endif
 
+
+#endif
 
 
 //****************************************//
