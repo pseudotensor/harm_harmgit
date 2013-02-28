@@ -61,7 +61,7 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   return 0;
 } 
 
-//SUPERGODMARK only for RK2
+//KORALTODO SUPERGODMARK only for RK2
 FTYPE compute_dt()
 {
   if( steppart == 0 ) {
@@ -161,16 +161,17 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     }
     
     if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV){
-	  dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
+	  //	  dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
 	  break;
 	}
     
     if(iter>IMPMAXITER){
-      dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");	  
+	  // KORALTODO: Need backup that won't fail.
+      dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");
       myexit(21341);
     }
 
-	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
+	//	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
     
   }// end do
   while(1);
@@ -1968,7 +1969,6 @@ calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
 
 //**********************************************************************
 //suplementary routines for conversions
-// SUPERGODMARK: KORALTODO: These should all be replaced or wrapped with HARM's eos.c functions, but they only appear to be used for initial conditions.  So for now, assume ideal gas.
 //**********************************************************************
 FTYPE calc_PEQ_ufromTrho(FTYPE T,FTYPE rho)
 {

@@ -474,7 +474,6 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
   lpflagrad=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
 
-  // KORALTODO: Need to set pflag when lpflagrad=1 so that fixups know to look for neighboars to average before just using zero ZAMO velocity and zero Erf as dont currently.  Also need to understand how fixups handle non-MHD stuff (even scalars).
 
 
   if(IFUTOPRIMFAILSOFT(lpflag) || IFUTOPRIMRADFAIL(lpflagrad)){

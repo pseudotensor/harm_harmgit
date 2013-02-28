@@ -554,6 +554,7 @@ int get_tetrcovcon(struct of_geom *ptrgeom, FTYPE (**tetrcov)[NDIM],FTYPE (**tet
 //**********************************************************************
 //calculates base vectors and 1-forms of ZAMO to transform lab <--> ZAMO
 // Here, ZAMO is ZAMO frame, and this function only works for BL coords
+// Only applies for Boyer-Lindquist coordinates
 int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][NDIM])
 {
   FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
@@ -563,7 +564,6 @@ int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][
   //  FTYPE emuup[][NDIM]=(FTYPE (*)[NDIM])(&ptremuup[0]);
   //FTYPE emudn[][NDIM]=(FTYPE (*)[NDIM])(&ptremudn[0]);
 
-  // SUPERGODMARK: Only applies for Boyer-Lindquist coordinates
 
   gtt=ptrgeom->gcov[GIND(0,0)];
   gtph=ptrgeom->gcov[GIND(0,3)];
