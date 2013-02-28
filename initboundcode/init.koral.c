@@ -109,7 +109,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==RADBEAMFLAT)
+#if(WHICHPROBLEM==FLATNESS)
 
 
   defcoord = UNIFORMCOORDS;
@@ -122,6 +122,7 @@ int init_defcoord(void)
   Rout_array[3]=1.0;
 
 #endif
+
 
   /*************************************************/
   /*************************************************/
@@ -156,6 +157,40 @@ int init_defcoord(void)
   Rout_array[3]=50.0; 
 
 #endif
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+
+  defcoord = UNIFORMCOORDS;
+  Rin_array[1]=0;
+  Rin_array[2]=0;
+  Rin_array[3]=0;
+
+  Rout_array[1]=1.0;
+  Rout_array[2]=1.0;
+  Rout_array[3]=1.0;
+
+#endif
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADTUBE)
+
+
+  defcoord = UNIFORMCOORDS;
+  Rin_array[1]=0;
+  Rin_array[2]=0;
+  Rin_array[3]=0;
+
+  Rout_array[1]=1.0;
+  Rout_array[2]=1.0;
+  Rout_array[3]=1.0;
+
+#endif
+
 
   return(0);
 }
@@ -286,6 +321,32 @@ int init_global(void)
 
 #endif
 
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+#if(WHICHPROBLEM==RADTUBE)
+  cour=0.8;
+  gam=gamideal=5.0/3.0;
+  cooling=KORAL;
+
+  BCtype[X1UP]=OUTFLOW;
+  BCtype[X1DN]=OUTFLOW;
+  BCtype[X2UP]=OUTFLOW;
+  BCtype[X2DN]=OUTFLOW;
+  BCtype[X3UP]=PERIODIC; 
+  BCtype[X3DN]=PERIODIC;
+
+  int idt;
+  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
+
+  DTr = 100; //number of time steps for restart dumps
+  tf = 10.0; //final time
+
+#endif
+
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -353,23 +414,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //****************************************//
 //****************************************//
 
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-//#define RADBEAMFLAT_FRATIO 0.95
-#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
-#define RADBEAMFLAT_RHO 1. // 1g/cm^3
-#define RADBEAMFLAT_ERAD 1. // 1g/cm^3 worth of energy density in radiation
-#define RADBEAMFLAT_UU 0.1 // 0.1g/cm^3 worth of energy density in fluid
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
@@ -406,6 +450,34 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
+
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+//#define RADBEAMFLAT_FRATIO 0.95
+#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
+#define RADBEAMFLAT_RHO 1. // 1g/cm^3
+#define RADBEAMFLAT_ERAD 1. // 1g/cm^3 worth of energy density in radiation
+#define RADBEAMFLAT_UU 0.1 // 0.1g/cm^3 worth of energy density in fluid
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADTUBE)
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+#endif
+
+//****************************************//
+//****************************************//
 
 
 
@@ -636,6 +708,15 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 #endif
 
 
+
+
+  /*************************************************/
+  /*************************************************/
+#if(WHICHPROBLEM==RADTUBE)
+
+  // TODO
+
+#endif 
 
 
 

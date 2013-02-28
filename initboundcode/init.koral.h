@@ -11,7 +11,8 @@
 //#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
 //#define WHICHPROBLEM RADPULSEPLANAR
-#define WHICHPROBLEM RADPULSE3D
+//#define WHICHPROBLEM RADPULSE3D
+#define WHICHPROBLEM RADTUBE
 
 
 //undefs
@@ -190,24 +191,6 @@
 //****************************************//
 //****************************************//
 
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
-#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
-
-//#define N1 20
-//#define N2 20
-#define N1 30 // making like problem24 in koral code
-#define N2 30 // making like problem24 in koral code
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-//****************************************//
-//****************************************//
-
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
 
@@ -237,14 +220,46 @@
 
 #define MCOORD CARTMINKMETRIC2
 
-#if(WHICHPROBLEM==RADPULSEPLANAR)
-
-
-#else // PULSE and PULSE3D
-
 
 #endif
 
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+
+//#define N1 20
+//#define N2 20
+#define N1 30 // making like problem24 in koral code
+#define N2 30 // making like problem24 in koral code
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADTUBE)
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+
+//#define N1 20
+//#define N2 20
+#define N1 30 // making like problem24 in koral code
+#define N2 30 // making like problem24 in koral code
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
 
 #endif
 
