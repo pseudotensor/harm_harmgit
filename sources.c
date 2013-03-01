@@ -28,6 +28,9 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
     // cooling function defined by user
     return(coolfunc_user(h_over_r, pr, ptrgeom, q,dUcomp));
   }
+  else if(cooling==NOCOOLING){
+    // cooling is turned off
+  }
   else{
     dualfprintf(fail_file,"cooling=%d does not exist in sourcephysics()\n",cooling);
     myexit(763252772);

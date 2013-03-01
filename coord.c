@@ -276,7 +276,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=10.0; //power exponent
+    bp_npow2=10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     bp_rbr = 5E2;  //radius at which hyperexponentiation kicks in
@@ -301,7 +301,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
     else if(1){
       bp_r1jet=2.8;
-      bp_njet=0.3;
+      bp_njet=0.0; // MARKNOTE set to 0.3 before using BP values
       bp_r0jet=15.0;
       bp_rsjet=40.0;
       bp_Qjet=1.3; // chosen to help keep jet resolved even within disk region
@@ -319,7 +319,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     // for theta2
     bp_h0=0.3; // inner-radial "hslope" for theta2
     // GODMARK: Note that this overwrites above njet!
-    bp_njet=1.0; // power \theta_j \propto r^{-njet}
+    bp_njet=1.0;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
 
 
     // see fix_3dpoledtissue.nb

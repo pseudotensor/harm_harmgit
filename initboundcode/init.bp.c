@@ -22,7 +22,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (1.4)
+#define USER_THETAROTMETRIC (0.0)
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -33,7 +33,6 @@
 
 
 #define WHICHPROBLEM THINBP
-
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
@@ -145,7 +144,7 @@ int post_init_specific_init(void)
   else if(WHICHPROBLEM==THINBP){
     cour=0.8;
   }
- else{
+  else{
     // leave as default
   }
 
@@ -265,6 +264,10 @@ int init_global(void)
   UORHOLIMIT=1E3;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
+
+  cooling=NOCOOLING; //COOLUSER; // MARKTODO should override these values set in initbase, right?
+  gam=4./3.;
+
 #elif(WHICHPROBLEM==THICKDISK)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -371,6 +374,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINBP)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
+  beta = 1.e1 ;
+  randfact = 4.e-2;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
   //  beta = 20.0;
@@ -935,7 +940,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
   FTYPE rpow;
-  rpow=3.3/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+  rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
@@ -1306,4 +1311,99 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 {
   // not used
 }
+
+
+
+
+// User's cooling function:
+
+#define USERTHETACOOL       (h_over_r)	/* should be same as h_over_r */
+#define USERTAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
+
+// This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
+
+int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
+{
+        FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,P,w,wcirc,dUcool;
+	FTYPE taper0;
+	int ii,jj, kk, pp;
+	FTYPE pressure;
+	FTYPE enk, enk0;
+        FTYPE Tfix;
+	FTYPE Yscaling;
+
+        FTYPE rpho;      
+	FTYPE photoncapture;
+	FTYPE rincool;
+	FTYPE nocoolthetafactor,thetacool,taucool;
+
+
+
+	// setup for macros
+	nocoolthetafactor=USERNOCOOLTHETAFACT;
+	thetacool=USERTHETACOOL;
+	taucool=USERTAUCOOL;
+
+	ii=geom->i;
+	jj=geom->j;
+	kk=geom->k;
+	pp=geom->p;
+
+        /* cooling function for maintaining fixed H/R */
+        rho = pr[RHO] ;
+        u = pr[UU] ;
+	P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
+        w = rho + u + P ;
+
+        bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
+	r=V[1];
+	th=V[2];
+ 
+      	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
+
+	//	trifprintf("rphoton=%lf\n", rpho);
+	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
+	  photoncapture=1.0 ;
+	  //  trifprintf("r=%lf, photoncapture=%lf, rph=%lf \ n", r, photoncapture, rpho); 
+	}
+	else{
+	  photoncapture=0.0 ;
+	}
+
+
+        R = r*sin(th) ;
+
+	rincool=10.;
+        /* crude approximation */
+        Wcirc = 1./(a + pow(R,1.5)) ;
+        cs_circ = thetacool/sqrt(R) ;
+	//        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+        wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+	Tfix = (M_PI / 2.) * (thetacool * R * Wcirc) * (thetacool * R * Wcirc);
+	Yscaling = (gam-1.)*u/(rho*Tfix);
+
+
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 0.) {
+
+	  dUcool = -u * sqrt( Yscaling - 1.) / Wcirc ;
+	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
+	}
+        else{
+	    dUcool = 0. ;
+	}
+
+
+	dUcomp[RADSOURCE][UU]=dUcool*(q->ucov[TT]);
+	dUcomp[RADSOURCE][U1]=dUcool*(q->ucov[RR]);
+	dUcomp[RADSOURCE][U2]=dUcool*(q->ucov[TH]);
+	dUcomp[RADSOURCE][U3]=dUcool*(q->ucov[PH]);
+
+	//			trifprintf("ducomps are %g %g %g %g \n", dUcomp[RADSOURCE][UU], dUcomp[RADSOURCE][U1], dUcomp[RADSOURCE][U2],	dUcomp[RADSOURCE][U3]); 
+        return(0) ;
+}
+
+
 
