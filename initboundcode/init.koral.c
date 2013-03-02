@@ -692,7 +692,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   // outsideness
   if (0) {
 
-    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+    get_geometry(i, j, k, CENT, ptrrealgeom); // code's internal final coordinate system
     set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
 
     *whichvel=WHICHVEL;
@@ -778,6 +778,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   zz=V[3];
   
 
+  // set fluid values.  Also set radiation values, which are set in fluid frame orthonormal basis
   if(xx<(Rout_array[1]+Rin_array[1])/2.){
     rho=1.;
     if(NTUBE==1) {uint = 3.e-5 / (GAMMATUBE - 1.); ERAD=1.e-8; Fx=1.e-2*ERAD;ux=0.015;}
@@ -811,17 +812,34 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	PLOOPBONLY(pl) pstag[pl]=pr[pl];
   }
 
+  Fy=Fz=0.0;
   pr[URAD0] = ERAD ;
   pr[URAD1] = Fx ;
   pr[URAD2] = Fy ;    
   pr[URAD3] = Fz ;
 
+  *whichvel=WHICHVEL;
+  *whichcoord=CARTMINKMETRIC2;
+
   // TODO: need to conver these radiation things from the fluid frame (as defined) to the lab-frame
   // make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
   // But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
   
-  *whichvel=WHICHVEL;
-  *whichcoord=CARTMINKMETRIC2;
+  // get metric grid geometry for these ICs
+  int getprim=0;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+  // transform radiation primitives to lab-frame
+  FTYPE prrad[NPR],prradnew[NPR];
+  PLOOPRADONLY(pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives
+  int whichdir=FF2LAB; // fluid frame orthonormal to lab-frame
+  prad_fforlab(whichdir, prrad, prradnew, ptrgeom);
+  // overwrite radiation primitives with new lab-frame values
+  PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+
+  
   return(0);
   
 

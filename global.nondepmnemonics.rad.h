@@ -11,7 +11,8 @@
 #define LAB2FF (0)
 #define FF2LAB (1)
 
-
+#define TYPEUCON (0)
+#define TYPEUCOV (1)
 
 //relele.c
 // same as dot(a,b) in global.variousmacros.h

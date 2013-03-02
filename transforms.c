@@ -645,7 +645,7 @@ void mettometp_genloc(int ii, int jj, int kk, int loc, FTYPE*ucon)
   // So T=BL2KSP for covariant components and KSP2BL for contravariant components
   // and (iT)=BL2KSP for contra and KSP2BL for cov
 
-  // where here T=dxdxp and (iT)=idxdxp (not transposed, just inverse)
+  // where here T=dxdxp and (iT)=idxdxp (tranpose inverse)
 
   /* done! */
 }

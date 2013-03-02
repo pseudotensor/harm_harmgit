@@ -78,6 +78,7 @@ int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_c
 
   // force tetr_con to have correct signature so when applied it gives back vector as if nothing done (i.e. Kronecker Delta) (e.g. Minkowski to Minkowski)
   // Tcon_j^l = Tconorig^{al} \eta_{ja}
+  // So first index is orthonormal and second index is old coordinate basis
   DLOOP(j,k) tmpgeneralmatrix[j][k] = tetr_con[j][k];
   DLOOP(j,k) tetr_con[j][k] = 0. ;
   DLOOP(j,k) for(l=0;l<NDIM;l++) tetr_con[j][k] += mink(j,l)*tmpgeneralmatrix[l][k] ;
@@ -90,6 +91,8 @@ int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_c
 
   // construct tetr_cov
   // Tcov^a_b = Tcon_j^l g_{lb} \eta^{aj}
+  // So first index is orthonormal and second index is old coordinate basis.
+  // So Tcon and Tcov are inverses but not transposes of each other as would occur if matrix_inverse() operated.
   DLOOP(j,k) tmpgeneralmatrix[j][k] = 0. ;
   DLOOP(j,k) for(l=0;l<NDIM;l++) tmpgeneralmatrix[j][k] += tetr_con[j][l]*gcov[GIND(l,k)] ;
   DLOOP(j,k) tetr_cov[j][k] = 0. ;
@@ -456,6 +459,14 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
 
 
 
+////////////
+//
+// Notes:
+//
+// dxdxp = dV^i/dX^k = \Lambda^i_k
+// idxdxp = inverse and tranpose of dxdxp = dX^k/dV^i = (iLambda)^k_i
+// Tetrcon_k^j [first index ortho, second index lab]
+// Tetrcov^k_j [first index ortho, second index lab (i.e. not transposed!)]
 
 
 //**********************************************************************
@@ -485,11 +496,11 @@ int calc_ORTHOes(struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FTYPE tmudn[][NDI
 
   // now convert back to X metric for general internal code use
 
-  // \LambdaXcov^jj[ortho]_kk[labX] = \LambdaVcov^jj[ortho]_ll[lab] idxdxp^ll[labV]_kk[labX]
+  // \LambdaXcov^jj[ortho]_kk[labX] = \LambdaVcov^jj[ortho]_ll[labV] idxdxp^ll[labX]_kk[labV]
   DLOOP(jj,kk){
     tetrcovX[jj][kk]=0.0;
     DLOOPA(ll) {
-      tetrcovX[jj][kk] += tetrcovV[jj][ll]*idxdxp[ll][kk];
+      tetrcovX[jj][kk] += tetrcovV[jj][ll]*idxdxp[kk][ll];
     }
   }
 
@@ -529,7 +540,7 @@ int get_tetrcovcon(struct of_geom *ptrgeom, FTYPE (**tetrcov)[NDIM],FTYPE (**tet
 
   // note that ORTHO2LAB is stored as tetrcon=tmudn
   // note that LAB2ORTHO is stored as tetrcov=tmuup
-  if(STORETLAB2ORTHO==1){
+  if(STORETLAB2ORTHO==1){ // global parameter
     // then just get stored version instead of computing on fly
     *tetrcov=GLOBALMETMACP2A0(tlab2ortho,pp,LAB2ORTHO,ii,jj,kk);
     *tetrcon=GLOBALMETMACP2A0(tlab2ortho,pp,ORTHO2LAB,ii,jj,kk);
@@ -555,6 +566,7 @@ int get_tetrcovcon(struct of_geom *ptrgeom, FTYPE (**tetrcov)[NDIM],FTYPE (**tet
 //calculates base vectors and 1-forms of ZAMO to transform lab <--> ZAMO
 // Here, ZAMO is ZAMO frame, and this function only works for BL coords
 // Only applies for Boyer-Lindquist coordinates
+// KORALTODO: Not used.  Remove? 
 int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][NDIM])
 {
   FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
@@ -605,6 +617,13 @@ int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][
 
 // Compute general Lorentz boost for an arbitrary metric and arbitrary 4-velocities
 // see docs/lorentz.ps.gz by Avery Broderick
+//    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu
+//    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu
+// (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu
+// (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu
+// So if going from u->w (i.e. FF2LAB) frame for  vecff^\mu  , then apply    Lambda^\mu_\nu vecff^nu  = veclab^\mu
+// So if going from w->u (i.e. LAB2FF) frame for veclab^\mu  , then apply (iLambda)^\mu_\nu veclab^nu = vecff^\mu
+// All this assumes iLambda was formed from matrix_inverse() that gives inverse transpose
 int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM])
 {
   int mu,nu;
@@ -701,30 +720,46 @@ int transboost_lab2fluid(struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transb
   calc_ortho_boost_uu(wconlab, uconlab, lambda);
   // get inverse lambda
   FTYPE ilambda[NDIM][NDIM];
+  // comments for matrix_inverse() say takes lambda^j_k and pops out (ilambda)^k_j such that (lambda)^j_k (ilambda)^k_l = \delta^j_l
+  // So need to apply ilambda correctly assuming does transpose
   matrix_inverse(PRIMECOORDS,lambda,ilambda);
+
+
+  // From earlier in other functions:
+  //
+  // Tetrcon_k^j [first index ortho, second index lab]
+  // Tetrcov^k_j [first index ortho, second index lab (i.e. not transposed!)]
+  //
+  //    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu
+  //    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu
+  // (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu
+  // (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu
+  // i.e. iLambda is inverse and transposed
+  // So if going from u->w (i.e. FF2LAB) frame for  vecff^\mu  , then apply    Lambda^\mu_\nu vecff^nu  = veclab^\mu
+  // So if going from w->u (i.e. LAB2FF) frame for veclab^\mu  , then apply (iLambda)^\mu_\nu veclab^nu = vecff^\mu
 
 
   // form transboost
   int aa;
   // apply Lorentz boost on transformation from lab-frame to orthonormal basis
 
-  // TBup_\mu[ff ortho]^\nu[lab coordbasis] = ilambda_\mu[ff ortho]^aa[lab ortho] Tetrcon_aa[lab ortho]^\nu[lab coordbasis]
+  // TBup_\mu[ff ortho]^\nu[lab coordbasis] = lambda^aa[lab ortho]_\mu[ff ortho] Tetrcon_aa[lab ortho]^\nu[lab coordbasis]
   DLOOP(mu,nu) transboostup[mu][nu]=0.0;
-  DLOOP(mu,nu) DLOOPA(aa) transboostup[mu][nu] += ilambda[mu][aa]*tetrcon[aa][nu]; // to operate on (e.g.) ucov^\nu
+  DLOOP(mu,nu) DLOOPA(aa) transboostup[mu][nu] += lambda[aa][mu]*tetrcon[aa][nu]; // as if operated boost on w_aa
 
-  // TBlo^\mu[ff ortho]_\nu[lab coordbasis] =  lambda^\mu[ff ortho]_aa[lab ortho] Tetrcov^aa[lab ortho]_\nu[lab coordbasis]
+  // TBlo^\mu[ff ortho]_\nu[lab coordbasis] =  ilambda^\mu[ff ortho]_aa[lab ortho] Tetrcov^aa[lab ortho]_\nu[lab coordbasis]
   DLOOP(mu,nu) transboostlo[mu][nu]=0.0;
-  DLOOP(mu,nu) DLOOPA(aa) transboostlo[mu][nu] += lambda[mu][aa]*tetrcov[aa][nu]; // to operate on (e.g.) ucon^\nu
+  DLOOP(mu,nu) DLOOPA(aa) transboostlo[mu][nu] += ilambda[mu][aa]*tetrcov[aa][nu]; // as if operated boost on w^aa
 
   // for starting in lab frame coordinate basis, use as follows:
   // i.e. ucon^\mu[ff ortho] =  TBlo^\mu[ff ortho]_\nu[lab coordbasis] ucon^\nu[lab coordbasis]
-  // i.e. ucov_\mu[ff ortho] =  TBhi_\mu[ff ortho]^\nu[lab coordbasis] ucov_\nu[lab coordbasis]
+  // i.e. ucov_\mu[ff ortho] =  TBup_\mu[ff ortho]^\nu[lab coordbasis] ucov_\nu[lab coordbasis]
 
   // if starting with fluid frame orthonormal basis, then use same things but indices are contracted reversely.
   // i.e. ucon^\nu[lab coordbasis] = ucon^\mu[ff ortho]  TBup_\mu[ff ortho]^\nu[lab coordbasis]
   // i.e. ucov_\nu[lab coordbasis] = ucov_\mu[ff ortho]  TBlo^\mu[ff ortho]_\nu[lab coordbasis]
 
-  // that is, as constructed, the TBlo and TBhi have indices always in the same consistent order as far as the meaning of the first and second index with respect to the frame and coordinates.
+  // that is, as constructed, the TBlo and TBhi have indices always in the same consistent order as far as the meaning of the first and second index with respect to the frame and coordinates.  Unlike those things that use matrix_inverse like idxdxp and ilambda
 
 
   return(0);
@@ -739,11 +774,13 @@ int transboost_lab2fluid(struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transb
 //
 // whichvector:
 //
-// 0 : T^t_\nu type,  so that T^t_\nu  = -[E_\nu]/(-\alpha) = -[-\eta_\mu T^\mu_\nu] /(-\alpha) . So that E_t is negative definite in Minkowski.
-//     T^{t\nu} type, so that T^{t\nu} = -[E^\nu]/(-\alpha) = -[-\eta_\mu T^{\mu\nu}]/(-\alpha) . So that E^t is positive definite in Minkowski.
+// TYPEUCOV :
+//  T^t_\nu type,  so that T^t_\nu  = -[E_\nu]/(-\alpha) = -[-\eta_\mu T^\mu_\nu] /(-\alpha) . So that E_t is negative definite in Minkowski.
+//  T^{t\nu} type, so that T^{t\nu} = -[E^\nu]/(-\alpha) = -[-\eta_\mu T^{\mu\nu}]/(-\alpha) . So that E^t is positive definite in Minkowski.
 
-// 1 : B^i = *F^{it} type, so that B^i = *F^{it}[HARMLAB]  = -[B^\nu]/(-\alpha) = -[\eta_\mu *F^{\mu\nu}]/(-\alpha)
-//     B_i = *F_i^t type , so that B_i = *F_i^t[HARMLAB]   = -[B_\nu]/(-\alpha) = -[\eta_\mu *F^\mu_\nu] /(-\alpha)
+// TYPEUCON:
+//  B^i = *F^{it} type, so that B^i = *F^{it}[HARMLAB]  = -[B^\nu]/(-\alpha) = -[\eta_\mu *F^{\mu\nu}]/(-\alpha)
+//  B_i = *F_i^t type , so that B_i = *F_i^t[HARMLAB]   = -[B_\nu]/(-\alpha) = -[\eta_\mu *F^\mu_\nu] /(-\alpha)
 int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out)
 {
   int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out);
@@ -756,39 +793,39 @@ int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of
 
 
   // harmlab to ortho fluid
-  if(harm2orthofluid==1){
+  if(harm2orthofluid==LAB2FF){
     // correct "t" component
-    if(whichvector==0){ // u_\mu type
+    if(whichvector==TYPEUCOV){ // u_\mu type
       DLOOPA(jj) vector4incopy[jj] *= (ptrgeom->alphalapse); // gets E_\nu from T^t_\nu or T^{t\nu} from E^\nu
     }
-    else if(whichvector==2){ // u^\nu type
+    else if(whichvector==TYPEUCON){ // u^\nu type
       DLOOPA(jj) vector4incopy[jj] *= (ptrgeom->alphalapse); // gets B^\nu from B^i or B_i from B_\nu
     }
 
     // transform+boost
     vector_lab2orthofluidorback(harm2orthofluid, ptrgeom, uconcovtype, uconcov, v4concovtype, vector4incopy, vector4out);
-    // vector4out is not orthonormalized and boosted into fluid frame
+    // vector4out is now orthonormalized and boosted into fluid frame
   }
 
 
   // ortho fluid to harmlab
-  if(harm2orthofluid==0){
+  if(harm2orthofluid==FF2LAB){
 
     // transform+boost
     vector_lab2orthofluidorback(harm2orthofluid, ptrgeom, uconcovtype, uconcov, v4concovtype, vector4incopy, vector4out);
-    // vector4out is not orthonormalized and boosted into fluid frame
+    // vector4out is now orthonormalized and boosted into fluid frame
 
 
     // correct "t" component
-    if(whichvector==0){ // u_\mu type
+    if(whichvector==TYPEUCOV){ // u_\mu type
       DLOOPA(jj) vector4out[jj] /= (ptrgeom->alphalapse); // gets T^t_\nu from E_\nu or T^{t\nu} from E^\nu
     }
-    else if(whichvector==2){ // u^\nu type
+    else if(whichvector==TYPEUCON){ // u^\nu type
       DLOOPA(jj) vector4out[jj] /= (ptrgeom->alphalapse); // gets B^i from B^\nu or B_i from B_\nu
     }
 
   }
-    
+  
   
   return(0);
 
@@ -799,10 +836,10 @@ int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of
 
 // convert 4-vector to/from lab-frame coordinate basis to fluid frame orthonormal basis
 //
-// lab2orthofluid : 1 = then vector4 is lab and vector4out is fluid ortho.  0 = orthofluid 2 lab
-// uconcovtype: 1=uconcov is ucon or 2=uconcov is ucov for fluid 4-velocity
+// lab2orthofluid : LAB2FF = then vector4 is lab and vector4out is fluid ortho.  FF2LAB = orthofluid 2 lab
+// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
 // uconcov is in lab-frame as 4-vector of fluid
-// v4concovtype: 1=vector4 is ucon or 2=vector4 is ucov for 4-vector to transform
+// v4concovtype: TYPEUCON=vector4 is ucon or TYPEUCOV=vector4 is ucov for 4-vector to transform
 // vector4in : inserted 4-vector to transform
 // vector4out : returned orthonormal fluid frame 4-vector (returned as same concov as input vector4in)
 // NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
@@ -821,11 +858,11 @@ int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int
   FTYPE transboostup[NDIM][NDIM],transboostlo[NDIM][NDIM];
   FTYPE ucon[NDIM]; // needed for transboost
 
-  if(uconcovtype==1){ // then uconcov is contravariant u^\mu of fluid frame
+  if(uconcovtype==TYPEUCON){ // then uconcov is contravariant u^\mu of fluid frame
     // ucon
     DLOOPA(mu) ucon[mu] = uconcov[mu];
   }
-  else if(uconcovtype==2){ // then uconcov is covariant u_\mu of fluid frame
+  else if(uconcovtype==TYPEUCOV){ // then uconcov is covariant u_\mu of fluid frame
     // ucon
     DLOOPA(mu) ucon[mu] = 0.0; DLOOP(mu,nu) ucon[nu] += uconcov[mu]*(ptrgeom->gcon[GIND(mu,nu)]);
   }
@@ -841,18 +878,18 @@ int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int
 
   // apply trans boost to 4-vector
   DLOOPA(mu) vector4out[mu]=0.0;
-  if(v4concovtype==1){ // then vector4in^\mu is contravariant
-    if(lab2orthofluid==1){
+  if(v4concovtype==TYPEUCON){ // then vector4in^\mu is contravariant
+    if(lab2orthofluid==LAB2FF){
       // vector4ff^\nu = TBlo^\nu_\mu vector4labcoordbasis^\mu
       DLOOP(mu,nu) vector4out[nu] += transboostlo[nu][mu]*vector4in[mu]; // application on vector4in^\mu
     }
     else{ // i.e. orthoff 2 lab
-      // vector4labcoordbasis^\mu = vector4ff^\nu TBhi_\nu^\mu 
+      // vector4labcoordbasis^\mu = vector4ff^\nu TBup_\nu^\mu 
       DLOOP(mu,nu) vector4out[mu] += vector4in[nu]*transboostup[nu][mu]; // application on vector4in^\nu
     }
   }
-  else if(v4concovtype==2){ // then vector4in_\mu is covariant
-    if(lab2orthofluid==1){
+  else if(v4concovtype==TYPEUCOV){ // then vector4in_\mu is covariant
+    if(lab2orthofluid==LAB2FF){
       //vector4ff_\nu = TBup_\nu^\mu vector4labcoordbasis_\mu
       DLOOP(mu,nu) vector4out[nu] += transboostup[nu][mu]*vector4in[mu]; // application on vector4in_\mu
     }
@@ -874,11 +911,11 @@ int vector_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int
 
 // convert lab frame 4-tensor to fluid frame orthonormal 4-tensor
 //
-// lab2orthofluid: 1 : lab2orthofluid   0: orthofluid 2 lab
-// uconcovtype: 1=uconcov is ucon or 2=uconcov is ucov for fluid 4-velocity
+// lab2orthofluid: LAB2FF : lab2orthofluid   FF2LAB: orthofluid 2 lab
+// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
 // uconcov is in lab-frame as 4-vector of fluid
-// tconcovtypeA: for 1st index of tensor: 1=tconcov is con or 2=tconcov is cov
-// tconcovtypeB: for 2nd index of tensor: 1=tconcov is con or 2=tconcov is cov
+// tconcovtypeA: for 1st index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
+// tconcovtypeB: for 2nd index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
 // tensor4in : input lab-frame as 4-tensor
 // tensor4out is returned orthonormal fluid frame 4-tensor (same tconcovtypeA and tconcovtypeB as tensor4in)
 // NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
@@ -889,13 +926,13 @@ int tensor_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int
   FTYPE transboostup[NDIM][NDIM],transboostlo[NDIM][NDIM];
 
 
-  if(uconcovtype==1){ // then uconcov is contravariant u^\mu of fluid frame
+  if(uconcovtype==TYPEUCON){ // then uconcov is contravariant u^\mu of fluid frame
     // ucon
     DLOOPA(mu) ucon[mu] = uconcov[mu];
   }
-  else if(uconcovtype==2){ // then uconcov is covariant u_\mu of fluid frame
+  else if(uconcovtype==TYPEUCOV){ // then uconcov is covariant u_\mu of fluid frame
     // ucon
-    DLOOPA(mu) ucon[mu] = 0.0; DLOOP(mu,nu) ucon[nu] += uconcov[mu]*(ptrgeom->gcon[GIND(mu,nu)]);
+	raise_vec(uconcov,ptrgeom,ucon);
   }
   else{
     dualfprintf(fail_file,"No such uconcovtype=%d\n",uconcovtype);
@@ -908,38 +945,38 @@ int tensor_lab2orthofluidorback(int lab2orthofluid, struct of_geom *ptrgeom, int
 
   // apply trans boost to 4-tensor
   DLOOP(mu,nu) tensor4out[mu][nu]=0.0;
-  if(tconcovtypeA==1 && tconcovtypeB==1){
-    if(lab2orthofluid==1){
-      // tfl^{\nu bb} = TBlo^\nu_\mu TBlo^bb_aa t^{\mu aa}
+  if(tconcovtypeA==TYPEUCON && tconcovtypeB==TYPEUCON){
+    if(lab2orthofluid==LAB2FF){
+      // tfl^{\nu bb} = TBlo^\nu[ffortho]_\mu[labcoord] TBlo^bb[ffortho]_aa[labcoord] t^{\mu aa}
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[nu][bb] += transboostlo[nu][mu]*transboostlo[bb][aa]*tensor4in[mu][aa]; // application on con con
     }
     else{
-      // t^{\mu aa} = tfl^{\nu bb} TBhi_\nu^\mu TBhi_bb^aa
+      // t^{\mu aa} = tfl^{\nu bb} TBup_\nu^\mu TBup_bb^aa
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
     }
   }
-  else if(tconcovtypeA==1 && tconcovtypeB==2){
-    if(lab2orthofluid==1){
+  else if(tconcovtypeA==TYPEUCON && tconcovtypeB==TYPEUCOV){
+    if(lab2orthofluid==LAB2FF){
       // tfl^\nu_bb = TBlo^\nu_\mu TBup_bb^aa t^\mu_aa
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[nu][bb] += transboostlo[nu][mu]*transboostup[bb][aa]*tensor4in[mu][aa]; // application on con cov
     }
     else{
-      // t^\mu_aa = t^\nu_bb TBhi_\nu^\mu TBlo^bb_aa
+      // t^\mu_aa = t^\nu_bb TBup_\nu^\mu TBlo^bb_aa
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostlo[bb][aa]; // application on con cov
     }
   }
-  else if(tconcovtypeA==2 && tconcovtypeB==1){
-    if(lab2orthofluid==1){
+  else if(tconcovtypeA==TYPEUCOV && tconcovtypeB==TYPEUCON){
+    if(lab2orthofluid==LAB2FF){
       // tfl_\nu^bb = TBup_\nu^\mu TBlo^bb_aa t_\mu^aa
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[nu][bb] += transboostup[nu][mu]*transboostlo[bb][aa]*tensor4in[mu][aa]; // application on cov con
     }
     else{
-      // t_\mu^aa = t_\nu^bb TBlo^\nu_\mu TBhi_bb^aa
-      DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostlo[bb][aa]; // application on cov con
+      // t_\mu^aa = t_\nu^bb TBlo^\nu_\mu TBup_bb^aa
+      DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[mu][aa] += tensor4in[nu][bb]*transboostlo[nu][mu]*transboostup[bb][aa]; // application on cov con
     }
   }
-  else if(tconcovtypeA==2 && tconcovtypeB==2){
-    if(lab2orthofluid==1){
+  else if(tconcovtypeA==TYPEUCOV && tconcovtypeB==TYPEUCOV){
+    if(lab2orthofluid==LAB2FF){
       // tfl_{\nu bb} = TBup_\nu^\mu TBup_bb^aa t_{\mu aa}
       DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[nu][bb] += transboostup[nu][mu]*transboostup[bb][aa]*tensor4in[mu][aa]; // application on cov cov
     }
@@ -994,19 +1031,15 @@ void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYP
   DLOOPA(jj) tempcomp[jj]=0.0;
   int kk;
   // NOTEMARK: here (unlike in jon_interp_computepreprocess.c) tetrcon and tetrcov convert directly from X coords to V-based orthonormal basis
-  if(concovtype==1){
+  if(concovtype==TYPEUCON){
     // transform to orthonormal basis for contravariant vector in X coordinates
-    DLOOP(jj,kk){
-      // u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
-      tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
-    }
+	// u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
+    DLOOP(jj,kk) tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
   }
-  else if(concovtype==2){
+  else if(concovtype==TYPEUCOV){
     // transform to orthonormal basis for covariant vector in X coordinates
-    DLOOP(jj,kk){
-      // u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
-      tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
-    }
+	// u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
+    DLOOP(jj,kk) tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
   }
   else{
     dualfprintf(fail_file,"No such concovtype=%d\n",concovtype);

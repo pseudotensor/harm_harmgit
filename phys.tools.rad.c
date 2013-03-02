@@ -529,8 +529,8 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 //******* tensor R^ij using M1 closure scheme *****************************
 //**********************************************************************
 // Use: For initial conditions and dumping
-// pp : fluid frame radiation conserved quantities
-// Rij : fluid frame radiation stress-energy tensor
+// pp : fluid frame orthonormal basis radiation conserved quantities
+// Rij : fluid frame orthonormal basis radiation stress-energy tensor
 int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
 {
   FTYPE E=pp[PRAD0];
@@ -711,44 +711,57 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 
 /*********************************************************************************/
 /****** radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame  *******/
+// Used only for initial conditions
 /*********************************************************************************/
-int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct of_geom *ptrgeom)
+// whichdir: LAB2FF or FF2LAB
+// pin: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values
+// pout: outputs radiation primitives (and doesn't touch other primitives if they exist -- preserves them)
+// ptrgeom: input geometry
+int prad_fforlab(int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
 {
-  FTYPE Rij[NDIM][NDIM];
+  FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR];
   int pliter,pl;
-  int boost22_laborff(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom);
 
 
-  dualfprintf(fail_file,"WHY HERE\n");
-  myexit(252526);
+  //radiative stress tensor in the fluid frame orthonormal basis
+  // assuming input pin for radiation is in fluid frame orthonormal basis.
+  // gets R^{ij} in fluid frame orthonormal basis from primitive quantities in fluid frame orthonormal basis
+  calc_Rij_ff(pin,Rijff);
 
-  //TODO : no distinction basing on whichdir!
+  // get ucon (assumed primitive velocity in ptrgeom coordinates)
+  FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+  ucon_calc(pin,ptrgeom,ucon,others);
+  
+  // transform and boost
+  if(whichdir==FF2LAB){
+	int tconcovtypeA=TYPEUCON;
+	int tconcovtypeB=TYPEUCON;
+	tensor_lab2orthofluidorback(FF2LAB, ptrgeom, TYPEUCON, ucon, tconcovtypeA, tconcovtypeB, Rijff, Rijlab);
 
-  //radiative stress tensor in the fluid frame
-  calc_Rij_ff(pp1,Rij);
+	//R^munu -> R^mu_nu so in standard form to extract conserved quantity R^t_\nu
+	indices_2221(Rijlab,Rijlab,ptrgeom);
+  }
 
-  //transforming from ortonormal coordinates to code coordinates
-  //trans22_on2cc(Rij,Rij,tlo);
+  // Store radiation conserved quantity from R^t_\nu .  u2p_rad() below only uses radiation U's.
+  U[URAD0]=Rijlab[TT][TT];
+  U[URAD1]=Rijlab[TT][RR];
+  U[URAD2]=Rijlab[TT][TH];
+  U[URAD3]=Rijlab[TT][PH];
 
-  //boosting the tensor to the lab frame
-  boost22_laborff(whichdir,Rij,Rij,pp1,q,ptrgeom);
-
-  //R^munu -> R^mu_nu
-  indices_2221(Rij,Rij,ptrgeom);
-
-  PLOOP(pliter,pl)
-    pp2[pl]=pp1[pl];
-
-  //temporarily store conserved in pp2[]
-  pp2[PRAD0]=Rij[0][0];
-  pp2[PRAD1]=Rij[0][1];
-  pp2[PRAD2]=Rij[0][2];
-  pp2[PRAD3]=Rij[0][3];
+  // set primitive that can use as pre-existing fluid velocity if need to use for reduction
+  PLOOP(pliter,pl) pout[pl]=pin[pl];
 
   //convert to real primitives - conversion does not care about MHD only about radiative conserved
   PFTYPE lpflag=UTOPRIMNOFAIL,lpflagrad=UTOPRIMRADNOFAIL;
-  // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pp2 primitives for velocity to maybe be used in local reductions to fluid frame.
-  u2p_rad(pp2,pp2,ptrgeom, &lpflag, &lpflagrad);
+  // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
+  u2p_rad(U,pout,ptrgeom, &lpflag, &lpflagrad);
+  if(lpflag!=UTOPRIMNOFAIL || lpflagrad!=UTOPRIMRADNOFAIL){
+	dualfprintf(fail_file,"Failed to invert during prad_fforlab() with whichdir=%d.  Assuming fixups won't be applied.\n",whichdir);
+	myexit(189235);
+	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
+  }
+
+  
 
   return 0;
 } 
@@ -760,8 +773,8 @@ int prad_fforlab(int whichdir, FTYPE *pp1, FTYPE *pp2,struct of_state *q, struct
 //calculates general Lorenz matrix for lab <-> ff
 //whichdir: [LAB2FF, FF2LAB]
 // SUPERGODMARK: What is lab frame velocity?
-int
-calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE L[][NDIM])
+// UNUSED -- KORALTODO :REMOVE?
+int calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE L[][NDIM])
 {
   int ii,jj,kk;
   int verbose=0;
@@ -861,8 +874,8 @@ int boost22_laborff(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,st
 /*****************************************************************/
 /*****************************************************************/
 //A^i Lorentz boost from lab to fluid frame
-int
-boost2_laborff(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom)
+// UNUSED -- KORALTODO :REMOVE?
+int boost2_laborff(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom)
 { 
   int ii,jj,kk,ll;
   FTYPE At[NDIM];
@@ -890,7 +903,7 @@ boost2_laborff(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_s
 /*****************************************************************/
 /*****************************************************************/
 //simple Lorentz boosts between ortonormal frames
-
+// UNUSED -- KORALTODO :REMOVE?
 int boost2_zamo2ff(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 { 
   boost2_fforzamo(ZAMO2FF, A1, A2, pp,q, ptrgeom,  eup);
@@ -898,6 +911,7 @@ int boost2_zamo2ff(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of
  return 0;
 }
 
+// UNUSED -- KORALTODO :REMOVE?
 int boost2_ff2zamo(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 { 
   boost2_fforzamo(FF2ZAMO, A1, A2, pp,q, ptrgeom,  eup);
@@ -909,6 +923,7 @@ int boost2_ff2zamo(FTYPE A1[],FTYPE A2[],FTYPE *pp,struct of_state *q, struct of
 /*****************************************************************/
 /*****************************************************************/
 //A^i Lorentz boost fluid frame -> ZAMO
+// UNUSED -- KORALTODO :REMOVE?
 int boost2_fforzamo(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 {
   // ptrgeom not used for now
@@ -985,6 +1000,7 @@ int boost2_fforzamo(int whichdir, FTYPE A1[NDIM],FTYPE A2[NDIM],FTYPE *pp,struct
 /*****************************************************************/
 /*****************************************************************/
 //T^ij Lorentz boost ZAMO -> fluid frame
+// UNUSED -- KORALTODO :REMOVE?
 int boost22_zamo2ff(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 { 
   boost22_fforzamo(ZAMO2FF, T1, T2, pp,q, ptrgeom,  eup);
@@ -992,6 +1008,7 @@ int boost22_zamo2ff(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state 
  return 0;
 }
 
+// UNUSED -- KORALTODO :REMOVE?
 int boost22_ff2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom,FTYPE eup[][NDIM])
 { 
   boost22_fforzamo(FF2ZAMO, T1, T2, pp,q, ptrgeom,  eup);
@@ -1003,6 +1020,7 @@ int boost22_ff2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state 
 /*****************************************************************/
 /*****************************************************************/
 //T^ij Lorentz boost fluid frame -> ZAMO
+// UNUSED -- KORALTODO :REMOVE?
 int boost22_fforzamo(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
   // ptrgeom not used for now
@@ -1086,6 +1104,7 @@ int boost22_fforzamo(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,s
 /*****************************************************************/
 /*****************************************************************/
 //T^ij transfromation ZAMO -> lab
+// UNUSED -- KORALTODO :REMOVE?
 int trans22_zamo2lab(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE elo[][NDIM])
 {
   int i,j,k,l;
@@ -1121,6 +1140,7 @@ int trans22_zamo2lab(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE elo[][NDIM])
 /*****************************************************************/
 /*****************************************************************/
 //T^ij transfromation lab -> ZAMO
+// UNUSED -- KORALTODO :REMOVE?
 int trans22_lab2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE eup[][NDIM])
 {
   int i,j,k,l;
@@ -1156,6 +1176,7 @@ int trans22_lab2zamo(FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE eup[][NDIM])
 /*****************************************************************/
 /*****************************************************************/
 //u^i transfromation lab -> ZAMO
+// UNUSED -- KORALTODO :REMOVE?
 int trans2_lab2zamo(FTYPE *u1,FTYPE *u2,FTYPE eup[][NDIM])
 {
   int i,j,k;
@@ -1180,6 +1201,7 @@ int trans2_lab2zamo(FTYPE *u1,FTYPE *u2,FTYPE eup[][NDIM])
 /*****************************************************************/
 /*****************************************************************/
 //u^i transfromation ZAMO -> lab
+// UNUSED -- KORALTODO :REMOVE?
 int trans2_zamo2lab(FTYPE *u1,FTYPE *u2,FTYPE elo[][NDIM])
 {
   int i,j,k;
@@ -1615,6 +1637,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 //numerical conserved to primitives solver for radiation
 //used e.g. for not-frame-invariant  Eddington apr. 
 //solves in 4dimensions using frame boosts etc.
+// UNUSED -- KORALTODO :REMOVE?
 int f_u2prad_num(FTYPE *uu,FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM], FTYPE elo[][NDIM],FTYPE *f)
 {
   FTYPE Rij[NDIM][NDIM];
@@ -1638,6 +1661,7 @@ int f_u2prad_num(FTYPE *uu,FTYPE *pp, struct of_state *q, struct of_geom *ptrgeo
 
 
 // U->P inversion for Eddington approximation using Newton method.
+// UNUSED -- KORALTODO :REMOVE?
 int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM], FTYPE elo[][NDIM])
 {
   FTYPE pp0[NPR],pporg[NPR];
@@ -1748,6 +1772,7 @@ int u2p_rad_num(FTYPE *uu, FTYPE *pp, struct of_state *q, struct of_geom *ptrgeo
 // Use: Maybe dumping
 // pp1 : Full set of primitives with radiation primitives replaced by fluid frame radiation \hat{E} and \hat{F}
 // pp2 : Full set of primitives with ZAMO frame for radiation conserved quantities
+// UNUSED -- KORALTODO :REMOVE?
 int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
   FTYPE Rij[NDIM][NDIM];
@@ -1776,6 +1801,7 @@ int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptr
 // Use: Error (f) for iteration
 // ppff : HD primitives (i.e. WHICHVEL velocity) and radiation primitives of \hat{E} and \hat{F} (i.e. fluid frame conserved quantities)
 // ppzamo : \hat{E} & \hat{F} -> E & F in ZAMO
+// UNUSED -- KORALTODO :REMOVE?
 int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM],FTYPE *f)
 {
   FTYPE Rij[NDIM][NDIM];
@@ -1797,6 +1823,7 @@ int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geo
 // numerical iteration to find ff from zamo
 // Use: Initial conditions
 // ppzamo : E & F in ZAMO -> \hat{E} & \hat{F}
+// UNUSED -- KORALTODO :REMOVE?
 int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][NDIM])
 {
   FTYPE pp0[NPR],pp[NPR];

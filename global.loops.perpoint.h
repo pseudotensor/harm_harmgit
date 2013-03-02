@@ -127,6 +127,9 @@
 #define PLOOPNOB2(pl) for(pl=B3+1;pl<NPR;pl++)
 
 
+#define PLOOPRADONLY(pl) for(pl=PRAD0;pl<=PRAD3;pl++)
+
+
 
 /* loop over all Dimensions; second rank loop */
 #define DLOOP(j,k) for(j=0;j<NDIM;j++)for(k=0;k<NDIM;k++)

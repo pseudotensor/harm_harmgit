@@ -274,17 +274,28 @@ int init(int *argc, char **argv[])
       /////////////////////////////// 
       
       trifprintf("System Fixup and Bound\n");
+
+
+      if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+
       
 #if(FIXUPAFTERINIT)
       if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
 	FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
 
+
+	  {
+		int finalstep=1; // assume user wants to know if initial conserved quants changed
+		// in case pflag failure of utoprim call was hit during init, and user didn't do anything about it, then need to fixup now.
+		MYFUN(post_fixup(STAGEM1,finalstep, t, GLOBALPOINT(pglobal),GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal)),"initbase.c:init()", "post_fixup()", 1);
+	  }
+
       
       {
-	int finalstep=1; // assume user wants to know if initial conserved quants changed
-	if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
-	  FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+		int finalstep=1; // assume user wants to know if initial conserved quants changed
+		if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
+		  FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
       }
 
 
@@ -292,8 +303,6 @@ int init(int *argc, char **argv[])
       pre_interpolate_and_advance(GLOBALPOINT(pglobal));
 
       
-      if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
-	FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
 
 
       if(DODIAGS && PRODUCTION==0){
@@ -380,13 +389,24 @@ int init(int *argc, char **argv[])
   else if(RESTARTMODE==1){
 
 
+	// more restart checks
     restart_init_simple_checks(2);
 
 
 #if(FIXUPAFTERINIT)
+    trifprintf("before pre_fixup() during restart: proc=%04d\n",myid);
+    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+    trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
+
     trifprintf("before fixup() during restart: proc=%04d\n",myid);
     if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)  FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
     trifprintf("after fixup() during restart: proc=%04d\n",myid);
+
+	{
+	  int finalstep=1; // assume user wants to know if initial conserved quants changed
+	  // in case pflag failure of utoprim call was hit during init, and user didn't do anything about it, then need to fixup now.
+	  MYFUN(post_fixup(STAGEM1,finalstep, t, GLOBALPOINT(pglobal),GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal)),"initbase.c:init()", "post_fixup()", 1);
+	}
 #endif
 
     trifprintf("before bound_prim() during restart: proc=%04d\n",myid);
@@ -399,13 +419,7 @@ int init(int *argc, char **argv[])
 
     trifprintf("after bound_prim() during restart: proc=%04d\n",myid);
 
-
-      
-    trifprintf("before pre_fixup() during restart: proc=%04d\n",myid);
-    if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
-    trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
-
-
+	// more restart checks
     restart_init_simple_checks(3);
 
 
@@ -443,6 +457,7 @@ int init(int *argc, char **argv[])
   }
 
 
+	// more restart checks
     restart_init_simple_checks(4);
 
 
@@ -454,6 +469,7 @@ int init(int *argc, char **argv[])
     trifprintf("after post_init and post_init_specific_init during restart: proc=%04d\n",myid);
 
 
+	// more restart checks
     restart_init_simple_checks(5);
 
 

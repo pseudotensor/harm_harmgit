@@ -741,7 +741,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //  FTYPE P,Pnew;
   int jj;
   int badinversion;
-  int oldmhdpflag,oldradpflag;
+  PFTYPE oldmhdpflag,oldradpflag;
 
 
   

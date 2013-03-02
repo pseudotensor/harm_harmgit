@@ -77,3 +77,36 @@
 // 8) Koral's F and U in LAXF have no \detg
 //
 //////////////////////////////////
+
+
+
+
+
+
+//
+//At this point actually everything seems to be working very well qualitatively.  Some effort went into adding tests, fixed the boundary conditions, adding all the missing pieces of code (opacity limiter), getting u2p_rad() to be more generally robust via HARM-like fixups (both inside u2p_rad() and using fixup_utoprim()), coding-up tetrad stuff that might be used, getting units to make sense, debugging the opacity and source terms, folding koral into HARM's general EOS framework, etc.  Check the git log for some other details.
+//
+//Many things left to do:
+//
+//0) Setup all the rest of the problems.  Now that code actually works (Hurray!) and is no longer incomplete (whew), we can add the other test problems.  We also need to think of MHD test problems for the new paper.
+//
+//1) See KORALTODO or SUPERGODMARK anywhere, and you'll see an issue.
+//
+//2) Compute_dt() needs to be using information passed from the place where dt for each step is set
+//
+//3) Implicit use of Uptorprimgen() needs to allow only a few steps to be taken -- no point in getting machine accurate U->p there if taking multiple implicit steps.  But often only take 1-2 implicit steps, so need to be careful.
+//
+//4) If Utoprimgen fails in implicit, won't converge, so need a backup method.  Koral backup won't work for rel flows, so need to sub-cycle with explicit scheme or use a different semi-implicit scheme like one I mentioned from numerical recipes.
+//
+//5) Should be able to choose explicit if not optically thick (more specifically, G_\mu/T^t_\mu is small enough, so source term doesn't change conserved quantity too much).  Perhaps do 1 explicit check and see if that condition is met, and if not use implicit method.  This is because implicit method is very slow, even for 1 iteration due to matrix inversion and MHD inversion.
+//
+//6) Need to check factors of Pi and 1/4 for B in calc_Gu as well as 4\pi in Gu.  Are those really dimensionless and should be there?
+//
+//7) I'm unsure about Olek's velocity limiter for tau>1.  I'm not sure the 4/3 is right.
+//
+//8) Not sure if reversions in u2p_rad() are all agreeable.  Better than prior choices, but e.g. CASE2B is a concern.  It's what also caused the implicit method to fail when CASE2B is hit.  Need some backup approach for CASE2B situation.
+//
+//9) Iteration and other constants as in global.depmnemonics.rad.h need to be chosen intelligently.  Can't always just be 1E-6.  For the MHD inversion, machine precision accuracy is always sought.  Maybe required for radiation sometimes.
+//
+//10) #9 is only possible if the equations are written to avoid catastrophic cancellation.  Maybe G and other terms have catastrophic cancellation issues.  E.g., kappaes cancels in Gu for static flow, but maybe other actual serious cancellation issues somewhere.  
+
