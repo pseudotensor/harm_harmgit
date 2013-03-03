@@ -5,6 +5,10 @@ Version 2 Created by Jonathan M. on 22 Jun 2009. Previous Version
 mkdir mysm ; cd mysm
 svn checkout https://harm.unfuddle.com/svn/harm_sm/ .
 
+Also get SM macros:
+
+svn co https://harm.unfuddle.com/svn/harm_harmsmmacros/
+
 2) Edit the Makefile and change “/home/jon/research/utils/sm/sm2_4_1” to the directory you have chosen and attach “/src” to the end
 
 3) Edit the Makefile and change “DEST = /usr/local” to where you want to install SM
@@ -62,4 +66,11 @@ The jsm file should contain:
 export TERM=vt100
 /bin/sm m smstart q $@
 
-14) Run: jsm
+14) To get the proper /etc/termcap entry for vt100, do on ubuntu:
+
+sudo apt-get install libncurses5-dev
+
+15) And also edit again .sm so that /etc/termcap is instead your home directory path with appending /sm/termcap .  E.g. /home/jon/sm/termcap
+
+16) Run: jsm
+

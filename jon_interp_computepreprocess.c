@@ -1487,7 +1487,8 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
 
 
   // get tetrad (uses dxdxp so that tetrcov and tetrcon and eigenvalues are using V metric not X metric)
-  tetr_func_frommetric(dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
+  primcoord=1; // tells to use dxdxp to make simpler
+  tetr_func_frommetric(primcoord, dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
 
   // DEBUG
   //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){

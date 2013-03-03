@@ -778,7 +778,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   zz=V[3];
   
 
-  // set fluid values.  Also set radiation values, which are set in fluid frame orthonormal basis
+  // set fluid values.  Also set radiation ff primitives (E,F^i), which are set in fluid frame orthonormal basis
   if(xx<(Rout_array[1]+Rin_array[1])/2.){
     rho=1.;
     if(NTUBE==1) {uint = 3.e-5 / (GAMMATUBE - 1.); ERAD=1.e-8; Fx=1.e-2*ERAD;ux=0.015;}
@@ -833,9 +833,10 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
   // transform radiation primitives to lab-frame
   FTYPE prrad[NPR],prradnew[NPR];
-  PLOOPRADONLY(pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives
+  PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
   int whichdir=FF2LAB; // fluid frame orthonormal to lab-frame
-  prad_fforlab(whichdir, prrad, prradnew, ptrgeom);
+  int primcoord=0; // tells not PRIMCOORDs so won't assume can use dxdxp's to simplify metric
+  prad_fforlab(primcoord, whichdir, prrad, prradnew, ptrgeom);
   // overwrite radiation primitives with new lab-frame values
   PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
 

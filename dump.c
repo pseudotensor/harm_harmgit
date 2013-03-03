@@ -425,14 +425,14 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 
 
   // always NPRDUMP
-  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + NDIM * NDIM + 6 + 1
+  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + 4 * NDIM + 6 + 1
 #if(CALCFARADAYANDCURRENTS)
 		    + NDIM*2
 		    + 2*6
 #endif
 		    ;
   else{
-    *numcolumns=3*3 + NPRDUMP + 3 + (nprend+1) + 1 + NDIM * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
+    *numcolumns=3*3 + NPRDUMP + 3 + (nprend+1) + 1 + 4 * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
 #if(CALCFARADAYANDCURRENTS)
       + NDIM*2
       + 2*6

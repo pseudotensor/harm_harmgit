@@ -1,0 +1,178 @@
+# This file describes some basic SM stuff using existing macros from this repo assuming already gone through quick start guide.
+
+Primary files are marked with * .  Still, those functions have been replaced by python scripts, but using SM is sometimes simpler or nice for simple plots with Latex labels.  But SM is buggy compared to python.
+
+
+  # total list (no comment if already primary one above)
+  2dtilt.m : PROJECT
+  anim.m  : animation of frames
+  areamap.m : uses areamap from HARM for failure map
+  asdfas.m : PROJECT
+  avery.m : PROJECT
+  averyraytrace.m : PROJECT
+  averystar.m : PROJECT
+  averywind.m : PROJECT
+  avgwrite.m : average file writing routines
+  axisstuff.m
+  axistest.m
+  bani.m : PROJECT
+  blandford.m : PROJECT
+  bondi_conv.m : PROJECT
+  bphivst.m : PROJECT (MG04?)
+  bzplots.m : PROJECT (MG04)
+  cartonly.m
+  cartonlyold.m
+  checkcurrent.m
+  checksasdfasdf.m
+  checksinwave.m
+  codechecks.m
+  coldgrmhd.m
+  courant.m : dt check
+  crap.m
+  crapsm.m
+  diss.m : Dissipation stuff?
+  divbtests.m
+  extra.m
+  fail1.m
+  fail.m
+  ffde.m
+  fieldline.m
+  fieldtests.m
+  flowlines.m
+  fluxdiskbh.m
+  forcebalance.m
+  forgammie.m
+* gammie.m : reads-in diagnostics from harm that have been replaced by python
+  gener.m : reads-in gammie energy diagnostics stuff vs. time files
+  gmri.m : mri check
+  grb1.m : PROJECT (eos/cc/GRB)
+  grbmodel.m : PROJECT (eos/cc/GRB)
+  grif.m
+* gtwodavgs.m : process or create time-average dump files
+* gtwod.m : containts a bunch of read file macros and some other calculations
+  gtwodmaps2.m : areamap failure file stuff
+  gtwodmaps.m : areamap failure file stuff
+  gtwodplots.m
+  hawley.m
+  idealmhdcheck.m
+  inftest.m
+  iozone.m
+  jet1.m
+  jetforavery.m : PROJECT
+  jetinst.m
+  kaz_backup.m : PROJECT (EOS/CC/grb)
+  kaz.m : PROJECT (EOS/CC/grb)
+  kazpostmatlab.m : PROJECT (EOS/CC/grb)
+  kom.m : PROJECT
+  levinson.m : PROJECT
+  lumvsr.m : luminosity vs. radius vs. time stuff for HARM cooling function
+  lw2003.m : PROJECT
+  lwtests.m : TESTS
+  lyutikov_hair.m : PROJECT
+  magnetic_diss.m : magnetic dissipation measurements
+  manyeners.m
+  meissner.m : PROJECT
+  metrics.m : metric test stuff
+  mignone.m : PROJECT
+  mode2.m : wave speed stuff
+  mode.m : wave speed stuff
+  mod.m
+  more.m
+  mri.m : MRI checks
+  myplots2.m
+  myplots.m
+  newinterpmacro.m
+  niayesh.m : PROJECT
+  noblebetacheck.m : See how beta computed makes difference
+  ns1.m
+  nsbh.m : NS-BH PROJECT stuff (incomplete project)
+  paratest.m
+  penna_disk.m : PROJECT
+  phivsr.m : Magnetic flux vs. radius (for MTB12 paper)
+  pls.m
+  plsold.m
+  powercheck.m
+  pulsar.m : PROJECT
+  punsly.m : PROJECT
+  qpo1.m : PROJECT
+  ramesh_disk.m : PROJECT
+  ramesh_instability.m : PROJECT
+  ramesh_selfsim.m : PROJECT (Narayan et al. 2007)
+* rdreads.m : reads-in various files
+  rebecaphi.m : PROJECT
+  reconnection_norad.m : PROJECT
+  reconnection_switch.m : PROJECT
+  restartderes.m
+  sashadiff.m
+  sashagod2.m
+  sashagod.m
+  scalingdata.m : Kraken or supercomputer scaling
+  scn.m
+  scnsymmetry.m
+  shep.m : PROJECT
+  sigmaproblem.m
+  spin.m
+  stress.m
+  supercrap.m
+  symmetry.m : symmetry check codes
+  testgcovmacro.m
+  testpara.m
+  tests1dhd.m
+  testworks.jon.m
+  testworks.m
+  thickdisk.m : MTB12 paper plots
+  thindisk2.m : PROJECT
+  thindisk.m : PROJECT
+  time.m : dt?
+  trans1.m
+  twod.m : PNMHD code SM macros
+* utils.m : various tools
+  uzdensky.m : PROJECT
+  wavespeed_check.m
+  zakamska.m : PROJECT
+
+
+#############
+
+# Generally when start SM using jsm, checks for ~/sm/smstart file (which does exist) and looks for "default" macro and then runs that macro that is currently "smstart" which sets-up defaults for Jon's SM macros
+
+# Often used setups for non-radiation harm (assumes dump files are text and not binary)
+
+gogrmhd
+jrdpcf3duentropy dump0000
+grid3d gdump
+pl 0 r rho
+
+
+# Now with radiation, have new macro to read-in full set of new things:
+
+gogrmhd
+jrdprad dump0000
+grid3d gdump
+pl 0 r rho
+
+# rho : rest-mass density \rho_0
+# u : rest internal energy density u_g
+# v1-v3 : relative 4-velocity
+# B1-B3 : lab-frame 3-field
+# prad0-3 : radiation primitives (Erf,relative 4-velocity for radiation frame)
+# p : thermal gas pressure
+# cs2 : sound speed squared
+# Sden : entropy density
+# U0 : \detg \rho_0 u^t
+# U1-U4 : \detg T^t_\nu
+# U5-U7 : \detg B^i
+# U8-U11 : radiation conserved quantities (R^t_\nu)
+# U12 : entropy conserved quantity
+# divb = \nabla \cdot B properly normalized so 1 is large
+# uu? = u^\mu and ud? = u_\mu and same for bu and bd
+# v?mp = wave speed lab-frame 3-velocity dx^?/dt for negative (m) and positive (p) directions for each direction ?=123
+# ju? = j^\mu jd=j_\mu
+# fu? = Faraday^{\mu\nu} but only independent 6 components.  Samefor fd?
+
+# grid3d contains grid stuff, including:
+# gv3?? = g_{\mu\nu} at cell center.  Same for gn3?? = g^{\mu\nu}.
+# detg = \detg = \sqrt{-g} where g=Det(g_{\mu\nu})
+# dxdxp?? = dV^\mu/dX^\nu
+# etc.
+

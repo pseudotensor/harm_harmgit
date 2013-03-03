@@ -1277,6 +1277,7 @@ static void set_tlab2ortho(void)
 {
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
+  int primcoord=1; // tells calc_ORTHOes() can use dxdxp to simplify metric before getting tetrad
 
 #pragma omp parallel 
   {
@@ -1296,7 +1297,7 @@ static void set_tlab2ortho(void)
       int ll;
       for(ll=CENT;ll<CENT+BOOSTGRIDPOS;ll++){
         get_geometry(i, j, k, ll, ptrgeom);
-        calc_ORTHOes(ptrgeom, GLOBALMETMACP2A0(tlab2ortho,ll,LAB2ORTHO,i,j,k),GLOBALMETMACP2A0(tlab2ortho,ll,ORTHO2LAB,i,j,k));// pass [4][4] array
+        calc_ORTHOes(primcoord, ptrgeom, GLOBALMETMACP2A0(tlab2ortho,ll,LAB2ORTHO,i,j,k),GLOBALMETMACP2A0(tlab2ortho,ll,ORTHO2LAB,i,j,k));// pass [4][4] array
 
 	// DEBUG:
 	//	int jj,kk;

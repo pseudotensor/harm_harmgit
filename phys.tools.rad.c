@@ -713,13 +713,14 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 /****** radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame  *******/
 // Used only for initial conditions
 /*********************************************************************************/
+// primcood: 0:false 1:true that PRIMCOORD so can use dxdxp to simplify input metric
 // whichdir: LAB2FF or FF2LAB
 // pin: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values
 // pout: outputs radiation primitives (and doesn't touch other primitives if they exist -- preserves them)
 // ptrgeom: input geometry
-int prad_fforlab(int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
+int prad_fforlab(int primcoord, int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
 {
-  FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR];
+  FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR]={0};
   int pliter,pl;
 
 
@@ -736,7 +737,7 @@ int prad_fforlab(int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
   if(whichdir==FF2LAB){
 	int tconcovtypeA=TYPEUCON;
 	int tconcovtypeB=TYPEUCON;
-	tensor_lab2orthofluidorback(FF2LAB, ptrgeom, TYPEUCON, ucon, tconcovtypeA, tconcovtypeB, Rijff, Rijlab);
+	tensor_lab2orthofluidorback(primcoord, FF2LAB, ptrgeom, TYPEUCON, ucon, tconcovtypeA, tconcovtypeB, Rijff, Rijlab);
 
 	//R^munu -> R^mu_nu so in standard form to extract conserved quantity R^t_\nu
 	indices_2221(Rijlab,Rijlab,ptrgeom);
@@ -756,7 +757,14 @@ int prad_fforlab(int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
   u2p_rad(U,pout,ptrgeom, &lpflag, &lpflagrad);
   if(lpflag!=UTOPRIMNOFAIL || lpflagrad!=UTOPRIMRADNOFAIL){
-	dualfprintf(fail_file,"Failed to invert during prad_fforlab() with whichdir=%d.  Assuming fixups won't be applied.\n",whichdir);
+	dualfprintf(fail_file,"Failed to invert during prad_fforlab() with whichdir=%d.  Assuming fixups won't be applied: %d %d\n",whichdir,lpflag,lpflagrad);
+	dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pin=%g U=%g\n",pl,pin[pl],U[pl]);
+	int jj,kk;
+	DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
+	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
+	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeom->gcov[GIND(jj,kk)],ptrgeom->gcon[GIND(jj,kk)]);
+	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
 	myexit(189235);
 	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
@@ -1569,7 +1577,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
       else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
 #if(PRODUCTION==0)
-      dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
 
     }
