@@ -2086,6 +2086,26 @@ int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *other
   return(0) ;
 }
 
+int ucon_calc_whichvel(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
+{
+  if(whichvel==VEL4){
+	return(ucon_calc_4vel(pr,geom,ucon,others));
+  }
+  else if(whichvel==VEL3){
+	return(ucon_calc_3vel(pr,geom,ucon,others));
+  }
+  else if(whichvel==VELREL4){
+	return(ucon_calc_rel4vel(pr,geom,ucon,others));
+  }
+  else{
+	dualfprintf(fail_file,"No such whichvel=%d for ucon_calc_whichvel()\n",whichvel);
+	myexit(384852);
+  }
+
+  return(1); // shouldn't get here
+
+}
+
 
 /* find gamma-factor wrt normal observer */
 int gamma_calc(FTYPE *pr, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq)

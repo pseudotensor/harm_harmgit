@@ -723,7 +723,7 @@ int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab,
   get_tetrcovcon(primcoord, ptrgeom, &tetrcov,&tetrcon); // pass address of pointer since want to give new pointer address if stored
   
 
-  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d tetrcov=%g tetrcon=%g\n",mu,nu,tetrcov[mu][nu],tetrcon[mu][nu]);
+  //  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d tetrcov=%g tetrcon=%g\n",mu,nu,tetrcov[mu][nu],tetrcon[mu][nu]);
 
 
   // get ucovlab
@@ -741,7 +741,8 @@ int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab,
   DLOOPA(mu) wconlab[mu] = 0.0;
   DLOOP(mu,nu) wconlab[nu] += wcovlab[mu]*(ptrgeom->gcon[GIND(mu,nu)]);
 
-  DLOOPA(mu) dualfprintf(fail_file,"mu=%d ucovlab=%g wcovlab=%g wconlab=%g\n",mu,ucovlab[mu],wcovlab[mu],wconlab[mu]);
+
+  //  DLOOPA(mu) dualfprintf(fail_file,"mu=%d ucovlab=%g wcovlab=%g wconlab=%g\n",mu,ucovlab[mu],wcovlab[mu],wconlab[mu]);
   
 
   // get orthonormal boost to fluid frame
@@ -755,7 +756,7 @@ int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab,
   matrix_inverse(PRIMECOORDS,lambda,ilambda);
 
 
-  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d lambda=%g ilambda=%g\n",mu,nu,lambda[mu][nu],ilambda[mu][nu]);
+  //  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d lambda=%g ilambda=%g\n",mu,nu,lambda[mu][nu],ilambda[mu][nu]);
 
 
   // From earlier in other functions:
@@ -977,7 +978,7 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
   transboost_lab2fluid(primcoord, ptrgeom, ucon, transboostup, transboostlo);
 
 
-  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d transboostup=%g transboostlo=%g\n",mu,nu,transboostup[mu][nu],transboostlo[mu][nu]);
+  //  DLOOP(mu,nu) dualfprintf(fail_file,"mu=%d nu=%d transboostup=%g transboostlo=%g\n",mu,nu,transboostup[mu][nu],transboostlo[mu][nu]);
 
 
   // apply trans boost to 4-tensor
@@ -989,7 +990,15 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
     }
     else{
       // t^{\mu aa} = tfl^{\nu bb} TBup_\nu^\mu TBup_bb^aa
-      DLOOP(mu,nu) DLOOP(aa,bb) tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
+	  //      DLOOP(mu,aa){
+	  //		DLOOP(nu,bb){
+	  DLOOP(mu,nu){
+		DLOOP(aa,bb){
+		  tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
+		  //		  dualfprintf(fail_file,"mu=%d aa=%d nu=%d bb=%d adding=%g from %g*%g*%g\n",mu,aa,nu,bb,tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa],tensor4in[nu][bb],transboostup[nu][mu],transboostup[bb][aa]);
+		}
+	  }
+	  //	  dualfprintf(fail_file,"final00=%26.20g\n",tensor4out[00][00]);
     }
   }
   else if(tconcovtypeA==TYPEUCON && tconcovtypeB==TYPEUCOV){

@@ -48,6 +48,7 @@ extern int ucon_calcother(FTYPE *pr, FTYPE *ucon, FTYPE *others);
 extern void ucon_precalc(FTYPE *ucon, FTYPE *AA, FTYPE *BB,FTYPE *CC, FTYPE *discr);
 
 
+extern int ucon_calc_whichvel(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
 
 
 // physics stuff

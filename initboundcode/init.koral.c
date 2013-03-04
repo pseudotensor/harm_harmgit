@@ -339,13 +339,16 @@ int init_global(void)
   /*************************************************/
 
 #if(WHICHPROBLEM==RADTUBE)
+  lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+  // should have PARA(LINE) not oscillate so much at cusp
+  // Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
   cour=0.8;
   gam=gamideal=GAMMATUBE;
   cooling=KORAL;
 
-  BCtype[X1UP]=OUTFLOW;
-  BCtype[X1DN]=OUTFLOW;
-  BCtype[X2UP]=OUTFLOW;
+  BCtype[X1UP]=FREEOUTFLOW;
+  BCtype[X1DN]=FREEOUTFLOW;
+  BCtype[X2UP]=OUTFLOW; // NOTEMARK: Koral sets fixed BCs.  We can do that following the IC choices, but not necessary.
   BCtype[X2DN]=OUTFLOW;
   BCtype[X3UP]=PERIODIC; 
   BCtype[X3DN]=PERIODIC;
@@ -359,7 +362,7 @@ int init_global(void)
   }
 
   DTr = 100; //number of time steps for restart dumps
-  tf = 10.0; //final time
+  tf = 100.0; //final time
 
 #endif
 
@@ -818,7 +821,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   pr[URAD2] = Fy ;    
   pr[URAD3] = Fz ;
 
-  *whichvel=WHICHVEL;
+  // setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
+  *whichvel=VEL4;
   *whichcoord=CARTMINKMETRIC2;
 
   // TODO: need to conver these radiation things from the fluid frame (as defined) to the lab-frame
@@ -836,10 +840,14 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
   int whichdir=FF2LAB; // fluid frame orthonormal to lab-frame
   int primcoord=0; // tells not PRIMCOORDs so won't assume can use dxdxp's to simplify metric
-  prad_fforlab(primcoord, whichdir, prrad, prradnew, ptrgeom);
+  prad_fforlab(*whichvel, *whichcoord, whichdir, prrad, prradnew, ptrgeom);
   // overwrite radiation primitives with new lab-frame values
   PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
 
+
+  // inversion returns WHICHVEL velocity type, so pass that back
+  *whichvel=WHICHVEL;
+  *whichcoord=CARTMINKMETRIC2;
   
   return(0);
   

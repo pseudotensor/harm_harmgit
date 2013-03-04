@@ -176,3 +176,13 @@ pl 0 r rho
 # dxdxp?? = dV^\mu/dX^\nu
 # etc.
 
+To see animation of (e.g. RADTUBE) data do:
+
+# !ls dumps/dump* to see how many dumps
+set startanim=0
+set endanim=5
+
+agpl 'dump' r rho
+
+
+

@@ -1842,6 +1842,12 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       // get total pressure
       MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
 
+#if(EOMRADTYPE!=EOMRADNONE)
+	  // KORALTODO: Need to add shock flattener separately for radiation quantities, but for now be aggressive and assume radiation couples strongly to fluid.
+	  // approximation KORALTODO
+	  MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);
+#endif
+
 #endif // end if STORESHOCKINDICATOR
 
 
