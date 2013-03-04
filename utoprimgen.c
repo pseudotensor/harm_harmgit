@@ -870,7 +870,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       // lpflagrad: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
       if(EOMRADTYPE!=EOMRADNONE && (*lpflagrad==1)) continue;
 	  // If doing Eddington approximation, actually ignore conserved flux evolution.
-      if(EOMRADTYPE!=EOMRADNONE && EDDINGTON_APR==1 && (pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
+      if(EOMRADTYPE==EOMRADEDD && (pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
 
 
       if(pl==YNU || pl==YL){
@@ -919,7 +919,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       if(CHECKONINVERSIONRAD==0 && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
 
 
-      plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EDDINGTON_APR==0) || pl==URAD2&&(EDDINGTON_APR==0) || pl==URAD3&&(EDDINGTON_APR==0) )));
+      plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD2&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD3&&(EOMRADTYPE!=EOMRADEDD) )));
 
       if(IFUTOPRIMFAIL(*lpflag) || fdiff[pl]>CHECKONINVFRAC){
 		if(

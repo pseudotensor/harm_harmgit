@@ -459,7 +459,6 @@
 //#define EOMTYPE EOMCOLDGRMHD
 
 #define EOMRADTYPE EOMRADNONE // EOMRADM1CLOSURE
-#define EDDINGTON_APR 0 // whether to use Eddington approximation by default
 
 
 // whether to try other methods for the inversion if primary choices fails

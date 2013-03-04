@@ -1,4 +1,9 @@
 
+// radiation equations of motion
+#define EOMRADNONE 0
+#define EOMRADEDD 1
+#define EOMRADM1CLOSURE 2
+
 // KORAL
 #define BOOSTGRIDPOS (NDIM) // CENT,FACE1,FACE2,FACE3 == assumes they are 0,1,2,3
 #define BOOSTDIRS (2)

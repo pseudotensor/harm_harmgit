@@ -514,14 +514,13 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 {
   int jj;
 
-  if(EOMRADTYPE!=EOMRADNONE){
-    // R^{dir}_{jj} radiation stress-energy tensor
-#if EDDINGTON_APR==1
+  // R^{dir}_{jj} radiation stress-energy tensor
+  if(EOMRADTYPE==EOMRADEDD){
 	// force radiation frame to be fluid frame
     DLOOPA(jj) radstressdir[jj]=THIRD*pr[PRAD0]*(4.0*q->ucon[dir]*q->ucov[jj] + delta(dir,jj));
-#else
+  }
+  else if(EOMRADTYPE==EOMRADM1CLOSURE){
     DLOOPA(jj) radstressdir[jj]=THIRD*pr[PRAD0]*(4.0*q->uradcon[dir]*q->uradcov[jj] + delta(dir,jj));
-#endif
   }
   else DLOOPA(jj) radstressdir[jj]=0.0; // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
 
@@ -549,15 +548,17 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   nlen=sqrt(nx*nx+ny*ny+nz*nz);
   
  
-#if EDDINGTON_APR==1
+#if EOMRADTYPE==EOMRADEDD
   f=1./3.; // f and Rij are both as if nx=ny=nz=0
   //  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  
   
-#else  
+#elif EOMRADTYPE==EOMRADM1CLOSURE
 
   if(nlen>=1.) f=1.; // KORALTODO: limiter, but only used so far for IC
   else //M1
     f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  
+#else
+#error No Such EOMRADTYPE1
 #endif
   
   if(nlen>0){
@@ -570,15 +571,18 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   }
  
   Rij[0][0]=E;
-#if EDDINGTON_APR==1
+
+#if EOMRADTYPE==EOMRADEDD
   // KORALTODO: Below 3 should be zero for Eddington approximation!  Why didn't original koral have that?
   Rij[0][1]=Rij[1][0]=0.0;
   Rij[0][2]=Rij[2][0]=0.0;
   Rij[0][3]=Rij[3][0]=0.0;
-#else
+#elif EOMRADTYPE==EOMRADM1CLOSURE
   Rij[0][1]=Rij[1][0]=E*nx;
   Rij[0][2]=Rij[2][0]=E*ny;
   Rij[0][3]=Rij[3][0]=E*nz;
+#else
+#error No Such EOMRADTYPE2
 #endif
 
   Rij[1][1]=E*(.5*(1.-f) + .5*(3.*f - 1.)*nx*nx);
@@ -1403,7 +1407,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   int jj;
 
 
-  if(EDDINGTON_APR==1){
+  if(EOMRADTYPE==EOMRADEDD){
 	// NOTEMARK: Can't use normal inversion that assumes R^t_i are independently evolved because they will generally lead to different velocity than fluid.
 
 	// radiation is same as fluid gamma (assume fluid has already been inverted)
@@ -1421,7 +1425,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 
 
   }
-  else{
+  else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
 	FTYPE Rij[NDIM][NDIM];
 
@@ -1673,7 +1677,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 
 	}
 
-  }// end if not Eddington approximation
+  }// end if M1
+  else{
+	dualfprintf(fail_file,"No such EOMRADTYPE=%d in u2p_rad()\n",EOMRADTYPE);
+	myexit(368322162);
+  }
   
 
 
