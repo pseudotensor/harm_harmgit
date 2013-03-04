@@ -32,9 +32,10 @@
 //passive definitions
 /*********************/
 
+#define RADSOURCEMETHODNONE 0
 #define RADSOURCEMETHODEXPLICIT 1
-#define RADSOURCEMETHODIMPLICIT 2
-#define RADSOURCEMETHODNONE 3
+#define RADSOURCEMETHODEXPLICITSUBCYCLE 2
+#define RADSOURCEMETHODIMPLICIT 3
 
 
 ///////////////////

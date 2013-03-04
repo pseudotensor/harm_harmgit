@@ -1,7 +1,7 @@
 #include "decs.h"
 
-void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G);
-void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu);
+void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
+void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
 //**********************************************************************
@@ -53,7 +53,8 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
 
   //radiative covariant four-force
   FTYPE Gd[NDIM];
-  calc_Gd(pp, ptrgeom, &q, Gd);
+  FTYPE chireturn;
+  calc_Gd(pp, ptrgeom, &q, Gd, &chireturn);
   
   // compute difference function
   DLOOPA(iv) f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + SIGNGD2 * realdt * Gd[iv];
@@ -193,14 +194,25 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 }
 
 
+
 // compute changes to U (both T and R) using implicit method
 // NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
-void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
+  FTYPE chi;
+  FTYPE Unew[NPR];
+  FTYPE prnew[NPR],pr0[NPR],U0[NPR];
 
-  calc_Gd(pr, ptrgeom, q, Gd);
+
+  // backup pr and U
+  PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
+  PLOOP(pliter,pl) U0[pl]=U[pl];
+
+  // initialize source update
+  sc = RADSOURCE;
+  PLOOP(pliter,pl) radsource[pl] = 0;
 
 
   // KORALTODO: Based upon size of Gd, sub-cycle this force.
@@ -209,6 +221,96 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   // 3) update T^t_\nu and R^t_\nu
   // 4) U->P locally
   // 5) repeat.
+
+  // According to NR 19.2, we get 2Ddt/(dx^2)<=1 as stability criterion for diffusive sytem of equations
+  // With Koral's D = 1/(3\chi), we have explicit dt requirement of dt <= dx^2/(6\chi).
+
+  FTYPE realdt=compute_dt();
+  FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
+  FTYPE dtdiff;
+  struct of_state qnew=*q;
+  struct of_newtonstats newtonstats;
+  FTYPE idtsubijk[NDIM],dtsub;
+  int finalstep = 1;
+  FTYPE Diff;
+
+  
+
+
+  int itersub=0;
+  while(1){
+
+	// get 4-force
+	calc_Gd(prnew, ptrgeom, &qnew, Gd, &chi);
+
+
+	if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+
+	  // see if need to sub-cycle
+	  // dynamically change dt to allow chi to change during sub-cycling.
+	  // use approximate dt along each spatial direction.  chi is based in orthonormal basis
+
+	  // assumes D = 1/(3\chi) below and otherwise using Numerical Recipes S19.2
+	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
+
+	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
+	  dtsub=1.0/MAX(MAX(idtsubijk[1]*N1NOT1,idtsubijk[2]*N2NOT1),idtsubijk[3]*N3NOT1);
+
+
+	  //	  SLOOPA(jj) dualfprintf(fail_file,"jj=%d dxsq=%g\n",jj,(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]));
+	  //	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,dtsub,dtcum,dttrue,itersub);
+
+	  // time left to go in sub-cycling
+	  dtdiff=(realdt-dtcum);
+
+	  if(realdt>dtsub && itersub==0 || dtdiff>0.0 && itersub>0){ // then sub-cycling
+
+		// initialize counters
+		newtonstats.nstroke=newtonstats.lntries=0;
+
+		// get change in conserved quantity between fluid and radiation
+		dttrue=MIN(dtsub,dtdiff);
+		// take step, but only go up to exactly realdt in total time
+		DLOOPA(jj) radsource[UU+jj]    += -SIGNGD*Gd[jj]*dttrue/realdt;
+		DLOOPA(jj) radsource[URAD0+jj] += +SIGNGD*Gd[jj]*dttrue/realdt;
+		dtcum+=dttrue; // cumulative dttrue
+	  
+		// get Unew
+		PLOOP(pliter,pl) Unew[pl]       = U[pl];
+		DLOOPA(jj)       Unew[UU+jj]    = U[UU+jj]    + radsource[UU+jj]*realdt;
+		DLOOPA(jj)       Unew[URAD0+jj] = U[URAD0+jj] + radsource[URAD0+jj]*realdt;
+	  
+		// Get U->P
+		// OPTMARK: Should optimize this to  not try to get down to machine precision
+		// KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
+		if(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)!=0){
+		  dualfprintf(fail_file,"Inversion problem during koral_explicit_source_rad()\n");
+		}
+
+		// re-get needed q's
+		get_state_uconucovonly(prnew, ptrgeom, &qnew);
+		get_state_uradconuradcovonly(prnew, ptrgeom, &qnew);
+
+		itersub++;
+	  }
+	  else if(itersub==0){
+		// equal and opposite forces
+		DLOOPA(jj) radsource[UU+jj]    = -SIGNGD*Gd[jj];
+		DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD*Gd[jj];
+		break;
+	  }
+	  else break;
+	}
+	else{
+	  // not allowing sub-cycling
+	  // equal and opposite forces
+	  DLOOPA(jj) radsource[UU+jj]    = -SIGNGD*Gd[jj];
+	  DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD*Gd[jj];
+	  break;
+	}
+
+  }// done looping
+
 
 
 #if(0)
@@ -220,17 +322,9 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 #endif
 
 
-
-
-  sc = RADSOURCE;
-  
-  PLOOP(pliter,pl) radsource[pl] = 0;
-
-  // equal and opposite forces
-  DLOOPA(jj) radsource[UU+jj]    = -SIGNGD*Gd[jj];
-  DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD*Gd[jj];
-
+  // apply 4-force as update in dUcomp[][]
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
+
   
 }
 
@@ -238,8 +332,8 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 {
   // KORALTODO: Should be able to choose explicit if locally works fine by some condition
 
-#if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT)
-  koral_explicit_source_rad( pin, ptrgeom, q, dUcomp);
+#if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE)
+  koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
 #elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
   koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
 #elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE)
@@ -302,9 +396,9 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 }
 
 
-void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G) 
+void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE* chireturn)
 {
-  calc_Gu(pp, ptrgeom, q, G);
+  calc_Gu(pp, ptrgeom, q, G, chireturn);
   indices_21(G, G, ptrgeom);
 }
 
@@ -313,7 +407,7 @@ void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G)
 //****** takes radiative stress tensor and gas primitives **************
 //****** and calculates contravariant four-force ***********************
 //**********************************************************************
-void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu) 
+void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE* chireturn) 
 {
   int i,j,k;
   
@@ -382,6 +476,10 @@ void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu)
 #endif
 
   }
+
+
+  *chireturn=chi; // if needed
+
 }
 
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
@@ -441,8 +539,11 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     // Note that tautot is frame independent once multiple \kappa by the cell length.  I.e. it's a Lorentz invariant.
     tautotsq = kappa*kappa * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
   
-    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?
+    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR S19.2.6
     vrad2limited=MIN(vrad2,vrad2tau);
+
+	// NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE method.
+
   }
   else{
     vrad2limited=vrad2;
