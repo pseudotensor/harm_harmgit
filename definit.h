@@ -459,6 +459,8 @@
 //#define EOMTYPE EOMCOLDGRMHD
 
 #define EOMRADTYPE EOMRADNONE // EOMRADM1CLOSURE
+#define EDDINGTON_APR 0 // whether to use Eddington approximation by default
+
 
 // whether to try other methods for the inversion if primary choices fails
 // created because utoprim_2d_final fails for large b^2/rho when other methods (even utoprim_2d) do not fail.

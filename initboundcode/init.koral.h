@@ -250,8 +250,8 @@
 
 #if(WHICHPROBLEM==RADTUBE)
 
-
-#define EDDINGTON_APR 1 // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#undef EDDINGTON_APR
+#define EDDINGTON_APR 0 // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
 
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
