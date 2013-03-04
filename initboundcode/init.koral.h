@@ -251,10 +251,15 @@
 #if(WHICHPROBLEM==RADTUBE)
 
 #undef EOMRADTYPE
-#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
 
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODOFF
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+
+
+
 
 #define N1 800
 #define N2 1
@@ -266,28 +271,30 @@
 #define NTUBE 1
 
 
+// arad = 4*sigmarad/c (so removed /4. from koral sigma setup).
+// Note, sigmarad or arad is not arbitrary -- value chosen to IC in radiative-hydro balance for each separately the left and right states.
 #undef ARAD_CODE
 #if (NTUBE==1)
 #define GAMMATUBE 5./3.
-#define ARAD_CODE (1e-8/pow(calc_PEQ_Tfromurho(3.e-5/(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (1e-8/pow(calc_PEQ_Tfromurho(3.e-5/(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==2)
 #define GAMMATUBE 5./3.
-#define ARAD_CODE (2e-5/pow(calc_PEQ_Tfromurho(4.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (2e-5/pow(calc_PEQ_Tfromurho(4.e-3/(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==3)
 #define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==31)
 #define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==4)
 #define GAMMATUBE 5./3.
-#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==41)
 #define GAMMATUBE 5./3.
-#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.))
 #elif (NTUBE==5)
 #define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.)/4.)
+#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
 #endif
 
 

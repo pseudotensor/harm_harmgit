@@ -825,7 +825,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   *whichvel=VEL4;
   *whichcoord=CARTMINKMETRIC2;
 
-  // TODO: need to conver these radiation things from the fluid frame (as defined) to the lab-frame
+  // TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
   // make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
   // But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
   
@@ -844,6 +844,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   // overwrite radiation primitives with new lab-frame values
   PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
 
+  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
 
   // inversion returns WHICHVEL velocity type, so pass that back
   *whichvel=WHICHVEL;

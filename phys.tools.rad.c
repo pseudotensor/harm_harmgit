@@ -203,13 +203,24 @@ void koral_explicit_source_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   calc_Gd(pr, ptrgeom, q, Gd);
 
 
-#if(1)
+  // KORALTODO: Based upon size of Gd, sub-cycle this force.
+  // 1) calc_Gd()
+  // 2) locally set dtsub~dt/\tau or whatever it should be
+  // 3) update T^t_\nu and R^t_\nu
+  // 4) U->P locally
+  // 5) repeat.
+
+
+#if(0)
 #define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
   // DEBUG
   FTYPE dxdxp[NDIM][NDIM];
   dxdxprim_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,dxdxp);
   DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d explicitGd[%d]=%g vs=%g\n",nstep,steppart,ptrgeom->i,jj,Gd[jj]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])),dx[1]/(dt/cour)*dxdxp[1][1]);
 #endif
+
+
+
 
   sc = RADSOURCE;
   
@@ -561,15 +572,7 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
 #error No Such EOMRADTYPE1
 #endif
   
-  if(nlen>0){
-	nx/=nlen;
-	ny/=nlen;
-	nz/=nlen;
-  }
-  else{
-	;
-  }
- 
+  ////////// Get R^{ij} in orthonormal fluid frame 
   Rij[0][0]=E;
 
 #if EOMRADTYPE==EOMRADEDD
@@ -578,12 +581,23 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   Rij[0][2]=Rij[2][0]=0.0;
   Rij[0][3]=Rij[3][0]=0.0;
 #elif EOMRADTYPE==EOMRADM1CLOSURE
-  Rij[0][1]=Rij[1][0]=E*nx;
-  Rij[0][2]=Rij[2][0]=E*ny;
-  Rij[0][3]=Rij[3][0]=E*nz;
+  Rij[0][1]=Rij[1][0]=F[0];
+  Rij[0][2]=Rij[2][0]=F[1];
+  Rij[0][3]=Rij[3][0]=F[2];
 #else
 #error No Such EOMRADTYPE2
 #endif
+
+
+  // normalize n^i for Rij calculation
+  if(nlen>0){
+	nx/=nlen;
+	ny/=nlen;
+	nz/=nlen;
+  }
+  else{
+	;
+  }
 
   Rij[1][1]=E*(.5*(1.-f) + .5*(3.*f - 1.)*nx*nx);
   Rij[1][2]=E*(.5*(3.*f - 1.)*nx*ny);
@@ -738,11 +752,15 @@ int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *
   FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR]={0};
   int pliter,pl;
   int primcoord;
+  int jj,kk;
 
   //radiative stress tensor in the fluid frame orthonormal basis
   // assuming input pin for radiation is in fluid frame orthonormal basis.
   // gets R^{ij} in fluid frame orthonormal basis from primitive quantities in fluid frame orthonormal basis
   calc_Rij_ff(pin,Rijff);
+  
+  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"pl=%d pin=%g\n",pl,pin[pl]);
+  //  DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g\n",jj,kk,Rijff[jj][kk]);
 
   // get ucon (assumed primitive velocity in ptrgeom coordinates)
   FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
@@ -781,12 +799,11 @@ int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *
 	dualfprintf(fail_file,"Failed to invert during prad_fforlab() with whichdir=%d.  Assuming fixups won't be applied: %d %d\n",whichdir,lpflag,lpflagrad);
 	dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pin=%g U=%g\n",pl,pin[pl],U[pl]);
-	int jj,kk;
 	DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
 	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
 	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeom->gcov[GIND(jj,kk)],ptrgeom->gcon[GIND(jj,kk)]);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
-	//	if(ptrgeom->i==700) myexit(189235);
+	//if(ptrgeom->i==700) myexit(189235);
 	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
 
