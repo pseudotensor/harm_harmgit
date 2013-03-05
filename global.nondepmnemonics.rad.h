@@ -56,7 +56,10 @@
 #define IMPMAXITER (50)
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
 #define COUREXPLICIT (0.25) // Effective Courant-like factor for stiff explicit radiation source term
+#define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
+// RADSHOCKFLAT 1 causes excessive oscillations in RADBEAMFLAT at injection point
 
+#define IMPLICITREVERTEXPLICIT 1 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
 
 
 ///////////////

@@ -442,15 +442,6 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
-// DUMMY GLOBAL VALUES for cases when *not* choosing that problem (so set to something when that problem for dummy values)
-#if(WHICHPROBLEM!=RADBEAMFLAT)
-
-#define RADBEAMFLAT_FRATIO (0.995) // FRATIO=Flux/(U*c)
-#define RADBEAMFLAT_ERAD (1. /RHOBAR) // i.e. c^2 * 1g/cm^3 of energy density
-#define RADBEAMFLAT_RHO (1. / RHOBAR)
-#define RADBEAMFLAT_UU (0.1 / RHOBAR) // i.e. c^2 * 1g/cm^3 of energy density
-
-#endif
 
 // X1 lower for radiation beam injection
 int bound_x1dn_radbeamflatinflow(

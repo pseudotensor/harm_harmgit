@@ -1,8 +1,10 @@
 #include "decs.h"
 
-void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
-void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
+static void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
+static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
 
 //**********************************************************************
 //******* solves implicitidly four-force source terms *********************
@@ -36,7 +38,7 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
 
-  // get primitive
+  // get primitive (don't change pp0 or uu0)
   PLOOP(pliter,pl) pp[pl] = pp0[pl];
 
   // get change in conserved quantity between fluid and radiation
@@ -81,7 +83,7 @@ FTYPE compute_dt()
 }
 
 // compute changes to U (both T and R) using implicit method
-void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE compute_dt();
   int i1,i2,i3,iv,ii,jj,pliter,sc;
@@ -92,7 +94,32 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
 
+
   realdt = compute_dt();
+
+
+  if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
+	// then first check if can just step with explicit scheme
+	FTYPE Gd[NDIM],chi,dtsub;
+	calc_Gd(pin, ptrgeom, q, Gd, &chi);
+	get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
+	if(dtsub>=realdt){
+	  // then just take explicit step!
+	  // assumes below doesn't modify pin,Uin,ptrgeom, or q
+	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  //	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+	  return; // done!
+	}
+	else{
+	  // else just continue with implicit, with only cost extra calc_Gd() evaluation
+
+	  // DEBUG (to comment out!):
+	  //dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+
+	}	
+  }
+
+
 
 #if(0)
   // DEBUG
@@ -169,7 +196,14 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
     if(iter>IMPMAXITER){
 	  // KORALTODO: Need backup that won't fail.
       dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");
-      myexit(21341);
+	  if(IMPLICITREVERTEXPLICIT){
+		// then revert to sub-cycle explicit
+		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  }
+	  else{
+		// can only die
+		myexit(21341);
+	  }
     }
 
 	//	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
@@ -178,16 +212,18 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
   while(1);
   
 
+  // get source update
   DLOOPA(jj) deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/dt;
 
+  // apply source update as force
   PLOOP(pliter,pl) radsource[pl] = 0;
-
   DLOOPA(jj) radsource[UU+jj]    = -SIGNGD3*deltas[jj];
   DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD3*deltas[jj];
 
   // DEBUG:
   //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,radsource[URAD0+jj]);
 
+  // store source update in dUcomp for return.
   sc = RADSOURCE;
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
   
@@ -195,7 +231,7 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 
 
 // get dt for explicit sub-cyclings
-void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
 #if(0)
   FTYPE fakedt;
@@ -236,7 +272,7 @@ void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *d
   DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
   iUmhd=1.0/(fabs(Umhd)+SMALL);
   iUrad=1.0/(fabs(Urad)+SMALL);
-  idtsub=fabs(Gd[TT]*MIN(iUmhd,iUrad));
+  idtsub=SMALL+fabs(Gd[TT]*MIN(iUmhd,iUrad));
   
   // what to return
   *dtsub=COUREXPLICIT/idtsub;
@@ -247,18 +283,18 @@ void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *d
 
 // compute changes to U (both T and R) using implicit method
 // NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
+// Only change dUcomp, NOT pr, U, ptrgeom, or q.
 void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
   FTYPE chi;
-  FTYPE Unew[NPR];
-  FTYPE prnew[NPR],pr0[NPR],U0[NPR];
+  FTYPE prnew[NPR],pr0[NPR],U0[NPR],Unew[NPR];
 
 
   // backup pr and U
   PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
-  PLOOP(pliter,pl) U0[pl]=U[pl];
+  PLOOP(pliter,pl) U0[pl]=Unew[pl]=U[pl];
 
   // initialize source update
   sc = RADSOURCE;
@@ -277,7 +313,7 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
   FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
   FTYPE dtdiff;
-  struct of_state qnew=*q;
+  struct of_state qnew=*q; // preserves original q
   struct of_newtonstats newtonstats;
   int finalstep = 1;
   FTYPE dtsub;
@@ -294,7 +330,7 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 	if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 
 	  // get dt for explicit stiff source term sub-cycling
-	  get_dtsub(U, Gd, chi, ptrgeom, &dtsub);
+	  get_dtsub(Unew, Gd, chi, ptrgeom, &dtsub);
 
 	  //	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g fakedt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,fakedt,dtsub,dtcum,dttrue,itersub);
 
@@ -363,6 +399,7 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
 
   // apply 4-force as update in dUcomp[][]
+  // only changed this quantity, none of other among function arguments
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
 
   
@@ -370,7 +407,6 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
 void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
-  // KORALTODO: Should be able to choose explicit if locally works fine by some condition
 
 #if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE)
   koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
@@ -436,7 +472,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 }
 
 
-void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE* chireturn)
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE* chireturn)
 {
   calc_Gu(pp, ptrgeom, q, G, chireturn);
   indices_21(G, G, ptrgeom);
@@ -447,7 +483,7 @@ void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, F
 //****** takes radiative stress tensor and gas primitives **************
 //****** and calculates contravariant four-force ***********************
 //**********************************************************************
-void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE* chireturn) 
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE* chireturn) 
 {
   int i,j,k;
   

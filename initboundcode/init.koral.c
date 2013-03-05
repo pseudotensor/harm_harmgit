@@ -490,11 +490,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
 
-//#define RADBEAMFLAT_FRATIO 0.95
-#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
-#define RADBEAMFLAT_RHO 1. // 1g/cm^3
-#define RADBEAMFLAT_ERAD 1. // 1g/cm^3 worth of energy density in radiation
-#define RADBEAMFLAT_UU 0.1 // 0.1g/cm^3 worth of energy density in fluid
 
 #define KAPPA 0.
 #define KAPPAES 0.

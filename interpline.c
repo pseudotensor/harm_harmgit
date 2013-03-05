@@ -3098,7 +3098,7 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
     P[yiniter] += 0.5*(qptr->bsq);
 #endif
 
-#if(EOMRADTYPE!=EOMRADNONE)
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
     P[yiniter] += (4.0/3.0-1.0)*yrealin[PRAD0][0][num]; // approximate KORALTODO
 #endif
     

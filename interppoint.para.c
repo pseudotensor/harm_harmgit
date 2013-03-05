@@ -1379,7 +1379,7 @@ void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P)
   for(mm=-interporder[PARAFLAT]/2;mm<=interporder[PARAFLAT]/2;mm++){
     P[mm] = pressure_rho0_u_simple(i, j, k, loc, yrealpl[RHO][mm],yrealpl[UU][mm]);
 
-#if(EOMRADTYPE!=EOMRADNONE)
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
 	P[mm] += (4.0/3.0-1.0)*yrealpl[PRAD0][mm]; // approximate KORALTODO
 #endif
   }
