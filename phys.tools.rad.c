@@ -199,6 +199,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
 	  if(IMPLICITREVERTEXPLICIT){
 		// then revert to sub-cycle explicit
 		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		return;
 	  }
 	  else{
 		// can only die
