@@ -55,7 +55,7 @@
 #define IMPCONV (1.e-6)
 #define IMPMAXITER (50)
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
-
+#define COUREXPLICIT (0.25) // Effective Courant-like factor for stiff explicit radiation source term
 
 
 

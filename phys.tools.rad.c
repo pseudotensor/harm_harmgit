@@ -230,11 +230,12 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
   FTYPE dtdiff;
   struct of_state qnew=*q;
   struct of_newtonstats newtonstats;
-  FTYPE idtsubijk[NDIM],dtsub;
   int finalstep = 1;
   FTYPE Diff;
-
-  
+  FTYPE dxsq[NDIM];
+  FTYPE fakedt;
+  FTYPE idtsubijk[NDIM],dtsub,idtsub;
+  FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
 
 
   int itersub=0;
@@ -251,19 +252,39 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 	  // use approximate dt along each spatial direction.  chi is based in orthonormal basis
 
 	  // assumes D = 1/(3\chi) below and otherwise using Numerical Recipes S19.2
-	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
+	  //	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
+	  //	  SLOOPA(jj) dxsq[jj]=(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
 
-	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
-	  dtsub=1.0/MAX(MAX(idtsubijk[1]*N1NOT1,idtsubijk[2]*N2NOT1),idtsubijk[3]*N3NOT1);
+	  // below is if Diffusion was part of flux
+	  //	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
+	  // below is if Diffusion is part of source term as in Koral
+	  // source term should lead to small (<1/2) change in conserved quantities
+
+	  fakedt=MIN(realdt,realdt/chi); // Olek's estimate
+
+	  // below should be similar to choosing idt=\chi/dx^2
+	  // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
+	  // Based upon NR 16.6.6 with removal of factor of two
+	  Umhd=Urad=Gtot=0.0;
+	  DLOOPA(jj) Umhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  iUmhd=1.0/(fabs(Umhd)+SMALL);
+	  iUrad=1.0/(fabs(Urad)+SMALL);
+	  idtsub=fabs(Gd[TT]*MIN(iUmhd,iUrad));
+	  dtsub=COUREXPLICIT/idtsub;
+	  
 
 
 	  //	  SLOOPA(jj) dualfprintf(fail_file,"jj=%d dxsq=%g\n",jj,(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]));
-	  //	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,dtsub,dtcum,dttrue,itersub);
+	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g fakedt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,fakedt,dtsub,dtcum,dttrue,itersub);
 
 	  // time left to go in sub-cycling
 	  dtdiff=(realdt-dtcum);
 
 	  if(realdt>dtsub && itersub==0 || dtdiff>0.0 && itersub>0){ // then sub-cycling
+
+		dualfprintf(fail_file,"DoingSUBCYCLE: iter=%d\n",itersub);
 
 		// initialize counters
 		newtonstats.nstroke=newtonstats.lntries=0;
