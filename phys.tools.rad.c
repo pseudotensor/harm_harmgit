@@ -47,6 +47,7 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
   // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
+  // Need to check if Utoprimgen fails in sense of stored inversion failure and revert to explicit or other if happens -- maybe CASE dependent!
   MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
 
   // re-get needed q's

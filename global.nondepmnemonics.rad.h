@@ -1,8 +1,9 @@
 
 // radiation equations of motion
-#define EOMRADNONE 0
-#define EOMRADEDD 1
-#define EOMRADM1CLOSURE 2
+#define EOMRADNONE 0 // no source term
+#define EOMRADEDD 1 // true Edd
+#define EOMRADEDDWITHFLUX 2 // fake Edd with extra flux (KORALTODO, using Fragile 2012 paper inversion -- simple to do)
+#define EOMRADM1CLOSURE 3 // M1 Closure
 
 // KORAL
 #define BOOSTGRIDPOS (NDIM) // CENT,FACE1,FACE2,FACE3 == assumes they are 0,1,2,3

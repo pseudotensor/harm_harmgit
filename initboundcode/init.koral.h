@@ -288,7 +288,7 @@
 
 // 1,2,3,31,4,41,5
 //#define NTUBE 1
-#define NTUBE 1
+#define NTUBE 2
 
 
 // arad = 4*sigmarad/c (so removed /4. from koral sigma setup).

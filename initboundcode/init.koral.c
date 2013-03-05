@@ -179,6 +179,7 @@ int init_defcoord(void)
   /*************************************************/
 #if(WHICHPROBLEM==RADTUBE)
 
+  trifprintf("RADTUBE NTUBE=%d GAMMATUBE=%g ARAD_CODE=%g SIGMARAD_CODE=%g\n",NTUBE,GAMMATUBE,ARAD_CODE,ARAD_CODE/4.0);
 
   if(NTUBE==5){
 	defcoord = UNIFORMCOORDS;

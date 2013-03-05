@@ -98,8 +98,6 @@
 //
 //4) If Utoprimgen fails in implicit, won't converge, so need a backup method.  Koral backup won't work for rel flows, so need to sub-cycle with explicit scheme or use a different semi-implicit scheme like one I mentioned from numerical recipes.
 //
-//5) Should be able to choose explicit if not optically thick (more specifically, G_\mu/T^t_\mu is small enough, so source term doesn't change conserved quantity too much).  Perhaps do 1 explicit check and see if that condition is met, and if not use implicit method.  This is because implicit method is very slow, even for 1 iteration due to matrix inversion and MHD inversion.
-//
 //6) Need to check factors of Pi and 1/4 for B in calc_Gu as well as 4\pi in Gu.  Are those really dimensionless and should be there?
 //
 //7) I'm unsure about Olek's velocity limiter for tau>1.  I'm not sure the 4/3 is right.
