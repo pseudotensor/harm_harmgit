@@ -93,7 +93,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
-
+  int invertfail;
 
   realdt = compute_dt();
 
@@ -168,8 +168,20 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
       }
     }
     
+
 	//inversion
-	inverse_44matrix(J,iJ);
+	invertfail=inverse_44matrix(J,iJ);
+	if(invertfail){
+	  if(IMPLICITREVERTEXPLICIT){
+		// then revert to sub-cycle explicit
+		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		return;
+	  }
+	  else{
+		// then can only fail
+		myexit(39475252);
+	  }
+	}
     
     //updating x
     DLOOPA(ii) x[ii]=uup[ii+URAD0];
@@ -899,7 +911,8 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 
   if(isnan(det)){
     dualfprintf(fail_file,"det in inverse 4x4 zero\n");
-    myexit(13235);
+	return(1); // indicates failure
+	//    myexit(13235);
   }
 
   for (j = 0; j < 16; j++)
