@@ -194,6 +194,56 @@ void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, 
 }
 
 
+// get dt for explicit sub-cyclings
+void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
+{
+#if(0)
+  FTYPE fakedt;
+  FTYPE Diff;
+  FTYPE dxsq[NDIM];
+  FTYPE idtsubijk[NDIM];
+#endif
+  FTYPE idtsub;
+  FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
+  int jj;
+
+  // see if need to sub-cycle
+  // dynamically change dt to allow chi to change during sub-cycling.
+  // use approximate dt along each spatial direction.  chi is based in orthonormal basis
+
+  // assumes D = 1/(3\chi) below and otherwise using Numerical Recipes S19.2
+  //	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
+  //	  SLOOPA(jj) dxsq[jj]=(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
+  //	  SLOOPA(jj) dualfprintf(fail_file,"jj=%d dxsq=%g\n",jj,(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]));
+
+  // below is if Diffusion was part of flux
+  //	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
+  // below is if Diffusion is part of source term as in Koral
+  // source term should lead to small (<1/2) change in conserved quantities
+
+#if(0)
+  FTYPE realdt=compute_dt();
+  fakedt=MIN(realdt,realdt/chi); // Olek's estimate
+  *dtsub=fakedt;
+#endif
+
+  // below should be similar to choosing idt=\chi/dx^2
+  // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
+  // Based upon NR 16.6.6 with removal of factor of two
+  Umhd=Urad=Gtot=0.0;
+  DLOOPA(jj) Umhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+  DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+  DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+  iUmhd=1.0/(fabs(Umhd)+SMALL);
+  iUrad=1.0/(fabs(Urad)+SMALL);
+  idtsub=fabs(Gd[TT]*MIN(iUmhd,iUrad));
+  
+  // what to return
+  *dtsub=COUREXPLICIT/idtsub;
+
+  
+}
+
 
 // compute changes to U (both T and R) using implicit method
 // NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
@@ -225,17 +275,13 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
   // According to NR 19.2, we get 2Ddt/(dx^2)<=1 as stability criterion for diffusive sytem of equations
   // With Koral's D = 1/(3\chi), we have explicit dt requirement of dt <= dx^2/(6\chi).
 
-  FTYPE realdt=compute_dt();
   FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
   FTYPE dtdiff;
   struct of_state qnew=*q;
   struct of_newtonstats newtonstats;
   int finalstep = 1;
-  FTYPE Diff;
-  FTYPE dxsq[NDIM];
-  FTYPE fakedt;
-  FTYPE idtsubijk[NDIM],dtsub,idtsub;
-  FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
+  FTYPE dtsub;
+  FTYPE realdt=compute_dt();
 
 
   int itersub=0;
@@ -247,44 +293,17 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
 	if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 
-	  // see if need to sub-cycle
-	  // dynamically change dt to allow chi to change during sub-cycling.
-	  // use approximate dt along each spatial direction.  chi is based in orthonormal basis
+	  // get dt for explicit stiff source term sub-cycling
+	  get_dtsub(U, Gd, chi, ptrgeom, &dtsub);
 
-	  // assumes D = 1/(3\chi) below and otherwise using Numerical Recipes S19.2
-	  //	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
-	  //	  SLOOPA(jj) dxsq[jj]=(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
-
-	  // below is if Diffusion was part of flux
-	  //	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
-	  // below is if Diffusion is part of source term as in Koral
-	  // source term should lead to small (<1/2) change in conserved quantities
-
-	  fakedt=MIN(realdt,realdt/chi); // Olek's estimate
-
-	  // below should be similar to choosing idt=\chi/dx^2
-	  // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
-	  // Based upon NR 16.6.6 with removal of factor of two
-	  Umhd=Urad=Gtot=0.0;
-	  DLOOPA(jj) Umhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-	  DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-	  DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
-	  iUmhd=1.0/(fabs(Umhd)+SMALL);
-	  iUrad=1.0/(fabs(Urad)+SMALL);
-	  idtsub=fabs(Gd[TT]*MIN(iUmhd,iUrad));
-	  dtsub=COUREXPLICIT/idtsub;
-	  
-
-
-	  //	  SLOOPA(jj) dualfprintf(fail_file,"jj=%d dxsq=%g\n",jj,(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]));
-	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g fakedt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,fakedt,dtsub,dtcum,dttrue,itersub);
+	  //	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g fakedt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,fakedt,dtsub,dtcum,dttrue,itersub);
 
 	  // time left to go in sub-cycling
 	  dtdiff=(realdt-dtcum);
 
 	  if(realdt>dtsub && itersub==0 || dtdiff>0.0 && itersub>0){ // then sub-cycling
 
-		dualfprintf(fail_file,"DoingSUBCYCLE: iter=%d\n",itersub);
+		//		dualfprintf(fail_file,"DoingSUBCYCLE: iter=%d\n",itersub);
 
 		// initialize counters
 		newtonstats.nstroke=newtonstats.lntries=0;
