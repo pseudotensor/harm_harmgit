@@ -286,7 +286,7 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
   DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
   iUmhd=1.0/(fabs(Umhd)+SMALL);
   iUrad=1.0/(fabs(Urad)+SMALL);
-  idtsub=SMALL+fabs(Gd[TT]*MIN(iUmhd,iUrad));
+  idtsub=SMALL+fabs(Gtot*MIN(iUmhd,iUrad));
   
   // what to return
   *dtsub=COUREXPLICIT/idtsub;
