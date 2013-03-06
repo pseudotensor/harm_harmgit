@@ -253,9 +253,14 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
   FTYPE dxsq[NDIM];
   FTYPE idtsubijk[NDIM];
 #endif
-  FTYPE idtsub;
-  FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
   int jj;
+  FTYPE idtsub;
+  //
+  FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
+  //
+  FTYPE idtsubs,idtsubt;
+  FTYPE Usmhd,Usrad,Gstot,iUsmhd,iUsrad;
+  FTYPE Utmhd,Utrad,Gttot,iUtmhd,iUtrad;
 
   // see if need to sub-cycle
   // dynamically change dt to allow chi to change during sub-cycling.
@@ -272,21 +277,73 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
   // source term should lead to small (<1/2) change in conserved quantities
 
 #if(0)
-  FTYPE realdt=compute_dt();
-  fakedt=MIN(realdt,realdt/chi); // Olek's estimate
-  *dtsub=fakedt;
+	FTYPE realdt=compute_dt();
+	fakedt=MIN(realdt,realdt/chi); // Olek's estimate
+	*dtsub=fakedt;
 #endif
+
 
   // below should be similar to choosing idt=\chi/dx^2
   // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
   // Based upon NR 16.6.6 with removal of factor of two
-  Umhd=Urad=Gtot=0.0;
-  DLOOPA(jj) Umhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-  DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-  DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
-  iUmhd=1.0/(fabs(Umhd)+SMALL);
-  iUrad=1.0/(fabs(Urad)+SMALL);
-  idtsub=SMALL+fabs(Gd[TT]*MIN(iUmhd,iUrad));
+  if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITNONE){
+	// merged space-time to avoid negligible total momentum with large update needing to be resolved.
+	// can split space and time (as did before) but if v<<1 and G is mid-range but still negligible, then dt will be incredibly small and code will halt.
+	Umhd=Urad=Gtot=0.0;
+	DLOOPA(jj) Umhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	DLOOPA(jj) Gtot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	iUmhd=1.0/(fabs(Umhd)+SMALL);
+	iUrad=1.0/(fabs(Urad)+SMALL);
+	idtsub=SMALL+fabs(Gtot*MIN(iUmhd,iUrad));
+  }
+  else if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITTIME){
+	// won't work if v~0
+	Usmhd=Usrad=Gstot=0.0;
+	Utmhd=Utrad=Gttot=0.0;
+	SLOOPA(jj) Usmhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	jj=TT;     Utmhd += fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	SLOOPA(jj) Usrad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	jj=TT;     Utrad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	SLOOPA(jj) Gstot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	jj=TT;     Gttot += fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	iUsmhd=1.0/(fabs(Usmhd)+SMALL);
+	iUtmhd=1.0/(fabs(Utmhd)+SMALL);
+	iUsrad=1.0/(fabs(Usrad)+SMALL);
+	iUtrad=1.0/(fabs(Utrad)+SMALL);
+	idtsubs=SMALL+fabs(Gstot*MIN(iUsmhd,iUsrad));
+	idtsubt=SMALL+fabs(Gttot*MIN(iUtmhd,iUtrad));
+	idtsub=MAX(idtsubs,idtsubt);
+  }
+  else if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITALL){
+	// won't work if flow becomes grid-aligned or if v~0
+	Usmhd=Usrad=Gstot=0.0;
+	idtsub=0.0;
+	DLOOPA(jj){
+	  Umhd = fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  Urad = fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  Gtot = fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  iUmhd=1.0/(fabs(Umhd)+SMALL);
+	  iUrad=1.0/(fabs(Urad)+SMALL);
+	  idtsub=MAX(idtsub,SMALL+fabs(Gtot*MIN(iUmhd,iUrad)));
+	}
+  }
+  else if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITSUPERALL){
+	// won't work if flow becomes grid-aligned or if v~0 or if radiation neglibile contribution to dynamics
+	Usmhd=Usrad=Gstot=0.0;
+	idtsub=0.0;
+	DLOOPA(jj){
+	  Umhd = fabs(U[UU+jj]*U[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  Urad = fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  Gtot = fabs(Gd[jj]*Gd[jj]*ptrgeom->gcon[GIND(jj,jj)]);
+	  iUmhd=1.0/(fabs(Umhd)+SMALL);
+	  iUrad=1.0/(fabs(Urad)+SMALL);
+	  idtsub=MAX(idtsub,SMALL+fabs(Gtot*iUmhd));
+	  idtsub=MAX(idtsub,SMALL+fabs(Gtot*iUrad));
+	}
+  }
+
+  
   
   // what to return
   *dtsub=COUREXPLICIT/idtsub;
@@ -979,6 +1036,7 @@ int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *
   U[URAD1]=Rijlab[TT][RR];
   U[URAD2]=Rijlab[TT][TH];
   U[URAD3]=Rijlab[TT][PH];
+
 
   // set primitive that can use as pre-existing fluid velocity if need to use for reduction
   PLOOP(pliter,pl) pout[pl]=pin[pl];

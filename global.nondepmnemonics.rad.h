@@ -60,7 +60,18 @@
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
 // RADSHOCKFLAT 1 causes excessive oscillations in RADBEAMFLAT at injection point
 
-#define IMPLICITREVERTEXPLICIT 1 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
+// whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
+#define IMPLICITREVERTEXPLICIT 1
+
+#define SPACETIMESUBSPLITNONE 0
+#define SPACETIMESUBSPLITTIME 1
+#define SPACETIMESUBSPLITALL 2
+#define SPACETIMESUBSPLITSUPERALL 3
+
+// 0 : space-time merged
+// 1 : all space merged but separate from time
+// 2 : full split
+#define WHICHSPACETIMESUBSPLIT SPACETIMESUBSPLITNONE
 
 
 

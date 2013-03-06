@@ -643,12 +643,12 @@ int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][
 
 // Compute general Lorentz boost for an arbitrary metric and arbitrary 4-velocities
 // see docs/lorentz.ps.gz by Avery Broderick
-//    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu
-//    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu
-// (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu
-// (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu
-// So if going from u->w (i.e. FF2LAB) frame for  vecff^\mu  , then apply    Lambda^\mu_\nu vecff^nu  = veclab^\mu
-// So if going from w->u (i.e. LAB2FF) frame for veclab^\mu  , then apply (iLambda)^\mu_\nu veclab^nu = vecff^\mu
+//    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu  [Corresponding to boost *into* fluid frame]
+//    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu  [Corresponding to boost *from* fluid frame]
+// (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu  [Corresponding to boost *into* fluid frame]
+// (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu  [Corresponding to boost *from* fluid frame]
+// So if going from w->u (i.e. FF2LAB) frame for  vecff^\mu  , then apply (iLambda)^\mu_\nu vecff^nu  = veclab^\mu
+// So if going from u->w (i.e. LAB2FF) frame for veclab^\mu  , then apply   Lambda ^\mu_\nu veclab^nu = vecff^\mu
 // All this assumes iLambda was formed from matrix_inverse() that gives inverse transpose
 int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM])
 {
@@ -667,7 +667,7 @@ int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE *ucon,
   FTYPE gamma=0.0;
   DLOOPA(mu) gamma += -wcon[mu]*ucov[mu];
 
-  // lambda
+  // lambda^\mu_\nu
   DLOOP(mu,nu) lambda[mu][nu]= 
     + delta(mu,nu) 
     + (1.0/(1.0+gamma)) * (wcon[mu]*wcov[nu] + ucon[mu]*ucov[nu] - gamma *(ucon[mu]*wcov[nu] + wcon[mu]*ucov[nu]))
@@ -764,26 +764,25 @@ int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab,
   // Tetrcon_k^j [first index ortho, second index lab]
   // Tetrcov^k_j [first index ortho, second index lab (i.e. not transposed!)]
   //
-  //    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu
-  //    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu
-  // (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu
-  // (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu
-  // i.e. iLambda is inverse and transposed
-  // So if going from u->w (i.e. FF2LAB) frame for  vecff^\mu  , then apply    Lambda^\mu_\nu vecff^nu  = veclab^\mu
-  // So if going from w->u (i.e. LAB2FF) frame for veclab^\mu  , then apply (iLambda)^\mu_\nu veclab^nu = vecff^\mu
+  //    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu  [Corresponding to boost *into* fluid frame]
+  //    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu  [Corresponding to boost *from* fluid frame]
+  // (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu  [Corresponding to boost *into* fluid frame]
+  // (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu  [Corresponding to boost *from* fluid frame]
+  // So if going from w->u (i.e. FF2LAB) frame for  vecff^\mu  , then apply (iLambda)^\mu_\nu vecff^nu  = veclab^\mu
+  // So if going from u->w (i.e. LAB2FF) frame for veclab^\mu  , then apply   Lambda ^\mu_\nu veclab^nu = vecff^\mu
 
 
   // form transboost
   int aa;
   // apply Lorentz boost on transformation from lab-frame to orthonormal basis
 
-  // TBup_\mu[ff ortho]^\nu[lab coordbasis] = lambda^aa[lab ortho]_\mu[ff ortho] Tetrcon_aa[lab ortho]^\nu[lab coordbasis]
+  // TBup_\mu[ff ortho]^\nu[lab coordbasis] = ilambda^aa[lab ortho]_\mu[ff ortho] Tetrcon_aa[lab ortho]^\nu[lab coordbasis]
   DLOOP(mu,nu) transboostup[mu][nu]=0.0;
-  DLOOP(mu,nu) DLOOPA(aa) transboostup[mu][nu] += lambda[aa][mu]*tetrcon[aa][nu]; // as if operated boost on w_aa
+  DLOOP(mu,nu) DLOOPA(aa) transboostup[mu][nu] += ilambda[aa][mu]*tetrcon[aa][nu]; // as if operated boost on u_aa
 
-  // TBlo^\mu[ff ortho]_\nu[lab coordbasis] =  ilambda^\mu[ff ortho]_aa[lab ortho] Tetrcov^aa[lab ortho]_\nu[lab coordbasis]
+  // TBlo^\mu[ff ortho]_\nu[lab coordbasis] =  lambda^\mu[ff ortho]_aa[lab ortho] Tetrcov^aa[lab ortho]_\nu[lab coordbasis]
   DLOOP(mu,nu) transboostlo[mu][nu]=0.0;
-  DLOOP(mu,nu) DLOOPA(aa) transboostlo[mu][nu] += ilambda[mu][aa]*tetrcov[aa][nu]; // as if operated boost on w^aa
+  DLOOP(mu,nu) DLOOPA(aa) transboostlo[mu][nu] += lambda[mu][aa]*tetrcov[aa][nu]; // as if operated boost on u^aa
 
   // for starting in lab frame coordinate basis, use as follows:
   // i.e. ucon^\mu[ff ortho] =  TBlo^\mu[ff ortho]_\nu[lab coordbasis] ucon^\nu[lab coordbasis]
@@ -990,15 +989,15 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
     }
     else{
       // t^{\mu aa} = tfl^{\nu bb} TBup_\nu^\mu TBup_bb^aa
-	  //      DLOOP(mu,aa){
-	  //		DLOOP(nu,bb){
+	  //DLOOP(mu,aa){
+	  //	DLOOP(nu,bb){
 	  DLOOP(mu,nu){
 		DLOOP(aa,bb){
 		  tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
 		  //		  dualfprintf(fail_file,"mu=%d aa=%d nu=%d bb=%d adding=%g from %g*%g*%g\n",mu,aa,nu,bb,tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa],tensor4in[nu][bb],transboostup[nu][mu],transboostup[bb][aa]);
 		}
 	  }
-	  //	  dualfprintf(fail_file,"final00=%26.20g\n",tensor4out[00][00]);
+	  //	  dualfprintf(fail_file,"final00=%26.20g final10=%26.20g final01=%26.20g\n",tensor4out[0][0],tensor4out[0][1],tensor4out[1][0]);
     }
   }
   else if(tconcovtypeA==TYPEUCON && tconcovtypeB==TYPEUCOV){

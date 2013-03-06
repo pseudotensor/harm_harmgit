@@ -363,7 +363,9 @@ int init_global(void)
   }
 
   DTr = 100; //number of time steps for restart dumps
-  tf = 100.0; //final time
+  //  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
+  tf = 3E2; //final time (good enough)
+
 
 #endif
 
