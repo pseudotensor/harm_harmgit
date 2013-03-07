@@ -381,8 +381,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   trifprintf("Normalize densities\n");
   normalize_densities(prim);
 
-
-
+  
 
   /////////////////////////////
   //
@@ -443,10 +442,12 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 
+
   trifprintf("Fixup #1\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
+
 
 
   {
@@ -454,6 +455,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
     int finalstep=1; //  modifies initial ucum-like-primitives
     if (bound_prim(STAGEM1,finalstep,t,prim, pstag, Bhat, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
   }
+
 
 
   trifprintf("pre_interpolate_and_advance #1\n");

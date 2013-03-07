@@ -1820,13 +1820,15 @@ int bound_x2_periodic(
 	  rj=rjout;
 	  rk=k;
 	  LOOPBOUND2IN PBOUNDLOOP(pliter,pl){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+1+j,rk,pl);
+	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+SHIFT2+j,rk,pl);
 
 	    
-#if(DEBUGINOUTLOOPS)		
+#if(DEBUGINOUTLOOPS)
 	    dualfprintf(fail_file,"INNER X2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d (otherrj=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rj+SHIFT2+j,i,j,k);
+		dualfprintf(fail_file,"ref: %g\n",MACP0A1(prim,ri,rj+SHIFT2+j,rk,pl));
 	    if(!isfinite(MACP0A1(prim,ri,rj+SHIFT2+j,rk,pl))){
 	      dualfprintf(fail_file,"INNER X2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+		  myexit(29533246346);
 	    }
 #endif
 
@@ -1841,8 +1843,10 @@ int bound_x2_periodic(
 
 #if(DEBUGINOUTLOOPS)		
 	    dualfprintf(fail_file,"OUTER X2: ispstag=%d pl=%d :: ri=%d rj=%d rk=%d (otherrj=%d) i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,rj+(j-N2),i,j,k);
+		dualfprintf(fail_file,"ref: %g\n",MACP0A1(prim,ri,rj+(j-N2),rk,pl));
 	    if(!isfinite(MACP0A1(prim,ri,rj+(j-N2),rk,pl))){
 	      dualfprintf(fail_file,"INNER X2: caught copying nan ri=%d rj=%d rk=%d pl=%d\n",ri,rj,rk,pl);
+		  myexit(3294863498634);
 	    }
 #endif
 

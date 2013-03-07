@@ -1053,6 +1053,7 @@ int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *
 	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
 	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeom->gcov[GIND(jj,kk)],ptrgeom->gcon[GIND(jj,kk)]);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
+	myexit(189235);
 	//if(ptrgeom->i==700) myexit(189235);
 	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
@@ -1061,6 +1062,97 @@ int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *
 
   return 0;
 } 
+
+
+// for BCs, to take E and u^i as radiation primitives in whichvel/whichcoord
+// obtains WHICHVEL/PRIMECOORD primitives
+int primefluid_EVrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
+{
+  int pliter,pl;
+
+  // copy over
+  PLOOP(pliter,pl) pout[pl]=pin[pl];
+
+  // get metric grid geometry for these ICs
+  int getprim=0;
+  struct of_geom geomrealdontuse;
+  struct of_geom *ptrgeomreal=&geomrealdontuse;
+  gset(getprim,whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeomreal);
+
+  FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
+  ucon_calc_whichvel(whichvel,&pout[URAD1-U1],ptrgeomreal,uradcon,othersrad);
+
+  // now convert velocity so in PRIMECOORDS assuming whichcoord=MCOORD
+  mettometp_genloc(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,uradcon);
+  if(whichcoord!=MCOORD){
+	dualfprintf(fail_file,"primefluid_EVrad_to_primeall() needs whichcoord (%d) to be MCOORD (%d)\n",whichcoord,MCOORD);
+	myexit(87345246);
+  }
+
+  // now go back to pr for radiation primitive
+  ucon2pr(WHICHVEL,uradcon,ptrgeom,&pout[URAD1-U1]);
+  
+  return(0);
+}
+
+
+// as in BCs, if start with fluid in WHICHVEL/PRIMECOORDS and set radiation as R^t_\nu in orthonormal fluid frame, then use this to get all things into final WHICHVEL/PRIMECOORDS for filling primitives.
+int primefluid_ffrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
+{
+  int pliter,pl;
+
+  int i=ptrgeom->i;
+  int j=ptrgeom->j;
+  int k=ptrgeom->k;
+  int loc=ptrgeom->p;
+  int whichvelnew;
+
+  // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
+  FTYPE pprime[NPR];
+  PLOOP(pliter,pl) pprime[pl]=pin[pl];
+
+  // get ucon (not uradcon!)
+  FTYPE ucon[NDIM];
+  whichvelnew=WHICHVEL;
+  if (pr2ucon(whichvel,pprime, ptrgeom, ucon) >= 1) FAILSTATEMENT("bounds.koral.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
+
+  // transform velocity from PRIMECOORD WHICHVEL to whichvel whichcoord
+  // so can be used below in prad_fforlab() for boost
+  metptomet(i,j,k,ucon);
+
+
+  // get metric grid geometry for these ICs
+  int getprim=0;
+  struct of_geom geomrealdontuse;
+  struct of_geom *ptrgeomreal=&geomrealdontuse;
+  gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+
+  // now get fluid velocity primitive in IC-like setup
+  FTYPE pnew[NPR];
+  PLOOP(pliter,pl) pnew[pl]=pprime[pl]; // copy for other things
+  // get the IC-type primitive
+  ucon2pr(whichvel,ucon,ptrgeomreal,pnew); // now pnew[U1-U3] contains whichvel/whichcoord velocity
+
+  int jj;
+  DLOOPA(jj) dualfprintf(fail_file,"ijk=%d %d %d : jj=%d uconreal=%g\n",i,j,k,jj,ucon[jj]);
+  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pnew=%g\n",pl,pnew[pl]);
+
+  // now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
+  int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
+  FTYPE pradnew[NPR];
+  prad_fforlab(whichvel, whichcoord, whichframedir, pnew, pradnew, ptrgeomreal); // assumes ptrgeom[RHO] applies to all quantities
+  
+  // now transform to WHICHVEL/PRIMECOORDS for the entire primitive
+  if (bl2met2metp2v(whichvel,whichcoord,pradnew, i,j,k) >= 1) FAILSTATEMENT("bounds.koral.c:transform_primitive_vB()", "bl2ks2ksp2v()", 1);
+  PLOOP(pliter,pl) pout[pl]=pin[pl];
+  // only have to overwrite radiation primitives since velocity won't have changed
+  PLOOPRADONLY(pl) pout[pl]=pradnew[pl];
+  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
+
+
+  return(0);
+
+}
 
 
 /*****************************************************************/

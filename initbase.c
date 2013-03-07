@@ -223,6 +223,7 @@ int init(int *argc, char **argv[])
       MYFUN(init_primitives(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf)),"initbase.c:init()", "init_primitives()", 0);
 
 
+
       
       // dump analytic solution
       //GLOBALPOINT(pdump)=GLOBALPOINT(panalytic);

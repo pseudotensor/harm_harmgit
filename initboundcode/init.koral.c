@@ -103,119 +103,6 @@ int init_consts(void)
 
 
 
-int init_defcoord(void)
-{
-
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-#if(WHICHPROBLEM==FLATNESS)
-
-
-  defcoord = UNIFORMCOORDS;
-  Rin_array[1]=0;
-  Rin_array[2]=0;
-  Rin_array[3]=0;
-
-  Rout_array[1]=1.0;
-  Rout_array[2]=1.0;
-  Rout_array[3]=1.0;
-
-#endif
-
-
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
-
-  defcoord = UNIFORMCOORDS;
-  Rin_array[1]=-50.0; 
-  Rin_array[2]=-1.0;
-  Rin_array[3]=-1.0;
-
-  Rout_array[1]=50.0; 
-  Rout_array[2]=1.0;
-  Rout_array[3]=1.0;
-
-#endif
-
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-
-#if(WHICHPROBLEM==RADPULSE3D)
-
-  defcoord = UNIFORMCOORDS;
-  Rin_array[1]=-50.0; 
-  Rin_array[2]=-50.0; 
-  Rin_array[3]=-50.0; 
-
-  Rout_array[1]=50.0; 
-  Rout_array[2]=50.0; 
-  Rout_array[3]=50.0; 
-
-#endif
-
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-
-  defcoord = UNIFORMCOORDS;
-  Rin_array[1]=0;
-  Rin_array[2]=0;
-  Rin_array[3]=0;
-
-  Rout_array[1]=1.0;
-  Rout_array[2]=1.0;
-  Rout_array[3]=1.0;
-
-#endif
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-#if(WHICHPROBLEM==RADTUBE)
-
-  trifprintf("RADTUBE NTUBE=%d GAMMATUBE=%g ARAD_CODE=%g SIGMARAD_CODE=%g\n",NTUBE,GAMMATUBE,ARAD_CODE,ARAD_CODE/4.0);
-
-  if(NTUBE==5){
-	defcoord = UNIFORMCOORDS;
-	Rin_array[1]=-20.0;
-	Rin_array[2]=-1.0;
-	Rin_array[3]=-1.0;
-
-	Rout_array[1]=20.0;
-	Rout_array[2]=1.0;
-	Rout_array[3]=1.0;
-  }
-  else{
-	defcoord = UNIFORMCOORDS;
-	Rin_array[1]=-15.0;
-	Rin_array[2]=-1.0;
-	Rin_array[3]=-1.0;
-
-	Rout_array[1]=15.0;
-	Rout_array[2]=1.0;
-	Rout_array[3]=1.0;
-  }
-
-#endif
-
-
-  return(0);
-}
-
-
-int init_grid(void)
-{
-  
-
-  return(0);
-}
-
 
 
 int init_global(void)
@@ -225,6 +112,10 @@ int init_global(void)
 
   funreturn=user1_init_global();
   if(funreturn!=0) return(funreturn);
+
+
+  // default
+  ARAD_CODE=ARAD_CODE_DEF;
 
 
   //  ERADLIMIT=UUMIN; // set same for now
@@ -259,115 +150,181 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-#if(WHICHPROBLEM==FLATNESS)  
+  if(WHICHPROBLEM==FLATNESS){
+	
+	//  lim[1]=lim[2]=lim[3]=MINM;
+	cour=0.8;
+	gam=gamideal=5.0/3.0;
+	cooling=KORAL;
 
-  //  lim[1]=lim[2]=lim[3]=MINM;
-  cour=0.8;
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
+	BCtype[X1UP]=PERIODIC; // OUTFLOW;
+	BCtype[X1DN]=PERIODIC;
+	BCtype[X2UP]=PERIODIC; // OUTFLOW;
+	BCtype[X2DN]=PERIODIC;
+	BCtype[X3UP]=PERIODIC; // OUTFLOW;
+	BCtype[X3DN]=PERIODIC;
 
-  BCtype[X1UP]=PERIODIC; // OUTFLOW;
-  BCtype[X1DN]=PERIODIC;
-  BCtype[X2UP]=PERIODIC; // OUTFLOW;
-  BCtype[X2DN]=PERIODIC;
-  BCtype[X3UP]=PERIODIC; // OUTFLOW;
-  BCtype[X3DN]=PERIODIC;
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
 
-  int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
-
-  DTr = 100; //number of time steps for restart dumps
-  tf = 10.0; //final time
-#endif
-
-  /*************************************************/
-  /*************************************************/
-  /*************************************************/
-
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-
-  //  lim[1]=lim[2]=lim[3]=MINM;
-  //  cour=0.5;
-  cour=0.8;
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
-
-  BCtype[X1UP]=OUTFLOW;
-  BCtype[X1DN]=OUTFLOW;
-  BCtype[X2UP]=OUTFLOW;
-  BCtype[X2DN]=OUTFLOW;
-  BCtype[X3UP]=OUTFLOW; 
-  BCtype[X3DN]=OUTFLOW;
-
-  int idt;
-  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
-
-  DTr = 100; //number of time steps for restart dumps
-  tf = 1E2; //final time
-
-#endif
+	DTr = 100; //number of time steps for restart dumps
+	tf = 10.0; //final time
+  }
 
   /*************************************************/
   /*************************************************/
   /*************************************************/
 
-#if(WHICHPROBLEM==RADBEAMFLAT)  
-  cour=0.8;
-  gam=gamideal=5.0/3.0;
-  cooling=KORAL;
 
-  BCtype[X1UP]=OUTFLOW;
-  BCtype[X1DN]=RADBEAMFLATINFLOW;
-  BCtype[X2UP]=OUTFLOW;
-  BCtype[X2DN]=OUTFLOW;
-  BCtype[X3UP]=PERIODIC; 
-  BCtype[X3DN]=PERIODIC;
+  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-  int idt;
-  //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
+	//  lim[1]=lim[2]=lim[3]=MINM;
+	//  cour=0.5;
+	cour=0.8;
+	gam=gamideal=5.0/3.0;
+	cooling=KORAL;
 
-  DTr = 100; //number of time steps for restart dumps
-  tf = 10.0; //final time
+	BCtype[X1UP]=OUTFLOW;
+	BCtype[X1DN]=OUTFLOW;
+	BCtype[X2UP]=OUTFLOW;
+	BCtype[X2DN]=OUTFLOW;
+	BCtype[X3UP]=OUTFLOW; 
+	BCtype[X3DN]=OUTFLOW;
 
-#endif
+	int idt;
+	//  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
+	DTr = 100; //number of time steps for restart dumps
+	tf = 1E2; //final time
+  }
 
   /*************************************************/
   /*************************************************/
   /*************************************************/
 
-#if(WHICHPROBLEM==RADTUBE)
-  lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
-  // should have PARA(LINE) not oscillate so much at cusp
-  // Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-  cour=0.8;
-  gam=gamideal=GAMMATUBE;
-  cooling=KORAL;
+  if(WHICHPROBLEM==RADBEAMFLAT){
+	cour=0.8;
+	gam=gamideal=5.0/3.0;
+	cooling=KORAL;
 
-  BCtype[X1UP]=FREEOUTFLOW;
-  BCtype[X1DN]=FREEOUTFLOW;
-  BCtype[X2UP]=OUTFLOW; // NOTEMARK: Koral sets fixed BCs.  We can do that following the IC choices, but not necessary.
-  BCtype[X2DN]=OUTFLOW;
-  BCtype[X3UP]=PERIODIC; 
-  BCtype[X3DN]=PERIODIC;
+	BCtype[X1UP]=OUTFLOW;
+	BCtype[X1DN]=RADBEAMFLATINFLOW;
+	BCtype[X2UP]=OUTFLOW;
+	BCtype[X2DN]=OUTFLOW;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
 
-  int idt;
-  if(NTUBE==5){
+	int idt;
+	//  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 10.0; //final time
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADTUBE){
+
+// 1,2,3,31,4,41,5
+//#define NTUBE 1
+//#define NTUBE 31
+#define NTUBE 5
+//#define NTUBE 3
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	// should have PARA(LINE) not oscillate so much at cusp
+	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
+	cour=0.8;
+	cooling=KORAL;
+
+	// arad = 4*sigmarad/c (so removed /4. from koral sigma setup).
+	// Note, sigmarad or arad is not arbitrary -- value chosen to IC in radiative-hydro balance for each separately the left and right states.
+	if(NTUBE==1){
+	  gam=gamideal=5./3.;
+	  ARAD_CODE=(1e-8/pow(calc_PEQ_Tfromurho(3.e-5/(gam-1.),1.),4.));
+	}
+	else if(NTUBE==2){
+	  gam=gamideal=5./3.;
+	  ARAD_CODE=(2e-5/pow(calc_PEQ_Tfromurho(4.e-3/(gam-1.),1.),4.));
+	}
+	else if(NTUBE==3){
+	  gam=gamideal=2.;
+	  ARAD_CODE=(2./pow(calc_PEQ_Tfromurho(60./(gam-1.),1.),4.));
+	}
+	else if(NTUBE==31){
+	  gam=gamideal=2.;
+	  ARAD_CODE=(2./pow(calc_PEQ_Tfromurho(60./(gam-1.),1.),4.));
+	}
+	else if(NTUBE==4){
+	  gam=gamideal=5./3.;
+	  ARAD_CODE=(.18/pow(calc_PEQ_Tfromurho(6.e-3/(gam-1.),1.),4.));
+	}
+	else if(NTUBE==41){
+	  gam=gamideal=5./3.;
+	  ARAD_CODE=(.18/pow(calc_PEQ_Tfromurho(6.e-3/(gam-1.),1.),4.));
+	}
+	else if(NTUBE==5){
+	  gam=gamideal=2.;
+	  ARAD_CODE=(2./pow(calc_PEQ_Tfromurho(60./(gam-1.),1.),4.));
+	}
+
+
+	trifprintf("RADTUBE NTUBE=%d ARAD_CODE=%g SIGMARAD_CODE=%g\n",NTUBE,ARAD_CODE,ARAD_CODE/4.0);
+
+
+	BCtype[X1UP]=FREEOUTFLOW;
+	BCtype[X1DN]=FREEOUTFLOW;
+	BCtype[X2UP]=OUTFLOW; // NOTEMARK: Koral sets fixed BCs.  We can do that following the IC choices, but not necessary.
+	BCtype[X2DN]=OUTFLOW;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
+
+	int idt;
+	if(NTUBE==5){
+	  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+	}
+	else{
+	  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2.0;
+	}
+
+	DTr = 100; //number of time steps for restart dumps
+	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
+	tf = 3E2; //final time (good enough)
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADSHADOW){
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	// should have PARA(LINE) not oscillate so much at cusp
+	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+	ARAD_CODE=1E7*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=FREEOUTFLOW;
+	BCtype[X1DN]=RADSHADOWINFLOW;
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
+
+	int idt;
 	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+
+	DTr = 100; //number of time steps for restart dumps
+	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
+	tf = 10.0; //final time
   }
-  else{
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2.0;
-  }
 
-  DTr = 100; //number of time steps for restart dumps
-  //  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
-  tf = 3E2; //final time (good enough)
-
-
-#endif
 
   /*************************************************/
   /*************************************************/
@@ -377,13 +334,144 @@ int init_global(void)
 
 }
 
+
+int init_defcoord(void)
+{
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==FLATNESS){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-50.0; 
+	Rin_array[2]=-1.0;
+	Rin_array[3]=-1.0;
+
+	Rout_array[1]=50.0; 
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADPULSE3D){
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-50.0; 
+	Rin_array[2]=-50.0; 
+	Rin_array[3]=-50.0; 
+
+	Rout_array[1]=50.0; 
+	Rout_array[2]=50.0; 
+	Rout_array[3]=50.0; 
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADBEAMFLAT){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADTUBE){
+
+
+
+	if(NTUBE==5){
+	  defcoord = UNIFORMCOORDS;
+	  Rin_array[1]=-20.0;
+	  Rin_array[2]=-1.0;
+	  Rin_array[3]=-1.0;
+
+	  Rout_array[1]=20.0;
+	  Rout_array[2]=1.0;
+	  Rout_array[3]=1.0;
+	}
+	else{
+	  defcoord = UNIFORMCOORDS;
+	  Rin_array[1]=-15.0;
+	  Rin_array[2]=-1.0;
+	  Rin_array[3]=-1.0;
+
+	  Rout_array[1]=15.0;
+	  Rout_array[2]=1.0;
+	  Rout_array[3]=1.0;
+	}
+  }
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADSHADOW){
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-1.0;
+	Rin_array[2]=-1.0;
+	Rin_array[3]=-1.0;
+	
+	Rout_array[1]=3.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
+
+
+  return(0);
+}
+
+
+int init_grid(void)
+{
+  
+
+  return(0);
+}
+
+
+
 // assumes normalized density
 int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr)
 {
   int funreturn;
 
-  funreturn=user1_init_atmosphere(whichvel, whichcoord,i, j, k, pr);
-  if(funreturn!=0) return(funreturn);
+  // NO atmosphere
+  //  funreturn=user1_init_atmosphere(whichvel, whichcoord,i, j, k, pr);
+  //  if(funreturn!=0) return(funreturn);
+
+
 
   return(0);
 
@@ -444,12 +532,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
 
-//#define RHO_AMB (1.e0) // in grams per cm^3
-#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
-#define T_AMB (1.0E6) // in Kelvin
-
-#define BLOBP 100.
-#define BLOBW 5.
 
 
 
@@ -536,6 +618,19 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //****************************************//
 
 
+#if(WHICHPROBLEM==RADSHADOW)
+
+//#define KAPPAUSER(rho,T) (rho*1E1) // seems to allow photon build-up at front edge of blob
+#define KAPPAUSER(rho,T) (rho*1E0) // seems radiation pentrates blob too much compared to koral paper
+#define KAPPAESUSER(rho,T) (rho*0.0)
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
 
 
 
@@ -590,49 +685,35 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==FLATNESS)  
+  if(WHICHPROBLEM==FLATNESS){
 
-  // outsideness
-  if (0) {
-
-    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
-    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
-
-    *whichvel=WHICHVEL;
-    *whichcoord=PRIMECOORDS;
-    return(0);
-  }
-  else {
     
-    
-    pr[RHO] = 1./RHOBAR ; // i.e. 1g/cm^3
-    pr[UU] = 0.1/RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
-    pr[U1] = 0 ;
-    pr[U2] = 0 ;    
-    pr[U3] = 0 ;
+	pr[RHO] = 1./RHOBAR ; // i.e. 1g/cm^3
+	pr[UU] = 0.1/RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
+	pr[U1] = 0 ;
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
 
-    // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
-    pr[B3]=0.0;
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
 
-    if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-      PLOOPBONLY(pl) pstag[pl]=pr[pl];
-    }
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
 
 
-    pr[URAD0] = 1./RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
-    pr[URAD1] = 0 ;
-    pr[URAD2] = 0 ;    
-    pr[URAD3] = 0 ;
+	pr[URAD0] = 1./RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
+	pr[URAD1] = 0 ;
+	pr[URAD2] = 0 ;    
+	pr[URAD3] = 0 ;
 
-    *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC2;
-    return(0);
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+	return(0);
   }
-#endif 
-
 
 
 
@@ -640,220 +721,288 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADBEAMFLAT)  
+  if(WHICHPROBLEM==RADBEAMFLAT){
 
-  // outsideness
-  if (0) {
-
-    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
-    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
-
-    *whichvel=WHICHVEL;
-    *whichcoord=PRIMECOORDS;
-    return(0);
-  }
-  else {
     
-    
-    pr[RHO] = RADBEAMFLAT_RHO/RHOBAR ;
-    pr[UU] = RADBEAMFLAT_UU/RHOBAR; // RADBEAMFLAT_UU was set in per c^2 units
-    pr[U1] = 0 ;
-    pr[U2] = 0 ;    
-    pr[U3] = 0 ;
+	pr[RHO] = RADBEAMFLAT_RHO/RHOBAR ;
+	pr[UU] = RADBEAMFLAT_UU/RHOBAR; // RADBEAMFLAT_UU was set in per c^2 units
+	pr[U1] = 0 ;
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
 
-    // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
-    pr[B3]=0.0;
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
 
-    if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-      PLOOPBONLY(pl) pstag[pl]=pr[pl];
-    }
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
 
 
-    pr[URAD0] = RADBEAMFLAT_ERAD/RHOBAR; // RADBEAMFLAT_ERAD was set in per c^2 units
-    pr[URAD1] = 0 ;
-    pr[URAD2] = 0 ;    
-    pr[URAD3] = 0 ;
+	pr[PRAD0] = RADBEAMFLAT_ERAD/RHOBAR; // RADBEAMFLAT_ERAD was set in per c^2 units
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
 
-    *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC2;
-    return(0);
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself.
+
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+	return(0);
   }
-#endif
 
 
 
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-  // outsideness
-  if (0) {
-
-    get_geometry(i, j, k, CENT, ptrrealgeom); // code's internal final coordinate system
-    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
-
-    *whichvel=WHICHVEL;
-    *whichcoord=PRIMECOORDS;
-    return(0);
-  }
-  else {
-
-    FTYPE Trad,Tgas,ERAD,uint;
-    FTYPE xx,yy,zz,rsq;
-    coord(i, j, k, CENT, X);
-    bl_coord(X, V);
-    xx=V[1];
-    yy=V[2];
-    zz=V[3];
+	FTYPE Trad,Tgas,ERAD,uint;
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
 
 
-    if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D){
-      rsq=(xx)*(xx)+(yy)*(yy)+(zz)*(zz);
-    }
-    else if(WHICHPROBLEM==RADPULSEPLANAR){
-      rsq=(xx)*(xx);
+	if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSE3D){
+	  rsq=(xx)*(xx)+(yy)*(yy)+(zz)*(zz);
+	}
+	else if(WHICHPROBLEM==RADPULSEPLANAR){
+	  rsq=(xx)*(xx);
 
-    }
+	}
 
-    // radiation temperature is distributed
-    Trad=(T_AMB/TEMPBAR)*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
-    ERAD=calc_LTE_EfromT(Trad);
+	//FTYPE RHO_AMB (1.e0) // in grams per cm^3
+	FTYPE RHO_AMB=(MPERSUN*MSUN/(LBAR*LBAR*LBAR)); // in grams per cm^3 to match koral's units with rho=1
+	FTYPE T_AMB=(1.0E6); // in Kelvin
 
-    //flat gas profiles
-    Tgas=(T_AMB/TEMPBAR);
+	FTYPE BLOBP=100.;
+	FTYPE BLOBW=5.;
+
+	// radiation temperature is distributed
+	Trad=(T_AMB/TEMPBAR)*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+	ERAD=calc_LTE_EfromT(Trad);
+
+	//flat gas profiles
+	Tgas=(T_AMB/TEMPBAR);
 	FTYPE rho;
-    rho=(RHO_AMB/RHOBAR);
-    uint=calc_PEQ_ufromTrho(Tgas,rho);
+	rho=(RHO_AMB/RHOBAR);
+	uint=calc_PEQ_ufromTrho(Tgas,rho);
 
 	//	dualfprintf(fail_file,"IC i=%d Trad=%g ERAD=%g Tgas=%g rho=%g uint=%g\n",i,Trad,ERAD,Tgas,rho,uint);
 
    
-    pr[RHO] = rho;
-    pr[UU] = uint;
-    pr[U1] = 0 ;
-    pr[U2] = 0 ;    
-    pr[U3] = 0 ;
+	pr[RHO] = rho;
+	pr[UU] = uint;
+	pr[U1] = 0 ;
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
 
-    // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
-    pr[B3]=0.0;
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
 
-    if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-      PLOOPBONLY(pl) pstag[pl]=pr[pl];
-    }
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
 
-    FTYPE Fx,Fy,Fz;
-    Fx=Fy=Fz=0.0;
+	FTYPE Fx,Fy,Fz;
+	Fx=Fy=Fz=0.0;
 
-    pr[URAD0] = ERAD ;
-    pr[URAD1] = Fx ;
-    pr[URAD2] = Fy ;    
-    pr[URAD3] = Fz ;
+	pr[URAD0] = ERAD ;
+	pr[URAD1] = Fx ;
+	pr[URAD2] = Fy ;    
+	pr[URAD3] = Fz ;
 
-    *whichvel=WHICHVEL;
-    *whichcoord=CARTMINKMETRIC2;
-    return(0);
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+	return(0);
   }
-#endif
-
 
 
 
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==RADTUBE)
+  if(WHICHPROBLEM==RADTUBE){
 
-  FTYPE rho,mx,my,mz,m,ERAD,uint,E0,Fx,Fy,Fz,pLTE;  
-  FTYPE rho0,Tgas0,ur,Tgas,Trad,r,rcm,prad,pgas,vx,ut,ux;
-  FTYPE xx,yy,zz;
-  coord(i, j, k, CENT, X);
-  bl_coord(X, V);
-  xx=V[1];
-  yy=V[2];
-  zz=V[3];
+	FTYPE rho,mx,my,mz,m,ERAD,uint,E0,Fx,Fy,Fz,pLTE;  
+	FTYPE rho0,Tgas0,ur,Tgas,Trad,r,rcm,prad,pgas,vx,ut,ux;
+	FTYPE xx,yy,zz;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
   
 
-  // set fluid values.  Also set radiation ff primitives (E,F^i), which are set in fluid frame orthonormal basis
-  if(xx<(Rout_array[1]+Rin_array[1])/2.){
-    rho=1.;
-    if(NTUBE==1) {uint = 3.e-5 / (GAMMATUBE - 1.); ERAD=1.e-8; Fx=1.e-2*ERAD;ux=0.015;}
-    if(NTUBE==2) {uint = 4.e-3 / (GAMMATUBE - 1.);ERAD=2.e-5; Fx=1.e-2*ERAD;ux=0.25;}
-    if(NTUBE==3 || NTUBE==31) {uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=10.;}
-    if(NTUBE==4 || NTUBE==41) {uint = 6.e-3 / (GAMMATUBE - 1.);ERAD=0.18; Fx=1.e-2*ERAD;ux=0.69;}	  
-    if(NTUBE==5) {uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.25;}
+	// set fluid values.  Also set radiation ff primitives (E,F^i), which are set in fluid frame orthonormal basis
+	if(xx<(Rout_array[1]+Rin_array[1])/2.){
+	  rho=1.;
+	  if(NTUBE==1) {uint = 3.e-5 / (gamideal - 1.); ERAD=1.e-8; Fx=1.e-2*ERAD;ux=0.015;}
+	  if(NTUBE==2) {uint = 4.e-3 / (gamideal - 1.);ERAD=2.e-5; Fx=1.e-2*ERAD;ux=0.25;}
+	  if(NTUBE==3 || NTUBE==31) {uint = 60. / (gamideal - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=10.;}
+	  if(NTUBE==4 || NTUBE==41) {uint = 6.e-3 / (gamideal - 1.);ERAD=0.18; Fx=1.e-2*ERAD;ux=0.69;}	  
+	  if(NTUBE==5) {uint = 60. / (gamideal - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.25;}
+	}
+	else{
+	  if(NTUBE==1) {rho=2.4;uint = 1.61e-4/ (gamideal - 1.); ERAD=2.51e-7; Fx=1.e-2*ERAD;ux=6.25e-3;}
+	  if(NTUBE==2) {rho=3.11;uint = 0.04512 / (gamideal - 1.);ERAD=3.46e-3; Fx=1.e-2*ERAD;ux=0.0804;}
+	  if(NTUBE==3 || NTUBE==31) {rho=8.0;uint = 2.34e3 / (gamideal - 1.);ERAD=1.14e3; Fx=1.e-2*ERAD;ux=1.25;}
+	  if(NTUBE==4 || NTUBE==41) {rho=3.65;uint =3.59e-2 / (gamideal - 1.);ERAD=1.30; Fx=1.e-2*ERAD;ux=0.189;}	  
+	  if(NTUBE==5) {rho=1.0;uint = 60. / (gamideal - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.10;}
+	}
+
+  
+	pr[RHO] = rho;
+	pr[UU] = uint;
+	pr[U1] = ux ; // ux is 4-velocity
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+  
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+	Fy=Fz=0.0;
+	pr[URAD0] = ERAD ;
+	pr[URAD1] = Fx ;
+	pr[URAD2] = Fy ;    
+	pr[URAD3] = Fz ;
+
+	// setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
+	*whichvel=VEL4;
+	*whichcoord=CARTMINKMETRIC2;
+
+	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
+	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
+	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
+  
+	// get metric grid geometry for these ICs
+	int getprim=0;
+	struct of_geom geomdontuse;
+	struct of_geom *ptrgeom=&geomdontuse;
+	gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+	// transform radiation primitives to lab-frame
+	FTYPE prrad[NPR],prradnew[NPR];
+	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
+	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
+	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
+	// overwrite radiation primitives with new lab-frame values
+	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+
+	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
+
+	// inversion returns WHICHVEL velocity type, so pass that back
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+  
+	return(0);
+  
+
   }
-  else{
-	if(NTUBE==1) {rho=2.4;uint = 1.61e-4/ (GAMMATUBE - 1.); ERAD=2.51e-7; Fx=1.e-2*ERAD;ux=6.25e-3;}
-	if(NTUBE==2) {rho=3.11;uint = 0.04512 / (GAMMATUBE - 1.);ERAD=3.46e-3; Fx=1.e-2*ERAD;ux=0.0804;}
-	if(NTUBE==3 || NTUBE==31) {rho=8.0;uint = 2.34e3 / (GAMMATUBE - 1.);ERAD=1.14e3; Fx=1.e-2*ERAD;ux=1.25;}
-	if(NTUBE==4 || NTUBE==41) {rho=3.65;uint =3.59e-2 / (GAMMATUBE - 1.);ERAD=1.30; Fx=1.e-2*ERAD;ux=0.189;}	  
-	if(NTUBE==5) {rho=1.0;uint = 60. / (GAMMATUBE - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.10;}
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADSHADOW){
+
+	//	FTYPE MASS=10.0;
+	FTYPE TAMB=1.e7/TEMPBAR;
+	FTYPE RHOAMB=1.e-4;
+	FTYPE RHOBLOB=1.e3;
+	FTYPE BLOBW=0.22;
+
+	FTYPE Trad,Tgas,ERAD;
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+	FTYPE rho,uint,Fx,Fy,Fz,pLTE;  
+
+	/*****************************/
+	
+	//	FTYPE pamb=calc_PEQ_ufromTrho(TAMB,RHOAMB);
+	rsq=xx*xx+yy*yy+zz*zz;
+	rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;      
+	Trad=TAMB*RHOAMB/rho;
+	//	Trad=TAMB;
+	// Paper says T = T0*rho/RHOAMB
+	//	Trad = TAMB*rho/RHOAMB;
+	// for constant gas pressure, P=\rho T implies rho T = constant so that T\propto 1/rho
+		  
+	uint=calc_PEQ_ufromTrho(Trad,rho);
+	ERAD=calc_LTE_EfromT(Trad);
+
+	//	dualfprintf(fail_file,"i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
+
+	Fx=0.;
+	Fy=0.;
+	Fz=0.;	      	      
+
+	FTYPE VV=0.; // assumed orthonormal 4-velocity
+
+	pr[RHO] = rho;
+	pr[UU] = uint;
+	pr[U1] = -VV ;
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+	pr[URAD0] = ERAD ;
+	pr[URAD1] = Fx ;
+	pr[URAD2] = Fy ;    
+	pr[URAD3] = Fz ;
+
+	*whichvel=VEL4;
+	*whichcoord=CARTMINKMETRIC2;
+
+	// get metric grid geometry for these ICs
+	int getprim=0;
+	struct of_geom geomdontuse;
+	struct of_geom *ptrgeom=&geomdontuse;
+	gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+
+	// now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
+	FTYPE prrad[NPR],prradnew[NPR];
+	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
+	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
+	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
+	// overwrite radiation primitives with new lab-frame values
+	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+   
+	//	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
+
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+	return(0);
   }
-
-  
-  pr[RHO] = rho;
-  pr[UU] = uint;
-  pr[U1] = ux ; // ux is 4-velocity
-  pr[U2] = 0 ;    
-  pr[U3] = 0 ;
-
-  // just define some field
-  pr[B1]=0.0;
-  pr[B2]=0.0;
-  pr[B3]=0.0;
-  
-  if(FLUXB==FLUXCTSTAG){
-	// assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-	PLOOPBONLY(pl) pstag[pl]=pr[pl];
-  }
-
-  Fy=Fz=0.0;
-  pr[URAD0] = ERAD ;
-  pr[URAD1] = Fx ;
-  pr[URAD2] = Fy ;    
-  pr[URAD3] = Fz ;
-
-  // setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
-  *whichvel=VEL4;
-  *whichcoord=CARTMINKMETRIC2;
-
-  // TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
-  // make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
-  // But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
-  
-  // get metric grid geometry for these ICs
-  int getprim=0;
-  struct of_geom geomdontuse;
-  struct of_geom *ptrgeom=&geomdontuse;
-  gset(getprim,*whichcoord,i,j,k,ptrgeom);
-
-  // transform radiation primitives to lab-frame
-  FTYPE prrad[NPR],prradnew[NPR];
-  PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-  int whichdir=FF2LAB; // fluid frame orthonormal to lab-frame
-  int primcoord=0; // tells not PRIMCOORDs so won't assume can use dxdxp's to simplify metric
-  prad_fforlab(*whichvel, *whichcoord, whichdir, prrad, prradnew, ptrgeom);
-  // overwrite radiation primitives with new lab-frame values
-  PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
-
-  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
-
-  // inversion returns WHICHVEL velocity type, so pass that back
-  *whichvel=WHICHVEL;
-  *whichcoord=CARTMINKMETRIC2;
-  
-  return(0);
-  
-
-
-#endif 
-
 
 
 
@@ -1056,14 +1205,14 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   //  torus_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
   //jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
 
-#if(1)
-  enerregiondef[POINTDOWN][1]=0;
-  enerregiondef[POINTUP][1]=totalsize[1]-1;
-  enerregiondef[POINTDOWN][2]=0;
-  enerregiondef[POINTUP][2]=totalsize[2]-1;
-  enerregiondef[POINTDOWN][3]=0;
-  enerregiondef[POINTUP][3]=totalsize[3]-1;
-#endif
+  if(1){
+	enerregiondef[POINTDOWN][1]=0;
+	enerregiondef[POINTUP][1]=totalsize[1]-1;
+	enerregiondef[POINTDOWN][2]=0;
+	enerregiondef[POINTUP][2]=totalsize[2]-1;
+	enerregiondef[POINTDOWN][3]=0;
+	enerregiondef[POINTUP][3]=totalsize[3]-1;
+  }
 
   return(0);
 }
@@ -1083,13 +1232,14 @@ int theproblem_set_enerregionupdate(int forceupdate, int timeorder, int numtimeo
   // number of steps after which position/size of active section is updated
   //
   ////////
-#if(N3==1)
-  //  *updateeverynumsteps=100;
-  *updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
-#else
-  //  *updateeverynumsteps=10;
-  *updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
-#endif
+  if(N3==1){
+	//  *updateeverynumsteps=100;
+	*updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
+  }
+  else{
+	//  *updateeverynumsteps=10;
+	*updateeverynumsteps=1; // update every step since otherwise flow runs into wall at outer boundary
+  }
 
   ////////
   //

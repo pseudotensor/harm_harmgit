@@ -28,6 +28,10 @@ extern int p2u_rad(FTYPE *pr, FTYPE *Urad, struct of_geom *ptrgeom, struct of_st
 
 extern int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pp1, FTYPE *pp2, struct of_geom *ptrgeom);
 
+extern int primefluid_ffrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout);
+
+extern int primefluid_EVrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout);
+
 
 extern int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
 extern int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4],FTYPE *f);

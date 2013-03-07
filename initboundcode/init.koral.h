@@ -2,9 +2,15 @@
 #define FLATNESS (0) // not in Koral
 #define RADTUBE (6)
 #define RADPULSE (10)
+#define RADSHADOW 11  // radiative shadow
 #define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
 #define RADPULSE3D (16)
 #define RADBEAMFLAT (24)
+
+// other BCTypes beyond those in definit.h (can't overlap numbers from there)
+#define RADBEAMFLATINFLOW 201
+#define RADSHADOWINFLOW 202
+
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
@@ -12,7 +18,8 @@
 //#define WHICHPROBLEM RADPULSE
 //#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
-#define WHICHPROBLEM RADTUBE
+//#define WHICHPROBLEM RADTUBE
+#define WHICHPROBLEM RADSHADOW
 
 
 //undefs
@@ -230,6 +237,7 @@
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
 
+#undef RADSHOCKFLAT
 #define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
 
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
@@ -244,7 +252,7 @@
 #define MCOORD CARTMINKMETRIC2
 
 //#define RADBEAMFLAT_FRATIO 0.95
-#define RADBEAMFLAT_FRATIO 0.995 // making like problem24 in koral code
+#define RADBEAMFLAT_FRATIO 0.99995 // vradx
 #define RADBEAMFLAT_ERAD 1. // 1g/cm^3 worth of energy density in radiation
 #define RADBEAMFLAT_RHO 1. // 1g/cm^3
 #define RADBEAMFLAT_UU 0.1 // 0.1g/cm^3 worth of energy density in fluid
@@ -286,39 +294,30 @@
 
 #define MCOORD CARTMINKMETRIC2
 
-// 1,2,3,31,4,41,5
-//#define NTUBE 1
-//#define NTUBE 31
-#define NTUBE 5
-//#define NTUBE 3
-
-
-// arad = 4*sigmarad/c (so removed /4. from koral sigma setup).
-// Note, sigmarad or arad is not arbitrary -- value chosen to IC in radiative-hydro balance for each separately the left and right states.
-#undef ARAD_CODE
-#if (NTUBE==1)
-#define GAMMATUBE 5./3.
-#define ARAD_CODE (1e-8/pow(calc_PEQ_Tfromurho(3.e-5/(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==2)
-#define GAMMATUBE 5./3.
-#define ARAD_CODE (2e-5/pow(calc_PEQ_Tfromurho(4.e-3/(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==3)
-#define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==31)
-#define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==4)
-#define GAMMATUBE 5./3.
-#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==41)
-#define GAMMATUBE 5./3.
-#define ARAD_CODE (.18/pow(calc_PEQ_Tfromurho(6.e-3/(GAMMATUBE-1.),1.),4.))
-#elif (NTUBE==5)
-#define GAMMATUBE 2.
-#define ARAD_CODE (2./pow(calc_PEQ_Tfromurho(60./(GAMMATUBE-1.),1.),4.))
 #endif
 
+
+
+
+
+
+#if(WHICHPROBLEM==RADSHADOW)
+
+#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICITSUBCYCLE
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 100
+#define N2 50
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
 
 #endif
 
