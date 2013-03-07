@@ -265,7 +265,7 @@ int init_global(void)
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 
-  cooling=NOCOOLING; //COOLUSER; // MARKTODO should override these values set in initbase, right?
+  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -374,7 +374,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINBP)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
-  beta = 1.e1 ;
+  beta = 1.e2 ;
   randfact = 4.e-2;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -1325,7 +1325,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
 {
-        FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,P,w,wcirc,dUcool;
+        FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,e,P,w,wcirc,dUcool;
 	FTYPE taper0;
 	int ii,jj, kk, pp;
 	FTYPE pressure;
@@ -1353,8 +1353,9 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
         /* cooling function for maintaining fixed H/R */
         rho = pr[RHO] ;
         u = pr[UU] ;
+	e = u/rho ;   // specific internal energy density
 	P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
-        w = rho + u + P ;
+        w = rho + u + P ; // enthalpy?
 
         bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
 	r=V[1];
@@ -1372,23 +1373,23 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	}
 
 
-        R = r*sin(th) ;
+        R = r*sin(th) ;     // r in Noble paper
 
 	rincool=10.;
         /* crude approximation */
-        Wcirc = 1./(a + pow(R,1.5)) ;
+        Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
         cs_circ = thetacool/sqrt(R) ;
 	//        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
 
         wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
 
 	Tfix = (M_PI / 2.) * (thetacool * R * Wcirc) * (thetacool * R * Wcirc);
-	Yscaling = (gam-1.)*u/(rho*Tfix);
+	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 0.) {
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 ) {
 
-	  dUcool = -u * sqrt( Yscaling - 1.) / Wcirc ;
+	  dUcool = - Wcirc * u * sqrt( Yscaling - 1.) * photoncapture ;
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 	}
         else{
