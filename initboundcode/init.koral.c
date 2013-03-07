@@ -941,13 +941,13 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	//	FTYPE pamb=calc_PEQ_ufromTrho(TAMB,RHOAMB);
 	rsq=xx*xx+yy*yy+zz*zz;
 	rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;      
-	Trad=TAMB*RHOAMB/rho;
-	//	Trad=TAMB;
+	Tgas=TAMB*RHOAMB/rho;
 	// Paper says T = T0*rho/RHOAMB
-	//	Trad = TAMB*rho/RHOAMB;
+	//	Tgas = TAMB*rho/RHOAMB;
 	// for constant gas pressure, P=\rho T implies rho T = constant so that T\propto 1/rho
-		  
-	uint=calc_PEQ_ufromTrho(Trad,rho);
+	uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+	Trad=TAMB;
 	ERAD=calc_LTE_EfromT(Trad);
 
 	//	dualfprintf(fail_file,"i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
