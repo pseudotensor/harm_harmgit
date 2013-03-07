@@ -308,7 +308,7 @@ int init_global(void)
 	cour=0.8;
 	gam=gamideal=1.4;
 	cooling=KORAL;
-	ARAD_CODE=1E7*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=FREEOUTFLOW;
 	BCtype[X1DN]=RADSHADOWINFLOW;
@@ -620,8 +620,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADSHADOW)
 
-//#define KAPPAUSER(rho,T) (rho*1E1) // seems to allow photon build-up at front edge of blob
-#define KAPPAUSER(rho,T) (rho*1E0) // seems radiation pentrates blob too much compared to koral paper
+#define KAPPAUSER(rho,T) (rho*1E2) // seems to allow photon build-up at front edge of blob
+//#define KAPPAUSER(rho,T) (rho*1E0) // seems radiation pentrates blob too much compared to koral paper
 #define KAPPAESUSER(rho,T) (rho*0.0)
 
 
