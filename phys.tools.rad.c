@@ -6,6 +6,58 @@ void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FT
 static void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
 static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
 
+static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
+
+
+
+
+// wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
+static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
+{
+
+  //calculating primitives  
+  // OPTMARK: Should optimize this to  not try to get down to machine precision
+  // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
+  // Need to check if Utoprimgen fails in sense of stored inversion failure and revert to explicit or other if happens -- maybe CASE dependent!
+  MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+
+  // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
+  int lpflag,lpflagrad;
+  lpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+  lpflagrad=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+  if(IFUTOPRIMFAILSOFT(lpflag) || IFUTOPRIMRADFAIL(lpflagrad)){
+	// soft failures -- assume ok
+	// no return, but reset
+	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+	GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
+  }
+  else if( IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADFAIL(lpflagrad) ){
+	// these need to get fixed-up, but can't, so return failure
+	dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab()\n");
+	return(1);
+  }
+  else{
+	// no failure
+  }
+  
+  
+
+  if(debugfail>=2){
+	static int maxlntries=0,maxnstroke=0;
+	int diff;
+	diff=0;
+	// For RADSHADOW, gets up to 5
+	if(newtonstats->lntries>maxlntries){ maxlntries=newtonstats->lntries; diff=1;}
+	if(newtonstats->nstroke>maxnstroke){ maxnstroke=newtonstats->nstroke; diff=1;}
+	// only report if grew beyond prior maximum
+	if(diff) dualfprintf(fail_file,"newtonsteps: lntries=%d (max=%d) nstroke=%d (max=%d) logerror=%g\n",newtonstats->lntries,maxlntries,newtonstats->nstroke,maxnstroke,newtonstats->lerrx);
+  }
+
+
+  return(0);
+}
+
+
 //**********************************************************************
 //******* solves implicitidly four-force source terms *********************
 //******* in the lab frame, returns ultimate deltas ***********************
@@ -44,11 +96,11 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   // get change in conserved quantity between fluid and radiation
   DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
   
-  //calculating primitives  
-  // OPTMARK: Should optimize this to  not try to get down to machine precision
-  // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
-  // Need to check if Utoprimgen fails in sense of stored inversion failure and revert to explicit or other if happens -- maybe CASE dependent!
-  MYFUN(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats),"phys.tools.rad.c:f_implicit_lab()", "Utoprimgen", 1);
+  // Get P(U)
+  if(Utoprimgen_failwrapper(finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats)){
+	dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab()\n");
+	return(1);
+  }
 
   // re-get needed q's
   get_state_uconucovonly(pp, ptrgeom, &q);
@@ -94,7 +146,8 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
-  int invertfail;
+
+
 
   realdt = compute_dt();
 
@@ -150,7 +203,16 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
     PLOOP(pliter,ii)  uup[ii]=uu[ii];
     
     //values at zero state
-    f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1);
+    if(f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1)){
+	  if(IMPLICITREVERTEXPLICIT){
+		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  }
+	  else{
+		// then can only fail
+		myexit(39475251);
+	  }
+	}
+
     
     //calculating approximate Jacobian
     DLOOPA(ii){
@@ -161,7 +223,15 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
 
 		uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
-		f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2);
+		if(f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2)){
+		  if(IMPLICITREVERTEXPLICIT){
+			koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		  }
+		  else{
+			// then can only fail
+			myexit(39475252);
+		  }
+		}
 	
 		J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
 	
@@ -171,8 +241,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
     
 
 	//inversion
-	invertfail=inverse_44matrix(J,iJ);
-	if(invertfail){
+	if(inverse_44matrix(J,iJ)){
 	  if(IMPLICITREVERTEXPLICIT){
 		// then revert to sub-cycle explicit
 		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
@@ -180,7 +249,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
 	  }
 	  else{
 		// then can only fail
-		myexit(39475252);
+		myexit(39475253);
 	  }
 	}
     
@@ -430,8 +499,11 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 		// Get U->P
 		// OPTMARK: Should optimize this to  not try to get down to machine precision
 		// KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
-		if(Utoprimgen(finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)!=0){
-		  dualfprintf(fail_file,"Inversion problem during koral_explicit_source_rad()\n");
+		// Get P(U)
+		if(Utoprimgen_failwrapper(finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
+		  dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of koral_explicit_source_rad()\n");
+		  myexit(347366436); // KORALTODO: if explicit dies, nothing to revert to.
+		  //return(1);
 		}
 
 		// re-get needed q's
@@ -1983,6 +2055,10 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
 
+		// KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
+		// I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
+
+
 #if(PRODUCTION==0)
 		dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
@@ -2049,6 +2125,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   pp[PRAD1]=urfconrel[1];
   pp[PRAD2]=urfconrel[2];
   pp[PRAD3]=urfconrel[3];
+
+  // DEBUG: TESTING CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
+  //  *lpflagrad=UTOPRIMRADNOFAIL;
 
   return 0;
 }
