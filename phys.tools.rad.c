@@ -607,8 +607,8 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
 {
   FTYPE kappa,kappaes;
-  calc_kappa(pp,ptrgeom,&kappa);
-  calc_kappaes(pp,ptrgeom,&kappaes);
+  calc_kappa(pr,ptrgeom,&kappa);
+  calc_kappaes(pr,ptrgeom,&kappaes);
   
   *chi=kappa+kappaes;
 }

@@ -338,6 +338,7 @@ int init_global(void)
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
 	cour=0.8;
+	//	cour=0.49;
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
