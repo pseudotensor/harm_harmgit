@@ -146,6 +146,10 @@
 #define NOGDETENTROPY 0
 #define NOGDETYL 0
 #define NOGDETYNU 0
+#define NOGDETURAD0 0
+#define NOGDETURAD1 0
+#define NOGDETURAD2 0
+#define NOGDETURAD3 0
 
 
 

@@ -139,6 +139,7 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
   VARSTATIC FTYPE todo[NPR];
   VARSTATIC FTYPE ftemp;
   VARSTATIC FTYPE mhd[NDIM][NDIM];
+  VARSTATIC FTYPE mhdrad[NDIM][NDIM];
   VARSTATIC FTYPE flux[NDIM][NPR];
   int primtofullflux(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE (*flux)[NPR]);
   void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
@@ -147,10 +148,11 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 
 
 
-  if((ANALYTICSOURCE)&&(defcoord==LOGRSINTH)&&(MCOORD==KSCOORDS)){
+  if((ANALYTICSOURCE)&&(defcoord==LOGRSINTH)&&(MCOORD==KSCOORDS)&&(EOMRADTYPE==EOMRADNONE)){
     // have both WHICHEOM==WITHGDET and WHICHEOM==WITHNOGDET
+	// avoided if doing radiation since can't use mks_source_conn() for radiation without explicitly creating new function (can't just substitute q->uradcon/cov for q->ucon/cov)
     mks_source_conn(pr,ptrgeom, q, dU); // returns without geometry prefactor
-    PLOOP(pliter,pl) dU[pl]*=ptrgeom->EOMFUNCMAC(pl);
+	PLOOP(pliter,pl) dU[pl]*=ptrgeom->EOMFUNCMAC(pl);
   }
   else { // general non-analytic form, which uses an analytic or numerical origin for conn/conn2 (see set_grid.c)
 
@@ -165,7 +167,16 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
     // SUPERGODMARK: problem in non-rel gravity for below term
     //DLOOPA(j)  mhd_calc_0(pr, j, ptrgeom, q, mhd[j]);
     // 
+
+
+	// Get MHD stress-energy tensor
     DLOOPA(j) mhd_calc(pr, j, ptrgeom, q, mhd[j]);
+
+	// Get radiation stress-energy tensor
+	if(EOMRADTYPE!=EOMRADNONE){
+	  DLOOPA(j) mhd_calc_rad(pr, j, ptrgeom, q, mhdrad[j]);
+	}
+
 
     /* contract mhd stress tensor with connection */
     // mhd^{dir}_{comp} = mhd^j_k
@@ -184,9 +195,23 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 #endif
 
 
-    for(l=0;l<NDIM;l++)  DLOOP(j,k){
-      dUconn[UU+l] += mhd[j][k] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
-    }
+
+
+	// For MHD and radiation stress-energy tensor
+	// Group these since conn[] repeats so should be easier on memory accesses
+	if(EOMRADTYPE!=EOMRADNONE){
+	  FTYPE connterm;
+	  for(l=0;l<NDIM;l++)  DLOOP(j,k){
+		  connterm=GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
+		  dUconn[UU+l]    += mhd[j][k]    * connterm;
+		  dUconn[URAD0+l] += mhdrad[j][k] * connterm;
+		}
+	}
+	else{
+	  // For MHD stress-energy tensor
+	  for(l=0;l<NDIM;l++)  DLOOP(j,k) dUconn[UU+l] += mhd[j][k] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
+	}
+
 
 #if(REMOVERESTMASSFROMUU==2)
     // then need to add-in density term to source (used to avoid non-rel problems)
@@ -226,22 +251,30 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
     // todo = whether that EOM has the NOGDET form.  If so, then need 2nd connection.  Do this instead of different connection2 for each EOM since each spatial component is actually the same.
 
     todo[RHO]=(NOGDETRHO>0) ? 1 : 0;
-    todo[UU]=(NOGDETU0>0) ? 1 : 0;
-    todo[U1]=(NOGDETU1>0) ? 1 : 0;
-    todo[U2]=(NOGDETU2>0) ? 1 : 0;
-    todo[U3]=(NOGDETU3>0) ? 1 : 0;
-    todo[B1]=(NOGDETB1>0) ? 1 : 0;
-    todo[B2]=(NOGDETB2>0) ? 1 : 0;
-    todo[B3]=(NOGDETB3>0) ? 1 : 0;
+    todo[UU]  =(NOGDETU0>0) ? 1 : 0;
+    todo[U1]  =(NOGDETU1>0) ? 1 : 0;
+    todo[U2]  =(NOGDETU2>0) ? 1 : 0;
+    todo[U3]  =(NOGDETU3>0) ? 1 : 0;
+    todo[B1]  =(NOGDETB1>0) ? 1 : 0;
+    todo[B2]  =(NOGDETB2>0) ? 1 : 0;
+    todo[B3]  =(NOGDETB3>0) ? 1 : 0;
     if(DOENTROPY) todo[ENTROPY]=(NOGDETENTROPY>0) ? 1 : 0;
+    if(DOYL)  todo[YL]=(NOGDETYL>0) ? 1 : 0;
+    if(DOYNU) todo[YNU]=(NOGDETYNU>0) ? 1 : 0;
+	if(EOMRADTYPE!=EOMRADNONE){
+	  todo[URAD0]  =(NOGDETURAD0>0) ? 1 : 0;
+	  todo[URAD1]  =(NOGDETURAD1>0) ? 1 : 0;
+	  todo[URAD2]  =(NOGDETURAD2>0) ? 1 : 0;
+	  todo[URAD3]  =(NOGDETURAD3>0) ? 1 : 0;
+	}
 
     // conn2 is assumed to take care of sign
     // conn2 has geom->e and normal d(ln(gdet)) factors combined
 
     if(REMOVERESTMASSFROMUU){
       if(todo[RHO]!=todo[UU]){
-	dualfprintf(fail_file,"Mixed form of REMOVERESTMASSFROMUU and NOGDET's not allowed.\n");
-	myexit(1);
+		dualfprintf(fail_file,"Mixed form of REMOVERESTMASSFROMUU and NOGDET's not allowed.\n");
+		myexit(1);
       }
     }
 
