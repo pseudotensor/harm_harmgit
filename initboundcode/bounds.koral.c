@@ -622,6 +622,7 @@ int bound_radshadowinflow(int dir,
   FTYPE NLEFT=0.99999;
   FTYPE angle=0.0;
 #elif(WHICHPROBLEM==RADDBLSHADOW)
+  //FTYPE NLEFT=0.99999;
   FTYPE NLEFT=0.99;
   //  FTYPE NLEFT=0.7;
   //  FTYPE NLEFT=0.93;

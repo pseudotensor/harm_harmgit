@@ -11,6 +11,7 @@ static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,F
 
 
 
+
 // wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
 static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
@@ -263,9 +264,6 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
 // get dt for explicit sub-cyclings
 static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
-  //#if(0)
-  //	FTYPE Diff;
-  //#endif
   int jj;
   FTYPE idtsub;
   //
@@ -275,27 +273,17 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
   FTYPE Usmhd,Usrad,Gstot,iUsmhd,iUsrad;
   FTYPE Utmhd,Utrad,Gttot,iUtmhd,iUtrad;
 
-  // see if need to sub-cycle
-  // dynamically change dt to allow chi to change during sub-cycling.
-  // use approximate dt along each spatial direction.  chi is based in orthonormal basis
-
-  // assumes D = 1/(3\chi) below and otherwise using Numerical Recipes S19.2
-  //	  Diff=1.0/(3.0*chi+SMALL);  // According to Koral
-  //	  SLOOPA(jj) dxsq[jj]=(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
-  //	  SLOOPA(jj) dualfprintf(fail_file,"jj=%d dxsq=%g\n",jj,(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]));
-
-  // below is if Diffusion was part of flux
-  //	  SLOOPA(jj) idtsubijk[jj]=(2.0*Diff)/(dx[jj]*dx[jj]*ptrgeom->gcov[GIND(jj,jj)]);
-  // below is if Diffusion is part of source term as in Koral
-  // source term should lead to small (<1/2) change in conserved quantities
+  // NOTE: The timestep does not fllow NR1992 S19.2 on diffusion equation step size.  That applies if diffusion was part of flux calculation, not source term.  And it applies to the radiative velocity limiter for the advection's effective wave speed.
+  // The relevant NR1992 is S16.6 on stiff source terms.
 
 
-  // below should be similar to choosing idt=\chi/dx^2
   // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
   // Based upon NR 16.6.6 with removal of factor of two
   if(WHICHSPACETIMESUBSPLIT==TAUSUPPRESS){
+	// use approximate dt along each spatial direction.  chi is based in orthonormal basis
 	// get maximum \tau for all relevant directions
 	FTYPE tautotdir[NDIM];
+	// KORALTODO: Should this only depend upon kappa and not kappaes?  Stiffness in source term comes from full chi, so seems to be full chi.
 	SLOOPA(jj) tautotdir[jj] = chi * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])));
 	// only include relevant directions
 	FTYPE taumax=MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
@@ -304,6 +292,8 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
 	idtsub=MAX(1.0/realdt,taumax/realdt);
 
   }
+  // below is if Diffusion is part of source term as in Koral
+  // source term should lead to small (<1/2) change in conserved quantities
   else if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITNONE){
 	// merged space-time to avoid negligible total momentum with large update needing to be resolved.
 	// can split space and time (as did before) but if v<<1 and G is mid-range but still negligible, then dt will be incredibly small and code will halt.
@@ -397,8 +387,6 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
   // 4) U->P locally
   // 5) repeat.
 
-  // According to NR 19.2, we get 2Ddt/(dx^2)<=1 as stability criterion for diffusive sytem of equations
-  // With Koral's D = 1/(3\chi), we have explicit dt requirement of dt <= dx^2/(6\chi).
 
   FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
   FTYPE dtdiff;
@@ -416,6 +404,8 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 	calc_Gd(prnew, ptrgeom, &qnew, Gd, &chi);
 
 
+	// see if need to sub-cycle
+	// dynamically change dt to allow chi to change during sub-cycling.
 	if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 
 	  // get dt for explicit stiff source term sub-cycling
@@ -559,6 +549,7 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 }
 
 
+
 //**********************************************************************
 //******* opacities ****************************************************
 //**********************************************************************
@@ -611,6 +602,15 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 #else
   *kappa = 0.;
 #endif  
+}
+
+void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
+{
+  FTYPE kappa,kappaes;
+  calc_kappa(pp,ptrgeom,&kappa);
+  calc_kappaes(pp,ptrgeom,&kappaes);
+  
+  *chi=kappa+kappaes;
 }
 
 
@@ -734,30 +734,36 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
   
-  // compute kappa
+  // compute chi
   // Assume computed as d\tau/dorthonormallength as defined by user.
-  // Assume \kappa defined in fluid frame (i.e. not radiation frame).
-  FTYPE kappa;
-  calc_kappa(pr,geom,&kappa);
+  // Assume \chi defined in fluid frame (i.e. not radiation frame).
+  
+  // KORALTODO: below 2 lines were how harm = koralinsert was before
+  //  FTYPE kappa;
+  //  calc_kappa(pr,geom,&kappa);
+
+  // seems paper uses full \chi
+  FTYPE chi;
+  calc_chi(pr,geom,&chi);
 
   //characterisitic wavespeed in the radiation rest frame
   FTYPE vrad2=THIRD;
   FTYPE vrad2limited;
 
-  if(kappa>0.0){// && WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
+  if(chi>0.0){// && WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
     // NOT DOING THIS:
-    // compute tautot assuming kappa is optical depth per unit grid dx[1-3].  I.e. calc_kappa() computes grid-based opacity
+    // compute tautot assuming chi is optical depth per unit grid dx[1-3].  I.e. calc_chi() computes grid-based opacity
     // tautot is the total optical depth of the cell in dim dimension
-    //  tautot = kappa * dx[dir];
+    //  tautot = chi * dx[dir];
 
     // DOING THIS:
     // KORALTODO: Approximation to any true path, but approximation is sufficient for approximate wave speeds.
-    // \tau_{\rm tot}^2 \approx \kappa^2 [dx^{dir} \sqrt{g_{dirdir}}]^2 
+    // \tau_{\rm tot}^2 \approx \chi^2 [dx^{dir} \sqrt{g_{dirdir}}]^2 
     FTYPE tautotsq,vrad2tau;
-    // Note that tautot is frame independent once multiple \kappa by the cell length.  I.e. it's a Lorentz invariant.
-    tautotsq = kappa*kappa * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
+    // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
+    tautotsq = chi*chi * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
   
-    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR S19.2.6
+    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6 or NR2007 S20.2 with D=1/(3\chi), but twice higher speed is only more robust.
     vrad2limited=MIN(vrad2,vrad2tau);
 
 	// NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE method.
