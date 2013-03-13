@@ -136,7 +136,7 @@ FTYPE compute_dt()
 }
 
 // compute changes to U (both T and R) using implicit method
-static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE compute_dt();
   int i1,i2,i3,iv,ii,jj,pliter,sc;
@@ -146,32 +146,6 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
-
-
-
-  realdt = compute_dt();
-
-
-  if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
-	// then first check if can just step with explicit scheme
-	FTYPE Gd[NDIM],chi,dtsub;
-	calc_Gd(pin, ptrgeom, q, Gd, &chi);
-	get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
-	if(dtsub>=realdt){
-	  // then just take explicit step!
-	  // assumes below doesn't modify pin,Uin,ptrgeom, or q
-	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-	  //	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
-	  return; // done!
-	}
-	else{
-	  // else just continue with implicit, with only cost extra calc_Gd() evaluation
-
-	  // DEBUG (to comment out!):
-	  //dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
-
-	}	
-  }
 
 
 
@@ -189,6 +163,11 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
   pl=URAD2; jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
   pl=URAD3; jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
 #endif
+
+
+
+  realdt = compute_dt();
+
  
   //uu0 will hold original vector of conserved
   PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uin[iv];
@@ -203,15 +182,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
     PLOOP(pliter,ii)  uup[ii]=uu[ii];
     
     //values at zero state
-    if(f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1)){
-	  if(IMPLICITREVERTEXPLICIT){
-		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-	  }
-	  else{
-		// then can only fail
-		myexit(39475251);
-	  }
-	}
+    if(f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1)) return(1);
 
     
     //calculating approximate Jacobian
@@ -223,15 +194,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
 
 		uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
-		if(f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2)){
-		  if(IMPLICITREVERTEXPLICIT){
-			koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-		  }
-		  else{
-			// then can only fail
-			myexit(39475252);
-		  }
-		}
+		if(f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2)) return(1);
 	
 		J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
 	
@@ -241,18 +204,8 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
     
 
 	//inversion
-	if(inverse_44matrix(J,iJ)){
-	  if(IMPLICITREVERTEXPLICIT){
-		// then revert to sub-cycle explicit
-		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-		return;
-	  }
-	  else{
-		// then can only fail
-		myexit(39475253);
-	  }
-	}
-    
+	if(inverse_44matrix(J,iJ)) return(1);
+   
     //updating x
     DLOOPA(ii) x[ii]=uup[ii+URAD0];
     
@@ -278,15 +231,7 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
     if(iter>IMPMAXITER){
 	  // KORALTODO: Need backup that won't fail.
       dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");
-	  if(IMPLICITREVERTEXPLICIT){
-		// then revert to sub-cycle explicit
-		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-		return;
-	  }
-	  else{
-		// can only die
-		myexit(21341);
-	  }
+	  return(1);
     }
 
 	//	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
@@ -309,6 +254,8 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
   // store source update in dUcomp for return.
   sc = RADSOURCE;
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
+
+  return(0);
   
 }
 
@@ -316,12 +263,9 @@ static void koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *pt
 // get dt for explicit sub-cyclings
 static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
-#if(0)
-  FTYPE fakedt;
-  FTYPE Diff;
-  FTYPE dxsq[NDIM];
-  FTYPE idtsubijk[NDIM];
-#endif
+  //#if(0)
+  //	FTYPE Diff;
+  //#endif
   int jj;
   FTYPE idtsub;
   //
@@ -345,17 +289,22 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
   // below is if Diffusion is part of source term as in Koral
   // source term should lead to small (<1/2) change in conserved quantities
 
-#if(0)
-	FTYPE realdt=compute_dt();
-	fakedt=MIN(realdt,realdt/chi); // Olek's estimate
-	*dtsub=fakedt;
-#endif
-
 
   // below should be similar to choosing idt=\chi/dx^2
   // get smallest timestep for stiff source terms of 8 equations with a single source term vector.
   // Based upon NR 16.6.6 with removal of factor of two
-  if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITNONE){
+  if(WHICHSPACETIMESUBSPLIT==TAUSUPPRESS){
+	// get maximum \tau for all relevant directions
+	FTYPE tautotdir[NDIM];
+	SLOOPA(jj) tautotdir[jj] = chi * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])));
+	// only include relevant directions
+	FTYPE taumax=MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
+
+	FTYPE realdt=compute_dt();
+	idtsub=MAX(1.0/realdt,taumax/realdt);
+
+  }
+  else if(WHICHSPACETIMESUBSPLIT==SPACETIMESUBSPLITNONE){
 	// merged space-time to avoid negligible total momentum with large update needing to be resolved.
 	// can split space and time (as did before) but if v<<1 and G is mid-range but still negligible, then dt will be incredibly small and code will halt.
 	Umhd=Urad=Gtot=0.0;
@@ -551,11 +500,61 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
 
+  // KORALTODO: SUPERGODMARK: Need to add NR 2007 page940 17.5.2 StepperSie method here as higher-order alternative if 1st order Newton breaks
+
 #if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE)
+
   koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
-#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK)
-  koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
+
+  int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+
+  if(failimplicit){
+	if(IMPLICITREVERTEXPLICIT){
+	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	}
+	else{
+	  // then can only fail
+	  myexit(39475251);
+	}
+  }
+
+#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK)
+
+  realdt = compute_dt();
+  // then first check if can just step with explicit scheme
+  FTYPE Gd[NDIM],chi,dtsub;
+  calc_Gd(pin, ptrgeom, q, Gd, &chi);
+  get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
+  if(dtsub>=realdt){
+	// then just take explicit step!
+	// assumes below doesn't modify pin,Uin,ptrgeom, or q
+	koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	//	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+  }
+  else{
+	// else just continue with implicit, with only cost extra calc_Gd() evaluation
+	
+	// DEBUG (to comment out!):
+	//dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+	
+	int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+
+	if(failimplicit){
+	  if(IMPLICITREVERTEXPLICIT){
+		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  }
+	  else{
+		// then can only fail
+		myexit(39475252);
+	  }
+	}
+
+  }
+
 #elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE)
+
 #endif
 }
 
