@@ -1914,8 +1914,11 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	// Note, can't set urfcon[0]=gammamax in case gammamax still remains space-like, e.g. inside horizon if gammamax isn't big enough.
 	//
 	//////////////////////
-	if(gammarel2>gammamax*gammamax){ // Jon choice
-	//if(gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.){ // Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
+	int JONCHOICEVALUE=gammarel2>gammamax*gammamax;
+	// Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
+	int OLEKCHOICEVALUE=gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.;
+
+	if(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE){
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
@@ -2132,8 +2135,14 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   pp[PRAD2]=urfconrel[2];
   pp[PRAD3]=urfconrel[3];
 
-  // DEBUG: TESTING CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-  // *lpflagrad=UTOPRIMRADNOFAIL; // uncomment this for Koral like behavior with no fixups
+
+  if(DORADFIXUPS==1){
+	// KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
+  }
+  else{
+	// CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
+	*lpflagrad=UTOPRIMRADNOFAIL;
+  }
 
   return 0;
 }

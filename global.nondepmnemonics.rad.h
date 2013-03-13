@@ -60,6 +60,14 @@
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
 // RADSHOCKFLAT 1 causes excessive oscillations in RADBEAMFLAT at injection point
 
+// whether to choose Jon or Olek way of handling u2p_rad inversion failures
+#define JONCHOICE 0
+#define OLEKCHOICE 1
+
+#define CASECHOICE JONCHOICE // choose
+
+#define DORADFIXUPS 1 // whether to fixup inversion failures using harm fixups
+
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
 #define IMPLICITREVERTEXPLICIT 1
 
