@@ -736,21 +736,27 @@
 #if(0)
 #define FLIPU3AXIS 1
 #define FLIPB3AXIS 1
+#define FLIPURAD3AXIS 1
 // should always be 1
 #define FLIPU2AXIS 1
 #define FLIPB2AXIS 1
+#define FLIPURAD2AXIS 1
 // should always be 0
 #define FLIPU1AXIS 0
 #define FLIPB1AXIS 0
+#define FLIPURAD1AXIS 0
 
 #else
 // See coord.c and "void dxdxprim() with regard to dxdxp[2][1] and gv311 and uu1 and other symmetry issues.
 #define FLIPU3AXIS 0
 #define FLIPB3AXIS 0
+#define FLIPURAD3AXIS 0
 #define FLIPU2AXIS 0
 #define FLIPB2AXIS 0
+#define FLIPURAD2AXIS 0
 #define FLIPU1AXIS 0
 #define FLIPB1AXIS 0
+#define FLIPURAD1AXIS 0
 #endif
 
 // control bounds.tools.c for SPC coordinates polar axis fixups

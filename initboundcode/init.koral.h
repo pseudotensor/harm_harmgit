@@ -1,15 +1,19 @@
 //problem names
 #define FLATNESS (0) // not in Koral
-#define RADTUBE (6)
-#define RADPULSE (10)
-#define RADSHADOW 11  // radiative shadow
+#define RADTUBE (6) // radiative shock tubes as in Farris et al 09 - assumes Edd.approximation which is currently not handled
+#define RADPULSE (10) //  radiative blob spreading around
+#define RADSHADOW (11)  // radiative shadow
 #define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
-#define RADPULSE3D (16)
-#define RADBEAMFLAT (24)
+#define RADPULSE3D (16) // radiative blob spreading around
+#define RADDBLSHADOW (17) // radiative shadow with two beams inclined
+#define RADBEAMFLAT (24) //  beam of light in Cartesian
+
 
 // other BCTypes beyond those in definit.h (can't overlap numbers from there)
 #define RADBEAMFLATINFLOW 201
 #define RADSHADOWINFLOW 202
+#define RADSHADOWINFLOWX2UP 203
+#define RADSHADOWINFLOWX2DN 204
 
 
 //problem choice
@@ -19,7 +23,8 @@
 //#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
 //#define WHICHPROBLEM RADTUBE
-#define WHICHPROBLEM RADSHADOW
+//#define WHICHPROBLEM RADSHADOW
+#define WHICHPROBLEM RADDBLSHADOW
 
 
 //undefs
@@ -178,6 +183,11 @@
 //#define MPERSUN (6.77255E-11) // with koral's gTILDA=1E-10
 
 
+
+
+
+
+
 //****************************************//
 //****************************************//
 
@@ -298,6 +308,8 @@
 
 
 
+//****************************************//
+//****************************************//
 
 
 
@@ -320,6 +332,47 @@
 #define MCOORD CARTMINKMETRIC2
 
 #endif
+
+
+
+//****************************************//
+//****************************************//
+
+
+
+#if(WHICHPROBLEM==RADDBLSHADOW)
+
+#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
+
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICITSUBCYCLE
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 120
+#define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //****************************************//

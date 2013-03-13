@@ -318,11 +318,43 @@ int init_global(void)
 	BCtype[X3DN]=PERIODIC;
 
 	int idt;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.5;
 
 	DTr = 100; //number of time steps for restart dumps
 	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
 	tf = 10.0; //final time
+  }
+
+
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADDBLSHADOW){
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	// should have PARA(LINE) not oscillate so much at cusp
+	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=FREEOUTFLOW;
+	BCtype[X1DN]=RADSHADOWINFLOW;
+	BCtype[X2UP]=RADSHADOWINFLOWX2UP;
+	BCtype[X2DN]=ASYMM;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2E-1;
+
+	DTr = 100; //number of time steps for restart dumps
+	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
+	tf = 200.0; //final time (far past plot so see evolves or stationary).
   }
 
 
@@ -445,6 +477,21 @@ int init_defcoord(void)
 	
 	Rout_array[1]=3.0;
 	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADDBLSHADOW){
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-6.0;
+	Rin_array[2]=0.0;
+	Rin_array[3]=-1.0;
+	
+	Rout_array[1]=3.0;
+	Rout_array[2]=1.5;
 	Rout_array[3]=1.0;
   }
 
@@ -618,7 +665,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //****************************************//
 
 
-#if(WHICHPROBLEM==RADSHADOW)
+#if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
 
 #define KAPPAUSER(rho,T) (rho*1E2) // seems to allow photon build-up at front edge of blob
 //#define KAPPAUSER(rho,T) (rho*1E0) // seems radiation pentrates blob too much compared to koral paper
@@ -626,6 +673,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 #endif
+
 
 //****************************************//
 //****************************************//
@@ -918,7 +966,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADSHADOW){
+  if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW){
 
 	//	FTYPE MASS=10.0;
 	FTYPE TAMB=1.e7/TEMPBAR;
@@ -1003,6 +1051,11 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	*whichcoord=CARTMINKMETRIC2;
 	return(0);
   }
+
+
+
+
+
 
 
 

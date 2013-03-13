@@ -427,6 +427,7 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
 
 		PLOOP(pliter,pl){
 		  if(pl==RHO || (pl>=B3+1 && pl<NPR)){
+			// KORALTODO: Needs different scaling as with vectors above.
 		    // GODMARK: assume all other are advective and get into form so like pressure but with advective component weighting
 		    // Then have \rho u^i u_i Y_e for term that was \rho Y_e u^i
 		    // no fabs() around first stencilvartemp term so picks up sign of u^i (e.g. u^i u_i is constant in reflecting wall type shock)

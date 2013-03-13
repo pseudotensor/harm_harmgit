@@ -1909,7 +1909,8 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	// Note, can't set urfcon[0]=gammamax in case gammamax still remains space-like, e.g. inside horizon if gammamax isn't big enough.
 	//
 	//////////////////////
-	if(gammarel2>gammamax*gammamax){
+	if(gammarel2>gammamax*gammamax){ // Jon choice
+	//if(gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.){ // Olek choice
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
@@ -2127,7 +2128,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   pp[PRAD3]=urfconrel[3];
 
   // DEBUG: TESTING CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-  //  *lpflagrad=UTOPRIMRADNOFAIL;
+  // *lpflagrad=UTOPRIMRADNOFAIL; // uncomment this for Koral like behavior with no fixups
 
   return 0;
 }
