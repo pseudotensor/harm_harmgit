@@ -335,10 +335,12 @@ int init_global(void)
   if(WHICHPROBLEM==RADDBLSHADOW){
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	//	lim[1]=lim[2]=lim[3]=MC; // MC gets totally bonkers answer with NLEFT=0.99999
+	//lim[1]=lim[2]=lim[3]=PARALINE; // bonkers answer for NLEFT=0.99999
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
 	cour=0.8;
-	//	cour=0.49;
+	//	cour=0.49; // doesn't help oscillations for NLEFT=0.99999 with MINM
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.

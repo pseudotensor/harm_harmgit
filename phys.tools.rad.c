@@ -1915,7 +1915,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	//
 	//////////////////////
 	if(gammarel2>gammamax*gammamax){ // Jon choice
-	//if(gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.){ // Olek choice
+	//if(gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.){ // Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
