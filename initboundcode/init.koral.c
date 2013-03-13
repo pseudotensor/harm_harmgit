@@ -336,7 +336,7 @@ int init_global(void)
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
 	//	lim[1]=lim[2]=lim[3]=MC; // MC gets totally bonkers answer with NLEFT=0.99999
-	//lim[1]=lim[2]=lim[3]=PARALINE; // bonkers answer for NLEFT=0.99999
+	//lim[1]=lim[2]=lim[3]=PARALINE; // bonkers answer for NLEFT=0.99999, ok for NLEFT=0.99
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
 	cour=0.8;
