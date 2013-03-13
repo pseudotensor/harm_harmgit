@@ -3084,6 +3084,19 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 #endif
 
 
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+
+#if(VLINEWITHGDETRHO==0)
+    V[yiniter] += yrealin[URAD0+dir][0][iii];
+#else
+    V[yiniter] += (ptrgeom->gdet)*yrealin[URAD0][0][num]*(qptr->uradcon[dir]); // KORALTODO: Very rough estimate!
+	// KORALTODO SUPERGODMARK: Need to get shock indicator for fluid separately from radiation!
+#endif
+
+
+#endif
+
+
 
     // OPTMARK: Since assuming at CENT with normal primitive, then already have correct pressure
     //    P[yiniter]=pressure_rho0_u_simple(locali,localj,localk,localloc,yrealin[RHO][0][iii],yrealin[UU][0][iii]);

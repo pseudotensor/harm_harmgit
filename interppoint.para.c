@@ -1209,6 +1209,8 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
   FTYPE a_P[10];
   FTYPE *V,*P;
+  FTYPE Vnewmem[10];
+  FTYPE *Vnew;
   FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
   int pl,pliter;
   FTYPE Fi;
@@ -1235,7 +1237,18 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
 
   // assume velocity is istelf
+  // KORALTODO: need Ficalc for radiation by itself!
   V = yrealpl[U1+dir-1];
+  Vnew = V;
+
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
+  int shifti;
+  Vnew=&Vnewmem[4]; // sufficiently shifted
+  // -3 -2 -1 0 1 2 3
+  for(shifti=-3;shifti<=3;shifti++){
+	Vnew[shifti] += yrealpl[U1+dir-1][shifti] + yrealpl[URAD1+dir-1][shifti]; // fake
+  }
+#endif
 
 
 
@@ -1248,7 +1261,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
   // computed only once for all variables
 #if( DOPPMREDUCE )
-  Fi = Ficalc(dir,V,P);
+  Fi = Ficalc(dir,Vnew,P);
 #else
   Fi = 0.0;
 #endif
@@ -1271,7 +1284,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
     para4gen(realisinterp,dqrange,pl,y,&loutpl[pl],&routpl[pl],dq[pl],&smooth);
 
 #if(DOPPMCONTACTSTEEP)
-    parasteep(dir,pl,V,P,ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    parasteep(dir,pl,Vnew,P,ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
 #endif
 
 
