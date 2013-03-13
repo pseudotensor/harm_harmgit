@@ -106,3 +106,50 @@
 //
 //10) #9 is only possible if the equations are written to avoid catastrophic cancellation.  Maybe G and other terms have catastrophic cancellation issues.  E.g., kappaes cancels in Gu for static flow, but maybe other actual serious cancellation issues somewhere.  
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Hi guys, */
+
+/* Regarding M1's imperfection, there are many studies on using radiative transfer in planetary and stellar atmospheres, and Shane is probably fully aware of the issues.  It's well known what fundamental things one misses with various approximations.  Even Wikipedia goes through some of those things (http://en.wikipedia.org/wiki/Two-stream_approximation_(radiative_transfer)!  But apart from those papers I mentioned that are astro-centric, there are *many* papers (just google) that go through why the 2-stream approximation is so great and what we would miss. */
+
+/* We'd want to get that effective 2-stream approximation per grid cell, and we are *far* from it.  So we'll miss many basic physics effects.  This includes the ability to treat multiple scatterings when we involve Compton scattering. */
+
+/* But forgetting about scattering, I think the main problem is directional independence in the optically thin limit.  Per-grid cell independence for each face would be a basic freedom.  Here's how the method would work: */
+
+/* 1) In each cell, in the averaged energy-weighted radiation rest frame (average of, e.g., R^t_\mu over bins), we split the angles up into bins/bands.  Easiest is 2N to 4N for N-dimensions giving 8N to 16N new variables.  Only increases total number of variables from current 12 to 24 (or 48) -- so factor of only two (or up to four). */
+
+/* 2) Once the problem has been setup (one now can control (per-cell) multiple radiation directions and energy densities), those are evolved with the flux conservative approach like normal to get the new U.  There's no interaction between bins at the flux level, but radiation might want to change its bin -- but that's not done yet (maybe it's a good idea to rebin here already, but maybe not). */
+
+/* 3) The source term is applied.  The cumulative radiation source still applies to the fluid.  Each radiation bin has its own independent source value determination/step as if the other bins don't exist.  After each internal implicit/explicit source step, the new value of R^t_\mu is compared to the average R^t_\mu and we rebin each bin at each implicit step if the radiation wants to be in a new bin.  This allows for interaction between bins at the source term level (maybe this isn't required, but it probably is). */
+
+/* 4) We do the final U->P and determine if rebinning (e.g. just even due to fluxes) is required by using each bin's R^t_\mu as compared to the average.  If already rebinnned at #2 and #3, then no rebinning required here except as related to how harm or koral updates variables (i.e. harm and koral don't update U during implicit and instead keep it as a dU that later gets added). */
+
+
+/* This takes the flux step (during which no rebinning yet occurs) and source step (during which rebinning can occur) and doing the inversion (during which rebinning can occur) to get new values for the radiation for each bin.  This allows for direct interaction between beams via the sources during stage 3, or the fluxes evolve the beam to get rebinned during stage 4. */
+
+/* Notes: */
+
+/* 1) The 4-force and u2p_rad() assume isotropic emission in the radiation frame.  We don't violate this because each beam bin is consistent with this.  The only "violation" occurs during rebinning, which just merges or splits beams and conserves energy-momentum -- there's no violation of isotropy per beam when isotropy is assumed. */
+
+/* 2) The only non-linearity for R^t_\mu enters in the source step.  But as far as a solution to the equations of motion that determines whether U->P can be done, by the linearity of the equations, if R^t_\mu is a solution, so is any other sum of other solutions, so we can't run into the sum being a non-solution (i.e. no primitive).  Even analytically, the source step could have a crazy cooling or heating that ends up giving bad U->P, but not the advection+geometry part. */
+
+/* Let me know what you think -- if there are gaps or errors. */
