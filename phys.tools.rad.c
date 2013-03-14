@@ -492,60 +492,64 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 
   // KORALTODO: SUPERGODMARK: Need to add NR 2007 page940 17.5.2 StepperSie method here as higher-order alternative if 1st order Newton breaks
 
-#if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE)
-
-  koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
-
-#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT)
-
-  int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
-
-  if(failimplicit){
-	if(IMPLICITREVERTEXPLICIT){
-	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-	}
-	else{
-	  // then can only fail
-	  myexit(39475251);
-	}
-  }
-
-#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK)
-
-  realdt = compute_dt();
-  // then first check if can just step with explicit scheme
-  FTYPE Gd[NDIM],chi,dtsub;
-  calc_Gd(pin, ptrgeom, q, Gd, &chi);
-  get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
-  if(dtsub>=realdt){
-	// then just take explicit step!
-	// assumes below doesn't modify pin,Uin,ptrgeom, or q
-	koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
-	//	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
-  }
-  else{
-	// else just continue with implicit, with only cost extra calc_Gd() evaluation
+  if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 	
-	// DEBUG (to comment out!):
-	//dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+	koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+  }
+  else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
 	
 	int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
-
+	
 	if(failimplicit){
 	  if(IMPLICITREVERTEXPLICIT){
 		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
 	  }
 	  else{
 		// then can only fail
-		myexit(39475252);
+		myexit(39475251);
 	  }
 	}
+  }
+  else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
+
+	FTYPE realdt = compute_dt();
+	// then first check if can just step with explicit scheme
+	FTYPE Gd[NDIM],chi,dtsub;
+	calc_Gd(pin, ptrgeom, q, Gd, &chi);
+	get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
+	if(dtsub>=realdt){
+	  // then just take explicit step!
+	  // assumes below doesn't modify pin,Uin,ptrgeom, or q
+	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  //	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+	}
+	else{
+	  // else just continue with implicit, with only cost extra calc_Gd() evaluation
+	
+	  // DEBUG (to comment out!):
+	  //dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+	
+	  int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+
+	  if(failimplicit){
+		if(IMPLICITREVERTEXPLICIT){
+		  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		}
+		else{
+		  // then can only fail
+		  myexit(39475252);
+		}
+	  }
+
+	}
+  }
+  else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE){
 
   }
-
-#elif(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE)
-
-#endif
+  else{
+	dualfprintf(fail_file,"3 No Such EOMRADTYPE=%d\n",EOMRADTYPE);
+	myexit(18754363);
+  }
 }
 
 
@@ -557,7 +561,6 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {
 
-#if(1)
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
   FTYPE rho=pr[RHO];
@@ -574,15 +577,11 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   zz=V[3];
   *kappa = calc_kappa_user(rho,T,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
-#else
-  *kappa = 0.;
-#endif  
 }
 
 //scattering
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {  
-#if(1)
   extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappaes()
   FTYPE rho=pr[RHO];
@@ -599,9 +598,6 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   zz=V[3];
   *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
-#else
-  *kappa = 0.;
-#endif  
 }
 
 void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
@@ -884,34 +880,44 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   nlen=sqrt(nx*nx+ny*ny+nz*nz);
   
  
-#if EOMRADTYPE==EOMRADEDD
-  f=1./3.; // f and Rij are both as if nx=ny=nz=0
-  //  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  
-  
-#elif EOMRADTYPE==EOMRADM1CLOSURE
+  if(EOMRADTYPE==EOMRADEDD){
+	f=1./3.; // f and Rij are both as if nx=ny=nz=0
+	//  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  
+  }
+  else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
-  if(nlen>=1.) f=1.; // KORALTODO: limiter, but only used so far for IC
-  else //M1
-    f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  
-#else
-#error No Such EOMRADTYPE1
-#endif
+	if(nlen>=1.) f=1.; // KORALTODO: limiter, but only used so far for IC
+	else  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  //M1
+  }
+  else if(EOMRADTYPE==EOMRADNONE){
+
+  }
+  else{
+	dualfprintf(fail_file,"1 No Such EOMRADTYPE=%d\n",EOMRADTYPE);
+	myexit(837453242);
+  }
   
   ////////// Get R^{ij} in orthonormal fluid frame 
   Rij[0][0]=E;
 
-#if EOMRADTYPE==EOMRADEDD
-  // KORALTODO: Below 3 should be zero for Eddington approximation!  Why didn't original koral have that?
-  Rij[0][1]=Rij[1][0]=0.0;
-  Rij[0][2]=Rij[2][0]=0.0;
-  Rij[0][3]=Rij[3][0]=0.0;
-#elif EOMRADTYPE==EOMRADM1CLOSURE
-  Rij[0][1]=Rij[1][0]=F[0];
-  Rij[0][2]=Rij[2][0]=F[1];
-  Rij[0][3]=Rij[3][0]=F[2];
-#else
-#error No Such EOMRADTYPE2
-#endif
+  if(EOMRADTYPE==EOMRADEDD){
+	// KORALTODO: Below 3 should be zero for Eddington approximation!  Why didn't original koral have that?
+	Rij[0][1]=Rij[1][0]=0.0;
+	Rij[0][2]=Rij[2][0]=0.0;
+	Rij[0][3]=Rij[3][0]=0.0;
+  }
+  else if(EOMRADTYPE==EOMRADM1CLOSURE){
+	Rij[0][1]=Rij[1][0]=F[0];
+	Rij[0][2]=Rij[2][0]=F[1];
+	Rij[0][3]=Rij[3][0]=F[2];
+  }
+  else if(EOMRADTYPE==EOMRADNONE){
+
+  }
+  else{
+	dualfprintf(fail_file,"2 No Such EOMRADTYPE=%d\n",EOMRADTYPE);
+	myexit(837453243);
+  }
 
 
   // normalize n^i for Rij calculation
@@ -1813,6 +1819,7 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 ///////////////
 int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
+  int jj,kk;
 
  
   if(WHICHVEL!=VELREL4){
@@ -1840,7 +1847,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   FTYPE urfconrel[NDIM];
   FTYPE gammarel2;
   FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
-  int jj;
 
 
   if(EOMRADTYPE==EOMRADEDD){
@@ -1866,11 +1872,9 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	FTYPE Rij[NDIM][NDIM];
 
 	//g_munu R^tmu R^tnu
-	FTYPE gRR=ptrgeom->gcov[GIND(0,0)]*Av[0]*Av[0]+ptrgeom->gcov[GIND(0,1)]*Av[0]*Av[1]+ptrgeom->gcov[GIND(0,2)]*Av[0]*Av[2]+ptrgeom->gcov[GIND(0,3)]*Av[0]*Av[3]+
-	  ptrgeom->gcov[GIND(1,0)]*Av[1]*Av[0]+ptrgeom->gcov[GIND(1,1)]*Av[1]*Av[1]+ptrgeom->gcov[GIND(1,2)]*Av[1]*Av[2]+ptrgeom->gcov[GIND(1,3)]*Av[1]*Av[3]+
-	  ptrgeom->gcov[GIND(2,0)]*Av[2]*Av[0]+ptrgeom->gcov[GIND(2,1)]*Av[2]*Av[1]+ptrgeom->gcov[GIND(2,2)]*Av[2]*Av[2]+ptrgeom->gcov[GIND(2,3)]*Av[2]*Av[3]+
-	  ptrgeom->gcov[GIND(3,0)]*Av[3]*Av[0]+ptrgeom->gcov[GIND(3,1)]*Av[3]*Av[1]+ptrgeom->gcov[GIND(3,2)]*Av[3]*Av[2]+ptrgeom->gcov[GIND(3,3)]*Av[3]*Av[3];
- 
+	FTYPE gRR=0.0;
+    DLOOP(jj,kk) gRR += ptrgeom->gcov[GIND(jj,kk)]*Av[jj]*Av[kk];
+
 	//the quadratic equation for u^t of the radiation rest frame (urf[0])
 	//supposed to provide two roots for (u^t)^2 of opposite signs
 	FTYPE a,b,c,delta,gamma2;
@@ -1904,7 +1908,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	// Or Fix-up inversion if problem with gamma (i.e. velocity) or energy density in radiation rest-frame (i.e. Erf)
 	//
 	//////////////////////
-	int kk;
 
 
 
@@ -2127,7 +2130,6 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 	myexit(368322162);
   }
   
-
 
   //new primitives (only uses urfcon[1-3])
   pp[PRAD0]=Erf;

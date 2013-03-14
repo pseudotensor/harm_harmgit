@@ -14,6 +14,33 @@ int bound_x1dn_radbeamflatinflow(
 								 int *localenerpos
 								 );
 
+int bound_radbeam2dbeaminflow(int dir,
+						  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+						  int *inboundloop,
+						  int *outboundloop,
+						  int *innormalloop,
+						  int *outnormalloop,
+						  int (*inoutlohi)[NUMUPDOWN][NDIM],
+						  int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+						  int *dosetbc,
+						  int enerregion,
+						  int *localenerpos
+						  );
+
+int bound_radbeam2dflowinflow(int dir,
+							   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							   int *inboundloop,
+							   int *outboundloop,
+							   int *innormalloop,
+							   int *outnormalloop,
+							   int (*inoutlohi)[NUMUPDOWN][NDIM],
+							   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							   int *dosetbc,
+							   int enerregion,
+							   int *localenerpos
+							   );
+
+
 int bound_radshadowinflow(int dir,
 						  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 						  int *inboundloop,
@@ -180,6 +207,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x1up_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==RADBEAM2DFLOWINFLOW){
+        bound_radbeam2dflowinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
         bound_x1up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
         donebc[dir]=1;
@@ -271,6 +302,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
 		bound_x3dn_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 		donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADBEAM2DBEAMINFLOW){
+        bound_radbeam2dbeaminflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
       }
       else{
         dualfprintf(fail_file,"No x3dn boundary condition specified: %d\n",BCtype[dir]);
@@ -618,16 +653,18 @@ int bound_radshadowinflow(int dir,
   FTYPE BLOBW=0.22;
   FTYPE RHOBLOB=1.e3;
   //
-#if(WHICHPROBLEM==RADSHADOW)
-  FTYPE NLEFT=0.99999;
-  FTYPE angle=0.0;
-#elif(WHICHPROBLEM==RADDBLSHADOW)
-  //FTYPE NLEFT=0.99999; // very hard on code -- only MINM with jon choice for CASES works.
-  FTYPE NLEFT=0.99;
-  //  FTYPE NLEFT=0.7;
-  //  FTYPE NLEFT=0.93;
-  FTYPE angle=0.4;
-#endif
+  FTYPE NLEFT,angle;
+  if(WHICHPROBLEM==RADSHADOW){
+	NLEFT=0.99999;
+	angle=0.0;
+  }
+  else if(WHICHPROBLEM==RADDBLSHADOW){
+	//NLEFT=0.99999; // very hard on code -- only MINM with jon choice for CASES works.
+	NLEFT=0.99;
+	//  NLEFT=0.7;
+	//  NLEFT=0.93;
+	angle=0.4;
+  }
   //
   FTYPE gammax=1.0/sqrt(1.0-NLEFT*NLEFT);
   FTYPE uradx=NLEFT*gammax/sqrt(1.0+angle*angle);
@@ -890,11 +927,373 @@ int bound_radshadowinflow(int dir,
   
 
 
-  
-
+ 
 
 
 
   return(0);
 } 
+
+
+
+
+
+// X3 lower for radiation beam injection
+int bound_radbeam2dbeaminflow(int dir,
+							int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							int *inboundloop,
+							int *outboundloop,
+							int *innormalloop,
+							int *outnormalloop,
+							int (*inoutlohi)[NUMUPDOWN][NDIM],
+							int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							int *dosetbc,
+							int enerregion,
+							int *localenerpos
+							)
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if(BCtype[X3DN]==RADBEAM2DBEAMINFLOW && totalsize[3]>1 && mycpupos[3] == 0 ){
+
+
+	  FTYPE RHOAMB=1.e0/RHOBAR;
+	  FTYPE TAMB=1e7/TEMPBAR;
+	  FTYPE PAR_D=1./RHOBAR;
+	  FTYPE PAR_E=1e-4/RHOBAR;
+
+	  int IFBEAM=0; // whether to have a beam
+	  FTYPE TLEFT=1e9/TEMPBAR;
+	  FTYPE NLEFT=0.999;
+
+	  FTYPE BEAML,BEAMR;
+	  if (BEAMNO==1){
+		BEAML=2.9;
+		BEAMR=3.1;
+	  }
+	  else if (BEAMNO==2){
+		BEAML=5.8;
+		BEAMR=6.2;
+	  }
+	  else if (BEAMNO==3){
+		BEAML=15.5;
+		BEAMR=16.5;
+	  }
+	  else if (BEAMNO==4){
+		BEAML=37;
+		BEAMR=43;
+	  }
+
+	  
+
+	  OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
+	  ////////	LOOPX3dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
+
+		ri=i;
+		rj=j;
+		rk=rkin;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  
+		LOOPBOUND3IN{
+
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  
+		  if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
+		  if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
+
+
+		  // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \phi at those i
+		  if(0      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
+
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+			//coordinates of the ghost cell
+			bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+			// set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+			int whichvel;
+			whichvel=VEL4;
+			int whichcoord;
+			whichcoord=MCOORD;
+
+			// get metric grid geometry for these ICs
+			int getprim=0;
+			struct of_geom geomrealdontuse;
+			struct of_geom *ptrgeomreal=&geomrealdontuse;
+			gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+
+
+			FTYPE ERADAMB;
+			FTYPE rho,uint,Vr;
+			FTYPE uradx,urady,uradz;
+			if(FLATBACKGROUND){
+			  Vr=0.0;
+			  rho=RHOAMB;
+			  uint=calc_PEQ_ufromTrho(TAMB,rho);
+			  ERADAMB=calc_LTE_EfromT(TAMB);
+
+			  // override so like outflow conditions to avoid shear at boundary
+			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+			  // need coordinate basis
+			  uradx=MACP0A1(prim,i,j,k,URAD1)*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
+			  urady=MACP0A1(prim,i,j,k,URAD2)*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
+			  uradz=MACP0A1(prim,i,j,k,URAD3)*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
+
+			  if(uradz>0.0) uradz=0.0; // limit so no arbitrary radiative inflow
+			}
+			else{
+			  //zaczynam jednak od profilu analitycznego:   
+			  FTYPE r=V[1];
+			  FTYPE mD=PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
+			  FTYPE mE=PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
+			  Vr=sqrt(2./r)*(1.-2./r);
+
+
+			  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeomreal->gcov[GIND(1,1)]); // assumes RHO location is good for all these quantities
+			  rho=PAR_D/(r*r*sqrt(2./r));
+			  FTYPE T=TAMB;
+			  //			FTYPE ERAD=calc_LTE_EfromT(T);
+			  uint=mE/W;
+			  ERADAMB=calc_LTE_Efromurho(uint,rho);
+			  
+			  // override so like outflow conditions to avoid shear at boundary
+			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+			  uradx=MACP0A1(prim,i,j,k,URAD1)*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
+			  urady=MACP0A1(prim,i,j,k,URAD2)*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
+			  uradz=MACP0A1(prim,i,j,k,URAD3)*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
+
+			  if(uradz>0.0) uradz=0.0; // limit so no arbitrary radiative inflow
+			}
+
+			//primitives in whichvel,whichcoord
+			if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
+			  
+			  // beam injection (override ERAD and uradz)
+			  FTYPE ERADINJ;
+			  ERADINJ=calc_LTE_EfromT(TLEFT);
+			  uradz=1.0/sqrt(1.0 - NLEFT*NLEFT); // radiation 4-velocity
+
+			  MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
+			  MACP0A1(prim,i,j,k,URAD1) = uradx;
+			  MACP0A1(prim,i,j,k,URAD2) = urady;
+			  MACP0A1(prim,i,j,k,URAD3) = uradz;
+			}
+			else{ //no beam
+			  //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
+			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
+			  MACP0A1(prim,i,j,k,URAD1) = uradx;
+			  MACP0A1(prim,i,j,k,URAD2) = urady;
+			  MACP0A1(prim,i,j,k,URAD3) = uradz;
+			}
+
+
+			// get all primitives in WHICHVEL/PRIMECOORDS value
+			primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+
+
+		  }// end if not staggered field
+
+
+		}// end loop over inner i's
+	  } // over block
+	}// end if correct BC and should be doind BC for this core
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+
+
+// X1 upper for inflow
+int bound_radbeam2dflowinflow(int dir,
+							   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							   int *inboundloop,
+							   int *outboundloop,
+							   int *innormalloop,
+							   int *outnormalloop,
+							   int (*inoutlohi)[NUMUPDOWN][NDIM],
+							   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							   int *dosetbc,
+							   int enerregion,
+							   int *localenerpos
+							   )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if(BCtype[X1UP]==RADBEAM2DFLOWINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
+
+
+	  FTYPE RHOAMB=1.e0/RHOBAR;
+	  FTYPE TAMB=1e7/TEMPBAR;
+	  FTYPE PAR_D=1./RHOBAR;
+	  FTYPE PAR_E=1e-4/RHOBAR;
+
+
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+
+		ri=riout;
+		rj=j;
+		rk=k;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  
+		LOOPBOUND1OUT{
+
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  
+
+		  if(ispstag==0){ // only do something special with non-field primitives
+
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+			//coordinates of the ghost cell
+			bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+			// set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+			int whichvel;
+			whichvel=VEL4;
+			int whichcoord;
+			whichcoord=MCOORD;
+
+
+			FTYPE ERADAMB;
+			FTYPE rho,uint,Vr;
+			if(FLATBACKGROUND){
+			  Vr=0.0;
+			  rho=RHOAMB;
+			  uint=calc_PEQ_ufromTrho(TAMB,rho);
+			  ERADAMB=calc_LTE_EfromT(TAMB);
+			}
+			else{
+			  //zaczynam jednak od profilu analitycznego:   
+			  FTYPE r=V[1];
+			  FTYPE mD=PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
+			  FTYPE mE=PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
+			  Vr=sqrt(2./r)*(1.-2./r);
+
+			  // get metric grid geometry for these ICs
+			  int getprim=0;
+			  struct of_geom geomrealdontuse;
+			  struct of_geom *ptrgeomreal=&geomrealdontuse;
+			  gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+
+			  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeomreal->gcov[GIND(1,1)]); // assumes RHO location is good for all these quantities
+			  rho=PAR_D/(r*r*sqrt(2./r));
+			  FTYPE T=TAMB;
+			  //			FTYPE ERAD=calc_LTE_EfromT(T);
+			  uint=mE/W;
+			  ERADAMB=calc_LTE_Efromurho(uint,rho);
+			}
+			FTYPE uradx,urady,uradz;
+			uradx=urady=uradz=0.0;
+
+			// set quantities at outer radial edge
+			MACP0A1(prim,i,j,k,RHO) = rho;
+			MACP0A1(prim,i,j,k,UU)  = uint;
+			MACP0A1(prim,i,j,k,U1)  = -Vr;
+			MACP0A1(prim,i,j,k,U2)  = 0.;
+			MACP0A1(prim,i,j,k,U3)  = 0.;
+			MACP0A1(prim,i,j,k,PRAD0) = ERADAMB;
+			MACP0A1(prim,i,j,k,PRAD1) = uradx;
+			MACP0A1(prim,i,j,k,PRAD2) = urady;
+			MACP0A1(prim,i,j,k,PRAD3) = uradz;
+			
+			//			dualfprintf(fail_file,"IC: ijk=%d %d %d : rho=%g u=%g Vr=%g erad=%g\n",i,j,k,rho,uint,-Vr,ERAD);
+
+			// get all primitives in WHICHVEL/PRIMECOORDS value
+			if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
+			  FAILSTATEMENT("bounds.koral.c:bound_radbeam2dflowinflow()", "bl2ks2ksp2v()", 1);
+			}
+			
+			//			dualfprintf(fail_file,"POSTIC: ijk=%d %d %d : rho=%g u=%g Vr=%g erad=%g\n",i,j,k,rho,uint,-Vr,ERAD);
+
+
+		  }// end if not staggered field
+
+
+		}// end loop over inner i's
+	  }// over block
+	}// if correct BC and core
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+
 

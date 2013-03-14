@@ -460,6 +460,9 @@
 
 #define EOMRADTYPE EOMRADNONE // EOMRADM1CLOSURE
 
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+
+
 
 // whether to try other methods for the inversion if primary choices fails
 // created because utoprim_2d_final fails for large b^2/rho when other methods (even utoprim_2d) do not fail.

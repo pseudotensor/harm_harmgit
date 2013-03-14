@@ -381,8 +381,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   trifprintf("Normalize densities\n");
   normalize_densities(prim);
 
-  
-
   /////////////////////////////
   //
   // Define an atmosphere if wanted
@@ -406,7 +404,10 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 	if(initreturn>0){
 	  FAILSTATEMENT("init.c:init_primitives()", "init_atmosphere()", 1);
 	}
-	else{
+	else if(initreturn==-1){
+	  // then do nothing -- no atmosphere
+	}
+	else{ // initreturn==0
 	  // transform from whichcoord to MCOORD
 	  if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
 	    FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
@@ -416,7 +417,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       }// end 3D LOOP
     }// end parallel region
   }
-
 
 
   /////////////////////////////
@@ -457,7 +457,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   }
 
 
-
   trifprintf("pre_interpolate_and_advance #1\n");
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
   pre_interpolate_and_advance(prim);
@@ -495,8 +494,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   trifprintf("copy_prim2panalytic #1\n");
   copy_prim2panalytic(prim,panalytic,pstag,pstaganalytic,vpot,vpotanalytic,Bhat,Bhatanalytic);
 #endif
-
-
 
   /////////////////////////////
   //
@@ -546,8 +543,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
   trifprintf("pre_fixup #2\n");
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-
-
 
 
   return(0);

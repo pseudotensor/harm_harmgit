@@ -1,20 +1,37 @@
 //problem names
 #define FLATNESS (0) // not in Koral
+#define RADBEAM2D (1) // beam of light (can choose SPC, KSCOORDS, etc.)
 #define RADTUBE (6) // radiative shock tubes as in Farris et al 09 - assumes Edd.approximation which is currently not handled
 #define RADPULSE (10) //  radiative blob spreading around
 #define RADSHADOW (11)  // radiative shadow
 #define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
 #define RADPULSE3D (16) // radiative blob spreading around
 #define RADDBLSHADOW (17) // radiative shadow with two beams inclined
+#define ATMSTATIC (18) // hydro atmosphere 
 #define RADBEAMFLAT (24) //  beam of light in Cartesian
-
 
 // other BCTypes beyond those in definit.h (can't overlap numbers from there)
 #define RADBEAMFLATINFLOW 201
 #define RADSHADOWINFLOW 202
 #define RADSHADOWINFLOWX2UP 203
 #define RADSHADOWINFLOWX2DN 204
+#define RADBEAM2DBEAMINFLOW 205
+#define RADBEAM2DFLOWINFLOW 206
 
+// TODO:
+//#define RADBONDI (7) // like in Fragile's paper
+//3 DONUT - 2d Polish donut
+//12 RADATM - atmosphere enlighted (also does
+//#define RADDONUT (25) // 2d radiative Polish donut in KS
+//14 RADWAVEBC - 1d linear rad wave imposed on boundary
+//15 RADWAVE - 1d linear rad wave with periodic BC
+//1 RADBEAM2D - beam of light (also does RADBEAM2DKS #19 and RADBEAM2DKSVERT #26)
+//27 RADFLATNESS - flat but with non-zero four-force
+//28 BOWSHOCK - bow shock hydro test
+//29* RADWALL - flat with wall
+//30* RADNT - emission from midplane
+//31* FLATDISK - emission from flat disk
+//32* CYLBEAM - beam towards the axis in cylindrical
 
 //problem choice
 //#define WHICHPROBLEM FLATNESS
@@ -24,7 +41,8 @@
 //#define WHICHPROBLEM RADPULSE3D
 //#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
-#define WHICHPROBLEM RADDBLSHADOW
+//#define WHICHPROBLEM RADDBLSHADOW
+#define WHICHPROBLEM RADBEAM2D
 
 
 //undefs
@@ -363,10 +381,38 @@
 
 
 
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAM2D)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+
+#define N1 30
+#define N2 1
+#define N3 30
+
+// can choose any spherical polar coordinate system
+#define MCOORD SPCMINKMETRIC
+//#define MCOORD KSCOORDS
+
+#define BEAMNO 1 // 1-4
+
+// whether constant or radially varying background
+// ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
+#define FLATBACKGROUND 0
+
+#endif
 
 
 
 
+//****************************************//
+//****************************************//
 
 
 
@@ -434,7 +480,7 @@
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
 #define DOAVG 0
-#define DOJETDIAG 1
+#define DOJETDIAG 0
 #define DOAVG2 0
 #define DODEBUG 1
 #define DO_WENO_DEBUG 0

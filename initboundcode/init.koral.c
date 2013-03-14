@@ -35,12 +35,6 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
 
-  // print out units and some constants
-  trifprintf("Constants\n");
-  trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
-  trifprintf("ARAD_CODE=%g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1)=%g KAPPA_BF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1),KAPPA_BF_CODE(1,1));
-
-
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
 
   return(0);
@@ -80,6 +74,12 @@ int post_init_specific_init(void)
 
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
+
+  // print out units and some constants
+  trifprintf("Constants\n");
+  trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
+  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1)=%g KAPPA_BF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1),KAPPA_BF_CODE(1,1));
+  trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
 
 
   //  cour=0.8;
@@ -343,7 +343,8 @@ int init_global(void)
 	//	cour=0.49; // doesn't help oscillations for NLEFT=0.99999 with MINM
 	gam=gamideal=1.4;
 	cooling=KORAL;
-	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+	ARAD_CODE=1E-30;
+	//ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=FREEOUTFLOW;
 	BCtype[X1DN]=RADSHADOWINFLOW;
@@ -359,6 +360,57 @@ int init_global(void)
 	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
 	tf = 200.0; //final time (far past plot so see evolves or stationary).
   }
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADBEAM2D){
+
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
+	BCtype[X1DN]=OUTFLOW;
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	//	BCtype[X3UP]=FREEOUTFLOW;
+	BCtype[X3UP]=OUTFLOW;
+	BCtype[X3DN]=RADBEAM2DBEAMINFLOW;
+
+	FTYPE DTOUT1;
+	if (BEAMNO==1){
+	  DTOUT1=.1; //dt for basic output
+	}
+	else if (BEAMNO==2){
+	  DTOUT1=.4; //dt for basic output
+	}
+	else if (BEAMNO==3){
+	  DTOUT1=1.; //dt for basic output
+	}
+	else if (BEAMNO==4){
+	  DTOUT1=.25; //dt for basic output
+	}
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 10.0; //final time
+  }
+
 
 
   /*************************************************/
@@ -498,6 +550,49 @@ int init_defcoord(void)
 	Rout_array[3]=1.0;
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADBEAM2D){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  
+
+
+	if (BEAMNO==1){
+	  Rin_array[1]=2.6;
+	  Rout_array[1]=3.5;
+	}
+	else if (BEAMNO==2){
+	  Rin_array[1]=5.5;
+	  Rout_array[1]=7.5;
+	}
+	else if (BEAMNO==3){
+	  Rin_array[1]=14.5;
+	  Rout_array[1]=20.5;
+	}
+	else if (BEAMNO==4){
+	  Rin_array[1]=30;
+	  Rout_array[1]=50;
+	}
+
+	Rin_array[2]=0.99*M_PI*0.5;
+	Rout_array[2]=1.01*M_PI*0.5;
+
+	Rin_array[3]=0.0;
+	Rout_array[3]=M_PI*0.25;
+
+	
+  }
+
 
   return(0);
 }
@@ -520,10 +615,14 @@ int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr
   // NO atmosphere
   //  funreturn=user1_init_atmosphere(whichvel, whichcoord,i, j, k, pr);
   //  if(funreturn!=0) return(funreturn);
+  //  return(0);
 
+  // tells to do no coordinate transformations
+  *whichvel=WHICHVEL;
+  *whichcoord=PRIMECOORDS;
+  //  return(0);
 
-
-  return(0);
+  return(-1); // no atmosphere set, so don't do anything at all
 
 }
 
@@ -622,6 +721,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #endif
 
 
+//****************************************//
+//****************************************//
+
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
 
@@ -680,6 +782,25 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 //****************************************//
 //****************************************//
+
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADBEAM2D)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
 
 
 
@@ -1057,6 +1178,106 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
 
 
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADBEAM2D){
+
+
+	FTYPE RHOAMB=1.e0/RHOBAR;
+	FTYPE TAMB=1e7/TEMPBAR;
+	int BLOB=0; // whether to put blob in way of beam
+	FTYPE BLOBW=.1;
+	FTYPE BLOBP=100000.;
+	FTYPE BLOBX=10.;
+	FTYPE BLOBZ=Pi/20.;
+	FTYPE PAR_D=1./RHOBAR;
+	FTYPE PAR_E=1e-4/RHOBAR;
+
+
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+	// if BLOB, override density with blob density
+	FTYPE rhoblob;
+	rhoblob=RHOAMB*(1.+BLOBP*exp(-((xx-BLOBX)*(xx-BLOBX)+(yy)*(yy)+(zz-BLOBZ)*(zz-BLOBZ))/BLOBW/BLOBW));
+
+	//zaczynam jednak od profilu analitycznego:   
+	FTYPE ERADAMB;
+	FTYPE rho,uint,Vr;
+	if(FLATBACKGROUND){
+	  Vr=0.;
+	  rho=RHOAMB;
+	  if(BLOB) rho=rhoblob;
+	  uint=calc_PEQ_ufromTrho(TAMB,rho);
+	  ERADAMB=calc_LTE_EfromT(TAMB);
+	  //	  ERADAMB=calc_LTE_Efromurho(uint,rho);
+	}
+	else{
+	  FTYPE r=V[1];
+	  FTYPE mD=PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
+	  FTYPE mE=PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
+	  Vr=sqrt(2./r)*(1.-2./r);
+
+	  // get metric grid geometry for these ICs
+	  int getprim=0;
+	  struct of_geom geomdontuse;
+	  struct of_geom *ptrgeom=&geomdontuse;
+	  gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+	  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeom->gcov[GIND(1,1)]);
+	  rho=PAR_D/(r*r*sqrt(2./r));
+	  if(BLOB) rho += rhoblob;
+	  FTYPE T=TAMB;
+	  //			FTYPE ERAD=calc_LTE_EfromT(T);
+	  uint=mE/W;
+	  ERADAMB=calc_LTE_Efromurho(uint,rho);
+	}
+
+
+
+	//test!
+	//Vr=0.7;
+
+	FTYPE uradx,urady,uradz;
+	uradx=urady=uradz=0.;
+    
+	pr[RHO] = rho ;
+	pr[UU]  = uint;
+	pr[U1]  = -Vr;
+	pr[U2]  = 0 ;    
+	pr[U3]  = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+	pr[PRAD0] = ERADAMB;
+	pr[PRAD1] = uradx ;
+	pr[PRAD2] = urady ;    
+	pr[PRAD3] = uradx ;
+
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0)
+
+	//	*whichvel=WHICHVEL;
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+	return(0);
+  }
 
 
 

@@ -54,6 +54,11 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   FTYPE *pressure=&pressuremem;
 
 
+
+  // DEBUG:
+  //  dualfprintf(fail_file,"Doing inversion for ijk=%d %d %d nstep=%ld steppart=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+
+
  
   ////////////////////////
   //
@@ -237,16 +242,16 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-		tryentropyinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-		if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
-		  usedhotinversion=0;
-		  usedentropyinversion=1;
-		  usedcoldinversion=0;
-		  usedffdeinversion=0;
-		}
+        tryentropyinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
+          usedhotinversion=0;
+          usedentropyinversion=1;
+          usedcoldinversion=0;
+          usedffdeinversion=0;
+        }
 
-		// check entropy inversion
-		check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        // check entropy inversion
+        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
       }
     }
@@ -263,16 +268,16 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-		trycoldinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-		if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
-		  usedhotinversion=0;
-		  usedentropyinversion=0;
-		  usedcoldinversion=1;
-		  usedffdeinversion=0;
-		}
+        trycoldinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=1;
+          usedffdeinversion=0;
+        }
 
-		// check cold inversion
-		check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        // check cold inversion
+        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
       }// end if hotpflag
 
@@ -306,7 +311,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     
     ////////////////////////
     // get entropy evolution (don't use failure -- otherfail)
-    Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
 #else
 
@@ -323,7 +328,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
     // check entropy inversion
     check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-	
+ 
 
 #if(0)
     // DEBUG
@@ -334,19 +339,19 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       // copy over utoprim_jon result for check_on_inversion below
       FTYPE prorig[NPR],pr0orig[NPR],Uoldorig[NPR],Uneworig[NPR];
       PLOOP(pliter,pl){
-		pr0orig[pl]=pr0[pl];
-		prorig[pl]=pr[pl];
-		Uoldorig[pl]=Uold[pl];
-		Uneworig[pl]=Unew[pl];
+        pr0orig[pl]=pr0[pl];
+        prorig[pl]=pr[pl];
+        Uoldorig[pl]=Uold[pl];
+        Uneworig[pl]=Unew[pl];
       }
 
       // Get original inversion for entropy
-      Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==0){
-		check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&lpflag, pr0orig, prorig, pressure, ptrgeom, Uoldorig, Uneworig,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
-		dualfprintf(fail_file,"Old inversion method worked while new failed\n");
-		myexit(0);
+        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&lpflag, pr0orig, prorig, pressure, ptrgeom, Uoldorig, Uneworig,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
+        dualfprintf(fail_file,"Old inversion method worked while new failed\n");
+        myexit(0);
       }
     }
 #endif
@@ -364,22 +369,22 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       PFTYPE entropypflag;
       // get failure flag
       entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-	
+ 
       if(entropypflag){
-		trycoldinversion(finalstep, entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-		if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
-		  usedhotinversion=0;
-		  usedentropyinversion=0;
-		  usedcoldinversion=1;
-		  usedffdeinversion=0;
-		}
+        trycoldinversion(finalstep, entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=1;
+          usedffdeinversion=0;
+        }
 
-		// check cold inversion
-		check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        // check cold inversion
+        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
 
       }// end if entropypflag
-	
+ 
     }
 
 
@@ -558,7 +563,7 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
     
     
     // get entropy evolution inversion
-    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &entropypflag, pr,pressure,newtonstats, lpflagrad);
+    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &entropypflag, prentropy,pressure,newtonstats, lpflagrad);
 
     
     ///////////////////////////////////
@@ -586,9 +591,9 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       
       // reset pflag, unless still need to do some kind of averaging
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDENTROPY){
-		// default then is that no failure
-		// already accounted for and just a soft failure that doesn't require fixup anymore (and can't leave as UTOPRIMFAILFIXEDUTOPRIM since fixup would complain about not resetting the flag)
-		GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+        // default then is that no failure
+        // already accounted for and just a soft failure that doesn't require fixup anymore (and can't leave as UTOPRIMFAILFIXEDUTOPRIM since fixup would complain about not resetting the flag)
+        GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
       }
 
 
@@ -597,6 +602,9 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
 #if(PRODUCTION==0)      
       if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+
+      //      int pliter;
+      //      PLOOP(pliter,pl) dualfprintf(fail_file,"POST GO TO ENTROPY: pl=%d pr0=%g pr=%g\n",pl,pr0[pl],pr[pl]);
 #endif
 
       
@@ -670,7 +678,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
     
     
     // get cold inversion
-    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMCOLDGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &coldpflag, pr,pressure,newtonstats, lpflagrad);
+    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMCOLDGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &coldpflag, prcold,pressure,newtonstats, lpflagrad);
 
     
     ///////////////////////////////////
@@ -695,18 +703,18 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
       //
       // decide how to use cold inversion solution    
       if(0&&IFUTOPRIMFAILSOFTNOTRHORELATED(hotpflag)){ // avoided now since reverting to 0 can introduce extra structure.  Want to keep to using averaging if possible that will generate better solution.
-		// since cold approximation is very good, then use cold solution and just set internal energy to 0
-		// if internal energy is actually small, then just set it to 0
-		// works for Hubble flow!
-		pr[UU]=zerouuperbaryon*pr[RHO];
+        // since cold approximation is very good, then use cold solution and just set internal energy to 0
+        // if internal energy is actually small, then just set it to 0
+        // works for Hubble flow!
+        pr[UU]=zerouuperbaryon*pr[RHO];
       }
       else{
-		//////////////
-		//  if internal energy is not negligible or unknown, then should average or evolve!
-		pr[UU]=pr0[UU];
-		// then very bad failure, so try cold inversion and average internal energy for now
-		GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1FROMCOLD; // assume only internal energy needs correcting by averaging
-	
+        //////////////
+        //  if internal energy is not negligible or unknown, then should average or evolve!
+        pr[UU]=pr0[UU];
+        // then very bad failure, so try cold inversion and average internal energy for now
+        GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1FROMCOLD; // assume only internal energy needs correcting by averaging
+ 
       }// end if (else) trying cold inversion
 
 
@@ -727,7 +735,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
 
       // reset pflag since above does full accounting, unless need to average-out internal energy still
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDCOLD){
-		GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+        GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
       }
 
 
@@ -805,12 +813,12 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
 
 
-  //  if(1 || !(*lpflag)){ // only report if not failure
+  //if(1 || !(*lpflag)){ // only report if not failure
   if(!(*lpflag)){ // only report if not failure
 
     /////////////
     //
-    // get new U
+    // get new U (only applicable if hot inversion used)
     //
     /////////////
     MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
@@ -861,49 +869,56 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       // in force-free projection on velocity always occurs that makes momenta terms not the same
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
       if(usedffdeinversion && (pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
+#if(0)
       if(usedcoldinversion  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
       // inversion either uses energy or entropy and can't use both at once inside inversion routine
       if(usedentropyinversion  && (pl==UU )) continue;
       if(usedhotinversion && (pl==ENTROPY )) continue;
+#else
+      // actually any reduction in the inversion invalidates all terms since velocity can be different and in the relativistic limit all things then change
+      if(usedcoldinversion  && (pl==UU || pl==RHO || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
+      if(usedentropyinversion  && (pl==UU || pl==RHO || pl==U1 || pl==U2 || pl==U3)) continue; // pl==ENTROPY should be now same!
+      if(usedhotinversion && (pl==ENTROPY )) continue; // only unused pl==ENTROPY won't be same
+#endif
 
       //(EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || // no need to check pl if no such pl's
       // lpflagrad: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
       if(EOMRADTYPE!=EOMRADNONE && (*lpflagrad==1)) continue;
-	  // If doing Eddington approximation, actually ignore conserved flux evolution.
+      // If doing Eddington approximation, actually ignore conserved flux evolution.
       if(EOMRADTYPE==EOMRADEDD && (pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
 
 
       if(pl==YNU || pl==YL){
-		// only check that new U is finite
-		if(!isfinite(Unormalnew[pl])){
-		  fdiff[pl]=BIG; // indicates was not finite
-		}
-		else continue; // then avoid checking passive scalars in case manipulated
+        // only check that new U is finite
+        if(!isfinite(Unormalnew[pl])){
+          fdiff[pl]=BIG; // indicates was not finite
+        }
+        else continue; // then avoid checking passive scalars in case manipulated
       }
 
       // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
       if(pl==RHO || pl==UU || pl==URAD0&&(*lpflagrad==0) || pl==ENTROPY){
-		fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 
-		errornorm  = THIRD*(fabs(Unormalnew[U1])+fabs(Unormalold[U1])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
+        errornorm  = THIRD*(fabs(Unormalnew[U1])+fabs(Unormalold[U1])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
 #if(REMOVERESTMASSFROMUU==2)
-		// only valid comparison if rest-mass taken out of energy term and modify U_i term to be comparable with U_t term
-		errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
+        // only valid comparison if rest-mass taken out of energy term and modify U_i term to be comparable with U_t term
+        errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
 #endif
-			  
-		fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
+     
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
 
       }
       else if( (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*lpflagrad==0) ){
-		errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
-		fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
+        errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
       else if(pl==B1 || pl==B2 || pl==B3){
-		fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
       }
     }
 
@@ -922,17 +937,17 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD2&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD3&&(EOMRADTYPE!=EOMRADEDD) )));
 
       if(IFUTOPRIMFAIL(*lpflag) || fdiff[pl]>CHECKONINVFRAC){
-		if(
-		   ( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
-		   ){
-		  badinversion++;
-		  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
-		}
+        if(
+           ( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
+           ){
+          badinversion++;
+          dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
+        }
       }
       if(fdiff[pl]>CHECKONINVFRACFAIL){
-		if( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ){
-		  badinversionfail++;
-		}
+        if( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ){
+          badinversionfail++;
+        }
       }
     }
 
@@ -978,7 +993,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       DLOOP(j,k) dualfprintf(fail_file,"gcov=%21.15g gcon=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);
 
       for(k=0;k<4;k++){
-		dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
+        dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
       }
 
       // only really need the below quantities to check on inversion in mathematica
@@ -1005,7 +1020,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
 
 
-			   
+      
 
 
 
@@ -1023,7 +1038,7 @@ static int compare_ffde_inversions(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE 
   int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
-  Utoprimgen_pick(UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), prother, pressure, newtonstats,lpflagrad);
+  Utoprimgen_pick(UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr, pressure, newtonstats,lpflagrad);
 
   PALLLOOP(pl) Ugeomfree[pl]=Ugeomfree0[pl]; // make sure good conserved quantity
       
@@ -1083,18 +1098,18 @@ static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geo
 #if(CRAZYDEBUG) // begin crazy debug stuff
   if(1|| newtonstats->lntries>3){
     if(nstep==9 && steppart==2 && ptrgeom->i==0 && ptrgeom->j==31){
-	  //    if(nstep==0 && steppart==0 && ptrgeom->i==4 && ptrgeom->j==36){
-	  //  if(nstep==0 && steppart==0 && ptrgeom->i == 5 && ptrgeom->j == 31 ){
-	  dualfprintf(fail_file,"nstep=%ld stepart=%d :: i=%d j=%d :: lntries=%d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,newtonstats->lntries);
+      //    if(nstep==0 && steppart==0 && ptrgeom->i==4 && ptrgeom->j==36){
+      //  if(nstep==0 && steppart==0 && ptrgeom->i == 5 && ptrgeom->j == 31 ){
+      dualfprintf(fail_file,"nstep=%ld stepart=%d :: i=%d j=%d :: lntries=%d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,newtonstats->lntries);
     
-	  //    PALLLOOP(pl) dualfprintf(fail_file,"Ugeomfree[%d]=%21.15g pr[%d]=%21.15g\n",pl,Ugeomfree[pl],pl,pr[pl]);
-	  PALLLOOP(pl) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Uold[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g)\n",pl,Uold[pl],pl,Uold[pl]*ptrgeom->gdet,pl,pr[pl],pl,pr0[pl]);
+      //    PALLLOOP(pl) dualfprintf(fail_file,"Ugeomfree[%d]=%21.15g pr[%d]=%21.15g\n",pl,Ugeomfree[pl],pl,pr[pl]);
+      PALLLOOP(pl) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Uold[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g)\n",pl,Uold[pl],pl,Uold[pl]*ptrgeom->gdet,pl,pr[pl],pl,pr0[pl]);
 
-	  dualfprintf(fail_file,"g=%21.15g\n",ptrgeom->gdet);
+      dualfprintf(fail_file,"g=%21.15g\n",ptrgeom->gdet);
 
-	  DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);
-	  //    myexit(777);
-	  //  }
+      DLOOP(j,k) dualfprintf(fail_file,"gcon=%21.15g gcov=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);
+      //    myexit(777);
+      //  }
     }
   }
 
@@ -1104,57 +1119,57 @@ static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geo
   if(nstep==9 && steppart==2 && ptrgeom->i==0 && ptrgeom->j==31){
 
 #if(0)
-	pr[0]= 7.22714301361038e-06 ;
-	pr[1]=-2.55753797775927e-07 ;
-	pr[2]= 0.000892168434512681 ;
-	pr[3]=  -0.0349621334882251 ;
-	pr[4]=                   -0 ;
-	pr[5]= -0.00101880685475446 ;
-	pr[6]=   0.0399035382308458 ;
-	pr[7]=                    0 ;
+    pr[0]= 7.22714301361038e-06 ;
+    pr[1]=-2.55753797775927e-07 ;
+    pr[2]= 0.000892168434512681 ;
+    pr[3]=  -0.0349621334882251 ;
+    pr[4]=                   -0 ;
+    pr[5]= -0.00101880685475446 ;
+    pr[6]=   0.0399035382308458 ;
+    pr[7]=                    0 ;
 #elif(0)
-	pr[0]= 7.46157819677347e-06;
-	pr[1]=  7.3407120498644e-06;
-	pr[2]= 0.000367464781319951;
-	pr[3]=  -0.0144105143008605;
-	pr[4]=                    0;
-	pr[5]= -0.00101880685475446;
-	pr[6]=   0.0399035382308458;
-	pr[7]=                    0;
+    pr[0]= 7.46157819677347e-06;
+    pr[1]=  7.3407120498644e-06;
+    pr[2]= 0.000367464781319951;
+    pr[3]=  -0.0144105143008605;
+    pr[4]=                    0;
+    pr[5]= -0.00101880685475446;
+    pr[6]=   0.0399035382308458;
+    pr[7]=                    0;
 #elif(0)
-	pr[0]=  7.5124289176258e-06 ;
-	pr[1]= 1.33752037209996e-08 ;
-	pr[2]= 1.33529579432262e-07 ;
-	pr[3]=-5.23276639757274e-06 ;
-	pr[4]=                    0 ;
-	pr[5]= -0.00101880685475444 ;
-	pr[6]=   0.0399035382308459 ;
-	pr[7]=                    0 ;
+    pr[0]=  7.5124289176258e-06 ;
+    pr[1]= 1.33752037209996e-08 ;
+    pr[2]= 1.33529579432262e-07 ;
+    pr[3]=-5.23276639757274e-06 ;
+    pr[4]=                    0 ;
+    pr[5]= -0.00101880685475444 ;
+    pr[6]=   0.0399035382308459 ;
+    pr[7]=                    0 ;
 
 #endif
 
-	MYFUN(get_state(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-	MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    MYFUN(get_state(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
+    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
 
-	for(k=0;k<4;k++){
-	  dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
-	}
+    for(k=0;k<4;k++){
+      dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
+    }
 
-	PLOOP(pliter,pl){
-	  Unew[pl]*=ptrgeom->gdet;
-	  Uold[pl]*=ptrgeom->gdet;
-	  fdiff[pl] = fabs(Unew[pl]-Uold[pl])/(fabs(Unew[pl]+Uold[pl])+1E-30);
-	  //    if(fdiff[pl]>1E-10){
+    PLOOP(pliter,pl){
+      Unew[pl]*=ptrgeom->gdet;
+      Uold[pl]*=ptrgeom->gdet;
+      fdiff[pl] = fabs(Unew[pl]-Uold[pl])/(fabs(Unew[pl]+Uold[pl])+1E-30);
+      //    if(fdiff[pl]>1E-10){
       if((pl>=RHO)&&(pl<=B3)&&((fabs(Uold[pl])>1E-20)||(fabs(Unew[pl])>1E-20))){
-		dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Uold[pl],Unew[pl]);
+        dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Uold[pl],Unew[pl]);
       }
       //    }
-	}
+    }
 
-	dualfprintf(fail_file,"dt=%21.15g\n",dt);
+    dualfprintf(fail_file,"dt=%21.15g\n",dt);
 
 
-	myexit(124);
+    myexit(124);
   }
 #endif// end crazy debug stuff
 #undef CRAZYDEBUG
@@ -1406,7 +1421,7 @@ int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom
   ////////////////////////
   // get entropy evolution (don't use failure -- otherpflag)
   // this inversion knows about global settings for DOENTROPY and increases tolerance for doing comparison
-  Utoprimgen_pick(UTOPRIM5D1, EOMTYPE, whichentropy, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), prother, pressure, newtonstats, lpflagrad);
+  Utoprimgen_pick(UTOPRIM5D1, EOMTYPE, whichentropy, Uold, ptrgeom, otherpflag, pr, pressure, newtonstats, lpflagrad);
 
   // DEBUG:
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"otherpflag=%d Uold[%d]=%21.15g pr0[%d]=%21.15g pr[%d]=%21.15g\n",*otherpflag,pl,Uold[pl],pl,pr0[pl], pl,pr[pl]);
@@ -1422,11 +1437,11 @@ int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom
   //    PLOOP(pliter,pl){
   //  fdiff[pl] = fabs(Unew[pl]-Uold[pl])/(fabs(Unew[pl]+Uold[pl])+1E-30);
   //      if(fdiff[pl]>1E-10){
-  //	if((pl>=U1)&&(pl<=B3)&&((fabs(Uold[pl])>1E-20)||(fabs(Unew[pl])>1E-20))){
-  //	  dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %g %g\n",pl,fdiff[pl],Uold[pl],Unew[pl]);
-  //	}
+  // if((pl>=U1)&&(pl<=B3)&&((fabs(Uold[pl])>1E-20)||(fabs(Unew[pl])>1E-20))){
+  //   dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %g %g\n",pl,fdiff[pl],Uold[pl],Unew[pl]);
+  // }
   //      }
-  //	}
+  // }
   //      }
 
      
@@ -1491,9 +1506,9 @@ int Utoprimgen_compare(int eomtype, int parameter, FTYPE *Ugeomfree, struct of_g
   
   // always do (use old utoprim)
   if(IFUTOPRIMNOFAILORFIXED(lpflag1)) PALLLOOP(pl){
-	  pr[pl]=ptest1[pl];
-	  *lpflag=lpflag1;
-	}
+      pr[pl]=ptest1[pl];
+      *lpflag=lpflag1;
+    }
   else{
     PALLLOOP(pl) pr[pl]=ptest2[pl];
     *lpflag=lpflag2;
@@ -1540,6 +1555,8 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
     myexit(1769384215);
   }
 
+  //  int pliter,pl;
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"after inversion: pl=%d pr=%g\n",pl,pr[pl]);
 
   /////////////
   //
@@ -1552,6 +1569,7 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
   if(EOMRADTYPE!=EOMRADNONE) u2p_rad(Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
   //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"after rad inversion: pl=%d pr=%g\n",pl,pr[pl]);
 
   
   return(0);
