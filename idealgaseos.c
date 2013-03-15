@@ -85,23 +85,21 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   indexn=1.0/GAMMAM1;
 
   // Entropy will be wrong when rho0 or pressure are non-positive
-  if(rho0<SMALL && pressure<SMALL){
+  if(rho0<SMALL && pressure<SMALL*1E-10){
     rho0=SMALL;
-    pressure=SMALL;
-    entropy = 0.0;
+    pressure=SMALL*1E-10;
   }
   else if(rho0<SMALL){
     rho0=SMALL;
-    entropy=0.0;
   }
-  else if(pressure<SMALL){
-    pressure=SMALL;
-    entropy=-BIG; // so not -inf
+  else if(pressure<SMALL*1E-10){
+    pressure=SMALL*1E-10;
+    //    entropy=-BIG; // so not -inf
+    // Too small entropy can cause precision/Newton inversion step issues, so implement floor on specific entropy
   }
-  else{
-    // normal:
-    entropy=rho0*log(pow(pressure,indexn)/pow(rho0,indexn+1.0));
-  }
+
+  // normal:
+  entropy=rho0*log(pow(pressure,indexn)/pow(rho0,indexn+1.0));
 
   // if p>>1 and rho0~0, then argument to log() could be out of range (i.e. inf).
   //  if(!isfinite(entropy)) entropy=0.0;

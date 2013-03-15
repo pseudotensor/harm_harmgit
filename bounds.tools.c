@@ -308,7 +308,7 @@ int bound_x1dn_outflow_simple(
 
     }
     else{
-      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      dualfprintf(fail_file,"Shouldn't be here in bounds: dir=%d\n",X1DN);
       myexit(3946836);
     }
 
@@ -435,8 +435,8 @@ int bound_x1up_outflow_simple(
 
     }
     else{
-      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946838);
+      dualfprintf(fail_file,"Shouldn't be here in bounds: dir=%d\n",X1UP);
+      myexit(3946837);
     }
 
   }// end parallel region
@@ -502,7 +502,7 @@ int bound_x1dn_outflow(
     }
 
 
-    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+    if((BCtype[X1DN]==HORIZONOUTFLOW)||(BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
 
 
       if ( (totalsize[1]>1) && (mycpupos[1] <= horizoncpupos1)) { // now all CPUs inside CPU with horizon will be using this (GODMARK: reference value needs to be chosen somehow for CPUs not on active grid)
@@ -608,8 +608,8 @@ int bound_x1dn_outflow(
 
     }
     else{
-      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946836);
+      dualfprintf(fail_file,"Shouldn't be here in bounds: horizonextrap version: dir=%d\n",X1DN);
+      myexit(3946838);
     }
 
 
@@ -780,7 +780,7 @@ int bound_x1up_outflow(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946838);
+      myexit(3946839);
     }
 
   }// end parallel region
@@ -888,7 +888,7 @@ int bound_x1dn_sym(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946839);
+      myexit(3946840);
     }
 
   } // end parallel region
@@ -1023,7 +1023,7 @@ int bound_x2dn_outflow_simple(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(39377836);
+      myexit(39377841);
     }
 
 
@@ -1144,7 +1144,7 @@ int bound_x2up_outflow_simple(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(39324838);
+      myexit(39324842);
     }
 
   }// end parallel region
@@ -1299,7 +1299,7 @@ int bound_x2dn_polaraxis_full3d(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946840);
+      myexit(3946843);
     }
 
 
@@ -1434,7 +1434,7 @@ int bound_x2dn_polaraxis(
     }// end if polar asym or asym
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946841);
+      myexit(3946844);
     }
 
   }// end parallel region
@@ -1572,7 +1572,7 @@ int bound_x2up_polaraxis_full3d(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946842);
+      myexit(3946845);
     }
 
   }// end parallel region
@@ -1704,7 +1704,7 @@ int bound_x2up_polaraxis(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946843);
+      myexit(3946846);
     }
 
   }// end parallel region
@@ -1799,7 +1799,7 @@ int bound_x1_periodic(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(1946844);
+      myexit(1946847);
     }
 
 
@@ -1895,7 +1895,7 @@ int bound_x2_periodic(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(2946844);
+      myexit(2946848);
     }
 
 
@@ -2023,7 +2023,7 @@ int bound_x3dn_outflow_simple(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(312475836);
+      myexit(312475849);
     }
 
 
@@ -2144,7 +2144,7 @@ int bound_x3up_outflow_simple(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(315875838);
+      myexit(315875850);
     }
 
   }// end parallel region
@@ -2255,7 +2255,7 @@ int bound_x3_periodic(
     }
     else{
       dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-      myexit(3946844);
+      myexit(3946851);
     }
 
 
@@ -2384,7 +2384,7 @@ int bound_x1dn_r0singfixinterior(
   }
   else{
     dualfprintf(fail_file,"Shouldn't be here in bounds\n");
-    myexit(3946845);
+    myexit(3946852);
   }
 
 

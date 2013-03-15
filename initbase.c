@@ -1281,8 +1281,10 @@ int init_defglobal(void)
   /** FIXUP PARAMETERS **/
   RHOMIN=1.e-4;
   UUMIN =1.e-6;
+  SPECIFICENTROPYMIN=-SMALL;  // for ideal gas or other things so Newton steps in inversion and flux calculation for dissipation doesn't go wacky (see notes in utoprim_jon.c under Ss_Wp_utsq() calculation and Ss0 calculation).
   RHOMINLIMIT=SMALL;
   UUMINLIMIT =SMALL;
+  SPECIFICENTROPYMINLIMIT=-SMALL;
 
   // limit of B^2/rho if using that flag
   BSQORHOLIMIT=1E2;

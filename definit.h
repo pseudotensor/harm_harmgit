@@ -670,6 +670,8 @@
 #define PERIODIC 7 // periodic boundary conditions
 #define OUTFLOWNOINFLOW 8  //copy if velocity directed outward; force velocity to zero and copy if directed inward (into the grid from the boundary)
 #define RAMESHOUTFLOW 9 //OUTFLOW quantities according the Ramesh's power-law solution
+#define HORIZONOUTFLOW 10
+
 #define BCEXTRAP 100  //atch: extrapolation into the boundary with high order (can be specified)
 #define CYLAXIS 101   //atch: cylindrical axis BC
 #define BCEXTRAP_VEL3 102  //atch: the same as BCEXTRAP but extrapolates 3-velocity rather than 4-velocity; important for Hubble flow

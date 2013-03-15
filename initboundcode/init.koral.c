@@ -383,7 +383,8 @@ int init_global(void)
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
-	BCtype[X1DN]=OUTFLOW;
+    BCtype[X1DN]=OUTFLOW;
+    //	BCtype[X1DN]=HORIZONOUTFLOW;
 	BCtype[X2UP]=PERIODIC;
 	BCtype[X2DN]=PERIODIC;
 	//	BCtype[X3UP]=FREEOUTFLOW;
@@ -408,7 +409,10 @@ int init_global(void)
 	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
 
 	DTr = 100; //number of time steps for restart dumps
-	tf = 10.0; //final time
+	tf = 20.0; //final time
+
+    DODIAGEVERYSUBSTEP = 1;
+
   }
 
 

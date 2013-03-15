@@ -211,6 +211,10 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     usedhotinversion=1;
     
 
+    if(pr[UU]>1.0) dualfprintf(fail_file,"0DEATH\n");
+    if(pr[UU]<1E-13) dualfprintf(fail_file,"0DEATH2\n");
+    if(Ugeomfree0[ENTROPY]<-10) dualfprintf(fail_file,"0DEATH3\n");
+
 
 
 
@@ -601,10 +605,16 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
 #if(PRODUCTION==0)      
-      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
 
-      //      int pliter;
-      //      PLOOP(pliter,pl) dualfprintf(fail_file,"POST GO TO ENTROPY: pl=%d pr0=%g pr=%g\n",pl,pr0[pl],pr[pl]);
+      if(debugfail>=2){
+        //        int pliter;
+        //        if(pr[UU]>1.0) dualfprintf(fail_file,"PDEATH\n");
+        //        if(pr[UU]<1E-13) dualfprintf(fail_file,"PDEATH2\n");
+        //        if(Ugeomfree0[ENTROPY]<-10) dualfprintf(fail_file,"PDEATH3\n");
+        //        PLOOP(pliter,pl) dualfprintf(fail_file,"POST GO TO ENTROPY: ijk=%d %d %d nstep=%ld steppart=%d pl=%d pr0=%g pr=%g U0=%g U=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,pl,pr0[pl],pr[pl],Ugeomfree0[pl],Ugeomfree[pl]);
+
+      }
 #endif
 
       
@@ -618,7 +628,15 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
       PALLLOOP(pl) pr[pl]=prhot[pl];
 
 #if(PRODUCTION==0)      
-      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and bad on finalstep=%d! t=%g steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,t,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Tried entropy and bad on finalstep=%d! t=%g steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,t,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+        //        int pliter;
+        //        if(pr[UU]>1.0) dualfprintf(fail_file,"ADEATH\n");
+        //        if(pr[UU]<1E-13) dualfprintf(fail_file,"ADEATH2\n");
+        //        if(Ugeomfree0[ENTROPY]<-10) dualfprintf(fail_file,"ADEATH3\n");
+        //        PLOOP(pliter,pl) dualfprintf(fail_file,"POST DID NOT GO TO ENTROPY: ijk=%d %d %d nstep=%ld steppart=%d pl=%d pr0=%g pr=%g U0=%g U=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,pl,pr0[pl],pr[pl],Ugeomfree0[pl],Ugeomfree[pl]);
+      }
+
 #endif
 
     }
@@ -813,7 +831,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
 
 
-  //if(1 || !(*lpflag)){ // only report if not failure
+  //  if(1 || !(*lpflag)){ // only report if not failure
   if(!(*lpflag)){ // only report if not failure
 
     /////////////
@@ -866,20 +884,14 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       fdiff[pl]=0.0;
 
 
+      // pl here is conserved quantity, so checking if conserved quantity not same as used to get primitive
       // in force-free projection on velocity always occurs that makes momenta terms not the same
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
-      if(usedffdeinversion && (pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
-#if(0)
-      if(usedcoldinversion  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
+      if(usedffdeinversion && (pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue; // if ffde, no mass or thermal/hot components
+      if(usedcoldinversion  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue; // if cold, can't evolve any hot or thermal component
       // inversion either uses energy or entropy and can't use both at once inside inversion routine
-      if(usedentropyinversion  && (pl==UU )) continue;
-      if(usedhotinversion && (pl==ENTROPY )) continue;
-#else
-      // actually any reduction in the inversion invalidates all terms since velocity can be different and in the relativistic limit all things then change
-      if(usedcoldinversion  && (pl==UU || pl==RHO || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue;
-      if(usedentropyinversion  && (pl==UU || pl==RHO || pl==U1 || pl==U2 || pl==U3)) continue; // pl==ENTROPY should be now same!
-      if(usedhotinversion && (pl==ENTROPY )) continue; // only unused pl==ENTROPY won't be same
-#endif
+      if(usedentropyinversion  && (pl==UU) ) continue; // entropy doesn't use energy equation, but does use conserved entropy
+      if(usedhotinversion && (pl==ENTROPY) ) continue; // hot doesn't use entropy, but does use conserved energy
 
       //(EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || // no need to check pl if no such pl's
       // lpflagrad: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
@@ -949,6 +961,11 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
           badinversionfail++;
         }
       }
+
+
+      //      dualfprintf(fail_file,"pl=%d Uold=%26.20g Unew=%26.20g\n",pl,Unormalold[pl],Unormalnew[pl]);
+
+
     }
 
     ////////////

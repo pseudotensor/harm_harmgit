@@ -97,6 +97,8 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
 
 
 // Newton checks:
+static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
+static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
 static int newt_errorcheck(FTYPE errx, FTYPE x0, FTYPE *wglobal);
 static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal);
 static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now  ) ;
@@ -349,6 +351,12 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   if( ret == 0 ) {
     // only changed RHO through U3 (otherwise have to remove alpha from B^i)
     for( i = 0; i <=U3; i++ ) prim[i] = prim_tmp[i];
+#if(DOENTROPY!=DONOENTROPY)
+    // if entropy is also copy entropy primitive that is internal energy density
+    i=ENTROPY;
+    prim[i] = prim_tmp[i];
+#endif
+
   }
   else{
     // ensure failure reported if ret!=0
@@ -358,7 +366,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
     }
   }
 
-  
+
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"internal pl=%d prim=%g\n",pl,prim[pl]);
 
 
@@ -720,7 +728,6 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
   }
 
 
-
   /* done! */
   return(retval) ;
 
@@ -912,7 +919,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
   FTYPE u,p;
   FTYPE utsq;
   FTYPE Ss;
-  FTYPE gammasq,gamma,rho0,w;
+  FTYPE gammasq,gamma,rho0,wmrho0,w;
   FTYPE bsq;
   FTYPE etaabs;
   int i,j;
@@ -964,7 +971,8 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
     u = MAX(0.0,u); // near degeneracy, allow somewhat "hot" solution so guess doesn't give immediately bad Wp and utsq(Wp)
   }
   p = pressure_rho0_u(whicheos,EOSextra,rho0,u) ; // p(rho0,u) just used for guess, while p(rho0,\chi) used to get solution since assume don't know \chi yet.  Even if had initial \chi, wouldn't be final \chi anyways.
-  w = rho0 + u + p ;
+  wmrho0=u+p;
+  w = rho0 + wmrho0 ;
 
   // need b^2 to normalize W since error in W limited by b^2
   // GODMARK: Computing b^2 this way is too expensive, just use B^2 since just used to make an error estimate
@@ -1057,6 +1065,7 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
 
   // sometimes above gives invalid guess (Wp=0 or utsq<0) so fix
   numattemptstofixguess=0;
+  FTYPE Ss0;
   while(1){
     // under all eomtype's, ensure utsq reasonable for guess so Newton's method starts at reasonable value around which to work from
     // check  utsq from this guess for W
@@ -1065,20 +1074,26 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
     if(eomtype==EOMENTROPYGRMHD){
       // for Entropy method, must also ensure Ss is reasonable
       Ss=Ss_Wp_utsq(whicheos,EOSextra,*Wp_last,D,utsq);
+      // see what initial entropy is.  Even if Ss is not a nan or inf, can be so small that Newton stepping will be wrong, so keep increasing Wp until actually hotter than older entropy.  This ensures start hotter than required and not bumping-up against limit of method.
+      // Noticed that entropy inversion will think it succeeds (low errx and dx) but it really fails very catastrophically! (conserved quantities don't match) for this reason.  Typically would give very low internal energy result, when should have been much higher.  Doesn't do that anymore.
+      // But, once that very low entropy occurs, then noticed a secondary bad effect.  The updated conserved quantity would then be VERY large, leading to a VERY large entropy and huge internal energy.  While this is avoided with no internal energy drop-outs, still a concern that very low entropy regions can cause problematic fluxes and give high entropy.  Probably need larger floor on entropy than SMALL in EOS.
+      Ss0=compute_specificentropy_wmrho0(whicheos,EOSextra,rho0,wmrho0);
     }
     else{
-      // just some dummy value
-      Ss=0.0;
+      // just some dummy value so passes below conditional without affect
+      Ss=SMALL;
+      Ss0=0.0;
     }
 
-    if(utsq>=0.0 && utsq==utsq && Ss==Ss){
-      // if utsq=nan, will fail to reach here
-      // if Ss=nan, will fail to reach here
+    if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>Ss0)){
+      // if utsq=nan or inf, will fail to reach here
+      // if Ss=nan or inf, will fail to reach here
+      if(numattemptstofixguess>0) if(debugfail>=2) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
 #if(PRODUCTION==0)
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma);
+      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
 #endif
 
 
@@ -1514,6 +1529,8 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FT
   //  }
 
   //  dualfprintf(fail_file,"Wp=%g W=%g D=%g vsq=%g gamma=%g wmrho0=%g p=%g u=%g\n",Wp,W,D,vsq,gamma,wmrho0,p,u);
+
+  //  dualfprintf(fail_file,"Wp=%g W=%g D=%g utsq=%g gamma=%g wmrho0=%g p=%g u=%g\n",Wp,W,D,utsq,gamma,wmrho0,p,u);
 
 
   // GODMARK
@@ -2056,7 +2073,7 @@ static FTYPE dEprimedWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTY
     
     result = (1.0 - dpdWp) - (Bsq*Qtsq - QdotBsq)/X3;
 
-    // check for nan
+    // check for nan (but not inf)
     if(dvsq!=dvsq || dp1!=dp1 || dp2!=dp2 || dpdWp!=dpdWp || result!=result) result=0.0; // indicates still problem
 
   }
@@ -2254,7 +2271,7 @@ static FTYPE dScdWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Q
     // new result for new residual
     result = -Sc + D*(dSsdWp*Wp + Ss);
 
-    // check for nan
+    // check for nan (but not inf)
     if(dvsq!=dvsq || dSs1!=dSs1 || dSs2!=dSs2 || dSsdWp!=dSsdWp || result!=result) result=0.0; // indicates still problem
 
   }
@@ -3061,7 +3078,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     dEprimedWp = (1.0 - dpdWp) - (Bsq*Qtsq - QdotBsq)/X3;
 
 
-    // check for nan
+    // check for nan (but not inf)
     if(dvsq!=dvsq || dpdW!=dpdW || dpdvsq!=dpdvsq || dpdWp!=dpdWp || dEprimedWp!=dEprimedWp) dEprimedWp=0.0; // indicates still problem
 
 
@@ -3293,7 +3310,7 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     // new result for new residual
     ////////dScprimedWp = -Sc + D*(dSsdWp*Wp + Ssofchi);
 
-    // check for nan
+    // check for nan (but not inf)
     if(dvsq!=dvsq || dSsdW!=dSsdW || dSsdvsq!=dSsdvsq || dSsdWp!=dSsdWp || dScprimedWp!=dScprimedWp) dScprimedWp=0.0; // indicates still problem
 
 
@@ -3877,7 +3894,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
                                   void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
-  FTYPE f, f_old, df, df_old, dx[NEWT_DIM], dx_old[NEWT_DIM], x_old[NEWT_DIM], x_older[NEWT_DIM], resid[NEWT_DIM], jac[NEWT_DIM][NEWT_DIM];
+  FTYPE f, f_old, df, df_old, dx[NEWT_DIM], dx_old[NEWT_DIM], x_old[NEWT_DIM], x_older[NEWT_DIM], x_olderer[NEWT_DIM], resid[NEWT_DIM], jac[NEWT_DIM][NEWT_DIM];
   FTYPE errx, errx_old, errx_oldest, x_orig[NEWT_DIM];
   int    n_iter, id, jd, i_extra, doing_extra;
   FTYPE randtmp, tmp;
@@ -3896,6 +3913,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   int it;
   int foundnan;
   int diddamp=0;
+  int didcycle=0;
   void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
@@ -3911,7 +3929,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
   errx_old = 2.;
   df = df_old = f = f_old = 1.;
   i_extra = doing_extra = 0;
-  for( id = 0; id < n ; id++)  x_older[id]=x_old[id] = x_orig[id] = x[id] ; // save initial guess as orig and old
+  for( id = 0; id < n ; id++)  x_olderer[id]=x_older[id]=x_old[id] = x_orig[id] = x[id] ; // save initial guess as orig and old
   vsq_old = vsq = W = W_old = 0.;
 
   for( id = 0; id < n ; id++) DAMPFACTOR[id]=1.0; // Jon's mod: start out fast
@@ -3932,7 +3950,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
     (newtonstats->lntries)++;
 
 
-    if((int)(newtonstats->lntries) > ITERDAMPSTART && diddamp==0){
+    if((int)(newtonstats->lntries) > ITERDAMPSTART && diddamp==0 && didcycle==0){
       for( id = 0; id < n ; id++) DAMPFACTOR[id]=0.5; // Jon's mod: try to catch bad closed loop cycles that can occur, e.g., when cubic type behavior
     }
 
@@ -3952,7 +3970,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 
 
     // DEBUG:
-    //for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%21.15g dx[%d]=%2.15g errx=%21.15g diddamp=%d dampfactor=%21.15g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it]);
+    //    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle);
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
@@ -3991,6 +4009,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
     errx = 0.;
     f_old = f;
     for( id = 0; id < n ; id++) {
+      x_olderer[id]=x_older[id];  //x_olderer contains 2 steps ago
       x_older[id]=x_old[id];  //x_older contains last step's W used by above funcd() to get resid and dx
       x_old[id] = x[id] ; // x_old contains just used W that was used to compute funcd() to get present resid and dx
     }
@@ -4127,6 +4146,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
       if(n_iter==0){
         for(id=0;id<n;id++) {
           // start history
+          x_olderer[id]=x[id];
           x_older[id]=x[id];
           x_old[id]=x[id];
           dx_old[id]=dx[id];
@@ -4157,20 +4177,47 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
           // Ensure this newly chosen "old" value gives reasonable result
           (*funcd) (x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);  /* returns with new dx, f, df */
           for(id=0;id<n;id++){
-            if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0     
+            if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0 or Ss=nan or inf
 #if(PRODUCTION==0)
-              if(debugfail>=2) dualfprintf(fail_file,"Old value failed too\n");
+              if(debugfail>=2) dualfprintf(fail_file,"Old value failed too: resid[%d]=%26.20g jac[0][%d]=%26.20g\n",id,resid[id],id,jac[0][id]);
 #endif
               return(1); // then old fails to work too
             }
             // reset old values so will use this good value if immediately hit bad solution
             // This restarts history
+            x_olderer[id]=x[id];
             x_older[id]=x[id];
             x_old[id]=x[id];
             dx_old[id]=dx[id];
           }
         }
-      }
+#if(1)
+        else{
+          // can only use x_olderer if 3 steps, but add 1 extra.
+          // Only do if not just doing extra steps after already error is low (so avoid errx=0 case where will cycle).
+          if(n_iter>4 && doing_extra==0){
+            // see if cycling Newton steps with no change in errx
+#if(0)
+            // DEBUG:
+            if(nstep==19 && steppart==1){// && i==0 && j==0 && k==26){
+              dualfprintf(fail_file,"errx=%26.20g errx_old=%26.20g errx_oldest=%26.20g dx=%26.20g dx_old=%26.20g x=%26.20g x_old=%26.20g x_older=%26.20g  x_olderer=%26.20g\n",errx,errx_old,errx_oldest,dx[0],dx_old[0],x[0],x_old[0],x_older[0],x_olderer[0]);
+              dualfprintf(fail_file,"differrx=%26.20g is=%d diffx=%26.20g is=%d\n",errx_old-errx_oldest,errx_old==errx_oldest,x[0]-x_olderer[0],x[0]==x_olderer[0]);
+            }
+#endif
+
+            if( newt_cyclecheck(n,errx,errx_old,errx_oldest,dx,dx_old,x,x_old,x_older,x_olderer) ){
+              if(debugfail>=2) dualfprintf(fail_file,"Caught in cycle, trying to damp: n_iter=%d.\n",n_iter);
+              // if hits another cycle, damp more
+              for(id=0;id<n;id++) DAMPFACTOR[id]=0.1*DAMPFACTOR[id]; // severe damp to try to get good step.
+              diddamp=1; // tells start of loop to not reset DAMPFACTOR
+              didcycle=1; // tells not to reset damp because having trouble and should stay damped
+            }
+          }// end if avoiding cycle
+        }
+#endif
+      }// end else if not first step
+
+
 #endif
       
 
@@ -4317,15 +4364,25 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
    
 
     
+    // see if reached tolerance
     if(newt_errorcheck(errx, x[0],  wglobal) && (doing_extra == 0) && (newt_extracheck(errx,x[0],wglobal) > 0) ) {
       doing_extra = 1;
     }
+
+    // see if repeating Newton steps with no change in errx
+    if(doing_extra==0 && newt_repeatcheck(n,errx,errx_old,errx_oldest,dx,dx_old,x,x_old,x_older,x_olderer) ){
+      if(debugfail>=2) dualfprintf(fail_file,"Repeat found\n");
+      doing_extra = 1;
+    }
+
 
     if( doing_extra == 1 ) i_extra++ ;
 
     if( (newt_errorcheck(errx, x[0],  wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(errx,x[0],wglobal)) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
       keep_iterating = 0;
     }
+
+
 
     n_iter++;
 
@@ -4507,7 +4564,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
 
 
 
-
+// see if meet tolerance
 static int newt_errorcheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
 {
 
@@ -4523,6 +4580,51 @@ static int newt_errorcheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
   }
 }
 
+
+
+// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
+static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer)
+{
+  int repeat;
+  int i;
+
+  repeat=0;
+  for(i=0;i<n;i++){
+  
+    if( (x[i]==x_olderer[i] && fabs(dx[i])==fabs(dx_old[i])) && (errx_oldest==errx_old) ){
+      repeat++;
+    }
+  }
+
+  if(repeat==n) return(1);
+  else return(0);
+
+
+}
+
+
+// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
+static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer)
+{
+  int cycle;
+  int i;
+
+  cycle=0;
+  for(i=0;i<n;i++){
+  
+    //    dualfprintf(fail_file,"%d %d %g %g %g %g\n",x[i]==x_olderer[i],errx_oldest==errx_old,x[i],x_olderer[i],errx_oldest,errx_old);
+    if( (x[i]==x_olderer[i]) && (errx_oldest==errx_old) ){
+      cycle++;
+    }
+  }
+
+  if(cycle==n) return(1);
+  else return(0);
+
+
+}
+
+// see if done with extra iterations
 static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
 {
 

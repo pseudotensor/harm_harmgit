@@ -397,8 +397,8 @@
 #define N3 30
 
 // can choose any spherical polar coordinate system
-#define MCOORD SPCMINKMETRIC
-//#define MCOORD KSCOORDS
+//#define MCOORD SPCMINKMETRIC
+#define MCOORD KSCOORDS
 
 #define BEAMNO 1 // 1-4
 
@@ -522,7 +522,7 @@
 #define UTOPRIMTRYAGAIN 0
 #define WHICHEOS IDEALGAS
 
-#define CHECKONINVERSION 0 // can slow things down
+#define CHECKONINVERSION 1 // can slow things down
 #define CHECKONINVERSIONRAD 1 // can independently check radiation inversion when no corrections
 
 #if(DODISS || DOLUMVSR || DODISSVSR)
