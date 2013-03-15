@@ -211,9 +211,9 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     usedhotinversion=1;
     
 
-    if(pr[UU]>1.0) dualfprintf(fail_file,"0DEATH\n");
-    if(pr[UU]<1E-13) dualfprintf(fail_file,"0DEATH2\n");
-    if(Ugeomfree0[ENTROPY]<-10) dualfprintf(fail_file,"0DEATH3\n");
+    //    if(pr[UU]>1.0) dualfprintf(fail_file,"0DEATH\n");
+    //    if(pr[UU]<1E-13) dualfprintf(fail_file,"0DEATH2\n");
+    //    if(Ugeomfree0[ENTROPY]<-10) dualfprintf(fail_file,"0DEATH3\n");
 
 
 
