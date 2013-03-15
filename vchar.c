@@ -355,9 +355,9 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     }
     
 #if(USESASHAREWRITE==0)
-    dualfprintf(fail_file, "\n\t %21.15g %21.15g %21.15g %21.15g %21.15g\n", A, B, C, discr, cms2);
+    dualfprintf(fail_file, "\n\t A=%21.15g B=%21.15g C=%21.15g discr=%21.15g cms2=%21.15g\n", A, B, C, discr, cms2);
 #else
-    dualfprintf(fail_file, "\n\t %21.15g %21.15g %21.15g\n", A, discr, cms2);
+    dualfprintf(fail_file, "\n\t A=%21.15g discr=%21.15g cms2=%21.15g\n", A, discr, cms2);
 #endif
     dualfprintf(fail_file, "\n\t q->ucon: %21.15g %21.15g %21.15g %21.15g\n", q->ucon[0],
 	    q->ucon[1], q->ucon[2], q->ucon[3]);

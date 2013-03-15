@@ -64,7 +64,7 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
   PLOOP(pliter,pl) fluxinput[pl] += fluxinputem[pl];
 
   // DEBUG:
-  //  PALLLOOP(pl) dualfprintf(fail_file,"ALLBEFORE: pl=%d flux=%21.15g\n",pl,fluxinput[pl]);
+  //  if((fabs(pr[U1])>1.0 || fabs(fluxinput[U1])>1.0) && (geom->i==10 || geom->i==9 || geom->i==11)&&(geom->k==0 || geom->k==-1 || geom->k==1)) PALLLOOP(pl) dualfprintf(fail_file,"ALLBEFORE: ijk=%d %d %d : pl=%d pr=%g flux=%21.15g\n",geom->i,geom->j,geom->k,pl,pr[pl],fluxinput[pl]);
 
 
   // convert from UNOTHING->returntype
@@ -135,7 +135,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
 
   if(EOMRADTYPE!=EOMRADNONE){
 
-    // define RAD terms
+    // define RAD terms (as separate fluid from MHD fluid)
     primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad);
 
     //  UtoU_rad(UNOTHING,returntype,geom,fluxinputrad,fluxrad);
@@ -1035,20 +1035,20 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
 {
   void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
-  void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir);
+  //  void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir);
   void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
   VARSTATIC int j;
-  VARSTATIC FTYPE mhdma[NDIM],mhdrad[NDIM],mhdem[NDIM];
+  VARSTATIC FTYPE mhdma[NDIM],mhdem[NDIM];//,mhdrad[NDIM]
   VARSTATIC FTYPE mhddiagpress[NDIM];
 
 
   mhd_calc_0_ma(pr, dir, q, mhdma,mhddiagpress);
-  mhd_calc_rad(pr, dir, geom, q, mhdrad);
+  //  mhd_calc_rad(pr, dir, geom, q, mhdrad); // DUH, wrong
   mhd_calc_em(pr, dir, geom, q, mhdem);
 
   
-  // add up MA+RAD+EM
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdrad[j] + mhdem[j];
+  // add up MA+EM (no RAD here in T because R kept as separate fluid)
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j]; // + mhdrad[j]
 
 }
 
@@ -1126,17 +1126,17 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
   void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdma, FTYPE *mhddiagpress);
   void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdem);
   VARSTATIC FTYPE mhdma[NDIM];
-  VARSTATIC FTYPE mhdrad[NDIM];
+  //  VARSTATIC FTYPE mhdrad[NDIM];
   VARSTATIC FTYPE mhdem[NDIM];
   VARSTATIC int j;
   VARSTATIC FTYPE mhddiagpress[NDIM];
 
   mhd_calc_norestmass_ma(pr, dir, geom, q, mhdma, mhddiagpress);
-  mhd_calc_rad(pr, dir, geom, q, mhdrad);
+  //  mhd_calc_rad(pr, dir, geom, q, mhdrad);
   mhd_calc_em(pr, dir, geom, q, mhdem);
 
   // add up MA and RAD and EM parts
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdrad[j] + mhdem[j];
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j]; // + mhdrad[j]
 
 }
 
@@ -1429,7 +1429,6 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
     Ugeomfree[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
   }
   sourcephysics(pr, ptrgeom, q, Ugeomfree, dUother, dUcomp);
-
 
   //////////////////
   //

@@ -1545,6 +1545,18 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
   extern int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
   extern int Utoprim_coldgrmhd(FTYPE *U, struct of_geom *geom, FTYPE *pr, int *positivityproblem);
   int positivityproblem;
+  int pliter,pl;
+
+
+
+  //  FTYPE Ugeomfree0[NPR];
+  //  if(ptrgeom->i==10 && ptrgeom->k==0){
+  //    PLOOP(pliter,pl) Ugeomfree0[pl]=Ugeomfree[pl];
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"before inversion: pl=%d pr=%g\n",pl,pr[pl]);
+  //    if(pr[UU]>0.1) dualfprintf(fail_file,"beforeADEATHUU: ijk=%d %d %d u=%g %g (%g)\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[UU],Ugeomfree[UU],Ugeomfree0[UU]);
+  //    if(fabs(pr[U1])>1.0) dualfprintf(fail_file,"beforeADEATHU1: ijk=%d %d %d u=%g %g (%g)\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[U1],Ugeomfree[U1],Ugeomfree0[U1]);
+  //  }
+
 
   /////////////
   //
@@ -1572,8 +1584,12 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
     myexit(1769384215);
   }
 
-  //  int pliter,pl;
-  //  PLOOP(pliter,pl) dualfprintf(fail_file,"after inversion: pl=%d pr=%g\n",pl,pr[pl]);
+
+  //  if(ptrgeom->i==10 && ptrgeom->k==0){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"after inversion: pl=%d pr=%g\n",pl,pr[pl]);
+  //    if(pr[UU]>0.1) dualfprintf(fail_file,"ADEATHUU: ijk=%d %d %d u=%g %g (%g)\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[UU],Ugeomfree[UU],Ugeomfree0[UU]);
+  //    if(fabs(pr[U1])>1.0) dualfprintf(fail_file,"ADEATHU1: ijk=%d %d %d u=%g %g (%g)\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[U1],Ugeomfree[U1],Ugeomfree0[U1]);
+  //  }
 
   /////////////
   //
@@ -1586,8 +1602,12 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
   if(EOMRADTYPE!=EOMRADNONE) u2p_rad(Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
   //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
-  //  PLOOP(pliter,pl) dualfprintf(fail_file,"after rad inversion: pl=%d pr=%g\n",pl,pr[pl]);
 
+  //  if(ptrgeom->i==10 && ptrgeom->k==0){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"after rad inversion: pl=%d pr=%g\n",pl,pr[pl]);
+  //    if(pr[UU]>0.1) dualfprintf(fail_file,"BDEATHUU: ijk=%d %d %d u=%g %g (%g)\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[UU],Ugeomfree[UU],Ugeomfree0[UU]);
+  //    if(fabs(pr[U1])>1.0) dualfprintf(fail_file,"BDEATHU1: ijk=%d %d %d u=%g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pr[U1],Ugeomfree[U1],Ugeomfree0[U1]);
+  //  }
   
   return(0);
 }

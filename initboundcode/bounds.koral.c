@@ -985,13 +985,14 @@ int bound_radbeam2dbeaminflow(int dir,
   
     if(BCtype[X3DN]==RADBEAM2DBEAMINFLOW && totalsize[3]>1 && mycpupos[3] == 0 ){
 
-
-	  FTYPE RHOAMB=1.e0/RHOBAR;
+      extern int BEAMNO,FLATBACKGROUND;
+      FTYPE RHOAMB=1.e0/RHOBAR;
 	  FTYPE TAMB=1e7/TEMPBAR;
 	  FTYPE PAR_D=1./RHOBAR;
 	  FTYPE PAR_E=1e-4/RHOBAR;
 
-	  int IFBEAM=0; // whether to have a beam
+      // BEAM PROPERTIES
+	  int IFBEAM=1; // whether to have a beam
 	  FTYPE TLEFT=1e9/TEMPBAR;
 	  FTYPE NLEFT=0.999;
 
@@ -1036,12 +1037,13 @@ int bound_radbeam2dbeaminflow(int dir,
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 		  
+          // NOTEMARK: only really makes sense near the hole if in KSCOORDS
 		  if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
 		  if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
 
 
 		  // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \phi at those i
-		  if(0      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
+		  if(1      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
 
 			// local geom
 			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
@@ -1065,6 +1067,18 @@ int bound_radbeam2dbeaminflow(int dir,
 			FTYPE ERADAMB;
 			FTYPE rho,uint,Vr;
 			FTYPE uradx,urady,uradz;
+            FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
+
+
+            // get coordinate basis in VEL4 format
+            ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[URAD1],uradcon,othersrad);
+            // get coordinate basis in MCOORD basis
+            uradx=uradcon[1]*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
+            urady=uradcon[2]*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
+            uradz=uradcon[3]*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
+            if(uradz>0.0) uradz=0.0; // limit so no arbitrary radiative inflow
+
+
 			if(FLATBACKGROUND){
 			  Vr=0.0;
 			  rho=RHOAMB;
@@ -1073,12 +1087,7 @@ int bound_radbeam2dbeaminflow(int dir,
 
 			  // override so like outflow conditions to avoid shear at boundary
 			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
-			  // need coordinate basis
-			  uradx=MACP0A1(prim,i,j,k,URAD1)*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
-			  urady=MACP0A1(prim,i,j,k,URAD2)*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
-			  uradz=MACP0A1(prim,i,j,k,URAD3)*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
 
-			  if(uradz>0.0) uradz=0.0; // limit so no arbitrary radiative inflow
 			}
 			else{
 			  //zaczynam jednak od profilu analitycznego:   
@@ -1097,20 +1106,19 @@ int bound_radbeam2dbeaminflow(int dir,
 			  
 			  // override so like outflow conditions to avoid shear at boundary
 			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
-			  uradx=MACP0A1(prim,i,j,k,URAD1)*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
-			  urady=MACP0A1(prim,i,j,k,URAD2)*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
-			  uradz=MACP0A1(prim,i,j,k,URAD3)*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
-
-			  if(uradz>0.0) uradz=0.0; // limit so no arbitrary radiative inflow
 			}
 
 			//primitives in whichvel,whichcoord
 			if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
 			  
-			  // beam injection (override ERAD and uradz)
+			  // beam injection
+              // override URAD0
 			  FTYPE ERADINJ;
 			  ERADINJ=calc_LTE_EfromT(TLEFT);
-			  uradz=1.0/sqrt(1.0 - NLEFT*NLEFT); // radiation 4-velocity
+              // override uradz
+			  uradz=1.0/sqrt(1.0 - NLEFT*NLEFT);
+
+              //              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradz);
 
 			  MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
 			  MACP0A1(prim,i,j,k,URAD1) = uradx;
@@ -1118,6 +1126,9 @@ int bound_radbeam2dbeaminflow(int dir,
 			  MACP0A1(prim,i,j,k,URAD3) = uradz;
 			}
 			else{ //no beam
+
+              //              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g\n",i,k,ERADAMB);
+
 			  //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
 			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
 			  MACP0A1(prim,i,j,k,URAD1) = uradx;
@@ -1126,9 +1137,20 @@ int bound_radbeam2dbeaminflow(int dir,
 			}
 
 
+            //            if(i==10 && k==0){
+            //              PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
+            //              if(MACP0A1(prim,i,j,k,UU)>0.1) dualfprintf(fail_file,"BEFORE BC DEATHUU: ijk=%d %d %d u=%g\n",i,j,k,MACP0A1(prim,i,j,k,UU));
+            //              if(fabs(MACP0A1(prim,i,j,k,U1))>1.0) dualfprintf(fail_file,"BEFORE BC DEATHU1: ijk=%d %d %d u=%g\n",i,j,k,MACP0A1(prim,i,j,k,U1));
+            //            }
+
 			// get all primitives in WHICHVEL/PRIMECOORDS value
 			primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
+            //            if(i==10 && k==0){
+            //              PLOOP(pliter,pl) dualfprintf(fail_file,"AFTERBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
+            //              if(MACP0A1(prim,i,j,k,UU)>0.1) dualfprintf(fail_file,"AFTER BC DEATHUU: ijk=%d %d %d u=%g\n",i,j,k,MACP0A1(prim,i,j,k,UU));
+            //              if(fabs(MACP0A1(prim,i,j,k,U1))>1.0) dualfprintf(fail_file,"AFTER BC DEATHU1: ijk=%d %d %d u=%g\n",i,j,k,MACP0A1(prim,i,j,k,U1));
+            //            }
 
 		  }// end if not staggered field
 
@@ -1188,7 +1210,7 @@ int bound_radbeam2dflowinflow(int dir,
   
     if(BCtype[X1UP]==RADBEAM2DFLOWINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
 
-
+      extern int FLATBACKGROUND;
 	  FTYPE RHOAMB=1.e0/RHOBAR;
 	  FTYPE TAMB=1e7/TEMPBAR;
 	  FTYPE PAR_D=1./RHOBAR;

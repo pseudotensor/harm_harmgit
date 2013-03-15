@@ -8,7 +8,7 @@
 // Rin, Rout, tf, DTdumpgen
 
 
-
+int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
 
 
 
@@ -196,7 +196,9 @@ int init_global(void)
 	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
 	DTr = 100; //number of time steps for restart dumps
-	tf = 1E2; //final time
+    if(WHICHPROBLEM==RADPULSEPLANAR) tf=1E5;
+	else if(WHICHPROBLEM==RADPULSE) tf = 35; //final time
+	else if(WHICHPROBLEM==RADPULSE3D) tf = 70; //final time
   }
 
   /*************************************************/
@@ -293,7 +295,7 @@ int init_global(void)
 
 	DTr = 100; //number of time steps for restart dumps
 	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
-	tf = 3E2; //final time (good enough)
+	tf = 3E2; //final time (good enough to see any evolution and errored evolution)
   }
 
   /*************************************************/
@@ -368,6 +370,11 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADBEAM2D){
 
+    BEAMNO=1; // 1-4
+// whether constant or radially varying background
+// ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
+    FLATBACKGROUND=1;
+
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
@@ -390,6 +397,7 @@ int init_global(void)
 	//	BCtype[X3UP]=FREEOUTFLOW;
 	BCtype[X3UP]=OUTFLOW;
 	BCtype[X3DN]=RADBEAM2DBEAMINFLOW;
+
 
 	FTYPE DTOUT1;
 	if (BEAMNO==1){
@@ -693,6 +701,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPA 0.
 //#define KAPPAES (0.0)
 //#define KAPPAES (1E-7)
+//#define KAPPAES (1E-4*1.09713E-18*1E6)
 #define KAPPAES (1E-4*1.09713E-18*1E3)
 //#define KAPPAES (1E-4*1.09713E-18*1E-0)
 //#define KAPPAES (1E-4*1.09713E-18*0.2)

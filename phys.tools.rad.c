@@ -137,6 +137,7 @@ FTYPE compute_dt()
 }
 
 // compute changes to U (both T and R) using implicit method
+// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.
 static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE compute_dt();
@@ -489,12 +490,18 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
 void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
 {
+  int pliter,pl;
+
+  //  if(ptrgeom->i==10 && ptrgeom->k==0){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE KORALSOURCE: pl=%d U=%g\n",pl,Uin[pl]);
+  //  }
 
   // KORALTODO: SUPERGODMARK: Need to add NR 2007 page940 17.5.2 StepperSie method here as higher-order alternative if 1st order Newton breaks
 
   if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 	
 	koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
 	
@@ -509,6 +516,7 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 		myexit(39475251);
 	  }
 	}
+
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
 
@@ -522,8 +530,10 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 	  // assumes below doesn't modify pin,Uin,ptrgeom, or q
 	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
 	  //	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+
 	}
 	else{
+
 	  // else just continue with implicit, with only cost extra calc_Gd() evaluation
 	
 	  // DEBUG (to comment out!):
@@ -540,16 +550,25 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 		  myexit(39475252);
 		}
 	  }
-
 	}
+
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODNONE){
 
   }
   else{
+
 	dualfprintf(fail_file,"3 No Such EOMRADTYPE=%d\n",EOMRADTYPE);
 	myexit(18754363);
+
   }
+
+ 
+  // if(ptrgeom->i==10 && ptrgeom->k==0){
+  //    dualfprintf(fail_file,"dUcomp=%g %g %g %g\n",dUcomp[RADSOURCE][UU],dUcomp[RADSOURCE][U1],dUcomp[RADSOURCE][U2],dUcomp[RADSOURCE][U3]);
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER KORALSOURCE: pl=%d U=%g\n",pl,Uin[pl]);
+  //  }
+
 }
 
 
@@ -735,12 +754,12 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // Assume \chi defined in fluid frame (i.e. not radiation frame).
   
   // KORALTODO: below 2 lines were how harm = koralinsert was before
-  //  FTYPE kappa;
-  //  calc_kappa(pr,geom,&kappa);
-
-  // seems paper uses full \chi
-  FTYPE chi;
+  // seems paper uses full \chi, but fails to work!  Takes single step and has inversion failures.  KORALTODO SUPERGODMARK!
+  FTYPE kappa,chi;
   calc_chi(pr,geom,&chi);
+  //  calc_kappa(pr,geom,&kappa);
+  //  chi=kappa;
+
 
   //characterisitic wavespeed in the radiation rest frame
   FTYPE vrad2=THIRD;

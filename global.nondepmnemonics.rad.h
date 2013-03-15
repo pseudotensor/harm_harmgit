@@ -65,22 +65,24 @@
 #define OLEKCHOICE 1
 
 #define CASECHOICE JONCHOICE // choose
+//#define CASECHOICE OLEKCHOICE // choose
 
 #define DORADFIXUPS 1 // whether to fixup inversion failures using harm fixups
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 1
+#define IMPLICITREVERTEXPLICIT 0
 
-#define SPACETIMESUBSPLITNONE 0
-#define TAUSUPPRESS 1
+// 0 : tau suppression
+// 1 : space-time merged
+// 2 : all space merged but separate from time
+// 3 : full split
+#define TAUSUPPRESS 0
+#define SPACETIMESUBSPLITNONE 1
 #define SPACETIMESUBSPLITTIME 2
 #define SPACETIMESUBSPLITALL 3
 #define SPACETIMESUBSPLITSUPERALL 4
 
-// 0 : space-time merged
-// 1 : all space merged but separate from time
-// 2 : full split
-#define WHICHSPACETIMESUBSPLIT SPACETIMESUBSPLITNONE
+#define WHICHSPACETIMESUBSPLIT TAUSUPPRESS
 
 
 

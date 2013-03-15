@@ -2123,6 +2123,8 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
   void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 
 
+
+
   // finally assign new Uf and ucum
   // store uf to avoid recomputing U(pf) used later as pb for advance()
   PLOOP(pliter,pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
@@ -2138,7 +2140,6 @@ static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann,
     PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
   }
 #endif
-
 
 }
 

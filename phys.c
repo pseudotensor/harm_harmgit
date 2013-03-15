@@ -172,7 +172,7 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 	// Get MHD stress-energy tensor
     DLOOPA(j) mhd_calc(pr, j, ptrgeom, q, mhd[j]);
 
-	// Get radiation stress-energy tensor
+	// Get radiation stress-energy tensor (separate fluid from MHD fluid)
 	if(EOMRADTYPE!=EOMRADNONE){
 	  DLOOPA(j) mhd_calc_rad(pr, j, ptrgeom, q, mhdrad[j]);
 	}
@@ -204,7 +204,7 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 	  for(l=0;l<NDIM;l++)  DLOOP(j,k){
 		  connterm=GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
 		  dUconn[UU+l]    += mhd[j][k]    * connterm;
-		  dUconn[URAD0+l] += mhdrad[j][k] * connterm;
+          dUconn[URAD0+l] += mhdrad[j][k] * connterm;
 		}
 	}
 	else{
