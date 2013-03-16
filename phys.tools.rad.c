@@ -558,7 +558,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 
 	  if(realdt>dtsubuse && itersub==0 || dtdiff>0.0 && itersub>0){ // then sub-cycling
 
-        dualfprintf(fail_file,"DoingSUBCYCLE: iter=%d : dtsub=%g dtsubuse=%g dttrue=%g dtcum=%g realdt=%g\n",itersub,dtsub,dtsubuse,dttrue,dtcum,realdt);
+        //        dualfprintf(fail_file,"DoingSUBCYCLE: iter=%d : dtsub=%g dtsubuse=%g dttrue=%g dtcum=%g realdt=%g\n",itersub,dtsub,dtsubuse,dttrue,dtcum,realdt);
 
 
 		// initialize counters
