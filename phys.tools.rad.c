@@ -13,6 +13,7 @@ static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,F
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
+static int opacity_interpolated_urfconrel(FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *urfconrel);
 
 
 // wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
@@ -509,7 +510,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
   PLOOP(pliter,pl) radsource[pl] = 0;
 
 
-  // KORALTODO: Based upon size of Gd, sub-cycle this force.
+  // Based upon size of Gd, sub-cycle this force.
   // 1) calc_Gd()
   // 2) locally set dtsub~dt/\tau or whatever it should be
   // 3) update T^t_\nu and R^t_\nu
@@ -693,7 +694,7 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
 	  // then just take explicit step!
 	  // assumes below doesn't modify pin,Uiin, Ufin, CUf,ptrgeom, or q
 	  koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
-      dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
+      //      dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
 
 	}
 	else{
@@ -929,6 +930,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // Assume \chi defined in fluid frame (i.e. not radiation frame).
   
   // KORALTODO: below 2 lines were how harm = koralinsert was before
+  // KORALTODO: Need to still use total wave speed for timestep limit!
   // seems paper uses full \chi, but fails to work!  Takes single step and has inversion failures.  KORALTODO SUPERGODMARK!
   FTYPE kappa,chi;
   calc_chi(pr,geom,&chi);
@@ -1989,8 +1991,9 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 #define TOZAMOFRAME 0 // reduce to ZAMO gammarel=1 frame (e.g. in non-GR that would be grid frame or v=0 frame or gammarel=1).
 #define TOFLUIDFRAME 1 // reduce to using fluid frame (probably more reasonable in general).
+#define TOOPACITYDEPENDENTFRAME 2
 
-#define M1REDUCE TOFLUIDFRAME // choose
+#define M1REDUCE TOOPACITYDEPENDENTFRAME // choose
 
 //**********************************************************************
 //**********************************************************************
@@ -2210,6 +2213,11 @@ delta = ((4*__64644*gv33 + \
 3*__64642*__64668*__64670 - \
 6*__64642*gv12*gv13*__64674)*__64682*__64683 + 6*__64642*Rtt*__64720 \
              + 3*__64642*__64715);
+
+// delta scales like gRR^2
+ if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+ //dualfprintf(fail_file,"delta=%g Rtt=%g\n",delta,Rtt);
+
 gamma2 = -((2*__64644*gv33 + __64650 - 4*gv23*gv24*gv34 + __64654 + __64655 + \
 2*gv22*__64653 + __64662 + (2*__64647 + (__64652 - gcttp1*__64652 - \
 2*gv22*gv33)*gv44 + __64671 + __64675)*__64682*__64683 + \
@@ -2220,7 +2228,7 @@ gv22)*gv33)*gv44 + __64671 + __64675)*__64682*__64683)/__64642 + \
 2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __64698)));
 }
 
- if(gamma2<=0.0)
+ if(gamma2<=0.0 || delta<0.0)
 {
   // this is probably not the right root ever
   dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
@@ -2272,6 +2280,11 @@ delta=((-3*__81363*__81364 + 4*__81364*gv33 - 3*__81367*__81370 + \
 + 4*__81368 + 3*__81374*gv33 - 4*gv22*gv33)*gv44)*__81397*__81398 - \
 6*Rtt*__81447 - 3*(__81402 + __81404 + __81406 + 2*gv24*Rtx*Rtz + \
                    2*gv34*Rty*Rtz + __81413));
+
+// delta scales like gRR^2
+ if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+ // dualfprintf(fail_file,"deltaalt=%g Rtt=%g\n",delta,Rtt);
+
 gamma2 = -((-(__81363*__81364 + 2*__81364*gv33 + __81367*(-__81368 + \
 gv22*gv33) + 2*gv12*gv13*gv24*gv34 - 4*gv23*gv24*gv34 - \
 __81374*__81375 + 2*gv22*__81375 + 2*gv14*__81430 + (__81384 + \
@@ -2343,6 +2356,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
 
 #if(PRODUCTION==0)
 		dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -2458,6 +2472,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
 
 #if(PRODUCTION==0)
 		dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -2471,10 +2486,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-
-		// KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
-		// I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
-
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
 
 #if(PRODUCTION==0)
 		dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -2502,6 +2514,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
 
 #if(PRODUCTION==0)
 		dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT.\n");
@@ -2553,6 +2566,42 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
   return 0;
 }
+
+
+
+
+
+// interpolate between optically thick and thin limits when no u2p_rad() inversion solution
+// KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
+// I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
+static int opacity_interpolated_urfconrel(FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *urfconrel)
+{
+  int jj;
+  FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
+
+  FTYPE gammafluid,qsqfluid;
+  gamma_calc_fromuconrel(&pp[U1-1],ptrgeom,&gammafluid,&qsqfluid);
+  FTYPE gammarel2fluid=gammafluid*gammafluid;
+  FTYPE Erffluid=3.*Av[0]*alpha*alpha/(4.*gammarel2fluid-1.0);  // JCM
+
+  FTYPE gammarad,qsqrad;
+  gamma_calc_fromuconrel(&pp[URAD1-1],ptrgeom,&gammarad,&qsqrad);
+  FTYPE gammarel2rad=gammarad*gammarad;
+  FTYPE Erfrad=3.*Av[0]*alpha*alpha/(4.*gammarel2rad-1.0);  // JCM
+
+  // get tautot based upon previous pp
+  FTYPE tautot[NDIM],tautotmax;
+  calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+  // now set urfconrel.  Choose fluid if tautotmax>=2/3 (updated fluid value), while choose previous radiation value (i.e. static!)
+  FTYPE tautotmaxlim=MIN(fabs(tautotmax),1.0); // limit for interpolation below
+  Erf = (1.0-tautotmaxlim)*Erfrad + tautotmaxlim*Erffluid;
+  SLOOPA(jj) urfconrel[jj] = (1.0-tautotmaxlim)*pp[URAD1+jj-1] + tautotmaxlim*pp[U1+jj-1];
+
+  //  dualfprintf(fail_file,"i=%d tautotmax=%g tautotmaxlim=%g\n",ptrgeom->i,tautotmax,tautotmaxlim);
+
+  return(0);
+}
+
 
 //**********************************************************************
 //**********************************************************************
@@ -2860,7 +2909,7 @@ int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom 
 //*********************************************************************
 //******* calculates total opacity over dx[] ***************************
 //**********************************************************************
-int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tautot)
+int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
 {
 #if(0)
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -2878,10 +2927,14 @@ int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tautot)
   calc_kappa(pp,ptrgeom,&kappa);
   calc_kappaes(pp,ptrgeom,&kappaes);
   chi=kappa+kappaes;
+  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
 
-  tautot[0]=chi*dx[0];
-  tautot[1]=chi*dx[1];
-  tautot[2]=chi*dx[2];
+  int jj;
+  *tautotmax=0.0;
+  SLOOPA(jj){
+    tautot[jj]=chi * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])))*NxNOT1[jj];
+    *tautotmax=MAX(*tautotmax,tautot[jj]);
+  }
 
   return 0;
 }
@@ -2889,8 +2942,7 @@ int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tautot)
 //**********************************************************************
 //******* calculates abs opacity over dx[] ***************************
 //**********************************************************************
-int
-calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
+int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabsmax)
 {
 #if(0)
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -2905,9 +2957,14 @@ calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dx, FTYPE *tauabs)
   FTYPE kappa;
   calc_kappa(pp,ptrgeom,&kappa);
 
-  tauabs[0]=kappa*dx[0];
-  tauabs[1]=kappa*dx[1];
-  tauabs[2]=kappa*dx[2];
+  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
+
+  int jj;
+  *tauabsmax=0.0;
+  SLOOPA(jj){
+    tauabs[jj]=kappa * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])))*NxNOT1[jj];
+    *tauabsmax=MAX(*tauabsmax,tauabs[jj]);
+  }
 
   return 0;
 }

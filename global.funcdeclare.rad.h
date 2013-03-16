@@ -54,8 +54,9 @@ extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);
 extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
 extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
 extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
-extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dl, FTYPE *tautot);
-extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *dl, FTYPE *tauabs);
+extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
+extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabsmax);
+
 extern FTYPE calc_LTE_EfromT(FTYPE);
 extern FTYPE calc_LTE_TfromE(FTYPE);
 extern FTYPE calc_LTE_Efromurho(FTYPE E,FTYPE);
