@@ -204,7 +204,7 @@ int init_global(void)
     if(WHICHPROBLEM==RADPULSEPLANAR){
       tf=1E5;
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=100.0; // Koral output steps
-      //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1; // testing
+      //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1; // testing
     }
     else if(WHICHPROBLEM==RADPULSE){
       tf = 35; //final time
@@ -730,7 +730,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPAES defines fractoin of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
-#define KAPPAES (1E3)
+//#define KAPPAES (1E3)
+#define KAPPAES (10.0)
+//#define KAPPAES (1E-1)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA)
 #define KAPPAESUSER(rho,T) (rho*KAPPAES)

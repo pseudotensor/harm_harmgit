@@ -35,9 +35,11 @@
 
 #define RADSOURCEMETHODNONE 0
 #define RADSOURCEMETHODEXPLICIT 1
-#define RADSOURCEMETHODEXPLICITSUBCYCLE 2
+#define RADSOURCEMETHODEXPLICITSUBCYCLE 2 // leads to dt->0 unless use SPACETIMESUBSPLITMHDRAD that is a bit noisy
 #define RADSOURCEMETHODIMPLICIT 3
-#define RADSOURCEMETHODIMPLICITEXPLICITCHECK 4 // KORALTODO
+#define RADSOURCEMETHODIMPLICITEXPLICITCHECK 4 // works
+
+#define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term
 
 
 ///////////////////
@@ -57,7 +59,7 @@
 #define IMPCONV (1.e-6)
 #define IMPMAXITER (50)
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
-#define COUREXPLICIT (0.25) // Effective Courant-like factor for stiff explicit radiation source term
+
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
 // RADSHOCKFLAT 1 causes excessive oscillations in RADBEAMFLAT at injection point
 
@@ -71,19 +73,27 @@
 #define DORADFIXUPS 1 // whether to fixup inversion failures using harm fixups
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 0
+#define IMPLICITREVERTEXPLICIT 1
+
+// like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
+#define MAXEXPLICITSUBSTEPCHANGE 1.e-2
 
 // 0 : tau suppression
 // 1 : space-time merged
 // 2 : all space merged but separate from time
 // 3 : full split
-#define TAUSUPPRESS 0
-#define SPACETIMESUBSPLITNONE 1
-#define SPACETIMESUBSPLITTIME 2
-#define SPACETIMESUBSPLITALL 3
-#define SPACETIMESUBSPLITSUPERALL 4
+// 4 : split even mhd and rad
+#define TAUSUPPRESS 0 // makes physical sense, but can be wrong in some limits (i.e. Gd can still be large relative to U due to R vs. T).
+#define SPACETIMESUBSPLITNONE 1 // DON'T USE! (gets inversion failures because overly aggressive)
+#define SPACETIMESUBSPLITTIME 2 // probably not ok -- need to split off mhd and rad
+#define SPACETIMESUBSPLITALL 3 // probably not ok -- need to split off mhd and rad
+#define SPACETIMESUBSPLITSUPERALL 4 // OK TO USE (most conservative)
+#define SPACETIMESUBSPLITMHDRAD 5 // KINDA OK TO USE (generates noise in velocity where E is very small, but maybe ok since sub-dominant and don't care about velocity where E is small.  E evolves fine, but Rtx eventually shows issues.)
+#define SPACETIMESUBSPLITTIMEMHDRAD 6 // OK TO USE (works fine and no noise in velocity because split it off.  Might have trouble in multiple dimensions if sub-dominant momentum dimension requires implicit step -- but general diffusive would suggest unlikely.  But, not efficient in optically thick regime once radiation velocity is non-trivial in magnitude)
 
-#define WHICHSPACETIMESUBSPLIT TAUSUPPRESS
+#define WHICHSPACETIMESUBSPLIT SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
+// SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
+
 
 
 // whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
