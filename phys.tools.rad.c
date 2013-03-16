@@ -2336,9 +2336,9 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 	//////////////////////
 	int JONCHOICEVALUE=gammarel2>gammamax*gammamax;
 	// Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
-	int OLEKCHOICEVALUE=gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.;
+    int OLEKCHOICEVALUE=gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.;
 
-	if(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE){
+    if(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE){
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;

@@ -262,6 +262,7 @@ int bound_x1dn_outflow_simple(
 
 		  LOOPBOUND1IN{ // bound entire region inside non-evolved portion of grid
 			PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+            //if(MACP0A1(prim,i,j,k,URAD1)>=0.0) MACP0A1(prim,i,j,k,URAD1)=0.0;
 		  }
 
 

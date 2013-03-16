@@ -3663,7 +3663,22 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
       pr[U1]=0;
-
+      
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW)&&(pr[URAD1+dir-1] > 0.)) 
+                                ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW)&&(pr[URAD1+dir-1] < 0.)) 
+                                )
+		) {
+      // set pre-primitive
+      PALLLOOP(pl)    pr0[pl]=pr[pl];
+      pr[URAD1]=0;
+      
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
@@ -3708,6 +3723,21 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[2]+jj<=jjn)&&(BCtype[X2DN]==OUTFLOW)&&(pr[URAD1+dir-1] > 0.)) 
+                                ||((startpos[2]+jj>=jout)&&(BCtype[X2UP]==OUTFLOW)&&(pr[URAD1+dir-1] < 0.)) 
+                                )
+		) {
+      // set pre-primitive
+      PALLLOOP(pl)    pr0[pl]=pr[pl];
+      pr[URAD2]=0;
+
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    }
   }
   else if(dir==3){
     // for dir==3
@@ -3724,6 +3754,21 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
       pr[U3]=0;
+
+      // account for changes
+      PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+      int doingmhdfixup=1;
+      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[3]+kk<=kkn)&&(BCtype[X3DN]==OUTFLOW)&&(pr[URAD1+dir-1] > 0.)) 
+                                ||((startpos[3]+kk>=kout)&&(BCtype[X3UP]==OUTFLOW)&&(pr[URAD1+dir-1] < 0.)) 
+                                )
+		) {
+      // set pre-primitive
+      PALLLOOP(pl)    pr0[pl]=pr[pl];
+      pr[URAD3]=0;
 
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
@@ -3748,8 +3793,9 @@ int inflow_check_3vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 // GODMARK: check for correctness
 int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
-  FTYPE ucon[NDIM] ;
+  FTYPE ucon[NDIM],uradcon[NDIM] ;
   FTYPE others[NUMOTHERSTATERESULTS];
+  FTYPE othersrad[NUMOTHERSTATERESULTS];
   int ii,jj,kk,loc;
   int j,k ;
   int pl,pliter;
@@ -3758,7 +3804,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   int iin,iout;
   int jjn,jout;
   int kkn,kout;
-  int dofix=0;
+  int dofix=0, dofixrad=0;
   FTYPE pr0[NPR];
 
 
@@ -3774,10 +3820,12 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
   //  PALLLOOP(pl) dualfprintf(fail_file,"nstep=%ld steppart=%d t=%21.15g :: pl=%d %21.15g\n",nstep,steppart,t,pl,pr[pl]);
 
   MYFUN(ucon_calc(pr, ptrgeom, ucon, others),"fixup.c:inflow_check_rel4vel()", "ucon_calc() dir=0", 1);
+  MYFUN(ucon_calc(&pr[URAD1-U1], ptrgeom, uradcon, othersrad),"fixup.c:inflow_check_rel4vel()", "ucon_calc() dir=0", 1);
 
-  //  DLOOPA(pl) dualfprintf(fail_file,"ucon[%d]=%21.15g\n",pl,ucon[pl]);
+  //  DLOOPA(pl) dualfprintf(fail_file,"ucon[%d]=%21.15g uconrad[%d]=%21.15g\n",pl,ucon[pl],pl,uradcon[pl]);
 
-  dofix=0;
+  dofix=dofixrad=0;
+ 
   if(dir==1){
     // for dir==1
     if((ptrgeom->p==CENT)||(ptrgeom->p==FACE2)||(ptrgeom->p==FACE3)||(ptrgeom->p==CORN1) ){ iin=-1; iout=totalsize[1]; }
@@ -3791,6 +3839,13 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
        ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(ucon[dir] < 0.)) 
 		) {
       dofix=1;
+    }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==OUTFLOWNOINFLOW)&&(uradcon[dir] > 0.)) 
+                                ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(uradcon[dir] < 0.)) 
+                                )
+		) {
+      dofixrad=1;
     }
     if( 
        ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==FIXEDOUTFLOW)&&(pr[U1+dir-1] > 0.)) 
@@ -3818,6 +3873,13 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 		) {
       dofix=2;
     }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[2]+jj<=jjn)&&(BCtype[X2DN]==OUTFLOW || BCtype[X2DN]==OUTFLOWNOINFLOW)&&(uradcon[dir] > 0.)) 
+                                ||((startpos[2]+jj>=jout)&&(BCtype[X2UP]==OUTFLOW || BCtype[X2UP]==OUTFLOWNOINFLOW)&&(uradcon[dir] < 0.)) 
+                                )
+		) {
+      dofixrad=2;
+    }
   }
   else if(dir==3){
     // for dir==3
@@ -3832,6 +3894,13 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
        ||((startpos[3]+kk>=kout)&&(BCtype[X3UP]==OUTFLOW || BCtype[X3UP]==OUTFLOWNOINFLOW)&&(ucon[dir] < 0.)) 
 		) {
       dofix=3;
+    }
+    if(EOMRADTYPE!=EOMRADNONE&&(
+                                ((startpos[3]+kk<=kkn)&&(BCtype[X3DN]==OUTFLOW || BCtype[X3DN]==OUTFLOWNOINFLOW)&&(uradcon[dir] > 0.)) 
+                                ||((startpos[3]+kk>=kout)&&(BCtype[X3UP]==OUTFLOW || BCtype[X3UP]==OUTFLOWNOINFLOW)&&(uradcon[dir] < 0.)) 
+                                )
+		) {
+      dofixrad=3;
     }
   }
   else{
@@ -3904,10 +3973,84 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
-    /* done */
+  }
+
+
+
+  if(dofixrad){
+
+    dualfprintf(fail_file,"WTF1\n");
+
+    // set pre-primitive
+    PALLLOOP(pl)    pr0[pl]=pr[pl];
+    FTYPE prdiag[NPR];
+    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+
+
+    /* find gamma and remove it from primitives */
+    if(gamma_calc(&pr[URAD1-U1],ptrgeom,&gamma,&qsq)>=1){
+      dualfprintf(fail_file,"gamma calc failed: inflow_check_rel4vel\n");
+      if (fail(ii,jj,kk,loc,FAIL_UTCALC_DISCR) >= 1)
+        return (1);
+    }
+    pr[URAD1] /= gamma ;
+    pr[URAD2] /= gamma ;
+    pr[URAD3] /= gamma ;
+    alpha = 1./sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
+    
+    /* reset radial velocity so radial 4-velocity
+     * is zero */
+    if(dofixrad==1){
+      betacon = ptrgeom->gcon[GIND(0,1)]*alpha*alpha ;
+      pr[URAD1] = betacon/alpha ; // gives 3-vel contravariant
+    }
+    else if(dofixrad==2){
+      betacon = ptrgeom->gcon[GIND(0,2)]*alpha*alpha ;
+      pr[URAD2] = betacon/alpha ; // gives 3-vel contravariant
+    }
+    else if(dofixrad==3){
+      betacon = ptrgeom->gcon[GIND(0,3)]*alpha*alpha ;
+      pr[URAD3] = betacon/alpha ; // gives 3-vel contravariant
+    }
+    /* now find new gamma and put it back in */
+    vsq = 0. ;
+    SLOOP(j,k) vsq += ptrgeom->gcov[GIND(j,k)]*pr[URAD1+j-1]*pr[URAD1+k-1] ;
+
+    if(vsq<0.0){
+      if(vsq>-NUMEPSILON*100.0) vsq=0.0; // machine precision thing
+      else if (fail(ii,jj,kk,loc,FAIL_VSQ_NEG) >= 1){
+        trifprintf("vsq=%21.15g\n",vsq);
+        return (1);
+      }
+    }
+ 
+    // it's possible that setting ucon(bc comp)->0 leads to v>c, so just reduce gamma to GAMMAMAX if that's the case
+    if(vsq>=1.0){
+      if(debugfail>=1) dualfprintf(fail_file,"i=%d j=%d k=%d inflow limit required change in gamma (after dofix==%d): vsq=%21.15g newvsq=%21.15g\n",ii+startpos[1],jj+startpos[2],kk+startpos[3],dofix,vsq,1.0-1.0/(GAMMAMAX*GAMMAMAX));
+
+      // new vsq
+      vsq = 1.0-1.0/(GAMMAMAX*GAMMAMAX);
+
+    }
+
+    gamma = 1./sqrt(1. - vsq) ;
+    pr[URAD1] *= gamma ;
+    pr[URAD2] *= gamma ;
+    pr[URAD3] *= gamma ;
+
+    // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
+    int doingmhdfixup=1;
+    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+    PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+
+  }
+  
+
+  if(dofix||dofixrad){
     return(-1);
   }
-  else return(0);
+
+  return(0);
 
 }
  
