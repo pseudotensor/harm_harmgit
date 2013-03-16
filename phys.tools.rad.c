@@ -3,11 +3,12 @@
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
-static void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR]);
-static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
+static void koral_explicit_source_rad(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static void get_dtsub(FTYPE *U, FTYPE *CUf, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
 
 static int Utoprimgen_failwrapper(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
 
+static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
 
@@ -111,16 +112,21 @@ int f_implicit_lab(FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE realdt, struct of_geom
   FTYPE Gd[NDIM];
   FTYPE chireturn;
   calc_Gd(pp, ptrgeom, &q, Gd, &chireturn);
-  
+
   // compute difference function
   DLOOPA(iv) f[iv]=uu[URAD0+iv] - uu0[URAD0+iv] + SIGNGD2 * realdt * Gd[iv];
+
+
+  //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g chi=%g\n",ptrgeom->i,Gd[0],Gd[1],Gd[2],Gd[3],chireturn);
+
 
   return 0;
 } 
 
-//KORALTODO SUPERGODMARK only for RK2
-FTYPE compute_dt()
+
+FTYPE compute_dt(FTYPE *CUf)
 {
+#if(0)
   if( steppart == 0 ) {
     return( 0.5 * dt );
   }
@@ -133,14 +139,19 @@ FTYPE compute_dt()
   }
 
   return(0.0);
+#else
+  // what's applied to source and flux terms to get update (see global.stepch.h and step_ch.c:get_truetime_fluxdt() and step_ch.c:setup_rktimestep()) to get Uf
+  // We don't use the ucum update version of dt.  As part of the RK method, the ucum update is separate from the substeps used to get information on updates(?). GODMARK.
+  return(CUf[2]*dt);
+#endif
 
 }
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.
-static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
-  FTYPE compute_dt();
+  FTYPE compute_dt(FTYPE *CUf);
   int i1,i2,i3,iv,ii,jj,pliter,sc;
   FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uu[NPR]; 
@@ -155,26 +166,39 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
   // DEBUG
 #define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
   dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d\n",nstep,steppart,dt,ptrgeom->i);
-  pl=RHO; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
-  pl=UU;    jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
-  pl=U1;    jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
-  pl=U2;    jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
-  pl=U3;    jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
-  pl=URAD0; jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uin[pl]/RHO_AMB);
-  pl=URAD1; jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
-  pl=URAD2; jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
-  pl=URAD3; jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=RHO; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uiin[pl]/RHO_AMB);
+  pl=UU;    jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uiin[pl]/RHO_AMB);
+  pl=U1;    jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=U2;    jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=U3;    jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD0; jj=0; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]/RHO_AMB,Uiin[pl]/RHO_AMB);
+  pl=URAD1; jj=1; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD2; jj=2; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
+  pl=URAD3; jj=3; dualfprintf(fail_file,"%d %g %g\n",pl,pin[pl]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]))  ,  Uiin[pl]/RHO_AMB*sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])));
 #endif
 
 
 
-  realdt = compute_dt();
+  realdt = compute_dt(CUf);
 
  
-  //uu0 will hold original vector of conserved
-  PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uin[iv];
+  if(USEDUINRADUPDATE){
+    // uu0 will hold original vector of conserved
+    // here original means U[before fluxes, geometry, etc.] + dU[due to fluxes, geometry, etc. already applied and included in dUother]
+    // This is required for stiff source term so immediately have balance between fluxes+geometry+radiation.  Otherwise, radiation diffuses.
+    // I'm guessing that even though one uses RK2 or RK3, the first step generates large radiative velocities without any balanced source term since U isn't updated yet.  One would hope RK2 would recover on the final substep, but it doesn't!  In RK2, upon the final substep, that velocity is present for the radiation source term.  But it's also present for the fluxes!  That is, if there were no flux update on the final substep, then the source would have balanced the previous flux, but yet another flux is done, so there can be no balance.  This leads to a run-away velocity that would be similar to the \tau\sim 1 case.
+    PLOOP(pliter,pl) uu[pl]=uu0[pl]=UFSET(CUf,dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+    // Note that "q" isn't used in this function or used in function call, so don't have to update it here.
+  }
+  else{
+    PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uiin[iv];
+  }  
   
-  
+
+
+  ////////////////////////////////
+  // START IMPLICIT ITERATIONS
+  ////////////////////////////////
   int iter=0;
   
   do{
@@ -186,6 +210,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
     //values at zero state
     if(f_implicit_lab(pin, uu0, uu, realdt, ptrgeom, f1)) return(1);
 
+    //    dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[0],f1[1],f1[2],f1[3]);
     
     //calculating approximate Jacobian
     DLOOPA(ii){
@@ -198,6 +223,9 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
 	
 		if(f_implicit_lab(pin,uu0,uu,realdt,ptrgeom,f2)) return(1);
 	
+        //        dualfprintf(fail_file,"i=%d f2: %g %g %g %g\n",ptrgeom->i,f2[0],f2[1],f2[2],f2[3]);
+
+
 		J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
 	
 		uu[jj+URAD0]=uup[jj+URAD0];
@@ -226,7 +254,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
     }
     
     if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV){
-	  //	  dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
+      //      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
 	  break;
 	}
     
@@ -236,14 +264,14 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
 	  return(1);
     }
 
-	//	dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d\n",nstep,steppart,dt,ptrgeom->i,iter);
+    //    dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
     
   }// end do
   while(1);
   
 
   // get source update
-  DLOOPA(jj) deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/dt;
+  DLOOPA(jj) deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/realdt;
 
   // apply source update as force
   PLOOP(pliter,pl) radsource[pl] = 0;
@@ -263,7 +291,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptr
 
 
 // get dt for explicit sub-cyclings
-static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void get_dtsub(FTYPE *U, FTYPE *CUf, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   int jj;
   FTYPE idtsub;
@@ -289,7 +317,7 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
 	// only include relevant directions
 	FTYPE taumax=MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
 
-	FTYPE realdt=compute_dt();
+	FTYPE realdt=compute_dt(CUf);
 	idtsub=MAX(1.0/realdt,taumax/realdt);
 
   }
@@ -364,17 +392,51 @@ static void get_dtsub(FTYPE *U, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, F
 // compute changes to U (both T and R) using implicit method
 // NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
 // Only change dUcomp, NOT pr, U, ptrgeom, or q.
-void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+void koral_explicit_source_rad(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   FTYPE Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
   FTYPE chi;
   FTYPE prnew[NPR],pr0[NPR],U0[NPR],Unew[NPR];
+  struct of_state qnew=*q; // preserves original q in case it changes
+  struct of_newtonstats newtonstats;
+  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+
+  // initialize counters
+  newtonstats.nstroke=newtonstats.lntries=0;
 
 
-  // backup pr and U
-  PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
-  PLOOP(pliter,pl) U0[pl]=Unew[pl]=U[pl];
+
+
+  if(USEDUINRADUPDATE){
+    // backup pr and Uiin
+    PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
+    PLOOP(pliter,pl) U0[pl]=Unew[pl]=UFSET(CUf,dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+
+    // Get P(U0) in case dUother is non-zero
+    if(Utoprimgen_failwrapper(finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
+      // failed to get updated primitive
+      dualfprintf(fail_file,"Utoprimgen_wrapper() failed in koral_explcit_source_rad(), so will use primitive without flux+geom update.\n");
+      // revert P and U
+      PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
+      PLOOP(pliter,pl) U0[pl]=Unew[pl]=Uiin[pl];
+    }
+    else{
+      // then got good new primitive, so store result from inversion (in prnew) into pr0
+      PLOOP(pliter,pl) pr0[pl]=prnew[pl];
+      // also need to update q
+      // re-get needed q's
+      get_state_uconucovonly(prnew, ptrgeom, &qnew);
+      get_state_uradconuradcovonly(prnew, ptrgeom, &qnew);
+    }
+  }
+  else{
+    // backup pr and Uiin
+    PLOOP(pliter,pl) pr0[pl]=prnew[pl]=pr[pl];
+    PLOOP(pliter,pl) U0[pl]=Unew[pl] = Uiin[pl];
+  }
+
+
 
   // initialize source update
   sc = RADSOURCE;
@@ -391,11 +453,8 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 
   FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
   FTYPE dtdiff;
-  struct of_state qnew=*q; // preserves original q
-  struct of_newtonstats newtonstats;
-  int finalstep = 1;
   FTYPE dtsub;
-  FTYPE realdt=compute_dt();
+  FTYPE realdt=compute_dt(CUf);
 
 
   int itersub=0;
@@ -410,7 +469,7 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 	if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 
 	  // get dt for explicit stiff source term sub-cycling
-	  get_dtsub(Unew, Gd, chi, ptrgeom, &dtsub);
+	  get_dtsub(Unew, CUf, Gd, chi, ptrgeom, &dtsub);
 
 	  //	  dualfprintf(fail_file,"i=%d chi=%g realdt=%g fakedt=%g dtsub=%g dtcum=%g dttrue=%g itersub=%d\n",ptrgeom->i,chi,realdt,fakedt,dtsub,dtcum,dttrue,itersub);
 
@@ -431,10 +490,10 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
 		DLOOPA(jj) radsource[URAD0+jj] += +SIGNGD*Gd[jj]*dttrue/realdt;
 		dtcum+=dttrue; // cumulative dttrue
 	  
-		// get Unew
-		PLOOP(pliter,pl) Unew[pl]       = U[pl];
-		DLOOPA(jj)       Unew[UU+jj]    = U[UU+jj]    + radsource[UU+jj]*realdt;
-		DLOOPA(jj)       Unew[URAD0+jj] = U[URAD0+jj] + radsource[URAD0+jj]*realdt;
+		// get Unew[U0,dUrad]
+		PLOOP(pliter,pl) Unew[pl]       = U0[pl];
+		DLOOPA(jj)       Unew[UU+jj]    = U0[UU+jj]    + radsource[UU+jj]*realdt;
+		DLOOPA(jj)       Unew[URAD0+jj] = U0[URAD0+jj] + radsource[URAD0+jj]*realdt;
 	  
 		// Get U->P
 		// OPTMARK: Should optimize this to  not try to get down to machine precision
@@ -488,28 +547,28 @@ void koral_explicit_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *ptrgeom, str
   
 }
 
-void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, struct of_state *q ,FTYPE (*dUcomp)[NPR])
+void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
 
   //  if(ptrgeom->i==10 && ptrgeom->k==0){
-  //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE KORALSOURCE: pl=%d U=%g\n",pl,Uin[pl]);
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE KORALSOURCE: pl=%d U=%g\n",pl,Uiin[pl]);
   //  }
 
   // KORALTODO: SUPERGODMARK: Need to add NR 2007 page940 17.5.2 StepperSie method here as higher-order alternative if 1st order Newton breaks
 
   if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
 	
-	koral_explicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+	koral_explicit_source_rad( pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, dUcomp);
 
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
 	
-	int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+	int failimplicit=koral_implicit_source_rad( pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, dUcomp);
 	
 	if(failimplicit){
 	  if(IMPLICITREVERTEXPLICIT){
-		koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		koral_explicit_source_rad(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp);
 	  }
 	  else{
 		// then can only fail
@@ -520,15 +579,15 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
 
-	FTYPE realdt = compute_dt();
+	FTYPE realdt = compute_dt(CUf);
 	// then first check if can just step with explicit scheme
 	FTYPE Gd[NDIM],chi,dtsub;
 	calc_Gd(pin, ptrgeom, q, Gd, &chi);
-	get_dtsub(Uin, Gd, chi, ptrgeom, &dtsub);
+	get_dtsub(Uiin, CUf, Gd, chi, ptrgeom, &dtsub);
 	if(dtsub>=realdt){
 	  // then just take explicit step!
-	  // assumes below doesn't modify pin,Uin,ptrgeom, or q
-	  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+	  // assumes below doesn't modify pin,Uiin, Ufin, CUf,ptrgeom, or q
+	  koral_explicit_source_rad(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp);
 	  //	  dualfprintf(fail_file,"NOTE: Was able to take explicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
 
 	}
@@ -539,11 +598,11 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
 	  // DEBUG (to comment out!):
 	  //dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
 	
-	  int failimplicit=koral_implicit_source_rad( pin, Uin, ptrgeom, q, dUcomp);
+	  int failimplicit=koral_implicit_source_rad( pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, dUcomp);
 
 	  if(failimplicit){
 		if(IMPLICITREVERTEXPLICIT){
-		  koral_explicit_source_rad(pin, Uin, ptrgeom, q ,dUcomp);
+		  koral_explicit_source_rad(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp);
 		}
 		else{
 		  // then can only fail
@@ -566,7 +625,7 @@ void inline koral_source_rad(FTYPE *pin, FTYPE *Uin, struct of_geom *ptrgeom, st
  
   // if(ptrgeom->i==10 && ptrgeom->k==0){
   //    dualfprintf(fail_file,"dUcomp=%g %g %g %g\n",dUcomp[RADSOURCE][UU],dUcomp[RADSOURCE][U1],dUcomp[RADSOURCE][U2],dUcomp[RADSOURCE][U3]);
-  //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER KORALSOURCE: pl=%d U=%g\n",pl,Uin[pl]);
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER KORALSOURCE: pl=%d U=%g\n",pl,Uiin[pl]);
   //  }
 
 }
@@ -649,7 +708,12 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
   mhdfull_calc_rad(pp, ptrgeom, q, Rij);
-  
+
+  //  FTYPE Rijkoral[NDIM][NDIM];
+  //  DLOOP(i,j) Rijkoral[i][j] =0;
+  //  DLOOP(i,j) DLOOPA(k) Rijkoral[i][j] += Rij[i][k]*ptrgeom->gcon[GIND(k,j)];
+  //  DLOOP(i,j) dualfprintf(fail_file,"i=%d j=%d Rij=%g Rijkoral=%g\n",i,j,Rij[i][j],Rijkoral[i][j]);
+
   //the four-velocity of fluid in lab frame
   FTYPE *ucon,*ucov;
 
@@ -704,6 +768,8 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
     Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i]; // KORALTODO: Is 4*Pi here ok?
 
+
+    //    dualfprintf(fail_file,"i=%d Ruu=%g Ru=%g kappa=%g kappaes=%g chi=%g B=%g ucon=%g %g %g %g\n",i,Ruu,Ru,kappa,kappaes,chi,B,ucon[0],ucon[1],ucon[2],ucon[3]);
 #if(0)
 	dualfprintf(fail_file,"i=%d : Ruu=%g Ru=%g chi=%g Gu=%g\n",i,Ruu/rho,Ru/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])),chi,Gu[i]/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])));
 #endif
@@ -746,7 +812,6 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
 {
-  extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
   
   // compute chi
@@ -777,6 +842,8 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     FTYPE tautotsq,vrad2tau;
     // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
     tautotsq = chi*chi * dx[dir]*dx[dir]*(geom->gcov[GIND(dir,dir)]);
+
+    //    dualfprintf(fail_file,"chi=%g dx=%g dir=%d tautot=%g\n",chi,dx[dir],dir,sqrt(tautotsq));
   
     vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6 or NR2007 S20.2 with D=1/(3\chi), but twice higher speed is only more robust.
     vrad2limited=MIN(vrad2,vrad2tau);
@@ -788,6 +855,15 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     vrad2limited=vrad2;
   }
 
+  simplefast_rad(dir,geom,q,vrad2limited,vmin,vmax);
+  
+  return(0);
+}
+
+// get lab-frame 3-velocity for radiative emission in radiative frame
+static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax)
+{
+  extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
   //need to substitute ucon,ucov with uradcon,uradcov to fool simplefast
   FTYPE ucon[NDIM],ucov[NDIM];
@@ -800,7 +876,14 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   }
 
   //calculating vmin, vmax
-  simplefast(dir,geom,q,vrad2limited,vmin,vmax);
+  simplefast(dir,geom,q,vrad2,vmin,vmax);
+
+  //restoring gas 4-velocities
+  DLOOPA(ii){
+    q->ucon[ii]=ucon[ii];
+    q->ucov[ii]=ucov[ii];
+  }
+
 
 #if(0)
   // Cartesian-Minkowski speed-of-light limit of radiation velocity
@@ -811,12 +894,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   *vmax=+1.0/dxdxp[dir][dir];
 #endif
 
-  //restoring gas 4-velocities
-  DLOOPA(ii){
-    q->ucon[ii]=ucon[ii];
-    q->ucov[ii]=ucov[ii];
-  }
-  
+
   return(0);
 }
 
@@ -1888,29 +1966,226 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
   }
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
-	FTYPE Rij[NDIM][NDIM];
+    FTYPE gamma2,delta;
 
-	//g_munu R^tmu R^tnu
-	FTYPE gRR=0.0;
-    DLOOP(jj,kk) gRR += ptrgeom->gcov[GIND(jj,kk)]*Av[jj]*Av[kk];
+#if(0)
+    {
+      // has some catastrophic cancellation issue for non-moving velocity at very low E\sim 1E-92 (as in RADPULSE test if no temperature conversion)
 
-	//the quadratic equation for u^t of the radiation rest frame (urf[0])
-	//supposed to provide two roots for (u^t)^2 of opposite signs
-	FTYPE a,b,c,delta,gamma2;
-	FTYPE urfcon[NDIM];
-	a=16.*gRR;
-	b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
-	c=gRR*ptrgeom->gcon[GIND(0,0)]*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]*ptrgeom->gcon[GIND(0,0)];
-	delta=b*b-4.*a*c;
-	gamma2=  (-b-sqrt(delta))/2./a; // lab-frame gamma^2
-	//if unphysical try the other root
-	if(gamma2<0.) gamma2=  (-b+sqrt(delta))/2./a; 
+      //g_munu R^tmu R^tnu
+      FTYPE gRR=0.0;
+      DLOOP(jj,kk) gRR += ptrgeom->gcov[GIND(jj,kk)]*Av[jj]*Av[kk];
+
+      //the quadratic equation for u^t of the radiation rest frame (urf[0])
+      // Formed as solution for solving two equations (R^{t\nu} R^t_\nu(E,ut) and R^{tt}(E,ut)) for ut
+      //supposed to provide two roots for (u^t)^2 of opposite signs
+      FTYPE a,b,c;
+      a=16.*gRR;
+      b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
+      c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]);
+      delta=b*b-4.*a*c;
+      gamma2=  0.5*(-b-sqrt(delta))/a; // lab-frame gamma^2
+      //if unphysical try the other root
+      if(gamma2<=0.) gamma2=  0.5*(-b+sqrt(delta))/a; 
+    }
+    //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Av0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Av[0],Av[1],Av[2],Av[3],gamma2);
+
+
+#elif(1)
+    // mathematica solution that avoids catastrophic cancellation -- otherwise same as above
+    // see u2p_inversion.nb
+    FTYPE gv12=ptrgeom->gcov[GIND(0,1)];
+    FTYPE gv13=ptrgeom->gcov[GIND(0,2)];
+    FTYPE gv14=ptrgeom->gcov[GIND(0,3)];
+    FTYPE gv22=ptrgeom->gcov[GIND(1,1)];
+    FTYPE gv23=ptrgeom->gcov[GIND(1,2)];
+    FTYPE gv24=ptrgeom->gcov[GIND(1,3)];
+    FTYPE gv33=ptrgeom->gcov[GIND(2,2)];
+    FTYPE gv34=ptrgeom->gcov[GIND(2,3)];
+    FTYPE gv44=ptrgeom->gcov[GIND(3,3)];
+    FTYPE Rtt=Av[0];
+    FTYPE Rtx=Av[1];
+    FTYPE Rty=Av[2];
+    FTYPE Rtz=Av[3];
+    FTYPE gcttp1=1.0+ptrgeom->gcon[GIND(0,0)];
+
+
+    //http://forums.wolfram.com/mathgroup/archive/2008/Mar/msg00116.html
+    /*
+
+
+    oexp = Experimental`OptimizeExpression[god];
+{locals, code} = 
+  ReleaseHold[(Hold @@ oexp) /. 
+    Verbatim[Block][vars_, seq_] :> {vars, Hold[seq]}];
+code1 = code /. Hold[CompoundExpression[seq__]] :> Hold[{seq}];
+code2 = First[
+   code1 //. 
+    Hold[{a___Hold, b_, c___}] /; Head[Unevaluated[b]] =!= Hold :> 
+     Hold[{a, Hold[b], c}]];
+statements = 
+  StringReplace[ToString[CForm[#]], 
+     "Hold(" ~~ ShortestMatch[a___] ~~ ")" :> a] & /@ code2;
+mycsequence = StringJoin @@ Riffle[statements, ";\n"];
+replacevar = 
+  Rule @@@ Transpose[{ToString[CForm[#]] & /@ locals, 
+     StringReplace[StringReplace[ToString[#], {__ ~~ "`" ~~ a_ :> a}],
+         "$" -> "_"] & /@ locals}];
+mycsequence1 = StringReplace[mycsequence, replacevar];
+"{\ndouble " <> 
+ StringJoin @@ 
+  Riffle[Last /@ replacevar, 
+   ","] <> ";\n\n" <> mycsequence1 <> ";\n}\n"
+    */
+{
+FTYPE __64642,__64652,__64653,__64647,__64644,__64645,__64651,__\
+64646,__64648,__64649,__64650,__64654,__64655,__64657,__64658,__64659,\
+__64660,__64661,__64662,__64668,__64669,__64670,__64671,__64672,__\
+64673,__64674,__64675,__64677,__64678,__64679,__64680,__64681,__64682,\
+__64683,__64686,__64687,__64689,__64690,__64691,__64697,__64698,__\
+64717,__64718,__64719,__64720,__64713,__64714,__64715;
+
+__64642 = -1 + gcttp1;
+__64652 = Power(gv12,2);
+__64653 = Power(gv34,2);
+__64647 = Power(gv23,2);
+__64644 = Power(gv24,2);
+__64645 = __64644*gv33;
+__64651 = -2*gv23*gv24*gv34;
+__64646 = Power(gv14,2);
+__64648 = -(gv22*gv33);
+__64649 = __64647 + __64648;
+__64650 = __64642*__64646*__64649;
+__64654 = -(__64652*__64653);
+__64655 = gcttp1*__64652*__64653;
+__64657 = gv13*gv23*gv24;
+__64658 = -(gv12*gv24*gv33);
+__64659 = -(gv13*gv22*gv34);
+__64660 = gv12*gv23*gv34;
+__64661 = __64657 + __64658 + __64659 + __64660;
+__64662 = -2*__64642*gv14*__64661;
+__64668 = Power(gv13,2);
+__64669 = -(gv22*gv44);
+__64670 = __64644 + __64669;
+__64671 = __64642*__64668*__64670;
+__64672 = gv24*gv34;
+__64673 = -(gv23*gv44);
+__64674 = __64672 + __64673;
+__64675 = -2*__64642*gv12*gv13*__64674;
+__64677 = __64647*gv44;
+__64678 = -(gv33*gv44);
+__64679 = __64653 + __64678;
+__64680 = gv22*__64679;
+__64681 = __64645 + __64651 + __64677 + __64680;
+__64682 = 1/__64681;
+__64683 = Power(Rtt,2);
+__64686 = Power(Rtx,2);
+__64687 = gv22*__64686;
+__64689 = 2*gv23*Rtx*Rty;
+__64690 = Power(Rty,2);
+__64691 = gv33*__64690;
+__64697 = Power(Rtz,2);
+__64698 = gv44*__64697;
+__64717 = gv12*Rtx;
+__64718 = gv13*Rty;
+__64719 = gv14*Rtz;
+__64720 = __64717 + __64718 + __64719;
+__64713 = 2*gv24*Rtx*Rtz;
+__64714 = 2*gv34*Rty*Rtz;
+__64715 = __64687 + __64689 + __64691 + __64713 + __64714 + __64698;
+delta = ((4*__64644*gv33 + \
+3*__64642*__64646*__64649 - 8*gv23*gv24*gv34 - 3*__64652*__64653 + \
+3*gcttp1*__64652*__64653 + 4*gv22*__64653 - 6*__64642*gv14*__64661 + \
+(4*__64647 + (-3*__64642*__64652 - 4*gv22)*gv33)*gv44 + \
+3*__64642*__64668*__64670 - \
+6*__64642*gv12*gv13*__64674)*__64682*__64683 + 6*__64642*Rtt*__64720 \
+             + 3*__64642*__64715);
+gamma2 = -((2*__64644*gv33 + __64650 - 4*gv23*gv24*gv34 + __64654 + __64655 + \
+2*gv22*__64653 + __64662 + (2*__64647 + (__64652 - gcttp1*__64652 - \
+2*gv22*gv33)*gv44 + __64671 + __64675)*__64682*__64683 + \
+   __64642*__64715 + Rtt*(2*__64642*__64720 + Sqrt(delta)))/(4.*(((__64645 + __64650 + __64651 + __64654 + \
+__64655 + gv22*__64653 + __64662 + (__64647 - (__64642*__64652 + \
+gv22)*gv33)*gv44 + __64671 + __64675)*__64682*__64683)/__64642 + \
+2*gv12*Rtt*Rtx + __64687 + 2*gv13*Rtt*Rty + __64689 + __64691 + \
+2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __64698)));
+}
+
+ if(gamma2<=0.0)
+{
+  // this is probably not the right root ever
+  dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
+FTYPE __81364,__81375,__81363,__81368,__81374,__81369,__81367,__\
+81384,__81385,__81386,__81390,__81391,__81392,__81393,__81394,__81395,\
+__81396,__81397,__81398,__81401,__81405,__81412,__81370,__81426,__\
+81427,__81428,__81429,__81430,__81444,__81445,__81446,__81447,__81402,\
+__81404,__81406,__81413;
+
+__81364 = Power(gv24,2);
+__81375 = Power(gv34,2);
+__81363 = Power(gv13,2);
+__81368 = Power(gv23,2);
+__81374 = Power(gv12,2);
+__81369 = -(gv22*gv33);
+__81367 = Power(gv14,2);
+__81384 = __81363*gv22;
+__81385 = -2*gv12*gv13*gv23;
+__81386 = __81374*gv33;
+__81390 = __81364*gv33;
+__81391 = -2*gv23*gv24*gv34;
+__81392 = __81368*gv44;
+__81393 = -(gv33*gv44);
+__81394 = __81375 + __81393;
+__81395 = gv22*__81394;
+__81396 = __81390 + __81391 + __81392 + __81395;
+__81397 = 1/__81396;
+__81398 = Power(Rtt,2);
+__81401 = Power(Rtx,2);
+__81405 = Power(Rty,2);
+__81412 = Power(Rtz,2);
+__81370 = __81368 + __81369;
+__81426 = gv13*gv23*gv24;
+__81427 = -(gv12*gv24*gv33);
+__81428 = -(gv13*gv22*gv34);
+__81429 = gv12*gv23*gv34;
+__81430 = __81426 + __81427 + __81428 + __81429;
+__81444 = gv12*Rtx;
+__81445 = gv13*Rty;
+__81446 = gv14*Rtz;
+__81447 = __81444 + __81445 + __81446;
+__81402 = gv22*__81401;
+__81404 = 2*gv23*Rtx*Rty;
+__81406 = gv33*__81405;
+__81413 = gv44*__81412;
+delta=((-3*__81363*__81364 + 4*__81364*gv33 - 3*__81367*__81370 + \
+6*gv12*gv13*gv24*gv34 - 8*gv23*gv24*gv34 - 3*__81374*__81375 + \
+4*gv22*__81375 + 6*gv14*__81430 + (3*__81363*gv22 - 6*gv12*gv13*gv23 \
++ 4*__81368 + 3*__81374*gv33 - 4*gv22*gv33)*gv44)*__81397*__81398 - \
+6*Rtt*__81447 - 3*(__81402 + __81404 + __81406 + 2*gv24*Rtx*Rtz + \
+                   2*gv34*Rty*Rtz + __81413));
+gamma2 = -((-(__81363*__81364 + 2*__81364*gv33 + __81367*(-__81368 + \
+gv22*gv33) + 2*gv12*gv13*gv24*gv34 - 4*gv23*gv24*gv34 - \
+__81374*__81375 + 2*gv22*__81375 + 2*gv14*__81430 + (__81384 + \
+__81385 + 2*__81368 + __81386 - 2*gv22*gv33)*gv44)*__81397*__81398 - \
+gv22*__81401 - 2*gv23*Rtx*Rty - gv33*__81405 - 2*gv24*Rtx*Rtz - \
+2*gv34*Rty*Rtz - gv44*__81412 - 2*Rtt*__81447 - \
+   Rtt*Sqrt(delta))/(4.*((__81363*__81364 - __81364*gv33 +   \
+__81367*__81370 - 2*gv12*gv13*gv24*gv34 + 2*gv23*gv24*gv34 + \
+__81374*__81375 - gv22*__81375 + 2*gv14*(-(gv13*gv23*gv24) + \
+gv12*gv24*gv33 + gv13*gv22*gv34 - gv12*gv23*gv34) - (__81384 + \
+__81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
+2*gv12*Rtt*Rtx + __81402 + 2*gv13*Rtt*Rty + __81404 + __81406 + \
+2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __81413)));
+}
+
+#endif
+
 
 
 
 	//cap on u^t
 	FTYPE gammamax=GAMMAMAXRAD;
 
+    // get relative 4-velocity, that is always >=1 even in GR
 	gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
 
 	if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
@@ -2006,7 +2281,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 		  SLOOPA(jj) Arad[jj]=(Av[jj]-1./3.*Erf*ptrgeom->gcon[GIND(0,jj)])/(4./3.*Erf*gammamax);
       
 		  //is normalized now
-		  FTYPE Afac;
+		  FTYPE Afac,a,b,c;
 		  a=0.; c=0.; b=0.;
 		  SLOOPA(jj){
 			a+=Arad[jj]*Arad[jj]*ptrgeom->gcov[GIND(jj,jj)];
@@ -2018,6 +2293,7 @@ int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE
 		  Afac= (-b+sqrt(delta))/2./a;
 
 		  // lab-frame radiation 4-velocity
+          FTYPE urfcon[NDIM];
 		  urfcon[0]=gammamax;
 		  urfcon[1]=Afac*Arad[1];
 		  urfcon[2]=Afac*Arad[2];

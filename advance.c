@@ -494,7 +494,7 @@ static int advance_standard(
 
 	// find dU(pb)
 	// source() doesn't actually use CUf[2]=dt right now
-	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
 	// assumes final dUcomp is nonzero and representative of source term over this timestep
 	
 
@@ -1145,7 +1145,7 @@ static int advance_finitevolume(
 
 	    
 	// get source term (point source, don't use to update diagnostics)
-	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -1282,7 +1282,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -2336,7 +2336,8 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // get source term
       // GODMARK: here dUriemann=0, although in reality this setting of dt is related to the constraint trying to make
       PLOOP(pliter,pl) dUriemann[pl]=0.0;
-      MYFUN(source(MAC(prim,i,j,k), ptrgeom, &state, U, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      FTYPE CUf=0.0; // no update yet!
+      MYFUN(source(MAC(prim,i,j,k), ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

@@ -178,7 +178,7 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-	//  lim[1]=lim[2]=lim[3]=MINM;
+    lim[1]=lim[2]=lim[3]=MINM;
 	//  cour=0.5;
 	cour=0.8;
 	gam=gamideal=5.0/3.0;
@@ -191,14 +191,29 @@ int init_global(void)
 	BCtype[X3UP]=OUTFLOW; 
 	BCtype[X3DN]=OUTFLOW;
 
+    // sigmarad = 1.56E-64
+    // arad=4*sigmarad/c
+    // NOTE: Koral code has different values than paper
+	ARAD_CODE=4.0*1.56E-64*(TEMPBAR*TEMPBAR*TEMPBAR*TEMPBAR); // to match koral and avoiding real units
+
+
 	int idt;
 	//  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E3;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
 	DTr = 100; //number of time steps for restart dumps
-    if(WHICHPROBLEM==RADPULSEPLANAR) tf=1E5;
-	else if(WHICHPROBLEM==RADPULSE) tf = 35; //final time
-	else if(WHICHPROBLEM==RADPULSE3D) tf = 70; //final time
+    if(WHICHPROBLEM==RADPULSEPLANAR){
+      tf=1E5;
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=100.0; // Koral output steps
+      //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1; // testing
+    }
+    else if(WHICHPROBLEM==RADPULSE){
+      tf = 35; //final time
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    }
+	else if(WHICHPROBLEM==RADPULSE3D){
+      tf = 70; //final time
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    }
   }
 
   /*************************************************/
@@ -419,7 +434,7 @@ int init_global(void)
 	DTr = 100; //number of time steps for restart dumps
 	tf = 20.0; //final time
 
-    DODIAGEVERYSUBSTEP = 1;
+    //    DODIAGEVERYSUBSTEP = 1;
 
   }
 
@@ -702,7 +717,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (0.0)
 //#define KAPPAES (1E-7)
 //#define KAPPAES (1E-4*1.09713E-18*1E6)
-#define KAPPAES (1E-4*1.09713E-18*1E3)
+//#define KAPPAES (1E-4*1.09713E-18*1E3)
 //#define KAPPAES (1E-4*1.09713E-18*1E-0)
 //#define KAPPAES (1E-4*1.09713E-18*0.2)
 //#define KAPPAES (1E-4*1.09713E-18*1E-1)
@@ -711,9 +726,14 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+//#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
 // assume KAPPAES defines fractoin of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+#define KAPPAES (1E3)
+
+#define KAPPAUSER(rho,T) (rho*KAPPA)
+#define KAPPAESUSER(rho,T) (rho*KAPPAES)
 
 
 #else // PULSE and PULSE3D
@@ -944,6 +964,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
+    // now avoids use of real units as in Koral paper (unlike Koral code)
 
 	FTYPE Trad,Tgas,ERAD,uint;
 	FTYPE xx,yy,zz,rsq;
@@ -963,20 +984,21 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	}
 
 	//FTYPE RHO_AMB (1.e0) // in grams per cm^3
-	FTYPE RHO_AMB=(MPERSUN*MSUN/(LBAR*LBAR*LBAR)); // in grams per cm^3 to match koral's units with rho=1
-	FTYPE T_AMB=(1.0E6); // in Kelvin
+    //	FTYPE RHO_AMB=(MPERSUN*MSUN/(LBAR*LBAR*LBAR)); // in grams per cm^3 to match koral's units with rho=1
+    FTYPE RHO_AMB=1.0;
+	FTYPE T_AMB=1.0E6/TEMPBAR;
 
 	FTYPE BLOBP=100.;
 	FTYPE BLOBW=5.;
 
 	// radiation temperature is distributed
-	Trad=(T_AMB/TEMPBAR)*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+	Trad=T_AMB*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
 	ERAD=calc_LTE_EfromT(Trad);
 
 	//flat gas profiles
-	Tgas=(T_AMB/TEMPBAR);
+	Tgas=T_AMB;
 	FTYPE rho;
-	rho=(RHO_AMB/RHOBAR);
+	rho=RHO_AMB;
 	uint=calc_PEQ_ufromTrho(Tgas,rho);
 
 	//	dualfprintf(fail_file,"IC i=%d Trad=%g ERAD=%g Tgas=%g rho=%g uint=%g\n",i,Trad,ERAD,Tgas,rho,uint);

@@ -1,12 +1,12 @@
 #include "decs.h"
 
 // Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
-int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfree, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_neutrino(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
-  int koral_source_rad(FTYPE *pr, FTYPE *U, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
+  int koral_source_rad(FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
   
 
@@ -20,13 +20,13 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
   else if(cooling==COOLEOSGENERAL){
     //    return(coolfunc_neutrino(pr, ptrgeom, q,dUcomp));
     // more general use of EOS version of sources
-    return(compute_sources_EOS(WHICHEOS,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, ptrgeom, q, Ugeomfree, dUother, dUcomp));
+    return(compute_sources_EOS(WHICHEOS,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr, ptrgeom, q, Ugeomfreei, dUother, dUcomp));
   }
   else if(cooling==COOLREBECCATHINDISK){
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
   else if(cooling==KORAL){
-    return(koral_source_rad(pr, Ugeomfree, ptrgeom, q,dUcomp));
+    return(koral_source_rad(pr, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dUother, dUcomp));
   }
 
   // random physics

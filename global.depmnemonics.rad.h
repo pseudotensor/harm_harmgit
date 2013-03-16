@@ -73,6 +73,7 @@
 // 6) Koral typically uses MINM with theta=1
 // 7) Koral has vectors in an orthonormal basis
 // 8) Koral's F and U in LAXF have no \detg
+// 9) Koral updates u (conserved quantity) due to flux and metric before using this u in the radiation source term.  Maybe good idea since only balances forces and doesn't wait a step to do it.  KORALTODO.  Don't have to update primitive or final primitive, so doesn't affect unsplitness.  Koral behaves like harm if I do radiation source first and flux second as similar to harm current setup.
 //
 //////////////////////////////////
 

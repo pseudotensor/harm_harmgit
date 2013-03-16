@@ -1388,14 +1388,15 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
-int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
+// assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
+int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
   VARSTATIC int pl,pliter;
   int source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE *dU);
   VARSTATIC FTYPE dUother[NPR];
-  VARSTATIC FTYPE Ugeomfree[NPR];
+  VARSTATIC FTYPE Ugeomfreei[NPR],Ugeomfreef[NPR];
 
 
   // initialize source terms to be zero
@@ -1417,7 +1418,8 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
   ////////////////
   //
   // First get geometry source (already does contain geometry prefactor term)
-  source_conn(pr,ptrgeom, q,dUcomp[GEOMSOURCE]);
+  // KORALTODO: Should I use dUriemann to already update p(U) and q(p) for more accurate geometry?
+  source_conn(pr,ptrgeom, q, dUcomp[GEOMSOURCE]);
 
 
   ////////////////
@@ -1426,9 +1428,10 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
   // get update pre- additional physics
   PLOOP(pliter,pl){
     dUother[pl] = (dUriemann[pl] + dUcomp[GEOMSOURCE][pl])*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // remove geometry factor for dUother
-    Ugeomfree[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
+    Ugeomfreei[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
+    Ugeomfreef[pl] = uf[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect uf to be UEVOLVE form
   }
-  sourcephysics(pr, ptrgeom, q, Ugeomfree, dUother, dUcomp);
+  sourcephysics(pr, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////
   //

@@ -994,7 +994,9 @@ int bound_radbeam2dbeaminflow(int dir,
       // BEAM PROPERTIES
 	  int IFBEAM=1; // whether to have a beam
 	  FTYPE TLEFT=1e9/TEMPBAR;
-	  FTYPE NLEFT=0.999;
+      FTYPE NLEFT=0.99;
+      //	  FTYPE NLEFT=0.999;
+      //	  FTYPE NLEFT=0.999999; // paper says this, while koral code says 0.999
 
 	  FTYPE BEAML,BEAMR;
 	  if (BEAMNO==1){
@@ -1117,8 +1119,9 @@ int bound_radbeam2dbeaminflow(int dir,
 			  ERADINJ=calc_LTE_EfromT(TLEFT);
               // override uradz
 			  uradz=1.0/sqrt(1.0 - NLEFT*NLEFT);
+              uradx=urady=0.0;
 
-              //              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradz);
+              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradx=%g urady=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradx,urady,uradz);
 
 			  MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
 			  MACP0A1(prim,i,j,k,URAD1) = uradx;
@@ -1136,6 +1139,7 @@ int bound_radbeam2dbeaminflow(int dir,
 			  MACP0A1(prim,i,j,k,URAD3) = uradz;
 			}
 
+            PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
 
             //            if(i==10 && k==0){
             //              PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
@@ -1145,6 +1149,11 @@ int bound_radbeam2dbeaminflow(int dir,
 
 			// get all primitives in WHICHVEL/PRIMECOORDS value
 			primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+
+            //            MACP0A1(prim,i,j,k,URAD1)=0.0;
+
+            PLOOP(pliter,pl) dualfprintf(fail_file,"AFTERBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
+
 
             //            if(i==10 && k==0){
             //              PLOOP(pliter,pl) dualfprintf(fail_file,"AFTERBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));

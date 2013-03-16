@@ -52,7 +52,8 @@
 #define RADCONV (1.e-7)
 #define PRADEPS (1.e-6)
 #define PRADCONV (1.e-8)
-#define IMPEPS (1.e-6)
+//#define IMPEPS (1.e-6)
+#define IMPEPS (1.e-8)
 #define IMPCONV (1.e-6)
 #define IMPMAXITER (50)
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
@@ -83,6 +84,10 @@
 #define SPACETIMESUBSPLITSUPERALL 4
 
 #define WHICHSPACETIMESUBSPLIT TAUSUPPRESS
+
+
+// whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
+#define USEDUINRADUPDATE 1
 
 
 

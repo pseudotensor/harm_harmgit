@@ -485,12 +485,25 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   if (!failed) {
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1)
       FAILSTATEMENT("dump.c:dump()", "get_state() dir=0", 1);
-    if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
-      FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 1);
-    if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
-      FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 2);
-    if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
-      FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 3);
+    if(N1NOT1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1) FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 1);
+    }
+    else{
+      vmax[1]=vmin[1]=0;
+    }
+    if(N2NOT1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1) FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 2);
+    }
+    else{
+      vmax[2]=vmin[2]=0;
+    }
+    if(N3NOT1){
+      if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1) FAILSTATEMENT("dump.c:dump()", "vchar_all() dir=1or2", 3);
+    }
+    else{
+      vmax[3]=vmin[3]=0;
+    }
+
   }
   else {// do a per zone check, otherwise set to 0
     whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
