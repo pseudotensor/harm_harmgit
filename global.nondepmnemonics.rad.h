@@ -83,15 +83,17 @@
 // 2 : all space merged but separate from time
 // 3 : full split
 // 4 : split even mhd and rad
-#define TAUSUPPRESS 0 // makes physical sense, but can be wrong in some limits (i.e. Gd can still be large relative to U due to R vs. T).
+#define TAUSUPPRESS 0 // makes physical sense, but might be wrong in some limits (i.e. Gd can still be large relative to U due to R vs. T).
 #define SPACETIMESUBSPLITNONE 1 // DON'T USE! (gets inversion failures because overly aggressive)
 #define SPACETIMESUBSPLITTIME 2 // probably not ok -- need to split off mhd and rad
 #define SPACETIMESUBSPLITALL 3 // probably not ok -- need to split off mhd and rad
-#define SPACETIMESUBSPLITSUPERALL 4 // OK TO USE (most conservative)
+#define SPACETIMESUBSPLITSUPERALL 4 // OK TO USE sometimes, but not always
 #define SPACETIMESUBSPLITMHDRAD 5 // KINDA OK TO USE (generates noise in velocity where E is very small, but maybe ok since sub-dominant and don't care about velocity where E is small.  E evolves fine, but Rtx eventually shows issues.)
-#define SPACETIMESUBSPLITTIMEMHDRAD 6 // OK TO USE (works fine and no noise in velocity because split it off.  Might have trouble in multiple dimensions if sub-dominant momentum dimension requires implicit step -- but general diffusive would suggest unlikely.  But, not efficient in optically thick regime once radiation velocity is non-trivial in magnitude)
+#define SPACETIMESUBSPLITTIMEMHDRAD 6 // OK TO USE sometimes (works fine and no noise in velocity because split it off.  Might have trouble in multiple dimensions if sub-dominant momentum dimension requires implicit step -- but general diffusive would suggest unlikely.  But, not efficient in optically thick regime once radiation velocity is non-trivial in magnitude)
 
-#define WHICHSPACETIMESUBSPLIT SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
+#define WHICHSPACETIMESUBSPLIT TAUSUPPRESS // only tausuppress works in general.
+
+ //SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
 // SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
 
 
