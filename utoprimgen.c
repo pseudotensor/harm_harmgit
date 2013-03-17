@@ -23,13 +23,13 @@
 static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag);
 static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int usedcoldinversion,int usedffdeinversion, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew);
-static int compare_ffde_inversions(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int compare_ffde_inversions(int showmessages, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
-static int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-static int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int tryentropyinversion(int showmessages, int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int trycoldinversion(int showmessages, int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
-int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
+int Utoprimgen(int showmessages, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   // debug
   int i, j, k;
@@ -41,10 +41,10 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
   FTYPE Uold[NPR],Unew[NPR];
   int otherfail;
   extern void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-  int Utoprimgen_compare(int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-  int Utoprimgen_tryagain(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-  int Utoprimgen_tryagain2(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_compare(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_tryagain(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_tryagain2(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   void convert_U_removerestmassfromuu(int utoprimverison, int removerestmassfromuu, FTYPE *U);
   int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr);
   int pl,pliter;
@@ -206,8 +206,8 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
 
-    if(UTOPRIMVERSION!=UTOPRIMCOMPARE) Utoprimgen_pick(UTOPRIMVERSION, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-    else Utoprimgen_compare(EOMTYPE, EVOLVENOENTROPY,Ugeomfree,ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    if(UTOPRIMVERSION!=UTOPRIMCOMPARE) Utoprimgen_pick(showmessages, UTOPRIMVERSION, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    else Utoprimgen_compare(showmessages, EOMTYPE, EVOLVENOENTROPY,Ugeomfree,ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     usedhotinversion=1;
     
 
@@ -221,10 +221,10 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     // try other methods (assumes all methods can handle WHICHVEL, etc. used for primary model)
     // right now, all can handle WHICHVEL==VELREL4 and energy equation evolution and REMOVERESTMASSFROMUU=0,1
 #if((WHICHVEL==VELREL4)&&(REMOVERESTMASSFROMUU<=1)&&(UTOPRIMTRYAGAIN))
-    Utoprimgen_tryagain(EOMTYPE, EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    Utoprimgen_tryagain(showmessages, EOMTYPE, EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 #elif((WHICHVEL==VELREL4)&&(REMOVERESTMASSFROMUU==2)&&(UTOPRIMTRYAGAIN))
     // Can only try again using same type of U since tryagain code doesn't convert U 
-    Utoprimgen_tryagain2(EOMTYPE, EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    Utoprimgen_tryagain2(showmessages, EOMTYPE, EVOLVENOENTROPY, Ugeomfree0, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 #endif
 
 
@@ -246,7 +246,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-        tryentropyinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        tryentropyinversion(showmessages,finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
           usedhotinversion=0;
           usedentropyinversion=1;
@@ -272,7 +272,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
       if(hotpflag){
-        trycoldinversion(finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        trycoldinversion(showmessages,finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
           usedhotinversion=0;
           usedentropyinversion=0;
@@ -315,7 +315,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     
     ////////////////////////
     // get entropy evolution (don't use failure -- otherfail)
-    Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    Utoprimgen_pick(showmessages, UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
 #else
 
@@ -325,7 +325,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
 
     // get entropy evolution inversion
-    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, whichentropy, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, whichentropy, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
 
     usedentropyinversion=1;
@@ -350,7 +350,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       }
 
       // Get original inversion for entropy
-      Utoprimgen_pick(UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(showmessages, UTOPRIM5D1, EOMENTROPYGRMHD, whichentropy, Uold, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==0){
         check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&lpflag, pr0orig, prorig, pressure, ptrgeom, Uoldorig, Uneworig,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)); // checks/outputs utoprim_jon.c, not original.  But only wanted outputted if original method succeeds where new fails
@@ -375,7 +375,7 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
       entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
  
       if(entropypflag){
-        trycoldinversion(finalstep, entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        trycoldinversion(showmessages,finalstep, entropypflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
           usedhotinversion=0;
           usedentropyinversion=0;
@@ -408,10 +408,10 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
     if(1){
       // Jon's inversion
-      Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
     else if(0){ // not working yet
-      Utoprimgen_pick(UTOPRIMCOLDGRMHD, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(showmessages, UTOPRIMCOLDGRMHD, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
 
     usedcoldinversion=1;
@@ -434,14 +434,14 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
     // GODMARK: inversions lead to different behavior (start with torus with rho=u=0 but loop of field)!
     
     if(0){ // Jon's old inversion
-      Utoprimgen_pick(UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(showmessages, UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
     else if(1){
       // Jon's inversion
-      Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
     else if(0){
-      compare_ffde_inversions(&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Ugeomfree0, Ugeomfree, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      compare_ffde_inversions(showmessages,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Ugeomfree0, Ugeomfree, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
 
     usedffdeinversion=1;
@@ -487,13 +487,13 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 
   if(IFUTOPRIMFAILSOFT(lpflag) || IFUTOPRIMRADFAIL(lpflagrad)){
     // then don't report info for now SUPERGODMARK
-    if(debugfail>=1) dualfprintf(fail_file, "SOFT Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
+    if(showmessages&&debugfail>=1) dualfprintf(fail_file, "SOFT Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
   }
   else if((IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADFAIL(lpflagrad)) &&(debugfail>=1)){
-    dualfprintf(fail_file, "Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
+    if(showmessages) dualfprintf(fail_file, "Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
   }
   else{
-    //    dualfprintf(fail_file, "NO FAIL t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g\n",t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
+    //    if(showmessages) dualfprintf(fail_file, "NO FAIL t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g\n",t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
   }
 
 
@@ -536,12 +536,12 @@ int Utoprimgen(int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of
 #define USEENTROPYIFHOTFAILCONV 1
 
 // try entropy inversion of hot one fails
-int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int tryentropyinversion(int showmessages, int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int pl;
   FTYPE prhot[NPR],prentropy[NPR];
   PFTYPE entropypflag;
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
   //  dualfprintf(fail_file,"Got here in tryentropyinversion\n");
@@ -567,7 +567,7 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
     
     
     // get entropy evolution inversion
-    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &entropypflag, prentropy,pressure,newtonstats, lpflagrad);
+    Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMENTROPYGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &entropypflag, prentropy,pressure,newtonstats, lpflagrad);
 
     
     ///////////////////////////////////
@@ -665,12 +665,12 @@ int tryentropyinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, F
 #define USECOLDIFHOTFAILCONV 1
 
 // try cold inversion of hot one fails
-int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int trycoldinversion(int showmessages, int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int pl;
   FTYPE prhot[NPR],prcold[NPR];
   PFTYPE coldpflag;
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
   //  dualfprintf(fail_file,"Got here in trycoldinversion\n");
@@ -696,7 +696,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
     
     
     // get cold inversion
-    Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMCOLDGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &coldpflag, prcold,pressure,newtonstats, lpflagrad);
+    Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMCOLDGRMHD, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &coldpflag, prcold,pressure,newtonstats, lpflagrad);
 
     
     ///////////////////////////////////
@@ -1024,9 +1024,9 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
   }
 
-  if(ptrgeom->i==39){
-    PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d : pl=%d Uold=%21.15g Unew=%21.15g pr0=%21.15g pr=%21.15g\n",ptrgeom->i,pl,Uold[pl],Unew[pl],pr0[pl],pr[pl]);
-  }
+  //  if(ptrgeom->i==39){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d : pl=%d Uold=%21.15g Unew=%21.15g pr0=%21.15g pr=%21.15g\n",ptrgeom->i,pl,Uold[pl],Unew[pl],pr0[pl],pr[pl]);
+  //  }
 
 
   return(0);
@@ -1051,21 +1051,21 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
 
 // compare ffde inversions
-static int compare_ffde_inversions(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+static int compare_ffde_inversions(int showmessages, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int j,k;
   int pl;
   FTYPE prother[NPR];
   FTYPE Upr[NPR],Uprother[NPR];
   struct of_state q;
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
-  Utoprimgen_pick(UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr, pressure, newtonstats,lpflagrad);
+  Utoprimgen_pick(showmessages, UTOPRIMFFDE, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr, pressure, newtonstats,lpflagrad);
 
   PALLLOOP(pl) Ugeomfree[pl]=Ugeomfree0[pl]; // make sure good conserved quantity
       
-  Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), prother, pressure, newtonstats, lpflagrad);
+  Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, EOMTYPE, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), prother, pressure, newtonstats, lpflagrad);
 
 
   // now get conserved quantity from pr to check
@@ -1383,7 +1383,7 @@ void convert_U_removerestmassfromuu(int utoprimversion, int removerestmassfromuu
 
 
 // Used for dissipation calculation only
-int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, PFTYPE *otherpflag, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int Utoprimdiss(int showmessages, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, PFTYPE *otherpflag, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   // debug
   int i, j, k;
@@ -1399,7 +1399,7 @@ int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom
   int pl,pliter;
   FTYPE pressuremem;
   FTYPE *pressure=&pressuremem;
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
 
@@ -1444,7 +1444,7 @@ int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom
   ////////////////////////
   // get entropy evolution (don't use failure -- otherpflag)
   // this inversion knows about global settings for DOENTROPY and increases tolerance for doing comparison
-  Utoprimgen_pick(UTOPRIM5D1, EOMTYPE, whichentropy, Uold, ptrgeom, otherpflag, pr, pressure, newtonstats, lpflagrad);
+  Utoprimgen_pick(showmessages, UTOPRIM5D1, EOMTYPE, whichentropy, Uold, ptrgeom, otherpflag, pr, pressure, newtonstats, lpflagrad);
 
   // DEBUG:
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"otherpflag=%d Uold[%d]=%21.15g pr0[%d]=%21.15g pr[%d]=%21.15g\n",*otherpflag,pl,Uold[pl],pl,pr0[pl], pl,pr[pl]);
@@ -1479,9 +1479,9 @@ int Utoprimdiss(int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom
 //////////////////////////////
 //
 // COMPARISON of 2 (currently only 2) methods
-int Utoprimgen_compare(int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int Utoprimgen_compare(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int pl,pliter;
   FTYPE Uo1[NPR], Uo2[NPR];
   FTYPE ptest1[NPR],ptest2[NPR];
@@ -1500,14 +1500,14 @@ int Utoprimgen_compare(int eomtype, int parameter, FTYPE *Ugeomfree, struct of_g
   }
 
   // currently comparing 5D1 and LDZ
-  //  Utoprimgen_pick(UTOPRIM5D1, eomtype, EVOLVENOENTROPY, Uo1, ptrgeom, lpflag, ptest1,newtonstats, lpflagrad);
-  //  Utoprimgen_pick(UTOPRIMLDZ, eomtype, EVOLVENOENTROPY, Uo2, ptrgeom, lpflag, ptest2,newtonstats, lpflagrad);
+  //  Utoprimgen_pick(showmessages, UTOPRIM5D1, eomtype, EVOLVENOENTROPY, Uo1, ptrgeom, lpflag, ptest1,newtonstats, lpflagrad);
+  //  Utoprimgen_pick(showmessages, UTOPRIMLDZ, eomtype, EVOLVENOENTROPY, Uo2, ptrgeom, lpflag, ptest2,newtonstats, lpflagrad);
 
   // remove rest-mass
   Uo1[UU]+=Uo1[RHO];
-  Utoprimgen_pick(UTOPRIMJONNONRELCOMPAT, eomtype, EVOLVENOENTROPY, Uo1, ptrgeom, &lpflag1, ptest1,pressure1,newtonstats,lpflagrad);
+  Utoprimgen_pick(showmessages, UTOPRIMJONNONRELCOMPAT, eomtype, EVOLVENOENTROPY, Uo1, ptrgeom, &lpflag1, ptest1,pressure1,newtonstats,lpflagrad);
   lntries1=newtonstats->lntries; newtonstats->lntries=0; lerrx1=newtonstats->lerrx;
-  Utoprimgen_pick(UTOPRIM2DFINAL, eomtype, EVOLVENOENTROPY, Uo2, ptrgeom, &lpflag2, ptest2,pressure2,newtonstats,lpflagrad);
+  Utoprimgen_pick(showmessages, UTOPRIM2DFINAL, eomtype, EVOLVENOENTROPY, Uo2, ptrgeom, &lpflag2, ptest2,pressure2,newtonstats,lpflagrad);
   lntries2=newtonstats->lntries; lerrx2=newtonstats->lerrx;
 
 #define ERRORCONST (1E-10)
@@ -1546,7 +1546,7 @@ int Utoprimgen_compare(int eomtype, int parameter, FTYPE *Ugeomfree, struct of_g
 
 
 // just picks the algorithm to invert
-int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats,PFTYPE *lpflagrad)
+int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats,PFTYPE *lpflagrad)
 {
   extern int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
   extern int Utoprim_coldgrmhd(FTYPE *U, struct of_geom *geom, FTYPE *pr, int *positivityproblem);
@@ -1605,7 +1605,7 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
 
   // KORAL
   // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
-  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages,Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
   //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
 
@@ -1622,21 +1622,21 @@ int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, str
 
 
 // Utoprimgen try again.  Can be whatever sequence or number of inversions
-int Utoprimgen_tryagain(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int Utoprimgen_tryagain(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
-  int Utoprimgen_tryagain_substep(int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_tryagain_substep(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
-  Utoprimgen_tryagain_substep(UTOPRIMJONNONRELCOMPAT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM2DFINAL, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIMJONNONRELCOMPAT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM2DFINAL, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
   // can't trust below really (causes some kind of superslow-down when doing torus problem with  MCSTEEP)
-  //  Utoprimgen_tryagain_substep(UTOPRIM5D1, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  //  Utoprimgen_tryagain_substep(showmessages, UTOPRIM5D1, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
   // LDZ as normally used generates nan's
-  //  Utoprimgen_tryagain_substep(UTOPRIMLDZ, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM1DFINAL, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM1DOPT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM5D2, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM2D, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM1D, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  //  Utoprimgen_tryagain_substep(showmessages, UTOPRIMLDZ, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM1DFINAL, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM1DOPT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM5D2, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM2D, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM1D, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
 
   // don't restore in the end, leave to whatever state inversion leaves it in.
 
@@ -1647,16 +1647,16 @@ int Utoprimgen_tryagain(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ug
 
 // Utoprimgen try again.  Can be whatever sequence or number of inversions
 // only those algorithms designed directly for REMOVERESTMASSFROMUU==2
-int Utoprimgen_tryagain2(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int Utoprimgen_tryagain2(int showmessages, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
-  int Utoprimgen_tryagain_substep(int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_tryagain_substep(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   void convert_U_removerestmassfromuu(int utoprimverison, int removerestmassfromuu, FTYPE *U);
   FTYPE Uorig0[NPR],Uorig[NPR];
   int pl,pliter;
 
 
-  Utoprimgen_tryagain_substep(UTOPRIMJONNONRELCOMPAT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
-  Utoprimgen_tryagain_substep(UTOPRIM5D1, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIMJONNONRELCOMPAT, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM5D1, eomtype, parameter, Ugeomfree0, Ugeomfree, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
 
   PALLLOOP(pl){
     Uorig0[pl]=Ugeomfree0[pl];
@@ -1668,7 +1668,7 @@ int Utoprimgen_tryagain2(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *U
   convert_U_removerestmassfromuu(UTOPRIM2DFINAL,REMOVERESTMASSFROMUU,Uorig);
   convert_U_removerestmassfromuu(UTOPRIM2DFINAL,REMOVERESTMASSFROMUU,Uorig0);
   // now in form usable by UTOPRIM2DFINAL
-  Utoprimgen_tryagain_substep(UTOPRIM2DFINAL, eomtype, parameter, Uorig0, Uorig, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
+  Utoprimgen_tryagain_substep(showmessages, UTOPRIM2DFINAL, eomtype, parameter, Uorig0, Uorig, ptrgeom, lpflag, pr0, pr,pressure,newtonstats,lpflagrad);
 
 
   // don't restore in the end, leave to whatever state inversion leaves it in.
@@ -1682,10 +1682,10 @@ int Utoprimgen_tryagain2(int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *U
 
 
 // need to keep this function of to date if going to add other "non-critical" failures.  Point is that some inversions can't handle non-rel case and might get positive results when shouldn't have.
-int Utoprimgen_tryagain_substep(int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int Utoprimgen_tryagain_substep(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int pl;
-  int Utoprimgen_pick(int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+  int Utoprimgen_pick(int showmessages, int which, int eomtype, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
   // if really a bad failure that don't want / can't handle, then try again
   if(
@@ -1700,7 +1700,7 @@ int Utoprimgen_tryagain_substep(int which, int eomtype, int parameter, FTYPE *Ug
       pr[pl]=pr0[pl];
     }
     // try again
-    MYFUN(Utoprimgen_pick(which,eomtype,parameter,Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats,lpflagrad),"step_ch.c:Utoprimgen_tryagain_substep()", "Utoprimgen_pick", 1);
+    MYFUN(Utoprimgen_pick(showmessages, which,eomtype,parameter,Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats,lpflagrad),"step_ch.c:Utoprimgen_tryagain_substep()", "Utoprimgen_pick", 1);
   }
 
   return(0);
@@ -1716,11 +1716,12 @@ int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   int i,j,k;
+  int showmessages=1;
 
   ZLOOP{
     get_geometry(i, j, k, CENT, ptrgeom);
     // invert True U->p
-    MYFUN(Utoprimgen(0,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), ptrgeom, MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+    MYFUN(Utoprimgen(showmessages,0,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), ptrgeom, MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   }
   return(0);
 }
@@ -1757,6 +1758,7 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   struct of_state q;
   //  int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr)  ;
   struct of_newtonstats newtonstats;
+  int showmessages=1;
 
   // now filter velocity
   get_geometry(i,j,k,CENT,ptrgeom);
@@ -1764,7 +1766,7 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   primtoU(UNOTHING,pr,&q,ptrgeom,U);
 
   //  Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
-  Utoprimgen(0,EVOLVEUTOPRIM,UNOTHING,U,ptrgeom,prout,&newtonstats);
+  Utoprimgen(showmessages, 0,EVOLVEUTOPRIM,UNOTHING,U,ptrgeom,prout,&newtonstats);
 
   PALLLOOP(pl) pr[pl]=prout[pl];
   // kill densities

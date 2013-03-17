@@ -2204,6 +2204,7 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_newtonstats newtonstats;
+  int showmessages=1;
 
 #if(0)
   // presently only thing that uses this is FV method for a2c for getting point field from average field
@@ -2228,7 +2229,7 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
 	get_geometry(i, j, k, CENT, ptrgeom);
 	// set guess
 	PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
-	MYFUN(Utoprimgen(0,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), ptrgeom, MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
+	MYFUN(Utoprimgen(showmessages,0,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), ptrgeom, MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
 	// if problem with inversion, then reduce to using primreal
 	if(GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)) PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
 	// pflag will be reset by real inversion routine in advance.c before used elsewhere
@@ -3139,6 +3140,7 @@ FTYPE limit_fluxc2a_prim_change(
   struct of_state q; //atch
   extern FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_geom *geom, FTYPE *pin, FTYPE *pout );
   struct of_newtonstats newtonstats;
+  int showmessages=1;
 
 
   //unit vector in the flux direction
@@ -3208,7 +3210,7 @@ FTYPE limit_fluxc2a_prim_change(
       // invert point Upoint_updated-> point pr_updated
       pflag_backup = GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL); //back up the old inversion flag, just in case, probably not needed anyway
 			
-      MYFUN(Utoprimgen(0,EVOLVEUTOPRIM, UEVOLVE, Upoint_updated, ptrgeom, pr_updated,&newtonstats),"flux.c:fluxcalc()", "Utoprimgen", 1);
+      MYFUN(Utoprimgen(showmessages,0,EVOLVEUTOPRIM, UEVOLVE, Upoint_updated, ptrgeom, pr_updated,&newtonstats),"flux.c:fluxcalc()", "Utoprimgen", 1);
 
       pflag_current = GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL);  //backup the new inversion flag
       GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL) = pflag_backup;   //restore the inversion flag

@@ -141,7 +141,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   }
   else if(which==-1){ // unrescale after interpolation
     struct of_newtonstats newtonstats;  
-    MYFUN(Utoprimgen(0,OTHERUTOPRIM,UDIAG,p2interp, ptrgeom, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    int showmessages=1;
+    MYFUN(Utoprimgen(showmessages,0,OTHERUTOPRIM,UDIAG,p2interp, ptrgeom, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
   }
   else{
     dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
