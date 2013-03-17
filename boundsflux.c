@@ -170,7 +170,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
   // first allow extrapolation
   //
   if (mycpupos[1] == 0) {
-    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* inner r boundary condition: u, just copy */
       LOOPX1dir{
 	ri=riin;
@@ -185,7 +185,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 	  MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl)+(MACP0A1(F1,ri+1,rj,rk,pl)-MACP0A1(F1,ri,rj,rk,pl))*(FTYPE)(i-ri);
 #endif
 	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X1DN]==OUTFLOW)){ // only for RHO is it obvious what to do without primitives
+	  if((pl==RHO)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))){ // only for RHO is it obvious what to do without primitives
 	    if(MACP0A1(F1,i,j,k,pl)>0.0) MACP0A1(F1,i,j,k,pl)=0.0; // GODMARK: hope this is enough to shut-down inflow (what about energy flux?)
 	  }
 	}// end pl and face loop
@@ -225,7 +225,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
   // outer r BC:
   if (mycpupos[1] == ncpux1 - 1) {
-    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* outer r BC: outflow */
 
       LOOPX1dir{
@@ -280,7 +280,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
 
   if (mycpupos[2] == 0) {
-    if((BCtype[X2DN]==OUTFLOW)||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X2DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X2DN]==OUTFLOW || BCtype[X2DN]==HORIZONOUTFLOW))||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X2DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* inner 2 BC: outflow */
 
       LOOPX2dir{
@@ -341,7 +341,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
 
   if (mycpupos[2] == ncpux2-1) {
-    if((BCtype[X2UP]==OUTFLOW)||(BCtype[X2UP]==FIXEDOUTFLOW)||(BCtype[X2UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X2UP]==OUTFLOW || BCtype[X2UP]==HORIZONOUTFLOW))||(BCtype[X2UP]==FIXEDOUTFLOW)||(BCtype[X2UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* outer 2 BC: outflow */
 
       LOOPX2dir{
@@ -395,7 +395,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
   //x3 inner
   if ( mycpupos[3] == 0 ) {
-    if((BCtype[X3DN]==OUTFLOW)||(BCtype[X3DN]==FIXEDOUTFLOW)||(BCtype[X3DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X3DN]==OUTFLOW || BCtype[X3DN]==HORIZONOUTFLOW))||(BCtype[X3DN]==FIXEDOUTFLOW)||(BCtype[X3DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* inner 3 BC: outflow */
 
       LOOPX3dir{
@@ -421,7 +421,7 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
   //x3 outer
   if ( mycpupos[3] == ncpux3 - 1 ) {
-    if((BCtype[X3UP]==OUTFLOW)||(BCtype[X3UP]==FIXEDOUTFLOW)||(BCtype[X3UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
+    if(((BCtype[X3UP]==OUTFLOW || BCtype[X3UP]==HORIZONOUTFLOW))||(BCtype[X3UP]==FIXEDOUTFLOW)||(BCtype[X3UP]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* outer 3 BC: outflow */
 
       LOOPX3dir{

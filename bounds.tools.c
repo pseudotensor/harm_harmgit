@@ -239,7 +239,7 @@ int bound_x1dn_outflow_simple(
     }
 
 
-    if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+    if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
 
 
       if ( (totalsize[1]>1) && (mycpupos[1] <= 0)) {
@@ -270,7 +270,7 @@ int bound_x1dn_outflow_simple(
 
 		  if(ispstag==0){
 
-			if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)){
+			if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)){
 			  // GODMARK: assume all velocities at same location when doing inflow check
 			  LOOPBOUND1INSPECIAL{
 #if(WHICHVEL==VEL4)
@@ -362,7 +362,7 @@ int bound_x1up_outflow_simple(
 
 
   
-    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
+    if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
 
       // outer r BC:
       if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
@@ -391,7 +391,7 @@ int bound_x1up_outflow_simple(
 
 		  if(ispstag==0){
 
-			if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)){
+			if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)){
 
 			  LOOPBOUND1OUT{
 #if(WHICHVEL==VEL4)
@@ -570,7 +570,7 @@ int bound_x1dn_outflow(
 
 		  if(ispstag==0){
 
-			if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)){
+			if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)){
 			  // GODMARK: assume all velocities at same location when doing inflow check
 			  LOOPBOUND1INSPECIAL{
 #if(WHICHVEL==VEL4)
@@ -673,7 +673,7 @@ int bound_x1up_outflow(
 
 
   
-    if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
+    if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==FREEOUTFLOW)){
 
       // outer r BC:
       if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
@@ -735,7 +735,7 @@ int bound_x1up_outflow(
 
 		  if(ispstag==0){
 
-			if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)){
+			if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)){
 
 			  LOOPBOUND1OUT{
 #if(WHICHVEL==VEL4)
@@ -951,7 +951,7 @@ int bound_x2dn_outflow_simple(
     }
 
 
-    if((BCtype[X2DN]==OUTFLOW)||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
+    if(((BCtype[X2DN]==OUTFLOW || BCtype[X2DN]==HORIZONOUTFLOW))||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FREEOUTFLOW)){
 
 
       if ( (totalsize[2]>1) && (mycpupos[2] <= 0)) {

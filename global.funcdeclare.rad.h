@@ -43,11 +43,11 @@ extern int u2p_rad(FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom, PFTYPE *lpflag
 extern int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
 
 extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
-		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
+		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
 extern int vchar_all(FTYPE *pr, struct of_state *q, int dir,
 		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
 extern int vchar_each(FTYPE *pr, struct of_state *q, int dir,
-		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad,int *ignorecourant);
+		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad, FTYPE *cmaxrad2, FTYPE *cminrad2,int *ignorecourant);
 
 
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);

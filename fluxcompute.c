@@ -22,7 +22,8 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
   FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
-  FTYPE ctopmhd,ctoprad;
+  FTYPE cminmaxrad2_l[NUMCS], cminmaxrad2_r[NUMCS], cminmaxrad2[NUMCS];
+  FTYPE ctopmhd,ctoprad,ctoprad2;
   struct of_state state_c, state_l, state_r;
   struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
   FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
@@ -47,11 +48,13 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 
   // usually "always" need cminmax_l cminmax_r and always need ctop
-  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad);
+  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad, cminmaxrad2_l, cminmaxrad2_r, cminmaxrad2, &ctoprad2);
 
+  ///////////////////
+  // choose ctopall that will go into choosing timestep
   if(EOMRADTYPE!=EOMRADNONE){
     // get maximum over both mhd and radiation 
-    *ctopallptr=MAX(ctopmhd,ctoprad);
+    *ctopallptr=MAX(ctopmhd,ctoprad2); // choose ctoprad2 for setting timestep
 
 	if(FORCESOLVEL){
 	  *ctopallptr=1.0/sqrt(ptrgeom->gcov[GIND(dir,dir)]);
@@ -63,6 +66,7 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
 
   //  dualfprintf(fail_file,"ctopmhdprim=%g ctopradprim=%g\n",ctopmhd*sqrt(ptrgeom->gcov[GIND(dir,dir)]),ctoprad*sqrt(ptrgeom->gcov[GIND(dir,dir)]));
 
+  // cminmaxrad and ctoprad are used for fluxes (not "2" version that's only for setting timestep)
   MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, ctopmhd, cminmaxrad_l,cminmaxrad_r, cminmaxrad, ctoprad, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
 
@@ -85,7 +89,8 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
   int p2SFUevolve_splitmaem(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *FEM, FTYPE *U, FTYPE *UEM);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
   FTYPE cminmaxrad_l[NUMCS], cminmaxrad_r[NUMCS], cminmaxrad[NUMCS];
-  FTYPE ctopmhd,ctoprad;
+  FTYPE cminmaxrad2_l[NUMCS], cminmaxrad2_r[NUMCS], cminmaxrad2[NUMCS];
+  FTYPE ctopmhd,ctoprad,ctoprad2;
   struct of_state state_c, state_l, state_r;
   struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
   FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
@@ -112,13 +117,19 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 
 
   // usually "always" need cminmax_l cminmax_r and always need ctop
-  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad);
+  get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, &ctopmhd, cminmaxrad_l, cminmaxrad_r, cminmaxrad, &ctoprad, cminmaxrad2_l, cminmaxrad2_r, cminmaxrad2, &ctoprad2);
 
+
+  ///////////////////
+  // choose ctopall that will go into choosing timestep
   if(EOMRADTYPE!=EOMRADNONE){
     // get maximum over both mhd and radiation for setting dt later
-    *ctopallptr=MAX(ctopmhd,ctoprad);
+    *ctopallptr=MAX(ctopmhd,ctoprad2); // choose ctoprad2 for setting timestep
   }
   else *ctopallptr=ctopmhd;
+
+
+  // cminmaxrad and ctoprad are used for fluxes (not "2" version that's only for setting timestep)
 
   // GODMARK:
   // below assumes flux_compute is linear in FMA and FEM, which it is right now
@@ -761,6 +772,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
   struct of_newtonstats newtonstats;
   FTYPE cminmhd,cmaxmhd,ctopmhd;
   FTYPE cminrad,cmaxrad,ctoprad;
+  FTYPE cminrad2,cmaxrad2,ctoprad2;
 
 
 #if(EOMRADTYPE!=EOMRADNONE)
@@ -1016,10 +1028,12 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
 #if(1||((WHICHFLUX==MUSTAHLL)||(WHICHFLUX==MUSTALAXF)))
     // wave speeds for new left-right states
-    MYFUN(vchar_each(p_l, ptrstate_l, dir, geom, &cmaxeach_l[EOMSETMHD], &cmineach_l[EOMSETMHD], &cmaxeach_l[EOMSETRAD], &cmineach_l[EOMSETRAD],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-    MYFUN(vchar_each(p_r, ptrstate_r, dir, geom, &cmaxeach_r[EOMSETMHD], &cmineach_r[EOMSETMHD], &cmaxeach_r[EOMSETRAD], &cmineach_r[EOMSETRAD],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+    MYFUN(vchar_each(p_l, ptrstate_l, dir, geom, &cmaxeach_l[EOMSETMHD], &cmineach_l[EOMSETMHD], &cmaxeach_l[EOMSETRAD], &cmineach_l[EOMSETRAD], &cmaxeach_l[EOMSETRADFORDT], &cmineach_l[EOMSETRADFORDT],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+    MYFUN(vchar_each(p_r, ptrstate_r, dir, geom, &cmaxeach_r[EOMSETMHD], &cmineach_r[EOMSETMHD], &cmaxeach_r[EOMSETRAD], &cmineach_r[EOMSETRAD], &cmaxeach_r[EOMSETRADFORDT], &cmineach_r[EOMSETRADFORDT],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
     cminmax_calc(cmineach_l[EOMSETMHD],cmineach_r[EOMSETMHD],cmaxeach_l[EOMSETMHD],cmaxeach_r[EOMSETMHD],&cminmhd,&cmaxmhd,&ctopmhd);
     cminmax_calc(cmineach_l[EOMSETRAD],cmineach_r[EOMSETRAD],cmaxeach_l[EOMSETRAD],cmaxeach_r[EOMSETRAD],&cminrad,&cmaxrad,&ctoprad);
+    cminmax_calc(cmineach_l[EOMSETRADFORDT],cmineach_r[EOMSETRADFORDT],cmaxeach_l[EOMSETRADFORDT],cmaxeach_r[EOMSETRADFORDT],&cminrad2,&cmaxrad2,&ctoprad2);
+    // cmin, cmax, ctop for fluxes
     PLOOP(pliter,pl){
       if(pl<URAD0 || pl>URAD3){
         cmin[pl]=cminmhd;

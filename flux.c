@@ -1005,7 +1005,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
     if(advancepassnumber<=0)
 #endif
       {
-	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
+	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
       }
   } // end if storing wavespeeds
 
@@ -1335,7 +1335,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
     if(advancepassnumber<=0)
 #endif
       {
-	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
+	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
       }
   } // end if storing wavespeeds
 

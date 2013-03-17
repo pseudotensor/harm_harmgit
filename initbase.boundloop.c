@@ -175,6 +175,7 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
     DIRLOOP(dir){
       if(
 	 BCtype[dir]==OUTFLOW
+	 || BCtype[dir]==HORIZONOUTFLOW
 	 || BCtype[dir]==FIXEDOUTFLOW
 	 || BCtype[dir]==OUTFLOWNOINFLOW
 	 || BCtype[dir]==RAMESHOUTFLOW

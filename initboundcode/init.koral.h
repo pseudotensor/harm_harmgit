@@ -37,12 +37,12 @@
 //#define WHICHPROBLEM FLATNESS
 //#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
-//#define WHICHPROBLEM RADPULSEPLANAR
+#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
 //#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
-#define WHICHPROBLEM RADBEAM2D
+//#define WHICHPROBLEM RADBEAM2D
 
 
 //undefs
@@ -230,8 +230,9 @@
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
 
+
 #undef FORCESOLVEL
-#define FORCESOLVEL 1 // for testing against koral // KORALTODO SUPERGODMARK: Koral actually fails if uses large timestep as suggested by tau limiter.
+#define FORCESOLVEL 0 // for testing against koral // KORALTODO SUPERGODMARK: Koral actually fails if uses large timestep as suggested by tau limiter.
 
 #define N1 100
 #define N2 1 

@@ -796,6 +796,7 @@ int trycoldinversion(int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYP
 static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int usedcoldinversion,int usedffdeinversion, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int badinversion,badinversionfail;
+  int badinversionrad,badinversionfailrad;
   FTYPE Unormalnew[NPR],Unormalold[NPR];
   FTYPE fdiff[NPR];
   struct of_state q;
@@ -826,8 +827,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
   
 
   // assume not bad
-  badinversion=0;
-  badinversionfail=0;
+  badinversion=badinversionfail=0;
+  badinversionrad=badinversionfailrad=0;
 
 
 
@@ -952,13 +953,15 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
         if(
            ( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
            ){
-          badinversion++;
+          if(pl<URAD0 && pl>URAD3) badinversion++;
+          else  badinversionrad++;
           dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
         }
       }
       if(fdiff[pl]>CHECKONINVFRACFAIL){
         if( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ){
-          badinversionfail++;
+          if(pl<URAD0 && pl>URAD3) badinversionfail++;
+          else  badinversionfailrad++;
         }
       }
 
@@ -974,6 +977,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     //
     /////////////
     if(CHECKONINVERSION==1 && FAILIFBADCHECK && badinversionfail){
+      if(debugfail>=2) dualfprintf(fail_file,"Changing flag since sufficiently bad inversion.\n");
       (*lpflag)=UTOPRIMFAILCONVBADINVERTCOMPARE;
     }
     // CHECKONINVERSIONRAD==1 case: No, would not redo inversion since no reduction to another inversion.
@@ -997,7 +1001,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     // Report bad inversion
     //
     /////////////
-    if(badinversion){
+    if(badinversion || badinversionrad){
       dualfprintf(fail_file,"Bad inversion (or possibly Bad U(p) calculation):\n");
       dualfprintf(fail_file,"Inversion types: %d %d %d %d\n",usedffdeinversion,usedcoldinversion,usedentropyinversion,usedhotinversion);
 
@@ -1020,7 +1024,9 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
   }
 
-
+  if(ptrgeom->i==39){
+    PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d : pl=%d Uold=%21.15g Unew=%21.15g pr0=%21.15g pr=%21.15g\n",ptrgeom->i,pl,Uold[pl],Unew[pl],pr0[pl],pr[pl]);
+  }
 
 
   return(0);

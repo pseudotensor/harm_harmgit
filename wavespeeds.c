@@ -9,7 +9,7 @@
 /////////////////////////////////
 
 // get wave speeds for flux calculation
-int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, struct of_state *state_l, struct of_state * state_r, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE *ctopptr, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE *ctopradptr)
+int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, struct of_state *state_l, struct of_state * state_r, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE *ctopptr, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE *ctopradptr, FTYPE *cminmaxrad2_l, FTYPE *cminmaxrad2_r, FTYPE *cminmaxrad2, FTYPE *ctoprad2ptr)
 {
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax);
@@ -35,13 +35,15 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
 #if(USEGLOBALWAVE==0 || STOREWAVESPEEDS==2)
 
   // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-  MYFUN(vchar_each(p_l, state_l, dir, ptrgeom, &cminmax_l[CMAX], &cminmax_l[CMIN], &cminmaxrad_l[CMAX], &cminmaxrad_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-  MYFUN(vchar_each(p_r, state_r, dir, ptrgeom, &cminmax_r[CMAX], &cminmax_r[CMIN], &cminmaxrad_r[CMAX], &cminmaxrad_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+  MYFUN(vchar_each(p_l, state_l, dir, ptrgeom, &cminmax_l[CMAX], &cminmax_l[CMIN], &cminmaxrad_l[CMAX], &cminmaxrad_l[CMIN], &cminmaxrad2_l[CMAX], &cminmaxrad2_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+  MYFUN(vchar_each(p_r, state_r, dir, ptrgeom, &cminmax_r[CMAX], &cminmax_r[CMIN], &cminmaxrad_r[CMAX], &cminmaxrad_r[CMIN], &cminmaxrad2_r[CMAX], &cminmaxrad2_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
 
   cminmax_calc(cminmax_l[CMIN],cminmax_r[CMIN],cminmax_l[CMAX],cminmax_r[CMAX],&cminmax[CMIN],&cminmax[CMAX],ctopptr);
   //  cminmax_calc_1(cminmax_l[CMIN],cminmax_r[CMIN],cminmax_l[CMAX],cminmax_r[CMAX],&cminmax[CMIN],&cminmax[CMAX]);
   if(EOMRADTYPE!=EOMRADNONE){
     cminmax_calc(cminmaxrad_l[CMIN],cminmaxrad_r[CMIN],cminmaxrad_l[CMAX],cminmaxrad_r[CMAX],&cminmaxrad[CMIN],&cminmaxrad[CMAX],ctopradptr);
+
+    cminmax_calc(cminmaxrad2_l[CMIN],cminmaxrad2_r[CMIN],cminmaxrad2_l[CMAX],cminmaxrad2_r[CMAX],&cminmaxrad2[CMIN],&cminmaxrad2[CMAX],ctoprad2ptr);
     //  cminmax_calc_1(cminmaxrad_l[CMIN],cminmaxrad_r[CMIN],cminmaxrad_l[CMAX],cminmaxrad_r[CMAX],&cminmaxrad[CMIN],&cminmaxrad[CMAX]);
   }
   // have cmin,cmax,ctop here
@@ -54,6 +56,9 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
   if(EOMRADTYPE!=EOMRADNONE){
     GLOBALMACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k)=cminmaxrad[CMIN];
     GLOBALMACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k)=cminmaxrad[CMAX];
+
+    GLOBALMACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k)=cminmaxrad2[CMIN];
+    GLOBALMACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k)=cminmaxrad2[CMAX];
   }
 #endif
 
@@ -66,6 +71,9 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
   if(EOMRADTYPE!=EOMRADNONE){
     cminmaxrad_l[CMIN]=cminmaxrad_r[CMIN]=cminmaxrad[CMIN]=GLOBALMACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k);
     cminmaxrad_l[CMAX]=cminmaxrad_r[CMAX]=cminmaxrad[CMAX]=GLOBALMACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k);
+
+    cminmaxrad2_l[CMIN]=cminmaxrad2_r[CMIN]=cminmaxrad2[CMIN]=GLOBALMACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k);
+    cminmaxrad2_l[CMAX]=cminmaxrad2_r[CMAX]=cminmaxrad2[CMAX]=GLOBALMACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k);
   }
   // change so feeds into Riemann solver with "standard" sign
   cminmax[CMIN] = fabs(max(0., -cminmax[CMIN]));
@@ -76,6 +84,10 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
     cminmaxrad[CMIN] = fabs(max(0., -cminmaxrad[CMIN]));
     cminmaxrad[CMAX] = fabs(max(0., cminmaxrad[CMAX]));
     *ctopradptr=max(cminmaxrad[CMIN],cminmaxrad[CMAX]);
+
+    cminmaxrad2[CMIN] = fabs(max(0., -cminmaxrad2[CMIN]));
+    cminmaxrad2[CMAX] = fabs(max(0., cminmaxrad2[CMAX]));
+    *ctoprad2ptr=max(cminmaxrad2[CMIN],cminmaxrad2[CMAX]);
   }
   // have cmin,cmax,ctop here
 #endif
@@ -298,7 +310,7 @@ int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, 
       // get geometry for center pre-interpolated values
       get_geometry(i, j, k, CENT, ptrgeom); 
 
-      MYFUN(get_global_wavespeeds(dir,ptrgeom, MAC(prim,i,j,k),GLOBALMACP1A0(wspeedtemp,EOMSETMHD,i,j,k),GLOBALMACP1A0(wspeedtemp,EOMSETRAD,i,j,k)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
+      MYFUN(get_global_wavespeeds(dir,ptrgeom, MAC(prim,i,j,k),GLOBALMACP1A0(wspeedtemp,EOMSETMHD,i,j,k),GLOBALMACP1A0(wspeedtemp,EOMSETRAD,i,j,k),GLOBALMACP1A0(wspeedtemp,EOMSETRADFORDT,i,j,k)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds()", 0);
     }
   }// end parallel region
 
@@ -316,7 +328,7 @@ int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, 
 
 
 // store wavespeeds somewhere
-int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *output,FTYPE *outputrad)
+int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *output,FTYPE *outputrad,FTYPE *outputrad2)
 {
   struct of_state qdontuse;
   struct of_state *qptr=&qdontuse;
@@ -326,7 +338,7 @@ int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *out
   // uses b^\mu b_\mu so need full state
   // OPTMARK: Should avoid use of b^\mu and b_\mu in vchar and if STOREFLUXSTATE, then use that data instead of recomputing.
   MYFUN(get_stateforglobalwavespeeds(pr, ptrgeom, &qptr),"step_ch.c:fluxcalc()", "get_state()", 0);
-  MYFUN(vchar_each(pr, qptr, dir, ptrgeom, &output[CMAX], &output[CMIN], &outputrad[CMAX], &outputrad[CMIN],&ignorecourant),"wavespeeds.c:get_global_wavespeeds()", "vchar() dir=1or2", 0);
+  MYFUN(vchar_each(pr, qptr, dir, ptrgeom, &output[CMAX], &output[CMIN], &outputrad[CMAX], &outputrad[CMIN], &outputrad2[CMAX], &outputrad2[CMIN],&ignorecourant),"wavespeeds.c:get_global_wavespeeds()", "vchar() dir=1or2", 0);
   
   // uses output as temporary space since not yet needed and not used before global_vchar() below
   
@@ -351,7 +363,7 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
     int reallim;
     int m;
     FTYPE ftemp[NUMCS];
-    FTYPE ctop,ctoprad;
+    FTYPE ctop,ctoprad,ctoprad2;
     extern int choose_limiter(int dir, int i, int j, int k, int pl);
     int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP( is-idel, ie+idel, js-jdel, je+jdel, ks-kdel, ke+kdel ); // due to averaging of this face quantity to get centered i/j/k=0 back
@@ -376,6 +388,8 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
       if(EOMRADTYPE!=EOMRADNONE){
         MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k)=+BIG; // assume all zones are smaller than this
         MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k)=-BIG; // assume all zones are larger than this
+        MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k)=+BIG; // assume all zones are smaller than this
+        MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k)=-BIG; // assume all zones are larger than this
       }
       // GODMARK: 1D, could do multi-D stencil even if interpolation is 1D
       for(m=-1;m<=0;m++){
@@ -386,6 +400,8 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
         for(m=-1;m<=0;m++){
           MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k),MACP1A1(pointspeed,EOMSETRAD,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
           MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k),MACP1A1(pointspeed,EOMSETRAD,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+          MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k),MACP1A1(pointspeed,EOMSETRADFORDT,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+          MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k),MACP1A1(pointspeed,EOMSETRADFORDT,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
         }
       }
 
@@ -399,13 +415,15 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
       // GODMARK: 1D, could do multi-D stencil even if interpolation is 1D
       // e.g. if dir=1, then expandi=0 and so COMPFZLOOP from i=0..N inclusive.  So can grab from (relative to i) -2 .. 1 inclusive for average centered on i edge
       for(m=-reallim/2;m<=reallim/2-1;m++){
-        MACP3A0(wspeed,EOMSETMHD,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETMHD,dir,CMIN,i,j,k),MACP1A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
-        MACP3A0(wspeed,EOMSETMHD,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETMHD,dir,CMAX,i,j,k),MACP1A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+        MACP3A0(wspeed,EOMSETMHD,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETMHD,dir,CMIN,i,j,k),MACP1A1(pointspeed,EOMSETMHD,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+        MACP3A0(wspeed,EOMSETMHD,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETMHD,dir,CMAX,i,j,k),MACP1A1(pointspeed,EOMSETMHD,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
       }
       if(EOMRADTYPE!=EOMRADNONE){
         for(m=-reallim/2;m<=reallim/2-1;m++){
-          MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k),MACP1A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
-          MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k),MACP1A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+          MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k),MACP1A1(pointspeed,EOMSETRAD,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+          MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k),MACP1A1(pointspeed,EOMSETRAD,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+          MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k)=MIN(MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k),MACP1A1(pointspeed,EOMSETRADFORDT,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+          MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k)=MAX(MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k),MACP1A1(pointspeed,EOMSETRADFORDT,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
         }
       }
       
@@ -429,6 +447,7 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
       cminmax_calc_2(&MACP3A0(wspeed,EOMSETMHD,dir,CMIN,i,j,k),&MACP3A0(wspeed,EOMSETMHD,dir,CMAX,i,j,k),&ctop); // ctop not used
       if(EOMRADTYPE!=EOMRADNONE){
         cminmax_calc_2(&MACP3A0(wspeed,EOMSETRAD,dir,CMIN,i,j,k),&MACP3A0(wspeed,EOMSETRAD,dir,CMAX,i,j,k),&ctoprad); // ctoprad not used
+        cminmax_calc_2(&MACP3A0(wspeed,EOMSETRADFORDT,dir,CMIN,i,j,k),&MACP3A0(wspeed,EOMSETRADFORDT,dir,CMAX,i,j,k),&ctoprad2); // ctoprad2 not used
       }
 
     }// end 3D loop

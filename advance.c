@@ -493,7 +493,6 @@ static int advance_standard(
 
 
 	// find dU(pb)
-	// source() doesn't actually use CUf[2]=dt right now
 	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
 	// assumes final dUcomp is nonzero and representative of source term over this timestep
 	

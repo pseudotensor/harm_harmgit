@@ -123,7 +123,7 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
     ///////////////////////////
 
     if (mycpupos[1] == 0) {
-      if((BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==OUTFLOWNOINFLOW)){
+      if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==OUTFLOWNOINFLOW)){
 	/* inner r boundary condition: u, just copy */
 	LOOPX1dir{
 	  ri=0;
@@ -264,7 +264,7 @@ int bound_prim_user_dir(int boundstage, SFTYPE boundtime, int whichdir, int boun
 
     // outer r BC:
     if (mycpupos[1] == ncpux1 - 1) {
-      if((BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==OUTFLOWNOINFLOW)){
+      if(((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==OUTFLOWNOINFLOW)){
 	/* outer r BC: outflow */
 
 	LOOPX1dir{

@@ -59,13 +59,15 @@
 
 // how many sets of EOMs (MHD or MHD+RAD)
 #if(EOMRADTYPE!=EOMRADNONE)
-#define NUMEOMSETS 2 // MHD+RAD
+//#define NUMEOMSETS 2 // MHD+RAD
+#define NUMEOMSETS 3 // MHD+RADforflux + RADfordt
 #else
 #define NUMEOMSETS 1 // MHD
 #endif
 
 #define EOMSETMHD 0
 #define EOMSETRAD 1
+#define EOMSETRADFORDT 2
 
 
 #if((WHICHCURRENTCALC==0)||(WHICHCURRENTCALC==2))

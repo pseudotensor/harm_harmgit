@@ -119,7 +119,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow inner x1
   if (mycpupos[1] == 0) {
-    if( (BCtype[X1DN]==OUTFLOW)||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==OUTFLOWNOINFLOW) ){
       /* inner r boundary condition: u, just copy */
       LOOPX1dir{
 	ri=riin;
@@ -132,7 +132,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow outer x1
   if (mycpupos[1] == ncpux1 - 1) {
-    if( (BCtype[X1UP]==OUTFLOW)||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))||(BCtype[X1UP]==FIXEDOUTFLOW)||(BCtype[X1UP]==OUTFLOWNOINFLOW) ){
       /* outer r BC: outflow */
       LOOPX1dir{
 	ri=riout;
@@ -145,7 +145,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow inner x2
   if (mycpupos[2] == 0) {
-    if( (BCtype[X2DN]==OUTFLOW)||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X2DN]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X2DN]==OUTFLOW || BCtype[X2DN]==HORIZONOUTFLOW))||(BCtype[X2DN]==FIXEDOUTFLOW)||(BCtype[X2DN]==OUTFLOWNOINFLOW) ){
       /* inner r boundary condition: u, just copy */
       LOOPX2dir{
 	ri=i;
@@ -158,7 +158,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow outer x2
   if (mycpupos[2] == ncpux2 - 1) {
-    if( (BCtype[X2UP]==OUTFLOW)||(BCtype[X2UP]==FIXEDOUTFLOW)||(BCtype[X2UP]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X2UP]==OUTFLOW || BCtype[X2UP]==HORIZONOUTFLOW))||(BCtype[X2UP]==FIXEDOUTFLOW)||(BCtype[X2UP]==OUTFLOWNOINFLOW) ){
       /* outer r BC: outflow */
       LOOPX2dir{
 	ri=i;
@@ -171,7 +171,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow inner x3
   if (mycpupos[3] == 0) {
-    if( (BCtype[X3DN]==OUTFLOW)||(BCtype[X3DN]==FIXEDOUTFLOW)||(BCtype[X3DN]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X3DN]==OUTFLOW || BCtype[X3DN]==HORIZONOUTFLOW))||(BCtype[X3DN]==FIXEDOUTFLOW)||(BCtype[X3DN]==OUTFLOWNOINFLOW) ){
       /* inner r boundary condition: u, just copy */
       LOOPX3dir{
 	ri=i;
@@ -184,7 +184,7 @@ int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
   // outflow outer x3
   if (mycpupos[3] == ncpux3 - 1) {
-    if( (BCtype[X3UP]==OUTFLOW)||(BCtype[X3UP]==FIXEDOUTFLOW)||(BCtype[X3UP]==OUTFLOWNOINFLOW) ){
+    if( ((BCtype[X3UP]==OUTFLOW || BCtype[X3UP]==HORIZONOUTFLOW))||(BCtype[X3UP]==FIXEDOUTFLOW)||(BCtype[X3UP]==OUTFLOWNOINFLOW) ){
       /* outer r BC: outflow */
       LOOPX3dir{
 	ri=i;

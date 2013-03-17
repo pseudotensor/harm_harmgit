@@ -3657,8 +3657,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       myexit(1);
     }
     if( 
-       ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW)&&(pr[U1+dir-1] > 0.)) 
-       ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW)&&(pr[U1+dir-1] < 0.)) 
+       ((startpos[1]+ii<=iin)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))&&(pr[U1+dir-1] > 0.)) 
+       ||((startpos[1]+ii>=iout)&&((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))&&(pr[U1+dir-1] < 0.)) 
 		) {
       // set pre-primitive
       PALLLOOP(pl)    pr0[pl]=pr[pl];
@@ -3671,8 +3671,8 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if(EOMRADTYPE!=EOMRADNONE&&(
-                                ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW)&&(pr[URAD1+dir-1] > 0.)) 
-                                ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW)&&(pr[URAD1+dir-1] < 0.)) 
+                                ((startpos[1]+ii<=iin)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))&&(pr[URAD1+dir-1] > 0.)) 
+                                ||((startpos[1]+ii>=iout)&&((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW))&&(pr[URAD1+dir-1] < 0.)) 
                                 )
 		) {
       // set pre-primitive
@@ -3835,14 +3835,14 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
       myexit(1);
     }
     if( 
-       ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==OUTFLOWNOINFLOW)&&(ucon[dir] > 0.)) 
-       ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(ucon[dir] < 0.)) 
+       ((startpos[1]+ii<=iin)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW) || BCtype[X1DN]==OUTFLOWNOINFLOW)&&(ucon[dir] > 0.)) 
+       ||((startpos[1]+ii>=iout)&&((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW) || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(ucon[dir] < 0.)) 
 		) {
       dofix=1;
     }
     if(EOMRADTYPE!=EOMRADNONE&&(
-                                ((startpos[1]+ii<=iin)&&(BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==OUTFLOWNOINFLOW)&&(uradcon[dir] > 0.)) 
-                                ||((startpos[1]+ii>=iout)&&(BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(uradcon[dir] < 0.)) 
+                                ((startpos[1]+ii<=iin)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW) || BCtype[X1DN]==OUTFLOWNOINFLOW)&&(uradcon[dir] > 0.)) 
+                                ||((startpos[1]+ii>=iout)&&((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW) || BCtype[X1UP]==OUTFLOWNOINFLOW)&&(uradcon[dir] < 0.)) 
                                 )
 		) {
       dofixrad=1;
@@ -4117,7 +4117,7 @@ void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][N
   // avoid mass flux in wrong direction, so consistent with velocity fix
   // how to treat other fluxes?
   if(mycpupos[1]==0){	 
-    if(BCtype[X1DN]==OUTFLOW){
+    if((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW)){
       LOOPX1dir{
 		ri=riin;
 		LOOPBOUND1IN{
@@ -4127,7 +4127,7 @@ void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][N
     }
   }
   if(mycpupos[1]==ncpux1-1){
-    if(BCtype[X1UP]==OUTFLOW){
+    if((BCtype[X1UP]==OUTFLOW || BCtype[X1UP]==HORIZONOUTFLOW)){
       LOOPX1dir{
 		LOOPBOUND1OUT{
 		  if(MACP0A1(F1,i,j,k,RHO)<0) MACP0A1(F1,i,j,k,RHO)=0;
