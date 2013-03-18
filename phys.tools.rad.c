@@ -176,7 +176,8 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 {
   int i1,i2,i3,iv,ii,jj,pliter,sc;
   FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
-  FTYPE uu0[NPR],uup[NPR],uu[NPR]; 
+  FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
+  FTYPE uuporig[NPR],uu0orig[NPR];
   FTYPE f1[NDIM],f2[NDIM],f3[NDIM],x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
@@ -203,7 +204,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
   realdt = compute_dt(CUf,dt);
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
-  FTYPE fracdtuu0=1.0,fracdtG=1.0; // initially try full realstep step
+  FTYPE fracdtuu0=1.0,fracdtG=1.0,fracuup=1.0; // initially try full realstep step
 
  
   if(USEDUINRADUPDATE){
@@ -226,20 +227,24 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int iter=0;
   int failreturn;
   int f1iter;
-  int checkconv;
-  int showmessages=0; // by default, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
+  int checkconv,changeotherdt;
+  int showmessages=1; // by default, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
 
 #define MAXF1TRIES 100 // 100 might sound like alot, but Jacobian does 4*4=16 inversions each iteration, and that 100 is only typically needed for very first iteration.
   // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 100 is certainly enough since 2^(-100) is beyond machine precision.
 
 #define DAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
 #define DAMPUNDELTA (1.0/DAMPDELTA)
+
+  // initialize previous 'good inversion' based uu's
+  PLOOP(pliter,pl)  uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
   
   do{
     iter++;
     
-    //vector of conserved at the previous iteration
-    PLOOP(pliter,pl)  uup[pl]=uu[pl];
+    //vector of conserved at the previous two iterations
+    PLOOP(pliter,pl)  uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
+    PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
     
     //values at zero state
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
@@ -251,16 +256,34 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
         // if f1 fails, try going back to Uiin a bit
         fracdtuu0*=DAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
-        fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
-        //        fracdtuu0=fracdtG=0.0; // FUCK
+
         PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
-        if(iter==1) PLOOP(pliter,pl) uup[pl]=uu[pl]=uu0[pl]; // modifies uup and uu as if starting over, and then another call to f_implicit_lab(f1) will change uu by generally smaller amount.
-        else PLOOP(pliter,pl) uu[pl]=uup[pl]; // if here, then assume prior uup was good in sense that no failures like P(uup) is good inversion.  And uu=uup before f_implicit_lab(f1) is called
+
+        if(iter==1){
+          // modifies uup and uu as if starting over, and then another call to f_implicit_lab(f1) will change uu by generally smaller amount.
+          PLOOP(pliter,pl) uup[pl]=uu[pl]=uu0[pl];
+        }
+        else{
+          // if here, then assume prior uup was good in sense that no failures like P(uup) is good inversion.  And uu=uup before f_implicit_lab(f1) is called.
+          // No, not necessarily true, because uu updated with some-sized Newton step without checking if inversion is good for that uu.
+          // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
+          //fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+          fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
+
+          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
+          PLOOP(pliter,pl) uup[pl]=uu[pl]; // store new version of prior Newton step
+        }
         // keep below so can count inversion failures against retry successes in the failure file.
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g\n",iter,f1iter,fracdtuu0,fracdtG);
-        //        PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%21.15g uu0=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",Uiin[pl],uu0[pl],uu[pl],uup[pl],dUother[pl]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g fracuup=%g\n",iter,f1iter,fracdtuu0,fracdtG,fracuup);
+        //        PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
       }
-      else break;
+      else{
+        // then success, so was able to do inversion P(U) with change in radiation on fluid: P(uu[fluid] = uu0[fluid] - (uu[rad]-uu0[rad]))
+        // This doesn't necessarily mean could do P(uu0) except for iter=1.
+        // Corresponds to success for a certain P(uu0,uu) pair.
+        //PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
+        break;
+      }
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
       if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES\n");
@@ -312,6 +335,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     DLOOPA(ii) x[ii]=uup[ii+URAD0];
 
     // step forward uu=x
+    // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
     DLOOPA(ii){
       DLOOPA(jj){
 		x[ii] -= DAMPFACTOR*iJ[ii][jj]*f1[jj];
@@ -321,16 +345,25 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // assign new uu
     DLOOPA(ii) uu[ii+URAD0]=x[ii];
 
+
     checkconv=1;
+    changeotherdt=1;
+    //    if(fracuup!=1.0){
+    if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
+      // try increasing amount of uu used
+      fracuup*=DAMPUNDELTA;
+      checkconv=0;
+      changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
+    }
     //    if(fracdtuu0!=1.0){
-    if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON){
+    if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
       // try increasing uu0 away from Uiin to account for full dUother
       fracdtuu0*=DAMPUNDELTA;
       PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
       checkconv=0;
     }
     //    if(fracdtG!=1.0){
-    if(fabs(fracdtG-1.0)>10.0*NUMEPSILON){
+    if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
       // try increasing amount of G applied
       fracdtG*=DAMPUNDELTA;
       checkconv=0;
@@ -342,9 +375,11 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
         f3[ii]=fabs(f3[ii]/uup[URAD0]);
       }
+
+#define LOCALIMPCONV (IMPCONV*1E-3)
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
-      if(f3[0]<IMPCONV && f3[1]<IMPCONV && f3[2]<IMPCONV && f3[3]<IMPCONV){
+      if(f3[0]<LOCALIMPCONV && f3[1]<LOCALIMPCONV && f3[2]<LOCALIMPCONV && f3[3]<LOCALIMPCONV){
         //        dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
         break;
       }
@@ -353,7 +388,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     if(iter>IMPMAXITER){
 	  // KORALTODO: Need backup that won't fail.
-      dualfprintf(fail_file,"iter exceeded in solve_implicit_lab()\n");
+      dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab()\n",IMPMAXITER);
 	  return(1);
     }
 

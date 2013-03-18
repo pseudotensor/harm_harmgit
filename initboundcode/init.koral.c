@@ -248,8 +248,8 @@ int init_global(void)
 
 // 1,2,3,31,4,41,5
 //#define NTUBE 1
-//#define NTUBE 31
-#define NTUBE 5
+#define NTUBE 31
+//#define NTUBE 5
 //#define NTUBE 3
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
@@ -310,7 +310,8 @@ int init_global(void)
 
 	DTr = 100; //number of time steps for restart dumps
 	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
-	tf = 3E2; //final time (good enough to see any evolution and errored evolution)
+	if(NTUBE==5) tf=15.0; // koral paper shows about t=13, and code has no problem going much further than 15.
+    else tf = 3E2; //final time (good enough to see any evolution and errored evolution)
   }
 
   /*************************************************/
