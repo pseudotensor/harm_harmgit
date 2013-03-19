@@ -3980,8 +3980,6 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
   if(dofixrad){
 
-    dualfprintf(fail_file,"WTF1\n");
-
     // set pre-primitive
     PALLLOOP(pl)    pr0[pl]=pr[pl];
     FTYPE prdiag[NPR];

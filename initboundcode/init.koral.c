@@ -10,7 +10,13 @@
 
 int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
 
+int THINRADATM;
 
+//FTYPE RADBEAMFLAT_FRATIO=0.95;
+FTYPE RADBEAMFLAT_FRATIO;
+FTYPE RADBEAMFLAT_ERAD;
+FTYPE RADBEAMFLAT_RHO;
+FTYPE RADBEAMFLAT_UU;
 
 FTYPE normglobal;
 
@@ -225,6 +231,13 @@ int init_global(void)
 	gam=gamideal=5.0/3.0;
 	cooling=KORAL;
 
+    // RADBEAMFLAT_FRATIO=0.95;
+    RADBEAMFLAT_FRATIO=0.99995; // vradx
+    RADBEAMFLAT_ERAD=1.; // 1g/cm^3 worth of energy density in radiation
+    RADBEAMFLAT_RHO=1.; // 1g/cm^3
+    RADBEAMFLAT_UU=0.1; // 0.1g/cm^3 worth of energy density in fluid
+
+
 	BCtype[X1UP]=OUTFLOW;
 	BCtype[X1DN]=RADBEAMFLATINFLOW;
 	BCtype[X2UP]=OUTFLOW;
@@ -384,7 +397,7 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-  if(WHICHPROBLEM==RADBEAM2D){
+  if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
 
     BEAMNO=1; // 1-4
 // whether constant or radially varying background
@@ -439,11 +452,116 @@ int init_global(void)
 
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==ATMSTATIC){
+
+    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for ATMSTATIC\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+    ARAD_CODE=0.0;
+
+	BCtype[X1UP]=OUTFLOW;
+    BCtype[X1DN]=HORIZONOUTFLOW; // leads to little bit more static solution near inner radial boundary due to higher-order interpolation.  Could also fix values as in Koral, but odd to fix values for incoming flow.
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	BCtype[X3UP]=PERIODIC;
+	BCtype[X3DN]=PERIODIC;
+
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E2;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 1E7; //final time
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
 
 
   /*************************************************/
   /*************************************************/
   /*************************************************/
+
+  if(WHICHPROBLEM==RADATM){
+
+
+    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for ATMSTATIC\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+    //    ARAD_CODE=0.0;
+
+	//BCtype[X1UP]=RADATMBEAMINFLOW;
+    //    BCtype[X1DN]=RADATMBEAMINFLOW;
+    BCtype[X1UP]=OUTFLOW;
+    //    BCtype[X1DN]=HORIZONOUTFLOW;
+    BCtype[X1DN]=OUTFLOW;
+
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	BCtype[X3UP]=PERIODIC;
+	BCtype[X3DN]=PERIODIC;
+
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E6;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 1E7; //final time
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADWALL){
+
+    lim[1]=lim[2]=lim[3]=MINM; // Messy with PARALINE
+
+	cour=0.8;
+	gam=gamideal=5.0/3.0;
+	cooling=KORAL;
+
+	BCtype[X1UP]=OUTFLOW;
+	BCtype[X1DN]=RADWALLINFLOW;
+	BCtype[X2UP]=RADWALLINFLOW;
+	BCtype[X2DN]=ASYMM;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.5;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 50.0; //final time
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
 
   return(0);
 
@@ -581,7 +699,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADBEAM2D){
+  if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
 
 
 	defcoord = UNIFORMCOORDS;
@@ -619,6 +737,58 @@ int init_defcoord(void)
 	Rout_array[3]=M_PI*0.25;
 
 	
+  }
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==ATMSTATIC){
+
+
+	defcoord = UNIFORMCOORDS;
+ 
+    Rin_array[1]=1E6;
+    Rout_array[1]=2E6;
+
+    Rin_array[2]=0.99*M_PI*0.5;
+    Rout_array[2]=1.01*M_PI*0.5;
+
+	Rin_array[3]=-1.0;
+	Rout_array[3]=1.0;
+	
+  }
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADATM){
+
+
+	defcoord = UNIFORMCOORDS;
+ 
+    Rin_array[1]=1E6;
+    Rout_array[1]=1.4E6;
+
+    Rin_array[2]=0.99*M_PI*0.5;
+    Rout_array[2]=1.01*M_PI*0.5;
+
+	Rin_array[3]=-1.0;
+	Rout_array[3]=1.0;
+	
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADWALL){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=-6;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=3.0;
+	Rout_array[2]=1.5;
+	Rout_array[3]=1.0;
   }
 
 
@@ -824,7 +994,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //****************************************//
 
 
-#if(WHICHPROBLEM==RADBEAM2D)
+#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS)
 
 
 #define KAPPA 0.
@@ -839,6 +1009,49 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #endif
 
 
+#if(WHICHPROBLEM==ATMSTATIC)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADATM)
+
+
+#define KAPPA 0.
+#define KAPPAES 1. // only scattering
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADWALL)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
 
 
 
@@ -1218,7 +1431,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADBEAM2D){
+  if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
 
 
 	FTYPE RHOAMB=1.e0/RHOBAR;
@@ -1306,7 +1519,70 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	pr[PRAD0] = ERADAMB;
 	pr[PRAD1] = uradx ;
 	pr[PRAD2] = urady ;    
-	pr[PRAD3] = uradx ;
+	pr[PRAD3] = uradz ;
+
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0)
+
+	//	*whichvel=WHICHVEL;
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+	return(0);
+  }
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==ATMSTATIC){
+
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+
+    FTYPE rho0=1.;
+    FTYPE r0=2.e6;
+    FTYPE u0=0.0001;
+    FTYPE r=xx;
+
+    FTYPE rho,uint;
+    rho=rho0*r0/r;
+    uint=u0*r0*r0/r/r;
+    
+    //    FTYPE E=exp(1.);
+    
+    uint=(4*r*u0 - 4*r*u0*gamideal - 2*r*rho0 + 2*r0*rho0 + r*r0*rho0*Log(-2 + r) - r*r0*rho0*Log(r) - r*r0*rho0*Log(-2 + r0) + r*r0*rho0*Log(r0))/(4*r - 4*r*gamideal);
+
+	FTYPE uradx,urady,uradz;
+	uradx=urady=uradz=0.;
+    
+	pr[RHO] = rho ;
+	pr[UU]  = uint;
+	pr[U1]  = 0 ;
+	pr[U2]  = 0 ;    
+	pr[U3]  = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+    //	pr[PRAD0] = ERADLIMIT;
+	pr[PRAD0] = uint*1E-10;
+	pr[PRAD1] = uradx ;
+	pr[PRAD2] = urady ;    
+	pr[PRAD3] = uradz ;
 
 	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0)
 
@@ -1318,7 +1594,149 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   }
 
 
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADATM){
 
+
+    FTYPE MASS=(MPERSUN*MSUN);
+    FTYPE MDOTEDD=(2.23/16.*1e18*MASS); //cm/s
+    FTYPE LUMEDD=(1.25e38*MASS); //erg/s
+    int THINRADATM=1;
+
+    FTYPE RHOAMB=1E-15/RHOBAR;
+    FTYPE TAMB=1.e6/TEMPBAR;
+
+    FTYPE FRATIO=.1;
+    FTYPE MINX=Rin_array[1];
+    FTYPE kappaesperrho=KAPPAESUSER(1.0,TAMB); // doesn't really depend upon TAMB
+    FTYPE FLUXLEFT=FRATIO/kappaesperrho/pow(MINX,2.0);
+    FTYPE FERATIO=.99999;
+
+
+
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+    //at outern boundary
+    FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
+
+    FTYPE p0=RHOAMB*TAMB;
+    FTYPE KKK=p0/pow(RHOAMB,gamideal);
+    FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
+
+    FTYPE rho=pow((gamideal-1.0)/gamideal/KKK*(C3+(1.-f)*(1./xx + 0.*1./xx/xx + 0.*4./3./xx/xx/xx)),1./(gamideal-1.0));
+
+    FTYPE pre=KKK*pow(rho,gamideal);
+
+    FTYPE uint=pre/(gamideal-1.0);
+
+    FTYPE Fz=0;
+    FTYPE Fy=0.;
+    FTYPE Fx=FLUXLEFT*(MINX/xx)*(MINX/xx);
+
+    FTYPE ERAD;
+    if(THINRADATM){
+      ERAD=Fx/FERATIO;
+    }
+    else{
+      ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
+    }
+
+
+    pr[RHO] = rho ;
+	pr[UU]  = uint;
+	pr[U1]  = 0 ;
+	pr[U2]  = 0 ;    
+	pr[U3]  = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+	pr[PRAD0] = ERAD  ;
+	pr[PRAD1] = Fx ;
+	pr[PRAD2] = Fy ;    
+	pr[PRAD3] = Fz ;
+
+    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
+
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+
+	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
+	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
+	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
+  
+	// get metric grid geometry for these ICs
+	int getprim=0;
+	struct of_geom geomdontuse;
+	struct of_geom *ptrgeom=&geomdontuse;
+	gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+	// transform radiation primitives to lab-frame
+	FTYPE prrad[NPR],prradnew[NPR];
+	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
+	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
+	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
+	// overwrite radiation primitives with new lab-frame values
+	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+
+
+	return(0);
+  }
+
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADWALL){
+
+    
+    // direct assignments since simple
+	pr[RHO] = 1.0 ;
+	pr[UU] = 1.0;
+	pr[U1] = 0 ;
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+    // direct assignments since simple
+	pr[PRAD0] = 1.0;
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself.
+
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+	return(0);
+  }
 
 
 }

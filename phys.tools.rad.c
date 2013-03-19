@@ -1,6 +1,6 @@
 #include "decs.h"
 
-static int f_implicit_lab(int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
+static int f_implicit_lab(int whichcall, int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
 
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
@@ -16,7 +16,7 @@ static int Utoprimgen_failwrapper(int showmessages, int finalstep, int evolvetyp
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
-static int opacity_interpolated_urfconrel(FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *urfconrel);
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
 
 static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 
@@ -99,7 +99,7 @@ static int Utoprimgen_failwrapper(int showmessages, int finalstep, int evolvetyp
 //f - (returned) errors
 
 //NOTE: uu WILL be changed from inside this fcn
-static int f_implicit_lab(int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
+static int f_implicit_lab(int whichcall, int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
 {
   struct of_state q;
   FTYPE pp[NPR];
@@ -117,6 +117,8 @@ static int f_implicit_lab(int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTY
   // get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
   // required for inversion to get P(U) for MHD and RAD variables
   DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
+
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"f_implicit_lab: wc=%d i=%d j=%d pl=%d uu=%g\n",whichcall, ptrgeom->i,ptrgeom->j,pl,uu[pl]);
   
   // Get P(U)
   int failreturn;
@@ -228,7 +230,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int failreturn;
   int f1iter;
   int checkconv,changeotherdt;
-  int showmessages=1; // by default, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
+  int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
 
 #define MAXF1TRIES 100 // 100 might sound like alot, but Jacobian does 4*4=16 inversions each iteration, and that 100 is only typically needed for very first iteration.
   // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 100 is certainly enough since 2^(-100) is beyond machine precision.
@@ -248,7 +250,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     
     //values at zero state
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
-      failreturn=f_implicit_lab(showmessages, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
+      failreturn=f_implicit_lab(1,showmessages, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
@@ -267,7 +269,10 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           // if here, then assume prior uup was good in sense that no failures like P(uup) is good inversion.  And uu=uup before f_implicit_lab(f1) is called.
           // No, not necessarily true, because uu updated with some-sized Newton step without checking if inversion is good for that uu.
           // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
+
+          // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
           //fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+
           fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
 
           PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
@@ -275,13 +280,13 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         }
         // keep below so can count inversion failures against retry successes in the failure file.
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g fracuup=%g\n",iter,f1iter,fracdtuu0,fracdtG,fracuup);
-        //        PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
+        //PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
       }
       else{
         // then success, so was able to do inversion P(U) with change in radiation on fluid: P(uu[fluid] = uu0[fluid] - (uu[rad]-uu0[rad]))
         // This doesn't necessarily mean could do P(uu0) except for iter=1.
         // Corresponds to success for a certain P(uu0,uu) pair.
-        //PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
+        //  PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
         break;
       }
     }// end loop over f1iter
@@ -292,9 +297,30 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
     //    dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[0],f1[1],f1[2],f1[3]);
-    
 
+
+    // see if pre-convergence (happens if force is small or no force at all.  Can't necessarily continue since Jacobian can require arbitrarily large dU on fluid and fail to invert even if no fluid-radiation interaction!
+    //test pre-convergence using initial |dU/U|
+#define LOCALPREIMPCONV (10.0*NUMEPSILON) // more strict than later tolerance
+    DLOOPA(ii){
+      f3[ii]=f1[ii];
+      f3[ii]=fabs(f3[ii]/uu0[URAD0]);
+    }
+    if(f3[0]<LOCALPREIMPCONV && f3[1]<LOCALPREIMPCONV && f3[2]<LOCALPREIMPCONV && f3[3]<LOCALPREIMPCONV){
+      //      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+      break;
+    }
+
+
+
+
+    
+    /////////////
+    //
     //calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
+    //
+    /////////////
+
     DLOOPA(ii){
 	  DLOOPA(jj){
 		FTYPE del;
@@ -306,7 +332,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 		uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
         // get dUresid for this offset uu
-		failreturn=f_implicit_lab(showmessages, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+		failreturn=f_implicit_lab(2,showmessages, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
         if(failreturn){
           if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Should explore smaller del in ultrarel case?\n",ii,jj);
           return(1);
@@ -324,28 +350,49 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }
     
 
+    /////////////////////
+    //
 	//invert Jacobian
+    //
+    /////////////////////
 	failreturn=inverse_44matrix(J,iJ);
     if(failreturn){
       if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed\n");
       return(1);
     }
    
+    /////////
+    //
     //updating x, start with previous uu = uup
+    //
+    /////////
     DLOOPA(ii) x[ii]=uup[ii+URAD0];
 
+    /////////
+    //
     // step forward uu=x
     // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
+    //
+    /////////
     DLOOPA(ii){
       DLOOPA(jj){
 		x[ii] -= DAMPFACTOR*iJ[ii][jj]*f1[jj];
       }
 	}
 
+    /////////
+    //
     // assign new uu
+    //
+    /////////
     DLOOPA(ii) uu[ii+URAD0]=x[ii];
 
 
+    /////////
+    //
+    // try to increase DAMPs if was damping or check convergence if no damping active.
+    //
+    /////////
     checkconv=1;
     changeotherdt=1;
     //    if(fracuup!=1.0){
@@ -369,14 +416,18 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       checkconv=0;
     }      
 
+    /////////
+    //
+    // test convergence afte Newton step
+    //
+    /////////
     if(checkconv){
+#define LOCALIMPCONV (IMPCONV*1E-3)
       //test convergence using |dU/U|
       DLOOPA(ii){
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
         f3[ii]=fabs(f3[ii]/uup[URAD0]);
       }
-
-#define LOCALIMPCONV (IMPCONV*1E-3)
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
       if(f3[0]<LOCALIMPCONV && f3[1]<LOCALIMPCONV && f3[2]<LOCALIMPCONV && f3[3]<LOCALIMPCONV){
@@ -386,6 +437,11 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }
  
 
+    /////////
+    //
+    // see if took too many Newton steps
+    //
+    /////////
     if(iter>IMPMAXITER){
 	  // KORALTODO: Need backup that won't fail.
       dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab()\n",IMPMAXITER);
@@ -409,7 +465,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD3*deltas[jj];
 
   // DEBUG:
-  //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g\n",nstep,steppart,ptrgeom->i,jj,radsource[URAD0+jj]);
+  //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g %g\n",nstep,steppart,ptrgeom->i,jj,radsource[UU+jj],radsource[URAD0+jj]);
 
   // store source update in dUcomp for return.
   sc = RADSOURCE;
@@ -451,7 +507,8 @@ static void get_dtsub(int method, FTYPE *U, FTYPE *CUf, FTYPE *Gd, FTYPE chi, st
 	FTYPE taumax=MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
 
 	FTYPE realdt=compute_dt(CUf,dt);
-	idtsub=MAX(1.0/realdt,taumax/realdt);
+    idtsub=taumax/realdt; // only valid if dtsub<realdt, so all checks should consider that.
+    //	idtsub=MAX(1.0/realdt,taumax/realdt); // don't use -- old and makes no sense for checking if can use explicit instead of implicit
 
   }
   // below is if Diffusion is part of source term as in Koral
@@ -676,7 +733,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
         // ensure don't change step too fast
         if(dtsub>dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE)) dtsubuse=dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE);
         else dtsubuse=dtsub;
-        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium
+        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium, so no longer necessary to check vs. dtsubold
         if(dtsub>realdt) dtsubuse=dtsub;
         // need to compare with previous actual dt
         dtsubold=dtsubuse;
@@ -767,42 +824,66 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
 
 
 
+  // make code use "orig" values that below can modify, so return preserves no changes to these no matter what internal functions do.
+#if(1)
+  // save pin, Uiin, Ufin, and q to avoid being modified upon return
+  FTYPE pinorig[NPR],Uiinorig[NPR],Ufinorig[NPR];
+  struct of_state qorigmem;
+  struct of_state *qorig=&qorigmem;
+  PLOOP(pliter,pl){
+    pinorig[pl]=pin[pl];
+    Uiinorig[pl]=Uiin[pl];
+    Ufinorig[pl]=Ufin[pl];
+  }
+  *qorig=*q;
+#else
+  FTYPE *pinorig,*Uiinorig,*Ufinorig;
+  struct of_state *qorig;
+
+  pinorig=pin;
+  Uiinorig=Uiin;
+  Ufinorig=Ufin;
+  qorig=q;
+#endif
+
+
   //  if(ptrgeom->i==10 && ptrgeom->k==0){
-  //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE KORALSOURCE: pl=%d U=%g\n",pl,Uiin[pl]);
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE KORALSOURCE: pl=%d U=%g\n",pl,Uiinorig[pl]);
   //  }
 
   // KORALTODO: SUPERGODMARK: Need to add NR 2007 page940 17.5.2 StepperSie method here as higher-order alternative if 1st order Newton breaks
 
   if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
-	
+
     FTYPE prnew[NPR],Unew[NPR];
     struct of_state qnew;
-    int failprepare=koral_explicit_source_rad_prepare(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother , prnew, Unew, &qnew);
+	
+    int failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
     if(failprepare){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed to prepare, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
       // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
-      PLOOP(pliter,pl) Unew[pl]=Uiin[pl];
-      PLOOP(pliter,pl) prnew[pl]=pin[pl];
-      qnew=*q;
+      PLOOP(pliter,pl) Unew[pl]=Uiinorig[pl];
+      PLOOP(pliter,pl) prnew[pl]=pinorig[pl];
+      qnew=*qorig;
     }
 
 	koral_explicit_source_rad( prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
 	
-	int failimplicit=koral_implicit_source_rad( pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, dUcomp);
+	int failimplicit=koral_implicit_source_rad( pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 	
 	if(failimplicit){
 	  if(IMPLICITREVERTEXPLICIT){
         FTYPE prnew[NPR],Unew[NPR];
         struct of_state qnew;
-        int failprepare=koral_explicit_source_rad_prepare(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother , prnew, Unew, &qnew);
+        int failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
         if(failprepare){
           if(showmessages && debugfail>=2) dualfprintf(fail_file,"implicit failed, and then explicit failed to prepare, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
-          PLOOP(pliter,pl) Unew[pl]=Uiin[pl];
-          PLOOP(pliter,pl) prnew[pl]=pin[pl];
-          qnew=*q;
+          PLOOP(pliter,pl) Unew[pl]=Uiinorig[pl];
+          PLOOP(pliter,pl) prnew[pl]=pinorig[pl];
+          qnew=*qorig;
         }
         koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
       }
@@ -814,12 +895,23 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
 
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
+
+
+    // first check if \tau is exceedingly small, so fluid-rad interaction can be skipped.  Avoids inversion for explicit prepare.
+    FTYPE tautot[NDIM],tautotmax;
+    calc_tautot(pinorig, ptrgeom, tautot, &tautotmax);
+    if(tautotmax<NUMEPSILON){
+      //if(debugfail>=2) dualfprintf(fail_file,"maximum optical depth for ijk=%d %d %d was tautotmax=%g , which is negligible enough to completely avoid source term explicit or implicit.\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,tautotmax);
+      return; // then nothing to do.
+    }
+
+
     FTYPE prnew[NPR],Unew[NPR];
     struct of_state qnew;
-    int failprepare;
-    int doimplicit;
+    int failprepare=0;
+    int doimplicit=1;
 
-    failprepare=koral_explicit_source_rad_prepare(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother , prnew, Unew, &qnew);
+    failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
     if(failprepare){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"was testing if can do explicit instead of implicit, but explicit failed to prepare, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d.\n So in this case, just avoid explicit and do implicit.\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
       // in this case, just avoid explicit method!
@@ -838,32 +930,40 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
       get_dtsub(method,Unew, CUf, Gd, chi, ptrgeom, &dtsub);
       if(dtsub>=realdt){
         // then just take explicit step!
-        // assumes below doesn't modify pin,Uiin, Ufin, CUf,ptrgeom, or q
+        // assumes below doesn't modify pinorig,Uiinorig, Ufinorig, CUf,ptrgeom, or qorig
         koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
         doimplicit=0;
-        //      dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
+        //        if(debugfail>=2) dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
       }
-      else doimplicit=1;
+      else{
+        doimplicit=1;
+        // if(debugfail>=2) dualfprintf(fail_file,"NOTE: Prepared for explicit step, but would require subcycling, so do implicit directly: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
+      }
 	}
-
 
     if(doimplicit){
 	  // else just continue with implicit, with only cost extra calc_Gd() evaluation
 	
 	  // DEBUG (to comment out!):
-	  //dualfprintf(fail_file,"NOTE: Had to take implicit step: realdt=%g dtsub=%g\n",realdt,dtsub);
+      //	  if(debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step\n");
+
+      //      PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE: i=%d j=%d pl=%d pin=%g pinorig=%g Uiin=%g Uiinorig=%g Ufin=%g Ufinorig=%g\n",ptrgeom->i,ptrgeom->j,pl,pin[pl],pinorig[pl],Uiin[pl],Uiinorig[pl],Ufin[pl],Ufinorig[pl]);
 	
-	  int failimplicit=koral_implicit_source_rad( pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, dUcomp);
+	  int failimplicit=koral_implicit_source_rad( pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+	  if(showmessages && debugfail>=2 && failimplicit) dualfprintf(fail_file,"Implicit failed in RADSOURCEMETHODIMPLICITEXPLICITCHECK.\n");
+
+      //      PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER: i=%d j=%d pl=%d pin=%g pinorig=%g Uiin=%g Uiinorig=%g Ufin=%g Ufinorig=%g\n",ptrgeom->i,ptrgeom->j,pl,pin[pl],pinorig[pl],Uiin[pl],Uiinorig[pl],Ufin[pl],Ufinorig[pl]);
+
 
 	  if(failimplicit){
 		if(IMPLICITREVERTEXPLICIT){
-          failprepare=koral_explicit_source_rad_prepare(pin, Uiin, Ufin, CUf, ptrgeom, q, dUother , prnew, Unew, &qnew);
+          failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
           if(failprepare){
             if(debugfail>=2) dualfprintf(fail_file,"implicit failed, and failed to prepare for explicit, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
             // With this method, nothing better to do.
-            PLOOP(pliter,pl) Unew[pl]=Uiin[pl];
-            PLOOP(pliter,pl) prnew[pl]=pin[pl];
-            qnew=*q;
+            PLOOP(pliter,pl) Unew[pl]=Uiinorig[pl];
+            PLOOP(pliter,pl) prnew[pl]=pinorig[pl];
+            qnew=*qorig;
           }
 		  koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
 		}
@@ -888,7 +988,7 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
  
   // if(ptrgeom->i==10 && ptrgeom->k==0){
   //    dualfprintf(fail_file,"dUcomp=%g %g %g %g\n",dUcomp[RADSOURCE][UU],dUcomp[RADSOURCE][U1],dUcomp[RADSOURCE][U2],dUcomp[RADSOURCE][U3]);
-  //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER KORALSOURCE: pl=%d U=%g\n",pl,Uiin[pl]);
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER KORALSOURCE: pl=%d U=%g\n",pl,Uiinorig[pl]);
   //  }
 
 }
@@ -2296,185 +2396,181 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
     /*
 
 
-    oexp = Experimental`OptimizeExpression[god];
-{locals, code} = 
-  ReleaseHold[(Hold @@ oexp) /. 
-    Verbatim[Block][vars_, seq_] :> {vars, Hold[seq]}];
-code1 = code /. Hold[CompoundExpression[seq__]] :> Hold[{seq}];
-code2 = First[
-   code1 //. 
-    Hold[{a___Hold, b_, c___}] /; Head[Unevaluated[b]] =!= Hold :> 
-     Hold[{a, Hold[b], c}]];
-statements = 
-  StringReplace[ToString[CForm[#]], 
-     "Hold(" ~~ ShortestMatch[a___] ~~ ")" :> a] & /@ code2;
-mycsequence = StringJoin @@ Riffle[statements, ";\n"];
-replacevar = 
-  Rule @@@ Transpose[{ToString[CForm[#]] & /@ locals, 
-     StringReplace[StringReplace[ToString[#], {__ ~~ "`" ~~ a_ :> a}],
-         "$" -> "_"] & /@ locals}];
-mycsequence1 = StringReplace[mycsequence, replacevar];
-"{\ndouble " <> 
- StringJoin @@ 
-  Riffle[Last /@ replacevar, 
-   ","] <> ";\n\n" <> mycsequence1 <> ";\n}\n"
+      oexp = Experimental`OptimizeExpression[god];
+      {locals, code} = 
+      ReleaseHold[(Hold @@ oexp) /. 
+      Verbatim[Block][vars_, seq_] :> {vars, Hold[seq]}];
+      code1 = code /. Hold[CompoundExpression[seq__]] :> Hold[{seq}];
+      code2 = First[
+      code1 //. 
+      Hold[{a___Hold, b_, c___}] /; Head[Unevaluated[b]] =!= Hold :> 
+      Hold[{a, Hold[b], c}]];
+      statements = 
+      StringReplace[ToString[CForm[#]], 
+      "Hold(" ~~ ShortestMatch[a___] ~~ ")" :> a] & /@ code2;
+      mycsequence = StringJoin @@ Riffle[statements, ";\n"];
+      replacevar = 
+      Rule @@@ Transpose[{ToString[CForm[#]] & /@ locals, 
+      StringReplace[StringReplace[ToString[#], {__ ~~ "`" ~~ a_ :> a}],
+      "$" -> "_"] & /@ locals}];
+      mycsequence1 = StringReplace[mycsequence, replacevar];
+      "{\ndouble " <> 
+      StringJoin @@ 
+      Riffle[Last /@ replacevar, 
+      ","] <> ";\n\n" <> mycsequence1 <> ";\n}\n"
     */
-{
-FTYPE __64642,__64652,__64653,__64647,__64644,__64645,__64651,__\
-64646,__64648,__64649,__64650,__64654,__64655,__64657,__64658,__64659,\
-__64660,__64661,__64662,__64668,__64669,__64670,__64671,__64672,__\
-64673,__64674,__64675,__64677,__64678,__64679,__64680,__64681,__64682,\
-__64683,__64686,__64687,__64689,__64690,__64691,__64697,__64698,__\
-64717,__64718,__64719,__64720,__64713,__64714,__64715;
+    {
+      FTYPE __64642,__64652,__64653,__64647,__64644,__64645,__64651,__64646,__64648,__64649,__64650,__64654,__64655,__64657,__64658,__64659,__64660,__64661,__64662,__64668,__64669,__64670,__64671,__64672,__64673,__64674,__64675,__64677,__64678,__64679,__64680,__64681,__64682,__64683,__64686,__64687,__64689,__64690,__64691,__64697,__64698,__64717,__64718,__64719,__64720,__64713,__64714,__64715;
 
-__64642 = -1 + gcttp1;
-__64652 = Power(gv12,2);
-__64653 = Power(gv34,2);
-__64647 = Power(gv23,2);
-__64644 = Power(gv24,2);
-__64645 = __64644*gv33;
-__64651 = -2*gv23*gv24*gv34;
-__64646 = Power(gv14,2);
-__64648 = -(gv22*gv33);
-__64649 = __64647 + __64648;
-__64650 = __64642*__64646*__64649;
-__64654 = -(__64652*__64653);
-__64655 = gcttp1*__64652*__64653;
-__64657 = gv13*gv23*gv24;
-__64658 = -(gv12*gv24*gv33);
-__64659 = -(gv13*gv22*gv34);
-__64660 = gv12*gv23*gv34;
-__64661 = __64657 + __64658 + __64659 + __64660;
-__64662 = -2*__64642*gv14*__64661;
-__64668 = Power(gv13,2);
-__64669 = -(gv22*gv44);
-__64670 = __64644 + __64669;
-__64671 = __64642*__64668*__64670;
-__64672 = gv24*gv34;
-__64673 = -(gv23*gv44);
-__64674 = __64672 + __64673;
-__64675 = -2*__64642*gv12*gv13*__64674;
-__64677 = __64647*gv44;
-__64678 = -(gv33*gv44);
-__64679 = __64653 + __64678;
-__64680 = gv22*__64679;
-__64681 = __64645 + __64651 + __64677 + __64680;
-__64682 = 1/__64681;
-__64683 = Power(Rtt,2);
-__64686 = Power(Rtx,2);
-__64687 = gv22*__64686;
-__64689 = 2*gv23*Rtx*Rty;
-__64690 = Power(Rty,2);
-__64691 = gv33*__64690;
-__64697 = Power(Rtz,2);
-__64698 = gv44*__64697;
-__64717 = gv12*Rtx;
-__64718 = gv13*Rty;
-__64719 = gv14*Rtz;
-__64720 = __64717 + __64718 + __64719;
-__64713 = 2*gv24*Rtx*Rtz;
-__64714 = 2*gv34*Rty*Rtz;
-__64715 = __64687 + __64689 + __64691 + __64713 + __64714 + __64698;
-delta = ((4*__64644*gv33 + \
-3*__64642*__64646*__64649 - 8*gv23*gv24*gv34 - 3*__64652*__64653 + \
-3*gcttp1*__64652*__64653 + 4*gv22*__64653 - 6*__64642*gv14*__64661 + \
-(4*__64647 + (-3*__64642*__64652 - 4*gv22)*gv33)*gv44 + \
-3*__64642*__64668*__64670 - \
-6*__64642*gv12*gv13*__64674)*__64682*__64683 + 6*__64642*Rtt*__64720 \
-             + 3*__64642*__64715);
+      __64642 = -1 + gcttp1;
+      __64652 = Power(gv12,2);
+      __64653 = Power(gv34,2);
+      __64647 = Power(gv23,2);
+      __64644 = Power(gv24,2);
+      __64645 = __64644*gv33;
+      __64651 = -2*gv23*gv24*gv34;
+      __64646 = Power(gv14,2);
+      __64648 = -(gv22*gv33);
+      __64649 = __64647 + __64648;
+      __64650 = __64642*__64646*__64649;
+      __64654 = -(__64652*__64653);
+      __64655 = gcttp1*__64652*__64653;
+      __64657 = gv13*gv23*gv24;
+      __64658 = -(gv12*gv24*gv33);
+      __64659 = -(gv13*gv22*gv34);
+      __64660 = gv12*gv23*gv34;
+      __64661 = __64657 + __64658 + __64659 + __64660;
+      __64662 = -2*__64642*gv14*__64661;
+      __64668 = Power(gv13,2);
+      __64669 = -(gv22*gv44);
+      __64670 = __64644 + __64669;
+      __64671 = __64642*__64668*__64670;
+      __64672 = gv24*gv34;
+      __64673 = -(gv23*gv44);
+      __64674 = __64672 + __64673;
+      __64675 = -2*__64642*gv12*gv13*__64674;
+      __64677 = __64647*gv44;
+      __64678 = -(gv33*gv44);
+      __64679 = __64653 + __64678;
+      __64680 = gv22*__64679;
+      __64681 = __64645 + __64651 + __64677 + __64680;
+      __64682 = 1/__64681;
+      __64683 = Power(Rtt,2);
+      __64686 = Power(Rtx,2);
+      __64687 = gv22*__64686;
+      __64689 = 2*gv23*Rtx*Rty;
+      __64690 = Power(Rty,2);
+      __64691 = gv33*__64690;
+      __64697 = Power(Rtz,2);
+      __64698 = gv44*__64697;
+      __64717 = gv12*Rtx;
+      __64718 = gv13*Rty;
+      __64719 = gv14*Rtz;
+      __64720 = __64717 + __64718 + __64719;
+      __64713 = 2*gv24*Rtx*Rtz;
+      __64714 = 2*gv34*Rty*Rtz;
+      __64715 = __64687 + __64689 + __64691 + __64713 + __64714 + __64698;
+      delta = ((4*__64644*gv33 + \
+                3*__64642*__64646*__64649 - 8*gv23*gv24*gv34 - 3*__64652*__64653 + \
+                3*gcttp1*__64652*__64653 + 4*gv22*__64653 - 6*__64642*gv14*__64661 + \
+                (4*__64647 + (-3*__64642*__64652 - 4*gv22)*gv33)*gv44 + \
+                3*__64642*__64668*__64670 - \
+                6*__64642*gv12*gv13*__64674)*__64682*__64683 + 6*__64642*Rtt*__64720 \
+               + 3*__64642*__64715);
 
-// delta scales like gRR^2
- if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
- //dualfprintf(fail_file,"delta=%g Rtt=%g\n",delta,Rtt);
+      // delta scales like gRR^2
+      if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+      //dualfprintf(fail_file,"delta=%g Rtt=%g\n",delta,Rtt);
 
-gamma2 = -((2*__64644*gv33 + __64650 - 4*gv23*gv24*gv34 + __64654 + __64655 + \
-2*gv22*__64653 + __64662 + (2*__64647 + (__64652 - gcttp1*__64652 - \
-2*gv22*gv33)*gv44 + __64671 + __64675)*__64682*__64683 + \
-   __64642*__64715 + Rtt*(2*__64642*__64720 + Sqrt(delta)))/(4.*(((__64645 + __64650 + __64651 + __64654 + \
-__64655 + gv22*__64653 + __64662 + (__64647 - (__64642*__64652 + \
-gv22)*gv33)*gv44 + __64671 + __64675)*__64682*__64683)/__64642 + \
-2*gv12*Rtt*Rtx + __64687 + 2*gv13*Rtt*Rty + __64689 + __64691 + \
-2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __64698)));
-}
+      gamma2 = -((2*__64644*gv33 + __64650 - 4*gv23*gv24*gv34 + __64654 + __64655 + \
+                  2*gv22*__64653 + __64662 + (2*__64647 + (__64652 - gcttp1*__64652 - \
+                                                           2*gv22*gv33)*gv44 + __64671 + __64675)*__64682*__64683 + \
+                  __64642*__64715 + Rtt*(2*__64642*__64720 + Sqrt(delta)))/(4.*(((__64645 + __64650 + __64651 + __64654 + \
+                                                                                  __64655 + gv22*__64653 + __64662 + (__64647 - (__64642*__64652 + \
+                                                                                                                                 gv22)*gv33)*gv44 + __64671 + __64675)*__64682*__64683)/__64642 + \
+                                                                                2*gv12*Rtt*Rtx + __64687 + 2*gv13*Rtt*Rty + __64689 + __64691 + \
+                                                                                2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __64698)));
+    }
 
-if(0&&(gamma2<=0.0 || delta<0.0)) // other root not a good inversion even if no CASE complaints.
-{
-  // this is probably not the right root ever
-  if(showmessages && debugfail>=2) dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
-FTYPE __81364,__81375,__81363,__81368,__81374,__81369,__81367,__\
-81384,__81385,__81386,__81390,__81391,__81392,__81393,__81394,__81395,\
-__81396,__81397,__81398,__81401,__81405,__81412,__81370,__81426,__\
-81427,__81428,__81429,__81430,__81444,__81445,__81446,__81447,__81402,\
-__81404,__81406,__81413;
+    if(0&&(gamma2<=0.0 || delta<0.0)) // other root not a good inversion even if no CASE complaints.
+      {
+        // this is probably not the right root ever
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
+        FTYPE __81364,__81375,__81363,__81368,__81374,__81369,__81367,__81384,__81385,__81386,__81390,__81391,__81392,__81393,__81394,__81395,__81396,__81397,__81398,__81401,__81405,__81412,__81370,__81426,__81427,__81428,__81429,__81430,__81444,__81445,__81446,__81447,__81402,__81404,__81406,__81413;
 
-__81364 = Power(gv24,2);
-__81375 = Power(gv34,2);
-__81363 = Power(gv13,2);
-__81368 = Power(gv23,2);
-__81374 = Power(gv12,2);
-__81369 = -(gv22*gv33);
-__81367 = Power(gv14,2);
-__81384 = __81363*gv22;
-__81385 = -2*gv12*gv13*gv23;
-__81386 = __81374*gv33;
-__81390 = __81364*gv33;
-__81391 = -2*gv23*gv24*gv34;
-__81392 = __81368*gv44;
-__81393 = -(gv33*gv44);
-__81394 = __81375 + __81393;
-__81395 = gv22*__81394;
-__81396 = __81390 + __81391 + __81392 + __81395;
-__81397 = 1/__81396;
-__81398 = Power(Rtt,2);
-__81401 = Power(Rtx,2);
-__81405 = Power(Rty,2);
-__81412 = Power(Rtz,2);
-__81370 = __81368 + __81369;
-__81426 = gv13*gv23*gv24;
-__81427 = -(gv12*gv24*gv33);
-__81428 = -(gv13*gv22*gv34);
-__81429 = gv12*gv23*gv34;
-__81430 = __81426 + __81427 + __81428 + __81429;
-__81444 = gv12*Rtx;
-__81445 = gv13*Rty;
-__81446 = gv14*Rtz;
-__81447 = __81444 + __81445 + __81446;
-__81402 = gv22*__81401;
-__81404 = 2*gv23*Rtx*Rty;
-__81406 = gv33*__81405;
-__81413 = gv44*__81412;
-delta=((-3*__81363*__81364 + 4*__81364*gv33 - 3*__81367*__81370 + \
-6*gv12*gv13*gv24*gv34 - 8*gv23*gv24*gv34 - 3*__81374*__81375 + \
-4*gv22*__81375 + 6*gv14*__81430 + (3*__81363*gv22 - 6*gv12*gv13*gv23 \
-+ 4*__81368 + 3*__81374*gv33 - 4*gv22*gv33)*gv44)*__81397*__81398 - \
-6*Rtt*__81447 - 3*(__81402 + __81404 + __81406 + 2*gv24*Rtx*Rtz + \
-                   2*gv34*Rty*Rtz + __81413));
+        __81364 = Power(gv24,2);
+        __81375 = Power(gv34,2);
+        __81363 = Power(gv13,2);
+        __81368 = Power(gv23,2);
+        __81374 = Power(gv12,2);
+        __81369 = -(gv22*gv33);
+        __81367 = Power(gv14,2);
+        __81384 = __81363*gv22;
+        __81385 = -2*gv12*gv13*gv23;
+        __81386 = __81374*gv33;
+        __81390 = __81364*gv33;
+        __81391 = -2*gv23*gv24*gv34;
+        __81392 = __81368*gv44;
+        __81393 = -(gv33*gv44);
+        __81394 = __81375 + __81393;
+        __81395 = gv22*__81394;
+        __81396 = __81390 + __81391 + __81392 + __81395;
+        __81397 = 1/__81396;
+        __81398 = Power(Rtt,2);
+        __81401 = Power(Rtx,2);
+        __81405 = Power(Rty,2);
+        __81412 = Power(Rtz,2);
+        __81370 = __81368 + __81369;
+        __81426 = gv13*gv23*gv24;
+        __81427 = -(gv12*gv24*gv33);
+        __81428 = -(gv13*gv22*gv34);
+        __81429 = gv12*gv23*gv34;
+        __81430 = __81426 + __81427 + __81428 + __81429;
+        __81444 = gv12*Rtx;
+        __81445 = gv13*Rty;
+        __81446 = gv14*Rtz;
+        __81447 = __81444 + __81445 + __81446;
+        __81402 = gv22*__81401;
+        __81404 = 2*gv23*Rtx*Rty;
+        __81406 = gv33*__81405;
+        __81413 = gv44*__81412;
+        delta=((-3*__81363*__81364 + 4*__81364*gv33 - 3*__81367*__81370 + \
+                6*gv12*gv13*gv24*gv34 - 8*gv23*gv24*gv34 - 3*__81374*__81375 + \
+                4*gv22*__81375 + 6*gv14*__81430 + (3*__81363*gv22 - 6*gv12*gv13*gv23 \
+                                                   + 4*__81368 + 3*__81374*gv33 - 4*gv22*gv33)*gv44)*__81397*__81398 - \
+               6*Rtt*__81447 - 3*(__81402 + __81404 + __81406 + 2*gv24*Rtx*Rtz + \
+                                  2*gv34*Rty*Rtz + __81413));
 
-// delta scales like gRR^2
- if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
- // dualfprintf(fail_file,"deltaalt=%g Rtt=%g\n",delta,Rtt);
+        // delta scales like gRR^2
+        if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+        // dualfprintf(fail_file,"deltaalt=%g Rtt=%g\n",delta,Rtt);
 
-gamma2 = -((-(__81363*__81364 + 2*__81364*gv33 + __81367*(-__81368 + \
-gv22*gv33) + 2*gv12*gv13*gv24*gv34 - 4*gv23*gv24*gv34 - \
-__81374*__81375 + 2*gv22*__81375 + 2*gv14*__81430 + (__81384 + \
-__81385 + 2*__81368 + __81386 - 2*gv22*gv33)*gv44)*__81397*__81398 - \
-gv22*__81401 - 2*gv23*Rtx*Rty - gv33*__81405 - 2*gv24*Rtx*Rtz - \
-2*gv34*Rty*Rtz - gv44*__81412 - 2*Rtt*__81447 - \
-   Rtt*Sqrt(delta))/(4.*((__81363*__81364 - __81364*gv33 +   \
-__81367*__81370 - 2*gv12*gv13*gv24*gv34 + 2*gv23*gv24*gv34 + \
-__81374*__81375 - gv22*__81375 + 2*gv14*(-(gv13*gv23*gv24) + \
-gv12*gv24*gv33 + gv13*gv22*gv34 - gv12*gv23*gv34) - (__81384 + \
-__81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
-2*gv12*Rtt*Rtx + __81402 + 2*gv13*Rtt*Rty + __81404 + __81406 + \
-2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __81413)));
-}
+        gamma2 = -((-(__81363*__81364 + 2*__81364*gv33 + __81367*(-__81368 + \
+                                                                  gv22*gv33) + 2*gv12*gv13*gv24*gv34 - 4*gv23*gv24*gv34 - \
+                      __81374*__81375 + 2*gv22*__81375 + 2*gv14*__81430 + (__81384 + \
+                                                                           __81385 + 2*__81368 + __81386 - 2*gv22*gv33)*gv44)*__81397*__81398 - \
+                    gv22*__81401 - 2*gv23*Rtx*Rty - gv33*__81405 - 2*gv24*Rtx*Rtz - \
+                    2*gv34*Rty*Rtz - gv44*__81412 - 2*Rtt*__81447 - \
+                    Rtt*Sqrt(delta))/(4.*((__81363*__81364 - __81364*gv33 +   \
+                                           __81367*__81370 - 2*gv12*gv13*gv24*gv34 + 2*gv23*gv24*gv34 + \
+                                           __81374*__81375 - gv22*__81375 + 2*gv14*(-(gv13*gv23*gv24) + \
+                                                                                    gv12*gv24*gv33 + gv13*gv22*gv34 - gv12*gv23*gv34) - (__81384 + \
+                                                                                                                                         __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
+                                          2*gv12*Rtt*Rtx + __81402 + 2*gv13*Rtt*Rty + __81404 + __81406 + \
+                                          2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __81413)));
+      }
 
 #endif
 
 
 
 
+
+    ////////////////////////
+    //
 	//cap on u^t
+    //
+    ///////////////////////
 	FTYPE gammamax=GAMMAMAXRAD;
 
     // get relative 4-velocity, that is always >=1 even in GR
@@ -2497,6 +2593,14 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 
 
+    ////////////
+    //
+    // get initial attempt for Erf
+    //
+    ////////////
+    Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
+
+
 	//////////////////////
 	//
 	// First case is if gammarel>gammamax, then set gammarel=gammamax unless Erf<ERADLIMIT (~0) in which case set Erf=ERADLIMIT and gammarel=1.
@@ -2507,7 +2611,23 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 	// Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
     int OLEKCHOICEVALUE=gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.;
 
-    if(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE){
+    int failure1=(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE);
+    int failure2=(gammarel2<1. || delta<0.);
+    int failure3=(Erf<ERADLIMIT);
+
+    FTYPE tautot[NDIM],tautotmax;
+    if(1 || M1REDUCE==TOOPACITYDEPENDENTFRAME){
+      // 1|| below because want to use tau to determine how to proceed with failures
+      if(1|| (failure1 || failure2 || failure3) && M1REDUCE==TOOPACITYDEPENDENTFRAME){
+        // then will possibly need tautotmax
+        // get tautot based upon previous pp in order to determine what to do in case of failure
+        calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+      }
+    }
+    
+
+
+    if(failure1 || failure2 && tautotmax<TAUFAILLIMIT){
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
@@ -2519,13 +2639,15 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 
 
 	  if(Erf<ERADLIMIT){ // Erf too small
-		*lpflagrad=UTOPRIMRADFAILCASE1A;
+
+		if(1) *lpflagrad=UTOPRIMRADFAILCASE1A;
+
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
@@ -2536,7 +2658,9 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 		//      if(fabs(gammarel2-gammamax*gammamax)>1E-12*gammamax*gammamax){
 		//	*lpflagrad=UTOPRIMRADFAILCASE1B;
 		//      }
-		*lpflagrad=UTOPRIMRADFAILCASE1B;
+
+        // if(0) below because, if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
+        if(0) *lpflagrad=UTOPRIMRADFAILCASE1B;
 
 
 		if(1){
@@ -2561,7 +2685,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 		  MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
 		  if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
 #endif
-		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: uu[%d]=%g\n",jj,uu[jj]);
+          //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
 
 
 		}
@@ -2615,7 +2739,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 	// Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
 	//
 	//////////////////////
-	else if(gammarel2<1. || delta<0.){
+	else if(failure2  && tautotmax>=TAUFAILLIMIT){
 
 
 	  FTYPE gammarel2orig=gammarel2;
@@ -2632,26 +2756,29 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 	  if(Erf<ERADLIMIT){ // JCM
-		*lpflagrad=UTOPRIMRADFAILCASE2A;
+
+		if(1) *lpflagrad=UTOPRIMRADFAILCASE2A;
 
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
 	  }
 	  else{
-		*lpflagrad=UTOPRIMRADFAILCASE2B;
+        // consider CASE2B ok with interpolation now, although uses pp in optically thin limit.  So generates static result!
+		if(0) *lpflagrad=UTOPRIMRADFAILCASE2B;
+
 		// relative 4-velocity radiation frame.  Might want to reset Erf to ERADLIMIT to be more strictly avoiding energy runaway problems.
 		//Erf=ERADLIMIT;
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
@@ -2671,13 +2798,16 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 	  if(Erf<ERADLIMIT){ // JCM
-		*lpflagrad=UTOPRIMRADFAILCASE3A;
+
+        // Erf<ERADLIMIT is bad, but interpolation results may be ok.  Although static with pp
+		if(1) *lpflagrad=UTOPRIMRADFAILCASE3A;
+
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
 
 		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
 		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(pp,ptrgeom,Av,Erf,gammarel2,urfconrel);
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT.\n");
 
@@ -2735,7 +2865,7 @@ __81385 + __81368 + __81386 + __81369)*gv44)*__81397*__81398 + \
 // interpolate between optically thick and thin limits when no u2p_rad() inversion solution
 // KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
 // I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
-static int opacity_interpolated_urfconrel(FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *urfconrel)
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
 {
   int jj;
   FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
@@ -2750,12 +2880,10 @@ static int opacity_interpolated_urfconrel(FTYPE *pp,struct of_geom *ptrgeom,FTYP
   FTYPE gammarel2rad=gammarad*gammarad;
   FTYPE Erfrad=3.*Av[0]*alpha*alpha/(4.*gammarel2rad-1.0);  // JCM
 
-  // get tautot based upon previous pp
-  FTYPE tautot[NDIM],tautotmax;
-  calc_tautot(pp, ptrgeom, tautot, &tautotmax);
   // now set urfconrel.  Choose fluid if tautotmax>=2/3 (updated fluid value), while choose previous radiation value (i.e. static!)
   FTYPE tautotmaxlim=MIN(fabs(tautotmax),1.0); // limit for interpolation below
-  Erf = (1.0-tautotmaxlim)*Erfrad + tautotmaxlim*Erffluid;
+  // done with Erf, so get Erfnew (Erf and *Erfnew might be same variable, but Erf passed by value so changing *Erfnew won't change Erf anyways)
+  *Erfnew = (1.0-tautotmaxlim)*Erfrad + tautotmaxlim*Erffluid;
   SLOOPA(jj) urfconrel[jj] = (1.0-tautotmaxlim)*pp[URAD1+jj-1] + tautotmaxlim*pp[U1+jj-1];
 
   //  dualfprintf(fail_file,"i=%d tautotmax=%g tautotmaxlim=%g\n",ptrgeom->i,tautotmax,tautotmaxlim);

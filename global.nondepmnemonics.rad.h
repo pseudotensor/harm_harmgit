@@ -70,7 +70,11 @@
 #define CASECHOICE JONCHOICE // choose
 //#define CASECHOICE OLEKCHOICE // choose
 
-#define DORADFIXUPS 1 // whether to fixup inversion failures using harm fixups
+// whether to fixup inversion failures using harm fixups
+// can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
+#define DORADFIXUPS 1
+
+#define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
 #define IMPLICITREVERTEXPLICIT 1
