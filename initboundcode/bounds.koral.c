@@ -1084,8 +1084,8 @@ int bound_radbeam2dbeaminflow(int dir,
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 		  
           // NOTEMARK: only really makes sense near the hole if in KSCOORDS
-		  if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
-		  if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
+		  if(pl==U3) if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
+		  if(pl==URAD3) if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
 
 
 		  // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \phi at those i
@@ -1154,34 +1154,38 @@ int bound_radbeam2dbeaminflow(int dir,
 			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
 			}
 
-			//primitives in whichvel,whichcoord
-			if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
-			  
-			  // beam injection
-              // override URAD0
-			  FTYPE ERADINJ;
-			  ERADINJ=calc_LTE_EfromT(TLEFT);
-              // override uradz
-			  uradz=1.0/sqrt(1.0 - NLEFT*NLEFT);
-              uradx=urady=0.0;
+            PBOUNDLOOP(pliter,pl){
 
-              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradx=%g urady=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradx,urady,uradz);
+              //primitives in whichvel,whichcoord
+              if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
+                
+                // beam injection
+                // override URAD0
+                FTYPE ERADINJ;
+                ERADINJ=calc_LTE_EfromT(TLEFT);
+                // override uradz
+                uradz=1.0/sqrt(1.0 - NLEFT*NLEFT);
+                uradx=urady=0.0;
+                
+                dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradx=%g urady=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradx,urady,uradz);
 
-			  MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
-			  MACP0A1(prim,i,j,k,URAD1) = uradx;
-			  MACP0A1(prim,i,j,k,URAD2) = urady;
-			  MACP0A1(prim,i,j,k,URAD3) = uradz;
-			}
-			else{ //no beam
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
+              }
+              else{ //no beam
+                
+                //              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g\n",i,k,ERADAMB);
+                
+                //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD1) = uradx;
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD2) = urady;
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD3) = uradz;
+              }
+            } // over allowed pl's to bound
 
-              //              dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g\n",i,k,ERADAMB);
-
-			  //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
-			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
-			  MACP0A1(prim,i,j,k,URAD1) = uradx;
-			  MACP0A1(prim,i,j,k,URAD2) = urady;
-			  MACP0A1(prim,i,j,k,URAD3) = uradz;
-			}
 
             PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
 
