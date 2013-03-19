@@ -50,6 +50,11 @@
 #define Pi (M_PI)     
 
 // KORALTODO: The below need to be chosen intelligently
+
+// below this \tau, no source term applied.
+// KORALTODO: Need to fix implicit solver so avoids dU-del in fluid if no radiatoin-fluid interaction, else overestimates effect and inversion failures occur.
+#define MINTAUSOURCE (NUMEPSILON)
+
 #define RADEPS (1.e-6)
 #define RADCONV (1.e-7)
 #define PRADEPS (1.e-6)
@@ -72,7 +77,7 @@
 
 // whether to fixup inversion failures using harm fixups
 // can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
-#define DORADFIXUPS 1
+#define DORADFIXUPS 0
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 

@@ -1423,6 +1423,27 @@ int bound_radatmbeaminflow(int dir,
 	}
 
 
+    extern FTYPE RADATM_MDOTEDD;
+    extern FTYPE RADATM_LUMEDD;
+    extern int RADATM_THINRADATM;
+    extern FTYPE RADATM_FERATIO;
+    extern FTYPE RADATM_FRATIO;
+    extern FTYPE RADATM_RHOAMB;
+    extern FTYPE RADATM_TAMB;
+
+
+    FTYPE MINX=Rin_array[1];
+    FTYPE kappaesperrho=calc_kappaes_user(1,0, 0,0,0);
+    FTYPE FLUXLEFT=RADATM_FRATIO/kappaesperrho/pow(MINX,2.0);
+
+    //at boundary
+    FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
+
+    FTYPE p0=RADATM_RHOAMB*RADATM_TAMB;
+    FTYPE KKK=p0/pow(RADATM_RHOAMB,gamideal);
+    FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RADATM_RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
+
+
 	  
 	if(dir==X1DN && BCtype[X1DN]==RADSHADOWINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
 
@@ -1463,23 +1484,6 @@ int bound_radatmbeaminflow(int dir,
             zz=V[3];
 
 
-            FTYPE RHOAMB=1E-15/RHOBAR;
-            FTYPE TAMB=1.e6/TEMPBAR;
-
-            FTYPE FRATIO=.1;
-            FTYPE MINX=Rin_array[1];
-            FTYPE kappaesperrho=calc_kappaes_user(1.0,TAMB,xx,yy,zz); // doesn't really depend upon TAMB
-            FTYPE FLUXLEFT=FRATIO/kappaesperrho/pow(MINX,2.0);
-            FTYPE FERATIO=.99999;
-
-
-            //at outern boundary
-            FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
-
-            FTYPE p0=RHOAMB*TAMB;
-            FTYPE KKK=p0/pow(RHOAMB,gamideal);
-            FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
-
             FTYPE rho=pow((gamideal-1.0)/gamideal/KKK*(C3+(1.-f)*(1./xx+0.*1./xx/xx+0.*4./3./xx/xx/xx)),1./(gamideal-1.0));
 
             FTYPE pre=KKK*pow(rho,gamideal);
@@ -1491,9 +1495,8 @@ int bound_radatmbeaminflow(int dir,
             FTYPE Fx=FLUXLEFT*(MINX/xx)*(MINX/xx);
 
             FTYPE ERAD;
-            extern FTYPE THINRADATM; // from init.koral.c
-            if(THINRADATM){
-              ERAD=Fx/FERATIO;
+            if(RADATM_THINRADATM){
+              ERAD=Fx/RADATM_FERATIO;
             }
             else{
               ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
@@ -1587,22 +1590,6 @@ int bound_radatmbeaminflow(int dir,
             zz=V[3];
 
 
-            FTYPE RHOAMB=1E-15/RHOBAR;
-            FTYPE TAMB=1.e6/TEMPBAR;
-
-            FTYPE FRATIO=.1;
-            FTYPE MINX=Rin_array[1];
-            FTYPE kappaesperrho=calc_kappaes_user(1.0,TAMB,xx,yy,zz); // doesn't really depend upon TAMB
-            FTYPE FLUXLEFT=FRATIO/kappaesperrho/pow(MINX,2.0);
-            FTYPE FERATIO=.99999;
-
-
-            //at outern boundary
-            FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
-
-            FTYPE p0=RHOAMB*TAMB;
-            FTYPE KKK=p0/pow(RHOAMB,gamideal);
-            FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
 
             FTYPE rho=pow((gamideal-1.0)/gamideal/KKK*(C3+(1.-f)*(1./xx+0.*1./xx/xx+0.*4./3./xx/xx/xx)),1./(gamideal-1.0));
 
@@ -1615,9 +1602,8 @@ int bound_radatmbeaminflow(int dir,
             FTYPE Fx=FLUXLEFT*(MINX/xx)*(MINX/xx);
 
             FTYPE ERAD;
-            extern FTYPE THINRADATM; // from init.koral.c
-            if(THINRADATM){
-              ERAD=Fx/FERATIO;
+            if(RADATM_THINRADATM){
+              ERAD=Fx/RADATM_FERATIO;
             }
             else{
               ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));

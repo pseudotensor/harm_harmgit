@@ -70,8 +70,8 @@
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
-//#define WHICHPROBLEM RADATM
-#define WHICHPROBLEM RADBEAM2D
+#define WHICHPROBLEM RADATM
+//#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
 
 
@@ -472,13 +472,12 @@
 #define N2 1
 #define N3 1
 
-// can choose any spherical polar coordinate system
-//#define MCOORD SPCMINKMETRIC
+// can choose any spherical polar coordinate system with gravity
 //#define MCOORD KSCOORDS
 #define MCOORD BLCOORDS
 
 #undef MPERSUN
-#define MPERSUN (1.0/MSUN) // So mass=1 as in koral for gTILDE=1.0
+#define MPERSUN (1.0) // So mass=1 as in koral for gTILDE=1.0
 
 
 #endif

@@ -442,12 +442,10 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 
-
   trifprintf("Fixup #1\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
-
 
 
   {
@@ -543,7 +541,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
   trifprintf("pre_fixup #2\n");
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
-
 
   return(0);
 

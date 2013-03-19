@@ -327,7 +327,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 		if(uup[jj+URAD0]==0.) del=IMPEPS*uup[URAD0];
 		else del=IMPEPS*uup[jj+URAD0];
 
-        // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
+        // KORALTODO: offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
         // KORALTODO: If ultrarel, then even this small "del" might be too large change in uu and might have bad P(U).  Need to control this "del" better.
 		uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
@@ -900,8 +900,8 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
     // first check if \tau is exceedingly small, so fluid-rad interaction can be skipped.  Avoids inversion for explicit prepare.
     FTYPE tautot[NDIM],tautotmax;
     calc_tautot(pinorig, ptrgeom, tautot, &tautotmax);
-    if(tautotmax<NUMEPSILON){
-      //if(debugfail>=2) dualfprintf(fail_file,"maximum optical depth for ijk=%d %d %d was tautotmax=%g , which is negligible enough to completely avoid source term explicit or implicit.\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,tautotmax);
+    if(tautotmax<MINTAUSOURCE){
+      if(debugfail>=2) dualfprintf(fail_file,"maximum optical depth for ijk=%d %d %d was tautotmax=%g , which is negligible enough to completely avoid source term explicit or implicit.\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,tautotmax);
       return; // then nothing to do.
     }
 

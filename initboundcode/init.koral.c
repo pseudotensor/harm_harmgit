@@ -10,13 +10,21 @@
 
 int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
 
-int THINRADATM;
 
 //FTYPE RADBEAMFLAT_FRATIO=0.95;
 FTYPE RADBEAMFLAT_FRATIO;
 FTYPE RADBEAMFLAT_ERAD;
 FTYPE RADBEAMFLAT_RHO;
 FTYPE RADBEAMFLAT_UU;
+
+FTYPE RADATM_MDOTEDD;
+FTYPE RADATM_LUMEDD;
+int RADATM_THINRADATM;
+FTYPE RADATM_FERATIO;
+FTYPE RADATM_FRATIO;
+FTYPE RADATM_RHOAMB;
+FTYPE RADATM_TAMB;
+
 
 FTYPE normglobal;
 
@@ -443,7 +451,8 @@ int init_global(void)
 	}
 
 	int idt;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+    //	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001;
 
 	DTr = 100; //number of time steps for restart dumps
 	tf = 20.0; //final time
@@ -501,8 +510,8 @@ int init_global(void)
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
-	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for ATMSTATIC\n",MCOORD);
-	  myexit(3434628752);
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADATM\n",MCOORD);
+	  myexit(3434628753);
 	}
 
 	cour=0.8;
@@ -510,11 +519,12 @@ int init_global(void)
 	cooling=KORAL;
     //    ARAD_CODE=0.0;
 
-	//BCtype[X1UP]=RADATMBEAMINFLOW;
-    //    BCtype[X1DN]=RADATMBEAMINFLOW;
-    BCtype[X1UP]=OUTFLOW;
+	BCtype[X1UP]=RADATMBEAMINFLOW;
+    BCtype[X1DN]=RADATMBEAMINFLOW;
+
+    //    BCtype[X1UP]=OUTFLOW;
     //    BCtype[X1DN]=HORIZONOUTFLOW;
-    BCtype[X1DN]=OUTFLOW;
+    //BCtype[X1DN]=OUTFLOW;
 
 	BCtype[X2UP]=PERIODIC;
 	BCtype[X2DN]=PERIODIC;
@@ -523,10 +533,11 @@ int init_global(void)
 
 
 	int idt;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E6;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E6;
+    //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E5; // DEBUG
 
 	DTr = 100; //number of time steps for restart dumps
-	tf = 1E7; //final time
+	tf = 2E9; //final time
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -1599,19 +1610,23 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   if(WHICHPROBLEM==RADATM){
 
 
-    FTYPE MASS=(MPERSUN*MSUN);
-    FTYPE MDOTEDD=(2.23/16.*1e18*MASS); //cm/s
-    FTYPE LUMEDD=(1.25e38*MASS); //erg/s
-    int THINRADATM=1;
+    // 2 PROBLEMS:
+    // 1) t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral
+    // 2) total loss of prad1 value
 
-    FTYPE RHOAMB=1E-15/RHOBAR;
-    FTYPE TAMB=1.e6/TEMPBAR;
+    //    FTYPE RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN); //cm/s
+    //    FTYPE RADATM_LUMEDD=(1.25e38*MPERSUN); //erg/s
+    int RADATM_THINRADATM=1;
+    FTYPE RADATM_FERATIO=.99999; // koral code
+    //    FTYPE RADATM_FERATIO=.99; // koral paper
+    FTYPE RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    FTYPE RADATM_RHOAMB=1E-15/RHOBAR;
+    FTYPE RADATM_TAMB=1.e6/TEMPBAR;
 
-    FTYPE FRATIO=.1;
+
     FTYPE MINX=Rin_array[1];
-    FTYPE kappaesperrho=KAPPAESUSER(1.0,TAMB); // doesn't really depend upon TAMB
-    FTYPE FLUXLEFT=FRATIO/kappaesperrho/pow(MINX,2.0);
-    FTYPE FERATIO=.99999;
+    FTYPE kappaesperrho=calc_kappaes_user(1,0, 0,0,0);
+    FTYPE FLUXLEFT=RADATM_FRATIO/kappaesperrho/pow(MINX,2.0);
 
 
 
@@ -1628,9 +1643,9 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     //at outern boundary
     FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
 
-    FTYPE p0=RHOAMB*TAMB;
-    FTYPE KKK=p0/pow(RHOAMB,gamideal);
-    FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
+    FTYPE p0=RADATM_RHOAMB*RADATM_TAMB;
+    FTYPE KKK=p0/pow(RADATM_RHOAMB,gamideal);
+    FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RADATM_RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
 
     FTYPE rho=pow((gamideal-1.0)/gamideal/KKK*(C3+(1.-f)*(1./xx + 0.*1./xx/xx + 0.*4./3./xx/xx/xx)),1./(gamideal-1.0));
 
@@ -1643,8 +1658,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
     FTYPE Fx=FLUXLEFT*(MINX/xx)*(MINX/xx);
 
     FTYPE ERAD;
-    if(THINRADATM){
-      ERAD=Fx/FERATIO;
+    if(RADATM_THINRADATM){
+      ERAD=Fx/RADATM_FERATIO;
     }
     else{
       ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
@@ -1695,6 +1710,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
 	// overwrite radiation primitives with new lab-frame values
 	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+
+    dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g uradx=%g ERAD=%g\n",i,pr[RHO],pr[UU],pr[U1],pr[URAD1],pr[URAD0]);
 
 
 	return(0);
@@ -1914,8 +1931,8 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 
   int pliter,pl;
   PLOOP(pliter,pl){
-    prfloor[RHO]=1E-10*RHOMIN;
-    prfloor[UU]=1E-10*UUMIN;
+    prfloor[RHO]=RHOMINLIMIT;
+    prfloor[UU]=UUMINLIMIT;
 
     prfloor[PRAD0]=ERADLIMIT;
   }
