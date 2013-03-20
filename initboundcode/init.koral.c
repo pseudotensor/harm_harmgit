@@ -26,6 +26,36 @@ FTYPE RADATM_RHOAMB;
 FTYPE RADATM_TAMB;
 
 
+int RADWAVE_NWAVE;
+int RADWAVE_NUMERO;
+FTYPE RADWAVE_PP;
+FTYPE RADWAVE_CC;
+FTYPE RADWAVE_KAPPA;
+FTYPE RADWAVE_RHOFAC;
+FTYPE RADWAVE_DRRE;
+FTYPE RADWAVE_DRIM;
+FTYPE RADWAVE_DVRE;
+FTYPE RADWAVE_DVIM;
+FTYPE RADWAVE_DURE;
+FTYPE RADWAVE_DUIM;
+FTYPE RADWAVE_DERE;
+FTYPE RADWAVE_DEIM;
+FTYPE RADWAVE_DFRE;
+FTYPE RADWAVE_DFIM;
+FTYPE RADWAVE_OMRE;
+FTYPE RADWAVE_OMIM;
+FTYPE RADWAVE_DTOUT1;
+FTYPE RADWAVE_RHOZERO;
+FTYPE RADWAVE_AAA;
+FTYPE RADWAVE_KK;
+FTYPE RADWAVE_UINT;
+FTYPE RADWAVE_TEMP;
+FTYPE RADWAVE_ERAD;
+FTYPE RADWAVE_VX;
+FTYPE RADWAVE_KAPPAES;
+FTYPE RADWAVE_ERADFACTOR;
+FTYPE RADWAVE_GASFACTOR;
+
 FTYPE normglobal;
 
 int prepre_init_specific_init(void)
@@ -573,6 +603,191 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
+  if(WHICHPROBLEM==RADWAVE){
+
+    lim[1]=lim[2]=lim[3]=MINM; // generates glitch at extrema in prad0
+    //lim[1]=lim[2]=lim[3]=MC; // less of a glitch near extrema in prad0
+
+	cour=0.8;
+	cooling=KORAL;
+    gam=gamideal=5./3.;
+
+    
+    RADWAVE_NWAVE=5; // 1,2,3,4,5 .  And for 5 can choose NUMERO=41,11,1
+    //    RADWAVE_NWAVE=1; // GOOD
+    //    RADWAVE_NWAVE=2; // GOOD
+    //    RADWAVE_NWAVE=3; // GOOD
+    //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
+    //    RADWAVE_NUMERO=11; // GOOD
+    RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
+    //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
+
+    // defaults
+    RADWAVE_KAPPA=RADWAVE_KAPPAES=0.0;
+
+
+	if(RADWAVE_NWAVE==5){ //sound wave with radiation set up according to Jiang+12
+
+      if(RADWAVE_NUMERO==41){
+        RADWAVE_PP=100.;
+        RADWAVE_CC=1.e2;
+        RADWAVE_KAPPA=10.;
+        RADWAVE_RHOFAC=0.01;
+        RADWAVE_DRRE=(1.e-3*RADWAVE_RHOFAC);
+        RADWAVE_DRIM=0.;
+        RADWAVE_DVRE=(4.06372e-6*RADWAVE_RHOFAC);
+        RADWAVE_DVIM=(6.90937e-6*RADWAVE_RHOFAC);
+        RADWAVE_DURE=(9.88671e-4*RADWAVE_RHOFAC);
+        RADWAVE_DUIM=(6.97077e-6*RADWAVE_RHOFAC);
+        RADWAVE_DERE=(-4.52724e-5*RADWAVE_RHOFAC);
+        RADWAVE_DEIM=(2.78566e-5*RADWAVE_RHOFAC);
+        RADWAVE_DFRE=(-5.83678e-6*RADWAVE_RHOFAC);
+        RADWAVE_DFIM=(-9.48194e-6*RADWAVE_RHOFAC);
+        RADWAVE_OMRE=0.0255331;
+        RADWAVE_OMIM=0.0434128;
+        RADWAVE_DTOUT1=1.e-0;
+      }
+
+      if(RADWAVE_NUMERO==11){
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=1.e2;
+        RADWAVE_KAPPA=0.01;
+        RADWAVE_RHOFAC=0.01;
+        RADWAVE_DRRE=(1.e-3*RADWAVE_RHOFAC);
+        RADWAVE_DRIM=0.;
+        RADWAVE_DVRE=(9.99998e-6*RADWAVE_RHOFAC);
+        RADWAVE_DVIM=(8.48878e-9*RADWAVE_RHOFAC);
+        RADWAVE_DURE=(1.66666e-3*RADWAVE_RHOFAC);
+        RADWAVE_DUIM=(2.82938e-6*RADWAVE_RHOFAC);
+        RADWAVE_DERE=(1.95853e-8*RADWAVE_RHOFAC);
+        RADWAVE_DEIM=(1.91123e-7*RADWAVE_RHOFAC);
+        RADWAVE_DFRE=(-1.33508e-5*RADWAVE_RHOFAC);
+        RADWAVE_DFIM=(4.23463e-6*RADWAVE_RHOFAC);
+        RADWAVE_OMRE=6.28317e-2;
+        RADWAVE_OMIM=5.33366e-5;
+        RADWAVE_DTOUT1=1.e-0;
+      }
+
+
+      if(RADWAVE_NUMERO==1){
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=1.e4;
+        RADWAVE_KAPPA=0.01;
+        RADWAVE_DRRE=1.e-3;
+        RADWAVE_DRIM=0.;
+        RADWAVE_DVRE=9.7548e-8;
+        RADWAVE_DVIM=7.92788e-9;
+        //RADWAVE_DPRE=1.61075e-3;
+        //RADWAVE_DPIM=2.07402e-4;
+        RADWAVE_DURE=1.57546e-3;
+        RADWAVE_DUIM=2.57783e-4;
+        RADWAVE_DERE=1.6874e-8; // 1.79137e-8
+        RADWAVE_DEIM=9.48966e-9; // 8.56498e-9
+        RADWAVE_DFRE=-1.77115e-6; // -1.32035e-6
+        RADWAVE_DFIM=3.65291e-6; // 3.88814e-6
+        RADWAVE_OMRE=6.12912e-4; // 7.99077
+        RADWAVE_OMIM=4.98123e-5; // 0.512336
+        RADWAVE_DTOUT1=1.e-2;
+      }
+
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
+      RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
+      ARAD_CODE=((RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
+      RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
+    }
+
+
+	if(RADWAVE_NWAVE==1){ //density wave advected with the gas
+      // NO RADIATION
+      RADWAVE_PP=0.1;
+      RADWAVE_CC=1.e6;
+      RADWAVE_VX=1.e-3;
+      RADWAVE_DTOUT1=(.05/RADWAVE_VX);
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_ERAD=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+    }
+
+	if(RADWAVE_NWAVE==2){ //hydro sound wave
+      // NO RADIATION
+      RADWAVE_PP=0.01;
+      RADWAVE_CC=1.e6;
+      RADWAVE_DTOUT1=(.05*RADWAVE_CC);
+      RADWAVE_VX=0.;
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_ERAD=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+    }
+
+	if(RADWAVE_NWAVE==3){ //radiative density wave advected with the gas
+      FLUXDISSIPATION=(0.0);
+      RADWAVE_PP=10.;
+      RADWAVE_CC=1.e6;
+      RADWAVE_VX=1.e-2;
+      RADWAVE_DTOUT1=(.0005/RADWAVE_VX);
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+      RADWAVE_KAPPAES=10.;
+    }
+
+
+	if(RADWAVE_NWAVE==4){ //sound wave with radiation, set up without the phase shifts etc.
+      FLUXDISSIPATION=(0.0);
+      RADWAVE_PP=1.;
+      RADWAVE_CC=1.e2;
+      RADWAVE_DTOUT1=(.005*RADWAVE_CC);
+      RADWAVE_VX=0.;
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-1;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+      RADWAVE_KAPPA=100.;
+      RADWAVE_ERADFACTOR=.5;
+      RADWAVE_GASFACTOR=.5;
+    }
+
+
+	BCtype[X1UP]=PERIODIC;
+	BCtype[X1DN]=PERIODIC;
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	BCtype[X3UP]=PERIODIC; 
+	BCtype[X3DN]=PERIODIC;
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=RADWAVE_DTOUT1;
+
+	DTr = 100; //number of time steps for restart dumps
+	if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
+    else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
+
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
 
   return(0);
 
@@ -800,6 +1015,22 @@ int init_defcoord(void)
 	Rout_array[1]=3.0;
 	Rout_array[2]=1.5;
 	Rout_array[3]=1.0;
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADWAVE){
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+
   }
 
 
@@ -1061,6 +1292,16 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPAES defines fractoin of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
+
+#endif
+
+
+
+
+#if(WHICHPROBLEM==RADWAVE)
+
+#define KAPPAUSER(rho,T) (rho*RADWAVE_KAPPA)
+#define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
 
 #endif
 
@@ -1610,9 +1851,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   if(WHICHPROBLEM==RADATM){
 
 
-    // 2 PROBLEMS:
-    // 1) t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral
-    // 2) total loss of prad1 value
+    // KORALTODO: t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral
 
     //    FTYPE RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN); //cm/s
     //    FTYPE RADATM_LUMEDD=(1.25e38*MPERSUN); //erg/s
@@ -1756,7 +1995,157 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
   }
 
 
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADWAVE){
+
+	FTYPE rho,ERAD,uint,Fx,Fy,Fz;
+	FTYPE vx;
+	FTYPE xx,yy,zz;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+
+
+
+    FTYPE time=0.;
+
+    //Jiang+12 waves
+    if(RADWAVE_NWAVE==5){
+
+      //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
+
+
+      rho=RADWAVE_RHOZERO*(1+RADWAVE_DRRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DRIM/RADWAVE_DRRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
+      //FTYPE RADWAVE_DURE=RADWAVE_DPRE/(gam-1.); FTYPE RADWAVE_DUIM=RADWAVE_DPIM/(gam-1.);
+      uint=RADWAVE_UINT*(1.+RADWAVE_DURE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DUIM/RADWAVE_DURE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx))) ;
+      FTYPE cs=1/RADWAVE_CC;
+      vx=0. + RADWAVE_DVRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DVIM/RADWAVE_DVRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
+      ERAD=RADWAVE_ERAD*(1+RADWAVE_DERE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DEIM/RADWAVE_DERE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
+      Fx=0. + RADWAVE_ERAD*RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DFIM/RADWAVE_DFRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Fz=Fy=0.;
+
+      //rho=RADWAVE_RHOZERO;
+      //uint=RADWAVE_UINT;
+      //ERAD=RADWAVE_ERAD;
+      //vx=0;
+      //Fx=0.;
+    }
+
+    //hydro density wave
+    if(RADWAVE_NWAVE==1){
+      rho=RADWAVE_RHOZERO*(1.+RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      uint=RADWAVE_UINT;
+      vx=RADWAVE_VX;
+      ERAD=1E-10*uint; // no radiation
+      Fx=Fz=Fy=0.;
+    }
+
+    //hydro sound wave
+	if(RADWAVE_NWAVE==2){
+      rho=RADWAVE_RHOZERO*(1.+RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      uint=RADWAVE_UINT*(1.+gam*RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      FTYPE cs=1./RADWAVE_CC;
+      vx=RADWAVE_AAA*cos(RADWAVE_KK*xx)*cs;
+      ERAD=RADWAVE_ERAD; // KORALTODO: Why does koral not set #define RADIATION for this test?
+      Fx=Fz=Fy=0.;
+    }
+
+    //radiative hydro density wave
+	if(RADWAVE_NWAVE==3){
+      rho=RADWAVE_RHOZERO*(1.+RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      uint=RADWAVE_UINT;
+      vx=RADWAVE_VX;
+      ERAD=RADWAVE_ERAD;
+      Fx=Fz=Fy=0.;
+    }
+
+    //radiative sound wave
+	if(RADWAVE_NWAVE==4){
+      rho=RADWAVE_RHOZERO*(1.+RADWAVE_GASFACTOR*RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      uint=RADWAVE_UINT*(1.+RADWAVE_GASFACTOR*gam*RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      FTYPE cs=1./RADWAVE_CC;
+      vx=RADWAVE_GASFACTOR*RADWAVE_AAA*cos(RADWAVE_KK*xx)*cs;
+      ERAD=RADWAVE_ERAD*(1.+RADWAVE_ERADFACTOR*RADWAVE_AAA*cos(RADWAVE_KK*xx));
+      Fx=Fz=Fy=0.;
+    }
+
+
+
+	pr[RHO] = rho;
+	pr[UU] = uint;
+	pr[U1] = vx ; // vx is 3-velocity
+	pr[U2] = 0 ;    
+	pr[U3] = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+  
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+	Fy=Fz=0.0;
+	pr[URAD0] = ERAD ;
+	pr[URAD1] = Fx ;
+	pr[URAD2] = Fy ;    
+	pr[URAD3] = Fz ;
+
+	// setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
+	*whichvel=VEL3;
+	*whichcoord=CARTMINKMETRIC2;
+
+	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
+	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
+	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
+  
+	// get metric grid geometry for these ICs
+	int getprim=0;
+	struct of_geom geomdontuse;
+	struct of_geom *ptrgeom=&geomdontuse;
+	gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+	// transform radiation primitives to lab-frame
+	FTYPE prrad[NPR],prradnew[NPR];
+	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
+	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
+	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
+	// overwrite radiation primitives with new lab-frame values
+	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+
+	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
+
+	// inversion returns WHICHVEL velocity type, so pass that back
+	*whichvel=WHICHVEL;
+	*whichcoord=CARTMINKMETRIC2;
+  
+	return(0);
+  
+
+  }
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
 
 
 #define NOFIELD -1

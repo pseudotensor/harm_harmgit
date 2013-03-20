@@ -218,25 +218,25 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
 
 
 // Harten-Lax-van Leer
-#define HLLCOMPUTE(cmin,cmax,U_l,U_r,F_l,F_r) ((  (cmax * F_l + cmin * F_r) - (cmax * cmin) * (U_r - U_l) ) / (cmax + cmin) )
+#define HLLCOMPUTE(cmin,cmax,U_l,U_r,F_l,F_r) ((  (cmax * F_l + cmin * F_r) - (FLUXDISSIPATION)*(cmax * cmin) * (U_r - U_l) ) / (cmax + cmin) )
 
 // Lax-Friedrichs with Rusanov wave speed
-#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - ctop * (U_r - U_l) ) )
+#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*ctop * (U_r - U_l) ) )
 //#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) ) )
-//#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - fabs(ctop) * fabs(U_r - U_l) ) )
-//#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - 1E-5 * (U_r - U_l) ) )
+//#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*fabs(ctop) * fabs(U_r - U_l) ) )
+//#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*1E-5 * (U_r - U_l) ) )
 
 // Lax-Friedrichs flux
-#define LFCOMPUTE(crus,U_l,U_r,F_l,F_r) (0.5*( (F_l+F_r) - crus*(U_r - U_l)))
+#define LFCOMPUTE(crus,U_l,U_r,F_l,F_r) (0.5*( (F_l+F_r) - (FLUXDISSIPATION)*crus*(U_r - U_l)))
 
 // mid-step for 2-step LW-flux
-#define UHALF(crus,U_l, U_r, F_l, F_r) (0.5*((U_l+U_r)-(F_r-F_l)/crus))
+#define UHALF(crus,U_l, U_r, F_l, F_r) (0.5*((U_l+U_r)-(FLUXDISSIPATION)*(F_r-F_l)/crus))
 
 // 2-step Lax-Wendroff flux
 #define LWCOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) (Fhalf)
 
 // FORCE
-#define FORCECOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) (0.25*( (F_l+F_r) + 2.0*Fhalf - crus*(U_r - U_l)))
+#define FORCECOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) (0.25*( (F_l+F_r) + 2.0*Fhalf - (FLUXDISSIPATION)*crus*(U_r - U_l)))
 
 // GFORCE // Toro & Titarev JCP 2006
 #define GFORCECOMPUTE(cg,crus,U_l,U_r,F_l,Fhalf,F_r) ( (LWCOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) + cg*LFCOMPUTE(crus,U_l,U_r,F_l,F_r))/(1.0+cg) )

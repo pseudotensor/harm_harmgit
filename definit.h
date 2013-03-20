@@ -794,6 +794,7 @@
 // whether to use hyperbolic function for cmin and cmax instead of sharp max(0,l,r)
 #define HYPERHLL 0
 
+
 // whether to shift stencil inside horizon
 #define HORIZONSUPERFAST 0
 

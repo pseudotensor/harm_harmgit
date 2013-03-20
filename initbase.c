@@ -1135,6 +1135,7 @@ int init_defglobal(void)
   defcon = 1.0;
   /* maximum increase in timestep */
   SAFE=1.3;
+  FLUXDISSIPATION=(1.0); // normally full flux dissipation.
   nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;

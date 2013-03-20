@@ -53,6 +53,10 @@ FTYPE TDYNORYEglobal,Hglobal;
 FTYPE rcurr, hcurr;
 FTYPE drsing;
 
+// float value prefactor for dissipation term in flux calculations (see fluxcompute.c)
+FTYPE FLUXDISSIPATION;
+
+
 //int istart, istop, jstart, jstop;
 #if(SIMULBCCALC!=-1) 
 int isc,iec,jsc,jec;

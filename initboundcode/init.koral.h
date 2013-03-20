@@ -5,6 +5,7 @@
 #define RADSHADOW (11)  // radiative shadow
 #define RADATM (12) // atmosphere enlighted
 #define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
+#define RADWAVE (15) // 1d linear rad wave with periodic BC
 #define RADPULSE3D (16) // radiative blob spreading around
 #define RADDBLSHADOW (17) // radiative shadow with two beams inclined
 #define ATMSTATIC (18) // simple hydrostatic atmosphere in SPC
@@ -14,14 +15,13 @@
 #define RADWALL (29) // flat with wall
 
 
-// RADBEAM2D, RADBEAM2DKS, and RADATM do not work yet.
+// RADBEAM2D, RADBEAM2DKS do not work yet.
 
 
 // TODO:
 #define RADBONDI (7) // like in Fragile's paper (called BONDI in koral)
 #define RADDONUT (25) // 2d radiative Polish donut in KS
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary
-#define RADWAVE (15) // 1d linear rad wave with periodic BC
 #define RADNT (30) // emission from midplane
 #define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral)
 #define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral)
@@ -70,9 +70,10 @@
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
-#define WHICHPROBLEM RADATM
+//#define WHICHPROBLEM RADATM
 //#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
+#define WHICHPROBLEM RADWAVE
 
 
 
@@ -482,6 +483,8 @@
 
 #endif
 
+//****************************************//
+//****************************************//
 
 #if(WHICHPROBLEM==RADWALL)
 
@@ -493,6 +496,25 @@
 
 #define N1 60
 #define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADWAVE)
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 100
+#define N2 1
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC2

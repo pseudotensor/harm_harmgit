@@ -55,14 +55,20 @@
 // KORALTODO: Need to fix implicit solver so avoids dU-del in fluid if no radiatoin-fluid interaction, else overestimates effect and inversion failures occur.
 #define MINTAUSOURCE (NUMEPSILON)
 
-#define RADEPS (1.e-6)
-#define RADCONV (1.e-7)
-#define PRADEPS (1.e-6)
-#define PRADCONV (1.e-8)
-//#define IMPEPS (1.e-6)
-#define IMPEPS (1.e-8)
-#define IMPCONV (1.e-6)
-#define IMPMAXITER (50)
+
+// IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
+#define IMPEPS (1.e-8) // for used implicit solver (needs to be chosen more generally.  1E-8 too small in general).
+#define IMPCONV (1.e-12)  // for used implicit solver
+#define IMPMAXITER (50) // for used implicit solver
+
+
+// UNUSED NUMERICAL STUFF
+#define RADEPS (1.e-6) // for unused numerical inversion stuff
+#define RADCONV (1.e-7) // for unused numerical inversion stuff
+#define PRADEPS (1.e-6)  // for unused numerical inversion stuff
+#define PRADCONV (1.e-8)  // for unused numerical inversion stuff
+
+
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
 
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
