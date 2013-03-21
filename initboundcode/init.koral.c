@@ -557,7 +557,7 @@ int init_global(void)
   if(WHICHPROBLEM==RADATM){
 
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -589,6 +589,8 @@ int init_global(void)
 
 	DTr = 100; //number of time steps for restart dumps
 	tf = 2E9; //final time
+    
+    tf=1E8; // profiling
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -641,9 +643,9 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    //    RADWAVE_NUMERO=11; // GOOD
-    //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
-    RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
+    //RADWAVE_NUMERO=11; // GOOD
+    RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
+    //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
     // NUMERO=41 corresponds to Jiang et al. (2002) PP=100, sigma=10 (2nd row, 2nd column in Table B1) 11 to PP=0.01, sigma=0.01 (1st row, 1st column).
 
@@ -821,11 +823,12 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADBONDI){
 
-	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //	lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
+    lim[1]=lim[2]=lim[3]=PARALINE;
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
-	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBONDI\n",MCOORD);
 	  myexit(3434628752);
 	}
 
@@ -870,12 +873,13 @@ int init_global(void)
       RADBONDI_MDOTPEREDD=100.;
     } 
 
-    RADBONDI_MDOTEDD=(2.23/16.*1e18*MPERSUN)*(MBAR/TBAR); //Mdot converted to code units
+    RADBONDI_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR); //Mdot converted to code units
     RADBONDI_RHOAMB=1.e-25/RHOBAR;
     RADBONDI_TAMB=1.e5/TEMPBAR;
     gam=gamideal=(1.+1./3.*((1.+RADBONDI_PRADGAS)/(.5+RADBONDI_PRADGAS)));
     RADBONDI_MUGAS=.5;
 
+    trifprintf("RADBONDI: %g %g %g %g %g %g %g %g\n",RADBONDI_PRADGAS,RADBONDI_TGAS0,RADBONDI_MDOTPEREDD,RADBONDI_MDOTEDD,RADBONDI_RHOAMB,RADBONDI_TAMB,gam,RADBONDI_MUGAS);
 
 	int idt;
 	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
@@ -1142,6 +1146,7 @@ int init_defcoord(void)
   /*************************************************/
   if(WHICHPROBLEM==RADBONDI){
 
+    // KORALTODO: 2.5 to 2E4 in paper
     RADBONDI_MINX=3.5;
     RADBONDI_MAXX=2e3;
 
@@ -1167,6 +1172,7 @@ int init_defcoord(void)
 int init_grid(void)
 {
   
+  init_defcoord(); // just avoids splitting function call, here sets R0,Rin,Rout
 
   return(0);
 }
@@ -1435,7 +1441,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==RADBONDI)
 
 
-#define KAPPA 0.
+#define KAPPA 1.0
 #define KAPPAES 1.0
 
 // assume KAPPA defines fraction of FF opacity
@@ -1900,8 +1906,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pradffortho[PRAD3] = Fz;
 
 	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-	*whichvel=VEL4;
-	*whichcoord=CARTMINKMETRIC2;
 	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
 	return(0);
@@ -1978,14 +1982,14 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     // KORALTODO: t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral
 
-    //    FTYPE RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN); //cm/s
-    //    FTYPE RADATM_LUMEDD=(1.25e38*MPERSUN); //erg/s
-    int RADATM_THINRADATM=1;
-    FTYPE RADATM_FERATIO=.99999; // koral code
-    //    FTYPE RADATM_FERATIO=.99; // koral paper
-    FTYPE RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
-    FTYPE RADATM_RHOAMB=1E-15/RHOBAR;
-    FTYPE RADATM_TAMB=1.e6/TEMPBAR;
+    RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR);
+    RADATM_LUMEDD=(1.25e38*MPERSUN)/(ENBAR/TBAR);
+    RADATM_THINRADATM=1;
+    RADATM_FERATIO=.99999; // koral code
+    //    RADATM_FERATIO=.99; // koral paper
+    RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    RADATM_RHOAMB=1E-15/RHOBAR;
+    RADATM_TAMB=1.e6/TEMPBAR;
 
 
     FTYPE MINX=Rin_array[1];

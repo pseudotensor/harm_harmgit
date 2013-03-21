@@ -15,9 +15,13 @@
 #define FLATNESS (27) // flat  (koral: but with non-zero four-force)
 #define RADWALL (29) // flat with wall
 
+// PROBLEMS:
 
-// RADBEAM2D, RADBEAM2DKS do not work yet.
-
+// RADBONDI, RADBEAM2D, RADBEAM2DKS do not work yet.
+// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.
+// RADWALL without fixups is worse than when avoided Erf< condition that seemingly was required for RADDBLSHADOW to work.
+// RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.
+// RADBONDI kinda works at high resolution with para until entropy reversions occur.  But constant bad inversions for u2p_rad() near BH of order 5%.  Some issue.  If that doesn't occur, maybe will work.
 
 // TODO:
 #define RADDONUT (25) // 2d radiative Polish donut in KS
@@ -70,12 +74,12 @@
 //#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
-#define WHICHPROBLEM ATMSTATIC
+//#define WHICHPROBLEM ATMSTATIC
 //#define WHICHPROBLEM RADATM
 //#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
 //#define WHICHPROBLEM RADWAVE
-//#define WHICHPROBLEM RADBONDI
+#define WHICHPROBLEM RADBONDI
 
 
 
@@ -546,7 +550,8 @@
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
 
-#define N1 112
+//#define N1 112 // KORALTODO: 512 in paper
+#define N1 512 // KORALTODO: 512 in paper
 #define N2 1
 #define N3 1
 

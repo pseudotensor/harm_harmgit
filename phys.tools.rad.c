@@ -1827,6 +1827,8 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
   int loc=ptrgeomprimecoords->p;
 
 
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"ijk=%d %d %d pl=%d pin0=%g pout0=%g\n",i,j,k,pl,pin[pl],pout[pl]);
+
   // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
   PLOOP(pliter,pl) pout[pl]=pin[pl];
 
@@ -1837,7 +1839,7 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
   if(*whichcoordrad==MCOORD || *whichcoordfluid==MCOORD){
     // get metric grid geometry this whichcoord
     int getprim=0;
-    gset(getprim,*whichcoordrad,i,j,k,ptrgeomreal);
+    gset_genloc(getprim,MCOORD,i,j,k,loc,ptrgeomreal);
   }
 
 
@@ -1894,11 +1896,14 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
   // output from prad_fforlab() is always WHICHVEL for both fluid and radiation primitives
   // changed whichvel's, so report that back if needed
   *whichvel=WHICHVEL;
-  
+ 
+  // PLOOP(pliter,pl) dualfprintf(fail_file,"ijk=%d %d %d pl=%d pout=%g\n",i,j,k,pl,pout[pl]);
+
+ 
   // output from prad_fforlab() not yet necessarily PRIMECOORDS.
   if(*whichcoordrad==MCOORD){
     // Get all primitives in WHICHVEL/PRIMECOORDS (no conversion for WHICHVEL since prad_fforlab() already put quantities in WHICHVEL due to u2p_rad() only setup for WHICHVEL)
-    if (bl2met2metp2v(&whichvel, &whichcoordrad, pout, i,j,k) >= 1){
+    if (bl2met2metp2v_genloc(*whichvel, *whichcoordrad, pout, i,j,k,loc) >= 1){
       FAILSTATEMENT("bounds.koral.c:bound_radatmbeaminflow()", "bl2ks2ksp2v()", 1);
     }
   }

@@ -1035,7 +1035,7 @@ int bound_radbeam2dbeaminflow(int dir,
 
 
   
-    if(BCtype[X3DN]==RADBEAM2DBEAMINFLOW && totalsize[3]>1 && mycpupos[3] == 0 ){
+    if(dir==X3DN && BCtype[X3DN]==RADBEAM2DBEAMINFLOW && totalsize[3]>1 && mycpupos[3] == 0 ){
 
       extern int BEAMNO,FLATBACKGROUND;
       FTYPE RHOAMB=1.e0/RHOBAR;
@@ -1175,7 +1175,7 @@ int bound_radbeam2dbeaminflow(int dir,
                 uradz=1.0/sqrt(1.0 - NLEFT*NLEFT);
                 uradx=urady=0.0;
                 
-                dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradx=%g urady=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradx,urady,uradz);
+                //                dualfprintf(fail_file,"i=%d k=%d ERADAMB=%g ERADINJ=%g uradx=%g urady=%g uradz=%g\n",i,k,ERADAMB,ERADINJ,uradx,urady,uradz);
 
                 if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
                 if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
@@ -1195,7 +1195,7 @@ int bound_radbeam2dbeaminflow(int dir,
             } // over allowed pl's to bound
 
 
-            PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
+            //            PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
 
             //            if(i==10 && k==0){
             //              PLOOP(pliter,pl) dualfprintf(fail_file,"BEFOREBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
@@ -1203,12 +1203,14 @@ int bound_radbeam2dbeaminflow(int dir,
             //              if(fabs(MACP0A1(prim,i,j,k,U1))>1.0) dualfprintf(fail_file,"BEFORE BC DEATHU1: ijk=%d %d %d u=%g\n",i,j,k,MACP0A1(prim,i,j,k,U1));
             //            }
 
+            // KORALTODO: ERADINJ is in fluid frame, need to convert, but probably ok.
+
 			// get all primitives in WHICHVEL/PRIMECOORDS value
 			primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
             //            MACP0A1(prim,i,j,k,URAD1)=0.0;
 
-            PLOOP(pliter,pl) dualfprintf(fail_file,"AFTERBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
+            //            PLOOP(pliter,pl) dualfprintf(fail_file,"AFTERBC: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
 
 
             //            if(i==10 && k==0){
@@ -1273,7 +1275,7 @@ int bound_radbeam2dflowinflow(int dir,
 
 
   
-    if(BCtype[X1UP]==RADBEAM2DFLOWINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
+    if(dir==X1UP && BCtype[X1UP]==RADBEAM2DFLOWINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
 
       extern int FLATBACKGROUND;
 	  FTYPE RHOAMB=1.e0/RHOBAR;
@@ -1362,6 +1364,9 @@ int bound_radbeam2dflowinflow(int dir,
 			MACP0A1(prim,i,j,k,PRAD1) = uradx;
 			MACP0A1(prim,i,j,k,PRAD2) = urady;
 			MACP0A1(prim,i,j,k,PRAD3) = uradz;
+
+            // KORALTODO: ERADAMB is in fluid frame, need to convert, but probably ok.
+
 			
 			//			dualfprintf(fail_file,"IC: ijk=%d %d %d : rho=%g u=%g Vr=%g erad=%g\n",i,j,k,rho,uint,-Vr,ERAD);
 
@@ -1451,7 +1456,7 @@ int bound_radatmbeaminflow(int dir,
     FTYPE KKK=p0/pow(RADATM_RHOAMB,gamideal);
     FTYPE C3=gamideal*KKK/(gamideal-1.)*pow(RADATM_RHOAMB,gamideal-1.)-(1.-f)*(1./MINX+0.*1./MINX/MINX+0.*4./3./MINX/MINX/MINX);
 
-
+    //    dualfprintf(fail_file,"IT: %g %g %g : %g : %g %g %g\n",MINX,kappaesperrho,FLUXLEFT,f,p0,KKK,C3);
 	  
 	if(dir==X1DN && BCtype[X1DN]==RADATMBEAMINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
 
@@ -1471,10 +1476,10 @@ int bound_radatmbeaminflow(int dir,
 		// ptrrgeom : i.e. ref geom
 		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
-	  
+        FTYPE *pr;
 		LOOPBOUND1IN{
 
-          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+          pr = &MACP0A1(prim,i,j,k,0);
     
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1512,7 +1517,7 @@ int bound_radatmbeaminflow(int dir,
               ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
             }
 
-            //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
+            //            dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,uint,ERAD);
 
 
             pr[RHO] = rho;
@@ -1533,6 +1538,8 @@ int bound_radatmbeaminflow(int dir,
             int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
             int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
             whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+            //            PLOOP(pliter,pl) dualfprintf(fail_file,"ijk=%d %d %d pl=%d pr=%g\n",i,j,k,pl,pr[pl]);
 
 		  }// end if not staggered fields
 
@@ -1562,10 +1569,11 @@ int bound_radatmbeaminflow(int dir,
 		// ptrrgeom : i.e. ref geom
 		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
         
+        FTYPE *pr;
 		LOOPBOUND1OUT{
           
-          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
-        
+          pr = &MACP0A1(prim,i,j,k,0);
+
     
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1929,10 +1937,11 @@ int bound_radbondiinflow(int dir,
 		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
 	  
+        FTYPE *pr;
 		LOOPBOUND1OUT{
 
-          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
-
+          pr = &MACP0A1(prim,i,j,k,0);
+          
     
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -2002,9 +2011,12 @@ int bound_radbondiinflow(int dir,
             pradffortho[PRAD2] = Fy;
             pradffortho[PRAD3] = Fz;
 
+            dualfprintf(fail_file,"rho=%g uint=%g vx=%g ERAD=%g\n",rho,uint,vx,ERAD);
 
             int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
             whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
 
 		  }// end if not staggered field
 
