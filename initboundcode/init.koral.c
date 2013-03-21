@@ -320,7 +320,7 @@ int init_global(void)
 
 // 1,2,3,31,4,41,5
 //#define NTUBE 1
-#define NTUBE 31
+#define NTUBE 31 // harder near t=0 at discontinuity
 //#define NTUBE 5
 //#define NTUBE 3
 
@@ -1346,8 +1346,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
 
-#define KAPPAUSER(rho,T) (rho*1E2) // seems to allow photon build-up at front edge of blob
-//#define KAPPAUSER(rho,T) (rho*1E0) // seems radiation pentrates blob too much compared to koral paper
+#define KAPPAUSER(rho,T) (rho*1E2)
+//#define KAPPAUSER(rho,T) (rho*1E0)
 #define KAPPAESUSER(rho,T) (rho*0.0)
 
 
@@ -1634,6 +1634,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[URAD2] = Fy ;    
 	pr[URAD3] = Fz ;
 
+    // no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.
+
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
 	return(0);
@@ -1671,6 +1673,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	  if(NTUBE==4 || NTUBE==41) {rho=3.65;uint =3.59e-2 / (gamideal - 1.);ERAD=1.30; Fx=1.e-2*ERAD;ux=0.189;}	  
 	  if(NTUBE==5) {rho=1.0;uint = 60. / (gamideal - 1.);ERAD=2.; Fx=1.e-2*ERAD;ux=1.10;}
 	}
+    Fy=Fz=0.0;
 
   
 	pr[RHO] = rho;
@@ -1693,6 +1696,20 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[PRAD1] = 0 ;
 	pr[PRAD2] = 0 ;    
 	pr[PRAD3] = 0 ;
+
+
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
+
+
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+	*whichvel=VEL4;
+	*whichcoord=CARTMINKMETRIC2;
+	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
 	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
 
@@ -1801,7 +1818,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	FTYPE BLOBZ=Pi/20.;
 	FTYPE PAR_D=1./RHOBAR;
 	FTYPE PAR_E=1e-4/RHOBAR;
-
+    FTYPE Fx,Fy,Fz;
 
 	FTYPE xx,yy,zz,rsq;
 	coord(i, j, k, CENT, X);
@@ -1849,19 +1866,16 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	  ERADAMB=calc_LTE_Efromurho(uint,rho);
 	}
 
-
+    Fx=Fy=Fz=0;
 
 	//test!
 	//Vr=0.7;
 
-	FTYPE uradx,urady,uradz;
-	uradx=urady=uradz=0.;
-    
 	pr[RHO] = rho ;
 	pr[UU]  = uint;
-	pr[U1]  = -Vr;
-	pr[U2]  = 0 ;    
-	pr[U3]  = 0 ;
+	pr[U1]  = -Vr; // VEL4
+	pr[U2]  = 0 ;  // static in VEL4
+	pr[U3]  = 0 ;  // static in VEL4
 
 	// just define some field
 	pr[B1]=0.0;
@@ -1873,17 +1887,22 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
 	}
 
-
 	pr[PRAD0] = ERADAMB;
-	pr[PRAD1] = uradx ;
-	pr[PRAD2] = urady ;    
-	pr[PRAD3] = uradz ;
+	pr[PRAD1] = 0.0 ; // static in VEL4
+	pr[PRAD2] = 0.0 ;    
+	pr[PRAD3] = 0.0 ;
 
-	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0)
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERADAMB;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
 
-	//	*whichvel=WHICHVEL;
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
 	*whichvel=VEL4;
-	*whichcoord=MCOORD;
+	*whichcoord=CARTMINKMETRIC2;
+	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
 	return(0);
   }

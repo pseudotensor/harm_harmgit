@@ -866,6 +866,7 @@ int bound_radshadowinflow(int dir,
 
 			  //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
 
+              // KORALTODO GODMARK: ERAD is really fluid frame value, not radiation frame!  Need the below to account for that.  Currently just adjusted ERAD so injection is similar to expected.
 
               // get all primitives in WHICHVEL/PRIMECOORDS value
               primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).

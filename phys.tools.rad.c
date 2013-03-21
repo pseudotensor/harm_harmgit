@@ -241,6 +241,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //vector of conserved at the previous two iterations
     PLOOP(pliter,pl)  uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
     PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
+    PLOOP(pliter,pl)  uuporig[pl]=uu[pl];
     
     //values at zero state
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
@@ -271,6 +272,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
 
           PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
+          //          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uup[pl];
           PLOOP(pliter,pl) uup[pl]=uu[pl]; // store new version of prior Newton step
         }
         // keep below so can count inversion failures against retry successes in the failure file.
@@ -281,6 +283,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         // then success, so was able to do inversion P(U) with change in radiation on fluid: P(uu[fluid] = uu0[fluid] - (uu[rad]-uu0[rad]))
         // This doesn't necessarily mean could do P(uu0) except for iter=1.
         // Corresponds to success for a certain P(uu0,uu) pair.
+        // || ptrgeom->i==23 && ptrgeom->j==24
         if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
         break;
       }
@@ -322,22 +325,36 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //
     /////////////
 
+    FTYPE localIMPEPS=IMPEPS;
+    FTYPE FRACIMPEPSCHANGE=0.1;
+    FTYPE del;
     DLOOPA(ii){
 	  DLOOPA(jj){
-		FTYPE del;
-		if(uup[jj+URAD0]==0.) del=IMPEPS*uup[URAD0];
-		else del=IMPEPS*uup[jj+URAD0];
 
-        // KORALTODO: offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
-        // KORALTODO: If ultrarel, then even this small "del" might be too large change in uu and might have bad P(U).  Need to control this "del" better.
-		uu[jj+URAD0]=uup[jj+URAD0]-del;
+        while(1){
+
+          if(uup[jj+URAD0]==0.) del=localIMPEPS*uup[URAD0];
+          else del=localIMPEPS*uup[jj+URAD0];
+
+          // KORALTODO: offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
+          // KORALTODO: If ultrarel, then even this small "del" might be too large change in uu and might have bad P(U).  Need to control this "del" better.
+          uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
-        // get dUresid for this offset uu
-        int whichcall=2;
-		failreturn=f_implicit_lab(whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
-        if(failreturn){
-          if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Should explore smaller del in ultrarel case?\n",ii,jj);
-          return(1);
+          // get dUresid for this offset uu
+          int whichcall=2;
+          failreturn=f_implicit_lab(whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+          if(failreturn){
+            if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
+            localIMPEPS*=FRACIMPEPSCHANGE;
+            if(localIMPEPS<NUMEPSILON*10.0){
+              if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del);
+              return(1); // can't go below machine precision for difference else will be 0-0
+            }
+          }
+          else{
+            // didn't fail
+            break;
+          }
         }
 
 	
@@ -842,9 +859,9 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 		// Get P(U)
 		if(Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
 		  dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of koral_explicit_source_rad()\n");
-		  myexit(347366436); // KORALTODO: if explicit dies, nothing to revert to.
+		  //myexit(347366436); // KORALTODO: if explicit dies, nothing to revert to, except to assume force not important for overall dynamics.
           // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)
-		  //return(1);
+		  return;
 		}
 
 		// re-get needed q's
@@ -892,7 +909,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
-  int showmessages=0; // 0 ok if not debugging and think everything works.
+  int showmessages=1; // 0 ok if not debugging and think everything works.
   int showmessagesheavy=0;
 
 
@@ -2468,16 +2485,22 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
 //
 ///////////////
-int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   int jj,kk;
+  FTYPE pp[NPR];
+  int pliter,pl;
 
- 
+  
+
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
     myexit(137432636);
   }
 
+
+  // copy over pin so pin isn't modified until end
+  PLOOP(pliter,pl) pp[pl]=pin[pl];
 
   //////////////////////
   //
@@ -2799,7 +2822,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     
 
 
-    if(failure1 || failure2 && tautotmax<TAUFAILLIMIT){
+    //    if(failure1){ // || failure2 ){ //&& tautotmax<TAUFAILLIMIT){
+    if(failure1 && tautotmax<TAUFAILLIMIT){
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
@@ -2815,33 +2839,36 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
+
+        // can't use normal velocity with small Erf -- fails with inf or nan
+        SLOOPA(jj) urfconrel[jj] = 0.0;
+
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 	  }
       else{
         // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
         if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      }
 
-
-      // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
-      // lab-frame radiation relative 4-velocity
-      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
-
-      // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
-      FTYPE gammatemp,qsqtemp;
-      int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
-      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-
-      // now rescale urfconrel[i] so will give desired \gammamax
-      SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
+        // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
+        // lab-frame radiation relative 4-velocity
+        SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+        
+        // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
+        FTYPE gammatemp,qsqtemp;
+        int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
+        MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+        
+        // now rescale urfconrel[i] so will give desired \gammamax
+        SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
 	
 #if(PRODUCTION==0)
-      // check that gamma really correctly gammamax
-      FTYPE gammatemp2,qsqtemp2;
-      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
+        // check that gamma really correctly gammamax
+        FTYPE gammatemp2,qsqtemp2;
+        MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+        if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 #endif
+      }
       //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
 
 
@@ -2851,7 +2878,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
       SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
       // update opacity calculation for new pp (although nominally radiation doesn't change opacity)
-      calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+      //      calc_tautot(pp, ptrgeom, tautot, &tautotmax);
       //      dualfprintf(fail_file,"tautotmax=%g\n",tautotmax);
 
       // now see how to handle opacity based limits between pp[PRAD1-PRAD3] and fluid velocity in pp[U1-U3] with Erf determined from one of those
@@ -2866,6 +2893,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 	// Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
 	//
 	//////////////////////
+    //	else if(failure2){ // && tautotmax>=TAUFAILLIMIT){
 	else if(failure2 && tautotmax>=TAUFAILLIMIT){
 
 
@@ -2894,6 +2922,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       }
 
+      // can't use normal velocity with small Erf -- fails with inf or nan
       // setup "old" pp in case used
       pp[PRAD0] = Erf;
       SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
@@ -2920,13 +2949,22 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
 		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE3A;
-		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT.\n");
-	  }
+		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
-      
-      // get good relative velocity
-      FTYPE gammarel=sqrt(gammarel2);
-      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+        // can't use normal velocity with small Erf -- fails with inf or nan
+        // setup "old" pp in case used
+        pp[PRAD0] = Erf;
+        SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
+        
+        if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+        else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
+	  }
+      else{
+        // get good relative velocity
+        FTYPE gammarel=sqrt(gammarel2);
+        SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+      }
 
       
 #if(PRODUCTION==0)
@@ -2943,10 +2981,10 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   
 
   //new primitives (only uses urfcon[1-3])
-  pp[PRAD0]=Erf;
-  pp[PRAD1]=urfconrel[1];
-  pp[PRAD2]=urfconrel[2];
-  pp[PRAD3]=urfconrel[3];
+  pin[PRAD0]=Erf;
+  pin[PRAD1]=urfconrel[1];
+  pin[PRAD2]=urfconrel[2];
+  pin[PRAD3]=urfconrel[3];
 
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
