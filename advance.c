@@ -767,6 +767,7 @@ static int advance_standard(
     FTYPE prbefore[NPR];
     struct of_newtonstats newtonstats; // not pointer
     int showmessages=1;
+    int allowlocalfailurefixandnoreport=1; // allow local fixups
     
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -787,7 +788,7 @@ static int advance_standard(
 	// store guess for diss_compute before changed by normal inversion
 	PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-	MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+	MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
 	nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 
@@ -798,7 +799,7 @@ static int advance_standard(
 	
       }
       else{ // otherwise still iterating on primitives
-        MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
       }
 
@@ -1487,6 +1488,7 @@ static int advance_finitevolume(
     struct of_geom *ptrgeom=&geomdontuse;
     struct of_newtonstats newtonstats;
     int showmessages=1;
+    int allowlocalfailurefixandnoreport=1; // allow local fixups
 
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -1508,7 +1510,7 @@ static int advance_finitevolume(
   
 
       // invert point U-> point p
-      MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
       //If using a high order scheme, need to choose whether to trust the point value
@@ -1677,6 +1679,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
   int finalstep;
   FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_geom *geom, FTYPE *pin, FTYPE *pout );
   int showmessages=1;
+  int allowlocalfailurefixandnoreport=1; // allow local fixups
 
 
   finalstep=timeorder == numtimeorders-1;
@@ -1709,7 +1712,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
     //make a copy of the initial guess so that not to modify the original pb's
     PLOOP(pliter,pl) pavg[pl] = pb[pl];
     //invert the average U -> "average" p
-    MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
 
     invert_from_average_flag = GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -1776,7 +1779,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //make a copy of the initial guess so that not to modify the original pb's
       PLOOP(pliter,pl) pf[pl] = pb[pl];
       //invert the average U -> "average" p
-      MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
       //      invert_from_average_flag = lpflag[FLAGUTOPRIMFAIL];
 
 
@@ -1785,7 +1788,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //      lpflag[FLAGUTOPRIMFAIL] = invert_from_average_flag;
 
       //old code:
-      //MYFUN(Utoprimgen(showmessages,finalstep,EVOLVEUTOPRIM, UEVOLVE, avg, ptrgeom, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
+      //MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM, UEVOLVE, avg, ptrgeom, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
 
       frac_avg_used = 1.0; //reverted to the average value
 

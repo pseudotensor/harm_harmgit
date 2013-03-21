@@ -893,7 +893,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
       struct of_newtonstats newtonstats;
       int showmessages=0; // messages not important if fixup doens't work, unless debugging.
-      failreturn=Utoprimgen(showmessages,finalstep,OTHERUTOPRIM,UNOTHING,U,ptrgeom,prmhd,&newtonstats);
+      int allowlocalfailurefixandnoreport=1; 
+      failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,OTHERUTOPRIM,UNOTHING,U,ptrgeom,prmhd,&newtonstats);
       // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
       badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));
 

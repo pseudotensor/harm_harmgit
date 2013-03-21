@@ -38,6 +38,9 @@ vis5d_enable_graphics $ctx VIS5D_TRAJ 0 VIS5D_ON
 
 # small-scale
 set outputfilename "small3d"
+
+
+# Add your own settings file from vis5d's "SAVE" button
 #source 3dtry.set
 #source 3dtry2.set
 #source try11.SAVE

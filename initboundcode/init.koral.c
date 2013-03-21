@@ -56,6 +56,27 @@ FTYPE RADWAVE_KAPPAES;
 FTYPE RADWAVE_ERADFACTOR;
 FTYPE RADWAVE_GASFACTOR;
 
+
+
+FTYPE RADBONDI_TESTNO;
+FTYPE RADBONDI_PRADGAS;
+FTYPE RADBONDI_TGAS0;
+FTYPE RADBONDI_MDOTPEREDD;
+FTYPE RADBONDI_MDOTEDD;
+FTYPE RADBONDI_RHOAMB;
+FTYPE RADBONDI_TAMB;
+FTYPE RADBONDI_MUGAS;
+FTYPE RADBONDI_MINX;
+FTYPE RADBONDI_MAXX;
+
+
+
+
+
+
+
+
+
 FTYPE normglobal;
 
 int prepre_init_specific_init(void)
@@ -612,6 +633,8 @@ int init_global(void)
 	cooling=KORAL;
     gam=gamideal=5./3.;
 
+
+    // KORALTODO: See Jiang, Stone, Davis (2012) for S6.1.2 for linear MHD-radiation compressible wave tests
     
     RADWAVE_NWAVE=5; // 1,2,3,4,5 .  And for 5 can choose NUMERO=41,11,1
     //    RADWAVE_NWAVE=1; // GOOD
@@ -619,8 +642,15 @@ int init_global(void)
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
     //    RADWAVE_NUMERO=11; // GOOD
-    RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
-    //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
+    //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
+    RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
+
+    // NUMERO=41 corresponds to Jiang et al. (2002) PP=100, sigma=10 (2nd row, 2nd column in Table B1) 11 to PP=0.01, sigma=0.01 (1st row, 1st column).
+
+    //NUMERO 1 was supposed to be his original test (1st row, 1st column) but, as you mention, it turned out to be jelly. The reason is that the initial conditions from the table were not precise enough to hit the acoustic mode and much faster radiation mode quickly dominates causing the jelly behavior. I had difficult time with that and decided to derive the numbers by myself (PROBLEMS/RADWAVE/disp107.nb). They were a bit different and made the difference so that one sees only the acoustic mode. The reason is most likely the fact that my dispersion relation and the code are somewhat relativistic.
+
+
+
 
     // defaults
     RADWAVE_KAPPA=RADWAVE_KAPPAES=0.0;
@@ -783,6 +813,80 @@ int init_global(void)
     //    DODIAGEVERYSUBSTEP = 1;
 
   }
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADBONDI){
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	cooling=KORAL;
+	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=RADBONDIINFLOW;
+    //    BCtype[X1DN]=OUTFLOW;
+    BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
+	BCtype[X2UP]=PERIODIC;
+	BCtype[X2DN]=PERIODIC;
+	//	BCtype[X3UP]=FREEOUTFLOW;
+	BCtype[X3UP]=OUTFLOW;
+	BCtype[X3DN]=OUTFLOW;
+
+
+
+    RADBONDI_TESTNO=2;
+
+	if(RADBONDI_TESTNO==1){
+      RADBONDI_PRADGAS=1.2e-7/RHOBAR;
+      RADBONDI_TGAS0=1e5/TEMPBAR;
+      RADBONDI_MDOTPEREDD=10.;
+    }
+
+	if(RADBONDI_TESTNO==2){
+      RADBONDI_PRADGAS=1.2e-4/RHOBAR;
+      RADBONDI_TGAS0=1.e6/TEMPBAR;
+      RADBONDI_MDOTPEREDD=10.;
+    }
+
+	if(RADBONDI_TESTNO==3){
+      RADBONDI_PRADGAS=1.2e-1/RHOBAR;
+      RADBONDI_TGAS0=1e7/TEMPBAR;
+      RADBONDI_MDOTPEREDD=10.;
+    }
+
+	if(RADBONDI_TESTNO==4){
+      RADBONDI_PRADGAS=1.2e-5/RHOBAR;
+      RADBONDI_TGAS0=1e6/TEMPBAR;
+      RADBONDI_MDOTPEREDD=100.;
+    } 
+
+    RADBONDI_MDOTEDD=(2.23/16.*1e18*MPERSUN)*(MBAR/TBAR); //Mdot converted to code units
+    RADBONDI_RHOAMB=1.e-25/RHOBAR;
+    RADBONDI_TAMB=1.e5/TEMPBAR;
+    gam=gamideal=(1.+1./3.*((1.+RADBONDI_PRADGAS)/(.5+RADBONDI_PRADGAS)));
+    RADBONDI_MUGAS=.5;
+
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 100*DTdumpgen[0]; // 100 dumps(?)
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+
 
   /*************************************************/
   /*************************************************/
@@ -1032,6 +1136,28 @@ int init_defcoord(void)
 	Rout_array[3]=1.0;
 
   }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADBONDI){
+
+    RADBONDI_MINX=3.5;
+    RADBONDI_MAXX=2e3;
+
+    //#define LOGXGRID
+    //    FTYPE LOGPAR1=2.2;
+    //    FTYPE LOGPAR2=2.;
+
+    //	defcoord = UNIFORMCOORDS;
+    defcoord = LOGRUNITH; // Uses R0, Rin, Rout
+    R0=0.0;
+	Rin=RADBONDI_MINX;
+	Rout=RADBONDI_MAXX;
+
+  }
+
+
 
 
   return(0);
@@ -1306,6 +1432,20 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #endif
 
 
+#if(WHICHPROBLEM==RADBONDI)
+
+
+#define KAPPA 0.
+#define KAPPAES 1.0
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
 
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
@@ -1332,22 +1472,20 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
-  int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
+  int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
 
   // assume inittype not used, pos==CENT, and time doesn't matter (e.g. only used at t=0)
 
-  init_dsandvels_flatness(whichvel, whichcoord,  i,  j,  k, pr, pstag);
+  init_dsandvels_koral(whichvel, whichcoord,  i,  j,  k, pr, pstag);
 
   return(0);
 }
 
 
 // unnormalized density
-int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
+int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   FTYPE X[NDIM],V[NDIM];
-  struct of_geom realgeomdontuse;
-  struct of_geom *ptrrealgeom=&realgeomdontuse;
   int pl,pliter;
 
   //  coord(i, j, k, CENT, X);
@@ -1419,7 +1557,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	pr[PRAD2] = 0 ;    
 	pr[PRAD3] = 0 ;
 
-	// no transformations required since only setting fluid-frame E that is PRAD0 itself.
+	// no transformations required since only setting radiation frame E that is PRAD0 itself.
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
@@ -1551,39 +1689,13 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
 	}
 
-	Fy=Fz=0.0;
-	pr[URAD0] = ERAD ;
-	pr[URAD1] = Fx ;
-	pr[URAD2] = Fy ;    
-	pr[URAD3] = Fz ;
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
 
-	// setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
-	*whichvel=VEL4;
-	*whichcoord=CARTMINKMETRIC2;
+	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
 
-	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
-	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
-	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
-  
-	// get metric grid geometry for these ICs
-	int getprim=0;
-	struct of_geom geomdontuse;
-	struct of_geom *ptrgeom=&geomdontuse;
-	gset(getprim,*whichcoord,i,j,k,ptrgeom);
-
-	// transform radiation primitives to lab-frame
-	FTYPE prrad[NPR],prradnew[NPR];
-	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
-	// overwrite radiation primitives with new lab-frame values
-	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
-
-	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
-
-	// inversion returns WHICHVEL velocity type, so pass that back
-	*whichvel=WHICHVEL;
-	*whichcoord=CARTMINKMETRIC2;
   
 	return(0);
   
@@ -1649,33 +1761,27 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
 	}
 
-	pr[URAD0] = ERAD ;
-	pr[URAD1] = Fx ;
-	pr[URAD2] = Fy ;    
-	pr[URAD3] = Fz ;
 
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
+
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
 	*whichvel=VEL4;
 	*whichcoord=CARTMINKMETRIC2;
-
-	// get metric grid geometry for these ICs
-	int getprim=0;
-	struct of_geom geomdontuse;
-	struct of_geom *ptrgeom=&geomdontuse;
-	gset(getprim,*whichcoord,i,j,k,ptrgeom);
-
-
-	// now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
-	FTYPE prrad[NPR],prradnew[NPR];
-	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
-	// overwrite radiation primitives with new lab-frame values
-	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
    
 	//	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
 
-	*whichvel=WHICHVEL;
-	*whichcoord=CARTMINKMETRIC2;
+
 	return(0);
   }
 
@@ -1730,11 +1836,11 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 
 	  // get metric grid geometry for these ICs
 	  int getprim=0;
-	  struct of_geom geomdontuse;
-	  struct of_geom *ptrgeom=&geomdontuse;
-	  gset(getprim,*whichcoord,i,j,k,ptrgeom);
+	  struct of_geom geomrealdontuse;
+	  struct of_geom *ptrgeomreal=&geomrealdontuse;
+	  gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
 
-	  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeom->gcov[GIND(1,1)]);
+	  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeomreal->gcov[GIND(1,1)]);
 	  rho=PAR_D/(r*r*sqrt(2./r));
 	  if(BLOB) rho += rhoblob;
 	  FTYPE T=TAMB;
@@ -1904,6 +2010,7 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
       ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
     }
 
+    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
 
     pr[RHO] = rho ;
 	pr[UU]  = uint;
@@ -1922,36 +2029,24 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	}
 
 
-	pr[PRAD0] = ERAD  ;
-	pr[PRAD1] = Fx ;
-	pr[PRAD2] = Fy ;    
-	pr[PRAD3] = Fz ;
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
 
-    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
 
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
 	*whichvel=VEL4;
 	*whichcoord=MCOORD;
-
-	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
-	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
-	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
-  
-	// get metric grid geometry for these ICs
-	int getprim=0;
-	struct of_geom geomdontuse;
-	struct of_geom *ptrgeom=&geomdontuse;
-	gset(getprim,*whichcoord,i,j,k,ptrgeom);
-
-	// transform radiation primitives to lab-frame
-	FTYPE prrad[NPR],prradnew[NPR];
-	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
-	// overwrite radiation primitives with new lab-frame values
-	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
+	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
 
     dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g uradx=%g ERAD=%g\n",i,pr[RHO],pr[UU],pr[U1],pr[URAD1],pr[URAD0]);
-
 
 	return(0);
   }
@@ -2011,6 +2106,8 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	zz=V[3];
 
 
+    // default
+	Fx=Fy=Fz=0.0;
 
 
     FTYPE time=0.;
@@ -2093,46 +2190,129 @@ int init_dsandvels_flatness(int *whichvel, int*whichcoord, int i, int j, int k, 
 	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
 	}
 
-	Fy=Fz=0.0;
-	pr[URAD0] = ERAD ;
-	pr[URAD1] = Fx ;
-	pr[URAD2] = Fy ;    
-	pr[URAD3] = Fz ;
 
-	// setup vel type and coord type for prad_fforlab() based upon input velocity type and coordinate/metric type from data above
+
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
+
+
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
 	*whichvel=VEL3;
 	*whichcoord=CARTMINKMETRIC2;
+    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
 
-	// TODO: need to convert these radiation things from the fluid frame (as defined) to the lab-frame
-	// make a prad_ff2lab() like in koral's frames.c using Jon's new tetrad conversion stuff.
-	// But in that case, here, lab frame is Minkowski so need to use gset() to make ptrgeom using CARTMINKMETRIC2.
-  
-	// get metric grid geometry for these ICs
-	int getprim=0;
-	struct of_geom geomdontuse;
-	struct of_geom *ptrgeom=&geomdontuse;
-	gset(getprim,*whichcoord,i,j,k,ptrgeom);
+    //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
 
-	// transform radiation primitives to lab-frame
-	FTYPE prrad[NPR],prradnew[NPR];
-	PLOOP(pliter,pl) prrad[pl]=pr[pl]; // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-	int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-	prad_fforlab(*whichvel, *whichcoord, whichframedir, prrad, prradnew, ptrgeom);
-	// overwrite radiation primitives with new lab-frame values
-	PLOOPRADONLY(pl) pr[pl]=prradnew[pl];
-
-	//  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeom->i,pl,pr[pl]);
-
-	// inversion returns WHICHVEL velocity type, so pass that back
-	*whichvel=WHICHVEL;
-	*whichcoord=CARTMINKMETRIC2;
-  
+ 
 	return(0);
   
 
   }
 
 
+
+
+
+
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADBONDI){
+
+
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+	*whichcoord=MCOORD;
+    // get metric grid geometry for these ICs
+    int getprim=0;
+    struct of_geom geomrealdontuse;
+    struct of_geom *ptrgeomreal=&geomrealdontuse;
+    gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+
+    
+    FTYPE rho,ERAD,uint;
+    FTYPE rho0,Tgas0,ur,Tgas,Trad,r,rcm,prad,pgas,vx,ut;
+
+    FTYPE Fx,Fy,Fz;
+    Fx=Fy=Fz=0;
+
+    //at outern boundary
+    r=RADBONDI_MAXX;
+    ur=-sqrt(2./r);
+    rho0=-RADBONDI_MDOTPEREDD*RADBONDI_MDOTEDD/(4.*Pi*r*r*ur);
+    Tgas0=RADBONDI_TGAS0;
+            
+    //at given cell
+    r=xx;
+    ur=-sqrt(2./r);    
+    ut=sqrt((-1.-ur*ur*ptrgeomreal->gcov[GIND(1,1)])/ptrgeomreal->gcov[GIND(0,0)]);
+    vx=ur/ut;  
+    rho=-RADBONDI_MDOTPEREDD*RADBONDI_MDOTEDD/(4.*Pi*r*r*ur);
+    Tgas=Tgas0*pow(rho/rho0,gam-1.);      
+
+    uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+    pgas=rho*Tgas;
+    prad=RADBONDI_PRADGAS*pgas;
+    ERAD=prad*3.;
+    
+	pr[RHO] = rho ;
+	pr[UU]  = uint;
+	pr[U1]  = vx;
+	pr[U2]  = 0 ;    
+	pr[U3]  = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+	pr[PRAD0] = ERAD;
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
+
+
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+	*whichvel=VEL3;
+    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+
+	return(0);
+  }
 
 
 

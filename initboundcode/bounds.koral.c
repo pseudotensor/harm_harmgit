@@ -80,6 +80,21 @@ int bound_radwallinflow(int dir,
 								 int *localenerpos
 								 );
 
+
+int bound_radbondiinflow(int dir,
+							   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							   int *inboundloop,
+							   int *outboundloop,
+							   int *innormalloop,
+							   int *outnormalloop,
+							   int (*inoutlohi)[NUMUPDOWN][NDIM],
+							   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							   int *dosetbc,
+							   int enerregion,
+							   int *localenerpos
+							   );
+
+
 /* bound array containing entire set of primitive variables */
 
 
@@ -255,6 +270,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if(BCtype[dir]==FIXEDUSEPANALYTIC){
         bound_x1up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADBONDIINFLOW){
+        bound_radbeam2dflowinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
       else{
@@ -545,6 +564,24 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////
+//
+//  Koral specific physical boundary conditions
+//
+////////////////////////////////////
+
+
+
 // X1 lower for radiation beam injection
 int bound_x1dn_radbeamflatinflow(
 								 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -586,86 +623,84 @@ int bound_x1dn_radbeamflatinflow(
 
 
   
-    if((BCtype[X1DN]==RADBEAMFLATINFLOW)){
-
-      // innner x BC:
-      if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) {
+    if(BCtype[X1DN]==RADBEAMFLATINFLOW && totalsize[1]>1 && mycpupos[1] == 0 ) {
 
 
 
-		OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-		////////	LOOPX1dir{
+      OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+      ////////	LOOPX1dir{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-		OPENMPBCLOOPBLOCK{
-		  OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
 
 
-		  ri=riin;
-		  rj=j;
-		  rk=k;
+        ri=riin;
+        rj=j;
+        rk=k;
 
 
-		  // ptrrgeom : i.e. ref geom
-		  PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
 	  
-		  LOOPBOUND1IN{
+        LOOPBOUND1IN{
 
     
-			//initially copying everything
-			PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          //initially copying everything
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 
-			if(ispstag==0){ // only do something special with non-field primitives
+          if(ispstag==0){ // only do something special with non-field primitives
 
-			  // local geom
-			  PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-			  //coordinates of the ghost cell
-			  bl_coord_ijk_2(i,j,k,CENT,X, V);
+            //coordinates of the ghost cell
+            bl_coord_ijk_2(i,j,k,CENT,X, V);
 
-			  // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
-			  int whichvel;
-			  whichvel=VEL4;
-			  int whichcoord;
-			  whichcoord=CARTMINKMETRIC2;
+            // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+            int whichvel;
+            whichvel=VEL4;
+            int whichcoord;
+            whichcoord=CARTMINKMETRIC2;
 
-              extern FTYPE RADBEAMFLAT_FRATIO,RADBEAMFLAT_ERAD, RADBEAMFLAT_RHO, RADBEAMFLAT_UU;
+            extern FTYPE RADBEAMFLAT_FRATIO,RADBEAMFLAT_ERAD, RADBEAMFLAT_RHO, RADBEAMFLAT_UU;
 
-			  FTYPE ERADAMB=(RADBEAMFLAT_ERAD/RHOBAR);
-			  FTYPE uradx=1.0/sqrt(1.0 - RADBEAMFLAT_FRATIO*RADBEAMFLAT_FRATIO); // radiation 4-velocity
-			  FTYPE ERADINJ;
-			  ERADINJ=1000.0*(RADBEAMFLAT_ERAD/RHOBAR);
-
-
-			  //primitives in whichvel,whichcoord
-			  if(V[2]>.4 && V[2]<.6){//beam to be imposed
-
-				MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
-				MACP0A1(prim,i,j,k,URAD1) = uradx;
-				MACP0A1(prim,i,j,k,URAD2) = 0.;
-				MACP0A1(prim,i,j,k,URAD3) = 0.;
-			  }
-			  else{ //no beam
-				MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
-				MACP0A1(prim,i,j,k,URAD1) = 0.;
-				MACP0A1(prim,i,j,k,URAD2) = 0.;
-				MACP0A1(prim,i,j,k,URAD3) = 0.;
-			  }
+            FTYPE ERADAMB=(RADBEAMFLAT_ERAD/RHOBAR);
+            FTYPE uradx=1.0/sqrt(1.0 - RADBEAMFLAT_FRATIO*RADBEAMFLAT_FRATIO); // radiation 4-velocity
+            FTYPE ERADINJ;
+            ERADINJ=1000.0*(RADBEAMFLAT_ERAD/RHOBAR);
 
 
-			  // get all primitives in WHICHVEL/PRIMECOORDS value
-			  primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+            //primitives in whichvel,whichcoord
+            if(V[2]>.4 && V[2]<.6){//beam to be imposed
+
+              MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
+              MACP0A1(prim,i,j,k,URAD1) = uradx;
+              MACP0A1(prim,i,j,k,URAD2) = 0.;
+              MACP0A1(prim,i,j,k,URAD3) = 0.;
+            }
+            else{ //no beam
+              MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
+              MACP0A1(prim,i,j,k,URAD1) = 0.;
+              MACP0A1(prim,i,j,k,URAD2) = 0.;
+              MACP0A1(prim,i,j,k,URAD3) = 0.;
+            }
 
 
-			}// end if not staggered field
+            // get all primitives in WHICHVEL/PRIMECOORDS value
+            primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
 
-		  }// end loop over inner i's
-		}
+          }// end if not staggered field
+
+
+        }// end loop over inner i's
       }
     }
+
+
   }// end parallel region
 
   return(0);
@@ -832,22 +867,8 @@ int bound_radshadowinflow(int dir,
 			  //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
 
 
-			  if(1){
-				// get all primitives in WHICHVEL/PRIMECOORDS value
-				primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
-			  }
-
-			  //			  PLOOP(pliter,pl) dualfprintf(fail_file,"OUTPUT: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
-
-			  if(0){
-				// now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
-				FTYPE prrad[NPR],prradnew[NPR];
-				PLOOP(pliter,pl) prrad[pl]=MACP0A1(prim,i,j,k,pl); // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-				int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-				prad_fforlab(WHICHVEL, PRIMECOORDS, whichframedir, prrad, prradnew, ptrgeom[RHO]); // assumes ptrgeom[RHO] applies to all quantities
-				// overwrite radiation primitives with new lab-frame values
-				PLOOPRADONLY(pl) MACP0A1(prim,i,j,k,pl)=prradnew[pl];
-			  }
+              // get all primitives in WHICHVEL/PRIMECOORDS value
+              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 			} // over spatially relevant region
 
 		  }// end if not staggered fields
@@ -946,22 +967,8 @@ int bound_radshadowinflow(int dir,
 			  //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
 
 
-			  if(1){
-				// get all primitives in WHICHVEL/PRIMECOORDS value
-				primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
-			  }
-
-			  //			  PLOOP(pliter,pl) dualfprintf(fail_file,"OUTPUT: pl=%d prim=%g\n",pl,MACP0A1(prim,i,j,k,pl));
-
-			  if(0){
-				// now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
-				FTYPE prrad[NPR],prradnew[NPR];
-				PLOOP(pliter,pl) prrad[pl]=MACP0A1(prim,i,j,k,pl); // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-				int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-				prad_fforlab(WHICHVEL, PRIMECOORDS, whichframedir, prrad, prradnew, ptrgeom[RHO]); // assumes ptrgeom[RHO] applies to all quantities
-				// overwrite radiation primitives with new lab-frame values
-				PLOOPRADONLY(pl) MACP0A1(prim,i,j,k,pl)=prradnew[pl];
-			  }
+              // get all primitives in WHICHVEL/PRIMECOORDS value
+              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 			}// if spatially relevant region
 
 		  }// end if not staggered fields
@@ -1196,7 +1203,7 @@ int bound_radbeam2dbeaminflow(int dir,
             //            }
 
 			// get all primitives in WHICHVEL/PRIMECOORDS value
-			primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+			primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
             //            MACP0A1(prim,i,j,k,URAD1)=0.0;
 
@@ -1445,7 +1452,7 @@ int bound_radatmbeaminflow(int dir,
 
 
 	  
-	if(dir==X1DN && BCtype[X1DN]==RADSHADOWINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
+	if(dir==X1DN && BCtype[X1DN]==RADATMBEAMINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
 
 
 	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -1465,12 +1472,14 @@ int bound_radatmbeaminflow(int dir,
 
 	  
 		LOOPBOUND1IN{
+
+          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
     
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
 		  if(ispstag==0){
-			// local geom
+			// local PRIMECOORDS geom
 			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 	  
 			//coordinates of the ghost cell
@@ -1502,34 +1511,27 @@ int bound_radatmbeaminflow(int dir,
               ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
             }
 
-
-            MACP0A1(prim,i,j,k,RHO) = rho;
-            MACP0A1(prim,i,j,k,UU) = uint;
-            MACP0A1(prim,i,j,k,U1) = 0.0; // static
-            MACP0A1(prim,i,j,k,U2) = 0.0;
-            MACP0A1(prim,i,j,k,U3) = 0.0;
-
-
-            //E, F^i
-            MACP0A1(prim,i,j,k,URAD0) = ERAD;
-            MACP0A1(prim,i,j,k,URAD1) = Fx;
-            MACP0A1(prim,i,j,k,URAD2) = Fy;
-            MACP0A1(prim,i,j,k,URAD3) = Fz;
-
             //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
 
-            if(1){
-              // now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
-              FTYPE prrad[NPR],prradnew[NPR];
-              PLOOP(pliter,pl) prrad[pl]=MACP0A1(prim,i,j,k,pl); // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-              int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-              prad_fforlab(WHICHVEL, PRIMECOORDS, whichframedir, prrad, prradnew, ptrgeom[RHO]); // assumes ptrgeom[RHO] applies to all quantities
-              // overwrite radiation primitives with new lab-frame values
-              PLOOPRADONLY(pl) MACP0A1(prim,i,j,k,pl)=prradnew[pl];
-            }
+
+            pr[RHO] = rho;
+            pr[UU] = uint;
+            pr[U1] = 0.0; // static
+            pr[U2] = 0.0;
+            pr[U3] = 0.0;
+
+            //E, F^i in orthonormal fluid frame
+            FTYPE pradffortho[NPR];
+            pradffortho[PRAD0] = ERAD;
+            pradffortho[PRAD1] = Fx;
+            pradffortho[PRAD2] = Fy;
+            pradffortho[PRAD3] = Fz;
 
 
-
+            int whichvel=VEL4; // in which vel U1-U3 set
+            int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
+            int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
 		  }// end if not staggered fields
 
@@ -1541,16 +1543,7 @@ int bound_radatmbeaminflow(int dir,
 
 
 
-
-
-
-
-
-
-
-
-
-	if(dir==X1UP && BCtype[X1UP]==RADSHADOWINFLOW && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
+	if(dir==X1UP && BCtype[X1UP]==RADATMBEAMINFLOW && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
 
 
 	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -1567,9 +1560,11 @@ int bound_radatmbeaminflow(int dir,
 
 		// ptrrgeom : i.e. ref geom
 		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
-
-	  
+        
 		LOOPBOUND1OUT{
+          
+          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+        
     
 		  //initially copying everything
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1610,33 +1605,24 @@ int bound_radatmbeaminflow(int dir,
             }
 
 
-            MACP0A1(prim,i,j,k,RHO) = rho;
-            MACP0A1(prim,i,j,k,UU) = uint;
-            MACP0A1(prim,i,j,k,U1) = 0.0; // static
-            MACP0A1(prim,i,j,k,U2) = 0.0;
-            MACP0A1(prim,i,j,k,U3) = 0.0;
+            pr[RHO] = rho;
+            pr[UU] = uint;
+            pr[U1] = 0.0; // static
+            pr[U2] = 0.0;
+            pr[U3] = 0.0;
 
+            //E, F^i in orthonormal fluid frame
+            FTYPE pradffortho[NPR];
+            pradffortho[PRAD0] = ERAD;
+            pradffortho[PRAD1] = Fx;
+            pradffortho[PRAD2] = Fy;
+            pradffortho[PRAD3] = Fz;
 
-            //E, F^i
-            MACP0A1(prim,i,j,k,URAD0) = ERAD;
-            MACP0A1(prim,i,j,k,URAD1) = Fx;
-            MACP0A1(prim,i,j,k,URAD2) = Fy;
-            MACP0A1(prim,i,j,k,URAD3) = Fz;
-
-            //			  dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
-
-            if(1){
-              // now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
-              FTYPE prrad[NPR],prradnew[NPR];
-              PLOOP(pliter,pl) prrad[pl]=MACP0A1(prim,i,j,k,pl); // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-              int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-              prad_fforlab(WHICHVEL, PRIMECOORDS, whichframedir, prrad, prradnew, ptrgeom[RHO]); // assumes ptrgeom[RHO] applies to all quantities
-              // overwrite radiation primitives with new lab-frame values
-              PLOOPRADONLY(pl) MACP0A1(prim,i,j,k,pl)=prradnew[pl];
-            }
-
-
-
+            
+            int whichvel=VEL4;
+            int whichcoordfluid=MCOORD;
+            int whichcoordrad=whichcoordfluid;
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
 		  }// end if not staggered fields
 
@@ -1708,7 +1694,7 @@ int bound_radwallinflow(int dir,
 
 
   
-    if(dir==1 && BCtype[X1DN]==RADWALLINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
+    if(dir==X1DN && BCtype[X1DN]==RADWALLINFLOW && (totalsize[1]>1) && (mycpupos[1] == 0) ){
 
 
 
@@ -1770,7 +1756,7 @@ int bound_radwallinflow(int dir,
             }// end over pl's allowed for bounding
 
             // get all primitives in WHICHVEL/PRIMECOORDS value
-            if(1) primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+            if(1) primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
           }// end if not staggered field
 
@@ -1782,7 +1768,7 @@ int bound_radwallinflow(int dir,
 
 
 
-    if(dir==2 && BCtype[X2UP]==RADWALLINFLOW && (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ){
+    if(dir==X2UP && BCtype[X2UP]==RADWALLINFLOW && (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ){
 
 
 
@@ -1839,7 +1825,7 @@ int bound_radwallinflow(int dir,
 
 
             // get all primitives in WHICHVEL/PRIMECOORDS value
-            if(1) primefluid_EVrad_to_primeall(whichvel, whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+            if(1) primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
 
 
           }// end if not staggered field
@@ -1856,6 +1842,175 @@ int bound_radwallinflow(int dir,
 
 
 
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+
+
+
+
+
+
+// X1 upper for inflow
+int bound_radbondiinflow(int dir,
+							   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							   int *inboundloop,
+							   int *outboundloop,
+							   int *innormalloop,
+							   int *outnormalloop,
+							   int (*inoutlohi)[NUMUPDOWN][NDIM],
+							   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							   int *dosetbc,
+							   int enerregion,
+							   int *localenerpos
+							   )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if(dir==X1UP && BCtype[X1UP]==RADBONDIINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
+
+
+      extern FTYPE RADBONDI_TESTNO;
+      extern FTYPE RADBONDI_PRADGAS;
+      extern FTYPE RADBONDI_TGAS0;
+      extern FTYPE RADBONDI_MDOTPEREDD;
+      extern FTYPE RADBONDI_MDOTEDD;
+      extern FTYPE RADBONDI_RHOAMB;
+      extern FTYPE RADBONDI_TAMB;
+      extern FTYPE RADBONDI_MUGAS;
+      extern FTYPE RADBONDI_MINX;
+      extern FTYPE RADBONDI_MAXX;
+
+
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+
+		ri=riout;
+		rj=j;
+		rk=k;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  
+		LOOPBOUND1OUT{
+
+          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  
+
+		  if(ispstag==0){ // only do something special with non-field primitives
+
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+			//coordinates of the ghost cell
+			bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+            // Identical to init, so could use analytic, but don't for now.
+
+            FTYPE xx,yy,zz,rsq;
+            xx=V[1];
+            yy=V[2];
+            zz=V[3];
+
+            int whichvel=VEL3; // in which vel U1-U3 set
+            int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
+            // get metric grid geometry for these ICs
+            int getprim=0;
+            struct of_geom geomrealdontuse;
+            struct of_geom *ptrgeomreal=&geomrealdontuse;
+            gset(getprim,whichcoordfluid,i,j,k,ptrgeomreal);
+
+    
+            FTYPE rho,ERAD,uint;
+            FTYPE rho0,Tgas0,ur,Tgas,Trad,r,rcm,prad,pgas,vx,ut;
+
+            FTYPE Fx,Fy,Fz;
+            Fx=Fy=Fz=0;
+
+            //at outern boundary
+            r=RADBONDI_MAXX;
+            ur=-sqrt(2./r);
+            rho0=-RADBONDI_MDOTPEREDD*RADBONDI_MDOTEDD/(4.*Pi*r*r*ur);
+            Tgas0=RADBONDI_TGAS0;
+            
+            //at given cell
+            r=xx;
+            ur=-sqrt(2./r);    
+            ut=sqrt((-1.-ur*ur*ptrgeomreal->gcov[GIND(1,1)])/ptrgeomreal->gcov[GIND(0,0)]);
+            vx=ur/ut;  
+            rho=-RADBONDI_MDOTPEREDD*RADBONDI_MDOTEDD/(4.*Pi*r*r*ur);
+            Tgas=Tgas0*pow(rho/rho0,gam-1.);      
+
+            uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+            pgas=rho*Tgas;
+            prad=RADBONDI_PRADGAS*pgas;
+            ERAD=prad*3.;
+    
+
+            pr[RHO] = rho ;
+            pr[UU]  = uint;
+            pr[U1]  = vx;
+            pr[U2]  = 0 ;    
+            pr[U3]  = 0 ;
+
+            //E, F^i in orthonormal fluid frame
+            FTYPE pradffortho[NPR];
+            pradffortho[PRAD0] = ERAD;
+            pradffortho[PRAD1] = Fx;
+            pradffortho[PRAD2] = Fy;
+            pradffortho[PRAD3] = Fz;
+
+
+            int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+		  }// end if not staggered field
+
+
+		}// end loop over inner i's
+	  }// over block
+	}// if correct BC and core
   }// end parallel region
 
   return(0);

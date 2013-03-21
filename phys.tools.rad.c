@@ -1,6 +1,6 @@
 #include "decs.h"
 
-static int f_implicit_lab(int whichcall, int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
+static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
 
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
@@ -11,7 +11,7 @@ static int koral_explicit_source_rad_prepare(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin
 
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
 
-static int Utoprimgen_failwrapper(int showmessages, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
+static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
 
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
@@ -26,14 +26,14 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 #define UTOPRIMGENWRAPPERRETURNFAILMHD 2
 
 // wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
-static int Utoprimgen_failwrapper(int showmessages, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
+static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
 
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
   // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
   // Need to check if Utoprimgen fails in sense of stored inversion failure and revert to explicit or other if happens -- maybe CASE dependent!
-  MYFUN(Utoprimgen(showmessages, finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+  MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
 
   // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
   int lpflag,lpflagrad;
@@ -99,7 +99,7 @@ static int Utoprimgen_failwrapper(int showmessages, int finalstep, int evolvetyp
 //f - (returned) errors
 
 //NOTE: uu WILL be changed from inside this fcn
-static int f_implicit_lab(int whichcall, int showmessages, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
+static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
 {
   struct of_state q;
   FTYPE pp[NPR];
@@ -122,7 +122,7 @@ static int f_implicit_lab(int whichcall, int showmessages, FTYPE *pp0, FTYPE *uu
   
   // Get P(U)
   int failreturn;
-  failreturn=Utoprimgen_failwrapper(showmessages,finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
+  failreturn=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
   if(failreturn){
 	if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab()\n");
 	return(failreturn);
@@ -168,6 +168,8 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
+  static long long int numimplicits=0;
+  static long long int numoff1iter=0,numofiter=0;
 
 
 
@@ -188,6 +190,12 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
 
+  // static counter for diagnosing issues
+  numimplicits++;
+
+
+
+  // setup implicit loops
   realdt = compute_dt(CUf,dt);
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
   FTYPE fracdtuu0=1.0,fracdtG=1.0,fracuup=1.0; // initially try full realstep step
@@ -216,6 +224,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int checkconv,changeotherdt;
   int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
   int showmessagesheavy=0;  // very detailed for common debugging
+  int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 #define MAXF1TRIES 100 // 100 might sound like alot, but Jacobian does 4*4=16 inversions each iteration, and that 100 is only typically needed for very first iteration.
   // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 100 is certainly enough since 2^(-100) is beyond machine precision.
@@ -235,7 +244,8 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     
     //values at zero state
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
-      failreturn=f_implicit_lab(1,showmessages, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
+      int whichcall=1;
+      failreturn=f_implicit_lab(whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
@@ -277,8 +287,13 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
       if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES\n");
+      // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)  UTOPRIMFAILFIXEDENTROPY or UTOPRIMFAILFIXEDCOLD (but right now those are already always allowed -- but watch for them to see if that's a problem).
       return(1);
     }
+
+    
+    // diagnose
+    numoff1iter += f1iter;
 
 
     if(showmessagesheavy) dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[0],f1[1],f1[2],f1[3]);
@@ -287,7 +302,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // see if pre-convergence (happens if force is small or no force at all.  Can't necessarily continue since Jacobian can require arbitrarily large dU on fluid and fail to invert even if no fluid-radiation interaction!
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
-#define LOCALPREIMPCONV (10.0*NUMEPSILON) // more strict than later tolerance
+    FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
     DLOOPA(ii){
       f3[ii]=f1[ii];
       f3[ii]=fabs(f3[ii]/uu0[URAD0]);
@@ -318,7 +333,8 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 		uu[jj+URAD0]=uup[jj+URAD0]-del;
 	
         // get dUresid for this offset uu
-		failreturn=f_implicit_lab(2,showmessages, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+        int whichcall=2;
+		failreturn=f_implicit_lab(whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
         if(failreturn){
           if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Should explore smaller del in ultrarel case?\n",ii,jj);
           return(1);
@@ -404,12 +420,11 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     /////////
     //
-    // test convergence afte Newton step
+    // test convergence after Newton step
     // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
     // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
     /////////
     if(checkconv){
-#define LOCALIMPCONV (IMPCONV*1E-3)
       //test convergence using |dU/U|
       DLOOPA(ii){
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
@@ -417,7 +432,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
-      if(f3[0]<LOCALIMPCONV && f3[1]<LOCALIMPCONV && f3[2]<LOCALIMPCONV && f3[3]<LOCALIMPCONV){
+      if(f3[0]<IMPTRYCONV && f3[1]<IMPTRYCONV && f3[2]<IMPTRYCONV && f3[3]<IMPTRYCONV){
         if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
         break;
       }
@@ -431,8 +446,23 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////
     if(iter>IMPMAXITER){
 	  // KORALTODO: Need backup that won't fail.
-      dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab()\n",IMPMAXITER);
-	  return(1);
+
+      //test convergence using |dU/U|
+      DLOOPA(ii){
+        f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
+        f3[ii]=fabs(f3[ii]/uup[URAD0]);
+      }
+
+      if(f3[0]<IMPALLOWCONV && f3[1]<IMPALLOWCONV && f3[2]<IMPALLOWCONV && f3[3]<IMPALLOWCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3],checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        break;
+      }
+      else{
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error.\n",IMPMAXITER);
+        return(1);
+      }
     }
 
     if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
@@ -440,7 +470,11 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   while(1);
   
 
+  // diagnose
+  numofiter+=iter;
 
+
+  if(showmessagesheavy) dualfprintf(fail_file,"numimplicits=%lld averagef1iter=%g averageiter=%g\n",numimplicits,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
 
 
   // get source update as "dU" = dU/dt using real dt that used during implicit iterations, and will eventually use to update U in advance.c.
@@ -660,7 +694,7 @@ static int koral_explicit_source_rad_prepare(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
-
+  int allowlocalfailurefixandnoreport=0; // need to know if failed
 
   int nochange=1;
   if(USEDUINRADUPDATE){
@@ -669,9 +703,10 @@ static int koral_explicit_source_rad_prepare(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin
     PLOOP(pliter,pl) Unew[pl]=UFSET(CUf,dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
 
     // Get P(U0) in case dUother is non-zero
-    if(Utoprimgen_failwrapper(showmessages,finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
+    if(Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
       // failed to get updated primitive
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed in koral_explcit_source_rad(), so will use primitive without flux+geom update.\n");
+      // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)
     }
     else{
       nochange=0;
@@ -741,6 +776,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
   FTYPE realdt=compute_dt(CUf,dt);
   int method;
   int showmessages=0;
+  int allowlocalfailurefixandnoreport=0; // need to see if any failures.
 
   int itersub=0;
   while(1){
@@ -804,9 +840,10 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 		// OPTMARK: Should optimize this to  not try to get down to machine precision
 		// KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
 		// Get P(U)
-		if(Utoprimgen_failwrapper(showmessages, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
+		if(Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
 		  dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of koral_explicit_source_rad()\n");
 		  myexit(347366436); // KORALTODO: if explicit dies, nothing to revert to.
+          // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)
 		  //return(1);
 		}
 
@@ -1584,91 +1621,141 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 
 
 
+
+
+
 /*********************************************************************************/
 /****** radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame  *******/
 // Used only for initial conditions
 /*********************************************************************************/
-// primcood: 0:false 1:true that PRIMCOORD so can use dxdxp to simplify input metric
-// whichvel: input vel type
-// whichcoord: input coord type
-// whichdir: LAB2FF or FF2LAB
-// pin: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values
-// pout: outputs radiation primitives (and doesn't touch other primitives if they exist -- preserves them)
-// ptrgeom: input geometry
-int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pin, FTYPE *pout, struct of_geom *ptrgeom)
+// whichvel: input vel type for U1-U3
+// whichcoord: input coord type for both U1-U3 and URAD1-URAD3
+// whichdir: LAB2FF or FF2LAB  . In addition, here lab means HARM-lab different by alpha factor from true lab.
+// i,j,k,loc = standard grid location
+// ptrgeom: any input geometry for the lab frame (ptrgeom could be from MCOORD, PRIMECOORDS, etc.) (same for pin's velocity as well as orthonormal basis)
+//          If ptrgeom==NULL, then use i,j,k,loc to get geometry in whichcoord coordinates
+// pradffortho: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values (i.e. E,F in fluid frame orthonormal basis)
+// pin: inputs for primitives (i.e. whichvel for U1-U3 and whichcoord for U1-U3,URAD1-URAD3)
+// pout: outputs for normal primitives (i.e. WHICHVEL for U1-U3,URAD1-URAD3 but still in whichcoord coordinates)
+int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR]={0};
   int pliter,pl;
   int primcoord;
   int jj,kk;
+  struct of_geom geomtousedontuse;
+  struct of_geom *ptrgeomtouse=&geomtousedontuse;
 
-  //radiative stress tensor in the fluid frame orthonormal basis
-  // assuming input pin for radiation is in fluid frame orthonormal basis.
+
+  if(ptrgeom==NULL){
+    if(*whichcoord!=PRIMECOORDS){
+      // get metric grid geometry for these ICs
+      int getprim=0;
+      gset_genloc(getprim,*whichcoord,i,j,k,loc,ptrgeomtouse);
+    }
+    else{
+      get_geometry(i, j, k, loc, ptrgeomtouse);
+    }
+  }
+  else{
+    // then assumes ptrgeom is in *whichcoord coordinates
+    ptrgeomtouse=ptrgeom;
+  }
+
+
+  // set primitive that can use as pre-existing fluid velocity if need to use for reduction
+  // also use pout instead of pin so preserves pin no matter what (unless user set pin=pout)
+  PLOOP(pliter,pl) pout[pl]=pin[pl];
+
+
+  // radiative stress tensor in the fluid frame orthonormal basis
+  // assuming input pradffortho for radiation is in fluid frame orthonormal basis, but in "primitive" format so using pradffortho[PRAD0-PRAD3]
   // gets R^{ij} in fluid frame orthonormal basis from primitive quantities in fluid frame orthonormal basis
-  calc_Rij_ff(pin,Rijff);
+  calc_Rij_ff(pradffortho,Rijff);
   
-  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"pl=%d pin=%g\n",pl,pin[pl]);
+  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
   //  DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g\n",jj,kk,Rijff[jj][kk]);
 
-  // get ucon (assumed primitive velocity in ptrgeom coordinates)
+
+  // get ucon (assumed primitive velocity in ptrgeomtouse coordinates)
   FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
-  ucon_calc_whichvel(whichvel,pin,ptrgeom,ucon,others);
+  ucon_calc_whichvel(*whichvel,pout,ptrgeomtouse,ucon,others);
+
+  // also convert whichvel ucon to WHICHVEL primitive velocity for use by u2p_rad() and as needed for consistent final output from this function and as possible backup value
+  if(*whichvel!=WHICHVEL) ucon2pr(WHICHVEL,ucon,ptrgeomtouse,pout);
+
   
-  // transform and boost
+  // transform and boost (ultimately converts pradffortho -> Rijff -> Rijlab -> U)
   if(whichdir==FF2LAB){
 	int tconcovtypeA=TYPEUCON;
 	int tconcovtypeB=TYPEUCON;
-	if(whichcoord==PRIMECOORDS) primcoord=1;
+	if(*whichcoord==PRIMECOORDS) primcoord=1;
 	else primcoord=0;
-	tensor_lab2orthofluidorback(primcoord, FF2LAB, ptrgeom, TYPEUCON, ucon, tconcovtypeA, tconcovtypeB, Rijff, Rijlab);
+	tensor_lab2orthofluidorback(primcoord, FF2LAB, ptrgeomtouse, TYPEUCON, ucon, tconcovtypeA, tconcovtypeB, Rijff, Rijlab);
 
 	//R^munu -> R^mu_nu so in standard form to extract conserved quantity R^t_\nu
-	indices_2221(Rijlab,Rijlab,ptrgeom);
+	indices_2221(Rijlab,Rijlab,ptrgeomtouse);
+
+    // Store radiation conserved quantity from R^t_\nu .  u2p_rad() below only uses radiation U's.
+    // for true lab to fake-harm lab, end up dividing by alpha (see vector_harm2orthofluidorback() in tetrad.c)
+    FTYPE alpha=ptrgeomtouse->alphalapse;
+    U[URAD0]=Rijlab[TT][TT]/alpha;
+    U[URAD1]=Rijlab[TT][RR]/alpha;
+    U[URAD2]=Rijlab[TT][TH]/alpha;
+    U[URAD3]=Rijlab[TT][PH]/alpha;
+
+    // 
+
   }
   else{
 	dualfprintf(fail_file,"prad_fforlab() not yet setup for lab2ff since not needed.");
 	myexit(652526624);
   }
 
-  // Store radiation conserved quantity from R^t_\nu .  u2p_rad() below only uses radiation U's.
-  U[URAD0]=Rijlab[TT][TT];
-  U[URAD1]=Rijlab[TT][RR];
-  U[URAD2]=Rijlab[TT][TH];
-  U[URAD3]=Rijlab[TT][PH];
 
 
-  // set primitive that can use as pre-existing fluid velocity if need to use for reduction
-  PLOOP(pliter,pl) pout[pl]=pin[pl];
-
-  //convert to real primitives - conversion does not care about MHD only about radiative conserved
+  //convert to WHICHVEL PRIMECOORDS velocity type primitives
   PFTYPE lpflag=UTOPRIMNOFAIL,lpflagrad=UTOPRIMRADNOFAIL;
   int showmessages=1; // LEAVE on (not normal debugging)
+  int allowlocalfailurefixandnoreport=1;
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
-  u2p_rad(showmessages, U,pout,ptrgeom, &lpflag, &lpflagrad);
+  // u2p_rad() only uses U[URAD0-URAD3]
+  // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
+  u2p_rad(showmessages, allowlocalfailurefixandnoreport, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
+
+  // so now both fluid and radiation velocities are in WHICHVEL whichcoord format
+  // inversion returns WHICHVEL velocity type, so pass that back
+  *whichvel=WHICHVEL;
+
+
+  // DEBUG:
   if(lpflag!=UTOPRIMNOFAIL || lpflagrad!=UTOPRIMRADNOFAIL){ // DEBUG with 1||
 	dualfprintf(fail_file,"Failed to invert during prad_fforlab() with whichdir=%d.  Assuming fixups won't be applied: %d %d\n",whichdir,lpflag,lpflagrad);
-	dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+	dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeomtouse->i,ptrgeomtouse->j,ptrgeomtouse->k,ptrgeomtouse->p);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pin=%g U=%g\n",pl,pin[pl],U[pl]);
 	DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
 	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
-	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeom->gcov[GIND(jj,kk)],ptrgeom->gcon[GIND(jj,kk)]);
+	DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
 	PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
 	myexit(189235);
-	//if(ptrgeom->i==700) myexit(189235);
+	//if(ptrgeomtouse->i==700) myexit(189235);
 	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
 
-  
 
   return 0;
 } 
 
 
-// for BCs, to take E and u^i as radiation primitives in whichvel/whichcoord
+// for BCs, to take E[radiation frame] and u^i as radiation primitives in whichvel/whichcoord
 // obtains WHICHVEL/PRIMECOORD primitives
-int primefluid_EVrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
+int primefluid_EVrad_to_primeall(int *whichvel, int *whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
 {
   int pliter,pl;
+  int i=ptrgeom->i;
+  int j=ptrgeom->j;
+  int k=ptrgeom->k;
+  int loc=ptrgeom->p;
 
   // copy over
   PLOOP(pliter,pl) pout[pl]=pin[pl];
@@ -1677,82 +1764,128 @@ int primefluid_EVrad_to_primeall(int whichvel, int whichcoord, struct of_geom *p
   int getprim=0;
   struct of_geom geomrealdontuse;
   struct of_geom *ptrgeomreal=&geomrealdontuse;
-  gset(getprim,whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeomreal);
+  gset_genloc(getprim,*whichcoord,i,j,k,loc,ptrgeomreal);
 
   FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
-  ucon_calc_whichvel(whichvel,&pout[URAD1-U1],ptrgeomreal,uradcon,othersrad);
+  ucon_calc_whichvel(*whichvel,&pout[URAD1-U1],ptrgeomreal,uradcon,othersrad);
 
   // now convert velocity so in PRIMECOORDS assuming whichcoord=MCOORD
-  mettometp_genloc(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,uradcon);
-  if(whichcoord!=MCOORD){
+  mettometp_genloc(i,j,k,loc,uradcon);
+
+  if(*whichcoord!=MCOORD){
 	dualfprintf(fail_file,"primefluid_EVrad_to_primeall() needs whichcoord (%d) to be MCOORD (%d)\n",whichcoord,MCOORD);
 	myexit(87345246);
   }
 
-  // now go back to pr for radiation primitive
+  // assumed already inputted PRIMECOORDS WHICHVEL for fluid velocity, so no conversion for the fluid velocity
+
+  // now go from ucon[PRIMECOORDS] -> primitive[PRIMECOORDS] for radiation velocity and get WHICHVEL version
   ucon2pr(WHICHVEL,uradcon,ptrgeom,&pout[URAD1-U1]);
+
+  // now all PRIMECOORDS WHICHVEL type assuming ptrgeom inputted PRIMECOORDS version as expected
+  *whichvel=WHICHVEL;
+  *whichcoord=PRIMECOORDS;
   
   return(0);
 }
 
 
-// as in BCs, if start with fluid in WHICHVEL/PRIMECOORDS and set radiation as R^t_\nu in orthonormal fluid frame, then use this to get all things into final WHICHVEL/PRIMECOORDS for filling primitives.
-int primefluid_ffrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
+// Input: start with pin [with fluid in whichvel velocity and whichcoordfluid coordinates (PRIMECOORDS or MCOORD) and radiation as E,F in fluid frame orthonormal basis in whichcoordrad coordinates]
+// Output: pout [with all WHICHVEL PRIMECOORDS and radiation using velocity primitive]
+//
+// Useful for BCs when have (say) VEL3,MCOORD for fluid velocity as well as E,F in ff for radiation and need normal WHICHVEL PRIMECOORDS fluid velocity as well as normal velocity primitive for radiation
+int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *whichcoordrad, struct of_geom *ptrgeomprimecoords, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   int pliter,pl;
+  int i=ptrgeomprimecoords->i;
+  int j=ptrgeomprimecoords->j;
+  int k=ptrgeomprimecoords->k;
+  int loc=ptrgeomprimecoords->p;
 
-  int i=ptrgeom->i;
-  int j=ptrgeom->j;
-  int k=ptrgeom->k;
-  int loc=ptrgeom->p;
-  int whichvelnew;
 
   // prad_fforlab() should only use radiation primitives, but copy all primitives so can form ucon for transformation
-  FTYPE pprime[NPR];
-  PLOOP(pliter,pl) pprime[pl]=pin[pl];
-
-  // get ucon (not uradcon!)
-  FTYPE ucon[NDIM];
-  whichvelnew=WHICHVEL;
-  if (pr2ucon(whichvel,pprime, ptrgeom, ucon) >= 1) FAILSTATEMENT("bounds.koral.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
-
-  // transform velocity from PRIMECOORD WHICHVEL to whichvel whichcoord
-  // so can be used below in prad_fforlab() for boost
-  metptomet(i,j,k,ucon);
+  PLOOP(pliter,pl) pout[pl]=pin[pl];
 
 
-  // get metric grid geometry for these ICs
-  int getprim=0;
+  // get real MCOORD geometry if needed
   struct of_geom geomrealdontuse;
   struct of_geom *ptrgeomreal=&geomrealdontuse;
-  gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+  if(*whichcoordrad==MCOORD || *whichcoordfluid==MCOORD){
+    // get metric grid geometry this whichcoord
+    int getprim=0;
+    gset(getprim,*whichcoordrad,i,j,k,ptrgeomreal);
+  }
 
-  // now get fluid velocity primitive in IC-like setup
-  FTYPE pnew[NPR];
-  PLOOP(pliter,pl) pnew[pl]=pprime[pl]; // copy for other things
-  // get the IC-type primitive
-  ucon2pr(whichvel,ucon,ptrgeomreal,pnew); // now pnew[U1-U3] contains whichvel/whichcoord velocity
 
-  int jj;
-  DLOOPA(jj) dualfprintf(fail_file,"ijk=%d %d %d : jj=%d uconreal=%g\n",i,j,k,jj,ucon[jj]);
-  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pnew=%g\n",pl,pnew[pl]);
+  // get geometry for transformation (i.e. for prad_fforlab())  
+  struct of_geom *ptrgeomfortrans; // just pointer
+  if(*whichcoordrad==PRIMECOORDS){
+    ptrgeomfortrans=ptrgeomprimecoords;
+  }
+  else if(*whichcoordrad==MCOORD){
+    ptrgeomfortrans=ptrgeomreal;
+  }
+  else{
+    dualfprintf(fail_file,"Not setup for A233463\n");
+    myexit(9324534);
+  }
 
-  // now need to transform these fluid frame E,F^i to lab frame coordinate basis primitives
+
+  // make whichcoord for fluid same as for rad before continuing (make fluid same as radiation by only changing fluid whichcoord)
+  if(*whichcoordfluid!=*whichcoordrad){
+    FTYPE ucon[NDIM];
+    FTYPE others[NUMOTHERSTATERESULTS];
+    if(*whichcoordfluid==PRIMECOORDS){ // then rad is in MCOORD, so get fluid in MCOORD
+      // can't use ucon_calc that assumes whichvel==WHICHVEL
+      //MYFUN(ucon_calc(pout, ptrgeomprimecoords, ucon,others) ,"phys.c:get_state()", "ucon_calc()", 1);
+      if (pr2ucon(*whichvel,pout, ptrgeomprimecoords, ucon) >= 1) FAILSTATEMENT("bounds.koral.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
+      metptomet_genloc(i,j,k,loc,ucon); // now ucon is in MCOORD
+      // stay as whichvel but now get in MCOORD
+      ucon2pr(*whichvel,ucon,ptrgeomreal,pout);
+    }
+    else{ // then rad is in PRIMECOORDS, so get fluid in PRIMECOORDS
+      //      MYFUN(ucon_calc(pout, ptrgeomreal, ucon,others) ,"phys.c:get_state()", "ucon_calc()", 1);
+      if (pr2ucon(*whichvel,pout, ptrgeomreal, ucon) >= 1) FAILSTATEMENT("bounds.koral.c:bl2met2metp2v_genloc() for radiation", "pr2ucon()", 2);
+      mettometp_genloc(i,j,k,loc,ucon); // now ucon is in PRIMECOORDS
+      // stay as whichvel but now get in PRIMECOORDS
+      ucon2pr(*whichvel,ucon,ptrgeomprimecoords,pout);
+    }
+
+    // changed fluid to have same whichcoord as radiation (set by radiation), so set that
+    *whichcoordfluid=*whichcoordrad;
+
+  }
+  else{
+    // otherwise, whichcoord same for fluid and radiation, so can continue
+  }
+
+
+
+  // get WHICHVEL primitives (still will be in whichcoord coordinates)
+  // whichvel here is for fluid velocity (prad_fforlab() converts velocity to WHICHVEL for consistency with only currently allowed output of radiation velocity)
+  // pradffortho assumed as in orthonormal fluid frame, but coordinates of whichcoordrad
   int whichframedir=FF2LAB; // fluid frame orthonormal to lab-frame
-  FTYPE pradnew[NPR];
-  prad_fforlab(whichvel, whichcoord, whichframedir, pnew, pradnew, ptrgeomreal); // assumes ptrgeom[RHO] applies to all quantities
-  
-  // now transform to WHICHVEL/PRIMECOORDS for the entire primitive
-  if (bl2met2metp2v(whichvel,whichcoord,pradnew, i,j,k) >= 1) FAILSTATEMENT("bounds.koral.c:transform_primitive_vB()", "bl2ks2ksp2v()", 1);
-  PLOOP(pliter,pl) pout[pl]=pin[pl];
-  // only have to overwrite radiation primitives since velocity won't have changed
-  PLOOPRADONLY(pl) pout[pl]=pradnew[pl];
-  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
+  prad_fforlab(whichvel, whichcoordrad, whichframedir, i, j, k, loc, ptrgeomfortrans, pradffortho, pout, pout);
 
+  // output from prad_fforlab() is always WHICHVEL for both fluid and radiation primitives
+  // changed whichvel's, so report that back if needed
+  *whichvel=WHICHVEL;
+  
+  // output from prad_fforlab() not yet necessarily PRIMECOORDS.
+  if(*whichcoordrad==MCOORD){
+    // Get all primitives in WHICHVEL/PRIMECOORDS (no conversion for WHICHVEL since prad_fforlab() already put quantities in WHICHVEL due to u2p_rad() only setup for WHICHVEL)
+    if (bl2met2metp2v(&whichvel, &whichcoordrad, pout, i,j,k) >= 1){
+      FAILSTATEMENT("bounds.koral.c:bound_radatmbeaminflow()", "bl2ks2ksp2v()", 1);
+    }
+  }
+
+  // changed coordinates to PRIMECOORDS, so set that as the case
+  *whichcoordfluid=*whichcoordrad=PRIMECOORDS;
 
   return(0);
 
 }
+
 
 
 /*****************************************************************/
@@ -2335,7 +2468,7 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
 //
 ///////////////
-int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   int jj,kk;
 
@@ -2677,100 +2810,55 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 
-	  if(Erf<ERADLIMIT){ // Erf too small
-
-		if(1) *lpflagrad=UTOPRIMRADFAILCASE1A;
-
+      // Check if Erf is too small
+	  if(Erf<ERADLIMIT){
+		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
-
-		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
 	  }
-	  else{ // Erf normal
-      
-		// check if just near gammamax, in which case don't need to worry about fixing
-		//      if(fabs(gammarel2-gammamax*gammamax)>1E-12*gammamax*gammamax){
-		//	*lpflagrad=UTOPRIMRADFAILCASE1B;
-		//      }
-
-        // if(0) below because, if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
-        if(0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+      else{
+        // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
+        if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      }
 
 
-		if(1){
-		  // lab-frame radiation relative 4-velocity
-		  FTYPE Aradrel[NDIM];
-		  SLOOPA(jj) Aradrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+      // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
+      // lab-frame radiation relative 4-velocity
+      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 
-		  // compute \gammarel using this
-		  FTYPE gammatemp,qsqtemp;
-		  int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
-		  MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+      // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
+      FTYPE gammatemp,qsqtemp;
+      int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
+      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
 
-		  // now rescale Aradrel[i] so will give desired \gammamax
-		  SLOOPA(jj) Aradrel[jj] *= (gammamax/gammatemp);
-	
-		  // copying to urfconrel
-		  SLOOPA(jj) urfconrel[jj]=Aradrel[jj];
-
-#if(PRODUCTION==0)
-		  // check that gamma really correctly gammamax
-		  FTYPE gammatemp2,qsqtemp2;
-		  MYFUN(gamma_calc_fromuconrel(Aradrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-		  if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
-#endif
-          //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
-
-
-		}
-		else if(0){ // Olek way
-	
-		  // lab-frame radiation 4-velocity
-		  FTYPE Arad[NDIM];
-		  SLOOPA(jj) Arad[jj]=(Av[jj]-1./3.*Erf*ptrgeom->gcon[GIND(0,jj)])/(4./3.*Erf*gammamax);
-      
-		  //is normalized now
-		  FTYPE Afac,a,b,c;
-		  a=0.; c=0.; b=0.;
-		  SLOOPA(jj){
-			a+=Arad[jj]*Arad[jj]*ptrgeom->gcov[GIND(jj,jj)];
-			b+=2.*Arad[jj]*ptrgeom->gcov[GIND(0,jj)]*gammamax;
-		  }
-
-		  c=ptrgeom->gcov[GIND(0,0)]*gammamax*gammamax+1.0;
-		  delta=b*b-4.*a*c;
-		  Afac= (-b+sqrt(delta))/2./a;
-
-		  // lab-frame radiation 4-velocity
-          FTYPE urfcon[NDIM];
-		  urfcon[0]=gammamax;
-		  urfcon[1]=Afac*Arad[1];
-		  urfcon[2]=Afac*Arad[2];
-		  urfcon[3]=Afac*Arad[3];
-
-		  // relative 4-velocity radiation frame
-		  DLOOPA(jj) urfconrel[jj]=urfcon[jj] - urfcon[0]*ptrgeom->gcon[GIND(0,jj)]/ptrgeom->gcon[GIND(0,0)];
+      // now rescale urfconrel[i] so will give desired \gammamax
+      SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
 	
 #if(PRODUCTION==0)
-		  // check that u.u=-1 (seems to be true)
-		  FTYPE urfcov[NDIM];
-		  DLOOPA(jj) urfcov[jj]=0.0;
-		  DLOOP(jj,kk) urfcov[jj] += urfcon[kk]*ptrgeom->gcov[GIND(jj,kk)];
-		  FTYPE udotu=0.0;
-		  DLOOPA(jj) udotu += urfcon[jj]*urfcov[jj];
-		  if(showmessages) dualfprintf(fail_file,"CASE1B(Olek): Erf=%g Afac=%g Arad123=%g %g %g : udotu=%g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],udotu,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      // check that gamma really correctly gammamax
+      FTYPE gammatemp2,qsqtemp2;
+      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g\n",gammamax,gammatemp,gammatemp2);
 #endif
-          if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B(Olek): Erf=%g Afac=%g Arad123=%g %g %g : i=%d j=%d k=%d\n",Erf,Afac,Arad[1],Arad[2],Arad[3],ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
 
 
-		}// end Olek method
-	
-	  }// end else if Erf>0
+      // now that have some version of uconrel, feed to pp[PRAD1-PRAD3] and see how to reduce 4-velocity in tau-based limits
+      // i.e. avoid using "static" old pp -- who knows that's there actually.
+      pp[PRAD0] = Erf;
+      SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
+
+      // update opacity calculation for new pp (although nominally radiation doesn't change opacity)
+      calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+      //      dualfprintf(fail_file,"tautotmax=%g\n",tautotmax);
+
+      // now see how to handle opacity based limits between pp[PRAD1-PRAD3] and fluid velocity in pp[U1-U3] with Erf determined from one of those
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+      else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
+
 	}
 	//////////////////////
 	//
@@ -2778,7 +2866,7 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
 	// Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
 	//
 	//////////////////////
-	else if(failure2  && tautotmax>=TAUFAILLIMIT){
+	else if(failure2 && tautotmax>=TAUFAILLIMIT){
 
 
 	  FTYPE gammarel2orig=gammarel2;
@@ -2795,33 +2883,24 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 	  if(Erf<ERADLIMIT){ // JCM
-
-		if(1) *lpflagrad=UTOPRIMRADFAILCASE2A;
-
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
-
-		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-
+		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g gamma2=%g : i=%d j=%d k=%d\n",gammarel2,gamma2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
-	  }
-	  else{
-        // consider CASE2B ok with interpolation now, although uses pp in optically thin limit.  So generates static result!
-		if(0) *lpflagrad=UTOPRIMRADFAILCASE2B;
-
-		// relative 4-velocity radiation frame.  Might want to reset Erf to ERADLIMIT to be more strictly avoiding energy runaway problems.
-		//Erf=ERADLIMIT;
-
-		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-
+      }
+      else{
+        // normal Erf
+		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2B;
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g gamma2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,gamma2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      }
 
-	  }
+      // setup "old" pp in case used
+      pp[PRAD0] = Erf;
+      SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
+      
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+      else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 
 	}
 	//////////////////////
@@ -2837,40 +2916,24 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 	  if(Erf<ERADLIMIT){ // JCM
-
         // Erf<ERADLIMIT is bad, but interpolation results may be ok.  Although static with pp
-		if(1) *lpflagrad=UTOPRIMRADFAILCASE3A;
-
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
 		Erf=ERADLIMIT;
-
-		if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-		else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-        else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-
+		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE3A;
 		if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT.\n");
-
 	  }
-	  else{ // no failure yet for *lpflagrad=UTOPRIMRADFAILCASE3B;
-		//relative velocity
-		FTYPE gammarel=sqrt(gammarel2);
-#if(1) // JCM
-		SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
-#else // Olek
-		SLOOPA(jj){
-		  urfconrel[jj]=(3.*Av[jj]-Erf*ptrgeom->gcon[GIND(0,jj)])/(3.*Av[0]-Erf*ptrgeom->gcon[GIND(0,0)])/alpha+ptrgeom->gcon[GIND(0,jj)]/alpha;
-		  urfconrel[jj]*=gammarel;
-		}
-#endif
 
+      
+      // get good relative velocity
+      FTYPE gammarel=sqrt(gammarel2);
+      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+      
 #if(PRODUCTION==0)
-		//      if(showmessages) dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
+      //      if(showmessages) dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
 #endif
-
-	  }
-
-
-	}
+      
+    }// no bad conditions
 
   }// end if M1
   else{
@@ -2886,7 +2949,7 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
   pp[PRAD3]=urfconrel[3];
 
 
-  if(DORADFIXUPS==1){
+  if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
 	// KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
   }
   else{
@@ -2904,20 +2967,25 @@ int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom,PFTY
 // interpolate between optically thick and thin limits when no u2p_rad() inversion solution
 // KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
 // I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
+//      else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
 {
   int jj;
   FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
 
+  //  dualfprintf(fail_file,"Erf=%g gammarel2=%g\n",Erf,gammarel2);
+
   FTYPE gammafluid,qsqfluid;
   gamma_calc_fromuconrel(&pp[U1-1],ptrgeom,&gammafluid,&qsqfluid);
   FTYPE gammarel2fluid=gammafluid*gammafluid;
   FTYPE Erffluid=3.*Av[0]*alpha*alpha/(4.*gammarel2fluid-1.0);  // JCM
+  if(Erffluid<ERADLIMIT) Erffluid=ERADLIMIT;
 
   FTYPE gammarad,qsqrad;
   gamma_calc_fromuconrel(&pp[URAD1-1],ptrgeom,&gammarad,&qsqrad);
   FTYPE gammarel2rad=gammarad*gammarad;
   FTYPE Erfrad=3.*Av[0]*alpha*alpha/(4.*gammarel2rad-1.0);  // JCM
+  if(Erfrad<ERADLIMIT) Erfrad=ERADLIMIT;
 
   // now set urfconrel.  Choose fluid if tautotmax>=2/3 (updated fluid value), while choose previous radiation value (i.e. static!)
   FTYPE tautotmaxlim=MIN(fabs(tautotmax),1.0); // limit for interpolation below
@@ -2926,6 +2994,7 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
   SLOOPA(jj) urfconrel[jj] = (1.0-tautotmaxlim)*pp[URAD1+jj-1] + tautotmaxlim*pp[U1+jj-1];
 
   //  dualfprintf(fail_file,"i=%d tautotmax=%g tautotmaxlim=%g\n",ptrgeom->i,tautotmax,tautotmaxlim);
+  //  SLOOPA(jj) dualfprintf(fail_file,"jj=%d Erfrad=%g Erffluid=%g gammarad=%g gammafluid=%g Erfnew=%g urfconrel=%g\n",jj,Erfrad,Erffluid,gammarad,gammafluid,*Erfnew,urfconrel[jj]);
 
   return(0);
 }

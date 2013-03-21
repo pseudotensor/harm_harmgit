@@ -1,6 +1,7 @@
 //problem names
 #define RADBEAM2D (1) // beam of light in SPC
 #define RADTUBE (6) // radiative shock tubes as in Farris et al 09 - assumes Edd.approximation which is currently not handled
+#define RADBONDI (7) // like in Fragile's paper (called BONDI in koral)
 #define RADPULSE (10) //  radiative blob spreading around
 #define RADSHADOW (11)  // radiative shadow
 #define RADATM (12) // atmosphere enlighted
@@ -19,7 +20,6 @@
 
 
 // TODO:
-#define RADBONDI (7) // like in Fragile's paper (called BONDI in koral)
 #define RADDONUT (25) // 2d radiative Polish donut in KS
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary
 #define RADNT (30) // emission from midplane
@@ -56,6 +56,7 @@
 #define RADBEAM2DFLOWINFLOW 206
 #define RADATMBEAMINFLOW 207
 #define RADWALLINFLOW 208
+#define RADBONDIINFLOW 209
 
 ///////////////////////////////
 //problem choice
@@ -64,7 +65,7 @@
 //#define WHICHPROBLEM FLATNESS
 //#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
-//#define WHICHPROBLEM RADPULSEPLANAR
+#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
 //#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
@@ -73,7 +74,8 @@
 //#define WHICHPROBLEM RADATM
 //#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
-#define WHICHPROBLEM RADWAVE
+//#define WHICHPROBLEM RADWAVE
+//#define WHICHPROBLEM RADBONDI
 
 
 
@@ -270,7 +272,7 @@
 
 
 #undef FORCESOLVEL
-#define FORCESOLVEL 0 // for testing against koral // KORALTODO SUPERGODMARK: Koral actually fails if uses large timestep as suggested by tau limiter.
+#define FORCESOLVEL 0 // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
 
 #define N1 100
 #define N2 1 
@@ -292,8 +294,8 @@
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK // works!
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK // works!
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICITSUBCYCLE // works fine at moderate \tau\lessim 100
 
 #define MCOORD CARTMINKMETRIC2
@@ -528,6 +530,31 @@
 
 
 
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBONDI)
+
+#undef MPERSUN
+#define MPERSUN (3.0)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 112
+#define N2 1
+#define N3 1
+
+// can choose any spherical polar coordinate system with gravity
+//#define MCOORD BLCOORDS
+#define MCOORD KSCOORDS
+
+#endif
 
 
 

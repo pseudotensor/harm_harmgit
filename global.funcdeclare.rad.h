@@ -26,18 +26,18 @@ extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 extern int p2u_rad(FTYPE *pr, FTYPE *Urad, struct of_geom *ptrgeom, struct of_state *q);
 
 
-extern int prad_fforlab(int whichvel, int whichcoord, int whichdir, FTYPE *pp1, FTYPE *pp2, struct of_geom *ptrgeom);
+extern int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout);
 
-extern int primefluid_ffrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout);
+extern int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *whichcoordrad, struct of_geom *ptrgeomprimecoords, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout);
 
-extern int primefluid_EVrad_to_primeall(int whichvel, int whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout);
+extern int primefluid_EVrad_to_primeall(int *whichvel, int *whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout);
 
 
 extern int prad_ff2zamo(FTYPE *pp1, FTYPE *pp2, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
 extern int f_prad_zamo2ff(FTYPE *ppff, FTYPE *ppzamo, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4],FTYPE *f);
 extern int prad_zamo2ff(FTYPE *ppzamo, FTYPE *ppff, struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
 
-extern int u2p_rad(int showmessages, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom, PFTYPE *lpflag, PFTYPE *lpflagrad);
+extern int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pp, struct of_geom *ptrgeom, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
 
 extern int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);

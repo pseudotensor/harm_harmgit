@@ -2293,7 +2293,8 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
     // Noticed this uses too much computational power and may not even have solution causing Newton's method to reach large number of iterations
     PFTYPE lpflagrad=0;
     int showmessages=0; // don't show messages if diagnostic fails unless debugging.
-    Utoprimdiss(showmessages,evolvetype, inputtype, U,  ptrgeom, prother[DISSFULLINVCO],&otherfail, &newtonstats,newtonstats,&lpflagrad);
+    int allowlocalfailurefixandnoreport=1;
+    Utoprimdiss(showmessages,allowlocalfailurefixandnoreport, evolvetype, inputtype, U,  ptrgeom, prother[DISSFULLINVCO],&otherfail, &newtonstats,newtonstats,&lpflagrad);
 #else
     PALLLOOP(pl) prother[DISSFULLINVCO][pl] = prother[DISSSIMPLEINVCO][pl];
     otherfail=0;
