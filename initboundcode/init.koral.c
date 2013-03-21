@@ -433,8 +433,8 @@ int init_global(void)
 	//	cour=0.49; // doesn't help oscillations for NLEFT=0.99999 with MINM
 	gam=gamideal=1.4;
 	cooling=KORAL;
-	ARAD_CODE=1E-30;
-	//ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //	ARAD_CODE=1E-30;
+	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=FREEOUTFLOW;
 	BCtype[X1DN]=RADSHADOWINFLOW;

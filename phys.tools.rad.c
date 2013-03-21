@@ -347,7 +347,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
             localIMPEPS*=FRACIMPEPSCHANGE;
             if(localIMPEPS<NUMEPSILON*10.0){
-              if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del);
+              if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g)\n",ii,jj,localIMPEPS,del);
               return(1); // can't go below machine precision for difference else will be 0-0
             }
           }
@@ -541,6 +541,9 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
   // get updated uu from dUother in case leads to different result
   FTYPE U0[NPR];
   PLOOP(pliter,pl) U0[pl]=UFSET(CUf,dt,Ui[pl],Uf[pl],dUother[pl],0.0);
+
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d U0=%g realdt=%g dt=%g Ui=%g Uf=%g dUother=%g\n",pl,U0[pl],realdt,dt,Ui[pl],Uf[pl],dUother[pl]);
+
   // get original U
   FTYPE U[NPR];
   PLOOP(pliter,pl) U[pl]=Ui[pl];
@@ -560,16 +563,19 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       // KORALTODO: Should this only depend upon kappa and not kappaes?  Stiffness in source term comes from full chi, so seems to be full chi.
       SLOOPA(jj) tautotdir[jj] = chi * dxortho[jj];
       // only include relevant directions
-      FTYPE taumax=MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
+      FTYPE taumax=SMALL+MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
       
       idtsub=taumax/realdt;
     }
     else{
       FTYPE uu0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
       //      FTYPE ratchangeRtt=chi * uu0 * realdt * 1.0; // 1.0 = c (1st term)
-      FTYPE ratchangeRtt=fabs(chi * uu0 * uu0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
+      FTYPE ratchangeRtt=SMALL+fabs(chi * uu0 * uu0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
       idtsub = ratchangeRtt/realdt; // if ratchange=1, then in principle right at edge of big change.
       // this is like having a "source speed" of v_s\sim \tau \gamma^2 c and limiting the timestep so the source wave only reaches across a cell dxortho in time dt.
+
+      //      dualfprintf(fail_file,"uu0=%g ratchangeRtt=%g idtsub=%g\n",uu0,ratchangeRtt,idtsub);
+
     }
 
 
@@ -578,19 +584,19 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     // account for case where effect on fluid is more than on radiation (where above would only account for effect on radiation)
 
     // first compare to original U
-    jj=TT; Umhd=fabs(U[UU+jj]);
+    jj=TT; Umhd=SMALL+fabs(U[UU+jj]);
     jj=TT; Urad=fabs(U[URAD0+jj]);
     idtsub=MAX(idtsub,idtsub*Urad/Umhd);
 
     //    dualfprintf(fail_file,"i=%d dtsub1=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
-
+       
     // also compare against changed U=U0
-    jj=TT; Umhd=fabs(U0[UU+jj]);
+    jj=TT; Umhd=SMALL+fabs(U0[UU+jj]);
     jj=TT; Urad=fabs(U0[URAD0+jj]);
     idtsub=MAX(idtsub,idtsub*Urad/Umhd);
 
     //    dualfprintf(fail_file,"i=%d dtsub2=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
-
+       
   }
   // below is if Diffusion is part of source term as in Koral
   // source term should lead to small (<1/2) change in conserved quantities
@@ -698,6 +704,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
   *dtsub=COURRADEXPLICIT/idtsub;
 
 
+  //  dualfprintf(fail_file,"*dtsub=%g idtsub=%g method=%d\n",*dtsub,idtsub,method);
  
 }
 
@@ -909,7 +916,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
-  int showmessages=1; // 0 ok if not debugging and think everything works.
+  int showmessages=0; // 0 ok if not debugging and think everything works.
   int showmessagesheavy=0;
 
 
@@ -2491,7 +2498,6 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   FTYPE pp[NPR];
   int pliter,pl;
 
-  
 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
@@ -2543,7 +2549,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   }
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
-    FTYPE gamma2,delta;
+    FTYPE gamma2,delta,deltatouse;
 
 #if(0)
     {
@@ -2561,9 +2567,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
       b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
       c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]);
       delta=b*b-4.*a*c;
-      gamma2=  0.5*(-b-sqrt(delta))/a; // lab-frame gamma^2
+      //if(delta<0) deltatouse=0.0;
+      deltatouse=delta;
+      gamma2=  0.5*(-b-sqrt(deltatouse))/a; // lab-frame gamma^2
       //if unphysical try the other root
-      if(gamma2<=0.) gamma2=  0.5*(-b+sqrt(delta))/a; 
+      if(gamma2<=0.) gamma2=  0.5*(-b+sqrt(deltatouse))/a; 
     }
     //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Av0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Av[0],Av[1],Av[2],Av[3],gamma2);
 
@@ -2674,13 +2682,15 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
                + 3*__64642*__64715);
 
       // delta scales like gRR^2
-      if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+      //      if(delta<0.0) deltatouse=0.0;
+      deltatouse=delta;
+      if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) deltatouse=delta=0.0; // probably gamma2=1
       //dualfprintf(fail_file,"delta=%g Rtt=%g\n",delta,Rtt);
 
       gamma2 = -((2*__64644*gv33 + __64650 - 4*gv23*gv24*gv34 + __64654 + __64655 + \
                   2*gv22*__64653 + __64662 + (2*__64647 + (__64652 - gcttp1*__64652 - \
                                                            2*gv22*gv33)*gv44 + __64671 + __64675)*__64682*__64683 + \
-                  __64642*__64715 + Rtt*(2*__64642*__64720 + Sqrt(delta)))/(4.*(((__64645 + __64650 + __64651 + __64654 + \
+                  __64642*__64715 + Rtt*(2*__64642*__64720 + Sqrt(deltatouse)))/(4.*(((__64645 + __64650 + __64651 + __64654 + \
                                                                                   __64655 + gv22*__64653 + __64662 + (__64647 - (__64642*__64652 + \
                                                                                                                                  gv22)*gv33)*gv44 + __64671 + __64675)*__64682*__64683)/__64642 + \
                                                                                 2*gv12*Rtt*Rtx + __64687 + 2*gv13*Rtt*Rty + __64689 + __64691 + \
@@ -2737,7 +2747,9 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
                                   2*gv34*Rty*Rtz + __81413));
 
         // delta scales like gRR^2
-        if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
+        //        if(delta<0.0) deltatouse=0.0;
+        deltatouse=delta;
+        if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) deltatouse=delta=0.0; // probably gamma2=1
         // dualfprintf(fail_file,"deltaalt=%g Rtt=%g\n",delta,Rtt);
 
         gamma2 = -((-(__81363*__81364 + 2*__81364*gv33 + __81367*(-__81368 + \
@@ -2746,7 +2758,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
                                                                            __81385 + 2*__81368 + __81386 - 2*gv22*gv33)*gv44)*__81397*__81398 - \
                     gv22*__81401 - 2*gv23*Rtx*Rty - gv33*__81405 - 2*gv24*Rtx*Rtz - \
                     2*gv34*Rty*Rtz - gv44*__81412 - 2*Rtt*__81447 - \
-                    Rtt*Sqrt(delta))/(4.*((__81363*__81364 - __81364*gv33 +   \
+                    Rtt*Sqrt(deltatouse))/(4.*((__81363*__81364 - __81364*gv33 +   \
                                            __81367*__81370 - 2*gv12*gv13*gv24*gv34 + 2*gv23*gv24*gv34 + \
                                            __81374*__81375 - gv22*__81375 + 2*gv14*(-(gv13*gv23*gv24) + \
                                                                                     gv12*gv24*gv33 + gv13*gv22*gv34 - gv12*gv23*gv34) - (__81384 + \
@@ -2791,6 +2803,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     ////////////
     //
     // get initial attempt for Erf
+    // If delta<0, then gammarel2=nan and Erf<RADLIMIT check below will fail as good.
     //
     ////////////
     Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
@@ -2819,11 +2832,28 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
         calc_tautot(pp, ptrgeom, tautot, &tautotmax);
       }
     }
-    
 
 
-    //    if(failure1){ // || failure2 ){ //&& tautotmax<TAUFAILLIMIT){
-    if(failure1 && tautotmax<TAUFAILLIMIT){
+
+    // if Erf already a value and already Erf<ERADLIMIT (i.e. delta>0 must be true), then bad failure and just reset velocity to zero or fluid velocity depending upon optical depth
+    if(Erf<ERADLIMIT){ // JCM
+      // Erf<ERADLIMIT is bad, but interpolation results may be ok.  Although static with pp
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE3A;
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+      // can't use normal velocity with small Erf -- fails with inf or nan
+      // setup "old" pp in case used
+      pp[PRAD0] = Erf;
+      SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
+        
+      if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+      else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+      else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
+    }    
+    else if(failure1 || failure2 && tautotmax<TAUFAILLIMIT){ // works for RADBEAMFLAT
+    //    if(failure1 && tautotmax<TAUFAILLIMIT){ // works for DBLSHADOW
 
 	  //    urfcon[0]=gammamax; // ba
 	  FTYPE gammarel=gammamax;
@@ -2834,7 +2864,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 	  Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
 
-      // Check if Erf is too small
+      // Check if Erf is too small with gamma->gammamax
 	  if(Erf<ERADLIMIT){
 		if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
 		// Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
@@ -2871,7 +2901,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
       }
       //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
 
-
+#if(1)
       // now that have some version of uconrel, feed to pp[PRAD1-PRAD3] and see how to reduce 4-velocity in tau-based limits
       // i.e. avoid using "static" old pp -- who knows that's there actually.
       pp[PRAD0] = Erf;
@@ -2885,6 +2915,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
       if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
       else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
       else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
+#endif
 
 	}
 	//////////////////////
@@ -2964,6 +2995,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
         // get good relative velocity
         FTYPE gammarel=sqrt(gammarel2);
         SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+        //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       }
 
       
