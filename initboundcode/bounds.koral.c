@@ -148,6 +148,20 @@ int bound_x1up_radcylbeam(
                           int *localenerpos
                           );
 
+
+int bound_radbeam2dksvertbeaminflow(int dir,
+							int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							int *inboundloop,
+							int *outboundloop,
+							int *innormalloop,
+							int *outnormalloop,
+							int (*inoutlohi)[NUMUPDOWN][NDIM],
+							int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							int *dosetbc,
+							int enerregion,
+							int *localenerpos
+                                    );
+
 /* bound array containing entire set of primitive variables */
 
 
@@ -423,6 +437,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         // now do anything else that needs to be done
         BCtype[dir]=RADNTBC;       
         bound_radnt(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADBEAM2DKSVERTBEAMINFLOW){
+        bound_radbeam2dksvertbeaminflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
       else{
@@ -1185,8 +1203,8 @@ int bound_radbeam2dbeaminflow(int dir,
 		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 		  
           // NOTEMARK: only really makes sense near the hole if in KSCOORDS
-		  if(pl==U3) if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
-		  if(pl==URAD3) if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
+		  if(MACP0A1(prim,i,j,k,U3)>0.0) MACP0A1(prim,i,j,k,U3)=0.0; // limit so no arbitrary fluid inflow
+		  if(MACP0A1(prim,i,j,k,URAD3)>0.0) MACP0A1(prim,i,j,k,URAD3)=0.0; // limit so no arbitrary radiative inflow
 
 
 		  // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \phi at those i
@@ -1281,9 +1299,9 @@ int bound_radbeam2dbeaminflow(int dir,
                 
                 //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
                 if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
-                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD1) = uradx;
-                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD2) = urady;
-                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD3) = uradz;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
               }
             } // over allowed pl's to bound
 
@@ -2733,6 +2751,239 @@ int bound_x1up_radcylbeam(
  
 
 
+
+  return(0);
+} 
+
+
+
+
+
+
+
+
+
+
+
+// X2 upper for radiation beam injection
+int bound_radbeam2dksvertbeaminflow(int dir,
+							int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+							int *inboundloop,
+							int *outboundloop,
+							int *innormalloop,
+							int *outnormalloop,
+							int (*inoutlohi)[NUMUPDOWN][NDIM],
+							int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+							int *dosetbc,
+							int enerregion,
+							int *localenerpos
+							)
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+    if(dir==X2UP && BCtype[X2UP]==RADBEAM2DKSVERTBEAMINFLOW && totalsize[2]>1 && mycpupos[2] == ncpux2-1 ){
+
+
+      extern int RADBEAM2DKSVERT_BEAMNO,FLATBACKGROUND;
+      FTYPE RHOAMB=1.e0/RHOBAR;
+	  FTYPE TAMB=1e7/TEMPBAR;
+	  FTYPE PAR_D=1./RHOBAR;
+	  FTYPE PAR_E=1e-4/RHOBAR;
+
+      // BEAM PROPERTIES
+	  int IFBEAM=1; // whether to have a beam
+	  FTYPE TLEFT=1e9/TEMPBAR;
+      //      FTYPE NLEFT=0.99;
+      FTYPE NLEFT=0.995;
+      //	  FTYPE NLEFT=0.999;
+      //	  FTYPE NLEFT=0.999999; // paper says this, while koral code says 0.999
+
+	  FTYPE BEAML,BEAMR;
+	  if (RADBEAM2DKSVERT_BEAMNO==1){
+		BEAML=2.9;
+		BEAMR=3.1;
+	  }
+	  else if (RADBEAM2DKSVERT_BEAMNO==2){
+		BEAML=5.8;
+		BEAMR=6.2;
+	  }
+	  else if (RADBEAM2DKSVERT_BEAMNO==3){
+		BEAML=15.5;
+		BEAMR=16.5;
+	  }
+	  else if (RADBEAM2DKSVERT_BEAMNO==4){
+		BEAML=37;
+		BEAMR=43;
+	  }
+	  else if (RADBEAM2DKSVERT_BEAMNO==5){
+		BEAML=7.;
+		BEAMR=9.;
+	  }
+
+	  
+
+	  OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+	  ////////	LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+		ri=i;
+		rj=rjout;
+		rk=k;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  
+		LOOPBOUND2OUT{
+
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  
+          // NOTEMARK: only really makes sense near the hole if in KSCOORDS
+		  if(MACP0A1(prim,i,j,k,U2)<0.0) MACP0A1(prim,i,j,k,U2)=0.0; // limit so no arbitrary fluid inflow
+		  if(MACP0A1(prim,i,j,k,URAD2)<0.0) MACP0A1(prim,i,j,k,URAD2)=0.0; // limit so no arbitrary radiative inflow
+
+
+		  // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \theta at those i
+		  if(1      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
+
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+			//coordinates of the ghost cell
+			bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+			// set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+			int whichvel;
+			whichvel=VEL4;
+			int whichcoord;
+			whichcoord=MCOORD;
+
+			// get metric grid geometry for these ICs
+			int getprim=0;
+			struct of_geom geomrealdontuse;
+			struct of_geom *ptrgeomreal=&geomrealdontuse;
+			gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+
+
+			FTYPE ERADAMB;
+			FTYPE rho,uint,Vr;
+			FTYPE uradx,urady,uradz;
+            FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
+
+
+            // get coordinate basis in VEL4 format
+            ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[URAD1],uradcon,othersrad);
+            // get coordinate basis in MCOORD basis
+            uradx=uradcon[1]*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
+            urady=uradcon[2]*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
+            uradz=uradcon[3]*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
+            if(urady<0.0) urady=0.0; // limit so no arbitrary radiative inflow
+
+
+			if(FLATBACKGROUND){
+			  Vr=0.0;
+			  rho=RHOAMB;
+			  uint=calc_PEQ_ufromTrho(TAMB,rho);
+			  ERADAMB=calc_LTE_EfromT(TAMB);
+
+			  // override so like outflow conditions to avoid shear at boundary
+			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+
+			}
+			else{
+			  //zaczynam jednak od profilu analitycznego:   
+			  FTYPE r=V[1];
+			  FTYPE mD=PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
+			  FTYPE mE=PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
+			  Vr=sqrt(2./r)*(1.-2./r);
+
+
+			  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeomreal->gcov[GIND(1,1)]); // assumes RHO location is good for all these quantities
+			  rho=PAR_D/(r*r*sqrt(2./r));
+			  FTYPE T=TAMB;
+			  //			FTYPE ERAD=calc_LTE_EfromT(T);
+			  uint=mE/W;
+			  ERADAMB=calc_LTE_Efromurho(uint,rho);
+			  
+			  // override so like outflow conditions to avoid shear at boundary
+			  ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+			}
+
+            PBOUNDLOOP(pliter,pl){
+
+              //primitives in whichvel,whichcoord
+              if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
+                
+                // beam injection
+                // override URAD0
+                FTYPE ERADINJ;
+                ERADINJ=calc_LTE_EfromT(TLEFT);
+                // override uradz
+                urady=-1.0/sqrt(1.0 - NLEFT*NLEFT);
+                uradx=uradz=0.0;
+                
+
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
+
+                //                dualfprintf(fail_file,"GOT BEAM: ijk=%d %d %d : %g %g\n",ERADINJ,urady);
+              }
+              else{ //no beam
+                
+                //                dualfprintf(fail_file,"GOTNOBEAM: ijk=%d %d %d : %g %g\n",ERADAMB,urady);
+                
+                //			  MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
+                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
+                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
+              }
+            } // over allowed pl's to bound
+
+
+            // KORALTODO: ERADINJ is in fluid frame, need to convert, but probably ok.
+
+			// get all primitives in WHICHVEL/PRIMECOORDS value
+			primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+
+
+		  }// end if not staggered field
+
+
+		}// end loop over inner i's
+	  } // over block
+	}// end if correct BC and should be doind BC for this core
+  }// end parallel region
 
   return(0);
 } 

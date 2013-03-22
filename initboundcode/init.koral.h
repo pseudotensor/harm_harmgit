@@ -13,11 +13,12 @@
 #define RADBEAM2DKS (19) // like RADBEAM2D, just chooses MCOORD KSCOORDS
 #define RADBEAMFLAT (24) //  beam of light in Cartesian
 #define RADDONUT (25) // 2d radiative Polish donut in KS (called RDONUT in koral.  Similar setup to RADNT.)
+#define RADBEAM2DKSVERT (26) // 2d radiative beam in r,theta plane (does more than KS)
 #define FLATNESS (27) // flat  (koral: but with non-zero four-force)
 #define RADWALL (29) // flat with wall
 #define RADNT (30) // emission from midplane
 #define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral.  Very similar to RADNT.)
-#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Similar to RADFLATDISK but in CYL coords.)
+#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Somewhat similar to RADFLATDISK but in CYL coords.)
 #define RADDOT (33) // radiating dot
 
 
@@ -27,7 +28,7 @@
 
 // KORALTODO: PROBLEMS:
 
-// RADBEAM2D, RADBEAM2DKS do not work -- noise and failures galore.  As if u2p_rad() needs some other decision tree.
+// RADBEAM2D, RADBEAM2DKS,RADBEAM2DKSVERT do not work -- noise and failures galore.  As if u2p_rad() needs some other decision tree.
 
 // RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
 
@@ -44,7 +45,7 @@
 
 // TODO:
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
-
+#define EDDINFALL (5) // infall with flux from inside
 
 
 
@@ -77,6 +78,8 @@
 #define RADBONDIINFLOW 209
 #define RADNTBC 210
 #define RADCYLBEAMBC 211
+#define RADBEAM2DKSVERTBEAMINFLOW 212
+
 
 ///////////////////////////////
 //problem choice
@@ -100,7 +103,8 @@
 //#define WHICHPROBLEM RADNT
 //#define WHICHPROBLEM RADFLATDISK
 //#define WHICHPROBLEM RADDONUT
-#define WHICHPROBLEM RADCYLBEAM
+//#define WHICHPROBLEM RADCYLBEAM
+#define WHICHPROBLEM RADBEAM2DKSVERT
 
 
 
@@ -463,6 +467,31 @@
 #endif
 
 #endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAM2DKSVERT)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 30
+#define N2 30
+#define N3 1
+
+#define MCOORD SPCMINKMETRIC
+//#define MCOORD KSCOORDS
+
+#endif
+
+
 
 //****************************************//
 //****************************************//

@@ -10,6 +10,7 @@
 
 int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
 
+int RADBEAM2DKSVERT_BEAMNO; // global for bounds.koral.c
 
 //FTYPE RADBEAMFLAT_FRATIO=0.95;
 FTYPE RADBEAMFLAT_FRATIO;
@@ -508,8 +509,8 @@ int init_global(void)
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
-    BCtype[X1DN]=OUTFLOW;
-    //	BCtype[X1DN]=HORIZONOUTFLOW;
+    //BCtype[X1DN]=OUTFLOW;
+    BCtype[X1DN]=HORIZONOUTFLOW;
 	BCtype[X2UP]=PERIODIC;
 	BCtype[X2DN]=PERIODIC;
 	//	BCtype[X3UP]=FREEOUTFLOW;
@@ -529,6 +530,68 @@ int init_global(void)
 	}
 	else if (BEAMNO==4){
 	  DTOUT1=.25; //dt for basic output
+	}
+
+	int idt;
+    //	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 20.0; //final time
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADBEAM2DKSVERT){
+
+    RADBEAM2DKSVERT_BEAMNO=5; // 1-5
+    // whether constant or radially varying background
+    // ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
+    FLATBACKGROUND=1;
+
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	gam=gamideal=1.4;
+	cooling=KORAL;
+	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
+    //BCtype[X1DN]=OUTFLOW;
+    BCtype[X1DN]=HORIZONOUTFLOW;
+	BCtype[X2UP]=RADBEAM2DKSVERTBEAMINFLOW;
+	BCtype[X2DN]=OUTFLOW;
+	//	BCtype[X3UP]=FREEOUTFLOW;
+	BCtype[X3UP]=OUTFLOW;
+	BCtype[X3DN]=OUTFLOW;
+
+
+	FTYPE DTOUT1;
+	if (RADBEAM2DKSVERT_BEAMNO==1){
+	  DTOUT1=1; //dt for basic output
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==2){
+	  DTOUT1=.4; //dt for basic output
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==3){
+	  DTOUT1=1.; //dt for basic output
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==4){
+	  DTOUT1=.25; //dt for basic output
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==5){
+	  DTOUT1=.4; //dt for basic output
 	}
 
 	int idt;
@@ -1199,6 +1262,56 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
+  if(WHICHPROBLEM==RADBEAM2DKSVERT){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+  
+
+
+	if (RADBEAM2DKSVERT_BEAMNO==1){
+	  Rin_array[1]=2.3;
+	  Rout_array[1]=3.5;
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==2){
+	  Rin_array[1]=5.5;
+	  Rout_array[1]=12.5;
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==3){
+      // for MKS
+	  //Rin_array[1]=2.5;
+      //	  Rout_array[1]=3.0;
+      // for UNI
+	  Rin_array[1]=14.5;
+      Rout_array[1]=20.5;
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==4){
+	  Rin_array[1]=30;
+	  Rout_array[1]=50;
+	}
+	else if (RADBEAM2DKSVERT_BEAMNO==5){
+	  Rin_array[1]=5.5;
+	  Rout_array[1]=12.5;
+	}
+
+	Rin_array[2]= -0.25*Pi/2.;
+    Rout_array[2]=+0.27*Pi/2.;
+
+	Rin_array[3]=0.;
+    Rout_array[3]=0.01*Pi/4.; // 8.*Pi/4.
+      
+	
+  }
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
   if(WHICHPROBLEM==ATMSTATIC){
 
 
@@ -1666,7 +1779,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //****************************************//
 
 
-#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS)
+#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT)
 
 
 #define KAPPA 0.
@@ -2139,7 +2252,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
+  if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT){
 
 
 	FTYPE RHOAMB=1.e0/RHOBAR;
