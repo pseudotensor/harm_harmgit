@@ -14,22 +14,32 @@
 #define RADBEAMFLAT (24) //  beam of light in Cartesian
 #define FLATNESS (27) // flat  (koral: but with non-zero four-force)
 #define RADWALL (29) // flat with wall
+#define RADDOT (33) // radiating dot
+
+// DOING:
+#define RADNT (30) // emission from midplane
+
+
 
 // PROBLEMS:
 
 // RADBONDI, RADBEAM2D, RADBEAM2DKS do not work yet.
-// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.
+
+// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
+
 // RADWALL without fixups is worse than when avoided Erf< condition that seemingly was required for RADDBLSHADOW to work.
+
 // RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.
-// RADBONDI kinda works at high resolution with para until entropy reversions occur.  But constant bad inversions for u2p_rad() near BH of order 5%.  Some issue.  If that doesn't occur, maybe will work.
+
+// RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
+
+
 
 // TODO:
 #define RADDONUT (25) // 2d radiative Polish donut in KS
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary
-#define RADNT (30) // emission from midplane
 #define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral)
 #define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral)
-#define RADDOT (33) // radiating dot
 
 
 
@@ -61,6 +71,7 @@
 #define RADATMBEAMINFLOW 207
 #define RADWALLINFLOW 208
 #define RADBONDIINFLOW 209
+#define RADNTBC 210
 
 ///////////////////////////////
 //problem choice
@@ -79,7 +90,9 @@
 //#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
 //#define WHICHPROBLEM RADWAVE
-#define WHICHPROBLEM RADBONDI
+//#define WHICHPROBLEM RADBONDI
+//#define WHICHPROBLEM RADDOT
+#define WHICHPROBLEM RADNT
 
 
 
@@ -531,12 +544,6 @@
 //****************************************//
 //****************************************//
 
-
-
-
-//****************************************//
-//****************************************//
-
 #if(WHICHPROBLEM==RADBONDI)
 
 #undef MPERSUN
@@ -561,6 +568,62 @@
 
 #endif
 
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADDOT)
+
+//#undef MPERSUN
+//#define MPERSUN (1.0/MSUN)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+// choose odd so DOT is located at center of single cell symmetrically around grid rather than at edge of grid or offset.
+#define N1 41
+#define N2 41
+#define N3 41
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADNT)
+
+#undef MPERSUN
+#define MPERSUN (10.0)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
+
+// N1=30 if using log coords from r=1.7 to r=50
+// N1=60 if using 1.5*hor - 40 (or 27.8)
+#define N1 30
+#define N2 30
+#define N3 1
+
+// can choose any spherical polar coordinate system
+//#define MCOORD SPCMINKMETRIC
+//#define MCOORD BLCOORDS
+#define MCOORD KSCOORDS
+
+#endif
 
 
 

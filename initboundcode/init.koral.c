@@ -70,6 +70,33 @@ FTYPE RADBONDI_MINX;
 FTYPE RADBONDI_MAXX;
 
 
+FTYPE RADDOT_XDOT;
+FTYPE RADDOT_YDOT;
+FTYPE RADDOT_ZDOT;
+int RADDOT_IDOT;
+int RADDOT_JDOT;
+int RADDOT_KDOT;
+FTYPE RADDOT_FYDOT;
+FTYPE RADDOT_LTEFACTOR;
+FTYPE RADDOT_URFX;
+FTYPE RADDOT_F1;
+FTYPE RADDOT_F2;
+
+
+
+FTYPE RADNT_MINX;
+FTYPE RADNT_MAXX;
+FTYPE RADNT_KKK;
+FTYPE RADNT_ELL;
+FTYPE RADNT_UTPOT;
+FTYPE RADNT_RHOATMMIN;
+FTYPE RADNT_UINTATMMIN;
+FTYPE RADNT_ERADATMMIN;
+FTYPE RADNT_NODONUT;
+FTYPE RADNT_INFLOWING;
+FTYPE RADNT_TGASATMMIN;
+FTYPE RADNT_TRADATMMIN;
+FTYPE RADNT_ROUT;
 
 
 
@@ -896,6 +923,78 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
+  if(WHICHPROBLEM==RADDOT){
+
+	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	cour=0.8;
+	gam=gamideal=4.0/3.0;
+	cooling=KORAL;
+    ARAD_CODE=ARAD_CODE_DEF*1E-20; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+
+	BCtype[X1UP]=OUTFLOW;
+    BCtype[X1DN]=OUTFLOW;
+	BCtype[X2UP]=OUTFLOW;
+	BCtype[X2DN]=OUTFLOW;
+	BCtype[X3UP]=OUTFLOW;
+	BCtype[X3DN]=OUTFLOW;
+
+    
+	int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;
+
+	DTr = 100; //number of time steps for restart dumps
+	tf = 100.0*DTdumpgen[0];
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  if(WHICHPROBLEM==RADNT){
+
+    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+	if(!(ISSPCMCOORDNATIVE(MCOORD))){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBONDI\n",MCOORD);
+	  myexit(3434628752);
+	}
+
+	cour=0.8;
+	gam=gamideal=4.0/3.0;
+	cooling=KORAL;
+	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
+
+    BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
+    BCtype[X1UP]=RADNTBC; // inflow analytic
+	BCtype[X2DN]=POLARAXIS;
+	BCtype[X2UP]=RADNTBC; // disk condition
+	BCtype[X3UP]=PERIODIC;
+	BCtype[X3DN]=PERIODIC;
+
+
+	int idt;
+	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+
+	DTr = 100; //number of time steps for restart dumps
+    //	tf = 100*DTdumpgen[0]; // 100 dumps(?)
+	tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
 
   return(0);
 
@@ -1155,13 +1254,63 @@ int init_defcoord(void)
     //    FTYPE LOGPAR2=2.;
 
     //	defcoord = UNIFORMCOORDS;
-    defcoord = LOGRUNITH; // Uses R0, Rin, Rout
+    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
     R0=0.0;
 	Rin=RADBONDI_MINX;
 	Rout=RADBONDI_MAXX;
 
+    Rin_array[2]=.99*Pi/2.;
+    Rout_array[2]=1.01*Pi/2.;
+    Rin_array[3]=-1.;
+    Rout_array[3]=1.;
+
+
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADDOT){
+
+
+	defcoord = UNIFORMCOORDS;
+	Rin_array[1]=0;
+	Rin_array[2]=0;
+	Rin_array[3]=0;
+
+	Rout_array[1]=1.0;
+	Rout_array[2]=1.0;
+	Rout_array[3]=1.0;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADNT){
+
+    if(1){
+      RADNT_MINX=1.7; // allows in KSCOORDS
+      RADNT_MAXX=50.0;
+    }
+    else{
+      RADNT_MINX=1.5*Rhor;
+      RADNT_MAXX=40.0; // 27.8
+    }
+
+    // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?
+    //	defcoord = UNIFORMCOORDS;
+    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+    R0=0.0;
+	Rin=RADNT_MINX;
+	Rout=RADNT_MAXX;
+
+    Rin_array[2]=0.2*Pi/4.;
+    Rout_array[2]=Pi/2.;
+    Rin_array[3]=-1.;
+    Rout_array[3]=1.;
+
+  }
 
 
 
@@ -1204,6 +1353,36 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
+
+
+
+  if(WHICHPROBLEM==RADDOT){
+    RADDOT_XDOT=(20.0/41.0)*(Rout_array[1]-Rin_array[1]) + Rin_array[1];
+    RADDOT_YDOT=(10.0/41.0)*(Rout_array[2]-Rin_array[2]) + Rin_array[2];
+    RADDOT_ZDOT=(20.0/41.0)*(Rout_array[3]-Rin_array[3]) + Rin_array[3];
+
+    // get X1,X2,X3 of dot assuming UNIFORMCOORDS
+    FTYPE myX[NDIM]={0.0};
+    FTYPE dxdxp[NDIM][NDIM];
+    dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
+    myX[1]= startx[1] + (RADDOT_XDOT-Rin_array[1])/dxdxp[1][1];
+    myX[2]= startx[2] + (RADDOT_YDOT-Rin_array[2])/dxdxp[2][2];
+    myX[3]= startx[3] + (RADDOT_ZDOT-Rin_array[3])/dxdxp[3][3];
+
+    trifprintf("RADDOT: myX: %g %g %g\n",myX[1],myX[2],myX[3]);
+
+    // get nearest i,j,k
+    extern void icoord_round(FTYPE *X,int loc, int *i, int *j, int *k);
+    icoord_round(myX,CENT,&RADDOT_IDOT,&RADDOT_JDOT,&RADDOT_KDOT);
+
+    RADDOT_FYDOT=0.3;
+    RADDOT_LTEFACTOR=1.;
+    RADDOT_URFX=0.;
+    RADDOT_F1=100;
+    RADDOT_F2=10000;
+    
+    trifprintf("RADDOT: %g %g %g : %d %d %d\n",RADDOT_XDOT,RADDOT_YDOT,RADDOT_ZDOT,RADDOT_IDOT,RADDOT_JDOT,RADDOT_KDOT);
+  }
 
 
   trifprintf("BEGIN check_rmin\n");
@@ -1449,6 +1628,28 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPAES defines fractoin of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
+
+#endif
+
+
+#if(WHICHPROBLEM==RADDOT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
+#if(WHICHPROBLEM==RADNT)
+
+#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
+#define KAPPAESUSER(rho,T) (0.0)
 
 #endif
 
@@ -2336,6 +2537,143 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 	return(0);
   }
+
+
+
+
+
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADDOT){
+
+	FTYPE xx,yy,zz,rsq;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	xx=V[1];
+	yy=V[2];
+	zz=V[3];
+
+    pr[RHO] = 1.0;
+	pr[UU]  = 1.0;
+	pr[U1]  = 0 ;
+	pr[U2]  = 0 ;    
+	pr[U3]  = 0 ;
+
+	// just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+
+	pr[PRAD0] = 0 ; // so triggers failure if used
+	pr[PRAD1] = 0 ;
+	pr[PRAD2] = 0 ;    
+	pr[PRAD3] = 0 ;
+
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = RADDOT_LTEFACTOR*calc_LTE_Efromurho(pr[RHO],pr[UU]);
+    pradffortho[PRAD1] = 0;
+    pradffortho[PRAD2] = 0;
+    pradffortho[PRAD3] = 0;
+
+    if(startpos[1]+i==RADDOT_IDOT && startpos[2]+j==RADDOT_JDOT && startpos[3]+k==RADDOT_KDOT){
+      //      dualfprintf(fail_file,"GOT INITIAL DOT\n");
+      if(N1==1) pradffortho[PRAD0] *= RADDOT_F1;
+      else{
+        pradffortho[PRAD0]*=RADDOT_F2;
+        pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
+      }
+    }// end if DOT
+
+
+	// Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+	*whichvel=VEL4;
+	*whichcoord=MCOORD;
+    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
+
+
+	*whichvel=WHICHVEL;
+	return(0);
+  }
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADNT){
+
+
+    RADNT_KKK=1.e-4;
+    RADNT_ELL=4.5;
+    RADNT_UTPOT=.98;
+    //RADNT_RHOATMMIN=1.e-4;
+    RADNT_RHOATMMIN= 1.e-2;
+    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
+    RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
+    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
+    RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
+    RADNT_NODONUT=0;
+    RADNT_INFLOWING=0;
+    RADNT_ROUT=2.0;
+
+	FTYPE r,th,ph;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	r=V[1];
+	th=V[2];
+	ph=V[3];
+
+	*whichcoord=MCOORD; // in case setting for inside horizon too when MCOORD=KSCOORDS
+    *whichvel=VEL4;
+    // get metric grid geometry for these ICs
+    int getprim=0;
+    struct of_geom geomrealdontuse;
+    struct of_geom *ptrgeomreal=&geomrealdontuse;
+    gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+
+    
+    // KORAL:
+    // atmtype=0 : -1.5 -2.5
+    // atmtype=1 : -2.0 -2.5
+    pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5);
+    pr[UU]=RADNT_UINTATMMIN*pow(r/RADNT_ROUT,-2.5);
+    set_zamo_velocity(*whichvel,ptrgeomreal,pr); // only sets U1-U3 to zamo
+
+    
+    // just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+    // KORAL:
+    // atmtype=0 : pr[URAD0]=ERADATMMIN and zamo vels
+    // atmtype=1 : pr[URAD0]=ERADATMMIN and ncon={0,-1,0,0} with set_ncon_velocity(whichvel,1000.0,ncon,ptrgeomreal,uconreal);
+    // atmtype=2 : pr[URAD0]=ERADATMMIN*pow(rout/r,4) pr[URAD1-URAD3]  with ncon={0,-gammamax*(pow(r/rout,1.)),0,0} again using set_non_velocity() with gammamax=10.
+	pr[PRAD0] = RADNT_ERADATMMIN;
+    set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+
+
+    // No special transformation for radiation since set in *whichvel *whichcoord in lab-frame
+        
+
+	return(0);
+  }
+
+
+
+
 
 
 

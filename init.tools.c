@@ -1110,26 +1110,7 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
 
     
   // bl-normal observer (4-vel components)
-  
-  // normal observer velocity in atmosphere
-  if(whichvel==VEL4){
-    prlocal[U1] = -ptrgeom->gcon[GIND(0,1)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
-    prlocal[U2] = -ptrgeom->gcon[GIND(0,2)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
-    prlocal[U3] = -ptrgeom->gcon[GIND(0,3)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
-  }
-  else if(whichvel==VEL3){
-    prlocal[U1] = ptrgeom->gcon[GIND(0,1)]/ptrgeom->gcon[GIND(0,0)] ;
-    prlocal[U2] = ptrgeom->gcon[GIND(0,2)]/ptrgeom->gcon[GIND(0,0)] ;
-    prlocal[U3] = ptrgeom->gcon[GIND(0,3)]/ptrgeom->gcon[GIND(0,0)] ;
-    // GAMMIE
-    //ur = -1./(r*r);
-    //uh=up=0.0;
-  }
-  else if(whichvel==VELREL4){
-    prlocal[U1] = 0.0;
-    prlocal[U2] = 0.0;
-    prlocal[U3] = 0.0;
-  }
+  set_zamo_velocity(whichvel,ptrgeom,prlocal);
   
   if(whichcond==1){
     if(100.0*dt>TAUADJUSTATM){

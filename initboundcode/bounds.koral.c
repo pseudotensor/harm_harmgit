@@ -94,6 +94,32 @@ int bound_radbondiinflow(int dir,
 							   int *localenerpos
 							   );
 
+int bound_raddot(
+                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                 int *inboundloop,
+                 int *outboundloop,
+                 int *innormalloop,
+                 int *outnormalloop,
+                 int (*inoutlohi)[NUMUPDOWN][NDIM],
+                 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                 int *dosetbc,
+                 int enerregion,
+                 int *localenerpos
+                 );
+
+int bound_radnt(int dir,
+                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                int *inboundloop,
+                int *outboundloop,
+                int *innormalloop,
+                int *outnormalloop,
+                int (*inoutlohi)[NUMUPDOWN][NDIM],
+                int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                int *dosetbc,
+                int enerregion,
+                int *localenerpos
+                );
+
 
 /* bound array containing entire set of primitive variables */
 
@@ -200,6 +226,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 
 
 
+  // first do non-directional internal grid assignments overwritting any evolution (ok to do for each whichdir)
+  if(WHICHPROBLEM==RADDOT){
+    bound_raddot(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+  }
   
 
 
@@ -273,7 +303,11 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         donebc[dir]=1;
       }
       else if(BCtype[dir]==RADBONDIINFLOW){
-        bound_radbeam2dflowinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        bound_radbondiinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADNTBC){
+        bound_radnt(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
       else{
@@ -338,6 +372,15 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if(BCtype[dir]==RADWALLINFLOW){
         bound_radwallinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADNTBC){
+        // do ASYMM first
+        BCtype[dir]=ASYMM;
+        bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        // now do anything else that needs to be done
+        BCtype[dir]=RADNTBC;       
+        bound_radnt(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
       else{
@@ -2024,6 +2067,355 @@ int bound_radbondiinflow(int dir,
 		}// end loop over inner i's
 	  }// over block
 	}// if correct BC and core
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+
+
+
+// on-grid bounding
+int bound_raddot(
+                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                 int *inboundloop,
+                 int *outboundloop,
+                 int *innormalloop,
+                 int *outnormalloop,
+                 int (*inoutlohi)[NUMUPDOWN][NDIM],
+                 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                 int *dosetbc,
+                 int enerregion,
+                 int *localenerpos
+                 )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    extern FTYPE RADDOT_XDOT;
+    extern FTYPE RADDOT_YDOT;
+    extern FTYPE RADDOT_ZDOT;
+    extern int RADDOT_IDOT;
+    extern int RADDOT_JDOT;
+    extern int RADDOT_KDOT;
+    extern FTYPE RADDOT_FYDOT;
+    extern FTYPE RADDOT_LTEFACTOR;
+    extern FTYPE RADDOT_URFX;
+    extern FTYPE RADDOT_F1;
+    extern FTYPE RADDOT_F2;
+
+
+    int i,j,k,pl,pliter;
+    FTYPE X[NDIM],V[NDIM]; 
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
+  
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      ////COMPFULLLOOP
+
+      // KORALTODO: Koral has different IC and BC for the dot
+      if(startpos[1]+i==RADDOT_IDOT && startpos[2]+j==RADDOT_JDOT && startpos[3]+k==RADDOT_KDOT){
+        // NOTEMARK: It's normal for inversion to fail right on the dot, but doesn't affect evolution since the dot's primitives are overwritten and never will the updated conserved quantities for the dot be used.
+        
+        if(ispstag==0){ // only do something special with non-field primitives
+        
+          FTYPE *pr=&MACP0A1(prim,i,j,k,0);
+        
+          // get current location
+          bl_coord_ijk_2(i,j,k,CENT,X, V);
+        
+          // local geom
+          PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+        
+          pr[RHO] = 1.0 ;
+          pr[UU]  = 1.0;
+          pr[U1]  = 0.0;
+          pr[U2]  = 0 ;    
+          pr[U3]  = 0 ;
+        
+          //E, F^i in orthonormal fluid frame
+          FTYPE pradffortho[NPR];
+          pradffortho[PRAD0] = RADDOT_LTEFACTOR*calc_LTE_Efromurho(pr[RHO],pr[UU]);
+          pradffortho[PRAD1] = 0;
+          pradffortho[PRAD2] = 0;
+          pradffortho[PRAD3] = 0;
+        
+          //          dualfprintf(fail_file,"GOT BC DOT: nstep=%ld steppart=%d\n",nstep,steppart);
+          if(N1==1) pradffortho[PRAD0] *= RADDOT_F1;
+          else{
+            pradffortho[PRAD0]*=RADDOT_F2;
+            pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
+          }
+
+          int whichvel=VEL4; // in which vel U1-U3 set
+          int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
+          int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+          whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+        
+        }// end if DOT
+      }// end if not staggered field
+    }// end loop over zones
+ 
+
+
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+
+
+
+// RADNT
+int bound_radnt(int dir,
+                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                int *inboundloop,
+                int *outboundloop,
+                int *innormalloop,
+                int *outnormalloop,
+                int (*inoutlohi)[NUMUPDOWN][NDIM],
+                int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                int *dosetbc,
+                int enerregion,
+                int *localenerpos
+                )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    extern FTYPE RADNT_MINX;
+    extern FTYPE RADNT_MAXX;
+    extern FTYPE RADNT_KKK;
+    extern FTYPE RADNT_ELL;
+    extern FTYPE RADNT_UTPOT;
+    extern FTYPE RADNT_RHOATMMIN;
+    extern FTYPE RADNT_UINTATMMIN;
+    extern FTYPE RADNT_ERADATMMIN;
+    extern FTYPE RADNT_NODONUT;
+    extern FTYPE RADNT_INFLOWING;
+    extern FTYPE RADNT_TGASATMMIN;
+    extern FTYPE RADNT_TRADATMMIN;
+    extern FTYPE RADNT_ROUT;
+
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if(dir==X1UP && BCtype[X1UP]==RADNTBC && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
+
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+
+		ri=riout;
+		rj=j;
+		rk=k;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+	  
+        FTYPE *pr;
+		LOOPBOUND1OUT{
+          pr = &MACP0A1(prim,i,j,k,0);
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  
+
+		  if(ispstag==0){ // only do something special with non-field primitives
+
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+            FTYPE r,th,ph;
+            coord(i, j, k, CENT, X);
+            bl_coord(X, V);
+            r=V[1];
+            th=V[2];
+            ph=V[3];
+
+            // Identical to IC, except more involved check for inflow vs. outflow
+
+            int whichcoord=BLCOORDS;
+            int whichvel=VEL4;
+            // get metric grid geometry for these ICs
+            int getprim=0;
+            struct of_geom geomrealdontuse;
+            struct of_geom *ptrgeomreal=&geomrealdontuse;
+            gset(getprim,whichcoord,i,j,k,ptrgeomreal);
+
+            FTYPE uconlab[NDIM];
+            FTYPE others[NUMOTHERSTATERESULTS];
+
+            // see if fluid flow wants to go in or out
+            // get PRIMECOORDS ucon
+            ucon_calc(pr,ptrgeom[U1],uconlab,others);
+            // get MCOORD
+            metptomet(i,j,k,uconlab);
+            // get whichcoord
+            coordtrans(MCOORD,whichcoord,i,j,k,CENT,uconlab);
+            if(uconlab[RR]<=0.0){ // check in whichvel whichcoord
+              pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5);
+              pr[UU]=RADNT_UINTATMMIN*pow(r/RADNT_ROUT,-2.5);
+              set_zamo_velocity(whichvel,ptrgeomreal,pr); // only sets U1-U3 to zamo
+            }
+            else{
+              uconlab[RR]=0.0;
+              // overwrite pr[U1-U3] with this non-radially moving flow in whichvel whichcoord version
+              ucon2pr(whichvel,uconlab,ptrgeomreal,pr);
+            }
+
+
+            // see if radiation wants to go in or out
+            // get PRIMECOORDS ucon
+            ucon_calc(&pr[URAD1-U1],ptrgeom[URAD1],uconlab,others);
+            // get MCOORD
+            metptomet(i,j,k,uconlab);
+            // get whichcoord
+            coordtrans(MCOORD,whichcoord,i,j,k,CENT,uconlab);
+            if(uconlab[RR]<=0.0){ // check in whichvel whichcoord
+              pr[PRAD0] = RADNT_ERADATMMIN;
+              set_zamo_velocity(whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+            }
+            else{
+              uconlab[RR]=0.0;
+              // overwrite pr[U1-U3] with this non-radially moving flow in whichvel whichcoord version
+              ucon2pr(whichvel,uconlab,ptrgeomreal,&pr[URAD1-U1]);
+            }
+
+            // get all primitives in from whichvel,whichcoord -> WHICHVEL/PRIMECOORDS
+            if (bl2met2metp2v(whichvel, whichcoord,pr, i,j,k) >= 1){
+              FAILSTATEMENT("bounds.koral.c:bound_radnt()", "bl2ks2ksp2v()", 1);
+            }
+
+		  }// end if not staggered field
+
+
+		}// end loop over inner i's
+	  }// over block
+	}// if correct BC and core
+
+
+
+
+
+
+
+    if(dir==X2UP && BCtype[X2UP]==RADNTBC && (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ){
+
+      OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+      ////////	LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+        ri=i;
+        rj=rjout;
+        rk=k;
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+        FTYPE *pr;
+        LOOPBOUND2OUT{
+          pr = &MACP0A1(prim,i,j,k,0);
+
+          // ASYMM already done before got here, so only change what's necessary to change
+
+          if(ispstag==0){ // only do something special with non-field primitives
+
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+            //coordinates of the ghost cell
+            bl_coord_ijk_2(i,j,k,CENT,X, V);
+            FTYPE r;
+            r=V[1];
+
+            //hot boundary KORALTODO: JCM confused why not much output in URAD0 out of disk
+            FTYPE rin=6.;
+            if(r>rin){
+
+              //E, F^i in orthonormal fluid frame
+              FTYPE pradffortho[NPR];
+              pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
+              pradffortho[PRAD1] = 0;
+              pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
+              pradffortho[PRAD3] = 0;
+
+              //pr[RHO] and pr[UU] remain same as from ASYMM condition as well as any field
+              //Keplerian gas with no inflow or outflow
+              pr[U1]=pr[U2]=0.0; // have to be careful with this for VEL3 (must have rin>>rergo).
+              pr[U3]=1./(a + pow(r,1.5));
+	
+              int whichvel;
+              whichvel=VEL3; // VEL3 so can set Keplerian rotation rate
+              int whichcoordfluid=BLCOORDS; // in which coordinates U1-U3 set so can use standard Keplerian formula
+              int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+              whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+            } // end if actually doing something to boundary cells in "hot" boundary
+
+          }// end if not staggered field
+
+
+        }// end loop over outer j's
+      }
+    }
+
+
+
+
+
+
+
   }// end parallel region
 
   return(0);

@@ -74,4 +74,5 @@ extern FTYPE calc_PEQ_Tfromurho(FTYPE,FTYPE);
 
 
 
+extern int set_ncon_velocity(int whichvel, FTYPE gammamax, FTYPE *ncon, struct of_geom *ptrgeom, FTYPE *uconwhichvel);
 

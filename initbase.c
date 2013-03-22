@@ -1818,11 +1818,20 @@ void check_bnd_num(void)
   }
 
 
-  //  if( (N1%2>0 && N1>1) || (N2%2>0 && N2>1) || (N3%2>0 && N3>1) ){
-  if( (N2%2>0 && N2>1) || (N3%2>0 && N3>1) ){
-    dualfprintf(fail_file,"N1, N2, N3 should be even since some parts of code assume so\n");
-    myexit(ERRORCODEBELOWCLEANFINISH+208);
+  if(ISSPCMCOORDNATIVE(MCOORD)){
+    //  if( (N1%2>0 && N1>1) || (N2%2>0 && N2>1) || (N3%2>0 && N3>1) ){
+    if( (N2%2>0 && N2>1) || (N3%2>0 && N3>1) ){
+      dualfprintf(fail_file,"N1, N2, N3 should be even since some parts of code assume so for SPC.\n");
+      myexit(ERRORCODEBELOWCLEANFINISH+208);
+    }
   }
+
+  //  if(N1%2 && N1>1 || N2%2 && N2>1 || N3%2 && N3>1){
+  //  if(N2%2 && N2>1 || N3%2 && N3>1){
+  //    dualfprintf(fail_file,"Need even N1,N2,N3 AFAIK N1=%d N2=%d N3=%d\n",N1,N2,N3);
+  //    myexit(ERRORCODEBELOWCLEANFINISH+19846286);
+  //  }
+
 
 
   if(SUPERLONGDOUBLE){
@@ -1964,11 +1973,6 @@ void check_bnd_num(void)
     myexit(ERRORCODEBELOWCLEANFINISH+246872464);
   }
 
-  //  if(N1%2 && N1>1 || N2%2 && N2>1 || N3%2 && N3>1){
-  if(N2%2 && N2>1 || N3%2 && N3>1){
-    dualfprintf(fail_file,"Need even N1,N2,N3 AFAIK N1=%d N2=%d N3=%d\n",N1,N2,N3);
-    myexit(ERRORCODEBELOWCLEANFINISH+19846286);
-  }
 
 
   if(SENSITIVE!=LONGDOUBLETYPE){

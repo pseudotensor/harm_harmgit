@@ -3369,7 +3369,7 @@ int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM])
 }
 
 
-
+// sets velocity U1-U3 part of primitive to be zamo velocity
 int set_zamo_velocity(int whichvel, struct of_geom *ptrgeom, FTYPE *pr)
 {
 

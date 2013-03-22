@@ -628,6 +628,9 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",x2trans,thetatores,m2,d2,c2,m3,b3,h_over_r);
       }
       else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
+        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rin_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rout_array[dimen]);
+        fprintf(out,"\n");
       }
       else if (defcoordlocal == JET1COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,h0,hf,rh0,myrout,dmyhslope1dr,dmyhslope2dx1,x1in,x1out);
@@ -652,10 +655,10 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,hinner,houter,r0jet,rsjet);
       }
       else if (defcoordlocal == UNIFORMCOORDS) {
-	//uniform grid for Cartesian coordinates
-	DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rin_array[dimen]);
-	DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rout_array[dimen]);
-	fprintf(out,"\n");
+        //uniform grid for Cartesian coordinates
+        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rin_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rout_array[dimen]);
+        fprintf(out,"\n");
       }
       else if (defcoordlocal == BILOGCYLCOORDS) {
 	fprintf(out,"%21.15g\n",npow);
@@ -725,6 +728,8 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER8IN,&x2trans,&thetatores,&m2,&d2,&c2,&m3,&b3,&h_over_r);
       }
       else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
+	DIMENLOOP(dimen) fscanf(in,HEADERONEIN,&Rin_array[dimen]);
+	DIMENLOOP(dimen) fscanf(in,HEADERONEIN,&Rout_array[dimen]);
       }
       else if (defcoordlocal == JET1COORDS) {
 	fscanf(in,HEADER9IN,&npow,&h0,&hf,&rh0,&myrout,&dmyhslope1dr,&dmyhslope2dx1,&x1in,&x1out);
@@ -810,6 +815,8 @@ void read_coord_parms(int defcoordlocal)
     //  MPI_Bcast(&h_over_r, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD); // set by pre_init_specific_init() in init.c
   }
   else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
+    DIMENLOOP(dimen) MPI_Bcast(&Rin_array[dimen], 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    DIMENLOOP(dimen) MPI_Bcast(&Rout_array[dimen], 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET1COORDS) {
     MPI_Bcast(&npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1079,9 +1086,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
   }
   else if (defcoord == LOGRUNITH) { // uniform theta and log in radius
     V[1] = R0+exp(X[1]) ;
-    V[2] = M_PI * X[2] ;
-    // default is uniform \phi grid
-    V[3]=2.0*M_PI*X[3];
+    V[2] = Rin_array[2] + X[2] * ( Rout_array[2] - Rin_array[2] );
+    V[3] = Rin_array[3] + X[3] * ( Rout_array[3] - Rin_array[3] );
   }
   else if (defcoord == JET1COORDS) {
     V[1] = R0+exp(pow(X[1],npow)) ;
@@ -1728,8 +1734,8 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
   }
   else if (defcoord == LOGRUNITH) {
     dxdxp[1][1] = V[1]-R0;
-    dxdxp[2][2] = M_PI;
-    dxdxp[3][3] = 2.0*M_PI;
+    dxdxp[2][2] = Rout_array[2] - Rin_array[2];
+    dxdxp[3][3] = Rout_array[3] - Rin_array[3];
   }
   else if (defcoord == JET1COORDS) {
 
