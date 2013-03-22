@@ -3372,27 +3372,27 @@ int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM])
 // sets velocity U1-U3 part of primitive to be zamo velocity
 int set_zamo_velocity(int whichvel, struct of_geom *ptrgeom, FTYPE *pr)
 {
+  int jj;
 
   // bl-normal observer (4-vel components)
+
+  FTYPE etacov[NDIM],etacon[NDIM];
+  etacov[TT]=-ptrgeom->alphalapse;
+  etacov[RR]=0;
+  etacov[TH]=0;
+  etacov[PH]=0;
+
+  raise_vec(etacov,ptrgeom,etacon);
   
   // normal observer velocity in atmosphere
   if(whichvel==VEL4){
-    pr[U1] = -ptrgeom->gcon[GIND(0,1)]*ptrgeom->alphalapse;
-    pr[U2] = -ptrgeom->gcon[GIND(0,2)]*ptrgeom->alphalapse;
-    pr[U3] = -ptrgeom->gcon[GIND(0,3)]*ptrgeom->alphalapse;
+    SLOOPA(jj) pr[U1+jj-1] = etacon[jj];
   }
   else if(whichvel==VEL3){
-    pr[U1] = ptrgeom->gcon[GIND(0,1)]*ptrgeom->alphalapse;
-    pr[U2] = ptrgeom->gcon[GIND(0,2)]*ptrgeom->alphalapse;
-    pr[U3] = ptrgeom->gcon[GIND(0,3)]*ptrgeom->alphalapse;
-    // GAMMIE
-    //ur = -1./(r*r);
-    //uh=up=0.0;
+    SLOOPA(jj) pr[U1+jj-1] = etacon[jj]/etacon[TT];
   }
   else if(whichvel==VELREL4){
-    pr[U1] = 0.0;
-    pr[U2] = 0.0;
-    pr[U3] = 0.0;
+    SLOOPA(jj) pr[U1+jj-1] = 0.0;
   }
 
   return(0);

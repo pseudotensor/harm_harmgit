@@ -362,7 +362,6 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
       initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,t,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers // t is ok here for initialization
-      //      trifprintf("GOT HERE1\n");
       if(initreturn>0){
 	FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
       }
@@ -370,6 +369,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
     }
   }// end parallel region
+
 
 
   /////////////////////////////

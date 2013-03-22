@@ -804,7 +804,7 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
 
   if(WHICHEOM==WITHGDET){
     gcov_func(ptrgeom, getprim, whichcoord,X,gcovmcoord,gcovpertcoord); // actually returns primcoords version of whichcoord
-    bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
+    bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
     if(gdet_func_metric(whichcoord,V,gcovmcoord,&ftemp)!=0){
       if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in eomfunc_func()\n");
     }
@@ -814,7 +814,7 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
     PLOOP(pliter,pl) EOMFUNCASSIGN(pl)=1.0;
   }
   else if(WHICHEOM==WITHSINSQ){ // obviously coordinate dependent
-    bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, V);
+    bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V);
 
     // rotate consistently with rotation in metric.c
     // that is, anytime take i,j,k -> V for metric stuff, need to first rotate V.
@@ -1228,6 +1228,11 @@ void set_gcov_cylminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   Mass=MBH; // NOW: use MBH as any compact object mass (in length units)
   RSTAR=0.1; // could use dxdxp[RR][RR]*dx[RR] to get size
   r=sqrt(R*R+z*z);
+  // These SMALL's assume not further squaring or otherwise making smaller to yield numerical 0
+  // These SMALL's also assume eventually apply gdet as 0 at axis.
+  FTYPE rsq=SMALL+r*r;
+  FTYPE Rsq=SMALL+R*R;
+  FTYPE zsq=SMALL+z*z;
 
   if(r<RSTAR){
     phi = (Mass/(2.0*RSTAR))*((r/RSTAR)*(r/RSTAR)-3.0);
@@ -1243,24 +1248,28 @@ void set_gcov_cylminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   gcov[GIND(TT,PH)] = 0.0 ;
     
   gcov[GIND(RR,TT)] = 0.0 ;
-  gcov[GIND(RR,RR)] = 1.0-2.0*phi*R*R/(r*r); 
-  gcovpert[RR] = -2.0*phi*R*R/(r*r); 
+  gcov[GIND(RR,RR)] = 1.0-2.0*phi*Rsq/(rsq); 
+  gcovpert[RR] = -2.0*phi*Rsq/(rsq); 
 
-  gcov[GIND(RR,TH)] = -2.0*phi*R*z/(r*r) ; // order v^4
+  gcov[GIND(RR,TH)] = -2.0*phi*R*z/(rsq) ; // order v^4
   gcov[GIND(RR,PH)] = 0.0 ;
     
   gcov[GIND(TH,TT)] = gcov[GIND(TT,TH)] ;
   gcov[GIND(TH,RR)] = gcov[GIND(RR,TH)] ;
-  gcov[GIND(TH,TH)] = 1.0 -2.0*phi*z*z/(r*r) ;
-  gcovpert[TH] =-2.0*phi*z*z/(r*r) ; // order v^4
+  gcov[GIND(TH,TH)] = 1.0 -2.0*phi*zsq/(rsq) ;
+  gcovpert[TH] =-2.0*phi*zsq/(rsq) ; // order v^4
 
   gcov[GIND(TH,PH)] = 0.0 ;
     
   gcov[GIND(PH,TT)] = gcov[GIND(TT,PH)] ;
   gcov[GIND(PH,RR)] = gcov[GIND(RR,PH)] ;
   gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;
-  gcov[GIND(PH,PH)] = R*R;
+  gcov[GIND(PH,PH)] = Rsq;
   gcovpert[PH] = gcov[GIND(PH,PH)]-1.0; // doesn't matter that -1.0 subtracted
+
+  //  dualfprintf(fail_file,"Mass=%g r=%g R=%g z=%g phi=%g gtt=%g\n",Mass,r,R,z,phi,gcov[GIND(TT,TT)]);
+  //  int jj,kk;
+  //  DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d g=%g\n",jj,kk,gcov[GIND(jj,kk)]);
 
 }
 

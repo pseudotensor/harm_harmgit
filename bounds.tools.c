@@ -117,8 +117,8 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 
 
   // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
-  dualfprintf(fail_file,"No use for this currently\n");
-  myexit(34269834);
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
 
 
 
@@ -161,15 +161,15 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 
 
 #if(ANALYTICMEMORY==0)
-  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x1dn_analytic\n");
+  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x1up_analytic\n");
   myexit(786753);
 #endif
 
 
-
+  // KORALTODO: Check below
   // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
-  dualfprintf(fail_file,"No use for this currently\n");
-  myexit(34269834);
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
 
 
   if(ispstag){
@@ -195,6 +195,202 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
   return(0);
 }
 
+
+// X2DN FIXEDUSINGPANALYTIC
+//
+///////////////////////////
+// Currently assume completely general situation where 
+// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+int bound_x2dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  int pl,pliter;
+
+#if(ANALYTICMEMORY==0)
+  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x2dn_analytic\n");
+  myexit(786752);
+#endif
+
+
+  // KORALTODO: Check if below true.
+  // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
+
+
+
+  if(ispstag){
+    COMPFULLLOOP{
+      // note we assume "j=0" is boundary cell to be fixed
+      // This ensures divb=0, but may be inconsistent with code's treatement of true j=0 if doing OUTFLOW
+      if(WITHINACTIVESTAGBNDSECTIONX2DN(i,j,k)){
+		pl=B2; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+      if(WITHINACTIVEBNDSECTIONX2DN(i,j,k)){
+		PLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+    }
+  }
+  else{
+    COMPFULLLOOP{
+      if(WITHINACTIVEBNDSECTIONX2DN(i,j,k)){
+		PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+      }
+    }
+	
+  }
+
+
+  return(0);
+}
+
+
+// X2UP FIXEDUSINGPANALYTIC
+//
+///////////////////////////
+// Currently assume completely general situation where 
+// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+int bound_x2up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  int pl,pliter;
+
+
+#if(ANALYTICMEMORY==0)
+  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x2up_analytic\n");
+  myexit(786753);
+#endif
+
+
+
+  // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
+
+
+  if(ispstag){
+    COMPFULLLOOP{
+      if(WITHINACTIVESTAGBNDSECTIONX2UP(i,j,k)){
+		pl=B2; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+      if(WITHINACTIVEBNDSECTIONX2UP(i,j,k)){
+		PLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+    }
+  }
+  else{
+    COMPFULLLOOP{
+      if(WITHINACTIVEBNDSECTIONX2UP(i,j,k)){
+		PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+      }
+    }
+	
+  }
+
+
+  return(0);
+}
+
+
+
+// X3DN FIXEDUSINGPANALYTIC
+//
+///////////////////////////
+// Currently assume completely general situation where 
+// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+int bound_x3dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  int pl,pliter;
+
+#if(ANALYTICMEMORY==0)
+  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x3dn_analytic\n");
+  myexit(786752);
+#endif
+
+
+  // KORALTODO: Check if below true.
+  // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
+
+
+
+  if(ispstag){
+    COMPFULLLOOP{
+      // note we assume "k=0" is boundary cell to be fixed
+      // This ensures divb=0, but may be inconsistent with code's treatement of true k=0 if doing OUTFLOW
+      if(WITHINACTIVESTAGBNDSECTIONX3DN(i,j,k)){
+		pl=B3; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+      if(WITHINACTIVEBNDSECTIONX3DN(i,j,k)){
+		PLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+    }
+  }
+  else{
+    COMPFULLLOOP{
+      if(WITHINACTIVEBNDSECTIONX3DN(i,j,k)){
+		PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+      }
+    }
+	
+  }
+
+
+  return(0);
+}
+
+
+// X3UP FIXEDUSINGPANALYTIC
+//
+///////////////////////////
+// Currently assume completely general situation where 
+// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+int bound_x3up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k;
+  int pl,pliter;
+
+
+#if(ANALYTICMEMORY==0)
+  dualfprintf(fail_file,"ANALYTICMEMORY==0 but called bound_x3up_analytic\n");
+  myexit(786753);
+#endif
+
+
+
+  // then no need to set pglobal or pstagglobal since evolution sets appropriately in constrained way on a well-defined computational box
+  //  dualfprintf(fail_file,"No use for this currently\n");
+  //  myexit(34269834);
+
+
+  if(ispstag){
+    COMPFULLLOOP{
+      if(WITHINACTIVESTAGBNDSECTIONX3UP(i,j,k)){
+		pl=B3; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+      if(WITHINACTIVEBNDSECTIONX3UP(i,j,k)){
+		PLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+      }
+    }
+  }
+  else{
+    COMPFULLLOOP{
+      if(WITHINACTIVEBNDSECTIONX3UP(i,j,k)){
+		PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+      }
+    }
+	
+  }
+
+
+  return(0);
+}
 
 
 

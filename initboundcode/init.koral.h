@@ -12,11 +12,17 @@
 #define ATMSTATIC (18) // simple hydrostatic atmosphere in SPC
 #define RADBEAM2DKS (19) // like RADBEAM2D, just chooses MCOORD KSCOORDS
 #define RADBEAMFLAT (24) //  beam of light in Cartesian
+#define RADDONUT (25) // 2d radiative Polish donut in KS (called RDONUT in koral.  Similar setup to RADNT.)
 #define FLATNESS (27) // flat  (koral: but with non-zero four-force)
 #define RADWALL (29) // flat with wall
 #define RADNT (30) // emission from midplane
 #define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral.  Very similar to RADNT.)
+#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Similar to RADFLATDISK but in CYL coords.)
 #define RADDOT (33) // radiating dot
+
+
+// DOING
+
 
 
 // KORALTODO: PROBLEMS:
@@ -31,12 +37,13 @@
 
 // RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
 
+// RADNT: doesn't seem to evolve prad0
+
+// RADDONUT: Donut explodes, and inversions take forever.
 
 
 // TODO:
-#define RADDONUT (25) // 2d radiative Polish donut in KS
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
-#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral)
 
 
 
@@ -69,6 +76,7 @@
 #define RADWALLINFLOW 208
 #define RADBONDIINFLOW 209
 #define RADNTBC 210
+#define RADCYLBEAMBC 211
 
 ///////////////////////////////
 //problem choice
@@ -90,7 +98,9 @@
 //#define WHICHPROBLEM RADBONDI
 //#define WHICHPROBLEM RADDOT
 //#define WHICHPROBLEM RADNT
-#define WHICHPROBLEM RADFLATDISK
+//#define WHICHPROBLEM RADFLATDISK
+//#define WHICHPROBLEM RADDONUT
+#define WHICHPROBLEM RADCYLBEAM
 
 
 
@@ -597,7 +607,7 @@
 //****************************************//
 //****************************************//
 
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM)
 
 #undef MPERSUN
 #define MPERSUN (10.0)
@@ -610,7 +620,12 @@
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
 
-#if(WHICHPROBLEM==RADNT)
+
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT)
+
+#undef ANALYTICMEMORY
+#define ANALYTICMEMORY 1 // set disk BC using analytical result (at least partially so don't duplicate code.)
+
 
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
@@ -623,7 +638,7 @@
 //#define MCOORD BLCOORDS
 #define MCOORD KSCOORDS
 
-#else
+#elif(WHICHPROBLEM==RADFLATDISK)
 
 #define N1 120
 #define N2 40
@@ -631,10 +646,27 @@
 
 #define MCOORD SPCMINKMETRIC // i.e. RADFLATDISK
 
+#elif(WHICHPROBLEM==RADCYLBEAM)
+
+#define N1 50 // R // 120 for defcoord=UNIFORMCOORDS
+#define N2 1 // z
+#define N3 30 // \phi
+
+#define MCOORD CYLMINKMETRIC
+
 #endif
 
 
 #endif
+
+
+
+
+
+
+
+
+
 
 
 

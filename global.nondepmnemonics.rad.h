@@ -73,6 +73,9 @@
 #define IMPMAXITER (200) // for used implicit solver
 
 
+#define MAXSUBCYCLES (2000) // for explicit sub-cycles
+
+
 // UNUSED NUMERICAL STUFF
 #define RADEPS (1.e-6) // for unused numerical inversion stuff
 #define RADCONV (1.e-7) // for unused numerical inversion stuff

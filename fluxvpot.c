@@ -275,13 +275,14 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
 
 
 
+  dualfprintf(fail_file,"WTF0: %g\n",GLOBALMACP0A1(pstaganalytic,30,-4,0,B1));
 
   // Since above procedures changed pfield that is probably pcent that is p, we need to rebound p since pfield was reset to undefined values in ghost cells since A_i isn't determined everywhere
   // alternatively for evolve_withvpot() could have inputted not the true p or some copy of it so wouldn't have to bound (except up to machine error difference when recomputed field using A_i)
   int finalstep=1; // assume user wants to know that conserved quants changed
   bound_prim(STAGEM1,finalstep, time,pfield,pstag,ucons, USEMPI);
 
-
+  dualfprintf(fail_file,"WTF2: %g\n",GLOBALMACP0A1(pstaganalytic,30,-4,0,B1));
 
   return(0);
 
@@ -488,7 +489,7 @@ int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
   }
     
 
-  trifprintf("Initialize field from vector potential assign\n");
+  trifprintf("Initialize field from vector potential assign: init_vpot_justAcov()\n");
 
 
 
@@ -624,7 +625,7 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
   }
     
 
-  trifprintf("Initialize field from vector potential assign\n");
+  trifprintf("Initialize field from vector potential assign: init_vpot_toF()\n");
 
 
 
@@ -1694,12 +1695,24 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
 
 // used to transform from one coordinate system to PRIMECOORDS
 // when acting on pstag, only relevant for magnetic field part, and in that case if didn't use vector potential to define pstag then assume not too important to get high accuracy, so average field to other positions in simple way
+// This function completely overwrites original pstag, so user doesn't have to set pstag in init.c
 int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
   FTYPE primface[NDIM][NPR];
   int dir;
+  int myim1,myjm1,mykm1;
+  int myip1,myjp1,mykp1;
 
+
+  // limit to avoid where have no data
+  myim1=MAX(-N1BND,im1mac(i));
+  myjm1=MAX(-N2BND,jm1mac(j));
+  mykm1=MAX(-N3BND,km1mac(k));
+
+  myip1=MIN(N1+N1BND-1,ip1mac(i));
+  myjp1=MIN(N2+N2BND-1,jp1mac(j));
+  mykp1=MIN(N3+N3BND-1,kp1mac(k));
 
   if(FLUXB==FLUXCTSTAG && pstag!=NULL && p!=NULL){
     // first copy over non-field quantities so treats 4-velocity part without failure even if don't need result
@@ -1711,24 +1724,34 @@ int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, 
     // average field to right location if doing stag (note only matters if mixing between coordinates -- i.e. dxdxp off-diagonals are nonzero)
     // GODMARK: Could accurately interpolate, but assume most often use vector potential for accurate field in PRIMECOORDS
     // SUPERGODMARK: Note that really should transform faraday or maxwell, not B^\mu -- if there is space-time mixing in dxdxp then this is wrong, but at the moment don't have this mixing
+    // Was stupidly using pstag to get pstag, so bl2met2metp2v_genloc() was using bad pstag values from averages.  Just use p, so user doesn't have to set pstag.
    
     // do FACE1 for B1 in PRIMECOORDS
     dir=1;
-    primface[dir][B1]=MACP0A1(pstag,i,j,k,B1);
-    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,jp1mac(j),k,B2)+MACP0A1(pstag,im1mac(i),j,k,B2)+MACP0A1(pstag,im1mac(i),jp1mac(j),k,B2));
-    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,kp1mac(k),B3)+MACP0A1(pstag,im1mac(i),j,k,B3)+MACP0A1(pstag,im1mac(i),j,kp1mac(k),B3));
+    //    primface[dir][B1]=MACP0A1(pstag,i,j,k,B1);
+    //    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,myjp1,k,B2)+MACP0A1(pstag,myim1,j,k,B2)+MACP0A1(pstag,myim1,myjp1,k,B2));
+    //    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,mykp1,B3)+MACP0A1(pstag,myim1,j,k,B3)+MACP0A1(pstag,myim1,j,mykp1,B3));
+    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,myim1,j,k,B1));
+    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,myim1,j,k,B2));
+    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,myim1,j,k,B3));
 
     // do FACE2 for B2 in PRIMECOORDS
     dir=2;
-    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,ip1mac(i),j,k,B1)+MACP0A1(pstag,i,jm1mac(j),k,B1)+MACP0A1(pstag,ip1mac(i),jm1mac(j),k,B1));
-    primface[dir][B2]=MACP0A1(pstag,i,j,k,B2);
-    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,kp1mac(k),B3)+MACP0A1(pstag,i,jm1mac(j),k,B3)+MACP0A1(pstag,i,jm1mac(j),kp1mac(k),B3));
+    //    primface[dir][B2]=MACP0A1(pstag,i,j,k,B2);
+    //    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,myip1,j,k,B1)+MACP0A1(pstag,i,myjm1,k,B1)+MACP0A1(pstag,myip1,myjm1,k,B1));
+    //    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,mykp1,B3)+MACP0A1(pstag,i,myjm1,k,B3)+MACP0A1(pstag,i,myjm1,mykp1,B3));
+    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,i,myjm1,k,B1));
+    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,myjm1,k,B2));
+    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,i,myjm1,k,B3));
 
     // do FACE3 for B3 in PRIMECOORDS
     dir=3;
-    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,ip1mac(i),j,k,B1)+MACP0A1(pstag,i,j,km1mac(k),B1)+MACP0A1(pstag,ip1mac(i),j,km1mac(k),B1));
-    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,jp1mac(j),k,B2)+MACP0A1(pstag,i,j,km1mac(k),B2)+MACP0A1(pstag,i,jp1mac(j),km1mac(k),B2));
-    primface[dir][B3]=MACP0A1(pstag,i,j,k,B3);
+    //    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,myip1,j,k,B1)+MACP0A1(pstag,i,j,mykm1,B1)+MACP0A1(pstag,myip1,j,mykm1,B1));
+    //    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,myjp1,k,B2)+MACP0A1(pstag,i,j,mykm1,B2)+MACP0A1(pstag,i,myjp1,mykm1,B2));
+    //    primface[dir][B3]=MACP0A1(pstag,i,j,k,B3);
+    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,i,j,mykm1,B1));
+    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,j,mykm1,B2));
+    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,i,j,mykm1,B3));
 
 
     DIMENLOOP(dir){

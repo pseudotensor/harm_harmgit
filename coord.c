@@ -3142,7 +3142,7 @@ void dxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*dxdxp)[NDIM])
     dxdxprim(X,V,dxdxp);
   }
   else{
-    dualfprintf(fail_file,"dxdxprim_ijk(): No X to compute V or dxdxp\n");
+    dualfprintf(fail_file,"dxdxprim_ijk(): No X to compute V or dxdxp ijk=%d %d %d loc=%d\n",i,j,k,loc);
     myexit(8813);
   }
 
@@ -3310,7 +3310,7 @@ void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V)
     bl_coord(X,V);
   }
   else{
-    dualfprintf(fail_file,"bl_coord_ijk(): No X to compute V\n");
+    dualfprintf(fail_file,"bl_coord_ijk(): No X to compute V : ijk=%d %d %d loc=%d\n",i,j,k,loc);
     myexit(8815);
   }
 

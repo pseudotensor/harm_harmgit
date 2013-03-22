@@ -121,6 +121,33 @@ int bound_radnt(int dir,
                 );
 
 
+int bound_x1dn_cylaxis(
+                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                       int *inboundloop,
+                       int *outboundloop,
+                       int *innormalloop,
+                       int *outnormalloop,
+                       int (*inoutlohi)[NUMUPDOWN][NDIM],
+                       int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                       int *dosetbc,
+                       int enerregion,
+                       int *localenerpos
+                       );
+
+
+int bound_x1up_radcylbeam(
+                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                          int *inboundloop,
+                          int *outboundloop,
+                          int *innormalloop,
+                          int *outnormalloop,
+                          int (*inoutlohi)[NUMUPDOWN][NDIM],
+                          int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                          int *dosetbc,
+                          int enerregion,
+                          int *localenerpos
+                          );
+
 /* bound array containing entire set of primitive variables */
 
 
@@ -276,7 +303,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_radwallinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
-
+      else if(BCtype[dir]==CYLAXIS){
+        bound_x1dn_cylaxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
+      }
       else{
         dualfprintf(fail_file,"No x1dn boundary condition specified: %d\n",BCtype[dir]);
         myexit(7598730);
@@ -308,6 +338,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if(BCtype[dir]==RADNTBC){
         bound_radnt(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADCYLBEAMBC){
+        bound_x1up_radcylbeam(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
       }
       else{
@@ -344,6 +378,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x2dn_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==FIXEDUSEPANALYTIC){
+        bound_x2dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
+      }
       else{
         dualfprintf(fail_file,"No x2dn boundary condition specified: %d\n",BCtype[dir]);
         myexit(7598732);
@@ -364,6 +402,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if((BCtype[dir]==POLARAXIS)||(BCtype[dir]==SYMM)||(BCtype[dir]==ASYMM) ){
         bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==FIXEDUSEPANALYTIC){
+        bound_x2up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
         donebc[dir]=1;
       }
       else if(BCtype[dir]==RADSHADOWINFLOWX2UP){
@@ -411,6 +453,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 		bound_x3dn_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 		donebc[dir]=1;
       }
+      else if(BCtype[dir]==FIXEDUSEPANALYTIC){
+        bound_x3dn_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
+      }
       else if(BCtype[dir]==RADBEAM2DBEAMINFLOW){
         bound_radbeam2dbeaminflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);	
         donebc[dir]=1;
@@ -427,6 +473,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
 		bound_x3up_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
 		donebc[dir]=1;
+      }
+      else if(BCtype[dir]==FIXEDUSEPANALYTIC){
+        bound_x3up_analytic(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim);
+        donebc[dir]=1;
       }
       else{
         dualfprintf(fail_file,"No x3up boundary condition specified: %d\n",BCtype[dir]);
@@ -2219,6 +2269,8 @@ int bound_radnt(int dir,
     extern FTYPE RADNT_TGASATMMIN;
     extern FTYPE RADNT_TRADATMMIN;
     extern FTYPE RADNT_ROUT;
+    extern FTYPE RADNT_OMSCALE;
+    extern FTYPE RADNT_FULLPHI;
 
 
     int i,j,k,pl,pliter;
@@ -2284,8 +2336,8 @@ int bound_radnt(int dir,
             // Identical to IC, except more involved check for inflow vs. outflow
 
             int whichcoord;
-            if(WHICHPROBLEM==RADNT) whichcoord=BLCOORDS; // want to setup things in BLCOORDS
-            else if(WHICHPROBLEM==RADFLATDISK) whichcoord=MCOORD; // whatever else
+            if(WHICHPROBLEM==RADFLATDISK) whichcoord=MCOORD; // whatever else
+            else whichcoord=BLCOORDS; // want to setup things in BLCOORDS
             int whichvel=VEL4;
 
             // get metric grid geometry for these ICs
@@ -2316,27 +2368,18 @@ int bound_radnt(int dir,
             }
 
 
-            // see if radiation wants to go in or out
-            // get PRIMECOORDS ucon
-            ucon_calc(&pr[URAD1-U1],ptrgeom[URAD1],uconlab,others);
-            // get MCOORD
-            metptomet(i,j,k,uconlab);
-            // get whichcoord
-            coordtrans(MCOORD,whichcoord,i,j,k,CENT,uconlab);
-            if(uconlab[RR]<=0.0){ // check in whichvel whichcoord
-              pr[PRAD0] = RADNT_ERADATMMIN;
-              set_zamo_velocity(whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
-            }
-            else{
-              uconlab[RR]=0.0;
-              // overwrite pr[U1-U3] with this non-radially moving flow in whichvel whichcoord version
-              ucon2pr(whichvel,uconlab,ptrgeomreal,&pr[URAD1-U1]);
-            }
+            // assume radiation in fluid frame with zero flux
+            FTYPE pradffortho[NPR];
 
-            // get all primitives in from whichvel,whichcoord -> WHICHVEL/PRIMECOORDS
-            if (bl2met2metp2v(whichvel, whichcoord,pr, i,j,k) >= 1){
-              FAILSTATEMENT("bounds.koral.c:bound_radnt()", "bl2ks2ksp2v()", 1);
-            }
+            pradffortho[PRAD0] = RADNT_ERADATMMIN; // fluid frame ortho!
+            pradffortho[PRAD1] = 0;
+            pradffortho[PRAD2] = 0;
+            pradffortho[PRAD3] = 0;
+            
+            int whichcoordfluid;
+            whichcoordfluid=whichcoord;
+            int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
 		  }// end if not staggered field
 
@@ -2383,16 +2426,16 @@ int bound_radnt(int dir,
             r=V[1];
 
             FTYPE rin;
-            if(WHICHPROBLEM==RADNT) rin=6.;
-            else if(WHICHPROBLEM==RADFLATDISK) rin=15.;
+            if(WHICHPROBLEM==RADFLATDISK) rin=15.;
+            else rin=6.;
 
             //hot boundary KORALTODO: JCM confused why not much output in URAD0 out of disk
             if(r>rin){
 
               //E, F^i in orthonormal fluid frame
               FTYPE pradffortho[NPR];
-              if(WHICHPROBLEM==RADNT) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
-              else if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR);
+              if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR);
+              else pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
               // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.
               pradffortho[PRAD1] = 0;
               pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
@@ -2403,15 +2446,15 @@ int bound_radnt(int dir,
               //Keplerian gas with no inflow or outflow
               // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.  But since magnitude is chosen to be zero, then no issue here.
               pr[U1]=pr[U2]=0.0; // have to be careful with this for VEL3 (must have rin>>rergo).
-              if(WHICHPROBLEM==RADNT) pr[U3]=1./(a + pow(r,1.5));
-              else if(WHICHPROBLEM==RADFLATDISK) pr[U3]=0.0;
+              if(WHICHPROBLEM==RADFLATDISK) pr[U3]=0.0;
+              else pr[U3]=1./(a + pow(r,1.5));
 	
               int whichvel;
               whichvel=VEL3; // VEL3 so can set Keplerian rotation rate
 
               int whichcoordfluid;
-              if(WHICHPROBLEM==RADNT) whichcoordfluid=BLCOORDS; // want to setup things in BLCOORDS
-              else if(WHICHPROBLEM==RADFLATDISK) whichcoordfluid=MCOORD; // whatever else
+              if(WHICHPROBLEM==RADFLATDISK) whichcoordfluid=MCOORD; // whatever else
+              else whichcoordfluid=BLCOORDS; // want to setup things in BLCOORDS
 
               int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
@@ -2432,6 +2475,264 @@ int bound_radnt(int dir,
 
 
   }// end parallel region
+
+  return(0);
+} 
+
+
+
+
+
+
+
+// X1 inner CYLAXIS
+int bound_x1dn_cylaxis(
+				   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+				   int *inboundloop,
+				   int *outboundloop,
+				   int *innormalloop,
+				   int *outnormalloop,
+				   int (*inoutlohi)[NUMUPDOWN][NDIM],
+				   int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+				   int *dosetbc,
+				   int enerregion,
+				   int *localenerpos
+				   )
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM]; // coordinate basis vcon
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+
+    extern FTYPE RADNT_OMSCALE;
+    extern FTYPE RADNT_FULLPHI;
+
+  
+    if( (BCtype[X1DN]==CYLAXIS) ){
+
+
+
+      /* inner radial BC (preserves u^t rho and u) */
+      if ( (totalsize[1]>1) && (mycpupos[1] == 0) ) {
+		////////	LOOPX1dir{
+
+		{ // start block
+		  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+		  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+		  OPENMPBCLOOPBLOCK{
+			OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+			rj=j;
+			if(RADNT_FULLPHI==2.0*Pi){
+              rk=k+N3/2;
+              if(rk>=N3) rk-=N3;
+            }
+            else rk=k;
+			LOOPBOUND1IN{
+			  PBOUNDLOOP(pliter,pl){
+				// SECTIONMARK: assume r=0 singularity can't move
+				if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ) ri = -i; // FACE1 values
+				else ri=-i-1; // "CENT" values for purposes of this BC
+				MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+			  }// over pl
+			}// over boundary zones
+		  }
+		}// end block
+
+
+
+		if( (BCtype[X1DN]==CYLAXIS) ){
+
+		  /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
+		  ////	LOOPX1dir{
+
+		  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+		  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+		  OPENMPBCLOOPBLOCK{
+			OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+			// SECTIONMARK: assume r=0 singularity can't move
+			i=0;
+			PBOUNDLOOP(pliter,pl){
+			  if(pl==U1 || pl==B1){
+				if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
+				  MACP0A1(prim,i,j,k,pl) = 0.0;
+				}
+			  }// else don't do this pl
+			} // end over pl
+	
+			LOOPBOUND1IN {
+			  PBOUNDLOOP(pliter,pl){
+				if(pl==U1 || pl==B1){
+				  MACP0A1(prim,i,j,k,pl) *= -1.;
+				}// end if right pl
+			  } // end over pl
+			} // end over boundary zones
+		  }// end loop 23
+		}
+      } //end if inner CPU wall
+    }
+    else{
+      dualfprintf(fail_file,"Shouldn't be here in bounds\n");
+      myexit(3946840);
+    }
+
+  } // end parallel region
+
+  // if full 2pi, then for MPI would have to deal with separately.
+
+  return(0);
+
+}
+
+
+
+
+
+
+
+
+// X1 upper for RADCYLBEAM
+int bound_x1up_radcylbeam(
+						  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+						  int *inboundloop,
+						  int *outboundloop,
+						  int *innormalloop,
+						  int *outnormalloop,
+						  int (*inoutlohi)[NUMUPDOWN][NDIM],
+						  int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+						  int *dosetbc,
+						  int enerregion,
+						  int *localenerpos
+						  )
+  
+{
+
+
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+	int i,j,k,pl,pliter;
+	FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+	int failreturn;
+#endif
+	int ri, rj, rk; // reference i,j,k
+	FTYPE prescale[NPR];
+	int jj,kk;
+	struct of_geom geomdontuse[NPR];
+	struct of_geom *ptrgeom[NPR];
+	struct of_geom rgeomdontuse[NPR];
+	struct of_geom *ptrrgeom[NPR];
+
+	// assign memory
+	PALLLOOP(pl){
+	  ptrgeom[pl]=&(geomdontuse[pl]);
+	  ptrrgeom[pl]=&(rgeomdontuse[pl]);
+	}
+
+
+    extern FTYPE RADNT_OMSCALE;
+    extern FTYPE RADNT_FULLPHI;
+
+
+	if(BCtype[X1UP]==RADCYLBEAMBC && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
+
+
+	  OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+	  ////////	LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+	  OPENMPBCLOOPBLOCK{
+		OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+		ri=riout;
+		rj=j;
+		rk=k;
+
+
+		// ptrrgeom : i.e. ref geom
+		PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        
+        FTYPE *pr;
+		LOOPBOUND1OUT{
+          
+          pr = &MACP0A1(prim,i,j,k,0);
+
+    
+		  //initially copying everything
+		  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+		  if(ispstag==0){
+			// local geom
+			PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+	  
+			//coordinates of the ghost cell
+			bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+
+            FTYPE xx,yy,zz,rsq;
+            coord(i, j, k, CENT, X);
+            bl_coord(X, V);
+            xx=V[1];
+            yy=V[2];
+            zz=V[3];
+
+
+            pr[RHO] = 1;
+            pr[UU] = 0.1;
+
+            //Keplerian gas
+            FTYPE rCYL=V[1];
+            FTYPE Om=RADNT_OMSCALE/(a+pow(rCYL,1.5));
+            
+            pr[U1] = 0.0;
+            pr[U2] = 0.0;
+            pr[U3] = Om;
+
+            //E, F^i in orthonormal fluid frame
+            FTYPE pradffortho[NPR];
+            pradffortho[PRAD0] = calc_LTE_EfromT(1.e10/TEMPBAR);
+            pradffortho[PRAD0] = 1.0;
+            pradffortho[PRAD1] = 0;
+            pradffortho[PRAD2] = 0;
+            pradffortho[PRAD3] = 0;
+
+            int whichvel=VEL3;
+            int whichcoordfluid=MCOORD;
+            int whichcoordrad=whichcoordfluid;
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+		  }// end if not staggered fields
+
+		}// end loop over outer i's
+
+	  }// end over loop
+	}// end if correct boundary condition and core
+	  
+	  
+	  
+  }// end parallel region
+  
+
+
+ 
+
+
 
   return(0);
 } 

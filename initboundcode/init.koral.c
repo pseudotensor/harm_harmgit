@@ -97,9 +97,12 @@ FTYPE RADNT_INFLOWING;
 FTYPE RADNT_TGASATMMIN;
 FTYPE RADNT_TRADATMMIN;
 FTYPE RADNT_ROUT;
+FTYPE RADNT_OMSCALE;
+FTYPE RADNT_FULLPHI;
 
 
-
+int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
+int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
 
 
 
@@ -955,16 +958,22 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
 
     lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
-    //    lim[1]=lim[2]=lim[3]=PARALINE;
+    //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+
+    if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
-	if(!(ISSPCMCOORDNATIVE(MCOORD))){
-	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBONDI\n",MCOORD);
+	if(!(ISSPCMCOORDNATIVE(MCOORD)) && (WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT)){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADNT,\n",MCOORD);
 	  myexit(3434628752);
 	}
+    else if(WHICHPROBLEM==RADCYLBEAM && MCOORD!=CYLMINKMETRIC){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be CYLMINKMETRIC for RADCYLBEAM,\n",MCOORD);
+	  myexit(2493434634);
+    }
 
 	cour=0.8;
 	gam=gamideal=4.0/3.0;
@@ -972,13 +981,27 @@ int init_global(void)
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     GAMMAMAXRAD=1000.0; // Koral limits for this problem.
 
-    BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
-    BCtype[X1UP]=RADNTBC; // inflow analytic
-	BCtype[X2DN]=POLARAXIS;
-	BCtype[X2UP]=RADNTBC; // disk condition
-	BCtype[X3UP]=PERIODIC;
-	BCtype[X3DN]=PERIODIC;
-
+    if(WHICHPROBLEM==RADCYLBEAM){
+      //      BCtype[X1DN]=ASYMM;
+      //      BCtype[X1DN]=SYMM;
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=RADCYLBEAMBC;
+      BCtype[X2DN]=OUTFLOW;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    else{
+      BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
+      if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X1UP]=RADNTBC; // inflow analytic
+      else BCtype[X1UP]=RADNTBC; // inflow analytic
+      //else BCtype[X1UP]=FIXEDUSEPANALYTIC; // fixed analytic // little silly for most of outer boundary, so avoid // KORALTODO: Also causes hellish problems with solution and implicit solver at the X1UP boundary surface (not just near torus)
+      BCtype[X2DN]=POLARAXIS;
+      if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition
+      else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
 
 	int idt;
 	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
@@ -991,9 +1014,11 @@ int init_global(void)
 
   }
 
+
   /*************************************************/
   /*************************************************/
   /*************************************************/
+
 
 
   return(0);
@@ -1332,7 +1357,81 @@ int init_defcoord(void)
 
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADDONUT){
 
+    if(1){
+      RADNT_MINX=1.7; // allows in KSCOORDS
+      RADNT_MAXX=50.0;
+    }
+    else{
+      RADNT_MINX=1.8*Rhor;
+      RADNT_MAXX=40.0; // 27.8
+    }
+
+    // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?
+    //	defcoord = UNIFORMCOORDS;
+    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+    R0=0.0;
+	Rin=RADNT_MINX;
+	Rout=RADNT_MAXX;
+
+    Rin_array[2]=0.0*Pi/4.;
+    Rout_array[2]=Pi/2.;
+    Rin_array[3]=-1.;
+    Rout_array[3]=1.;
+
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADCYLBEAM){
+
+    RADNT_FULLPHI=(Pi/2.5);
+    //    RADNT_FULLPHI=(2.0*Pi);
+
+    RADNT_MINX=0.0; // all the way to the R=0 origin
+    RADNT_MAXX=20.0;
+ 
+   if(1){
+      defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+      R0=-1.0;
+      Rin=RADNT_MINX;
+      Rout=RADNT_MAXX;
+      
+      Rin_array[2]=-1.0;
+      Rout_array[2]=1.0;
+
+      Rin_array[3]=0.0;
+      Rout_array[3]=RADNT_FULLPHI;
+    }
+    else{
+      defcoord = UNIFORMCOORDS;
+     
+      Rin_array[1]=RADNT_MINX;
+      Rout_array[1]=RADNT_MAXX;
+
+      Rin_array[2]=-1.0;
+      Rout_array[2]=1.0;
+
+      Rin_array[3]=0.0;
+      Rout_array[3]=RADNT_FULLPHI;
+    }
+
+  }
+
+
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
+
+    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
+    //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+
+    if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+  }
 
   return(0);
 }
@@ -1666,9 +1765,16 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADCYLBEAM)
+
+#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0) // note 0.0
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
@@ -1784,7 +1890,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[PRAD2] = 0 ;    
 	pr[PRAD3] = 0 ;
 
-	// no transformations required since only setting radiation frame E that is PRAD0 itself.
+	// KORALTODO: no transformations required since only setting radiation frame E that is PRAD0 itself (with tuned units so same as koral)
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
@@ -1861,7 +1967,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[URAD2] = Fy ;    
 	pr[URAD3] = Fz ;
 
-    // no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.
+    // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
@@ -2619,15 +2725,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	*whichcoord=MCOORD;
     prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
 
-
-	*whichvel=WHICHVEL;
 	return(0);
   }
 
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
 
 
     RADNT_KKK=1.e-4;
@@ -2642,7 +2746,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     RADNT_NODONUT=0;
     RADNT_INFLOWING=0;
     RADNT_ROUT=2.0;
+    RADNT_OMSCALE=1.0;
+  }
 
+
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT){
 	FTYPE r,th,ph;
 	coord(i, j, k, CENT, X);
 	bl_coord(X, V);
@@ -2651,7 +2759,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	ph=V[3];
 
 	*whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
-    *whichvel=VEL4;
+    *whichvel=VEL3; // use 3-velocity since later set donut using VEL3
     // get metric grid geometry for these ICs
     int getprim=0;
     struct of_geom geomrealdontuse;
@@ -2677,21 +2785,94 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
 	}
 
+
     // KORAL:
     // atmtype=0 : pr[URAD0]=ERADATMMIN and zamo vels
     // atmtype=1 : pr[URAD0]=ERADATMMIN and ncon={0,-1,0,0} with set_ncon_velocity(whichvel,1000.0,ncon,ptrgeomreal,uconreal);
     // atmtype=2 : pr[URAD0]=ERADATMMIN*pow(rout/r,4) pr[URAD1-URAD3]  with ncon={0,-gammamax*(pow(r/rout,1.)),0,0} again using set_non_velocity() with gammamax=10.
-	pr[PRAD0] = RADNT_ERADATMMIN;
-    set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+
+    // KORAL:
+    //	pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
+    //    set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+
+    // No, just set as in fluid frame, which is ZAMO anyways.
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0]=RADNT_ERADATMMIN;
+    pradffortho[PRAD1]=0;
+    pradffortho[PRAD2]=0;
+    pradffortho[PRAD3]=0;
 
 
-    // No special transformation for radiation since set in *whichvel *whichcoord in lab-frame
-        
+    // So donut already has ambient in whichvel whichcoord, now get donut
+    if(WHICHPROBLEM==RADDONUT){
+      // donut expects fluid frame values in pr.  JCM sets as output in fluid frame so use same conversion below.
+      pr[PRAD0]=pradffortho[PRAD0];
+      pr[PRAD1]=pradffortho[PRAD1];
+      pr[PRAD2]=pradffortho[PRAD2];
+      pr[PRAD3]=pradffortho[PRAD3];
 
-	return(0);
+      // ADD DONUT
+      get_full_donut(*whichvel,*whichcoord,pr,X,V,ptrgeomreal);
+      
+      // donut returns fluid frame orthonormal values for radiation in pp
+      pradffortho[PRAD0]=pr[PRAD0];
+      pradffortho[PRAD1]=pr[PRAD1];
+      pradffortho[PRAD2]=pr[PRAD2];
+      pradffortho[PRAD3]=pr[PRAD3];
+     
+    }
+
+
+    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+
+    return(0);
   }
 
 
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADCYLBEAM){
+	FTYPE r,th,ph;
+	coord(i, j, k, CENT, X);
+	bl_coord(X, V);
+	r=V[1];
+	th=V[2];
+	ph=V[3];
+
+	*whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichvel=VEL3;
+
+    
+    // as in koral:
+    pr[RHO]=1.0;
+    pr[UU]=0.1;
+    pr[U1]=0.0;
+    pr[U2]=0.0;
+    pr[U3]=0.0;
+
+    
+    // just define some field
+	pr[B1]=0.0;
+	pr[B2]=0.0;
+	pr[B3]=0.0;
+    
+    // radiation primitives directly
+    pr[URAD0]=0.0001;
+    pr[URAD1]=0.0;
+    pr[URAD2]=0.0;
+    pr[URAD3]=0.0;
+
+
+	if(FLUXB==FLUXCTSTAG){
+	  // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+	  PLOOPBONLY(pl) pstag[pl]=pr[pl];
+	}
+
+    return(0);
+  }
 
 
 
@@ -2699,6 +2880,255 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 }
 
+
+
+
+
+// get full radiative donut solution assuming pp has atmosphere
+// input pp[PRAD0-PRAD3] are fluid frame orthonormal values
+int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
+{
+  int jj,kk;
+  int pliter,pl;
+  FTYPE ppback[NPR];
+  int i=ptrgeom->i;
+  int j=ptrgeom->j;
+  int k=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE r=V[1];
+  FTYPE rho,uint,uT,uphi,uPhi,Vr,Vphi,E,Fx,Fy,Fz;
+
+
+  // set backup atmosphere value for primitives
+  PLOOP(pliter,pl) ppback[pl]=pp[pl];
+
+  // get parameters to decide if inside torus
+  FTYPE podpierd=-((ptrgeom->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeom->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeom->gcon[GIND(3,3)]));
+  FTYPE ut=-1./sqrt(podpierd);
+  ut/=RADNT_UTPOT; //rescales rin
+  if(!isfinite(ut)) ut=-1.0; // so skips donut, but doesn't give false in condition below (i.e. condition controlled by only podpierd)
+
+
+  
+  // see if adding donut (otherwise nothing to do and just return)
+  if(r>=3.0 && RADNT_NODONUT==0 && RADNT_INFLOWING==0 && ut>=-1.0 && podpierd>=0.0){
+    
+
+
+    ///////////////// STAGE1
+
+    FTYPE h=-1./ut;
+    FTYPE eps=(h-1.)/gam;
+    rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+    uint=rho*eps;
+    uphi=-RADNT_ELL*ut;
+    uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;
+    uPhi=(ptrgeom->gcon[GIND(3,3)])*uphi+(ptrgeom->gcon[GIND(0,3)])*ut;
+    Vphi=uPhi/uT;
+    Vr=0.;
+
+    //3-velocity in BL transformed to MCOORD (which is what ptrgeom is in) // KORALTODO: Koral had this as 4-velocity?!
+    FTYPE prucon[NPR];
+    prucon[U1]=-Vr;
+    prucon[U2]=0;
+    prucon[U3]=Vphi;
+    FTYPE ucon[NDIM];
+    pr2ucon(whichvel,prucon,ptrgeom,ucon);
+    if(whichcoord!=BLCOORDS && whichcoord!=SPCMINKMETRIC) coordtrans(BLCOORDS,MCOORD,i,j,k,CENT,ucon);
+    else{} // nothing to do if SPCMINKMETRIC
+    ucon2pr(whichvel,ucon,ptrgeom,pp);
+
+    pp[RHO]=MAX(rho,ppback[RHO]); 
+    pp[UU]=MAX(uint,ppback[UU]);
+
+
+
+    ///////////////// STAGE2
+
+    FTYPE P,aaa,bbb;
+    P=(gam-1.0)*uint;
+    //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
+    aaa=ARAD_CODE;
+    bbb=rho;
+    FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
+    FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
+    T4/=TEMPBAR; // assumes T4 is in Kelvin
+
+    E=calc_LTE_EfromT(T4);
+    Fx=Fy=Fz=0.;
+    uint=calc_PEQ_ufromTrho(T4,rho);
+
+    pp[UU]=MAX(uint,ppback[UU]);
+
+
+
+    ////////////////// STAGE3
+
+    //estimating F = -1/chi E,i
+    FTYPE kappa,kappaes,chi;
+    // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
+    chi=
+      calc_kappa_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3])
+      +
+      calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
+
+    FTYPE Vtemp[NDIM];
+    FTYPE Xtemp[NDIM];
+    FTYPE pptemp[NPR],E1,E2;
+    PLOOP(pliter,pl) pptemp[pl]=pp[pl];
+    int anret,anretmin=0;
+    struct of_geom geomtdontuse;
+    struct of_geom *ptrgeomt=&geomtdontuse;
+    int getprim=0;
+
+    ////////////////// STAGE3A
+
+    //r dimension
+    Xtemp[0]=X[0];
+    Xtemp[1]=1.01*X[1];
+    Xtemp[2]=1.0*X[2];
+    Xtemp[3]=1.0*X[3];
+    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+
+    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    if(anret<0) anretmin=-1;
+    E1=pptemp[PRAD0]; // fluid frame E
+
+    Xtemp[0]=X[0];
+    Xtemp[1]=.99*X[1];
+    Xtemp[2]=1.0*X[2];
+    Xtemp[3]=1.0*X[3];
+    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+
+    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    if(anret<0) anretmin=-1;
+    E2=pptemp[PRAD0]; // fluid frame E
+
+    Fx=(E2-E1)/(.02*V[1]*(ptrgeom->gcov[GIND(1,1)]))/chi/3.; // flux frame Fx
+
+    ////////////////// STAGE3B
+
+    //th dimension
+    Xtemp[0]=X[0];
+    Xtemp[1]=1.0*X[1];
+    Xtemp[2]=1.01*X[2];
+    Xtemp[3]=1.0*X[3];
+    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+
+    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    if(anret<0) anretmin=-1;
+    E1=pptemp[PRAD0]; // flux frame E1
+
+    Xtemp[0]=X[0];
+    Xtemp[1]=1.0*X[1];
+    Xtemp[2]=0.99*X[2];
+    Xtemp[3]=1.0*X[3];
+    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+
+    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    if(anret<0) anretmin=-1;
+    E2=pptemp[PRAD0]; // fluid frame E2
+
+    Fy=(E2-E1)/(.02*V[2]*(ptrgeom->gcov[GIND(2,2)]))/chi/3.; // flux frame Fy
+
+    ////////////////// STAGE3C
+
+    //ph dimension
+    Fz=0.; // flux frame Fz
+
+
+    ////////////////// STAGE4
+
+    if(anretmin<0){
+      Fx=Fy=Fz=0.;
+    }
+    else{
+      FTYPE Fl=sqrt(Fx*Fx+Fy*Fy+Fz*Fz);
+      if(Fl>.99*E){
+        Fx=Fx/Fl*0.99*E;
+        Fy=Fy/Fl*0.99*E;
+        Fz=Fz/Fl*0.99*E;
+      }
+    }
+
+    //saving ff values to pp[] (so any function using this function should know pp has fluid frame orthonormal values in pp[PRAD0-PRAD3] as was in the input as well.
+    pp[PRAD1]=Fx;
+    pp[PRAD2]=Fy;
+    pp[PRAD3]=Fz;
+
+
+  }// end if adding donut
+
+  return(0);
+}
+
+
+
+// analytical solution for RADDONUT donut
+// expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
+int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
+{
+
+  FTYPE xx=V[1];
+
+ 
+  FTYPE podpierd=-((ptrgeom->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeom->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeom->gcon[GIND(3,3)]));
+  FTYPE ut=-1./sqrt(podpierd);
+
+  ut/=RADNT_UTPOT; //rescales rin
+  FTYPE Vphi,Vr;
+  FTYPE D,W,eps,uT,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz;
+  if(ut<-1 || podpierd<0. || xx<3. || RADNT_NODONUT || RADNT_INFLOWING)
+    return -1; //outside donut
+
+  FTYPE h=-1./ut;
+  eps=(h-1.)/gam;
+  rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+  uint=rho*eps;
+  uphi=-RADNT_ELL*ut;
+  uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;
+  uPhi=(ptrgeom->gcon[GIND(3,3)])*uphi+(ptrgeom->gcon[GIND(0,3)])*ut;
+  Vphi=uPhi/uT;
+  Vr=0.;
+
+
+  pp[RHO]=rho;
+  pp[UU]=uint;
+  //4-velocity in lab frame (SUPERGODMARK KORALTODO: ucon not set in koral!!)
+  // just don't set pp[U1-U3]
+  //  FTYPE others[NUMOTHERSTATERESULTS];
+  //  ucon_calc(pp,ptrgeom,ucon,others);
+  //  pp[U1]=ucon[1]; 
+  //  pp[U2]=ucon[2];
+  //  pp[U3]=ucon[3];
+
+  FTYPE P,aaa,bbb;
+  P=(gam-1.0)*uint; // assumes ideal gas
+  //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
+  aaa=ARAD_CODE;
+  bbb=rho;
+  FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
+  FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
+
+  E=calc_LTE_EfromT(T4);
+  Fx=Fy=Fz=0.;
+  uint=calc_PEQ_ufromTrho(T4,rho);
+
+  // overwrite uint
+  pp[UU]=uint;
+
+  // fluid frame orthonormal values for radiation
+  pp[PRAD0]=E;
+  pp[PRAD1]=Fx;
+  pp[PRAD2]=Fy;
+  pp[PRAD3]=Fz;
+
+  return 0;
+}
 
 
 

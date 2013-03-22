@@ -1326,7 +1326,36 @@ void gset(int getprim, int whichcoord, int i, int j, int k, struct of_geom *ptrg
 // So this function should be quite similar to set_grid.c for that part setting ptrgeom contents, but really setting contents rather than looking them up
 void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, struct of_geom *ptrgeom)
 {
-  FTYPE X[NDIM],V[NDIM];
+  FTYPE X[NDIM];
+
+  if(whichcoord>=0){
+    coord_ijk(i, j, k, loc, X);
+  }
+  else if(whichcoord==PRIMECOORDS){ // special case
+    // won't neeed X .  Assumes user never requests PRIMECOORDS unless on grid.  User should call getprim=1 with whichcoord>=0 for normal coordinates in prime coords
+  }
+  else{
+    dualfprintf(fail_file,"gset(): no such whichcoord=%d\n",whichcoord);
+    myexit(3466);
+  }
+
+  gset_X(getprim, whichcoord, i, j, k, loc, X, ptrgeom);
+
+}
+
+
+
+
+// find the con/cov forms of the chosen metric
+// fills in information like get_geometry but for arbitrary metric not just PRIMECOORDS
+// GODMARK: doesn't yet set igdet's
+// NOTE:
+// This function returns contents of ptrgeom when not necessarily internal coordinate system
+// So this function should be quite similar to set_grid.c for that part setting ptrgeom contents, but really setting contents rather than looking them up
+// i,j,k,loc can be filled or loc=NOWHERE then recomputes bl_coord()
+void gset_X(int getprim, int whichcoord, int i, int j, int k, int loc, FTYPE *X, struct of_geom *ptrgeom)
+{
+  FTYPE V[NDIM];
   struct of_geom tempgeom;
   extern void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME);
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
@@ -1361,8 +1390,8 @@ void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, stru
 
 
   if(whichcoord>=0){
-    coord_ijk(i, j, k, loc, X);
-    bl_coord_ijk(i, j, k, loc, V);
+    if(X==NULL) coord_ijk(i, j, k, loc, X); // user passes X if X==NULL
+    bl_coord_ijk_2(i, j, k, loc, X, V);
     gcov_func(ptrgeom,getprim,whichcoord,X,gcovptr,gcovpertptr);
     // must come after gcov_func() above
     if(gdet_func_metric(whichcoord,V,gcovptr,&(ptrgeom->gdet))!=0){

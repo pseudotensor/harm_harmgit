@@ -25,6 +25,8 @@ extern void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYP
 
 extern void gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, struct of_geom *geom);
 extern void gset(int getprim, int whichcoord, int i, int j, int k, struct of_geom *geom);
+extern void gset_X(int getprim, int whichcoord, int i, int j, int k, int loc, FTYPE *X, struct of_geom *ptrgeom);
+
 
 
 extern void get_and_copy_geometry(int ii, int jj, int kk, int pp, struct of_geom *ptrgeom);

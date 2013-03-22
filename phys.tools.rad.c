@@ -771,6 +771,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
   int pliter, pl, jj, sc;
   FTYPE chi;
   FTYPE pr0[NPR],U0[NPR];
+  int numcycles=0;
 
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
@@ -827,6 +828,10 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
       PLOOP(pliter,pl) Ualt[pl]=Unew[pl]; // at most doubles value
       // assume Unew already accounts for Uf and dUother
 	  get_dtsub(method,prnew,qnew,Unew, Ualt,dUotheralt, CUf, Gd, chi, ptrgeom, &dtsub);
+      if(realdt/dtsub>MAXSUBCYCLES){
+        if(debugfail>=2) dualfprintf(fail_file,"dtsub very small: %g with realdt=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub\n",dtsub,realdt,MAXSUBCYCLES);
+        dtsub=realdt/(FTYPE)MAXSUBCYCLES;
+      }
       if(itersub==0) dtsubold=dtsubuse=dtsub;
       else{
         // ensure don't change step too fast
@@ -1709,6 +1714,7 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
   FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
   ucon_calc_whichvel(*whichvel,pout,ptrgeomtouse,ucon,others);
 
+
   // also convert whichvel ucon to WHICHVEL primitive velocity for use by u2p_rad() and as needed for consistent final output from this function and as possible backup value
   if(*whichvel!=WHICHVEL) ucon2pr(WHICHVEL,ucon,ptrgeomtouse,pout);
 
@@ -1751,9 +1757,22 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
   // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
   u2p_rad(showmessages, allowlocalfailurefixandnoreport, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
+
   // so now both fluid and radiation velocities are in WHICHVEL whichcoord format
   // inversion returns WHICHVEL velocity type, so pass that back
-  *whichvel=WHICHVEL;
+  //  *whichvel=WHICHVEL;
+
+
+
+  // no longer force return of WHICHVEL, just change both to whichvel.
+  FTYPE uconback[NDIM],othersback[NUMOTHERSTATERESULTS];
+  // for fluid
+  ucon_calc_whichvel(WHICHVEL,pout,ptrgeomtouse,uconback,othersback);
+  ucon2pr(*whichvel,uconback,ptrgeomtouse,pout);
+  // for radiation
+  ucon_calc_whichvel(WHICHVEL,&pout[URAD1-U1],ptrgeomtouse,uconback,othersback);
+  ucon2pr(*whichvel,uconback,ptrgeomtouse,&pout[URAD1-U1]);
+
 
 
   // DEBUG:
@@ -1769,6 +1788,7 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
 	//if(ptrgeomtouse->i==700) myexit(189235);
 	// KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
+
 
 
   return 0;
@@ -1905,7 +1925,8 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
 
   // output from prad_fforlab() is always WHICHVEL for both fluid and radiation primitives
   // changed whichvel's, so report that back if needed
-  *whichvel=WHICHVEL;
+  //  *whichvel=WHICHVEL;
+  // above change of whichvel no longer true (and anyways, whichvel was changed in prad_fforlab() directly)
  
   // PLOOP(pliter,pl) dualfprintf(fail_file,"ijk=%d %d %d pl=%d pout=%g\n",i,j,k,pl,pout[pl]);
 
