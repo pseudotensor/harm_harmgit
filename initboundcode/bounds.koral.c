@@ -2283,8 +2283,11 @@ int bound_radnt(int dir,
 
             // Identical to IC, except more involved check for inflow vs. outflow
 
-            int whichcoord=BLCOORDS;
+            int whichcoord;
+            if(WHICHPROBLEM==RADNT) whichcoord=BLCOORDS; // want to setup things in BLCOORDS
+            else if(WHICHPROBLEM==RADFLATDISK) whichcoord=MCOORD; // whatever else
             int whichvel=VEL4;
+
             // get metric grid geometry for these ICs
             int getprim=0;
             struct of_geom geomrealdontuse;
@@ -2379,25 +2382,37 @@ int bound_radnt(int dir,
             FTYPE r;
             r=V[1];
 
+            FTYPE rin;
+            if(WHICHPROBLEM==RADNT) rin=6.;
+            else if(WHICHPROBLEM==RADFLATDISK) rin=15.;
+
             //hot boundary KORALTODO: JCM confused why not much output in URAD0 out of disk
-            FTYPE rin=6.;
             if(r>rin){
 
               //E, F^i in orthonormal fluid frame
               FTYPE pradffortho[NPR];
-              pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
+              if(WHICHPROBLEM==RADNT) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
+              else if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR);
+              // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.
               pradffortho[PRAD1] = 0;
               pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
               pradffortho[PRAD3] = 0;
 
+
               //pr[RHO] and pr[UU] remain same as from ASYMM condition as well as any field
               //Keplerian gas with no inflow or outflow
+              // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.  But since magnitude is chosen to be zero, then no issue here.
               pr[U1]=pr[U2]=0.0; // have to be careful with this for VEL3 (must have rin>>rergo).
-              pr[U3]=1./(a + pow(r,1.5));
+              if(WHICHPROBLEM==RADNT) pr[U3]=1./(a + pow(r,1.5));
+              else if(WHICHPROBLEM==RADFLATDISK) pr[U3]=0.0;
 	
               int whichvel;
               whichvel=VEL3; // VEL3 so can set Keplerian rotation rate
-              int whichcoordfluid=BLCOORDS; // in which coordinates U1-U3 set so can use standard Keplerian formula
+
+              int whichcoordfluid;
+              if(WHICHPROBLEM==RADNT) whichcoordfluid=BLCOORDS; // want to setup things in BLCOORDS
+              else if(WHICHPROBLEM==RADFLATDISK) whichcoordfluid=MCOORD; // whatever else
+
               int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 

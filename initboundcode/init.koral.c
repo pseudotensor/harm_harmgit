@@ -955,7 +955,7 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-  if(WHICHPROBLEM==RADNT){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
 
     lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
     //    lim[1]=lim[2]=lim[3]=PARALINE;
@@ -1312,6 +1312,26 @@ int init_defcoord(void)
 
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADFLATDISK){
+
+    RADNT_MINX=4.0;
+    RADNT_MAXX=100.0;
+
+    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+    R0=0.0;
+	Rin=RADNT_MINX;
+	Rout=RADNT_MAXX;
+
+    Rin_array[2]=0.0*Pi/4.;
+    Rout_array[2]=Pi/2.;
+    Rin_array[3]=-1.;
+    Rout_array[3]=1.;
+
+  }
+
 
 
   return(0);
@@ -1646,7 +1666,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
-#if(WHICHPROBLEM==RADNT)
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
 #define KAPPAESUSER(rho,T) (0.0)
@@ -2607,12 +2627,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADNT){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
 
 
     RADNT_KKK=1.e-4;
     RADNT_ELL=4.5;
-    RADNT_UTPOT=.98;
+    RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
     //RADNT_RHOATMMIN=1.e-4;
     RADNT_RHOATMMIN= 1.e-2;
     RADNT_TGASATMMIN = 1.e11/TEMPBAR;
@@ -2630,7 +2650,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	th=V[2];
 	ph=V[3];
 
-	*whichcoord=MCOORD; // in case setting for inside horizon too when MCOORD=KSCOORDS
+	*whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
     *whichvel=VEL4;
     // get metric grid geometry for these ICs
     int getprim=0;
