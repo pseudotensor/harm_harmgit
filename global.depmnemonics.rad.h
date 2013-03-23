@@ -65,15 +65,19 @@
 //
 // Notes on differences with Koral setup
 //
-// 1) Koral sets mass scale as M (i.e. black hole mass), where I set it via the density scale of 1g/cm^3
-// 2) Koral hard codes MASSCM, which makes it hard to match for similar constants when gTILDA is changed.
-// 3) Koral currently uses v=c as the wavespeed limit when including radiation
-// 4) Koral is defaulted to use OpenMP , and default is 4 cores, so any output from parallel loops will be randomly ordered.
-// 5) Koral is not fully unsplit for forces at each step.  Koral updates primitives with geometry+MHD sources before applying radiation forces.  This means never will be able to reach exact equilibrium. Note that this is different from operator split.  While the code can be operator split, this doesn't mean one has to use new primitives in each operation as in koral or zeus.  One can remove the "calc_prmitives() before the source update to ensure unsplit (this is what's done for implicit_lab but for some reason not explicit_lab by default)
-// 6) Koral typically uses MINM with theta=1
-// 7) Koral has vectors in an orthonormal basis
-// 8) Koral's F and U in LAXF have no \detg
-// 9) Koral updates u (conserved quantity) due to flux and metric before using this u in the radiation source term.  Maybe good idea since only balances forces and doesn't wait a step to do it.  KORALTODO.  Don't have to update primitive or final primitive, so doesn't affect unsplitness.  Koral behaves like harm if I do radiation source first and flux second as similar to harm current setup.
+// 1) Units:
+// 1a) Koral sets mass scale as M (i.e. black hole mass), where I set it via the density scale of 1g/cm^3
+// 1b) Koral's M is mass per unit Msun, just like my MPERSUN, but as 1a, my mass scale is independent of MPERSUN
+// 1c) RADOUTPUTINZAMO sets output of koral in orthonormal basis in zamo frame.
+// 1d) Koral hard codes MASSCM, which makes it hard to match for similar constants when gTILDA is changed.
+// 2) Algorithmic differences:
+// 2a) Koral currently uses v=c as the wavespeed limit when including radiation
+// 2b) Koral (and now koralinsert) updates radiation source term with dUgeom+dUriemann.  Required for high opacity cases (e.g. RADPULSEPLANAR) to avoid diffusion.  See notes elsewhere.
+// 2c) Koral typically uses MINM with theta=1, but uses MP5 when needing more accuracy
+// 3) Details:
+// 3a) Koral's F and U in LAXF have no \detg
+// 4) Runtime differences:
+// 4a) Koral is defaulted to use OpenMP , and default is 4 cores, so any output from parallel loops will be randomly ordered.
 //
 //////////////////////////////////
 

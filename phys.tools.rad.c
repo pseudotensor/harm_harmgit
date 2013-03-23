@@ -1293,7 +1293,6 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   
   // KORALTODO: below 2 lines were how harm = koralinsert was before
   // KORALTODO: Need to still use total wave speed for timestep limit!
-  // seems paper uses full \chi, but fails to work!  Takes single step and has inversion failures.  KORALTODO SUPERGODMARK!
   FTYPE kappa,chi;
   calc_chi(pr,geom,&chi);
   //  calc_kappa(pr,geom,&kappa);
@@ -3014,7 +3013,8 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     }
   }
 
-
+  // TOTRY Erf nan
+  // TOTRY try old way of gamma<1 || delta < 0 setting gamma=1
 
   // if Erf already a value and already Erf<ERADLIMIT (i.e. delta>0 must be true), then bad failure and just reset velocity to zero or fluid velocity depending upon optical depth
   if(Erf<ERADLIMIT){ // JCM

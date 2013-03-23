@@ -19,10 +19,14 @@
 #define RADNT (30) // emission from midplane
 #define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral.  Very similar to RADNT.)
 #define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Somewhat similar to RADFLATDISK but in CYL coords.)
-#define RADDOT (33) // radiating dot
+#define RADDOT (33) // radiating dot (Olek changes this while I was testing)
+#define RADCYLBEAMCART (40) //  similar to RADCYLBEAM but in cartesian
 
 
-// DOING
+
+// TOTRY: Speed of light limiter?
+
+// TOTRY : optically thin dot in SPC or pulse in SPC.
 
 
 
@@ -43,10 +47,9 @@
 // RADDONUT: Donut explodes, and inversions take forever.
 
 
-// TODO:
-#define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
-#define EDDINFALL (5) // infall with flux from inside
-
+//TODO:
+#define RADDOTFLAT (41) // similar to RADDOT but in cartesian (well, RADDOT was similar, but still different after Olek changes)
+#define RVDONUT (42) // radiative and viscous 
 
 
 // non-implemented NON-radiative problems in KORAL that are semi-duplicated by some other radiative tests
@@ -61,6 +64,11 @@
 #define DONUTMKS1 (22) // 2d Polish donut in MKS1 (like DONUT)
 #define ATMMKS1 (23) //  radial atmosphere infalling in MKS1 (like ATMKS)
 #define BOWSHOCK (28) // bow shock hydro test
+
+// non-implemented radiative problems in KORAL.  Olek says not interesting pre-test versions of other actual tests.
+#define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
+#define EDDINFALL (5) // infall with flux from inside
+
 
 
 
@@ -79,6 +87,7 @@
 #define RADNTBC 210
 #define RADCYLBEAMBC 211
 #define RADBEAM2DKSVERTBEAMINFLOW 212
+#define RADCYLBEAMCARTBC 213
 
 
 ///////////////////////////////
@@ -86,7 +95,7 @@
 ///////////////////////////////
 
 //#define WHICHPROBLEM FLATNESS
-//#define WHICHPROBLEM RADBEAMFLAT
+#define WHICHPROBLEM RADBEAMFLAT
 //#define WHICHPROBLEM RADPULSE
 //#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
@@ -104,8 +113,8 @@
 //#define WHICHPROBLEM RADFLATDISK
 //#define WHICHPROBLEM RADDONUT
 //#define WHICHPROBLEM RADCYLBEAM
-#define WHICHPROBLEM RADBEAM2DKSVERT
-
+//#define WHICHPROBLEM RADBEAM2DKSVERT
+//#define WHICHPROBLEM RADCYLBEAMCART
 
 
 
@@ -626,7 +635,8 @@
 // choose odd so DOT is located at center of single cell symmetrically around grid rather than at edge of grid or offset.
 #define N1 41
 #define N2 41
-#define N3 41
+//#define N3 41 // koral original is 3D, but ok to test in 2D
+#define N3 1
 
 #define MCOORD CARTMINKMETRIC2
 
@@ -636,7 +646,7 @@
 //****************************************//
 //****************************************//
 
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM)
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
 #undef MPERSUN
 #define MPERSUN (10.0)
@@ -682,6 +692,14 @@
 #define N3 30 // \phi
 
 #define MCOORD CYLMINKMETRIC
+
+#elif(WHICHPROBLEM==RADCYLBEAMCART)
+
+#define N1 80
+#define N2 80
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
 
 #endif
 

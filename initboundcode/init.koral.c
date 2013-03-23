@@ -316,6 +316,9 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
+  // TOTRY: SEe if koral is going Erf<0
+  // TOTRY: matching F/E and seeing koral fails.
+
   if(WHICHPROBLEM==RADBEAMFLAT){
 	cour=0.8;
 	gam=gamideal=5.0/3.0;
@@ -1021,21 +1024,25 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
+
+    // TOTRY: prad0 doesn't lift off.   RADNT SPCMINKMETRIC
+    // TOTRY: Om not happening even if set!
 
     lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
     //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
 
-    if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
-	a=0.0; // no spin in case use MCOORD=KSCOORDS
-
-	if(!(ISSPCMCOORDNATIVE(MCOORD)) && (WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT)){
+	if(!ISSPCMCOORDNATIVE(MCOORD) && (WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT) ){
 	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADNT,\n",MCOORD);
 	  myexit(3434628752);
 	}
     else if(WHICHPROBLEM==RADCYLBEAM && MCOORD!=CYLMINKMETRIC){
-	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be CYLMINKMETRIC for RADCYLBEAM,\n",MCOORD);
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be CYLMINKMETRIC for RADCYLBEAM.\n",MCOORD);
 	  myexit(2493434634);
+    }
+    else if(WHICHPROBLEM==RADCYLBEAMCART && MCOORD!=CARTMINKMETRIC2){
+	  dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be CARTMINKMETRIC2 for RADCYLBEAMCART.\n",MCOORD);
+	  myexit(2493434635);
     }
 
 	cour=0.8;
@@ -1051,6 +1058,14 @@ int init_global(void)
       BCtype[X1UP]=RADCYLBEAMBC;
       BCtype[X2DN]=OUTFLOW;
       BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    else if(WHICHPROBLEM==RADCYLBEAMCART){
+      BCtype[X1DN]=RADCYLBEAMCARTBC;
+      BCtype[X1UP]=RADCYLBEAMCARTBC;
+      BCtype[X2DN]=RADCYLBEAMCARTBC;
+      BCtype[X2UP]=RADCYLBEAMCARTBC;
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
     }
@@ -1097,7 +1112,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==FLATNESS){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1115,6 +1130,7 @@ int init_defcoord(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=-50.0; 
@@ -1132,6 +1148,7 @@ int init_defcoord(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADPULSE3D){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=-50.0; 
@@ -1147,7 +1164,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAMFLAT){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1163,8 +1180,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADTUBE){
-
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(NTUBE==5){
 	  defcoord = UNIFORMCOORDS;
@@ -1191,6 +1207,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADSHADOW){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=-1.0;
@@ -1206,6 +1223,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDBLSHADOW){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=-6.0;
@@ -1221,7 +1239,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1263,7 +1281,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAM2DKSVERT){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1313,7 +1331,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==ATMSTATIC){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
  
@@ -1331,7 +1349,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADATM){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
  
@@ -1350,7 +1368,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADWALL){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=-6;
@@ -1366,6 +1384,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADWAVE){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1382,6 +1401,12 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBONDI){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    // TOTRY: Change horizon interpolation to be like koral.
+    // PURE HYDRO: entropy inversions don't lead to major problems.
+    // TRY pure HD.
+    // TRY moving the inner boundary outward a bit.
 
     // KORALTODO: 2.5 to 2E4 in paper
     RADBONDI_MINX=3.5;
@@ -1409,7 +1434,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDOT){
-
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	defcoord = UNIFORMCOORDS;
 	Rin_array[1]=0;
@@ -1426,6 +1451,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADNT){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
@@ -1436,7 +1462,7 @@ int init_defcoord(void)
       RADNT_MAXX=40.0; // 27.8
     }
 
-    // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?
+    // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?  Change of feature set.
     //	defcoord = UNIFORMCOORDS;
     defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
     R0=0.0;
@@ -1454,6 +1480,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADFLATDISK){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     RADNT_MINX=4.0;
     RADNT_MAXX=100.0;
@@ -1474,6 +1501,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDONUT){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
@@ -1502,6 +1530,11 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADCYLBEAM){
+	a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
+
+    // TOTRY: find azimuthal flux.
 
     RADNT_FULLPHI=(Pi/2.5);
     //    RADNT_FULLPHI=(2.0*Pi);
@@ -1536,15 +1569,29 @@ int init_defcoord(void)
 
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADCYLBEAMCART){
+	a=0.0;
 
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
+    RADNT_MINX=-20.0;
+    RADNT_MAXX=+20.0;
+ 
+    defcoord = UNIFORMCOORDS;
+     
+    Rin_array[1]=RADNT_MINX;
+    Rout_array[1]=RADNT_MAXX;
 
-    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
-    //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+    Rin_array[2]=RADNT_MINX;
+    Rout_array[2]=RADNT_MAXX;
 
-    if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
-	a=0.0; // no spin in case use MCOORD=KSCOORDS
+    Rin_array[3]=0.0;
+    Rout_array[3]=1.0;
+
   }
+
+
 
   return(0);
 }
@@ -1885,7 +1932,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
-#if(WHICHPROBLEM==RADCYLBEAM)
+#if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0) // note 0.0
 #define KAPPAESUSER(rho,T) (0.0)
@@ -2420,7 +2467,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   if(WHICHPROBLEM==RADATM){
 
 
-    // KORALTODO: t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral
+    // KORALTODO: t=0 R^t_t [lab] R^t_x [lab] or prad0 (E rad frame] prad1 [rad 4-vel] are off by about 16% compared to koral  UNITS CONSTANTS.
 
     RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR);
     RADATM_LUMEDD=(1.25e38*MPERSUN)/(ENBAR/TBAR);
@@ -2612,7 +2659,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       uint=RADWAVE_UINT*(1.+gam*RADWAVE_AAA*cos(RADWAVE_KK*xx));
       FTYPE cs=1./RADWAVE_CC;
       vx=RADWAVE_AAA*cos(RADWAVE_KK*xx)*cs;
-      ERAD=RADWAVE_ERAD; // KORALTODO: Why does koral not set #define RADIATION for this test?
+      ERAD=RADWAVE_ERAD; // KORALTODO: Why does koral not set #define RADIATION for this test?  avoid test.
       Fx=Fz=Fy=0.;
     }
 
@@ -2844,7 +2891,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM){
+  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
 
     RADNT_KKK=1.e-4;
@@ -2947,7 +2994,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADCYLBEAM){
+  if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 	FTYPE r,th,ph;
 	coord(i, j, k, CENT, X);
 	bl_coord(X, V);
@@ -3040,7 +3087,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     Vphi=uPhi/uT;
     Vr=0.;
 
-    //3-velocity in BL transformed to MCOORD (which is what ptrgeom is in) // KORALTODO: Koral had this as 4-velocity?!
+    //3-velocity in BL transformed to MCOORD (which is what ptrgeom is in)
     FTYPE prucon[NPR];
     prucon[U1]=-Vr;
     prucon[U2]=0;
@@ -3211,7 +3258,7 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 
   pp[RHO]=rho;
   pp[UU]=uint;
-  //4-velocity in lab frame (SUPERGODMARK KORALTODO: ucon not set in koral!!)
+  //4-velocity in lab frame
   // just don't set pp[U1-U3]
   //  FTYPE others[NUMOTHERSTATERESULTS];
   //  ucon_calc(pp,ptrgeom,ucon,others);
