@@ -18,13 +18,13 @@ static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int j
 {
 
 #if(MERGEDC2EA2CMETHOD)
-      // if doing merged method, then expanded "flux" calculation to get state in full (i.e. left,cent,right) in the "-1" and "N" cells
-      if(dir==1 && (i==is) || dir==2 && (j==js) || dir==3 && (k==ks)){ *computewithleft=0; *computewithright=1; }
-      else if(dir==1 && (i==ie) || dir==2 && (j==je) || dir==3 && (k==ke)){ *computewithleft=1; *computewithright=0; }
-      else{ *computewithleft=1; *computewithright=1; }
+  // if doing merged method, then expanded "flux" calculation to get state in full (i.e. left,cent,right) in the "-1" and "N" cells
+  if(dir==1 && (i==is) || dir==2 && (j==js) || dir==3 && (k==ks)){ *computewithleft=0; *computewithright=1; }
+  else if(dir==1 && (i==ie) || dir==2 && (j==je) || dir==3 && (k==ke)){ *computewithleft=1; *computewithright=0; }
+  else{ *computewithleft=1; *computewithright=1; }
 #else
-      // normal routine when always get final dissipative flux
-      *computewithleft=1; *computewithright=1;
+  // normal routine when always get final dissipative flux
+  *computewithleft=1; *computewithright=1;
 #endif
 
 
@@ -36,22 +36,22 @@ static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int j
 
 // see fluxcompute.c for non-computer science, real physics calculations of flux
 int fluxcalc(int stage,
-	     int initialstep, int finalstep,
-	     FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-	     FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-	     FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-	     FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-	     FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
-	     FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
-	     FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
- 	     FTYPE *CUf,
-	     FTYPE *CUnew,
-	     SFTYPE fluxdt,
-	     SFTYPE fluxtime,
-	     FTYPE *ndt1,
-	     FTYPE *ndt2,
-	     FTYPE *ndt3
-	     )
+             int initialstep, int finalstep,
+             FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+             FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
+             FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
+             FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
+             FTYPE *CUf,
+             FTYPE *CUnew,
+             SFTYPE fluxdt,
+             SFTYPE fluxtime,
+             FTYPE *ndt1,
+             FTYPE *ndt2,
+             FTYPE *ndt3
+             )
 {
   int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop);
   void fix_flux(FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]) ;
@@ -211,13 +211,13 @@ int fluxcalc(int stage,
   FULLLOOP{
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-	PLOOP(pliter,pl){
-	  if(pl>=B1 && pl<=B2){
-	    if(!isfinite(MACP1A1(fluxvec,dir,i,j,k,pl))){
-	      dualfprintf(fail_file,"GOD FLUXA: dir=%d pl=%d i=%d j=%d k=%d\n",dir,pl,i,j,k,MACP1A1(fluxvec,dir,i,j,k,pl));
-	    }
-	  }
-	}
+        PLOOP(pliter,pl){
+          if(pl>=B1 && pl<=B2){
+            if(!isfinite(MACP1A1(fluxvec,dir,i,j,k,pl))){
+              dualfprintf(fail_file,"GOD FLUXA: dir=%d pl=%d i=%d j=%d k=%d\n",dir,pl,i,j,k,MACP1A1(fluxvec,dir,i,j,k,pl));
+            }
+          }
+        }
       }
     }
   }
@@ -318,10 +318,10 @@ int fluxcalc(int stage,
   FULLLOOP{
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
+        PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
       }
       else{
-	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0;
+        PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0;
       }
     }
   }    
@@ -380,82 +380,82 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
 
-	//      get_odirs(dir,&odir1,&odir2);
+        //      get_odirs(dir,&odir1,&odir2);
 
-	is=loop[FIS];
-	ie=loop[FIE]+(dir==1)*SHIFT1;
-	js=loop[FJS];
-	je=loop[FJE]+(dir==2)*SHIFT2;
-	ks=loop[FKS];
-	ke=loop[FKE]+(dir==3)*SHIFT3;
-
-
-	if(FLUXB==FLUXCTSTAG){
- 	  // E1: Needed: i==0..N1-1 j=0..N2   k=0..N3
-	  // E2: Needed: i==0..N1   j=0..N2-1 k=0..N3
-	  // E3: Needed: i==0..N1   j=0..N2   k=0..N3-1
-	  // Note Fi[Bi]=0 always and should already be set everywhere
-
-	  // B1
-	  B1is=loop[FIS];
-	  B1ie=loop[FIE]+(dir==1 || dir==2 || dir==3)*SHIFT1; // for F1[B1],F2[B1]=E3,F3[B1]=E2
-	  B1js=loop[FJS];
-	  B1je=loop[FJE]+(dir==1 || dir==2)*SHIFT2; // for F1[B1],F2[B1]=E3
-	  B1ks=loop[FKS];
-	  B1ke=loop[FKE]+(dir==1 || dir==3)*SHIFT3; // for F1[B1],F3[B1]=E2
-
-	  // B2
-	  B2is=loop[FIS];
-	  B2ie=loop[FIE]+(dir==1 || dir==2)*SHIFT1; // for F1[B2]=E3,F2[B2],F3[B2]=E1
-	  B2js=loop[FJS];
-	  B2je=loop[FJE]+(dir==1 || dir==2 || dir==3)*SHIFT2; // for F1[B2]=E3,F2[B2],F3[B2]=E1
-	  B2ks=loop[FKS];
-	  B2ke=loop[FKE]+(dir==2 || dir==3)*SHIFT3; // for F2[B2],F3[B2]=E1
-
-	  // B3
-	  B3is=loop[FIS];
-	  B3ie=loop[FIE]+(dir==1 || dir==3)*SHIFT1; // for F1[B3]=E2,F3[B3]
-	  B3js=loop[FJS];
-	  B3je=loop[FJE]+(dir==2 || dir==3)*SHIFT2; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
-	  B3ks=loop[FKS];
-	  B3ke=loop[FKE]+(dir==1 || dir==2 || dir==3)*SHIFT3; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
-	}
-	else{
-	  B1is=B2is=B3is=is;
-	  B1ie=B2ie=B3ie=ie;
-	  B1js=B2js=B3js=js;
-	  B1je=B2je=B3je=je;
-	  B1ks=B2ks=B3ks=ks;
-	  B1ke=B2ke=B3ke=ke;
-	}
+        is=loop[FIS];
+        ie=loop[FIE]+(dir==1)*SHIFT1;
+        js=loop[FJS];
+        je=loop[FJE]+(dir==2)*SHIFT2;
+        ks=loop[FKS];
+        ke=loop[FKE]+(dir==3)*SHIFT3;
 
 
-	//	dualfprintf(fail_file,"dir=%d Clean1: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
-	//	dualfprintf(fail_file,"CleanB1: B1is=%d B1ie=%d B1js=%d B1je=%d B1ks=%d B1ke=%d\n",B1is,B1ie,B1js,B1je,B1ks,B1ke);
-	//	dualfprintf(fail_file,"CleanB2: B2is=%d B2ie=%d B2js=%d B2je=%d B2ks=%d B2ke=%d\n",B2is,B2ie,B2js,B2je,B2ks,B2ke);
-	//	dualfprintf(fail_file,"CleanB3: B3is=%d B3ie=%d B3js=%d B3je=%d B3ks=%d B3ke=%d\n",B3is,B3ie,B3js,B3je,B3ks,B3ke);
+        if(FLUXB==FLUXCTSTAG){
+          // E1: Needed: i==0..N1-1 j=0..N2   k=0..N3
+          // E2: Needed: i==0..N1   j=0..N2-1 k=0..N3
+          // E3: Needed: i==0..N1   j=0..N2   k=0..N3-1
+          // Note Fi[Bi]=0 always and should already be set everywhere
+
+          // B1
+          B1is=loop[FIS];
+          B1ie=loop[FIE]+(dir==1 || dir==2 || dir==3)*SHIFT1; // for F1[B1],F2[B1]=E3,F3[B1]=E2
+          B1js=loop[FJS];
+          B1je=loop[FJE]+(dir==1 || dir==2)*SHIFT2; // for F1[B1],F2[B1]=E3
+          B1ks=loop[FKS];
+          B1ke=loop[FKE]+(dir==1 || dir==3)*SHIFT3; // for F1[B1],F3[B1]=E2
+
+          // B2
+          B2is=loop[FIS];
+          B2ie=loop[FIE]+(dir==1 || dir==2)*SHIFT1; // for F1[B2]=E3,F2[B2],F3[B2]=E1
+          B2js=loop[FJS];
+          B2je=loop[FJE]+(dir==1 || dir==2 || dir==3)*SHIFT2; // for F1[B2]=E3,F2[B2],F3[B2]=E1
+          B2ks=loop[FKS];
+          B2ke=loop[FKE]+(dir==2 || dir==3)*SHIFT3; // for F2[B2],F3[B2]=E1
+
+          // B3
+          B3is=loop[FIS];
+          B3ie=loop[FIE]+(dir==1 || dir==3)*SHIFT1; // for F1[B3]=E2,F3[B3]
+          B3js=loop[FJS];
+          B3je=loop[FJE]+(dir==2 || dir==3)*SHIFT2; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
+          B3ks=loop[FKS];
+          B3ke=loop[FKE]+(dir==1 || dir==2 || dir==3)*SHIFT3; // for F1[B3]=E2,F2[B3]=E1,F3[B3]
+        }
+        else{
+          B1is=B2is=B3is=is;
+          B1ie=B2ie=B3ie=ie;
+          B1js=B2js=B3js=js;
+          B1je=B2je=B3je=je;
+          B1ks=B2ks=B3ks=ks;
+          B1ke=B2ke=B3ke=ke;
+        }
 
 
-	////      COMPFULLLOOP{
+        // dualfprintf(fail_file,"dir=%d Clean1: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
+        // dualfprintf(fail_file,"CleanB1: B1is=%d B1ie=%d B1js=%d B1je=%d B1ks=%d B1ke=%d\n",B1is,B1ie,B1js,B1je,B1ks,B1ke);
+        // dualfprintf(fail_file,"CleanB2: B2is=%d B2ie=%d B2js=%d B2je=%d B2ks=%d B2ke=%d\n",B2is,B2ie,B2js,B2je,B2ks,B2ke);
+        // dualfprintf(fail_file,"CleanB3: B3is=%d B3ie=%d B3js=%d B3je=%d B3ks=%d B3ke=%d\n",B3is,B3ie,B3js,B3je,B3ks,B3ke);
+
+
+        ////      COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	  // below means we are not within the computational block
-	  if(! (i>=is && i<=ie && j>=js  && j<=je && k>=ks && k<=ke) ){
-	    PLOOPNOB1(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	    PLOOPNOB2(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	  }
-	  if(! (i>=B1is && i<=B1ie && j>=B1js && j<=B1je && k>=B1ks && k<=B1ke) ){
-	    pl=B1; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	  }
-	  if(! (i>=B2is && i<=B2ie && j>=B2js && j<=B2je && k>=B2ks && k<=B2ke) ){
-	    pl=B2; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	  }
-	  if(! (i>=B3is && i<=B3ie && j>=B3js && j<=B3je && k>=B3ks && k<=B3ke) ){
-	    pl=B3; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	  }
-	}// end 3D loop
+          // below means we are not within the computational block
+          if(! (i>=is && i<=ie && j>=js  && j<=je && k>=ks && k<=ke) ){
+            PLOOPNOB1(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+            PLOOPNOB2(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+          }
+          if(! (i>=B1is && i<=B1ie && j>=B1js && j<=B1je && k>=B1ks && k<=B1ke) ){
+            pl=B1; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+          }
+          if(! (i>=B2is && i<=B2ie && j>=B2js && j<=B2je && k>=B2ks && k<=B2ke) ){
+            pl=B2; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+          }
+          if(! (i>=B3is && i<=B3ie && j>=B3js && j<=B3je && k>=B3ks && k<=B3ke) ){
+            pl=B3; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+          }
+        }// end 3D loop
       }// end if doing this dimen
     }// end over dimens
   }// end parallel region (no need for added barrier since parallel region has impassible barrier)
@@ -483,11 +483,11 @@ int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  ////COMPFULLLOOP
-	  PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	}// end over 3D loop
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          ////COMPFULLLOOP
+          PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+        }// end over 3D loop
       }// if dir
     }// over dirs
   }// end parallel region (no need for added barrier since parallel region has impassible barrier)
@@ -512,11 +512,11 @@ int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  ////COMPFULLLOOP
-	  PLOOPBONLY(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-	}// end over 3D loop
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          ////COMPFULLLOOP
+          PLOOPBONLY(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+        }// end over 3D loop
       }// if dir
     }// over dirs
   }// end parallel region (no need for added barrier since parallel region has impassible barrier)
@@ -541,14 +541,14 @@ int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FT
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
       DIMENLOOP(dir){
-	if(Nvec[dir]>1){
+        if(Nvec[dir]>1){
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	  OPENMP3DLOOPBLOCK{
-	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	    //// COMPFULLLOOP
-	    PLOOPBONLY(pl) MACP1A1(fluxvecEM,dir,i,j,k,pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
-	  }// end over 3D loop
-	}// if dir
+          OPENMP3DLOOPBLOCK{
+            OPENMP3DLOOPBLOCK2IJK(i,j,k);
+            //// COMPFULLLOOP
+            PLOOPBONLY(pl) MACP1A1(fluxvecEM,dir,i,j,k,pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
+          }// end over 3D loop
+        }// if dir
       }// over dirs
     }// end if splitmaem
   }// end parallel region
@@ -570,14 +570,14 @@ int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
       DIMENLOOP(dir){
-	if(Nvec[dir]>1){
+        if(Nvec[dir]>1){
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	  OPENMP3DLOOPBLOCK{
-	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	    ////COMPFULLLOOP
-	    PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)+=MACP1A1(fluxvecEM,dir,i,j,k,pl);
-	  }// end over 3D loop
-	}// end if dir
+          OPENMP3DLOOPBLOCK{
+            OPENMP3DLOOPBLOCK2IJK(i,j,k);
+            ////COMPFULLLOOP
+            PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)+=MACP1A1(fluxvecEM,dir,i,j,k,pl);
+          }// end over 3D loop
+        }// end if dir
       }// end over dirs
     }// end if splitmaem
   }// end parallel region
@@ -602,27 +602,27 @@ int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fl
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
 
       DIMENLOOP(dir){
-	if(Nvec[dir]>1){
+        if(Nvec[dir]>1){
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
-	  OPENMP3DLOOPBLOCK{
-	    OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	    ////	COMPFULLLOOP{
+          OPENMP3DLOOPBLOCK{
+            OPENMP3DLOOPBLOCK2IJK(i,j,k);
+            //// COMPFULLLOOP{
 #if(SPLITPRESSURETERMINFLUXMA)
-	    // add diagonal pressure term back to normal FLUX term
-	    MACP1A1(fluxvec,dir,i,j,k,UU+dir)+=MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
-	    // reset temporary storage
-	    MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir))=0.0;
+            // add diagonal pressure term back to normal FLUX term
+            MACP1A1(fluxvec,dir,i,j,k,UU+dir)+=MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
+            // reset temporary storage
+            MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir))=0.0;
 #endif
 #if(SPLITPRESSURETERMINFLUXEM)
-	    // add diagonal pressure term back to normal FLUX term
-	    MACP1A1(fluxvec,dir,i,j,k,UU+dir)+=MACP1A1(fluxvecEM,dir,i,j,k,FLUXSPLITPEM(dir));
-	    // reset temporary storage
-	    MACP1A1(fluxvecEM,dir,i,j,k,FLUXSPLITPEM(dir))=0.0;
+            // add diagonal pressure term back to normal FLUX term
+            MACP1A1(fluxvec,dir,i,j,k,UU+dir)+=MACP1A1(fluxvecEM,dir,i,j,k,FLUXSPLITPEM(dir));
+            // reset temporary storage
+            MACP1A1(fluxvecEM,dir,i,j,k,FLUXSPLITPEM(dir))=0.0;
 #endif
-	    // now do normal addition
-	    PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)+=MACP1A1(fluxvecEM,dir,i,j,k,pl);
-	  }// over 3D LOOP
-	}// if dir
+            // now do normal addition
+            PLOOP(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)+=MACP1A1(fluxvecEM,dir,i,j,k,pl);
+          }// over 3D LOOP
+        }// if dir
       }// over dirs
     }// end if splitmaem
   }// end parallel region
@@ -704,8 +704,8 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       int dimen;
       // set dimension having no influence on dt by default
       DIMENLOOP(dimen){
- 	*(ndtvec[dimen])=BIG;
-	ndtveclocal[dimen]=BIG;
+        *(ndtvec[dimen])=BIG;
+        ndtveclocal[dimen]=BIG;
       }
     }
 
@@ -728,27 +728,27 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	
-	// get dt for each dimension at each grid point -- but only if dimension is relevant (otherwise stays as BIG and doesn't affect wavedt)
-	DIMENLOOP(dimen) if(doingdimen[dimen]) ndtveclocal[dimen]=GLOBALMACP0A1(dtijk,i,j,k,dimen);
-	
-	// set local per-cell dt
-	// sum of inverses is proper for unsplit scheme based upon split interpolations/fluxes.
-	wavedt = 1. / (1. / ndtveclocal[1] + 1. / ndtveclocal[2] + 1. / ndtveclocal[3]);
-	
-	// use dimen=1 to store result
-	dimen=dimenorig;
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+ 
+        // get dt for each dimension at each grid point -- but only if dimension is relevant (otherwise stays as BIG and doesn't affect wavedt)
+        DIMENLOOP(dimen) if(doingdimen[dimen]) ndtveclocal[dimen]=GLOBALMACP0A1(dtijk,i,j,k,dimen);
+ 
+        // set local per-cell dt
+        // sum of inverses is proper for unsplit scheme based upon split interpolations/fluxes.
+        wavedt = MINDTSET(ndtveclocal[1],ndtveclocal[2],ndtveclocal[3]);
+ 
+        // use dimen=1 to store result
+        dimen=dimenorig;
 #pragma omp critical
-	{
-	  if (wavedt < *(ndtvec[dimen]) ){
-	    *ndtvec[dimen] = wavedt;
-	    // below are global so can report when other dt's are reported in advance.c
-	    waveglobaldti[dimen]=i;
-	    waveglobaldtj[dimen]=j;
-	    waveglobaldtk[dimen]=k;
-	  }
-	}// end critical region
+        {
+          if (wavedt < *(ndtvec[dimen]) ){
+            *ndtvec[dimen] = wavedt;
+            // below are global so can report when other dt's are reported in advance.c
+            waveglobaldti[dimen]=i;
+            waveglobaldtj[dimen]=j;
+            waveglobaldtk[dimen]=k;
+          }
+        }// end critical region
       }//end over 3dloopblock
     }// end over parallel region
 
@@ -756,12 +756,12 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
     {
       int dimen;
       DIMENLOOP(dimen){
-	if(doingdimen[dimen]){
-	  *ndtvec[dimen]=*ndtvec[dimenorig];
-	  waveglobaldti[dimen]=waveglobaldti[dimenorig];
-	  waveglobaldtj[dimen]=waveglobaldtj[dimenorig];
-	  waveglobaldtk[dimen]=waveglobaldtk[dimenorig];
-	}
+        if(doingdimen[dimen]){
+          *ndtvec[dimen]=*ndtvec[dimenorig];
+          waveglobaldti[dimen]=waveglobaldti[dimenorig];
+          waveglobaldtj[dimen]=waveglobaldtj[dimenorig];
+          waveglobaldtk[dimen]=waveglobaldtk[dimenorig];
+        }
       }
     }
 
@@ -818,25 +818,25 @@ int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*psta
   ////////////////////////////////////
 
   /*
-  Nvec[1]=N1;
-  Nvec[2]=N2;
-  Nvec[3]=N3;
+    Nvec[1]=N1;
+    Nvec[2]=N2;
+    Nvec[3]=N3;
   
 
-  odir1=dir%3+1;
-  odir2=(dir+1)%3+1;
-  if(splitmaem==0){
+    odir1=dir%3+1;
+    odir2=(dir+1)%3+1;
+    if(splitmaem==0){
     if(Nvec[dir]==1 && Nvec[odir1]==1) COMPFULLLOOP MACP0A1(F,i,j,k,B1-1+odir1)=0.0;
     if(Nvec[dir]==1 && Nvec[odir2]==1) COMPFULLLOOP MACP0A1(F,i,j,k,B1-1+odir2)=0.0;
     COMPFULLLOOP MACP0A1(F,i,j,k,B1-1+dir)=0.0; // flux along field is always 0 due to antisymmetry of Faraday/Maxwell
-  }
-  else{
+    }
+    else{
     // only need to change FEM since above F doesn't contain this EMF in this case
     if(Nvec[dir]==1 && Nvec[odir1]==1) COMPFULLLOOP MACP0A1(FEM,i,j,k,B1-1+odir1)=0.0;
     if(Nvec[dir]==1 && Nvec[odir2]==1) COMPFULLLOOP MACP0A1(FEM,i,j,k,B1-1+odir2)=0.0;
     COMPFULLLOOP MACP0A1(FEM,i,j,k,B1-1+dir)=0.0; // flux along field is always 0 due to antisymmetry of Faraday/Maxwell
     // don't reset field part of MA flux since using that for other purposes (diagonal pressure term for now)
-  }
+    }
   */
 
 
@@ -1005,7 +1005,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
     if(advancepassnumber<=0)
 #endif
       {
-	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
+        MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
       }
   } // end if storing wavespeeds
 
@@ -1088,31 +1088,31 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
       /////////////////////////////////
 
       if(npr2interpstart<=npr2interpend){
-	MYFUN(getplpr(dir,time,idel,jdel,kdel,i,j,k,ptrgeom,pr,pstag,p2interp,dq,GLOBALPOINT(pleft),GLOBALPOINT(pright),p2interp_l,p2interp_r,p_l,p_r),"flux.c:fluxcalc_standard()", "getplpr", 1);
+        MYFUN(getplpr(dir,time,idel,jdel,kdel,i,j,k,ptrgeom,pr,pstag,p2interp,dq,GLOBALPOINT(pleft),GLOBALPOINT(pright),p2interp_l,p2interp_r,p_l,p_r),"flux.c:fluxcalc_standard()", "getplpr", 1);
 #if(SPLITNPR || FIELDSTAGMEM)
-	// then means there is going to be a second pass, so store into memory
-	PINTERPLOOP(pliter,pl){
-	  MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
-	  MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
-	}
-	PNOTINTERPLOOP(pliter,pl){ // restore those things didn't interpolate
-	  p_l[pl]=MACP1A1(pl_ct,dir,i,j,k,pl);
-	  p_r[pl]=MACP1A1(pr_ct,dir,i,j,k,pl);
-	}
+        // then means there is going to be a second pass, so store into memory
+        PINTERPLOOP(pliter,pl){
+          MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
+          MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
+        }
+        PNOTINTERPLOOP(pliter,pl){ // restore those things didn't interpolate
+          p_l[pl]=MACP1A1(pl_ct,dir,i,j,k,pl);
+          p_r[pl]=MACP1A1(pr_ct,dir,i,j,k,pl);
+        }
 #endif
       }
       else{
 #if(SPLITNPR || FIELDSTAGMEM)
-	// GODMARK: for now assume interpolations either all done or none done, else need exclusion list for interpolations
-	// then just get from memory
-	PLOOPALLINTERP(pl){
-	  p_l[pl]=MACP1A1(pl_ct,dir,i,j,k,pl);
-	  p_r[pl]=MACP1A1(pr_ct,dir,i,j,k,pl);
-	}
+        // GODMARK: for now assume interpolations either all done or none done, else need exclusion list for interpolations
+        // then just get from memory
+        PLOOPALLINTERP(pl){
+          p_l[pl]=MACP1A1(pl_ct,dir,i,j,k,pl);
+          p_r[pl]=MACP1A1(pr_ct,dir,i,j,k,pl);
+        }
 #endif
 #if(SPLITNPR==0 || FIELDSTAGMEM==0)
-	dualfprintf(fail_file,"Should not be using gp_? in flux.c when SPLITNPR==0 or FIELDSTAGMEM==0\n");
-	myexit(16760276);
+        dualfprintf(fail_file,"Should not be using gp_? in flux.c when SPLITNPR==0 or FIELDSTAGMEM==0\n");
+        myexit(16760276);
 #endif
       }
 
@@ -1138,62 +1138,62 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
       if(computewithleft&&computewithright){
 
-	//////////////////////////////////
-	//
-	// actually compute the dissipative flux
-	//
-	/////////////////////////////////
+        //////////////////////////////////
+        //
+        // actually compute the dissipative flux
+        //
+        /////////////////////////////////
 
-	if(splitmaem==0){
-	  MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-	}
-	else{
-	  MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-	}
-
-
-	/////////////////////////////
-	//
-	// evaluate restriction on timestep
-	//
-	///////////////////////////////
-	// below is old before new grid sectioning
-	//#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
-	// avoid limiting dt if inside horizon
-	// GODMARK: can only do this if boundary condition does not drive solution's dt behavior
-	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
-	//#endif
+        if(splitmaem==0){
+          MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+        }
+        else{
+          MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), p_l, p_r, MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+        }
 
 
-	////////////////////////
-	// set dt for this cell in this direction
-	dtij = cour * dx[dir] / ctop;
+        /////////////////////////////
+        //
+        // evaluate restriction on timestep
+        //
+        ///////////////////////////////
+        // below is old before new grid sectioning
+        //#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
+        // avoid limiting dt if inside horizon
+        // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
+        //    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
+        //#endif
 
 
-	/////////////////////////////////
-	//
-	// save minimum dt
-	//
-	/////////////////////////////////
-	if(PERCELLDT==0){
-	  // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+        ////////////////////////
+        // set dt for this cell in this direction
+        dtij = cour * dx[dir] / ctop;
+
+
+        /////////////////////////////////
+        //
+        // save minimum dt
+        //
+        /////////////////////////////////
+        if(PERCELLDT==0){
+          // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+          // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+          if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 #pragma omp critical
-	    {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
-	      if (dtij < *ndt){
-		*ndt = dtij;
-		// below are global so can report when other dt's are reported in advance.c
-		waveglobaldti[dir]=i;
-		waveglobaldtj[dir]=j;
-		waveglobaldtk[dir]=k;
-	      }
-	    }// end critical region
-	  }// end if within dt-setting section
-	}
-	else{
-	  GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
-	}
+            {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
+              if (dtij < *ndt){
+                *ndt = dtij;
+                // below are global so can report when other dt's are reported in advance.c
+                waveglobaldti[dir]=i;
+                waveglobaldtj[dir]=j;
+                waveglobaldtk[dir]=k;
+              }
+            }// end critical region
+          }// end if within dt-setting section
+        }
+        else{
+          GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
+        }
 
 
 
@@ -1335,7 +1335,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
     if(advancepassnumber<=0)
 #endif
       {
-	MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
+        MYFUN(get_global_wavespeeds_full(dir,is,ie,js,je,ks,ke,idel,jdel,kdel,POINT(pr),GLOBALPOINT(wspeed)),"flux.c:fluxcalc_standard()", "get_global_wavespeeds_full()", 0);
       }
   } // end if storing wavespeeds
 
@@ -1399,71 +1399,71 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 
       if(computewithleft&&computewithright){
 
-	////////////////////////
-	//
-	// get the geometry for the flux face
-	//
-	///////////////////////
-	get_geometry(i, j, k, face, ptrgeom); // OPTMARK: Seems should put back together interpolate_prim_cent2face() with flux_compute stuff below so only 1 call to get_geometry @ face....not sure why this way?!
+        ////////////////////////
+        //
+        // get the geometry for the flux face
+        //
+        ///////////////////////
+        get_geometry(i, j, k, face, ptrgeom); // OPTMARK: Seems should put back together interpolate_prim_cent2face() with flux_compute stuff below so only 1 call to get_geometry @ face....not sure why this way?!
 
 
-	//////////////////////////////////
-	//
-	// actually compute the dissipative flux
-	//
-	/////////////////////////////////
+        //////////////////////////////////
+        //
+        // actually compute the dissipative flux
+        //
+        /////////////////////////////////
 
-	if(splitmaem==0){
-	  MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-	}
-	else{
-	  MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
-	}
-
-
-	/////////////////////////////
-	//
-	// evaluate restriction on timestep
-	//
-	///////////////////////////////
-	// below is old before new grid sectioning
-	//#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
-	//    // avoid limiting dt if inside horizon
-	//    // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
-	//    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
-	//#endif
+        if(splitmaem==0){
+          MYFUN(flux_compute_general(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+        }
+        else{
+          MYFUN(flux_compute_splitmaem(i, j, k, dir, ptrgeom, CUf,  MAC(pr,i,j,k), MACP1A0(pl_ct,dir,i,j,k), MACP1A0(pr_ct,dir,i,j,k), MAC(F,i,j,k), MAC(FEM,i,j,k), &ctop),"step_ch.c:fluxcalc()", "flux_compute", 1);
+        }
 
 
-	////////////////////////
-	// set dt for this cell in this direction
-	dtij = cour * dx[dir] / ctop;
+        /////////////////////////////
+        //
+        // evaluate restriction on timestep
+        //
+        ///////////////////////////////
+        // below is old before new grid sectioning
+        //#if( (DOEVOLVEMETRIC || DOSELFGRAVVSR) && (RESTRICTDTSETTINGINSIDEHORIZON==2))
+        //    // avoid limiting dt if inside horizon
+        //    // GODMARK: can only do this if boundary condition does not drive solution's dt behavior
+        //    if(WITHINENERREGION(enerposreg[OUTSIDEHORIZONENERREGION],i,j,k))
+        //#endif
 
 
-	/////////////////////////////////
-	//
-	// save minimum dt
-	//
-	/////////////////////////////////
-	if(PERCELLDT==0){
+        ////////////////////////
+        // set dt for this cell in this direction
+        dtij = cour * dx[dir] / ctop;
 
-	  // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
-	  // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
-	  if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+
+        /////////////////////////////////
+        //
+        // save minimum dt
+        //
+        /////////////////////////////////
+        if(PERCELLDT==0){
+
+          // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
+          // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
+          if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 #pragma omp critical
-	    {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
-	      if (dtij < *ndt){
-		*ndt = dtij;
-		// below are global so can report when other dt's are reported in advance.c
-		waveglobaldti[dir]=i;
-		waveglobaldtj[dir]=j;
-		waveglobaldtk[dir]=k;
-	      }
-	    }// end critical region
-	  }// end if within dt-setting section
-	}
-	else{
-	  GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
-	}
+            {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
+              if (dtij < *ndt){
+                *ndt = dtij;
+                // below are global so can report when other dt's are reported in advance.c
+                waveglobaldti[dir]=i;
+                waveglobaldtj[dir]=j;
+                waveglobaldtk[dir]=k;
+              }
+            }// end critical region
+          }// end if within dt-setting section
+        }
+        else{
+          GLOBALMACP0A1(dtijk,i,j,k,dir) = dtij;
+        }
 
 
 
@@ -1532,11 +1532,11 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
       // choice for range of PLOOPINTERP
       // check if wanted to interpolate B along dir, and if so remove
       for(pl=npr2interpstart;pl<=npr2interpend;pl++){
-	if(npr2interplist[pl]==B1+dir-1){
-	  for(pl2=pl+1;pl2<=npr2interpend;pl2++) npr2interplist[pl2-1]=npr2interplist[pl2]; // moving upper to lower index
-	  npr2interpend--; // lost field along dir, so one less thing to do
-	  break;
-	}
+        if(npr2interplist[pl]==B1+dir-1){
+          for(pl2=pl+1;pl2<=npr2interpend;pl2++) npr2interplist[pl2-1]=npr2interplist[pl2]; // moving upper to lower index
+          npr2interpend--; // lost field along dir, so one less thing to do
+          break;
+        }
       }
     }
 
@@ -1649,17 +1649,17 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
 
       MYFUN(getplpr(dir,time,idel,jdel,kdel,i,j,k,ptrgeom,pr,pstag,p2interp,dq,GLOBALPOINT(pleft),GLOBALPOINT(pright),p2interp_l,p2interp_r,p_l,p_r),"flux.c:fluxcalc_standard()", "getplpr", 1);
       if(SPLITNPR || FLUXB==FLUXCTSTAG){
-	// then means there is going to be a second pass, so store into memory
-	PINTERPLOOP(pliter,pl){
-	  MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
-	  MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
-	}
+        // then means there is going to be a second pass, so store into memory
+        PINTERPLOOP(pliter,pl){
+          MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
+          MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
+        }
       }
       if(FLUXB==FLUXCTSTAG){
-	// then also get B in dir direction not included in interpolation in slope_lim() above but included in getplpr() from pstagscratch[]
-	pl = B1+dir-1;
-	MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
-	MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
+        // then also get B in dir direction not included in interpolation in slope_lim() above but included in getplpr() from pstagscratch[]
+        pl = B1+dir-1;
+        MACP1A1(pl_ct,dir,i,j,k,pl)=p_l[pl];
+        MACP1A1(pr_ct,dir,i,j,k,pl)=p_r[pl];
       }
 
 
@@ -1872,9 +1872,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
 
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-	  // KORALTODO: Need to add shock flattener separately for radiation quantities, but for now be aggressive and assume radiation couples strongly to fluid.
-	  // approximation KORALTODO
-	  MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);
+      // KORALTODO: Need to add shock flattener separately for radiation quantities, but for now be aggressive and assume radiation couples strongly to fluid.
+      // approximation KORALTODO
+      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);
 #endif
 
 #endif // end if STORESHOCKINDICATOR
@@ -1966,17 +1966,17 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       OPENMP3DLOOPSETUPFULLINOUT2DIR1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// extract stencil of data for Ficalc()
-	for(l=startorderi;l<=endorderi;l++){
-	  //	PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
-	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
-	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
-	}
+        // extract stencil of data for Ficalc()
+        for(l=startorderi;l<=endorderi;l++){
+          // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
+          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
+          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
+        }
       
-	//      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
-	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+        //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
 
       }// end 3D loop
     }// end parallel region  
@@ -2000,15 +2000,15 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       OPENMP3DLOOPSETUPFULLINOUT2DIR2;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// extract stencil of data for Ficalc()
-	for(l=startorderi;l<=endorderi;l++){
-	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j+l,k);
-	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j+l,k);
-	}
+        // extract stencil of data for Ficalc()
+        for(l=startorderi;l<=endorderi;l++){
+          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j+l,k);
+          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j+l,k);
+        }
       
-	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
       
       }// end 3D loop
     }// end parallel region  
@@ -2034,15 +2034,15 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       OPENMP3DLOOPSETUPFULLINOUT2DIR3;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// extract stencil of data for Ficalc()
-	for(l=startorderi;l<=endorderi;l++){
-	  velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k+l);
-	  ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k+l);
-	}
+        // extract stencil of data for Ficalc()
+        for(l=startorderi;l<=endorderi;l++){
+          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k+l);
+          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k+l);
+        }
       
-	GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
 
       }// end 3D loop
     }// end parallel region  
@@ -2096,7 +2096,7 @@ int getplpr(int dir, SFTYPE time, int idel, int jdel, int kdel, int i, int j, in
   // always do since p2interp is good and dq/pleft/pright should have stored quantities or just-computed quantities
   /////////////////////////////////////
   getp2interplr(dir,idel,jdel,kdel,i,j,k,p2interp,dq,pleft,pright,p2interp_l,p2interp_r);
-			
+   
 
 
   /////////////////////////////////////
@@ -2186,7 +2186,7 @@ int check_plpr(int dir, int i, int j, int k, int idel, int jdel, int kdel, struc
 #endif
 #if(JONCHECKS2)
   // must verify if this p makes sense (u^t sense)
-  MYFUN(check_pr(p_l,MAC(pr,i-idel,j-jdel,k-kdel),NULL,geom,1,-1.0),"flux.c:check_plpr()", "check_pr()", 1);	
+  MYFUN(check_pr(p_l,MAC(pr,i-idel,j-jdel,k-kdel),NULL,geom,1,-1.0),"flux.c:check_plpr()", "check_pr()", 1); 
   
   MYFUN(check_pr(p_r,MAC(pr,i,j,k),NULL,geom,2,-1),"flux.c:check_plpr()", "check_pr()", 2);
 #endif
@@ -2280,14 +2280,14 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
       locallim=choose_limiter(dir, i,j,k,pl);
       // get interpolated quantity
       if((locallim<PARA)&&(LIMADJUST==0)){
-	if(rleft>Rhor) p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
-	else p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
-	if(rcent>Rhor) p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
-	else p2interp_r[pl] = MACP0A1(p2interp,i+idel,j+jdel,k+kdel,pl) - 1.5 * MACP0A1(dq,i+idel,j+jdel,k+kdel,pl);
+        if(rleft>Rhor) p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
+        else p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
+        if(rcent>Rhor) p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
+        else p2interp_r[pl] = MACP0A1(p2interp,i+idel,j+jdel,k+kdel,pl) - 1.5 * MACP0A1(dq,i+idel,j+jdel,k+kdel,pl);
       }
       else{
-	p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
-	p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
+        p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
+        p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
       }
     } // end PLOOPINTERP
   }// if horizonsuperfast
@@ -2301,13 +2301,13 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
       locallim=choose_limiter(dir, i,j,k,pl);
       // get interpolated quantity
       if((locallim<PARA)&&(LIMADJUST==0)){
-	p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
-	p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
+        p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
+        p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
       }
       else{
-	//p_l & p_r for the current interface -- atch comment
-	p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
-	p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
+        //p_l & p_r for the current interface -- atch comment
+        p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
+        p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
       }
     }
   }
@@ -2335,7 +2335,7 @@ int choose_limiter(int dir, int i, int j, int k, int pl)
 {
 #if(LIMADJUST==LIMITERFIXED)
   // TESTMARK
-  // if(i>=4)	return(lim[dir]);
+  // if(i>=4) return(lim[dir]);
   //else return(DONOR);
   return(lim[dir]);
 #else
@@ -2387,7 +2387,7 @@ void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jde
     get_loop(INTERPPOINTTYPE, ENOINTERPTYPE, dir, cent2faceloop);
     if(dointerpolation){
       PINTERPLOOP(pliter,pl){
-	slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+        slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
       }
     }
   }
@@ -2436,7 +2436,7 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
     get_loop(INTERPPOINTTYPE, interporflux, dir, cent2faceloop);
     if(dointerpolation){
       PINTERPLOOP(pliter,pl){
-	slope_lim_pointtype(interporflux, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+        slope_lim_pointtype(interporflux, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
       }
     }
   }
@@ -2463,19 +2463,19 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
 //int fluxcalc
 int fluxcalc_donor
 (int stage,
-		  FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-		  FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-		  FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-		  FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		  FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
-		  FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
-		  FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
-		  FTYPE CUf,
-		  FTYPE fluxdt,
-		  FTYPE *ndt1,
-		  FTYPE *ndt2,
-		  FTYPE *ndt3
-		  )
+ FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+ FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+ FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+ FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+ FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
+ FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
+ FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
+ FTYPE CUf,
+ FTYPE fluxdt,
+ FTYPE *ndt1,
+ FTYPE *ndt2,
+ FTYPE *ndt3
+ )
 {
   int dir,i,j,k,pl,pliter;
   struct of_geom geomcdontuse;
@@ -2575,27 +2575,27 @@ int fluxcalc_donor
     kk=0;
     for(ii=im1mac(i);ii<=ip1mac(i);ii++){
       for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
-	shifti=1+ii-i;
-	shiftj=1+jj-j;
+        shifti=1+ii-i;
+        shiftj=1+jj-j;
 
-	PLOOP(pliter,pl) primcent[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
-	PLOOP(pliter,pl) prim[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
-	PLOOPBONLY(pl) prim[shifti][shiftj][pl] = MACP0A1(pstag,ii,jj,kk,pl); // replace with face values (should be same really)
+        PLOOP(pliter,pl) primcent[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
+        PLOOP(pliter,pl) prim[shifti][shiftj][pl] = MACP0A1(pr,ii,jj,kk,pl);
+        PLOOPBONLY(pl) prim[shifti][shiftj][pl] = MACP0A1(pstag,ii,jj,kk,pl); // replace with face values (should be same really)
 
-	//	if(i==390 && j==1 && k==0){
-	//	  dualfprintf(fail_file,"i=%d j=%d k=%d prim[B2]=%21.15g\n",ii,jj,k,prim[shifti][shiftj][B2]);
-	//	}
+        // if(i==390 && j==1 && k==0){
+        //   dualfprintf(fail_file,"i=%d j=%d k=%d prim[B2]=%21.15g\n",ii,jj,k,prim[shifti][shiftj][B2]);
+        // }
 
-	get_geometry(ii,jj,kk, CENT, ptrgeomc);
-	ucon_calc(prim[shifti][shiftj], ptrgeomc, uconcent[shifti][shiftj],others);
+        get_geometry(ii,jj,kk, CENT, ptrgeomc);
+        ucon_calc(prim[shifti][shiftj], ptrgeomc, uconcent[shifti][shiftj],others);
 
-	// only geometrical difference compared to above
-	get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
-	ucon_calc(prim[shifti][shiftj], ptrgeomf1, uconf1[shifti][shiftj],others);
+        // only geometrical difference compared to above
+        get_geometry(ii,jj,kk, FACE1, ptrgeomf1);
+        ucon_calc(prim[shifti][shiftj], ptrgeomf1, uconf1[shifti][shiftj],others);
 
-	// only geometrical difference compared to above
-	get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
-	ucon_calc(prim[shifti][shiftj], ptrgeomf2, uconf2[shifti][shiftj],others);
+        // only geometrical difference compared to above
+        get_geometry(ii,jj,kk, FACE2, ptrgeomf2);
+        ucon_calc(prim[shifti][shiftj], ptrgeomf2, uconf2[shifti][shiftj],others);
 
       }
     }
@@ -2620,16 +2620,16 @@ int fluxcalc_donor
     get_geometry(ii,jj,kk, CENT, ptrgeomc);
     p_r[B2]=0.5*(prim[1][1][B2]*ptrgeomf2->gdet+prim[1][2][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
     //      if(i==390 && j==1 && k==0){
-    //	dualfprintf(fail_file,"ONE: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[1][1][B2],ptrgeomf2->gdet,prim[1][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
-    //	dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",ii,jj,kk,ii,jp1mac(jj),kk,ii,jj,kk);
+    // dualfprintf(fail_file,"ONE: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[1][1][B2],ptrgeomf2->gdet,prim[1][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
+    // dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",ii,jj,kk,ii,jp1mac(jj),kk,ii,jj,kk);
     //      }
     get_geometry(im1mac(ii),jj,kk, FACE2, ptrgeomf2);
     get_geometry(im1mac(ii),jp1mac(jj),kk, FACE2, ptrgeomf2u);
     get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
     p_l[B2]=0.5*(prim[0][1][B2]*ptrgeomf2->gdet+prim[0][2][B2]*ptrgeomf2u->gdet)/(ptrgeomc->gdet);
     //      if(i==390 && j==1 && k==0){
-    //	dualfprintf(fail_file,"TWO: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[0][1][B2],ptrgeomf2->gdet,prim[0][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
-    //	dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",im1mac(ii),jj,kk,im1mac(ii),jp1mac(jj),kk,im1mac(ii),jj,kk);
+    // dualfprintf(fail_file,"TWO: ii=%d jj=%d kk=%d :: %21.15g %21.15g : %21.15g %21.15g : %21.15g\n",ii,jj,kk,prim[0][1][B2],ptrgeomf2->gdet,prim[0][2][B2],ptrgeomf2u->gdet,ptrgeomc->gdet);
+    // dualfprintf(fail_file,"ONEB: %d %d %d :: %d %d %d :: %d %d %d\n",im1mac(ii),jj,kk,im1mac(ii),jp1mac(jj),kk,im1mac(ii),jj,kk);
     //      }
 
     PLOOP(pliter,pl) pvec_l[dir][pl]=p_l[pl];
@@ -2644,21 +2644,21 @@ int fluxcalc_donor
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf1, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
       if(STOREWAVESPEEDMETHOD==0){
-	// == 0 method
-	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);
+        // == 0 method
+        // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+        MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);
       }
       else{
-	// ==1 method
-	get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
-	get_state(primcent[0][1],ptrgeomc,&state);
-	MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	get_geometry(ii,jj,kk, CENT, ptrgeomc);
-	get_state(primcent[1][1],ptrgeomc,&state);
-	MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]);	
+        // ==1 method
+        get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+        get_state(primcent[0][1],ptrgeomc,&state);
+        MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        get_geometry(ii,jj,kk, CENT, ptrgeomc);
+        get_state(primcent[1][1],ptrgeomc,&state);
+        MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[1]); 
       }
 
 
@@ -2676,9 +2676,9 @@ int fluxcalc_donor
 #if(0)
       // DEBUG:
       if(i==390 && j==1 && k==0){
-	dualfprintf(fail_file,"\n");
-	PLOOP(pliter,pl) dualfprintf(fail_file,"F1: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
-	dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[1]);
+        dualfprintf(fail_file,"\n");
+        PLOOP(pliter,pl) dualfprintf(fail_file,"F1: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+        dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[1]);
       }
 #endif
 
@@ -2705,22 +2705,22 @@ int fluxcalc_donor
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf1, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 
       if(STOREWAVESPEEDMETHOD==0){
-	// ==0 method
-	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
-	// have cmin,cmax,ctop here
+        // ==0 method
+        // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+        MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf1, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf1, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
+        // have cmin,cmax,ctop here
       }
       else{
-	// ==1 method
-	get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
-	get_state(primcent[0][0],ptrgeomc,&state);
-	MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	get_geometry(ii,jj,kk, CENT, ptrgeomc);
-	get_state(primcent[1][0],ptrgeomc,&state);
-	MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
+        // ==1 method
+        get_geometry(im1mac(ii),jj,kk, CENT, ptrgeomc);
+        get_state(primcent[0][0],ptrgeomc,&state);
+        MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        get_geometry(ii,jj,kk, CENT, ptrgeomc);
+        get_state(primcent[1][0],ptrgeomc,&state);
+        MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[1]);
       }
 
       // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
@@ -2766,22 +2766,22 @@ int fluxcalc_donor
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
       
       if(STOREWAVESPEEDMETHOD==0){
-	// == 0 method
-	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
-	// have cmin,cmax,ctop here
+        // == 0 method
+        // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+        MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
+        // have cmin,cmax,ctop here
       }
       else{
-	// == 1 method
-	get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
-	get_state(primcent[1][0],ptrgeomc,&state);
-	MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	get_geometry(ii,jj,kk, CENT, ptrgeomc);
-	get_state(primcent[1][1],ptrgeomc,&state);
-	MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
+        // == 1 method
+        get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
+        get_state(primcent[1][0],ptrgeomc,&state);
+        MYFUN(vchar(primcent[1][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        get_geometry(ii,jj,kk, CENT, ptrgeomc);
+        get_state(primcent[1][1],ptrgeomc,&state);
+        MYFUN(vchar(primcent[1][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr[2]);
       }
 
       // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
@@ -2796,10 +2796,10 @@ int fluxcalc_donor
 #if(0)
       // DEBUG:
       if(i==390 && j==1 && k==0){
-	dualfprintf(fail_file,"\n");
-	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim: pl=%d prim[1][0]=%21.15g prim[1][1]=%21.15g\n",prim[1][0][pl],prim[1][1][pl]);
-	PLOOP(pliter,pl) dualfprintf(fail_file,"F2: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
-	dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[2]);
+        dualfprintf(fail_file,"\n");
+        // PLOOP(pliter,pl) dualfprintf(fail_file,"prim: pl=%d prim[1][0]=%21.15g prim[1][1]=%21.15g\n",prim[1][0][pl],prim[1][1][pl]);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"F2: pl=%d p_l=%21.15g p_r=%21.15g U_l=%21.15g U_r=%21.15g F_l=%21.15g F_r=%21.15g F=%21.15g\n",pl,p_l[pl],p_r[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl],F[pl]);
+        dualfprintf(fail_file,"NEW: ocminmax_l[CMIN]=%21.15g ocminmax_r[CMIN]=%21.15g ocminmax_l[CMAX]=%21.15g ocminmax_r[CMAX]=%21.15g ocminmax[CMIN]=%21.15g ocminmax[CMAX]=%21.15g ctopptr[1]=%21.15g\n",ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],ocminmax[CMIN],ocminmax[CMAX],ctopptr[2]);
       }
 #endif
 
@@ -2825,22 +2825,22 @@ int fluxcalc_donor
       MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeomf2, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
       MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeomf2, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
       if(STOREWAVESPEEDMETHOD==0){
-	// ==0 method
-	// characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
-	MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
-	// have cmin,cmax,ctop here
+        // ==0 method
+        // characteristic based upon t^n level for 1/2 step and t^{n+1/2} level for the full step.
+        MYFUN(vchar(p_l, ptrstate_l, dir, ptrgeomf2, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        MYFUN(vchar(p_r, ptrstate_r, dir, ptrgeomf2, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
+        // have cmin,cmax,ctop here
       }
       else{
-	// ==1 method
-	get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
-	get_state(primcent[0][0],ptrgeomc,&state);
-	MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
-	get_geometry(ii,jj,kk,CENT, ptrgeomc);
-	get_state(primcent[0][1],ptrgeomc,&state);
-	MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
-	cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
+        // ==1 method
+        get_geometry(ii,jm1mac(jj),kk,CENT, ptrgeomc);
+        get_state(primcent[0][0],ptrgeomc,&state);
+        MYFUN(vchar(primcent[0][0], &state, dir, ptrgeomc, &ocminmax_l[CMAX], &ocminmax_l[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 1);
+        get_geometry(ii,jj,kk,CENT, ptrgeomc);
+        get_state(primcent[0][1],ptrgeomc,&state);
+        MYFUN(vchar(primcent[0][1], &state, dir, ptrgeomc, &ocminmax_r[CMAX], &ocminmax_r[CMIN],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 2);
+        cminmax_calc(ocminmax_l[CMIN],ocminmax_r[CMIN],ocminmax_l[CMAX],ocminmax_r[CMAX],&ocminmax[CMIN],&ocminmax[CMAX],&ctopptr2[2]);
       }
 
       // cminmax_calc() already sets the below with positive sign and MAX'ed against zero
@@ -2874,27 +2874,27 @@ int fluxcalc_donor
     kk=0;
     for(ii=im1mac(i);ii<=ip1mac(i);ii++){
       for(jj=jm1mac(j);jj<=jp1mac(j);jj++){
-	shifti=1+ii-i;
-	shiftj=1+jj-j;
-	  
-	// use uconf1 with B1 since that's how packed for interpolation in normal routine.  Can try alternatives.
-	// emf_3 = gdet(B^2 v^1 - B^1 v^2) = F1[B2] or -F2[B1]
-	emf2d[shifti][shiftj] = (
-				 //				 + prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
-				 //				 - prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
-				 + prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
-				 - prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
-				 );
+        shifti=1+ii-i;
+        shiftj=1+jj-j;
+   
+        // use uconf1 with B1 since that's how packed for interpolation in normal routine.  Can try alternatives.
+        // emf_3 = gdet(B^2 v^1 - B^1 v^2) = F1[B2] or -F2[B1]
+        emf2d[shifti][shiftj] = (
+                                 //     + prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
+                                 //     - prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
+                                 + prim[shifti][shiftj][B2]*uconf2[shifti][shiftj][1]/uconf2[shifti][shiftj][TT]
+                                 - prim[shifti][shiftj][B1]*uconf1[shifti][shiftj][2]/uconf1[shifti][shiftj][TT]
+                                 );
 
-	// GODMARK: vchar directly at CORN3, which is different than averaging procedure done in normal code
-	get_state(prim[shifti][shiftj], ptrgeomcorn3, &state);
-	dir=1; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 10);
-	dir=2; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 11);
+        // GODMARK: vchar directly at CORN3, which is different than averaging procedure done in normal code
+        get_state(prim[shifti][shiftj], ptrgeomcorn3, &state);
+        dir=1; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 10);
+        dir=2; MYFUN(vchar(prim[shifti][shiftj], &state, dir, ptrgeomcorn3, &cminmax[shifti][shiftj][CMAX][dir], &cminmax[shifti][shiftj][CMIN][dir],&ignorecourant),"step_ch.c:fluxcalc()", "vchar() dir=1or2", 11);
 
 
-	//	dualfprintf(fail_file,"i=%d j=%d k=%d ii=%d jj=%d kk=%d ",i,j,k,ii,jj,kk);
-	//	PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g ",pl,prim[shifti][shiftj][pl]);
-	//	dualfprintf(fail_file,"\n");
+        // dualfprintf(fail_file,"i=%d j=%d k=%d ii=%d jj=%d kk=%d ",i,j,k,ii,jj,kk);
+        // PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g ",pl,prim[shifti][shiftj][pl]);
+        // dualfprintf(fail_file,"\n");
       }
     }
 
@@ -2941,9 +2941,9 @@ int fluxcalc_donor
     ucon_calc(primcent[1][1], ptrgeomf2, uconf2[1][1],others);
 
     emf2d[1][1] = (
-			     + prim[1][1][B2]*uconf2[1][1][1]/uconf2[1][1][TT]
-			     - prim[1][1][B1]*uconf1[1][1][2]/uconf1[1][1][TT]
-			     );
+                   + prim[1][1][B2]*uconf2[1][1][1]/uconf2[1][1][TT]
+                   - prim[1][1][B1]*uconf1[1][1][2]/uconf1[1][1][TT]
+                   );
 
     // 0 1
     ii=im1mac(i);
@@ -2956,9 +2956,9 @@ int fluxcalc_donor
     ucon_calc(primcent[0][1], ptrgeomf2, uconf2[0][1],others);
 
     emf2d[0][1] = (
-			     + prim[0][1][B2]*uconf2[0][1][1]/uconf2[0][1][TT]
-			     - prim[1][1][B1]*uconf1[0][1][2]/uconf1[0][1][TT]
-			     );
+                   + prim[0][1][B2]*uconf2[0][1][1]/uconf2[0][1][TT]
+                   - prim[1][1][B1]*uconf1[0][1][2]/uconf1[0][1][TT]
+                   );
 
     // 1 0
     ii=i;
@@ -2971,9 +2971,9 @@ int fluxcalc_donor
     ucon_calc(primcent[1][0], ptrgeomf2, uconf2[1][0],others);
 
     emf2d[1][0] = (
-			     + prim[1][1][B2]*uconf2[1][0][1]/uconf2[1][0][TT]
-			     - prim[1][0][B1]*uconf1[1][0][2]/uconf1[1][0][TT]
-			     );
+                   + prim[1][1][B2]*uconf2[1][0][1]/uconf2[1][0][TT]
+                   - prim[1][0][B1]*uconf1[1][0][2]/uconf1[1][0][TT]
+                   );
 
     // 0 0
     ii=im1mac(i);
@@ -2986,9 +2986,9 @@ int fluxcalc_donor
     ucon_calc(primcent[0][0], ptrgeomf2, uconf2[0][0],others);
 
     emf2d[0][0] = (
-			     + prim[0][1][B2]*uconf2[0][0][1]/uconf2[0][0][TT]
-			     - prim[1][0][B1]*uconf1[0][0][2]/uconf1[0][0][TT]
-			     );
+                   + prim[0][1][B2]*uconf2[0][0][1]/uconf2[0][0][TT]
+                   - prim[1][0][B1]*uconf1[0][0][2]/uconf1[0][0][TT]
+                   );
 
     // don't compute cminmax[][][CMIN/CMAX][dir] since not needed
 
@@ -3008,12 +3008,12 @@ int fluxcalc_donor
 
 
     emffinal=(
-	      + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
-	      - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0])
-	      );
+              + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
+              - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0])
+              );
 
 #if(0)
-      // DEBUG:
+    // DEBUG:
     if(i==390 && j==1 && k==0){
       dualfprintf(fail_file,"NEW: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgeomcorn3->gdet);
       dualfprintf(fail_file,"NEW: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
@@ -3057,8 +3057,8 @@ int fluxcalc_donor
       ks=fluxloop[dir][FKS]+SHIFTX3DN;
       ke=fluxloop[dir][FKE]+SHIFTX3UP;
       if(dtij[dir]<*ndt1 && i>=is && i<=ie && j>=js && j<=je && k>=ks && k<=ke){ // mimics normal code
-	*ndt1=dtij[dir];
-	dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt1);
+        *ndt1=dtij[dir];
+        dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt1);
       }
 
       dir=2;
@@ -3070,8 +3070,8 @@ int fluxcalc_donor
       ks=fluxloop[dir][FKS]+SHIFTX3DN;
       ke=fluxloop[dir][FKE]+SHIFTX3UP;
       if(dtij[dir]<*ndt2 && i>=is && i<=ie && j>=js && j<=je && k>=ks && k<=ke){ // mimics normal code
-	*ndt2=dtij[dir];
-	dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt2);
+        *ndt2=dtij[dir];
+        dualfprintf(fail_file,"NEW: Got lower dir=%d i=%d j=%d k=%d ndt=%21.15g\n",dir,i,j,k,*ndt2);
       }
     }
   }

@@ -28,6 +28,7 @@
 
 // TOTRY : optically thin dot in SPC or pulse in SPC.
 
+// TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
 
 
 // KORALTODO: PROBLEMS:
@@ -346,6 +347,9 @@
 //****************************************//
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // to compare against koral
 
 #undef RADSHOCKFLAT
 #define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.

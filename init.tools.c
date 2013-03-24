@@ -118,6 +118,7 @@ int user1_init_global(void)
   // As of 07/26/2012, I have found cour=0.4999 leads to ~40k "entropy and bad" or "Failed to find" SOFT errors and no hard failures (i.e. "cold and bad").  But, cour=0.8 leads to only 21K non-hard failures but gets 1 or 2 hard failures.
   // So overall cour=0.4999 more trustable to evolve velocity, but more frequently fails to evolve densities.
 
+  // Also  while a single Riemann fan won't go reach into another cell with cour>0.5 && cour<1.0, the Riemann fans from each cells collide for anything using cour>=0.5.  And so in that case the average state isn't at all like what the Riemann solver predicts.
 
   ///////////////////////
   //

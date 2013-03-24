@@ -2302,6 +2302,7 @@ void mpifmin(FTYPE*minptr)
 }
 
 
+// only used for images to get min max over whole dumped domain.
 void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *maxptr, FTYPE*minptr,FTYPE*sumptr)
 {
   long long int i,j,k,pl;
@@ -2318,7 +2319,7 @@ void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *
     if(domax) maxptr[pl]=-1E30;
     if(dosum) sumptr[pl]=0;
   }
-  ZLOOP {
+  DUMPGENLOOP{
     for(pl=start;pl<start+nmemb;pl++){
       if(domax) if (MACP0A1(p,i,j,k,pl) > maxptr[pl]) maxptr[pl] = MACP0A1(p,i,j,k,pl);
       if(domin) if (MACP0A1(p,i,j,k,pl) < minptr[pl]) minptr[pl] = MACP0A1(p,i,j,k,pl);

@@ -1604,7 +1604,7 @@ static int prepare_globaldt(
   //
   ////////////////
   if(PERCELLDT==0){
-    wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
+    wavedt = MINDTSET(ndt1,ndt2,ndt3);
   }
   else{
     wavedt = ndt1; // full result stored in *any* of ndt1,2,3 regardless of whether dimension is relevant
@@ -2319,7 +2319,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
     // also get PERCELLDT==1 version
-    wavedttemp = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]);
+    wavedttemp = MINDTSET(wavendt[1],wavendt[2],wavendt[3]);
     if(wavedttemp<wavedt_2) wavedt_2=wavedttemp;
 
 
@@ -2400,7 +2400,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   mpifmin(&wavendt[2]);
   mpifmin(&wavendt[3]);
   // single all-CPU wavedt for PERCELLDT==0 version
-  wavedt_1 = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); // wavendt[i] is over entire region for each i
+  wavedt_1 = MINDTSET(wavendt[1],wavendt[2],wavendt[3]); // wavendt[i] is over entire region for each i
 
   // minimize per-cell dt over all CPUs for PERCELLDT==1 version
   mpifmin(&wavedt_2);

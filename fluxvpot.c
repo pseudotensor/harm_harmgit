@@ -275,14 +275,11 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
 
 
 
-  dualfprintf(fail_file,"WTF0: %g\n",GLOBALMACP0A1(pstaganalytic,30,-4,0,B1));
-
   // Since above procedures changed pfield that is probably pcent that is p, we need to rebound p since pfield was reset to undefined values in ghost cells since A_i isn't determined everywhere
   // alternatively for evolve_withvpot() could have inputted not the true p or some copy of it so wouldn't have to bound (except up to machine error difference when recomputed field using A_i)
   int finalstep=1; // assume user wants to know that conserved quants changed
   bound_prim(STAGEM1,finalstep, time,pfield,pstag,ucons, USEMPI);
 
-  dualfprintf(fail_file,"WTF2: %g\n",GLOBALMACP0A1(pstaganalytic,30,-4,0,B1));
 
   return(0);
 

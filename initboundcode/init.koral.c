@@ -177,9 +177,6 @@ int post_init_specific_init(void)
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
 
 
-  //  cour=0.8;
-  
-
   return(0);
 }
 
@@ -248,7 +245,7 @@ int init_global(void)
   if(WHICHPROBLEM==FLATNESS){
 	
 	//  lim[1]=lim[2]=lim[3]=MINM;
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=5.0/3.0;
 	cooling=KORAL;
 
@@ -275,7 +272,7 @@ int init_global(void)
 
     lim[1]=lim[2]=lim[3]=MINM;
 	//  cour=0.5;
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=5.0/3.0;
 	cooling=KORAL;
 
@@ -319,7 +316,9 @@ int init_global(void)
   // TOTRY: matching F/E and seeing koral fails.
 
   if(WHICHPROBLEM==RADBEAMFLAT){
-	cour=0.8;
+    //cour=0.8; // this or with old MINDTSET, causes Erf<0 for default koral test
+    cour=0.5;
+    lim[1]=lim[2]=lim[3]=MINM;
     //	gam=gamideal=5.0/3.0;
 	gam=gamideal=4.0/3.0; // koral now
 	cooling=KORAL;
@@ -361,7 +360,7 @@ int init_global(void)
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-	cour=0.8;
+	cour=0.5;
 	cooling=KORAL;
 
 	// arad = 4*sigmarad/c (so removed /4. from koral sigma setup).
@@ -429,7 +428,7 @@ int init_global(void)
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -463,7 +462,7 @@ int init_global(void)
 	//lim[1]=lim[2]=lim[3]=PARALINE; // bonkers answer for NLEFT=0.99999, ok for NLEFT=0.99
 	// should have PARA(LINE) not oscillate so much at cusp
 	// Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-	cour=0.8;
+	cour=0.5;
 	//	cour=0.49; // doesn't help oscillations for NLEFT=0.99999 with MINM
 	gam=gamideal=1.4;
 	cooling=KORAL;
@@ -506,7 +505,7 @@ int init_global(void)
 	  myexit(3434628752);
 	}
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -565,7 +564,7 @@ int init_global(void)
 	  myexit(3434628752);
 	}
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -622,7 +621,7 @@ int init_global(void)
 	  myexit(3434628752);
 	}
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=1.4;
 	cooling=KORAL;
     ARAD_CODE=0.0;
@@ -661,7 +660,7 @@ int init_global(void)
 	  myexit(3434628753);
 	}
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=1.4;
 	cooling=KORAL;
     //    ARAD_CODE=0.0;
@@ -700,7 +699,7 @@ int init_global(void)
 
     lim[1]=lim[2]=lim[3]=MINM; // Messy with PARALINE
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=5.0/3.0;
 	cooling=KORAL;
 
@@ -727,7 +726,7 @@ int init_global(void)
     lim[1]=lim[2]=lim[3]=MINM; // generates glitch at extrema in prad0
     //lim[1]=lim[2]=lim[3]=MC; // less of a glitch near extrema in prad0
 
-	cour=0.8;
+	cour=0.5;
 	cooling=KORAL;
     gam=gamideal=5./3.;
 
@@ -928,7 +927,7 @@ int init_global(void)
 	  myexit(3434628752);
 	}
 
-	cour=0.8;
+	cour=0.5;
 	cooling=KORAL;
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
@@ -997,7 +996,7 @@ int init_global(void)
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=4.0/3.0;
 	cooling=KORAL;
     ARAD_CODE=ARAD_CODE_DEF*1E-20; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -1045,7 +1044,7 @@ int init_global(void)
 	  myexit(2493434635);
     }
 
-	cour=0.8;
+	cour=0.5;
 	gam=gamideal=4.0/3.0;
 	cooling=KORAL;
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
