@@ -63,7 +63,7 @@
 // RADTUBE NTUBE=31: ~0 f1iters and ~5 iters
 // and each f1iter does 1 inversion, while each iter does 16 inversions!
 #define IMPTRYCONV (1.e-12)  // for used implicit solver
-#define IMPALLOWCONV (1.e-4)  // for used implicit solver
+#define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters

@@ -973,9 +973,6 @@ int bound_radshadowinflow(int dir,
     angle=0.4;
   }
   //
-  FTYPE gammax=1.0/sqrt(1.0-NLEFT*NLEFT);
-  FTYPE uradx=NLEFT*gammax/sqrt(1.0+angle*angle);
-  FTYPE urady=-NLEFT*gammax*angle/sqrt(1.0+angle*angle);
   FTYPE TLEFT=TAMB*100.0;
 
 
@@ -1031,6 +1028,7 @@ int bound_radshadowinflow(int dir,
 
    
         LOOPBOUND1IN{
+          FTYPE *pr=&MACP0A1(prim,i,j,k,0);
     
           //initially copying everything
           PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1041,59 +1039,67 @@ int bound_radshadowinflow(int dir,
    
             //coordinates of the ghost cell
             bl_coord_ijk_2(i,j,k,CENT,X, V);
-
-            // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
-            int whichvel;
-            whichvel=VEL4;
-            int whichcoord;
-            whichcoord=CARTMINKMETRIC2;
-
-
-
             FTYPE xx,yy,zz,rsq;
-            coord(i, j, k, CENT, X);
-            bl_coord(X, V);
             xx=V[1];
             yy=V[2];
             zz=V[3];
 
+            // default for beam or not
+            rsq=xx*xx+yy*yy+zz*zz;
+            rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;
+            pr[RHO] = rho;
+            Trad=TAMB*RHOAMB/rho;
+            uint=calc_PEQ_ufromTrho(Trad,rho);
+            pr[UU] = uint;
+
      
             if(yy>0.3 && WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADSHADOW ){
 
-              rsq=xx*xx+yy*yy+zz*zz;
-              rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;      
-              //   rho=RHOAMB;
-              Trad=TAMB*RHOAMB/rho;
-   
-              uint=calc_PEQ_ufromTrho(Trad,rho);
               FTYPE ERAD;
               ERAD=calc_LTE_EfromT(TLEFT);
-              //     FTYPE FxRAD;
-              //     FxRAD=NLEFT*ERAD;
+
               FTYPE ux=0.0; // orthonormal 4-velocity.  Matches init.koral.c
-
-              //   dualfprintf(fail_file,"i=%d j=%d k=%d TLEFT=%g ERAD=%g FxRAD=%g : ARAD_CODE=%g\n",i,j,k,TLEFT,ERAD,FxRAD,ARAD_CODE);
-
-              MACP0A1(prim,i,j,k,RHO) = rho;
-              MACP0A1(prim,i,j,k,UU) = uint;
-              MACP0A1(prim,i,j,k,U1) = ux/sqrt(ptrgeom[U1]->gcov[GIND(1,1)]); // assumed no spatial mixing
-
+              pr[U1] = ux/sqrt(ptrgeom[U1]->gcov[GIND(1,1)]); // assumed no spatial mixing
 
               //E, F^i
-              MACP0A1(prim,i,j,k,URAD0) = ERAD;
-              //       MACP0A1(prim,i,j,k,URAD1) = 0.;
-              //     MACP0A1(prim,i,j,k,URAD1) = FxRAD;
-              MACP0A1(prim,i,j,k,URAD1) = uradx; //FxRAD;
-              //       MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
-              MACP0A1(prim,i,j,k,URAD2) = urady;
-              MACP0A1(prim,i,j,k,URAD3) = 0.;
+              if(1){
+                // correct way of using ERAD(TLEFT) and NLEFT
+                FTYPE Fx=NLEFT*ERAD/sqrt(1+angle*angle);
+                FTYPE Fy=-NLEFT*ERAD*angle/sqrt(1+angle*angle);
+                FTYPE Fz=0.0;
 
-              //     dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
+                //E, F^i in orthonormal fluid frame
+                FTYPE pradffortho[NPR];
+                pradffortho[PRAD0] = ERAD;
+                pradffortho[PRAD1] = Fx;
+                pradffortho[PRAD2] = Fy;
+                pradffortho[PRAD3] = Fz;
 
-              // KORALTODO GODMARK: ERAD is really fluid frame value, not radiation frame!  Need the below to account for that.  Currently just adjusted ERAD so injection is similar to expected.
 
-              // get all primitives in WHICHVEL/PRIMECOORDS value
-              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+                int whichvel=VEL4; // in which vel U1-U3 set
+                int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
+                int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+                whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+              }
+              else{
+                // old harm way
+                FTYPE gammax=1.0/sqrt(1.0-NLEFT*NLEFT);
+                FTYPE uradx=NLEFT*gammax/sqrt(1.0+angle*angle);
+                FTYPE urady=-NLEFT*gammax*angle/sqrt(1.0+angle*angle);
+                
+                pr[URAD0] = ERAD;
+                pr[URAD1] = uradx;
+                pr[URAD2] = urady;
+                pr[URAD3] = 0.;
+
+                // get all primitives in WHICHVEL/PRIMECOORDS value
+                int whichvel;
+                whichvel=VEL4;
+                int whichcoord;
+                whichcoord=MCOORD;
+                primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+              }
+
             } // over spatially relevant region
 
           }// end if not staggered fields
@@ -1132,6 +1138,7 @@ int bound_radshadowinflow(int dir,
 
    
         LOOPBOUND2OUT{
+          FTYPE *pr=&MACP0A1(prim,i,j,k,0);
     
           //initially copying everything
           PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1142,58 +1149,72 @@ int bound_radshadowinflow(int dir,
    
             //coordinates of the ghost cell
             bl_coord_ijk_2(i,j,k,CENT,X, V);
-
-            // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
-            int whichvel;
-            whichvel=VEL4;
-            int whichcoord;
-            whichcoord=CARTMINKMETRIC2;
-
-
-
             FTYPE xx,yy,zz,rsq;
-            coord(i, j, k, CENT, X);
-            bl_coord(X, V);
             xx=V[1];
             yy=V[2];
             zz=V[3];
 
 
-            if( WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADSHADOW ){
 
-              rsq=xx*xx+yy*yy+zz*zz;
-              rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;      
-              //   rho=RHOAMB;
-              Trad=TAMB*RHOAMB/rho;
-   
-              uint=calc_PEQ_ufromTrho(Trad,rho);
+            // default for beam or not
+            rsq=xx*xx+yy*yy+zz*zz;
+            rho=(RHOBLOB-RHOAMB)*exp(-sqrt(rsq)/(BLOBW*BLOBW))+RHOAMB;
+            pr[RHO] = rho;
+            Trad=TAMB*RHOAMB/rho;
+            uint= calc_PEQ_ufromTrho(Trad,rho);
+            pr[UU] = uint;
+
+     
+            if(WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADSHADOW){
+
               FTYPE ERAD;
               ERAD=calc_LTE_EfromT(TLEFT);
-              //     FTYPE FxRAD;
-              //     FxRAD=NLEFT*ERAD;
+
               FTYPE ux=0.0; // orthonormal 4-velocity.  Matches init.koral.c
-
-              //   dualfprintf(fail_file,"i=%d j=%d k=%d TLEFT=%g ERAD=%g FxRAD=%g : ARAD_CODE=%g\n",i,j,k,TLEFT,ERAD,FxRAD,ARAD_CODE);
-
-              MACP0A1(prim,i,j,k,RHO) = rho;
-              MACP0A1(prim,i,j,k,UU) = uint;
-              MACP0A1(prim,i,j,k,U1) = ux/sqrt(ptrgeom[U1]->gcov[GIND(1,1)]); // assumed no spatial mixing
+              pr[U1] = ux/sqrt(ptrgeom[U1]->gcov[GIND(1,1)]); // assumed no spatial mixing
 
 
               //E, F^i
-              MACP0A1(prim,i,j,k,URAD0) = ERAD;
-              //       MACP0A1(prim,i,j,k,URAD1) = 0.;
-              //     MACP0A1(prim,i,j,k,URAD1) = FxRAD;
-              MACP0A1(prim,i,j,k,URAD1) = uradx; //FxRAD;
-              //       MACP0A1(prim,i,j,k,URAD2) = RADBEAMFLAT_FRATIO*MACP0A1(prim,i,j,k,URAD0);
-              MACP0A1(prim,i,j,k,URAD2) = urady;
-              MACP0A1(prim,i,j,k,URAD3) = 0.;
+              if(1){
+                // correct way of using ERAD(TLEFT) and NLEFT
+                FTYPE Fx=NLEFT*ERAD/sqrt(1+angle*angle);
+                FTYPE Fy=-NLEFT*ERAD*angle/sqrt(1+angle*angle);
+                FTYPE Fz=0.0;
 
-              //     dualfprintf(fail_file,"BC: i=%d j=%d rho=%g Trad=%g uint=%g ERAD=%g\n",i,j,rho,Trad,uint,ERAD);
+                //E, F^i in orthonormal fluid frame
+                FTYPE pradffortho[NPR];
+                pradffortho[PRAD0] = ERAD;
+                pradffortho[PRAD1] = Fx;
+                pradffortho[PRAD2] = Fy;
+                pradffortho[PRAD3] = Fz;
 
 
-              // get all primitives in WHICHVEL/PRIMECOORDS value
-              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+                int whichvel=VEL4; // in which vel U1-U3 set
+                int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
+                int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
+                whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+              }
+              else{
+                // old harm way
+                FTYPE gammax=1.0/sqrt(1.0-NLEFT*NLEFT);
+                FTYPE uradx=NLEFT*gammax/sqrt(1.0+angle*angle);
+                FTYPE urady=-NLEFT*gammax*angle/sqrt(1.0+angle*angle);
+                
+                pr[URAD0] = ERAD;
+                pr[URAD1] = uradx;
+                pr[URAD2] = urady;
+                pr[URAD3] = 0.;
+
+                // get all primitives in WHICHVEL/PRIMECOORDS value
+                int whichvel;
+                whichvel=VEL4;
+                int whichcoord;
+                whichcoord=MCOORD;
+                primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+              }
+
+
+
             }// if spatially relevant region
 
           }// end if not staggered fields

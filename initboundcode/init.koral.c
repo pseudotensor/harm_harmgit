@@ -2015,6 +2015,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
+
+    // KORALTODO: no transformation for radiation.  Would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
+
 	return(0);
   }
 
@@ -2143,7 +2146,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[URAD2] = Fy ;    
 	pr[URAD3] = Fz ;
 
-    // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.
+    // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.   Also, would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;
@@ -2468,7 +2471,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[PRAD2] = urady ;    
 	pr[PRAD3] = uradz ;
 
-	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0)
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0 and ufluid=0)
 
 	//	*whichvel=WHICHVEL;
 	*whichvel=VEL4;
@@ -2572,7 +2575,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	*whichcoord=MCOORD;
 	prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
 
-    dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g uradx=%g ERAD=%g\n",i,pr[RHO],pr[UU],pr[U1],pr[URAD1],pr[URAD0]);
+    //    dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g uradx=%g ERAD=%g\n",i,pr[RHO],pr[UU],pr[U1],pr[URAD1],pr[URAD0]);
 
 	return(0);
   }
@@ -2608,7 +2611,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	pr[PRAD2] = 0 ;    
 	pr[PRAD3] = 0 ;
 
-	// no transformations required since only setting fluid-frame E that is PRAD0 itself.
+	// no transformations required since only setting fluid-frame E that is PRAD0 itself since ufluid=F=0
 
 	*whichvel=WHICHVEL;
 	*whichcoord=CARTMINKMETRIC2;

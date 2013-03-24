@@ -109,7 +109,8 @@
 //#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3)))
 
 // relativistically inspired (based upon RADBEAMFLAT)
-// This is more strict in that it presumes that if one direction is relativistic one should really limit things because full (here) 2D effects really imply the general 2D characteristic (not just the i or j char) is probably v~c.  That is, it's bad to assume that just because exactly along y it's v~c/2 and exactly along x it's v~c that this represents a *smooth* ~linear version for any other direction.  E.g., at 45degrees, it should be still v~c due to beaming effects.  In that sense, looking at exactly y-direction is degenerate and highly non-representative.
+// This is more strict in that it presumes that if one direction is relativistic one should really limit things because full (here) 2D effects really imply the general 2D characteristic (not just the i or j char) is probably v~c.  That is, it's bad to assume that just because exactly along y it's v~c/2 and exactly along x it's v~c that this represents a *smooth* ~linear version for any other direction.  E.g., at other angles, it should be still v~c despite beaming effects.  In that sense, looking at exactly y-direction is degenerate and highly non-representative.
+// Note that NR1997 Eq19.3.11 suggests dt<delta/(\sqrt{N} |v|) for N dimensions and absolute magnitude of velocity v.  This is much higher dt than required for stability of many problems, perhaps related to non-linear multi-D coupling in relativistic case.
 #define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3))/(FTYPE)(N1NOT1+N2NOT1+N3NOT1))
 
 
