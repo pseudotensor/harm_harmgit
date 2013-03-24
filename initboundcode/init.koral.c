@@ -467,7 +467,8 @@ int init_global(void)
 	gam=gamideal=1.4;
 	cooling=KORAL;
     //	ARAD_CODE=1E-30;
-	ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    ARAD_CODE=1E7*1E-5*1E-10*(6E-9/1.7E-25); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.  And also similar value as in Figure 11 koral paper plot.  As long as prad0<<u and prad0<<rho, solution is independent of ARAD because 4-force off radiation on the fluid is negligible.  Then kappa just sets what rho becomes \tau\sim 1 and nothing about the fluid is affected.
 
 	BCtype[X1UP]=FREEOUTFLOW;
 	BCtype[X1DN]=RADSHADOWINFLOW;
@@ -481,7 +482,8 @@ int init_global(void)
 
 	DTr = 100; //number of time steps for restart dumps
 	//  tf = 100.0; //final time (seems almost good enough to get quasi-steady solution for these steady tube tests)
-	tf = 200.0; //final time (far past plot so see evolves or stationary).
+    //	tf = 200.0; //final time (far past plot so see evolves or stationary).
+	tf = 20.0; //final time (far past plot so see evolves or stationary).
   }
 
 
@@ -1809,8 +1811,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
 
-#define KAPPAUSER(rho,T) (rho*1E2)
-//#define KAPPAUSER(rho,T) (rho*1E0)
+//#define KAPPAUSER(rho,T) (rho*1E2)
+#define KAPPAUSER(rho,T) (rho*1.0) // paper
 #define KAPPAESUSER(rho,T) (rho*0.0)
 
 

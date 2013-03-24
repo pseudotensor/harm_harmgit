@@ -445,8 +445,10 @@
 //#define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICIT
 #define WHICHRADSOURCEMETHOD RADSOURCEMETHODIMPLICITEXPLICITCHECK
 
-#define N1 120
-#define N2 20
+//#define N1 120 // code
+#define N1 100 // paper
+//#define N2 20 // code
+#define N2 50 // paper
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC2

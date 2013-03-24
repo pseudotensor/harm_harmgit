@@ -966,8 +966,8 @@ int bound_radshadowinflow(int dir,
     angle=0.0;
   }
   else if(WHICHPROBLEM==RADDBLSHADOW){
-    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
-    //NLEFT=0.99; // koral paper
+    //    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
+    NLEFT=0.99; // koral paper
     //NLEFT=0.999; // latest koral
     //  NLEFT=0.7;
     //  NLEFT=0.93;
