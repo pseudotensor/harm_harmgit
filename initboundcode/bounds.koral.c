@@ -966,16 +966,19 @@ int bound_radshadowinflow(int dir,
     angle=0.0;
   }
   else if(WHICHPROBLEM==RADDBLSHADOW){
-    //NLEFT=0.99999; // very hard on code -- only MINM with jon choice for CASES works.
-    NLEFT=0.99;
+    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
+    //NLEFT=0.99; // koral paper
+    //NLEFT=0.999; // latest koral
     //  NLEFT=0.7;
     //  NLEFT=0.93;
-    angle=0.4;
+   
+    angle=0.4; // koral paper
+    //    angle=0.3; // latest koral
   }
   //
   FTYPE TLEFT=TAMB*100.0;
 
-
+  FTYPE BEAMY=0.3;
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -1053,7 +1056,7 @@ int bound_radshadowinflow(int dir,
             pr[UU] = uint;
 
      
-            if(yy>0.3 && WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADSHADOW ){
+            if(yy>BEAMY && WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADSHADOW ){
 
               FTYPE ERAD;
               ERAD=calc_LTE_EfromT(TLEFT);
@@ -1172,7 +1175,6 @@ int bound_radshadowinflow(int dir,
 
               FTYPE ux=0.0; // orthonormal 4-velocity.  Matches init.koral.c
               pr[U1] = ux/sqrt(ptrgeom[U1]->gcov[GIND(1,1)]); // assumed no spatial mixing
-
 
               //E, F^i
               if(1){
