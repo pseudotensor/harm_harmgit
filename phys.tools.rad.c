@@ -23,6 +23,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn);
 static int get_m1clsoure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn);
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
 
 // mnemonics for return modes so schemes know how failed and what to do.
@@ -2489,11 +2490,6 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 
 
-#define TOZAMOFRAME 0 // reduce to ZAMO gammarel=1 frame (e.g. in non-GR that would be grid frame or v=0 frame or gammarel=1).
-#define TOFLUIDFRAME 1 // reduce to using fluid frame (probably more reasonable in general).
-#define TOOPACITYDEPENDENTFRAME 2
-
-#define M1REDUCE TOOPACITYDEPENDENTFRAME // choose
 
 //**********************************************************************
 //**********************************************************************
@@ -2590,7 +2586,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     get_m1clsoure_Erf(ptrgeom,Av,gammarel2,&Erf);
 
     // get relative 4-velocity
-    get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
+    if(0&&CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
+    else if(1||CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
 
 
   }// end if M1
@@ -2664,8 +2661,8 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
 {
   FTYPE gamma2,gammarel2,delta;
 
-#if(0)
-  {
+  if(0){
+
     // has some catastrophic cancellation issue for non-moving velocity at very low E\sim 1E-92 (as in RADPULSE test if no temperature conversion)
 
     //g_munu R^tmu R^tnu
@@ -2688,249 +2685,40 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
   //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Av0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Av[0],Av[1],Av[2],Av[3],gamma2);
 
 
-#elif(1)
-  // mathematica solution that avoids catastrophic cancellation when Rtt very small (otherwise above gives gamma2=1/2 oddly when gamma2=1) -- otherwise same as above
-  // well, then had problems for R~1E-14 for some reason when near BH.  Couldn't quickly figure out, so use no replacement of gv11.
-  // see u2p_inversion.nb
-  static FTYPE gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz,  gcttp1, gctt;
-  gv11=ptrgeom->gcov[GIND(0,0)];
-  gv12=ptrgeom->gcov[GIND(0,1)];
-  gv13=ptrgeom->gcov[GIND(0,2)];
-  gv14=ptrgeom->gcov[GIND(0,3)];
-  gv22=ptrgeom->gcov[GIND(1,1)];
-  gv23=ptrgeom->gcov[GIND(1,2)];
-  gv24=ptrgeom->gcov[GIND(1,3)];
-  gv33=ptrgeom->gcov[GIND(2,2)];
-  gv34=ptrgeom->gcov[GIND(2,3)];
-  gv44=ptrgeom->gcov[GIND(3,3)];
-  Rtt=Av[0];
-  Rtx=Av[1];
-  Rty=Av[2];
-  Rtz=Av[3];
-  gcttp1=1.0+ptrgeom->gcon[GIND(0,0)];
-  gctt=ptrgeom->gcon[GIND(0,0)];
+  else{
+    // mathematica solution that avoids catastrophic cancellation when Rtt very small (otherwise above gives gamma2=1/2 oddly when gamma2=1) -- otherwise same as above
+    // well, then had problems for R~1E-14 for some reason when near BH.  Couldn't quickly figure out, so use no replacement of gv11.
+    // see u2p_inversion.nb
+    static FTYPE gctt, gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz;
+    gv11=ptrgeom->gcov[GIND(0,0)];
+    gv12=ptrgeom->gcov[GIND(0,1)];
+    gv13=ptrgeom->gcov[GIND(0,2)];
+    gv14=ptrgeom->gcov[GIND(0,3)];
+    gv22=ptrgeom->gcov[GIND(1,1)];
+    gv23=ptrgeom->gcov[GIND(1,2)];
+    gv24=ptrgeom->gcov[GIND(1,3)];
+    gv33=ptrgeom->gcov[GIND(2,2)];
+    gv34=ptrgeom->gcov[GIND(2,3)];
+    gv44=ptrgeom->gcov[GIND(3,3)];
+    Rtt=Av[0];
+    Rtx=Av[1];
+    Rty=Av[2];
+    Rtz=Av[3];
+    gctt=ptrgeom->gcon[GIND(0,0)];
 
-
-  //http://forums.wolfram.com/mathgroup/archive/2008/Mar/msg00116.html
-  /*
-
-
-    oexp = Experimental`OptimizeExpression[god];
-    {locals, code} = 
-    ReleaseHold[(Hold @@ oexp) /. 
-    Verbatim[Block][vars_, seq_] :> {vars, Hold[seq]}];
-    code1 = code /. Hold[CompoundExpression[seq__]] :> Hold[{seq}];
-    code2 = First[
-    code1 //. 
-    Hold[{a___Hold, b_, c___}] /; Head[Unevaluated[b]] =!= Hold :> 
-    Hold[{a, Hold[b], c}]];
-    statements = 
-    StringReplace[ToString[CForm[#]], 
-    "Hold(" ~~ ShortestMatch[a___] ~~ ")" :> a] & /@ code2;
-    mycsequence = StringJoin @@ Riffle[statements, ";\n"];
-    replacevar = 
-    Rule @@@ Transpose[{ToString[CForm[#]] & /@ locals, 
-    StringReplace[StringReplace[ToString[#], {__ ~~ "`" ~~ a_ :> a}],
-    "$" -> "_"] & /@ locals}];
-    mycsequence1 = StringReplace[mycsequence, replacevar];
-    "{\ndouble " <> 
-    StringJoin @@ 
-    Riffle[Last /@ replacevar, 
-    ","] <> ";\n\n" <> mycsequence1 <> ";\n}\n"
-  */
-  
-
-  // NO!  That sequence is wrong somehow.  Stick to CForm[]
-
-
-  // 1) Run above mathematica
-  // 2) Copy as Input Text to avoid truncated lines
-  // 3) Replace inside of Sqrt() with Sqrt(delta) and assign delta
-  // 4) Add delta conditional so if actually gamma2~1 that catches slightly negative delta as properly normalized
-  // 5) Run regexp: Power(\([a-zA-Z0-9]+\),2) -> ((\1)*(\1))
-
-  delta = (1. + 3.*gctt*gv11)*((Rtt)*(Rtt)) + 
-            6.*gctt*Rtt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
-            3.*gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
-                     2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz)));
-  gamma2 = (-0.25*((1. + gctt*gv11)*((Rtt)*(Rtt)) + 
-       gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
-          2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz))) + 
-       Rtt*(2.*gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
-            Sqrt(delta))))/
-   (gv11*((Rtt)*(Rtt)) + 2.*gv12*Rtt*Rtx + gv22*((Rtx)*(Rtx)) + 2.*gv13*Rtt*Rty + 
-     2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + 
-    gv44*((Rtz)*(Rtz)));
-
-  if(0){
-    static FTYPE __88492,__88495,__88496,__88498,__88499,__88500,__88506,__88507,__88517,__88518,__88519,__88520,__88513,__88514,__88515;
-
-    __88492 = (Rtt)*(Rtt);
-    __88495 = (Rtx)*(Rtx);
-    __88496 = gv22*__88495;
-    __88498 = 2.*gv23*Rtx*Rty;
-    __88499 = (Rty)*(Rty);
-    __88500 = gv33*__88499;
-    __88506 = (Rtz)*(Rtz);
-    __88507 = gv44*__88506;
-    __88517 = gv12*Rtx;
-    __88518 = gv13*Rty;
-    __88519 = gv14*Rtz;
-    __88520 = __88517 + __88518 + __88519;
-    __88513 = 2.*gv24*Rtx*Rtz;
-    __88514 = 2.*gv34*Rty*Rtz;
-    __88515 = __88496 + __88498 + __88500 + __88513 + __88514 + __88507;
-    delta = ((1. + 3.*gctt*gv11)*__88492 + 6.*gctt*Rtt*__88520 + 3.*gctt*__88515);
-    gamma2 = (-0.25*((1. + gctt*gv11*__88492 + gctt*__88515 + Rtt*(2.*gctt*__88520 + Sqrt(delta))))/(gv11*__88492 + 2.*gv12*Rtt*Rtx + __88496 + 2.*gv13*Rtt*Rty + __88498 + __88500 + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __88507));
-
-    if(delta<0.0){
-      if((1||showmessages) && debugfail>=2) dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
-      static FTYPE __88534,__88537,__88538,__88540,__88541,__88542,__88548,__88549,__88555,__88556,__88557,__88558,__88560,__88561,__88562;
-
-      __88534 = (Rtt)*(Rtt);
-      __88537 = (Rtx)*(Rtx);
-      __88538 = gv22*__88537;
-      __88540 = 2.*gv23*Rtx*Rty;
-      __88541 = (Rty)*(Rty);
-      __88542 = gv33*__88541;
-      __88548 = (Rtz)*(Rtz);
-      __88549 = gv44*__88548;
-      __88555 = gv12*Rtx;
-      __88556 = gv13*Rty;
-      __88557 = gv14*Rtz;
-      __88558 = __88555 + __88556 + __88557;
-      __88560 = 2.*gv24*Rtx*Rtz;
-      __88561 = 2.*gv34*Rty*Rtz;
-      __88562 = __88538 + __88540 + __88542 + __88560 + __88561 + __88549;
-      delta = ((1. + 3.*gctt*gv11)*__88534 + 6.*gctt*Rtt*__88558 + 3.*gctt*__88562);
-      gamma2 = (-0.25*((1. + gctt*gv11*__88534 + 2.*gctt*Rtt*__88558 + gctt*__88562 - 1.*Rtt*Sqrt(delta)))/(gv11*__88534 + 2.*gv12*Rtt*Rtx + __88538 + 2.*gv13*Rtt*Rty + __88540 + __88542 + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __88549));
-    }
-
+    delta = (1. + 3.*gctt*gv11)*((Rtt)*(Rtt)) + 
+      6.*gctt*Rtt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
+      3.*gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
+               2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz)));
+    gamma2 = (-0.25*((1. + gctt*gv11)*((Rtt)*(Rtt)) + 
+                     gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
+                           2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz))) + 
+                     Rtt*(2.*gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
+                          Sqrt(delta))))/
+      (gv11*((Rtt)*(Rtt)) + 2.*gv12*Rtt*Rtx + gv22*((Rtx)*(Rtx)) + 2.*gv13*Rtt*Rty + 
+       2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + 
+       gv44*((Rtz)*(Rtz)));
   }
-  
-
-
-  if(0){
-    {
-      static FTYPE __51285,__51295,__51296,__51290,__51287,__51288,__51294,__51289,__51291,__51292,__51293,__51297,__51298,__51300,__51301,__51302,__51303,__51304,__51305,__51311,__51312,__51313,__51314,__51315,__51316,__51317,__51318,__51320,__51321,__51322,__51323,__51324,__51325,__51326,__51329,__51330,__51332,__51333,__51334,__51340,__51341,__51360,__51361,__51362,__51363,__51356,__51357,__51358;
-
-      __51285 = -1. + gcttp1;
-      __51295 = (gv12)*(gv12);
-      __51296 = (gv34)*(gv34);
-      __51290 = (gv23)*(gv23);
-      __51287 = (gv24)*(gv24);
-      __51288 = __51287*gv33;
-      __51294 = -2.*gv23*gv24*gv34;
-      __51289 = (gv14)*(gv14);
-      __51291 = -1.*gv22*gv33;
-      __51292 = __51290 + __51291;
-      __51293 = __51285*__51289*__51292;
-      __51297 = -1.*__51295*__51296;
-      __51298 = gcttp1*__51295*__51296;
-      __51300 = gv13*gv23*gv24;
-      __51301 = -1.*gv12*gv24*gv33;
-      __51302 = -1.*gv13*gv22*gv34;
-      __51303 = gv12*gv23*gv34;
-      __51304 = __51300 + __51301 + __51302 + __51303;
-      __51305 = -2.*__51285*gv14*__51304;
-      __51311 = (gv13)*(gv13);
-      __51312 = -1.*gv22*gv44;
-      __51313 = __51287 + __51312;
-      __51314 = __51285*__51311*__51313;
-      __51315 = gv24*gv34;
-      __51316 = -1.*gv23*gv44;
-      __51317 = __51315 + __51316;
-      __51318 = -2.*__51285*gv12*gv13*__51317;
-      __51320 = __51290*gv44;
-      __51321 = -1.*gv33*gv44;
-      __51322 = __51296 + __51321;
-      __51323 = gv22*__51322;
-      __51324 = __51288 + __51294 + __51320 + __51323;
-      __51325 = 1/__51324;
-      __51326 = (Rtt)*(Rtt);
-      __51329 = (Rtx)*(Rtx);
-      __51330 = gv22*__51329;
-      __51332 = 2.*gv23*Rtx*Rty;
-      __51333 = (Rty)*(Rty);
-      __51334 = gv33*__51333;
-      __51340 = (Rtz)*(Rtz);
-      __51341 = gv44*__51340;
-      __51360 = gv12*Rtx;
-      __51361 = gv13*Rty;
-      __51362 = gv14*Rtz;
-      __51363 = __51360 + __51361 + __51362;
-      __51356 = 2.*gv24*Rtx*Rtz;
-      __51357 = 2.*gv34*Rty*Rtz;
-      __51358 = __51330 + __51332 + __51334 + __51356 + __51357 + __51341;
-      delta = ((4.*__51287*gv33 + 3.*__51285*__51289*__51292 - 8.*gv23*gv24*gv34 - 3.*__51295*__51296 + 3.*gcttp1*__51295*__51296 + 4.*gv22*__51296 - 6.*__51285*gv14*__51304 + (4.*__51290 + (-3.*__51285*__51295 - 4.*gv22)*gv33)*gv44 + 3.*__51285*__51311*__51313 - 6.*__51285*gv12*gv13*__51317)*__51325*__51326 + 6.*__51285*Rtt*__51363 + 3.*__51285*__51358);
-      gamma2 = (-0.25*((2.*__51287*gv33 + __51293 - 4.*gv23*gv24*gv34 + __51297 + __51298 + 2.*gv22*__51296 + __51305 + (2.*__51290 + (__51295 - 1.*gcttp1*__51295 - 2.*gv22*gv33)*gv44 + __51314 + __51318)*__51325*__51326 + __51285*__51358 + Rtt*(2.*__51285*__51363 + Sqrt(delta))))/(((__51288 + __51293 + __51294 + __51297 + __51298 + gv22*__51296 + __51305 + (__51290 - 1.*(__51285*__51295 + gv22)*gv33)*gv44 + __51314 + __51318)*__51325*__51326)/__51285 + 2.*gv12*Rtt*Rtx + __51330 + 2.*gv13*Rtt*Rty + __51332 + __51334 + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __51341));
-    }
-    //    if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
-  }
-
-  if(0){
-
-    // this is probably not the right root ever
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Chose other root in u2p_rad()\n");
-
-    static FTYPE __51073,__51083,__51084,__51078,__51075,__51076,__51082,__51077,__51079,__51080,__51081,__51085,__51086,__51088,__51089,__51090,__51091,__51092,__51093,__51099,__51100,__51101,__51102,__51103,__51104,__51105,__51106,__51108,__51109,__51110,__51111,__51112,__51113,__51114,__51117,__51118,__51120,__51121,__51122,__51128,__51129,__51144,__51145,__51146,__51147,__51149,__51150,__51151;
-
-    __51073 = -1 + gcttp1;
-    __51083 = (gv12)*(gv12);
-    __51084 = (gv34)*(gv34);
-    __51078 = (gv23)*(gv23);
-    __51075 = (gv24)*(gv24);
-    __51076 = __51075*gv33;
-    __51082 = -2*gv23*gv24*gv34;
-    __51077 = (gv14)*(gv14);
-    __51079 = -(gv22*gv33);
-    __51080 = __51078 + __51079;
-    __51081 = __51073*__51077*__51080;
-    __51085 = -(__51083*__51084);
-    __51086 = gcttp1*__51083*__51084;
-    __51088 = gv13*gv23*gv24;
-    __51089 = -(gv12*gv24*gv33);
-    __51090 = -(gv13*gv22*gv34);
-    __51091 = gv12*gv23*gv34;
-    __51092 = __51088 + __51089 + __51090 + __51091;
-    __51093 = -2*__51073*gv14*__51092;
-    __51099 = (gv13)*(gv13);
-    __51100 = -(gv22*gv44);
-    __51101 = __51075 + __51100;
-    __51102 = __51073*__51099*__51101;
-    __51103 = gv24*gv34;
-    __51104 = -(gv23*gv44);
-    __51105 = __51103 + __51104;
-    __51106 = -2*__51073*gv12*gv13*__51105;
-    __51108 = __51078*gv44;
-    __51109 = -(gv33*gv44);
-    __51110 = __51084 + __51109;
-    __51111 = gv22*__51110;
-    __51112 = __51076 + __51082 + __51108 + __51111;
-    __51113 = 1/__51112;
-    __51114 = (Rtt)*(Rtt);
-    __51117 = (Rtx)*(Rtx);
-    __51118 = gv22*__51117;
-    __51120 = 2*gv23*Rtx*Rty;
-    __51121 = (Rty)*(Rty);
-    __51122 = gv33*__51121;
-    __51128 = (Rtz)*(Rtz);
-    __51129 = gv44*__51128;
-    __51144 = gv12*Rtx;
-    __51145 = gv13*Rty;
-    __51146 = gv14*Rtz;
-    __51147 = __51144 + __51145 + __51146;
-    __51149 = 2*gv24*Rtx*Rtz;
-    __51150 = 2*gv34*Rty*Rtz;
-    __51151 = __51118 + __51120 + __51122 + __51149 + __51150 + __51129;
-    delta = ((4*__51075*gv33 + 3*__51073*__51077*__51080 - 8*gv23*gv24*gv34 - 3*__51083*__51084 + 3*gcttp1*__51083*__51084 + 4*gv22*__51084 - 6*__51073*gv14*__51092 + (4*__51078 + (-3*__51073*__51083 - 4*gv22)*gv33)*gv44 + 3*__51073*__51099*__51101 - 6*__51073*gv12*gv13*__51105)*__51113*__51114 + 6*__51073*Rtt*__51147 + 3*__51073*__51151);
-    if(delta<0.0 && delta>-NUMEPSILON*fabs(Rtt*Rtt) ) delta=0.0; // probably gamma2=1
-    gamma2= -((2*__51075*gv33 + __51081 - 4*gv23*gv24*gv34 + __51085 + __51086 + 2*gv22*__51084 + __51093 + (2*__51078 + (__51083 - gcttp1*__51083 - 2*gv22*gv33)*gv44 + __51102 + __51106)*__51113*__51114 + 2*__51073*Rtt*__51147 + __51073*__51151 - Rtt*Sqrt(delta))/(4.*(((__51076 + __51081 + __51082 + __51085 + __51086 + gv22*__51084 + __51093 + (__51078 - (__51073*__51083 + gv22)*gv33)*gv44 + __51102 + __51106)*__51113*__51114)/__51073 + 2*gv12*Rtt*Rtx + __51118 + 2*gv13*Rtt*Rty + __51120 + __51122 + 2*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + __51129)));
-  }
-
-
-#endif
-
 
 
   ////////////////////////
@@ -2940,12 +2728,15 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
   ///////////////////////
   FTYPE alpha=ptrgeom->alphalapse;
 
-  // get relative 4-velocity, that is always >=1 even in GR
-  gammarel2 = gamma2*alpha*alpha;  // /(-ptrgeom->gcon[GIND(TT,TT)]); // relative velocity gammarel^2
+  if(!isfinite(gamma2)) gamma2=-BIG; // so no nan and avoids false conditional responses
 
+  // get relative 4-velocity, that is always >=1 even in GR
+  gammarel2 = gamma2*alpha*alpha;
+
+  // check for machine error away from 1.0 that happens sometimes
   if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
     //	dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
-    gammarel2=1.0; // force machine error floor on gammarel2
+    gammarel2=1.0;
   }
 
 
@@ -2974,6 +2765,7 @@ static int get_m1clsoure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2
 
   return(0);
 }
+
 
 // get contravariant relative 4-velocity in lab frame
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
@@ -3013,8 +2805,6 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     }
   }
 
-  // TOTRY Erf nan
-  // TOTRY try old way of gamma<1 || delta < 0 setting gamma=1
 
   // if Erf already a value and already Erf<ERADLIMIT (i.e. delta>0 must be true), then bad failure and just reset velocity to zero or fluid velocity depending upon optical depth
   if(Erf<ERADLIMIT){ // JCM
@@ -3165,6 +2955,138 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
 
 
+  *Erfreturn=Erf; // pass back new Erf to pointer
+  return(0);
+}
+
+
+
+
+// get contravariant relative 4-velocity in lab frame using Olek's koral choices
+static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
+{
+  FTYPE Erf=*Erfreturn; // get initial Erf
+  FTYPE gammamax=GAMMAMAXRAD;
+  int jj,kk;
+
+
+  //////////////////////
+  //
+  // Fix-up inversion if problem with gamma (i.e. velocity) or energy density in radiation rest-frame (i.e. Erf)
+  //
+  //////////////////////
+
+  int failure1=gammarel2>1.01*gammamax*gammamax || gammarel2<0. || delta<0.;
+  int failure2=gammarel2<1. || delta<0.;
+
+
+
+  if(failure1){
+    //    if(failure1 && tautotmax<TAUFAILLIMIT){ // works for DBLSHADOW
+
+    FTYPE gammarel=gammamax;
+    gammarel2=gammamax*gammamax;
+
+    // get new Erf(gammarel)
+    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
+
+
+    // Check if Erf is too small with gamma->gammamax
+    if(Erf<ERADLIMIT){
+      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+
+      // can't use normal velocity with small Erf -- fails with inf or nan
+      SLOOPA(jj) urfconrel[jj] = 0.0;
+
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    }
+    else{
+      // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
+      if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+      // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
+      // lab-frame radiation relative 4-velocity
+      FTYPE alpha=ptrgeom->alphalapse;
+      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+        
+      // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
+      FTYPE gammatemp,qsqtemp;
+      int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
+      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+        
+      // now rescale urfconrel[i] so will give desired \gammamax
+      SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
+	
+#if(PRODUCTION==0)
+      // check that gamma really correctly gammamax
+      FTYPE gammatemp2,qsqtemp2;
+      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+#endif
+    }
+
+  }
+  //////////////////////
+  //
+  // Second case is if gammarel<1 or delta<0, then set gammarel=1.  If Erf<ERADLIMIT (~0), then set Erf=ERADLIMIT and gammarel=1.
+  // Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
+  //
+  //////////////////////
+  else if(failure2){
+
+
+    FTYPE gammarel2orig=gammarel2;
+    // override
+    gammarel2=1.0;
+    FTYPE gammarel=1.0;  // use this below
+
+    // get new Erf(gammarel)
+    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    SLOOPA(jj) urfconrel[jj] = 0.0;
+
+
+    if(Erf<ERADLIMIT){ // JCM
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    }
+    else{
+      // normal Erf
+      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2B;
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    }
+
+
+      
+  }
+  //////////////////////
+  //
+  // Third case is if no bad conditions, then try regular calculation.  If Erf<ERADLIMIT, then already caught with first condition
+  //
+  //////////////////////
+  else{
+
+    if(Erf<ERADLIMIT){
+      Erf=ERADLIMIT;
+      SLOOPA(jj) urfconrel[jj] = 0.0;
+    }
+    
+    // get good relative velocity
+    FTYPE gammarel=sqrt(gammarel2);
+    FTYPE alpha=ptrgeom->alphalapse;
+
+    // NOTEMARK: This overwrites choice above for urfconrel when Erf<ERADLIMIT.
+    SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+
+    //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
+
+      
   *Erfreturn=Erf; // pass back new Erf to pointer
   return(0);
 }

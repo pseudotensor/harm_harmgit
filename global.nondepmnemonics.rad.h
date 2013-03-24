@@ -95,6 +95,13 @@
 #define CASECHOICE JONCHOICE // choose
 //#define CASECHOICE OLEKCHOICE // choose
 
+#define TOZAMOFRAME 0 // reduce to ZAMO gammarel=1 frame (e.g. in non-GR that would be grid frame or v=0 frame or gammarel=1).
+#define TOFLUIDFRAME 1 // reduce to using fluid frame (probably more reasonable in general).
+#define TOOPACITYDEPENDENTFRAME 2
+
+#define M1REDUCE TOOPACITYDEPENDENTFRAME // choose
+
+
 // whether to fixup inversion failures using harm fixups
 // can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
 #define DORADFIXUPS 0

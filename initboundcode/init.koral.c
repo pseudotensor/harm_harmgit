@@ -12,7 +12,6 @@ int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
 
 int RADBEAM2DKSVERT_BEAMNO; // global for bounds.koral.c
 
-//FTYPE RADBEAMFLAT_FRATIO=0.95;
 FTYPE RADBEAMFLAT_FRATIO;
 FTYPE RADBEAMFLAT_ERAD;
 FTYPE RADBEAMFLAT_RHO;
@@ -321,14 +320,15 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADBEAMFLAT){
 	cour=0.8;
-	gam=gamideal=5.0/3.0;
+    //	gam=gamideal=5.0/3.0;
+	gam=gamideal=4.0/3.0; // koral now
 	cooling=KORAL;
 
-    // RADBEAMFLAT_FRATIO=0.95;
-    RADBEAMFLAT_FRATIO=0.99995; // vradx
-    RADBEAMFLAT_ERAD=1.; // 1g/cm^3 worth of energy density in radiation
-    RADBEAMFLAT_RHO=1.; // 1g/cm^3
-    RADBEAMFLAT_UU=0.1; // 0.1g/cm^3 worth of energy density in fluid
+    RADBEAMFLAT_FRATIO=0.995; // koral at some point.
+    //    RADBEAMFLAT_FRATIO=0.99995; // vradx
+    RADBEAMFLAT_ERAD=1./RHOBAR; // 1g/cm^3 worth of energy density in radiation
+    RADBEAMFLAT_RHO=1./RHOBAR; // 1g/cm^3
+    RADBEAMFLAT_UU=0.1/RHOBAR; // 0.1g/cm^3 worth of energy density in fluid
 
 
 	BCtype[X1UP]=OUTFLOW;
@@ -2028,8 +2028,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   if(WHICHPROBLEM==RADBEAMFLAT){
 
     
-	pr[RHO] = RADBEAMFLAT_RHO/RHOBAR ;
-	pr[UU] = RADBEAMFLAT_UU/RHOBAR; // RADBEAMFLAT_UU was set in per c^2 units
+	pr[RHO] = RADBEAMFLAT_RHO ;
+	pr[UU] = RADBEAMFLAT_UU;
 	pr[U1] = 0 ;
 	pr[U2] = 0 ;    
 	pr[U3] = 0 ;
@@ -2045,15 +2045,32 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	}
 
 
-	pr[PRAD0] = RADBEAMFLAT_ERAD/RHOBAR; // RADBEAMFLAT_ERAD was set in per c^2 units
-	pr[PRAD1] = 0 ;
-	pr[PRAD2] = 0 ;    
-	pr[PRAD3] = 0 ;
 
-	// KORALTODO: no transformations required since only setting radiation frame E that is PRAD0 itself (with tuned units so same as koral)
+    if(1){
+      // new way: correctly transform -- also how koral currently setup
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = RADBEAMFLAT_ERAD;
+      pradffortho[PRAD1] = 0;
+      pradffortho[PRAD2] = 0;
+      pradffortho[PRAD3] = 0;
 
-	*whichvel=WHICHVEL;
-	*whichcoord=CARTMINKMETRIC2;
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      *whichvel=VEL4;
+      *whichcoord=MCOORD;
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+    }
+    else if(0){
+      // old way: don't transform, leave as radiation frame E.
+      pr[PRAD0] = RADBEAMFLAT_ERAD;
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+      *whichvel=WHICHVEL;
+      *whichcoord=MCOORD;
+    }
+
 	return(0);
   }
 

@@ -357,8 +357,10 @@
 
 //#define N1 20
 //#define N2 20
-#define N1 30 // making like problem24 in koral code
-#define N2 30 // making like problem24 in koral code
+//#define N1 30
+//#define N2 30
+#define N1 31 // making like problem24 in koral code
+#define N2 31 // making like problem24 in koral code
 #define N3 1
 
 #define MCOORD CARTMINKMETRIC2
