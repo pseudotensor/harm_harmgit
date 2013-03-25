@@ -2803,6 +2803,10 @@ static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2
 }
 
 
+// 0 or 1
+#define TRYCOLD 0
+// COLD leads to some bombs/issues near boundaries.  Not sure why.
+
 // get contravariant relative 4-velocity in lab frame
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
@@ -2848,9 +2852,11 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
   else if(failure1){
-    gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
-    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
-    if(0){
+    if(TRYCOLD){
+      gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+    }
+    else{
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
      
@@ -2861,9 +2867,11 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
   }    
   else if(failure2){
-    gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
-    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
-    if(0){
+    if(TRYCOLD){
+      gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+    }
+    else{
       FTYPE gammarel2orig=gammarel2;
       // override
       gammarel2=1.0;
@@ -2880,70 +2888,68 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d : %ld %d %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
   }
   else{
-    gammarel2=gammamax*gammamax;
-    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
-    if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
-    //    return(0);
-  }
-  //else if(0){// if(failure3){
-  //  else{
-  if(0){
-    FTYPE gammarel=gammamax;
-    gammarel2=gammamax*gammamax;
-
-    // get new Erf(gammarel)
-    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
-
-
-    // Check if Erf is too small with gamma->gammamax
-    if(Erf<ERADLIMIT){
-      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
-      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
-      Erf=ERADLIMIT;
-
-      // can't use normal velocity with small Erf -- fails with inf or nan
-      SLOOPA(jj) urfconrel[jj] = 0.0;
-
+    if(TRYCOLD){
+      gammarel2=gammamax*gammamax;
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+      if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
     }
     else{
-      // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
-      if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+      FTYPE gammarel=gammamax;
+      gammarel2=gammamax*gammamax;
 
-      // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
-      // lab-frame radiation relative 4-velocity
-      FTYPE alpha=ptrgeom->alphalapse;
-      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
-        
-      // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
-      FTYPE gammatemp,qsqtemp;
-      int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
-      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+      // get new Erf(gammarel)
+      get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
 
-      if(!isfinite(gammatemp)){
-        SLOOPA(jj) urfconrel[jj] =0.0;
-      }
-      else if(0&&gammatemp<=gammamax){
-        // do nothing, don't make gamma larger just to get consistency
+
+      // Check if Erf is too small with gamma->gammamax
+      if(Erf<ERADLIMIT){
+        if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
+        // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+        Erf=ERADLIMIT;
+
+        // can't use normal velocity with small Erf -- fails with inf or nan
+        SLOOPA(jj) urfconrel[jj] = 0.0;
+
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
       }
       else{
-        // now rescale urfconrel[i] so will give desired \gammamax
-        SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
-      }
+        // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
+        if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+
+        // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
+        // lab-frame radiation relative 4-velocity
+        FTYPE alpha=ptrgeom->alphalapse;
+        SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+        
+        // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
+        FTYPE gammatemp,qsqtemp;
+        int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
+        MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+
+        if(!isfinite(gammatemp)){
+          SLOOPA(jj) urfconrel[jj] =0.0;
+        }
+        else if(0&&gammatemp<=gammamax){
+          // do nothing, don't make gamma larger just to get consistency
+        }
+        else{
+          // now rescale urfconrel[i] so will give desired \gammamax
+          SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
+        }
 	
 #if(PRODUCTION==0)
-      // check that gamma really correctly gammamax
-      FTYPE gammatemp2,qsqtemp2;
-      MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d : %ld %d %g\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+        // check that gamma really correctly gammamax
+        FTYPE gammatemp2,qsqtemp2;
+        MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
+        if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d : %ld %d %g\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
 #endif
+      }
+      //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
+
+      //    SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
     }
-    //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
-
-    //    SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
-
   }
 
 

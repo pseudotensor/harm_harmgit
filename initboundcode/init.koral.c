@@ -2378,9 +2378,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     RADBEAM2D_IFBEAM=1; // whether to have a beam
     RADBEAM2D_TLEFT=1e9/TEMPBAR;
     //    RADBEAM2D_NLEFT=0.95; // >~0.95 and code fails with SPCMINKMETRIC for BEAMNO=1
-    RADBEAM2D_NLEFT=0.99; // testing FUCK
-    //    RADBEAM2D_NLEFT=0.999; // code
-    //   RADBEAM2D_NLEFT=0.99999; // paper
+    //    RADBEAM2D_NLEFT=0.99; // testing GODMARK KORALTODO
+    //RADBEAM2D_NLEFT=0.999; // code
+    RADBEAM2D_NLEFT=0.99999; // paper  // major problems with SPCMINKMETRIC
 
     if (RADBEAM2D_BEAMNO==1){
       RADBEAM2D_BEAML=2.9;

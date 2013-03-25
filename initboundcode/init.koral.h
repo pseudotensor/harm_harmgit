@@ -485,7 +485,8 @@
 
 // can choose any spherical polar coordinate system
 #if(WHICHPROBLEM==RADBEAM2D)
-#define MCOORD SPCMINKMETRIC
+//#define MCOORD SPCMINKMETRIC
+#define MCOORD BLCOORDS // default koral is a=0 BLCOORDS
 #elif(WHICHPROBLEM==RADBEAM2DKS)
 #define MCOORD KSCOORDS
 #endif
