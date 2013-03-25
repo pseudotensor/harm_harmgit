@@ -8,7 +8,25 @@
 // Rin, Rout, tf, DTdumpgen
 
 
-int BEAMNO,FLATBACKGROUND; // global for bounds.koral.c
+
+int RADBEAM2D_BEAMNO;
+int RADBEAM2D_FLATBACKGROUND;
+FTYPE RADBEAM2D_RHOAMB;
+FTYPE RADBEAM2D_TAMB;
+int RADBEAM2D_BLOB;
+FTYPE RADBEAM2D_BLOBW;
+FTYPE RADBEAM2D_BLOBP;
+FTYPE RADBEAM2D_BLOBX;
+FTYPE RADBEAM2D_BLOBZ;
+FTYPE RADBEAM2D_PAR_D;
+FTYPE RADBEAM2D_PAR_E;
+int RADBEAM2D_IFBEAM;
+FTYPE RADBEAM2D_TLEFT;
+FTYPE RADBEAM2D_NLEFT;
+FTYPE RADBEAM2D_BEAML;
+FTYPE RADBEAM2D_BEAMR;
+
+
 
 int RADBEAM2DKSVERT_BEAMNO; // global for bounds.koral.c
 
@@ -493,10 +511,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
 
-    BEAMNO=1; // 1-4
-// whether constant or radially varying background
-// ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
-    FLATBACKGROUND=1;
+    RADBEAM2D_BEAMNO=1; // 1-4
+    // whether constant or radially varying background
+    // ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
+    RADBEAM2D_FLATBACKGROUND=1;
 
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
@@ -507,7 +525,8 @@ int init_global(void)
 	  myexit(3434628752);
 	}
 
-	cour=0.5;
+    cour=0.5;
+    //	cour=0.2; // doesn't seem to help avoid failures for this test
 	gam=gamideal=1.4;
 	cooling=KORAL;
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -523,22 +542,22 @@ int init_global(void)
 
 
 	FTYPE DTOUT1;
-	if (BEAMNO==1){
+	if (RADBEAM2D_BEAMNO==1){
 	  DTOUT1=.1; //dt for basic output
 	}
-	else if (BEAMNO==2){
+	else if (RADBEAM2D_BEAMNO==2){
 	  DTOUT1=.4; //dt for basic output
 	}
-	else if (BEAMNO==3){
+	else if (RADBEAM2D_BEAMNO==3){
 	  DTOUT1=1.; //dt for basic output
 	}
-	else if (BEAMNO==4){
+	else if (RADBEAM2D_BEAMNO==4){
 	  DTOUT1=.25; //dt for basic output
 	}
 
 	int idt;
-    //	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001; // testing
 
 	DTr = 100; //number of time steps for restart dumps
 	tf = 20.0; //final time
@@ -555,7 +574,7 @@ int init_global(void)
     RADBEAM2DKSVERT_BEAMNO=5; // 1-5
     // whether constant or radially varying background
     // ==0 doesn't make much sense for Minkowski without gravity, because flow reverses due to chosen high density
-    FLATBACKGROUND=1;
+    RADBEAM2D_FLATBACKGROUND=1;
 
 
 	lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
@@ -615,7 +634,7 @@ int init_global(void)
 
   if(WHICHPROBLEM==ATMSTATIC){
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    lim[1]=lim[2]=lim[3]=MINM; 
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -654,7 +673,12 @@ int init_global(void)
   if(WHICHPROBLEM==RADATM){
 
 
-    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
+    //    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
+    lim[1]=lim[2]=lim[3]=PARALINE;
+    // Koral uses MINMOD_THETA2 (MC?)
+    // koral paper uses MP5
+    //    lim[1]=lim[2]=lim[3]=MC;
+    
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -687,7 +711,7 @@ int init_global(void)
 	DTr = 100; //number of time steps for restart dumps
 	tf = 2E9; //final time
     
-    tf=1E8; // profiling
+    tf=1E8; // profiling // SUPERTODOMARK
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -1253,19 +1277,19 @@ int init_defcoord(void)
   
 
 
-	if (BEAMNO==1){
+	if (RADBEAM2D_BEAMNO==1){
 	  Rin_array[1]=2.6;
 	  Rout_array[1]=3.5;
 	}
-	else if (BEAMNO==2){
+	else if (RADBEAM2D_BEAMNO==2){
 	  Rin_array[1]=5.5;
 	  Rout_array[1]=7.5;
 	}
-	else if (BEAMNO==3){
+	else if (RADBEAM2D_BEAMNO==3){
 	  Rin_array[1]=14.5;
 	  Rout_array[1]=20.5;
 	}
-	else if (BEAMNO==4){
+	else if (RADBEAM2D_BEAMNO==4){
 	  Rin_array[1]=30;
 	  Rout_array[1]=50;
 	}
@@ -1964,6 +1988,18 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
@@ -2323,15 +2359,42 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT){
 
 
-	FTYPE RHOAMB=1.e0/RHOBAR;
-	FTYPE TAMB=1e7/TEMPBAR;
-	int BLOB=0; // whether to put blob in way of beam
-	FTYPE BLOBW=.1;
-	FTYPE BLOBP=100000.;
-	FTYPE BLOBX=10.;
-	FTYPE BLOBZ=Pi/20.;
-	FTYPE PAR_D=1./RHOBAR;
-	FTYPE PAR_E=1e-4/RHOBAR;
+	RADBEAM2D_RHOAMB=1.e0/RHOBAR;
+	RADBEAM2D_TAMB=1e7/TEMPBAR;
+	RADBEAM2D_BLOB=0; // whether to put blob in way of beam
+	RADBEAM2D_BLOBW=.1;
+	RADBEAM2D_BLOBP=100000.;
+	RADBEAM2D_BLOBX=10.;
+	RADBEAM2D_BLOBZ=Pi/20.;
+	RADBEAM2D_PAR_D=1./RHOBAR;
+	RADBEAM2D_PAR_E=1e-4/RHOBAR;
+
+    // BEAM PROPERTIES
+    RADBEAM2D_IFBEAM=1; // whether to have a beam
+    RADBEAM2D_TLEFT=1e9/TEMPBAR;
+    //    RADBEAM2D_NLEFT=0.95; // >~0.95 and code fails with SPCMINKMETRIC for BEAMNO=1
+    RADBEAM2D_NLEFT=0.99; // testing
+    //    RADBEAM2D_NLEFT=0.999; // code
+    //   RADBEAM2D_NLEFT=0.99999; // paper
+
+    if (RADBEAM2D_BEAMNO==1){
+      RADBEAM2D_BEAML=2.9;
+      RADBEAM2D_BEAMR=3.1;
+    }
+    else if (RADBEAM2D_BEAMNO==2){
+      RADBEAM2D_BEAML=5.8;
+      RADBEAM2D_BEAMR=6.2;
+    }
+    else if (RADBEAM2D_BEAMNO==3){
+      RADBEAM2D_BEAML=15.5;
+      RADBEAM2D_BEAMR=16.5;
+    }
+    else if (RADBEAM2D_BEAMNO==4){
+      RADBEAM2D_BEAML=37;
+      RADBEAM2D_BEAMR=43;
+    }
+
+
     FTYPE Fx,Fy,Fz;
 
 	FTYPE xx,yy,zz,rsq;
@@ -2346,23 +2409,23 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 	// if BLOB, override density with blob density
 	FTYPE rhoblob;
-	rhoblob=RHOAMB*(1.+BLOBP*exp(-((xx-BLOBX)*(xx-BLOBX)+(yy)*(yy)+(zz-BLOBZ)*(zz-BLOBZ))/BLOBW/BLOBW));
+	rhoblob=RADBEAM2D_RHOAMB*(1.+RADBEAM2D_BLOBP*exp(-((xx-RADBEAM2D_BLOBX)*(xx-RADBEAM2D_BLOBX)+(yy)*(yy)+(zz-RADBEAM2D_BLOBZ)*(zz-RADBEAM2D_BLOBZ))/RADBEAM2D_BLOBW/RADBEAM2D_BLOBW));
 
 	//zaczynam jednak od profilu analitycznego:   
 	FTYPE ERADAMB;
 	FTYPE rho,uint,Vr;
-	if(FLATBACKGROUND){
+	if(RADBEAM2D_FLATBACKGROUND){
 	  Vr=0.;
-	  rho=RHOAMB;
-	  if(BLOB) rho=rhoblob;
-	  uint=calc_PEQ_ufromTrho(TAMB,rho);
-	  ERADAMB=calc_LTE_EfromT(TAMB);
+	  rho=RADBEAM2D_RHOAMB;
+	  if(RADBEAM2D_BLOB) rho=rhoblob;
+	  uint=calc_PEQ_ufromTrho(RADBEAM2D_TAMB,rho);
+	  ERADAMB=calc_LTE_EfromT(RADBEAM2D_TAMB);
 	  //	  ERADAMB=calc_LTE_Efromurho(uint,rho);
 	}
 	else{
 	  FTYPE r=V[1];
-	  FTYPE mD=PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
-	  FTYPE mE=PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
+	  FTYPE mD=RADBEAM2D_PAR_D/(r*r*sqrt(2./r*(1.-2./r)));
+	  FTYPE mE=RADBEAM2D_PAR_E/(pow(r*r*sqrt(2./r),gamideal)*pow(1.-2./r,(gamideal+1.)/4.));
 	  Vr=sqrt(2./r)*(1.-2./r);
 
 	  // get metric grid geometry for these ICs
@@ -2372,9 +2435,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 	  gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
 
 	  FTYPE W=1./sqrt(1.-Vr*Vr*ptrgeomreal->gcov[GIND(1,1)]);
-	  rho=PAR_D/(r*r*sqrt(2./r));
-	  if(BLOB) rho += rhoblob;
-	  FTYPE T=TAMB;
+	  rho=RADBEAM2D_PAR_D/(r*r*sqrt(2./r));
+	  if(RADBEAM2D_BLOB) rho += rhoblob;
+	  FTYPE T=RADBEAM2D_TAMB;
 	  //			FTYPE ERAD=calc_LTE_EfromT(T);
 	  uint=mE/W;
 	  ERADAMB=calc_LTE_Efromurho(uint,rho);
@@ -2493,8 +2556,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     RADATM_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR);
     RADATM_LUMEDD=(1.25e38*MPERSUN)/(ENBAR/TBAR);
     RADATM_THINRADATM=1;
-    RADATM_FERATIO=.99999; // koral code
-    //    RADATM_FERATIO=.99; // koral paper
+    //    RADATM_FERATIO=.99999; // koral code
+    RADATM_FERATIO=.99; // koral paper
     RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
     RADATM_RHOAMB=1E-15/RHOBAR;
     RADATM_TAMB=1.e6/TEMPBAR;

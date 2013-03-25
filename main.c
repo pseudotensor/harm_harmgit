@@ -154,7 +154,6 @@ int main(int argc, char *argv[])
     // output timestep info
     output_steptimedt_info(comptstart);
     
-
   }
   trifprintf("proc: %04d : End computation\n", myid);
 

@@ -20,9 +20,9 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 
 static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 
-static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn);
-static int get_m1clsoure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn);
-static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn);
+static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
 
@@ -2554,7 +2554,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   indices_12(Av,Av,ptrgeom);
 
 
-  FTYPE gammarel2,delta;
+  FTYPE gammarel2,delta,numerator,divisor;
   FTYPE Erf;
   FTYPE urfconrel[NDIM];
 
@@ -2580,13 +2580,13 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
     // get \gamma^2 for relative 4-velocity
-    get_m1closure_gammarel2(showmessages,ptrgeom,Av,&gammarel2,&delta);
+    get_m1closure_gammarel2(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor);
 
     // get E in radiation frame
-    get_m1clsoure_Erf(ptrgeom,Av,gammarel2,&Erf);
+    get_m1closure_Erf(ptrgeom,Av,gammarel2,&Erf);
 
     // get relative 4-velocity
-    if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
+    if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
     else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
 
 
@@ -2603,6 +2603,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   pin[PRAD2]=urfconrel[2];
   pin[PRAD3]=urfconrel[3];
 
+  //  DLOOPA(jj){
+  //    if(!isfinite(pin[PRAD0+jj])){
+  //      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  //    }
+  //  }
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
 	// KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
@@ -2633,13 +2638,13 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
   FTYPE gammafluid,gammarel2fluid,qsqfluid,Erffluid;
   gamma_calc_fromuconrel(&pp[U1-1],ptrgeom,&gammafluid,&qsqfluid);
   gammarel2fluid=gammafluid*gammafluid;
-  get_m1clsoure_Erf(ptrgeom, Av, gammarel2fluid, &Erffluid);
+  get_m1closure_Erf(ptrgeom, Av, gammarel2fluid, &Erffluid);
   if(Erffluid<ERADLIMIT) Erffluid=ERADLIMIT;
 
   FTYPE gammarad,gammarel2rad,qsqrad,Erfrad;
   gamma_calc_fromuconrel(&pp[URAD1-1],ptrgeom,&gammarad,&qsqrad);
   gammarel2rad=gammarad*gammarad;
-  get_m1clsoure_Erf(ptrgeom, Av, gammarel2rad, &Erfrad);
+  get_m1closure_Erf(ptrgeom, Av, gammarel2rad, &Erfrad);
   if(Erfrad<ERADLIMIT) Erfrad=ERADLIMIT;
 
   // now set urfconrel.  Choose fluid if tautotmax>=2/3 (updated fluid value), while choose previous radiation value (i.e. static!)
@@ -2657,11 +2662,12 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 
 
 // get's gamma^2 for lab-frame gamma
-static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn)
+static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
 {
-  FTYPE gamma2,gammarel2,delta;
+  FTYPE gamma2,gammarel2,delta,numerator,divisor;
 
   if(0){
+    // GODMARK something nans out in RADBEAM2D with NLEFT=0.999 and SPCMINKMETRIC
 
     // has some catastrophic cancellation issue for non-moving velocity at very low E\sim 1E-92 (as in RADPULSE test if no temperature conversion)
 
@@ -2678,9 +2684,20 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
     b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
     c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]);
     delta=b*b-4.*a*c;
-    gamma2=  0.5*(-b-sqrt(delta))/a; // lab-frame gamma^2
+
+    numerator=0.5*(-b-sqrt(delta));
+    divisor=a;
+
+    gamma2=numerator/divisor; // lab-frame gamma^2
     //if unphysical try the other root
-    if(gamma2<=0.) gamma2=  0.5*(-b+sqrt(delta))/a; 
+    if(gamma2<=0.){
+      numerator=0.5*(-b+sqrt(delta));
+      divisor=a;
+      gamma2=  numerator/divisor; 
+    }
+    
+    *numeratorreturn=numerator;
+    *divisorreturn=divisor;
   }
   //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Av0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Av[0],Av[1],Av[2],Av[3],gamma2);
 
@@ -2710,14 +2727,18 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
       6.*gctt*Rtt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
       3.*gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
                2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz)));
-    gamma2 = (-0.25*((1. + gctt*gv11)*((Rtt)*(Rtt)) + 
+
+    divisor=(gv11*((Rtt)*(Rtt)) + 2.*gv12*Rtt*Rtx + gv22*((Rtx)*(Rtx)) + 2.*gv13*Rtt*Rty + 
+       2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + 
+             gv44*((Rtz)*(Rtz)));
+
+    numerator=(-0.25*((1. + gctt*gv11)*((Rtt)*(Rtt)) + 
                      gctt*(gv22*((Rtx)*(Rtx)) + 2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 
                            2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*((Rtz)*(Rtz))) + 
                      Rtt*(2.*gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 
-                          Sqrt(delta))))/
-      (gv11*((Rtt)*(Rtt)) + 2.*gv12*Rtt*Rtx + gv22*((Rtx)*(Rtx)) + 2.*gv13*Rtt*Rty + 
-       2.*gv23*Rtx*Rty + gv33*((Rty)*(Rty)) + 2.*(gv14*Rtt + gv24*Rtx + gv34*Rty)*Rtz + 
-       gv44*((Rtz)*(Rtz)));
+                          Sqrt(delta))));
+
+    gamma2 = numerator/divisor;
   }
 
 
@@ -2728,21 +2749,22 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
   ///////////////////////
   FTYPE alpha=ptrgeom->alphalapse;
 
-  if(!isfinite(gamma2)) gamma2=-BIG; // so no nan and avoids false conditional responses
 
   // get relative 4-velocity, that is always >=1 even in GR
   gammarel2 = gamma2*alpha*alpha;
 
   // check for machine error away from 1.0 that happens sometimes
   if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
-    //	dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
+    //	if(debugfail>=2) dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
     gammarel2=1.0;
   }
 
-
+  //  dualfprintf(fail_file,"gammarel2=%g gamma2=%g delta=%26.20g\n",gammarel2,gamma2,delta);
 
   *gammarel2return=gammarel2;
   *deltareturn=delta;
+  *numeratorreturn=numerator;
+  *divisorreturn=divisor;
   return(0);
 
 }
@@ -2751,7 +2773,7 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
 
 
 // get Erf
-static int get_m1clsoure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn)
+static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn)
 {
   FTYPE alpha=ptrgeom->alphalapse;
 
@@ -2768,7 +2790,7 @@ static int get_m1clsoure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2
 
 
 // get contravariant relative 4-velocity in lab frame
-static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
+static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
@@ -2787,51 +2809,63 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   // Note, can't set urfcon[0]=gammamax in case gammamax still remains space-like, e.g. inside horizon if gammamax isn't big enough.
   //
   //////////////////////
-  int JONCHOICEVALUE=gammarel2>gammamax*gammamax;
-  // Olek choice (fails for RADDBLSHADOW with NLEFT=0.99999 and paraline
-  int OLEKCHOICEVALUE=gammarel2>gammamax*gammamax || gammarel2<1. || delta<0.;
 
-  int failure1=(JONCHOICEVALUE && CASECHOICE==JONCHOICE || OLEKCHOICEVALUE && CASECHOICE==OLEKCHOICE);
-  int failure2=(gammarel2<1. || delta<0.);
-  int failure3=(Erf<ERADLIMIT);
+  // NOTE: gammarel2 just below 1.0 already fixed to be =1.0
+  int nonfailure=gammarel2>=1.0 && Erf>ERADLIMIT && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
+  // falilure1 : gammarel2 normal, but already Erf<ERADLIMIT (note for M1 that gammarel2>=1/4 for any reasonable chance for correct non-zero Erf
+  int failure1=Av[0]<0.0 || (gammarel2<1.0 && gammarel2>0.25) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
+  // gamma probably around 1
+  int failure2=gammarel2<1.0 && gammarel2>0.0 && delta>=0.0;
+  // i.e. all else, so not really used below.
+  int failure3=gammarel2>gammamax*gammamax && Erf>=ERADLIMIT || gammarel2<0.0 || delta<0.  || divisor==0.0 && numerator==0.0 || divisor==0.0 && numerator!=0.0;
 
-  FTYPE tautot[NDIM],tautotmax;
-  if(1 || M1REDUCE==TOOPACITYDEPENDENTFRAME){
-    // 1|| below because want to use tau to determine how to proceed with failures
-    if(1|| (failure1 || failure2 || failure3) && M1REDUCE==TOOPACITYDEPENDENTFRAME){
-      // then will possibly need tautotmax
-      // get tautot based upon previous pp in order to determine what to do in case of failure
-      calc_tautot(pp, ptrgeom, tautot, &tautotmax);
-    }
+
+
+  if(nonfailure){
+    // get good relative velocity
+    FTYPE gammarel=sqrt(gammarel2);
+    FTYPE alpha=ptrgeom->alphalapse;
+
+    SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+    *Erfreturn=Erf; // pass back new Erf to pointer
+    return(0);
+
+    //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
-
-
-  // if Erf already a value and already Erf<ERADLIMIT (i.e. delta>0 must be true), then bad failure and just reset velocity to zero or fluid velocity depending upon optical depth
-  if(Erf<ERADLIMIT){ // JCM
-    // Erf<ERADLIMIT is bad, but interpolation results may be ok.  Although static with pp
+  else if(failure1){
     // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
     Erf=ERADLIMIT;
     if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE3A;
     if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
-    // can't use normal velocity with small Erf -- fails with inf or nan
-    // setup "old" pp in case used
-    pp[PRAD0] = Erf;
-    SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
-        
-    if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-    else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-    else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-  }    
-  else if(failure1 || failure2 && tautotmax<TAUFAILLIMIT){ // works for RADBEAMFLAT
-    //    if(failure1 && tautotmax<TAUFAILLIMIT){ // works for DBLSHADOW
+    SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
 
-    //    urfcon[0]=gammamax; // ba
+  }    
+  else if(failure2){
+
+    FTYPE gammarel2orig=gammarel2;
+    // override
+    gammarel2=1.0;
+    FTYPE gammarel=1.0;  // use this below
+
+    // get new Erf(gammarel)
+    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    if(Erf<ERADLIMIT)  Erf=ERADLIMIT;
+    
+    SLOOPA(jj) urfconrel[jj] = 0.0;
+
+    if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+  }
+  else{// if(failure3){
+
     FTYPE gammarel=gammamax;
     gammarel2=gammamax*gammamax;
 
     // get new Erf(gammarel)
-    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
 
 
     // Check if Erf is too small with gamma->gammamax
@@ -2859,9 +2893,17 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       FTYPE gammatemp,qsqtemp;
       int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
       MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-        
-      // now rescale urfconrel[i] so will give desired \gammamax
-      SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
+
+      if(!isfinite(gammatemp)){
+        SLOOPA(jj) urfconrel[jj] =0.0;
+      }
+      else if(0&&gammatemp<=gammamax){
+        // do nothing, don't make gamma larger just to get consistency
+      }
+      else{
+        // now rescale urfconrel[i] so will give desired \gammamax
+        SLOOPA(jj) urfconrel[jj] *= (gammamax/gammatemp);
+      }
 	
 #if(PRODUCTION==0)
       // check that gamma really correctly gammamax
@@ -2872,88 +2914,31 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     }
     //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
 
-#if(1)
-    // now that have some version of uconrel, feed to pp[PRAD1-PRAD3] and see how to reduce 4-velocity in tau-based limits
-    // i.e. avoid using "static" old pp -- who knows that's there actually.
-    pp[PRAD0] = Erf;
-    SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
-
-    // update opacity calculation for new pp (although nominally radiation doesn't change opacity)
-    //      calc_tautot(pp, ptrgeom, tautot, &tautotmax);
-    //      dualfprintf(fail_file,"tautotmax=%g\n",tautotmax);
-
-    // now see how to handle opacity based limits between pp[PRAD1-PRAD3] and fluid velocity in pp[U1-U3] with Erf determined from one of those
-    if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-    else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-    else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-#endif
+    //    SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
 
   }
-  //////////////////////
-  //
-  // Second case is if gammarel<1 or delta<0, then set gammarel=1.  If Erf<ERADLIMIT (~0), then set Erf=ERADLIMIT and gammarel=1.
-  // Can't assume this condition is equivalent to large gamma, because if not, then leads to crazy boost of energy.
-  //
-  //////////////////////
-  //	else if(failure2){ // && tautotmax>=TAUFAILLIMIT){
-  else if(failure2 && tautotmax>=TAUFAILLIMIT){
 
 
-    FTYPE gammarel2orig=gammarel2;
-    // override
-    gammarel2=1.0;
-    FTYPE gammarel=1.0;  // use this below
+  // if here, then one failure mode.  See if optically thick or thin and reduce to (e.g.) fluid frame if thick
 
-    // get new Erf(gammarel)
-    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
-
-
-    if(Erf<ERADLIMIT){ // JCM
-      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
-      Erf=ERADLIMIT;
-      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: gamma<1 or delta<0 and Erf<ERADLIMIT : gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-    }
-    else{
-      // normal Erf
-      if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2B;
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2B: gamma<1 or delta<0 and Erf normal : gammamax=%g gammarel2orig=%21.15g gammarel2=%21.15g delta=%g : i=%d j=%d k=%d\n",gammamax,gammarel2orig,gammarel2,delta,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-    }
-
-    // can't use normal velocity with small Erf -- fails with inf or nan
-    // setup "old" pp in case used
-    pp[PRAD0] = Erf;
-    SLOOPA(jj) pp[PRAD1+jj-1] = 0.0; // consistent with gammarel2=1
-      
-    if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
-    else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-    else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-
-  }
-  //////////////////////
-  //
-  // Third case is if no bad conditions, then try regular calculation.  If Erf<ERADLIMIT, then already caught with first condition
-  //
-  //////////////////////
-  else{
-    
-    // get good relative velocity
-    FTYPE gammarel=sqrt(gammarel2);
-    FTYPE alpha=ptrgeom->alphalapse;
-
-    SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+  // can't use normal velocity with small Erf -- fails with inf or nan
+  // setup "old" pp in case used
+  pp[PRAD0] = Erf;
+  SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
 
-    //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  FTYPE tautot[NDIM],tautotmax;
+  if(M1REDUCE==TOOPACITYDEPENDENTFRAME){
+    // then will possibly need tautotmax
+    // get tautot based upon previous pp in order to determine what to do in case of failure
+    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
   }
 
-      
-#if(PRODUCTION==0)
-    //      if(showmessages) dualfprintf(fail_file,"CASEnofail: normal gamma and normal Erf (default non-fixed) : Erf=%g : gamma=%g urfconrel123= %g %g %g\n",Erf,gammarel,urfcon[1],urfcon[2],urfcon[3]);
-#endif
-      
-
-
+  
+  if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+  else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+  else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
+     
 
   *Erfreturn=Erf; // pass back new Erf to pointer
   return(0);
@@ -2977,7 +2962,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   //////////////////////
 
   int failure1=gammarel2>1.01*gammamax*gammamax || gammarel2<0. || delta<0.;
-  int failure2=gammarel2<1. || delta<0.;
+  int failure2=gammarel2<1. || delta<0.; // NOTE: first failure1 already catches delta<0.
 
 
 
@@ -2988,7 +2973,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
     gammarel2=gammamax*gammamax;
 
     // get new Erf(gammarel)
-    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
 
 
     // Check if Erf is too small with gamma->gammamax
@@ -3044,7 +3029,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
     FTYPE gammarel=1.0;  // use this below
 
     // get new Erf(gammarel)
-    get_m1clsoure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
     SLOOPA(jj) urfconrel[jj] = 0.0;
 
 
