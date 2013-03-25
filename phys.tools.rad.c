@@ -21,9 +21,14 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 
 static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
+
+
 static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn);
+
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+
 
 
 // mnemonics for return modes so schemes know how failed and what to do.
@@ -2582,6 +2587,17 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     // get \gamma^2 for relative 4-velocity
     get_m1closure_gammarel2(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor);
 
+    if(0){
+      // testing
+      FTYPE Avnew[NDIM]={Av[0],Av[1],Av[2],Av[3]};
+      FTYPE urfconrelnew[NDIM];
+      FTYPE gammarel2new,deltanew,numeratornew,divisornew,Erfnew;
+      //      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avnew,&gammarel2new,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avnew,NULL,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
+    }
+
+
+
     // get E in radiation frame
     get_m1closure_Erf(ptrgeom,Av,gammarel2,&Erf);
 
@@ -2666,9 +2682,7 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
 {
   FTYPE gamma2,gammarel2,delta,numerator,divisor;
 
-  if(0){
-    // GODMARK something nans out in RADBEAM2D with NLEFT=0.999 and SPCMINKMETRIC
-
+  if(1){
     // has some catastrophic cancellation issue for non-moving velocity at very low E\sim 1E-92 (as in RADPULSE test if no temperature conversion)
 
     //g_munu R^tmu R^tnu
@@ -2813,7 +2827,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   // NOTE: gammarel2 just below 1.0 already fixed to be =1.0
   int nonfailure=gammarel2>=1.0 && Erf>ERADLIMIT && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
   // falilure1 : gammarel2 normal, but already Erf<ERADLIMIT (note for M1 that gammarel2>=1/4 for any reasonable chance for correct non-zero Erf
-  int failure1=Av[0]<0.0 || (gammarel2<1.0 && gammarel2>0.25) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
+  int failure1=Av[0]<0.0 || (gammarel2>0.0 && gammarel2<=0.25 && delta>=0.0 && divisor!=0.0) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
   // gamma probably around 1
   int failure2=gammarel2<1.0 && gammarel2>0.0 && delta>=0.0;
   // i.e. all else, so not really used below.
@@ -2834,33 +2848,47 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
   else if(failure1){
-    // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
-    Erf=ERADLIMIT;
+    gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
+    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+    if(0){
+      // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
+      Erf=ERADLIMIT;
+     
+      SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
+    }
     if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE3A;
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
-    SLOOPA(jj) urfconrel[jj] = 0.0; // consistent with gammarel2=1
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE3A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d : %ld %d %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
 
   }    
   else if(failure2){
+    gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
+    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+    if(0){
+      FTYPE gammarel2orig=gammarel2;
+      // override
+      gammarel2=1.0;
+      FTYPE gammarel=1.0;  // use this below
 
-    FTYPE gammarel2orig=gammarel2;
-    // override
-    gammarel2=1.0;
-    FTYPE gammarel=1.0;  // use this below
-
-    // get new Erf(gammarel)
-    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
-    if(Erf<ERADLIMIT)  Erf=ERADLIMIT;
+      // get new Erf(gammarel)
+      get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+      if(Erf<ERADLIMIT)  Erf=ERADLIMIT;
     
-    SLOOPA(jj) urfconrel[jj] = 0.0;
+      SLOOPA(jj) urfconrel[jj] = 0.0;
 
+    }
     if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE2A: normal gamma, but Erf<ERADLIMIT. ijk=%d %d %d : %ld %d %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
   }
-  else{// if(failure3){
-
+  else{
+    gammarel2=gammamax*gammamax;
+    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+    if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+    //    return(0);
+  }
+  //else if(0){// if(failure3){
+  //  else{
+  if(0){
     FTYPE gammarel=gammamax;
     gammarel2=gammamax*gammamax;
 
@@ -2877,12 +2905,12 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       // can't use normal velocity with small Erf -- fails with inf or nan
       SLOOPA(jj) urfconrel[jj] = 0.0;
 
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
     }
     else{
       // if Erf normal, assume ok to have gammamax for radiation.  This avoids fixups, which can generate more oscillations.
       if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g : i=%d j=%d k=%d\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
 
       // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
       // lab-frame radiation relative 4-velocity
@@ -2909,7 +2937,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       // check that gamma really correctly gammamax
       FTYPE gammatemp2,qsqtemp2;
       MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d : %ld %d %g\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
 #endif
     }
     //		  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);
@@ -3075,6 +3103,227 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   *Erfreturn=Erf; // pass back new Erf to pointer
   return(0);
 }
+
+
+
+
+
+
+
+
+
+// get's gamma assuming fixed E rather than using original R^{tt} that we assume is flawed near floor regions.  We want to preserve R^{ti} (i.e momentum)
+static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
+{
+  FTYPE gamma2,gammarel2,delta;
+  FTYPE Erf;
+  FTYPE alpha=ptrgeom->alphalapse;
+
+  static FTYPE gctt, gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz;
+  gv11=ptrgeom->gcov[GIND(0,0)];
+  gv12=ptrgeom->gcov[GIND(0,1)];
+  gv13=ptrgeom->gcov[GIND(0,2)];
+  gv14=ptrgeom->gcov[GIND(0,3)];
+  gv22=ptrgeom->gcov[GIND(1,1)];
+  gv23=ptrgeom->gcov[GIND(1,2)];
+  gv24=ptrgeom->gcov[GIND(1,3)];
+  gv33=ptrgeom->gcov[GIND(2,2)];
+  gv34=ptrgeom->gcov[GIND(2,3)];
+  gv44=ptrgeom->gcov[GIND(3,3)];
+  //  Rtt=Av[0];
+  Rtx=Av[1];
+  Rty=Av[2];
+  Rtz=Av[3];
+  gctt=ptrgeom->gcon[GIND(0,0)];
+
+
+  // choose gamma
+  if(gammarel2return==NULL){
+    FTYPE gammamax=GAMMAMAXRAD;
+    gammarel2=gammamax*gammamax;
+  }
+  else gammarel2=*gammarel2return; // feed in desired gammarel2
+
+  FTYPE utsq=gammarel2/(alpha*alpha);
+
+
+
+  // but check if utsq is too small
+  FTYPE utsqmina=(0.5*(-8.*gctt*Power(gv12,2)*Power(Rtx,2) + 8.*gv22*Power(Rtx,2) + 
+       8.*gctt*gv11*gv22*Power(Rtx,2) - 16.*gctt*gv12*gv13*Rtx*Rty + 
+       16.*gv23*Rtx*Rty + 16.*gctt*gv11*gv23*Rtx*Rty - 
+       8.*gctt*Power(gv13,2)*Power(Rty,2) + 8.*gv33*Power(Rty,2) + 
+       8.*gctt*gv11*gv33*Power(Rty,2) - 16.*gctt*gv12*gv14*Rtx*Rtz + 
+       16.*gv24*Rtx*Rtz + 16.*gctt*gv11*gv24*Rtx*Rtz - 
+       16.*gctt*gv13*gv14*Rty*Rtz + 16.*gv34*Rty*Rtz + 
+       16.*gctt*gv11*gv34*Rty*Rtz - 8.*gctt*Power(gv14,2)*Power(Rtz,2) + 
+       8.*gv44*Power(Rtz,2) + 8.*gctt*gv11*gv44*Power(Rtz,2) - 
+       1.*Sqrt(Power(8.*gctt*Power(gv12,2)*Power(Rtx,2) - 8.*gv22*Power(Rtx,2) - 
+            8.*gctt*gv11*gv22*Power(Rtx,2) + 16.*gctt*gv12*gv13*Rtx*Rty - 
+            16.*gv23*Rtx*Rty - 16.*gctt*gv11*gv23*Rtx*Rty + 
+            8.*gctt*Power(gv13,2)*Power(Rty,2) - 8.*gv33*Power(Rty,2) - 
+            8.*gctt*gv11*gv33*Power(Rty,2) + 16.*gctt*gv12*gv14*Rtx*Rtz - 
+            16.*gv24*Rtx*Rtz - 16.*gctt*gv11*gv24*Rtx*Rtz + 
+            16.*gctt*gv13*gv14*Rty*Rtz - 16.*gv34*Rty*Rtz - 
+            16.*gctt*gv11*gv34*Rty*Rtz + 8.*gctt*Power(gv14,2)*Power(Rtz,2) - 
+            8.*gv44*Power(Rtz,2) - 8.*gctt*gv11*gv44*Power(Rtz,2),2) - 
+          4.*(16.*Power(gv12,2)*Power(Rtx,2) - 16.*gv11*gv22*Power(Rtx,2) + 
+             32.*gv12*gv13*Rtx*Rty - 32.*gv11*gv23*Rtx*Rty + 
+             16.*Power(gv13,2)*Power(Rty,2) - 16.*gv11*gv33*Power(Rty,2) + 
+             32.*gv12*gv14*Rtx*Rtz - 32.*gv11*gv24*Rtx*Rtz + 
+             32.*gv13*gv14*Rty*Rtz - 32.*gv11*gv34*Rty*Rtz + 
+             16.*Power(gv14,2)*Power(Rtz,2) - 16.*gv11*gv44*Power(Rtz,2))*
+           (Power(gctt,2)*Power(gv12,2)*Power(Rtx,2) + gctt*gv22*Power(Rtx,2) - 
+             1.*Power(gctt,2)*gv11*gv22*Power(Rtx,2) + 
+             2.*Power(gctt,2)*gv12*gv13*Rtx*Rty + 2.*gctt*gv23*Rtx*Rty - 
+             2.*Power(gctt,2)*gv11*gv23*Rtx*Rty + 
+             Power(gctt,2)*Power(gv13,2)*Power(Rty,2) + gctt*gv33*Power(Rty,2) - 
+             1.*Power(gctt,2)*gv11*gv33*Power(Rty,2) + 
+             2.*Power(gctt,2)*gv12*gv14*Rtx*Rtz + 2.*gctt*gv24*Rtx*Rtz - 
+             2.*Power(gctt,2)*gv11*gv24*Rtx*Rtz + 
+             2.*Power(gctt,2)*gv13*gv14*Rty*Rtz + 2.*gctt*gv34*Rty*Rtz - 
+             2.*Power(gctt,2)*gv11*gv34*Rty*Rtz + 
+             Power(gctt,2)*Power(gv14,2)*Power(Rtz,2) + gctt*gv44*Power(Rtz,2) - 
+             1.*Power(gctt,2)*gv11*gv44*Power(Rtz,2)))))/
+   (16.*Power(gv12,2)*Power(Rtx,2) - 16.*gv11*gv22*Power(Rtx,2) + 
+     32.*gv12*gv13*Rtx*Rty - 32.*gv11*gv23*Rtx*Rty + 
+     16.*Power(gv13,2)*Power(Rty,2) - 16.*gv11*gv33*Power(Rty,2) + 
+     32.*gv12*gv14*Rtx*Rtz - 32.*gv11*gv24*Rtx*Rtz + 32.*gv13*gv14*Rty*Rtz - 
+     32.*gv11*gv34*Rty*Rtz + 16.*Power(gv14,2)*Power(Rtz,2) - 
+    16.*gv11*gv44*Power(Rtz,2));
+
+  FTYPE utsqminb=(0.5*(-8.*gctt*Power(gv12,2)*Power(Rtx,2) + 8.*gv22*Power(Rtx,2) + 
+       8.*gctt*gv11*gv22*Power(Rtx,2) - 16.*gctt*gv12*gv13*Rtx*Rty + 
+       16.*gv23*Rtx*Rty + 16.*gctt*gv11*gv23*Rtx*Rty - 
+       8.*gctt*Power(gv13,2)*Power(Rty,2) + 8.*gv33*Power(Rty,2) + 
+       8.*gctt*gv11*gv33*Power(Rty,2) - 16.*gctt*gv12*gv14*Rtx*Rtz + 
+       16.*gv24*Rtx*Rtz + 16.*gctt*gv11*gv24*Rtx*Rtz - 
+       16.*gctt*gv13*gv14*Rty*Rtz + 16.*gv34*Rty*Rtz + 
+       16.*gctt*gv11*gv34*Rty*Rtz - 8.*gctt*Power(gv14,2)*Power(Rtz,2) + 
+       8.*gv44*Power(Rtz,2) + 8.*gctt*gv11*gv44*Power(Rtz,2) + 
+       Sqrt(Power(8.*gctt*Power(gv12,2)*Power(Rtx,2) - 8.*gv22*Power(Rtx,2) - 
+           8.*gctt*gv11*gv22*Power(Rtx,2) + 16.*gctt*gv12*gv13*Rtx*Rty - 
+           16.*gv23*Rtx*Rty - 16.*gctt*gv11*gv23*Rtx*Rty + 
+           8.*gctt*Power(gv13,2)*Power(Rty,2) - 8.*gv33*Power(Rty,2) - 
+           8.*gctt*gv11*gv33*Power(Rty,2) + 16.*gctt*gv12*gv14*Rtx*Rtz - 
+           16.*gv24*Rtx*Rtz - 16.*gctt*gv11*gv24*Rtx*Rtz + 
+           16.*gctt*gv13*gv14*Rty*Rtz - 16.*gv34*Rty*Rtz - 
+           16.*gctt*gv11*gv34*Rty*Rtz + 8.*gctt*Power(gv14,2)*Power(Rtz,2) - 
+           8.*gv44*Power(Rtz,2) - 8.*gctt*gv11*gv44*Power(Rtz,2),2) - 
+         4.*(16.*Power(gv12,2)*Power(Rtx,2) - 16.*gv11*gv22*Power(Rtx,2) + 
+            32.*gv12*gv13*Rtx*Rty - 32.*gv11*gv23*Rtx*Rty + 
+            16.*Power(gv13,2)*Power(Rty,2) - 16.*gv11*gv33*Power(Rty,2) + 
+            32.*gv12*gv14*Rtx*Rtz - 32.*gv11*gv24*Rtx*Rtz + 
+            32.*gv13*gv14*Rty*Rtz - 32.*gv11*gv34*Rty*Rtz + 
+            16.*Power(gv14,2)*Power(Rtz,2) - 16.*gv11*gv44*Power(Rtz,2))*
+          (Power(gctt,2)*Power(gv12,2)*Power(Rtx,2) + gctt*gv22*Power(Rtx,2) - 
+            1.*Power(gctt,2)*gv11*gv22*Power(Rtx,2) + 
+            2.*Power(gctt,2)*gv12*gv13*Rtx*Rty + 2.*gctt*gv23*Rtx*Rty - 
+            2.*Power(gctt,2)*gv11*gv23*Rtx*Rty + 
+            Power(gctt,2)*Power(gv13,2)*Power(Rty,2) + gctt*gv33*Power(Rty,2) - 
+            1.*Power(gctt,2)*gv11*gv33*Power(Rty,2) + 
+            2.*Power(gctt,2)*gv12*gv14*Rtx*Rtz + 2.*gctt*gv24*Rtx*Rtz - 
+            2.*Power(gctt,2)*gv11*gv24*Rtx*Rtz + 
+            2.*Power(gctt,2)*gv13*gv14*Rty*Rtz + 2.*gctt*gv34*Rty*Rtz - 
+            2.*Power(gctt,2)*gv11*gv34*Rty*Rtz + 
+            Power(gctt,2)*Power(gv14,2)*Power(Rtz,2) + gctt*gv44*Power(Rtz,2) - 
+            1.*Power(gctt,2)*gv11*gv44*Power(Rtz,2)))))/
+   (16.*Power(gv12,2)*Power(Rtx,2) - 16.*gv11*gv22*Power(Rtx,2) + 
+     32.*gv12*gv13*Rtx*Rty - 32.*gv11*gv23*Rtx*Rty + 
+     16.*Power(gv13,2)*Power(Rty,2) - 16.*gv11*gv33*Power(Rty,2) + 
+     32.*gv12*gv14*Rtx*Rtz - 32.*gv11*gv24*Rtx*Rtz + 32.*gv13*gv14*Rty*Rtz - 
+     32.*gv11*gv34*Rty*Rtz + 16.*Power(gv14,2)*Power(Rtz,2) - 
+    16.*gv11*gv44*Power(Rtz,2));
+
+  dualfprintf(fail_file,"utsq=%g utsqmina=%g utsqminb=%g\n",utsq,utsqmina,utsqminb);
+  // KORALTODO: override (only applicable for first root)  Unsure if 2nd root used for GR in ergosphere.  e.g. gv11 switches sign!
+  if(utsq<utsqmina && utsqmina>utsqminb) utsq=utsqmina;
+  if(utsq<utsqminb && utsqminb>utsqmina) utsq=utsqminb;
+
+
+  
+
+  // get new Av[0]=R^{tt}
+  
+  Av[0]=(-1.*(gctt + 4.*utsq)*(gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 4.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq + 
+       0.16666666666666666*Sqrt(36.*Power(gv12*Rtx + gv13*Rty + gv14*Rtz,2)*Power(gctt + 4.*utsq,2) - 
+          36.*(gv22*Power(Rtx,2) + 2.*gv23*Rtx*Rty + gv33*Power(Rty,2) + 2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*Power(Rtz,2))*
+           (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq)))))/
+    (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
+
+  Erf=(-3.*(gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 4.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq + 
+       0.16666666666666666*Sqrt(36.*Power(gv12*Rtx + gv13*Rty + gv14*Rtz,2)*Power(gctt + 4.*utsq,2) - 
+          36.*(gv22*Power(Rtx,2) + 2.*gv23*Rtx*Rty + gv33*Power(Rty,2) + 2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*Power(Rtz,2))*
+           (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq)))))/
+    (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
+
+  dualfprintf(fail_file,"NOR SOL: %g %g :: %g %g %g\n",Av[0],Erf,Rtx,Rty,Rtz);
+  
+  delta=0; // not yet
+
+  if(1){
+    // alt solution
+    FTYPE Avalt=(-1.*(gctt + 4.*utsq)*(gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 4.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq - 
+       0.16666666666666666*Sqrt(36.*Power(gv12*Rtx + gv13*Rty + gv14*Rtz,2)*Power(gctt + 4.*utsq,2) - 
+          36.*(gv22*Power(Rtx,2) + 2.*gv23*Rtx*Rty + gv33*Power(Rty,2) + 2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*Power(Rtz,2))*
+           (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq)))))/
+      (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
+
+
+    FTYPE Erfalt=(-3.*gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) - 12.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq + 
+     0.5*Sqrt(36.*Power(gv12*Rtx + gv13*Rty + gv14*Rtz,2)*Power(gctt + 4.*utsq,2) - 
+        36.*(gv22*Power(Rtx,2) + 2.*gv23*Rtx*Rty + gv33*Power(Rty,2) + 2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*Power(Rtz,2))*
+         (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq))))/
+      (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
+
+    dualfprintf(fail_file,"ALT SOL: %g %g : %g %g %g\n",Avalt,Erfalt,Rtx,Rty,Rtz);
+  }
+
+
+  *gammarel2return=gammarel2;
+  *deltareturn=delta;
+
+  // get good relative velocity
+  FTYPE gammarel=sqrt(gammarel2);
+
+  // get relative 4-velocity
+  int jj;
+  if(Erf>0.0) SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+  else SLOOPA(jj) urfconrel[jj] = 0.0;
+
+  dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
+
+  
+  *Erfreturn=Erf; // pass back new Erf to pointer
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

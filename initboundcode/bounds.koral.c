@@ -1318,12 +1318,18 @@ int bound_radbeam2dbeaminflow(int dir,
           FTYPE *pr=&MACP0A1(prim,i,j,k,0);
     
           //initially copying everything
-          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-    
-          // NOTEMARK: only really makes sense near the hole if in KSCOORDS
-          PBOUNDLOOP(pliter,pl) if(pl==U3) if(pr[U3]>0.0) pr[U3]=0.0; // limit so no arbitrary fluid inflow
-          PBOUNDLOOP(pliter,pl) if(pl==URAD3) if(pr[URAD3]>0.0) pr[URAD3]=0.0; // limit so no arbitrary radiative inflow
+          PBOUNDLOOP(pliter,pl) pr[pl] = MACP0A1(prim,ri,rj,rk,pl);
 
+
+          if(0){
+            // NOTEMARK: only really makes sense near the hole if in KSCOORDS
+            PBOUNDLOOP(pliter,pl) if(pl==U3) if(pr[U3]>0.0) pr[U3]=0.0; // limit so no arbitrary fluid inflow
+            PBOUNDLOOP(pliter,pl) if(pl==URAD3) if(pr[URAD3]>0.0) pr[URAD3]=0.0; // limit so no arbitrary radiative inflow
+          }
+
+          // store this outflow result
+          FTYPE pr0[NPR];
+          PBOUNDLOOP(pliter,pl) pr0[pl]=pr[pl];
 
           // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \phi at those i
           if(1      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
@@ -1376,12 +1382,16 @@ int bound_radbeam2dbeaminflow(int dir,
               if(0) ERADAMB=pr[URAD0];
             }
 
-            // beam injection
+
+            // beam parameters
             FTYPE ERADINJ=calc_LTE_EfromT(RADBEAM2D_TLEFT);
-            // get ERAD
-            FTYPE ERAD;
-            if(V[1]>RADBEAM2D_BEAML && V[1]<RADBEAM2D_BEAMR && RADBEAM2D_IFBEAM) ERAD=ERADINJ;
-            else ERAD=ERADAMB;
+            // original top-hat beam
+            //FTYPE beamshape=(FTYPE)(V[1]>RADBEAM2D_BEAML && V[1]<RADBEAM2D_BEAMR && RADBEAM2D_IFBEAM);
+            // gaussian-like beam:
+            FTYPE powbeam=6.0;
+            FTYPE beamhalfwidth=0.5*(RADBEAM2D_BEAMR-RADBEAM2D_BEAML);
+            FTYPE beamcenter=(RADBEAM2D_BEAML+RADBEAM2D_BEAMR)*0.5;
+            FTYPE beamshape=exp(-pow(V[1]-beamcenter,powbeam)/(2.0*pow(beamhalfwidth,powbeam)))*RADBEAM2D_IFBEAM;
 
 
             if(1){
@@ -1389,20 +1399,33 @@ int bound_radbeam2dbeaminflow(int dir,
               FTYPE Fx,Fy,Fz;
               // default flux
               Fx=Fy=Fz=0;
-
               // beam flux
-              if(V[1]>RADBEAM2D_BEAML && V[1]<RADBEAM2D_BEAMR && RADBEAM2D_IFBEAM) Fz=RADBEAM2D_NLEFT*ERAD;
-
+              Fz=RADBEAM2D_NLEFT*ERADINJ;
+              
               FTYPE pradffortho[NPR];
-              pradffortho[PRAD0] = ERAD;
-              pradffortho[PRAD1] = Fx;
-              pradffortho[PRAD2] = Fy;
-              pradffortho[PRAD3] = Fz;
+              pradffortho[PRAD0] = ERADAMB + ERADINJ*beamshape;
+              pradffortho[PRAD1] = Fx*beamshape;
+              pradffortho[PRAD2] = Fy*beamshape;
+              pradffortho[PRAD3] = Fz*beamshape;
 
               int whichvel=WHICHVEL; // in which vel U1-U3 set
               int whichcoordfluid=PRIMECOORDS; // in which coordinates U1-U3 set
               int whichcoordrad=MCOORD; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+        
+#if(0)
+              // try using outflow outside of beam
+              if(){
+              }
+              else{
+                pr[PRAD0]=pr0[PRAD0];
+                pr[PRAD1]=pr0[PRAD1];
+                pr[PRAD2]=pr0[PRAD2];
+                pr[PRAD3]=pr0[PRAD3];
+                if(pr[PRAD3]>0.0) pr[PRAD3]=0.0; // but don't let radiative inflow
+              }
+#endif
 
             }
             else if(0){
@@ -1426,7 +1449,7 @@ int bound_radbeam2dbeaminflow(int dir,
               if(V[1]>RADBEAM2D_BEAML && V[1]<RADBEAM2D_BEAMR && RADBEAM2D_IFBEAM) uradz=1.0/sqrt(1.0 - RADBEAM2D_NLEFT*RADBEAM2D_NLEFT);
               //              else uradz=0.0;
 
-              PBOUNDLOOP(pliter,pl) if(pl==URAD0) pr[URAD0] = ERAD;
+              PBOUNDLOOP(pliter,pl) if(pl==URAD0) pr[URAD0] = ERADINJ;
               PBOUNDLOOP(pliter,pl) if(pl==URAD1) pr[URAD1] = uradx;
               PBOUNDLOOP(pliter,pl) if(pl==URAD2) pr[URAD2] = urady;
               PBOUNDLOOP(pliter,pl) if(pl==URAD3) pr[URAD3] = uradz;

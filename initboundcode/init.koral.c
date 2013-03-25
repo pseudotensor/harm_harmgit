@@ -532,8 +532,13 @@ int init_global(void)
 	//	ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
 	BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
-    //BCtype[X1DN]=OUTFLOW;
-    BCtype[X1DN]=HORIZONOUTFLOW;
+    if(MCOORD==KSCOORDS||BLCOORDS){
+      BCtype[X1DN]=HORIZONOUTFLOW; // if SPCMINKMETRIC with no gravity, suckingin on boundary can leave prad0 very small and then pradi~c for no good reason
+    }
+    else{
+      //    BCtype[X1DN]=OUTFLOW;
+      BCtype[X1DN]=FREEOUTFLOW;
+    }
 	BCtype[X2UP]=PERIODIC;
 	BCtype[X2DN]=PERIODIC;
 	//	BCtype[X3UP]=FREEOUTFLOW;
@@ -2373,7 +2378,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     RADBEAM2D_IFBEAM=1; // whether to have a beam
     RADBEAM2D_TLEFT=1e9/TEMPBAR;
     //    RADBEAM2D_NLEFT=0.95; // >~0.95 and code fails with SPCMINKMETRIC for BEAMNO=1
-    RADBEAM2D_NLEFT=0.99; // testing
+    RADBEAM2D_NLEFT=0.99; // testing FUCK
     //    RADBEAM2D_NLEFT=0.999; // code
     //   RADBEAM2D_NLEFT=0.99999; // paper
 
