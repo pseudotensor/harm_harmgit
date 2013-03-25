@@ -623,8 +623,8 @@ int init_global(void)
 	}
 
 	int idt;
-    //	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
-	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=DTOUT1;
+    //	for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001;
 
 	DTr = 100; //number of time steps for restart dumps
 	tf = 20.0; //final time
@@ -769,8 +769,8 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    //RADWAVE_NUMERO=11; // GOOD
-    RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
+    RADWAVE_NUMERO=11; // GOOD
+    //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
     //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
     // NUMERO=41 corresponds to Jiang et al. (2002) PP=100, sigma=10 (2nd row, 2nd column in Table B1) 11 to PP=0.01, sigma=0.01 (1st row, 1st column).
@@ -1349,6 +1349,7 @@ int init_defcoord(void)
 	  Rout_array[1]=12.5;
 	}
 
+    // NOTE: For testing radiation through polar axis region with axis *on* grid.
 	Rin_array[2]= -0.25*Pi/2.;
     Rout_array[2]=+0.27*Pi/2.;
 

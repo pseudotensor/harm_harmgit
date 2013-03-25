@@ -24,8 +24,6 @@
 
 
 
-// TOTRY: Speed of light limiter?
-
 // TOTRY : optically thin dot in SPC or pulse in SPC.
 
 // TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
@@ -33,16 +31,12 @@
 
 // KORALTODO: PROBLEMS:
 
-// RADBEAM2D, RADBEAM2DKS,RADBEAM2DKSVERT do not work -- noise and failures galore.  As if u2p_rad() needs some other decision tree.
 
 // RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
 
 // RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.  No change.
 
 // RADATM with paraline clearly shows oscillations in vx per grid cell while not improving error.
-
-
-// RADWALL without fixups is worse than when avoided Erf< condition that seemingly was required for RADDBLSHADOW to work.
 
 // RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
 
@@ -108,16 +102,16 @@
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
 //#define WHICHPROBLEM RADATM
-#define WHICHPROBLEM RADBEAM2D
+//#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
 //#define WHICHPROBLEM RADWAVE
 //#define WHICHPROBLEM RADBONDI
 //#define WHICHPROBLEM RADDOT
-//#define WHICHPROBLEM RADNT
-//#define WHICHPROBLEM RADFLATDISK
-//#define WHICHPROBLEM RADDONUT
+//#define WHICHPROBLEM RADNT // TODOCHECK
+//#define WHICHPROBLEM RADFLATDISK // TODOCHECK
+//#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
 //#define WHICHPROBLEM RADCYLBEAM
-//#define WHICHPROBLEM RADBEAM2DKSVERT
+#define WHICHPROBLEM RADBEAM2DKSVERT // TODO
 //#define WHICHPROBLEM RADCYLBEAMCART
 
 

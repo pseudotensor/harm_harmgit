@@ -3018,17 +3018,19 @@ int bound_radbeam2dksvertbeaminflow(int dir,
 
    
         LOOPBOUND2OUT{
-
+          FTYPE *pr=&MACP0A1(prim,i,j,k,0);
     
           //initially copying everything
-          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          PBOUNDLOOP(pliter,pl) pr[pl] = MACP0A1(prim,ri,rj,rk,pl);
     
           // NOTEMARK: only really makes sense near the hole if in KSCOORDS
-          if(MACP0A1(prim,i,j,k,U2)<0.0) MACP0A1(prim,i,j,k,U2)=0.0; // limit so no arbitrary fluid inflow
-          if(MACP0A1(prim,i,j,k,URAD2)<0.0) MACP0A1(prim,i,j,k,URAD2)=0.0; // limit so no arbitrary radiative inflow
+          if(pr[U2]<0.0) pr[U2]=0.0; // limit so no arbitrary fluid inflow
+          if(pr[URAD2]<0.0) pr[URAD2]=0.0; // limit so no arbitrary radiative inflow
 
 
           // only overwrite copy if not inside i<0 since want to keep consistent with outflow BCs used for other \theta at those i
+          FTYPE ERADAMB;
+          FTYPE rho,uint,Vr;
           if(1      &&     startpos[1]+i>=0 && ispstag==0){ // only do something special with non-field primitives
 
             // local geom
@@ -3037,9 +3039,6 @@ int bound_radbeam2dksvertbeaminflow(int dir,
             //coordinates of the ghost cell
             bl_coord_ijk_2(i,j,k,CENT,X, V);
 
-            // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
-            int whichvel;
-            whichvel=VEL4;
             int whichcoord;
             whichcoord=MCOORD;
 
@@ -3050,21 +3049,6 @@ int bound_radbeam2dksvertbeaminflow(int dir,
             gset(getprim,whichcoord,i,j,k,ptrgeomreal);
 
 
-            FTYPE ERADAMB;
-            FTYPE rho,uint,Vr;
-            FTYPE uradx,urady,uradz;
-            FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
-
-
-            // get coordinate basis in VEL4 format
-            ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[URAD1],uradcon,othersrad);
-            // get coordinate basis in MCOORD basis
-            uradx=uradcon[1]*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
-            urady=uradcon[2]*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
-            uradz=uradcon[3]*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
-            if(urady<0.0) urady=0.0; // limit so no arbitrary radiative inflow
-
-
             if(RADBEAM2D_FLATBACKGROUND){
               Vr=0.0;
               rho=RHOAMB;
@@ -3072,7 +3056,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
               ERADAMB=calc_LTE_EfromT(TAMB);
 
               // override so like outflow conditions to avoid shear at boundary
-              ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+              // ERADAMB=pr[URAD0];
 
             }
             else{
@@ -3091,48 +3075,101 @@ int bound_radbeam2dksvertbeaminflow(int dir,
               ERADAMB=calc_LTE_Efromurho(uint,rho);
      
               // override so like outflow conditions to avoid shear at boundary
-              ERADAMB=MACP0A1(prim,i,j,k,URAD0);
+              //ERADAMB=pr[URAD0];
             }
 
-            PBOUNDLOOP(pliter,pl){
 
-              //primitives in whichvel,whichcoord
-              if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
+            // beam parameters
+            FTYPE ERADINJ=calc_LTE_EfromT(TLEFT);
+            // original top-hat beam
+            //FTYPE beamshape=(FTYPE)(V[1]>BEAML && V[1]<BEAMR && IFBEAM);
+            // gaussian-like beam:
+            FTYPE powbeam=6.0;
+            FTYPE beamhalfwidth=0.5*(BEAMR-BEAML);
+            FTYPE beamcenter=(BEAML+BEAMR)*0.5;
+            FTYPE beamshape=exp(-pow(V[1]-beamcenter,powbeam)/(2.0*pow(beamhalfwidth,powbeam)))*IFBEAM;
+
+
+            if(1){
+              //E, F^i in orthonormal fluid frame
+              FTYPE Fx,Fy,Fz;
+              // default flux
+              Fx=Fy=Fz=0;
+              // beam flux
+              Fy=-NLEFT*ERADINJ;
+
+              dualfprintf(fail_file,"ERADINJ=%g Fy=%g beamshape=%g\n",ERADINJ, Fy,beamshape);
+              
+              FTYPE pradffortho[NPR];
+              pradffortho[PRAD0] = ERADAMB + ERADINJ*beamshape;
+              pradffortho[PRAD1] = Fx*beamshape;
+              pradffortho[PRAD2] = Fy*beamshape;
+              pradffortho[PRAD3] = Fz*beamshape;
+
+              int whichvel=WHICHVEL; // in which vel U1-U3 set
+              int whichcoordfluid=PRIMECOORDS; // in which coordinates U1-U3 set
+              int whichcoordrad=MCOORD; // in which coordinates E,F are orthonormal
+              whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+              dualfprintf(fail_file,"primrad: %g %g %g %g\n",pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+
+            }
+            else{
+              // old harm way
+
+              // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+              int whichvel;
+              whichvel=VEL4;
+
+
+              FTYPE uradx,urady,uradz;
+              FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
+
+
+              // get coordinate basis in VEL4 format
+              ucon_calc(&pr[URAD1-U1],ptrgeom[URAD1],uradcon,othersrad);
+              // get coordinate basis in MCOORD basis
+              uradx=uradcon[1]*sqrt(fabs(ptrgeom[URAD1]->gcov[GIND(1,1)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(1,1)]));
+              urady=uradcon[2]*sqrt(fabs(ptrgeom[URAD2]->gcov[GIND(2,2)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(2,2)]));
+              uradz=uradcon[3]*sqrt(fabs(ptrgeom[URAD3]->gcov[GIND(3,3)]))/sqrt(fabs(ptrgeomreal->gcov[GIND(3,3)]));
+              if(urady<0.0) urady=0.0; // limit so no arbitrary radiative inflow
+
+
+              PBOUNDLOOP(pliter,pl){
+
+                //primitives in whichvel,whichcoord
+                if(V[1]>BEAML && V[1]<BEAMR && IFBEAM){//beam to be imposed
                 
-                // beam injection
-                // override URAD0
-                FTYPE ERADINJ;
-                ERADINJ=calc_LTE_EfromT(TLEFT);
-                // override uradz
-                urady=-1.0/sqrt(1.0 - NLEFT*NLEFT);
-                uradx=uradz=0.0;
+                  // override uradz
+                  urady=-1.0/sqrt(1.0 - NLEFT*NLEFT);
+                  uradx=uradz=0.0;
                 
 
-                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADINJ;
-                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
+                  if(pl==URAD0) pr[URAD0] = ERADINJ;
+                  if(pl==URAD1) pr[URAD1] = uradx;
+                  if(pl==URAD2) pr[URAD2] = urady;
+                  if(pl==URAD3) pr[URAD3] = uradz;
 
-                //                dualfprintf(fail_file,"GOT BEAM: ijk=%d %d %d : %g %g\n",ERADINJ,urady);
-              }
-              else{ //no beam
+                  //                dualfprintf(fail_file,"GOT BEAM: ijk=%d %d %d : %g %g\n",ERADINJ,urady);
+                }
+                else{ //no beam
                 
-                //                dualfprintf(fail_file,"GOTNOBEAM: ijk=%d %d %d : %g %g\n",ERADAMB,urady);
+                  //                dualfprintf(fail_file,"GOTNOBEAM: ijk=%d %d %d : %g %g\n",ERADAMB,urady);
                 
-                //     MACP0A1(prim,i,j,k,URAD0) = ERADAMB;
-                if(pl==URAD0) MACP0A1(prim,i,j,k,URAD0) = ERADAMB; // so matches outer radial boundary when no beam
-                if(pl==URAD1) MACP0A1(prim,i,j,k,URAD1) = uradx;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,URAD2) = urady;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,URAD3) = uradz;
-              }
-            } // over allowed pl's to bound
+                  //     pr[URAD0] = ERADAMB;
+                  if(pl==URAD0) pr[URAD0] = ERADAMB; // so matches outer radial boundary when no beam
+                  if(pl==URAD1) pr[URAD1] = uradx;
+                  if(pl==URAD2) pr[URAD2] = urady;
+                  if(pl==URAD3) pr[URAD3] = uradz;
+                }
+              } // over allowed pl's to bound
 
 
-            // KORALTODO: ERADINJ is in fluid frame, need to convert, but probably ok.
+              // KORALTODO: ERADINJ is in fluid frame, need to convert, but probably ok.
 
-            // get all primitives in WHICHVEL/PRIMECOORDS value
-            primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
-
+              // get all primitives in WHICHVEL/PRIMECOORDS value
+              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],pr,pr); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+            }
 
           }// end if not staggered field
 
@@ -3143,7 +3180,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
   }// end parallel region
 
   return(0);
-} 
+}
 
 
 
