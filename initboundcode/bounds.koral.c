@@ -3098,7 +3098,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
               // beam flux
               Fy=-NLEFT*ERADINJ;
 
-              dualfprintf(fail_file,"ERADINJ=%g Fy=%g beamshape=%g\n",ERADINJ, Fy,beamshape);
+              //              dualfprintf(fail_file,"ERADINJ=%g Fy=%g beamshape=%g\n",ERADINJ, Fy,beamshape);
               
               FTYPE pradffortho[NPR];
               pradffortho[PRAD0] = ERADAMB + ERADINJ*beamshape;
@@ -3111,7 +3111,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
               int whichcoordrad=MCOORD; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
-              dualfprintf(fail_file,"primrad: %g %g %g %g\n",pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+              //              dualfprintf(fail_file,"primrad: %g %g %g %g\n",pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
 
             }
             else{

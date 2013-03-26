@@ -1259,6 +1259,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 }
 
+// KORALTODO: move these vchar_all and vchar_each to wavespeeds.c
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
 {
   FTYPE vminmhd,vmaxmhd;
@@ -1381,7 +1382,7 @@ static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYP
 
 #if(0)
   // Cartesian-Minkowski speed-of-light limit of radiation velocity
- FTYPE dxdxp[NDIM][NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
   dxdxprim_ijk(geom->i, geom->j, geom->k, geom->p, dxdxp);
   // characeristic wavespeeds are 3-velocity in lab-frame
   *vmin=-1.0/dxdxp[dir][dir]; // e.g. dxdxp = dr/dx1
@@ -1393,6 +1394,7 @@ static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYP
 }
 
 // convert primitives to conserved radiation quantities
+// KORALTODO: UNUSED remove?
 int p2u_rad(FTYPE *pr, FTYPE *Urad, struct of_geom *ptrgeom, struct of_state *q)
 {
   FTYPE Uraddiag;
@@ -2030,6 +2032,7 @@ int calc_Lorentz_laborff(int whichdir,FTYPE *pp,struct of_state *q, struct of_ge
 /*****************************************************************/
 /*****************************************************************/
 //T^ij Lorentz boost lab <-> fluid frame
+// UNUSED -- KORALTODO :REMOVE?
 //whichdir: [LAB2FF, FF2LAB]
 int boost22_laborff(int whichdir, FTYPE T1[][NDIM],FTYPE T2[][NDIM],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom)
 { 

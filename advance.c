@@ -10,11 +10,11 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
 
 
 static int prepare_globaldt(
-			    int truestep, 
-		     FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
-		     FTYPE accdt,int accdti,int accdtj,int accdtk,
-		     FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
-		     FTYPE *ndt);
+                            int truestep, 
+                            FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
+                            FTYPE accdt,int accdti,int accdtj,int accdtk,
+                            FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
+                            FTYPE *ndt);
 
 
 
@@ -36,19 +36,19 @@ static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2
 
 
 static int advance_standard(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			    FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-			    FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
+                            FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                            FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+                            FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
 static int advance_finitevolume(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-				FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-				FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-				FTYPE *CUf,FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime,  int stagenow, int numstages, FTYPE *ndt);
+                                FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                                FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+                                FTYPE *CUf,FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime,  int stagenow, int numstages, FTYPE *ndt);
 
 
 
@@ -84,12 +84,12 @@ void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 //
 // So in the end only pf is modified at each zone, so the loop changing p at previous (i,j) location doesn't affect the any new location in (i,j)
 int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-	    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-	    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-	    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-	    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-	    FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	    FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt)
+            FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+            FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+            FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+            FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+            FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt)
 {
 
 
@@ -139,25 +139,25 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 // this method has updated field staggered method
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
 static int advance_standard(
-			    int truestep,
-			    int stage,
-			    FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			    FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			    FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
-			    FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
-			    FTYPE *CUf, 
-			    FTYPE *CUnew, 
-			    SFTYPE fluxdt,
-			    SFTYPE boundtime,
-			    SFTYPE fluxtime,
-			    int timeorder, int numtimeorders,
-			    FTYPE *ndt)
+                            int truestep,
+                            int stage,
+                            FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                            FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
+                            FTYPE *CUf, 
+                            FTYPE *CUnew, 
+                            SFTYPE fluxdt,
+                            SFTYPE boundtime,
+                            SFTYPE fluxtime,
+                            int timeorder, int numtimeorders,
+                            FTYPE *ndt)
 {
   FTYPE ndt1, ndt2, ndt3;
   FTYPE dUtot;
@@ -324,8 +324,6 @@ static int advance_standard(
       MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
 
-    
-
   
 #if(0)// DEBUG:
     if(1){
@@ -336,11 +334,11 @@ static int advance_standard(
     if(1){
       int i,j,k,pl,pliter;
       FULLLOOP{
-	PLOOP(pliter,pl){
-	  if(N1>1) MACP0A1(F1,i,j,k,pl)=GLOBALMACP0A1(F1EM,i,j,k,pl);
-	  if(N2>1) MACP0A1(F2,i,j,k,pl)=GLOBALMACP0A1(F2EM,i,j,k,pl);
-	  if(N3>1) MACP0A1(F3,i,j,k,pl)=GLOBALMACP0A1(F3EM,i,j,k,pl);
-	}
+        PLOOP(pliter,pl){
+          if(N1>1) MACP0A1(F1,i,j,k,pl)=GLOBALMACP0A1(F1EM,i,j,k,pl);
+          if(N2>1) MACP0A1(F2,i,j,k,pl)=GLOBALMACP0A1(F2EM,i,j,k,pl);
+          if(N3>1) MACP0A1(F3,i,j,k,pl)=GLOBALMACP0A1(F3EM,i,j,k,pl);
+        }
       }
       ndt1=ndt1donor;
       ndt2=ndt2donor;
@@ -355,10 +353,10 @@ static int advance_standard(
       dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
       dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
       COMPFULLLOOP{
-	if(i==390 && j==1 && k==0){
-	  dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
-	  PLOOP(pliter,pl) dualfprintf(fail_file,"          pl=%d F1orig=%21.15g F1new=%21.15g  :: F2orig=%21.15g F2new=%21.15g \n",pl,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
-	}
+        if(i==390 && j==1 && k==0){
+          dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
+          PLOOP(pliter,pl) dualfprintf(fail_file,"          pl=%d F1orig=%21.15g F1new=%21.15g  :: F2orig=%21.15g F2new=%21.15g \n",pl,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+        }
       }
     }
 #endif
@@ -371,16 +369,16 @@ static int advance_standard(
       dualfprintf(fail_file,                 "BADLOOPCOMPARE: nstep=%ld steppart=%d\n",nstep,steppart);
       dualfprintf(fail_file,                 "ndt1orig=%21.15g ndt1new=%21.15g ndt2orig=%21.15g ndt2new=%21.15g\n",ndt1,ndt1donor,ndt2,ndt2donor);
       COMPFULLLOOP{
-	PLOOP(pliter,pl){
-	  diff1=fabs(MACP0A1(F1,i,j,k,pl)-GLOBALMACP0A1(F1EM,i,j,k,pl));
-	  sum1=fabs(MACP0A1(F1,i,j,k,pl))+fabs(GLOBALMACP0A1(F1EM,i,j,k,pl))+SMALL;
-	  diff2=fabs(MACP0A1(F2,i,j,k,pl)-GLOBALMACP0A1(F2EM,i,j,k,pl));
-	  sum2=fabs(MACP0A1(F2,i,j,k,pl))+fabs(GLOBALMACP0A1(F2EM,i,j,k,pl))+SMALL;
-	  if(diff1/sum1>100.0*NUMEPSILON || diff2/sum2>100.0*NUMEPSILON){
-	    dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
-	    dualfprintf(fail_file,"          pl=%d diff1/sum1=%21.15g F1orig=%21.15g F1new=%21.15g  :: diff2/sum2=%21.15g F2orig=%21.15g F2new=%21.15g \n",pl,diff1/sum1,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),diff2/sum2,MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
-	  }
-	}
+        PLOOP(pliter,pl){
+          diff1=fabs(MACP0A1(F1,i,j,k,pl)-GLOBALMACP0A1(F1EM,i,j,k,pl));
+          sum1=fabs(MACP0A1(F1,i,j,k,pl))+fabs(GLOBALMACP0A1(F1EM,i,j,k,pl))+SMALL;
+          diff2=fabs(MACP0A1(F2,i,j,k,pl)-GLOBALMACP0A1(F2EM,i,j,k,pl));
+          sum2=fabs(MACP0A1(F2,i,j,k,pl))+fabs(GLOBALMACP0A1(F2EM,i,j,k,pl))+SMALL;
+          if(diff1/sum1>100.0*NUMEPSILON || diff2/sum2>100.0*NUMEPSILON){
+            dualfprintf(fail_file,                 "i=%d j=%d k=%d\n",i,j,k);
+            dualfprintf(fail_file,"          pl=%d diff1/sum1=%21.15g F1orig=%21.15g F1new=%21.15g  :: diff2/sum2=%21.15g F2orig=%21.15g F2new=%21.15g \n",pl,diff1/sum1,MACP0A1(F1,i,j,k,pl),GLOBALMACP0A1(F1EM,i,j,k,pl),diff2/sum2,MACP0A1(F2,i,j,k,pl),GLOBALMACP0A1(F2EM,i,j,k,pl));
+          }
+        }
       }
     }
 #endif
@@ -448,107 +446,107 @@ static int advance_standard(
       
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	// set geometry for centered zone to be updated
-	get_geometry(i, j, k, CENT, ptrgeom);
+        // set geometry for centered zone to be updated
+        get_geometry(i, j, k, CENT, ptrgeom);
       
-	// find Ui(pi)
-	// force use of primitive to set Ui since otherwise wherever corrected/changed primitive (in fixup, etc.) then would have to change conserved quantity, while same since both are point values
-	// only field for staggered method is special point value at faces that needs to come from conserved quantity
-	MYFUN(get_state(MAC(pi,i,j,k), ptrgeom, qptr),"step_ch.c:advance()", "get_state()", 1);
-	MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp),"step_ch.c:advance()", "primtoU()", 1);
+        // find Ui(pi)
+        // force use of primitive to set Ui since otherwise wherever corrected/changed primitive (in fixup, etc.) then would have to change conserved quantity, while same since both are point values
+        // only field for staggered method is special point value at faces that needs to come from conserved quantity
+        MYFUN(get_state(MAC(pi,i,j,k), ptrgeom, qptr),"step_ch.c:advance()", "get_state()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp),"step_ch.c:advance()", "primtoU()", 1);
 
-	if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
-	  // then field version of ui[] is stored as "conserved" value at FACE, not CENT
-	  PLOOPNOB1(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
-	  //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
-	  PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
-	}
-	else{
-	  PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
-	}
-	
-	// dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
-	flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-	PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+        if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
+          // then field version of ui[] is stored as "conserved" value at FACE, not CENT
+          PLOOPNOB1(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
+          PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+        }
+        else{
+          PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
+        }
+ 
+        // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
+        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
 
 
-	/////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////
-	//
-	// now update get source update (only affects stress-energy tensor in general)
-	// [Loop goes over up to +1 normal computational region for getting new staggered U if doing FLUXCTSTAG]
-	//
-	/////////////////////////////////////////////////////
-	
-	// get state since both source() and dUtodt() need same state
-	// From pb, so different than state for Ui(pi)
-	MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
+        /////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////
+        //
+        // now update get source update (only affects stress-energy tensor in general)
+        // [Loop goes over up to +1 normal computational region for getting new staggered U if doing FLUXCTSTAG]
+        //
+        /////////////////////////////////////////////////////
+ 
+        // get state since both source() and dUtodt() need same state
+        // From pb, so different than state for Ui(pi)
+        MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
       
 
-	// note that uf and ucum are initialized inside setup_rktimestep() before first substep
+        // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
 
-	// find dU(pb)
-	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
-	// assumes final dUcomp is nonzero and representative of source term over this timestep
-	
+        // find dU(pb)
+        MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        // assumes final dUcomp is nonzero and representative of source term over this timestep
+ 
 
 
 #if(SPLITNPR)
-	// don't update metric if only doing B1-B3
-	if(advancepassnumber==-1 || advancepassnumber==1)
+        // don't update metric if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	  {
+          {
 #if(ACCURATESOURCEDIAG)
-	    if(DODIAGS){
-	      diag_source_comp(ptrgeom,dUcomp,fluxdt);
-	      diag_source_all(ptrgeom,dUgeom,fluxdt);
-	    }
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+              diag_source_all(ptrgeom,dUgeom,fluxdt);
+            }
 #else
-	    if(DODIAGS){
-	      diag_source_comp(ptrgeom,dUcomp,dt4diag);
-	      diag_source_all(ptrgeom,dUgeom,dt4diag);
-	    }
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+              diag_source_all(ptrgeom,dUgeom,dt4diag);
+            }
 #endif
-	  }
+          }
 
       
 
-	// Get update
-	dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        // Get update
+        dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
       
       
       
-	// get timestep limit from acceleration
+        // get timestep limit from acceleration
 #if(LIMITDTWITHSOURCETERM)
 #if(SPLITNPR)
-	// don't do dUtodt if only doing B1-B3
-	if(advancepassnumber==-1 || advancepassnumber==1)
+        // don't do dUtodt if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	  {
-	    // geometry is post-metric update, but should still give good estimate of future dt
-	    dUtodt(ptrgeom, qptr2, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
+          {
+            // geometry is post-metric update, but should still give good estimate of future dt
+            dUtodt(ptrgeom, qptr2, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
 
 #pragma omp critical
-	    {
-	      if(accdt_ij<accdt){
-		accdt=accdt_ij;
-		accdti=i;
-		accdtj=j;
-		accdtk=k;
-	      }
-	      if(gravitydt_ij<gravitydt){
-		gravitydt=gravitydt_ij;
-		gravitydti=i;
-		gravitydtj=j;
-		gravitydtk=k;
-	      }
-	    }// end critical region
-	  }// end block that may mean: if not only doing B1-B3
+            {
+              if(accdt_ij<accdt){
+                accdt=accdt_ij;
+                accdti=i;
+                accdtj=j;
+                accdtk=k;
+              }
+              if(gravitydt_ij<gravitydt){
+                gravitydt=gravitydt_ij;
+                gravitydti=i;
+                gravitydtj=j;
+                gravitydtk=k;
+              }
+            }// end critical region
+          }// end block that may mean: if not only doing B1-B3
 
 #endif // end if doing LIMITDTWITHSOURCETERM
           
@@ -558,19 +556,19 @@ static int advance_standard(
 
 
 #if(FLUXDUMP)
-	fluxdumpdt=dt; // store current dt so when dump fluxdump use that dt instead of updated dt
-	fluxdumprealnstep=realnstep;
-	// DEBUG - DIAG:
-	PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
+        fluxdumpdt=dt; // store current dt so when dump fluxdump use that dt instead of updated dt
+        fluxdumprealnstep=realnstep;
+        // DEBUG - DIAG:
+        PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
 
-	if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
-	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
-		
-	if(N2>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
-	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
+        if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
+        else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
+  
+        if(N2>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
+        else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
 
-	if(N3>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
-	else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
+        if(N3>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=dUriemann3[pl];
+        else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=0.0;
 #endif
 
       } // end COMPZLOOP :: end looping to obtain dUriemann and full unew update
@@ -612,9 +610,9 @@ static int advance_standard(
       // don't update metric if only doing B1-B3
       if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	{
-	  compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
-	}
+        {
+          compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
+        }
     }// end if doing metric substepping
   }
 
@@ -635,7 +633,7 @@ static int advance_standard(
 #endif
       {
 #if(ACCURATEDIAG)
-	diag_flux_pureflux(pb,F1, F2, F3, fluxdt); // fluxdt is true dt for this flux as added in dUtoU() as part of ucum
+        diag_flux_pureflux(pb,F1, F2, F3, fluxdt); // fluxdt is true dt for this flux as added in dUtoU() as part of ucum
 #endif
       }
   }
@@ -654,7 +652,7 @@ static int advance_standard(
   
 
 
- // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
+  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
   /////////////
   //
   // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
@@ -785,18 +783,18 @@ static int advance_standard(
       
       // invert U->p
       if(finalstep){ // last call, so ucum is cooked and ready to eat!
-	// store guess for diss_compute before changed by normal inversion
-	PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
+        // store guess for diss_compute before changed by normal inversion
+        PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-	MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-	nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 
 #if(DODISS||DODISSVSR)
-	// then see what entropy inversion would give
-	diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
+        // then see what entropy inversion would give
+        diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
 #endif
-	
+ 
       }
       else{ // otherwise still iterating on primitives
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
@@ -811,15 +809,15 @@ static int advance_standard(
       // don't update metric if only doing B1-B3
       if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	{
-	  // immediate local (i.e. 1-zone) fix
+        {
+          // immediate local (i.e. 1-zone) fix
 #if(FIXUPZONES==FIXUP1ZONE)
-	  // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
-	  if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-	    MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
-	  }
+          // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
+          if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
+            MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
+          }
 #endif
-	}
+        }
 
 
     }// end COMPZLOOP
@@ -887,25 +885,25 @@ static int advance_standard(
 // finite volume method NOT SETUP FOR CONSISTENT METRIC EVOLUTION YET -- EASY, JUST NOT DOING IT YET -- FOLLOW ABOVE AS EXAMPLE OF WHAT TO DO
 // also not setup for staggered field method
 static int advance_finitevolume(
-				int truestep,
-				int stage,
-				FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-				FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-				FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
-				FTYPE *CUf, 
-				FTYPE *CUnew, 
-				SFTYPE fluxdt,
-				SFTYPE boundtime,
-				SFTYPE fluxtime,
-				int timeorder, int numtimeorders,
-				FTYPE *ndt)
+                                int truestep,
+                                int stage,
+                                FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                                FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
+                                FTYPE *CUf, 
+                                FTYPE *CUnew, 
+                                SFTYPE fluxdt,
+                                SFTYPE boundtime,
+                                SFTYPE fluxtime,
+                                int timeorder, int numtimeorders,
+                                FTYPE *ndt)
 {
   int sc;
   FTYPE ndt1, ndt2, ndt3;
@@ -1093,7 +1091,7 @@ static int advance_finitevolume(
 
 
 
-	
+ 
   /////////////////////////
   //
   // SOURCE TERM
@@ -1130,23 +1128,23 @@ static int advance_finitevolume(
       
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	// find dU(pb)
-	// only find source term if non-Minkowski and non-Cartesian
-	// set geometry for centered zone to be updated
-	get_geometry(i, j, k, CENT, ptrgeom);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        // find dU(pb)
+        // only find source term if non-Minkowski and non-Cartesian
+        // set geometry for centered zone to be updated
+        get_geometry(i, j, k, CENT, ptrgeom);
 
-	// get state
-	MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr) ,"advance.c:()", "get_state() dir=0", 1);
+        // get state
+        MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr) ,"advance.c:()", "get_state() dir=0", 1);
 
 
-	// dUriemann is volume averaged quantity (here this calcuation is done in case want to limit sources)
-	flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-	PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        // dUriemann is volume averaged quantity (here this calcuation is done in case want to limit sources)
+        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
 
-	    
-	// get source term (point source, don't use to update diagnostics)
-	MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+     
+        // get source term (point source, don't use to update diagnostics)
+        MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -1155,30 +1153,30 @@ static int advance_finitevolume(
       // don't update metric if only doing B1-B3
       if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-      {
+        {
 #pragma omp critical // since diagnostics store in same global cumulative variables
-	{
+          {
 #if(ACCURATESOURCEDIAG)
-	  if(DODIAGS){
-	    diag_source_comp(ptrgeom,dUcomp,fluxdt);
-	  }
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+            }
 #else
-	  if(DODIAGS){
-	    diag_source_comp(ptrgeom,dUcomp,dt4diag);
-	  }
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+            }
 #endif
-	}	  
-      }
+          }   
+        }
       
 
       // volume integrate dUgeom
       // c2a_1 c2a_2 c2a_3
       if(dosource){
-	// need to limit source averaging -- GODMARK
-	PALLLOOP(pl) locpl[pl]=CENT;
-	PALLLOOP(pl) whichpltoavg[pl]=do_source_integration[pl];// default
-	PALLLOOP(pl) ifnotavgthencopy[pl]=1-do_source_integration[pl];// default
-	avg2cen_interp(locpl,whichpltoavg, ifnotavgthencopy, ENOSOURCETERM, ENOCENT2AVGTYPE, pb, POINT(dUgeomarray), POINT(dUgeomarray));
+        // need to limit source averaging -- GODMARK
+        PALLLOOP(pl) locpl[pl]=CENT;
+        PALLLOOP(pl) whichpltoavg[pl]=do_source_integration[pl];// default
+        PALLLOOP(pl) ifnotavgthencopy[pl]=1-do_source_integration[pl];// default
+        avg2cen_interp(locpl,whichpltoavg, ifnotavgthencopy, ENOSOURCETERM, ENOCENT2AVGTYPE, pb, POINT(dUgeomarray), POINT(dUgeomarray));
       }
     }// end parallel region
   }// end if truestep
@@ -1221,57 +1219,57 @@ static int advance_finitevolume(
 
       // get state
       MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr) ,"advance.c:()", "get_state() dir=0", 1);
-		
+  
       /////////////
       //
       // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
       //
       ////////////
-		
+  
       // initialize uf and ucum if very first time here since ucum is cumulative (+=)
       //    if(timeorder==0) PLOOP(pliter,pl) MACP0A1(uf,i,j,k,pl)=MACP0A1(tempucum,i,j,k,pl)=MACP0A1(ucum,i,j,k,pl)=0.0;
       if(timeorder==0) PLOOP(pliter,pl) MACP0A1(uf,i,j,k,pl)=MACP0A1(tempucum,i,j,k,pl)=0.0;
-		
+  
       // NEED TO DEFINE Ui on other substeps besides the 0th one
       // find Ui(pi)
 
 
 
       if(truestep){
-	// get source term (volume integrated)
-	PLOOP(pliter,pl) dUgeom[pl]=MACP0A1(dUgeomarray,i,j,k,pl);
+        // get source term (volume integrated)
+        PLOOP(pliter,pl) dUgeom[pl]=MACP0A1(dUgeomarray,i,j,k,pl);
 
 
-	// store diagnostics related to source.  Totals, so use volume-integrated source.
+        // store diagnostics related to source.  Totals, so use volume-integrated source.
 #if(SPLITNPR)
-	// don't update metric if only doing B1-B3
-	if(advancepassnumber==-1 || advancepassnumber==1)
+        // don't update metric if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	  {
+          {
 #pragma omp critical // since diagnostics store in same global cumulative variables
-	    {
+            {
 #if(ACCURATESOURCEDIAG)
-	    if(DODIAGS){
-	      diag_source_all(ptrgeom,dUgeom,fluxdt);
-	    }
+              if(DODIAGS){
+                diag_source_all(ptrgeom,dUgeom,fluxdt);
+              }
 #else
-	    if(DODIAGS){
-	      diag_source_all(ptrgeom,dUgeom,dt4diag);
-	    }
+              if(DODIAGS){
+                diag_source_all(ptrgeom,dUgeom,dt4diag);
+              }
 #endif
-	    }	  
-	  }
-		  
+            }   
+          }
+    
 
-	// dUriemann is volume averaged quantity
-	flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-	PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        // dUriemann is volume averaged quantity
+        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
       }
       else{
-	PLOOP(pliter,pl){
-	  dUriemann[pl]=0.0;
-	  dUgeom[pl]=0.0;
-	}
+        PLOOP(pliter,pl){
+          dUriemann[pl]=0.0;
+          dUgeom[pl]=0.0;
+        }
       }
 
       // find uf==Uf and additional terms to ucum
@@ -1294,18 +1292,18 @@ static int advance_finitevolume(
       //#endif
 #pragma omp critical
       {
-	if(accdt_ij<accdt){
-	  accdt=accdt_ij;
-	  accdti=i;
-	  accdtj=j;
-	  accdtk=k;
-	}
-	if(gravitydt_ij<gravitydt){
-	  gravitydt=gravitydt_ij;
-	  gravitydti=i;
-	  gravitydtj=j;
-	  gravitydtk=k;
-	}
+        if(accdt_ij<accdt){
+          accdt=accdt_ij;
+          accdti=i;
+          accdtj=j;
+          accdtk=k;
+        }
+        if(gravitydt_ij<gravitydt){
+          gravitydt=gravitydt_ij;
+          gravitydti=i;
+          gravitydtj=j;
+          gravitydtk=k;
+        }
       }// end critical region
 #endif
 
@@ -1317,7 +1315,7 @@ static int advance_finitevolume(
 
       if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];
       else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=0.0;
-		
+  
       if(N2>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=dUriemann2[pl];
       else PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=0.0;
 
@@ -1347,9 +1345,9 @@ static int advance_finitevolume(
     // don't update metric if only doing B1-B3
     if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-    {
-      compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
-    }
+      {
+        compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
+      }
   }
 
 
@@ -1368,7 +1366,7 @@ static int advance_finitevolume(
 #endif
       {
 #if(ACCURATEDIAG)
-	diag_flux_pureflux(pb,F1, F2, F3, fluxdt); // fluxdt is true dt for this flux as added in dUtoU() as part of ucum update
+        diag_flux_pureflux(pb,F1, F2, F3, fluxdt); // fluxdt is true dt for this flux as added in dUtoU() as part of ucum update
 #endif
       }
   }
@@ -1515,14 +1513,14 @@ static int advance_finitevolume(
 
       //If using a high order scheme, need to choose whether to trust the point value
       if(docons){
-	MYFUN(check_point_vs_average(timeorder, numtimeorders, GLOBALMAC(pflag,i,j,k),MAC(pb,i,j,k),MAC(pf,i,j,k),MAC(myupoint,i,j,k),MAC(utoinvert,i,j,k),ptrgeom,&newtonstats),"advance.c:advance_finitevolume()", "check_point_vs_average()", 1);
+        MYFUN(check_point_vs_average(timeorder, numtimeorders, GLOBALMAC(pflag,i,j,k),MAC(pb,i,j,k),MAC(pf,i,j,k),MAC(myupoint,i,j,k),MAC(utoinvert,i,j,k),ptrgeom,&newtonstats),"advance.c:advance_finitevolume()", "check_point_vs_average()", 1);
       }
 
 
 #if(DODISS||DODISSVSR)
       if(finalstep){
-	// then see what entropy inversion would give
-	diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(useducum,i,j,k),ptrgeom,prbefore, MAC(pf,i,j,k),&newtonstats);
+        // then see what entropy inversion would give
+        diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(useducum,i,j,k),ptrgeom,prbefore, MAC(pf,i,j,k),&newtonstats);
       }
 #endif
 
@@ -1531,15 +1529,15 @@ static int advance_finitevolume(
       // don't update metric if only doing B1-B3
       if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
-	{
-	  // immediate local (i.e. 1-zone) fix
+        {
+          // immediate local (i.e. 1-zone) fix
 #if(FIXUPZONES==FIXUP1ZONE)
-	  // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
-	  if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-	    MYFUN(fixup1zone(MAC(pf,i,j,k), MAC(useducum,i,j,k), ptrgeom, finalstep),"advance.c:advance_finitevolume()", "fixup1zone()", 1);
-	  }
+          // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
+          if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
+            MYFUN(fixup1zone(MAC(pf,i,j,k), MAC(useducum,i,j,k), ptrgeom, finalstep),"advance.c:advance_finitevolume()", "fixup1zone()", 1);
+          }
 #endif
-	}
+        }
     }// end COMPZLOOP
   }// end parallel region
 
@@ -1587,11 +1585,11 @@ static int advance_finitevolume(
 
 // some dt calculations done at end of each substep
 static int prepare_globaldt(
-			    int truestep,
-		     FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
-		     FTYPE accdt,int accdti,int accdtj,int accdtk,
-		     FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
-		     FTYPE *ndt)
+                            int truestep,
+                            FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
+                            FTYPE accdt,int accdti,int accdtj,int accdtk,
+                            FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
+                            FTYPE *ndt)
 {
   FTYPE wavedt;
   int jj;
@@ -1695,8 +1693,8 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
 
   if( 0 && debugfail >= 1 && (IFUTOPRIMFAILSOFT(invert_from_point_flag)) ) {
     dualfprintf( fail_file, "t = %g, nstep = %ld, steppart = %d, i = %d, j = %d, rho = %21.15g, u = %21.15g, fracneg = %21.15g\n",
-		 t, realnstep, steppart, ptrgeom->i + startpos[1], ptrgeom->j + startpos[2],
-		 pf[RHO], pf[UU], (pf[RHO]>0)?(-pf[UU]/(pf[RHO]+DBL_MIN)):(-pf[RHO]/(pf[UU]+DBL_MIN)) );
+                 t, realnstep, steppart, ptrgeom->i + startpos[1], ptrgeom->j + startpos[2],
+                 pf[RHO], pf[UU], (pf[RHO]>0)?(-pf[UU]/(pf[RHO]+DBL_MIN)):(-pf[RHO]/(pf[UU]+DBL_MIN)) );
   }
 
 
@@ -1726,7 +1724,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
 
 #if( DOENODEBUG )  //atch debug; note that use the location with pl =0 , interporflux = 0, & dir = 1 since limiting the change in prim quantities is not a per-component operation
       if(  frac_avg_used > 0.01 ) {
-	MACP0A4(enodebugarray,ptrgeom->i,ptrgeom->j,ptrgeom->k,1-1,0,0,ENODEBUGPARAM_LIMCORR_PRIM)++;
+        MACP0A4(enodebugarray,ptrgeom->i,ptrgeom->j,ptrgeom->k,1-1,0,0,ENODEBUGPARAM_LIMCORR_PRIM)++;
       }
 #endif
       
@@ -1766,14 +1764,14 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
        ( 1 == is_convergence_failure ) || //non-convergence (no solution in primitive quantities) error, so have to fix it up
 
        ( (timeorder<numtimeorders-1) && (
-					 ((IFUTOPRIMFAILSOFTNOTRHORELATED(invert_from_point_flag)) && (0 == STEPOVERNEGU))||
-					 ((invert_from_point_flag==UTOPRIMFAILRHOUNEG) && (0 == STEPOVERNEGRHOU)) ||
-					 ((IFUTOPRIMFAILSOFTRHORELATED(invert_from_point_flag)) && (0 == STEPOVERNEGRHO))
-					 )
-	 )  //intermediate substep with no stepping over u < 0, rho<0, or both <0
+                                         ((IFUTOPRIMFAILSOFTNOTRHORELATED(invert_from_point_flag)) && (0 == STEPOVERNEGU))||
+                                         ((invert_from_point_flag==UTOPRIMFAILRHOUNEG) && (0 == STEPOVERNEGRHOU)) ||
+                                         ((IFUTOPRIMFAILSOFTRHORELATED(invert_from_point_flag)) && (0 == STEPOVERNEGRHO))
+                                         )
+         )  //intermediate substep with no stepping over u < 0, rho<0, or both <0
        ) {
       if(debugfail >= 1) {
-	dualfprintf( fail_file, "Inversion from the point value failed.  Using the inversion from the average value.\n" );
+        dualfprintf( fail_file, "Inversion from the point value failed.  Using the inversion from the average value.\n" );
       }
 
       //make a copy of the initial guess so that not to modify the original pb's
@@ -1842,10 +1840,10 @@ FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_ge
   comovingenergyout = pout[RHO] + pout[UU] + bsqout*0.5 - bdotuout*bdotuout;
 
 
-	
+ 
 #if( COMPARE_GAMMA ) 
   frac_diff = MAX( fractional_diff(gammain, gammaout), 
-		   fractional_diff( comovingenergyin, comovingenergyout ) );
+                   fractional_diff( comovingenergyin, comovingenergyout ) );
 #else
   frac_diff = fractional_diff( comovingenergyin, comovingenergyout );
 #endif
@@ -1862,7 +1860,7 @@ FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_ge
   if( 0.0 != fraction_input_value ){
     //states are too different: reverted to primitives that correspond to average conserved quantities because trust them more than point values
     dualfprintf( fail_file, "States are too different, using %3d%% of the average values: i = %d, j = %d, k = %d, nstep = %ld, steppart = %d, t = %21.15g\n", 
-		 (int)(100. * fraction_input_value), geom->i, geom->j, geom->k, nstep, steppart, t );
+                 (int)(100. * fraction_input_value), geom->i, geom->j, geom->k, nstep, steppart, t );
     if( debugfail >= 2 ){
       dualfprintf( fail_file, "Prim. pt. value (gamma, rho, u): " );
       dualfprintf( fail_file, "%21.15g %21.15g %21.15g\n",  gammaout, pout[RHO], pout[UU] );
@@ -1870,10 +1868,10 @@ FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_ge
       dualfprintf( fail_file, "%21.15g %21.15g %21.15g\n", gammain, pin[RHO], pin[UU] );
       dualfprintf( fail_file, "Frac. difference(ganna, rho, u): " );
       dualfprintf( fail_file, "%21.15g %21.15g %21.15g\n", 
-		   fractional_diff(gammain, gammaout),
-		   fractional_diff(pin[RHO], pout[RHO]),  
-		   fractional_diff(pin[UU], pout[UU])
-		   );
+                   fractional_diff(gammain, gammaout),
+                   fractional_diff(pin[RHO], pout[RHO]),  
+                   fractional_diff(pin[UU], pout[UU])
+                   );
     }
   }
 
@@ -1949,19 +1947,19 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     PLOOPNOB1(pl){
 #if(N1>1)
       dU1avg[pl]=(
-		  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
-		  );
+                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
+                  );
 #endif
 #if(N2>1)
       dU2avg[pl]=(
-		  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
-		  );
+                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
+                  );
 #endif
 
 #if(N3>1)
       dU3avg[pl]=(
-		  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
-		  );
+                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
+                  );
 #endif
 
     }
@@ -1970,18 +1968,18 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     PLOOPBONLY(pl){
 #if(N1>1)
       dU1avg[pl]=(
-		  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
-		  );
+                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
+                  );
 #endif
 #if(N2>1)
       dU2avg[pl]=(
-		  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
-		  );
+                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
+                  );
 #endif
 #if(N3>1)
       dU3avg[pl]=(
-		  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
-		  );
+                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
+                  );
 #endif
     }
 
@@ -2048,18 +2046,18 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     PLOOPNOB2(pl){
 #if(N1>1)
       dU1avg[pl]=(
-		  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
-		  );
+                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
+                  );
 #endif
 #if(N2>1)
       dU2avg[pl]=(
-		  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
-		  );
+                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
+                  );
 #endif
 #if(N3>1)
       dU3avg[pl]=(
-		  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
-		  );
+                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
+                  );
 #endif
 
     }
@@ -2093,18 +2091,18 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 
 #if(N1>1)
       dU1avg[pl]=(
-		  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
-		  );
+                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
+                  );
 #endif
 #if(N2>1)
       dU2avg[pl]=(
-		  - (upperF2*MACP0A1(F2,i,jp1mac(j),k,pl) - lowerF2*MACP0A1(F2,i,j,k,pl)) *idx2
-		  );
+                  - (upperF2*MACP0A1(F2,i,jp1mac(j),k,pl) - lowerF2*MACP0A1(F2,i,j,k,pl)) *idx2
+                  );
 #endif
 #if(N3>1)
       dU3avg[pl]=(
-		  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
-		  );
+                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
+                  );
 #endif
     }
 
@@ -2204,15 +2202,15 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
 
 static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
 {
-    if(N1>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F1[i]=%21.15g F1[i+1]=%21.15g dF1/dx1=%21.15g \n",pl,i,j,k,MACP0A1(F1,i,j,k,pl),MACP0A1(F1,i+SHIFT1,j,k,pl),(MACP0A1(F1,i+SHIFT1,j,k,pl)-MACP0A1(F1,i,j,k,pl))/dx[1]);
-    }
-    if(N2>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F2[j]=%21.15g F2[j+1]=%21.15g dF2/dx2=%21.15g\n",pl,i,j,k,MACP0A1(F2,i,j,k,pl),MACP0A1(F2,i,j+SHIFT2,k,pl),(MACP0A1(F2,i,j+SHIFT2,k,pl)-MACP0A1(F2,i,j,k,pl))/dx[2]);
-    }
-    if(N3>1){
-      dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F3[k]=%21.15g F3[k+1]=%21.15g dF3/dx3=%21.15g \n",pl,i,j,k,MACP0A1(F3,i,j,k,pl),MACP0A1(F3,i,j,k+SHIFT3,pl),(MACP0A1(F3,i,j,k+SHIFT3,pl)-MACP0A1(F3,i,j,k,pl))/dx[3]);
-    }
+  if(N1>1){
+    dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F1[i]=%21.15g F1[i+1]=%21.15g dF1/dx1=%21.15g \n",pl,i,j,k,MACP0A1(F1,i,j,k,pl),MACP0A1(F1,i+SHIFT1,j,k,pl),(MACP0A1(F1,i+SHIFT1,j,k,pl)-MACP0A1(F1,i,j,k,pl))/dx[1]);
+  }
+  if(N2>1){
+    dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F2[j]=%21.15g F2[j+1]=%21.15g dF2/dx2=%21.15g\n",pl,i,j,k,MACP0A1(F2,i,j,k,pl),MACP0A1(F2,i,j+SHIFT2,k,pl),(MACP0A1(F2,i,j+SHIFT2,k,pl)-MACP0A1(F2,i,j,k,pl))/dx[2]);
+  }
+  if(N3>1){
+    dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F3[k]=%21.15g F3[k+1]=%21.15g dF3/dx3=%21.15g \n",pl,i,j,k,MACP0A1(F3,i,j,k,pl),MACP0A1(F3,i,j,k+SHIFT3,pl),(MACP0A1(F3,i,j,k+SHIFT3,pl)-MACP0A1(F3,i,j,k,pl))/dx[3]);
+  }
 
 }
 
@@ -2275,9 +2273,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=1;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax1, &cmin1,&ignorecourant),"advance.c:set_dt()", "vchar_all() dir=1", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax1),fabs(cmin1));
-	if(FORCESOLVEL){
-	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
-	}
+    if(FORCESOLVEL){
+      dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+    }
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2290,9 +2288,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=2;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax2, &cmin2,&ignorecourant),"advance.c:set_dt()", "vchar_all() dir=2", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax2),fabs(cmin2));
-	if(FORCESOLVEL){
-	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
-	}
+    if(FORCESOLVEL){
+      dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+    }
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2305,9 +2303,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
     dir=3;
     MYFUN(vchar_all(MAC(prim,i,j,k), &state, dir, ptrgeom, &cmax3, &cmin3,&ignorecourant),"restart.c:set_dt()", "vchar_all() dir=3", 1);
     dtij[dir] = cour * dx[dir] / MAX(fabs(cmax3),fabs(cmin3));
-	if(FORCESOLVEL){
-	  dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
-	}
+    if(FORCESOLVEL){
+      dtij[dir] = cour*dx[dir]*sqrt(ptrgeom->gcov[GIND(dir,dir)]);
+    }
     if (dtij[dir] < wavendt[dir]){
       wavendt[dir] = dtij[dir];
       wavendti[dir] = i;
@@ -2348,36 +2346,36 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);
       if(accdt>tempaccdt){
-	accdt=tempaccdt;
-	accdti=i;
-	accdtj=j;
-	accdtk=k;
+        accdt=tempaccdt;
+        accdti=i;
+        accdtj=j;
+        accdtk=k;
       }
       if(gravitydt>tempgravitydt){
-	gravitydt=tempgravitydt;
-	gravitydti=i;
-	gravitydtj=j;
-	gravitydtk=k;
+        gravitydt=tempgravitydt;
+        gravitydti=i;
+        gravitydtj=j;
+        gravitydtk=k;
       }
 
 #if(0)// DEBUG
       if(i==-1 || i==0){
-	dualfprintf(fail_file,"BANG: i=%d\n",i);
-	PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g\n",pl,MACP0A1(prim,i,j,k,pl));
-	PLOOP(pliter,pl) dualfprintf(fail_file,"dUgeom[%d]=%21.15g dUcompgeomsource=%21.15g\n",pl,dUgeom[pl],dUcomp[GEOMSOURCE][pl]);
-	if(i==-1){
-	  // side-by-side
-	  coord(i,j,k,CENT,X);
-	  bl_coord(X,V);
-	  coord(ip1mac(i),j,k,CENT,X);
-	  bl_coord(X,Vp1);
-	  dualfprintf(fail_file,"r(i=-1)=%21.15g r(i=0)=%21.15g\n",V[1],Vp1[1]);
-	  dualfprintf(fail_file,"gdet(i=-1)=%21.15g gdet(i=0)=%21.15g\n",GLOBALMETMACP1A0(gdet,CENT,i,j,k),GLOBALMETMACP1A0(gdet,CENT,ip1mac(i),j,k));
-	  DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcov(i=-1)=%21.15g gcov(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcov,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcov,CENT,ip1mac(i),j,k,jj,kk));
-	  DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcovlast(i=-1)=%21.15g gcovlast(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcovlast,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcovlast,CENT,ip1mac(i),j,k,jj,kk));
-	  DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcon(i=-1)=%21.15g gcon(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcon,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcon,CENT,ip1mac(i),j,k,jj,kk));
-	  DLOOP(jj,kk) DLOOPA(ll) dualfprintf(fail_file,"%d %d %d conn(i=-1)=%21.15g conn(i=0)=%21.15g\n",jj,kk,ll,GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll),GLOBALMETMACP0A3(conn,ip1mac(i),j,k,jj,kk,ll));
-	}
+        dualfprintf(fail_file,"BANG: i=%d\n",i);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"prim[%d]=%21.15g\n",pl,MACP0A1(prim,i,j,k,pl));
+        PLOOP(pliter,pl) dualfprintf(fail_file,"dUgeom[%d]=%21.15g dUcompgeomsource=%21.15g\n",pl,dUgeom[pl],dUcomp[GEOMSOURCE][pl]);
+        if(i==-1){
+          // side-by-side
+          coord(i,j,k,CENT,X);
+          bl_coord(X,V);
+          coord(ip1mac(i),j,k,CENT,X);
+          bl_coord(X,Vp1);
+          dualfprintf(fail_file,"r(i=-1)=%21.15g r(i=0)=%21.15g\n",V[1],Vp1[1]);
+          dualfprintf(fail_file,"gdet(i=-1)=%21.15g gdet(i=0)=%21.15g\n",GLOBALMETMACP1A0(gdet,CENT,i,j,k),GLOBALMETMACP1A0(gdet,CENT,ip1mac(i),j,k));
+          DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcov(i=-1)=%21.15g gcov(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcov,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcov,CENT,ip1mac(i),j,k,jj,kk));
+          DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcovlast(i=-1)=%21.15g gcovlast(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcovlast,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcovlast,CENT,ip1mac(i),j,k,jj,kk));
+          DLOOP(jj,kk) dualfprintf(fail_file,"%d %d gcon(i=-1)=%21.15g gcon(i=0)=%21.15g\n",jj,kk,GLOBALMETMACP1A2(gcon,CENT,i,j,k,jj,kk),GLOBALMETMACP1A2(gcon,CENT,ip1mac(i),j,k,jj,kk));
+          DLOOP(jj,kk) DLOOPA(ll) dualfprintf(fail_file,"%d %d %d conn(i=-1)=%21.15g conn(i=0)=%21.15g\n",jj,kk,ll,GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll),GLOBALMETMACP0A3(conn,ip1mac(i),j,k,jj,kk,ll));
+        }
       }
 #endif
 

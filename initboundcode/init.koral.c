@@ -1056,7 +1056,6 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
-    // TOTRY: prad0 doesn't lift off.   RADNT SPCMINKMETRIC
     // TOTRY: Om not happening even if set!
 
     lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
@@ -1104,7 +1103,9 @@ int init_global(void)
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X1UP]=RADNTBC; // inflow analytic
       else BCtype[X1UP]=RADNTBC; // inflow analytic
       //else BCtype[X1UP]=FIXEDUSEPANALYTIC; // fixed analytic // little silly for most of outer boundary, so avoid // KORALTODO: Also causes hellish problems with solution and implicit solver at the X1UP boundary surface (not just near torus)
-      BCtype[X2DN]=POLARAXIS;
+      
+      BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+      
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition
       else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
       BCtype[X3UP]=PERIODIC;
@@ -1500,7 +1501,8 @@ int init_defcoord(void)
 	Rin=RADNT_MINX;
 	Rout=RADNT_MAXX;
 
-    Rin_array[2]=0.2*Pi/4.;
+    //    Rin_array[2]=0.2*Pi/4.;
+    Rin_array[2]=0.0*Pi/4.;
     Rout_array[2]=Pi/2.;
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
@@ -2983,12 +2985,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   /*************************************************/
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
+    // NOTE: RADNT has very high disk radiation energy and only goes out very slowly, so not even log will show it if one includes boundary cells.
 
     RADNT_KKK=1.e-4;
     RADNT_ELL=4.5;
     RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
-    //RADNT_RHOATMMIN=1.e-4;
-    RADNT_RHOATMMIN= 1.e-2;
+    //RADNT_RHOATMMIN=1.e-4/RHOBAR;
+    RADNT_RHOATMMIN= 1.e-2/RHOBAR;
     RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
     RADNT_TRADATMMIN = 1.e9/TEMPBAR;
@@ -3045,7 +3048,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     //	pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
     //    set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
 
-    // No, just set as in fluid frame, which is ZAMO anyways.
+    // No, just set as in fluid frame
     FTYPE pradffortho[NPR];
     pradffortho[PRAD0]=RADNT_ERADATMMIN;
     pradffortho[PRAD1]=0;
