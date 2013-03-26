@@ -1,4 +1,19 @@
 
+///////////////
+//
+// Some physical constants (here in dep since might want to change cTILDA and gTILDA per problem)
+//
+///////////////
+#define GGG (GGG0/gTILDA) // cgs in cm^3/(kg s^2)
+#define CCCTRUE (CCCTRUE0/cTILDA) // cgs in cm/s
+
+/////////////////////
+//
+// derived constants
+//
+/////////////////////
+#define MSUNCM (GGG*MSUN/(CCCTRUE*CCCTRUE)) // Msun in cm
+
 //////////////////////////
 //
 // Define Length, Time, and Mass (and Temperature) units
@@ -21,6 +36,8 @@
 ////////////////
 // Note: Interaction requires specific mass unit, which determines code value of ARAD, KAPPAs, and how initial conditions (IC) are chosen.
 /////////////////
+
+
 
 
 ////////////////////////
@@ -80,6 +97,16 @@
 // 4a) Koral is defaulted to use OpenMP , and default is 4 cores, so any output from parallel loops will be randomly ordered.
 //
 //////////////////////////////////
+
+
+////////////////////////
+//
+// Koral units conversions
+//
+////////////////
+// Olek keeps changing gTILDA and cTILDA in different code versions, and so actually changing the problems despite PROBLEM files wanted to describe specific problem as in (e.g.) the paper.
+#define MASSCM (GGG*MPERSUN*MSUN/pow(CCCTRUE,2.0))
+#define KORAL2HARMRHO(rho) ((rho/GGG*CCCTRUE*CCCTRUE/MASSCM/MASSCM)/RHOBAR)
 
 
 

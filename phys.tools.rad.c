@@ -6,7 +6,7 @@ static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailure
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
-static void koral_explicit_source_rad(FTYPE *pr, FTYPE *Unew, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *qnew, FTYPE (*dUcomp)[NPR]);
+static int koral_explicit_source_rad(FTYPE *pr, FTYPE *Unew, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *qnew, FTYPE (*dUcomp)[NPR]);
 static int koral_explicit_source_rad_prepare(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *prnew, FTYPE *Unew, struct of_state *qnew);
 
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gd, FTYPE chi, struct of_geom *ptrgeom, FTYPE *dtsub);
@@ -327,6 +327,12 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
 
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+      int iii;
+      DLOOPA(iii) dualfprintf(fail_file,"f1[%d]=%26.20g\n",iii,f1[iii]);
+    }
+
 
     
     /////////////
@@ -343,8 +349,9 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
         while(1){
 
-          if(uup[jj+URAD0]==0.) del=localIMPEPS*uup[URAD0];
-          else del=localIMPEPS*uup[jj+URAD0];
+          //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
+          del=localIMPEPS*MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]));
+          // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense.
 
           // KORALTODO: offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
           // KORALTODO: If ultrarel, then even this small "del" might be too large change in uu and might have bad P(U).  Need to control this "del" better.
@@ -368,7 +375,10 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         }
 
 	
-        if(showmessagesheavy) dualfprintf(fail_file,"i=%d f2: %g %g %g %g\n",ptrgeom->i,f2[0],f2[1],f2[2],f2[3]);
+        if(showmessagesheavy){
+          dualfprintf(fail_file,"JAC: uu: %g %g %g %g : uup=%g %g %g %g (del=%g localIMPEPS=%g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
+          dualfprintf(fail_file,"i=%d ii=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,ii,jj,f2[0],f2[1],f2[2],f2[3]);
+        }
 
         // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
 		J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
@@ -377,6 +387,14 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 		uu[jj+URAD0]=uup[jj+URAD0];
       }
     }
+
+
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"POSTJAC: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+      int iii,jjj;
+      DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%g\n",iii,jjj,J[iii][jjj]);
+    }
+
     
 
     /////////////////////
@@ -415,7 +433,13 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //
     /////////
     DLOOPA(ii) uu[ii+URAD0]=x[ii];
-
+    
+    
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+      int iii,jjj;
+      DLOOP(iii,jjj) dualfprintf(fail_file,"iJ[%d][%d]=%g\n",iii,jjj,iJ[iii][jjj]);
+    }
 
     /////////
     //
@@ -482,7 +506,7 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
       if(f3[0]<IMPALLOWCONV && f3[1]<IMPALLOWCONV && f3[2]<IMPALLOWCONV && f3[3]<IMPALLOWCONV){
         if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3],checkconv);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3],checkconv);
         // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
@@ -492,7 +516,10 @@ static int koral_implicit_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
     }
 
-    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+      dualfprintf(fail_file,"F3CHECK: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+    }
   }// end do
   while(1);
   
@@ -531,7 +558,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 {
   int jj;
   int pliter,pl;
-  FTYPE idtsub;
+  FTYPE idtsub0,idtsub;
   //
   FTYPE Umhd,Urad,Gtot,iUmhd,iUrad;
   //
@@ -540,6 +567,13 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
   FTYPE Usmhd,Usrad,Gstot,iUsmhd,iUsrad;
   FTYPE Utmhd,Utrad,Gttot,iUtmhd,iUtrad;
   FTYPE Gddt[NDIM];
+
+  if(REMOVERESTMASSFROMUU!=2){
+    dualfprintf(fail_file,"get_dtsub() assumes removed rest mass from UU so can compare G and U[UU]\n");
+    myexit(9285345);
+  }
+
+  // KORALTODO: If Umhd is very small and dynamically unimportant, should probably ignore trying to subcycle, but at least limit number of sub-cycles.  May be more of a problem when deal with MHD in force-free magnetosphere.
 
   // NOTE: The timestep does not fllow NR1992 S19.2 on diffusion equation step size.  That applies if diffusion was part of flux calculation, not source term.  And it applies to the radiative velocity limiter for the advection's effective wave speed.
   // The relevant NR1992 is S16.6 on stiff source terms.
@@ -575,18 +609,23 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       // only include relevant directions
       FTYPE taumax=SMALL+MAX(MAX(tautotdir[1]*N1NOT1,tautotdir[2]*N2NOT1),tautotdir[3]*N3NOT1);
       
-      idtsub=taumax/realdt;
+      idtsub0=taumax/realdt;
     }
     else{
       FTYPE uu0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
       //      FTYPE ratchangeRtt=chi * uu0 * realdt * 1.0; // 1.0 = c (1st term)
       FTYPE ratchangeRtt=SMALL+fabs(chi * uu0 * uu0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
-      idtsub = ratchangeRtt/realdt; // if ratchange=1, then in principle right at edge of big change.
+      idtsub0 = ratchangeRtt/realdt; // if ratchange=1, then in principle right at edge of big change.
       // this is like having a "source speed" of v_s\sim \tau \gamma^2 c and limiting the timestep so the source wave only reaches across a cell dxortho in time dt.
 
-      //      dualfprintf(fail_file,"uu0=%g ratchangeRtt=%g idtsub=%g\n",uu0,ratchangeRtt,idtsub);
+      //dualfprintf(fail_file,"uu0=%g chi=%g ratchangeRtt=%g idtsub=%g\n",uu0,chi,ratchangeRtt,idtsub);
 
     }
+
+
+    // pre-ratio idtsub
+    idtsub=idtsub0;
+
 
 
     //    dualfprintf(fail_file,"i=%d dtsub0=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
@@ -596,16 +635,16 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     // first compare to original U
     jj=TT; Umhd=SMALL+fabs(U[UU+jj]);
     jj=TT; Urad=fabs(U[URAD0+jj]);
-    idtsub=MAX(idtsub,idtsub*Urad/Umhd);
+    idtsub=MAX(idtsub,idtsub0*Urad/Umhd);
 
     //    dualfprintf(fail_file,"i=%d dtsub1=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
        
     // also compare against changed U=U0
     jj=TT; Umhd=SMALL+fabs(U0[UU+jj]);
     jj=TT; Urad=fabs(U0[URAD0+jj]);
-    idtsub=MAX(idtsub,idtsub*Urad/Umhd);
+    idtsub=MAX(idtsub,idtsub0*Urad/Umhd);
 
-    //    dualfprintf(fail_file,"i=%d dtsub2=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
+    //    dualfprintf(fail_file,"i=%d dtsub2=%g (realdt=%g)  Urad=%g Umhd=%g\n",ptrgeom->i,1/idtsub,realdt,Urad,Umhd);
        
   }
   // below is if Diffusion is part of source term as in Koral
@@ -771,7 +810,7 @@ static int koral_explicit_source_rad_prepare(FTYPE *pr, FTYPE *Uiin, FTYPE *Ufin
 // compute changes to U (both T and R) using implicit method
 // NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
 // Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
-static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *qnew, FTYPE (*dUcomp)[NPR])
+static int koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *qnew, FTYPE (*dUcomp)[NPR])
 {
   FTYPE Gd[NDIM], radsource[NPR];
   int pliter, pl, jj, sc;
@@ -835,7 +874,7 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
       // assume Unew already accounts for Uf and dUother
 	  get_dtsub(method,prnew,qnew,Unew, Ualt,dUotheralt, CUf, Gd, chi, ptrgeom, &dtsub);
       if(realdt/dtsub>MAXSUBCYCLES){
-        if(debugfail>=2) dualfprintf(fail_file,"dtsub very small: %g with realdt=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub\n",dtsub,realdt,MAXSUBCYCLES);
+        if(debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g chi=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,chi,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         dtsub=realdt/(FTYPE)MAXSUBCYCLES;
       }
       if(itersub==0) dtsubold=dtsubuse=dtsub;
@@ -880,10 +919,10 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
 		// KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
 		// Get P(U)
 		if(Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats)){
-		  dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of koral_explicit_source_rad()\n");
+		  dualfprintf(fail_file,"BAD: Utoprimgen_wrapper() failed, must return out of koral_explicit_source_rad()\n");
 		  //myexit(347366436); // KORALTODO: if explicit dies, nothing to revert to, except to assume force not important for overall dynamics.
           // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)
-		  return;
+		  return(0); // could return(1), but nothing to revert to, so assume not important for dynamics.
 		}
 
 		// re-get needed q's
@@ -925,6 +964,8 @@ static void koral_explicit_source_rad(FTYPE *prnew, FTYPE *Unew, FTYPE *CUf, str
   // only changed this quantity, none of other among function arguments
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
 
+
+  return(0);
   
 }
 
@@ -1001,18 +1042,41 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
   }
   else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
 
+    FTYPE prnew[NPR],Unew[NPR];
+    struct of_state qnew;
+    int failprepare=0;
+    int doimplicit=1;
+    int candoexplicit=0;
 
 
-    // Check if can completely skip optical depth effects
-    FTYPE Gd[NDIM],chi,dtsub;
-    calc_Gd(pinorig, ptrgeom, qorig, Gd, &chi);
-    int method=TAUSUPPRESS; //WHICHSPACETIMESUBSPLIT; // chosen in global.nondepmnemonics.rad.h or by user in init.h (assume quite conservative since can just do implicit step)
-    get_dtsub(method,pinorig,qorig,Uiinorig, Ufinorig, dUother, CUf, Gd, chi, ptrgeom, &dtsub);
+#if(1)
+    // Check if can completely skip optical depth effects or do explicit
     FTYPE realdt = compute_dt(CUf,dt);
-    if(NUMEPSILON*dtsub>=realdt){
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"Nothing in source step to do because effect on radiation or fluid is below machine precision\n");
-      return;
+    FTYPE dtsub;
+    // need to "prepare" for explicit to see if can even do explicit.  I.e. get updated primitive and see if that has large source
+    failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
+    if(failprepare==0){
+      // Can't just use old pinorig and need to use changed version
+      FTYPE Gd[NDIM],chi;
+      calc_Gd(prnew, ptrgeom, &qnew, Gd, &chi);
+      int method=TAUSUPPRESS; //WHICHSPACETIMESUBSPLIT; // chosen in global.nondepmnemonics.rad.h or by user in init.h (assume quite conservative since can just do implicit step)
+      // can put Uiinorig and Ufinorig since get_dtsub() gets updated U that's equal to Unew.  Key is that need new prnew and qnew.
+      get_dtsub(method,prnew,&qnew,Uiinorig, Ufinorig, dUother, CUf, Gd, chi, ptrgeom, &dtsub);
+      if(NUMEPSILON*dtsub>=realdt){
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"Nothing in source step to do because effect on radiation or fluid is below machine precision\n");
+        return;
+      }
+      if(dtsub>=realdt){
+        candoexplicit=1;
+        if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Think can take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
+      }
     }
+    else{
+      candoexplicit=0;
+      if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Tested if can do explicit, and can't because failed to prepare. ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
+    }
+#endif
+
 
 
 #if(0)
@@ -1032,32 +1096,18 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
 
 
 
-    FTYPE prnew[NPR],Unew[NPR];
-    struct of_state qnew;
-    int failprepare=0;
-    int doimplicit=1;
-
-
-    // first check if can just step with explicit scheme without sub-cycling
-    if(dtsub>=realdt){
-      // then just take explicit step!
-      failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
-      if(failprepare){
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"was testing if can do explicit instead of implicit, but explicit failed to prepare, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d.\n So in this case, just avoid explicit and do implicit.\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    if(candoexplicit){
+      // assumes below doesn't modify pinorig,Uiinorig, Ufinorig, CUf,ptrgeom, or qorig
+      int failreturn=koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
+      if(failreturn){
         doimplicit=1;
+        if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Tried explicit step, but didn't work out: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
       }
       else{
         doimplicit=0;
-        // assumes below doesn't modify pinorig,Uiinorig, Ufinorig, CUf,ptrgeom, or qorig
-        koral_explicit_source_rad(prnew, Unew, CUf, ptrgeom, &qnew, dUcomp);
         if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
       }
-	}
-    else{
-      doimplicit=1;
-      if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Prepared for explicit step, but would require subcycling, so do implicit directly: ijk=%d %d %d : realdt=%g dtsub=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,realdt,dtsub);
     }
-
 
 
     if(doimplicit){
@@ -1076,7 +1126,7 @@ void koral_source_rad(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct o
 
 	  if(failimplicit){
 		if(IMPLICITREVERTEXPLICIT){
-          failprepare=koral_explicit_source_rad_prepare(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother , prnew, Unew, &qnew);
+          // just use prepare from beginning.
           if(failprepare){
             if(debugfail>=2) dualfprintf(fail_file,"implicit failed, and failed to prepare for explicit, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           }
@@ -1251,6 +1301,8 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 #if(0)
 	dualfprintf(fail_file,"i=%d : Ruu=%g Ru=%g chi=%g Gu=%g\n",i,Ruu/rho,Ru/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])),chi,Gu[i]/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])));
 #endif
+
+    //    dualfprintf(fail_file,"ratG1=%g ratG2=%g chi=%g Ru=%g rho=%g\n",chi*Ru/rho,kappa*4.*Pi*B/rho,chi,Ru,rho);
 
   }
 
@@ -1643,7 +1695,8 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
   /* calculate matrix inverse */
   det = 1.0/det; 
 
-  if(isnan(det)){
+  if(isnan(det)){ // FUCK
+  //  if(!isfinite(det)){
     dualfprintf(fail_file,"det in inverse 4x4 zero\n");
 	return(1); // indicates failure
 	//    myexit(13235);
@@ -1721,6 +1774,8 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
   FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
   ucon_calc_whichvel(*whichvel,pout,ptrgeomtouse,ucon,others);
 
+  //  DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
+
 
   // also convert whichvel ucon to WHICHVEL primitive velocity for use by u2p_rad() and as needed for consistent final output from this function and as possible backup value
   if(*whichvel!=WHICHVEL) ucon2pr(WHICHVEL,ucon,ptrgeomtouse,pout);
@@ -1745,7 +1800,7 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
     U[URAD2]=Rijlab[TT][TH]/alpha;
     U[URAD3]=Rijlab[TT][PH]/alpha;
 
-    // 
+    //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d URAD=%g\n",jj,U[URAD0+jj]);
 
   }
   else{
@@ -1923,6 +1978,9 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
   }
 
 
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"PRE:  ijk=%d %d %d pl=%d pout=%g\n",i,j,k,pl,pout[pl]);
+
+
 
   // get WHICHVEL primitives (still will be in whichcoord coordinates)
   // whichvel here is for fluid velocity (prad_fforlab() converts velocity to WHICHVEL for consistency with only currently allowed output of radiation velocity)
@@ -1935,7 +1993,7 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
   //  *whichvel=WHICHVEL;
   // above change of whichvel no longer true (and anyways, whichvel was changed in prad_fforlab() directly)
  
-  // PLOOP(pliter,pl) dualfprintf(fail_file,"ijk=%d %d %d pl=%d pout=%g\n",i,j,k,pl,pout[pl]);
+  //  PLOOP(pliter,pl) dualfprintf(fail_file,"POST: ijk=%d %d %d pl=%d pout=%g\n",i,j,k,pl,pout[pl]);
 
  
   // output from prad_fforlab() not yet necessarily PRIMECOORDS.

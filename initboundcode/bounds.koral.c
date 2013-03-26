@@ -2613,7 +2613,8 @@ int bound_radnt(int dir,
               else pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
               // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.
               pradffortho[PRAD1] = 0;
-              pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
+              if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD2] = 0.0;
+              else pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
               pradffortho[PRAD3] = 0;
 
 
@@ -2631,8 +2632,14 @@ int bound_radnt(int dir,
               if(WHICHPROBLEM==RADFLATDISK) whichcoordfluid=MCOORD; // whatever else
               else whichcoordfluid=BLCOORDS; // want to setup things in BLCOORDS
 
+              //dualfprintf(fail_file,"FLAT: rho=%g uint=%g prad0=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO],pradffortho[PRAD0]/pr[RHO]);
+
               int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+              //              dualfprintf(fail_file,"FLATPOST: rho=%g uint=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO]);
+              //              dualfprintf(fail_file,"opacity : %g\n",pr[RHO]*KAPPA_ES_CODE(rho,T)/1E14*0.1);
+              //              dualfprintf(fail_file,"LBAR: %g\n",LBAR);
 
             } // end if actually doing something to boundary cells in "hot" boundary
 

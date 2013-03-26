@@ -606,7 +606,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
       // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
 #if(PRODUCTION==0)      
-      if(debugfail>=2) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
+      if(debugfail>=2 && showmessages) dualfprintf(fail_file,"Tried entropy and good on finalstep=%d! steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
 
       if(debugfail>=2){
         //        int pliter;
@@ -629,7 +629,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
       PALLLOOP(pl) pr[pl]=prhot[pl];
 
 #if(PRODUCTION==0)      
-      if(debugfail>=2){
+      if(debugfail>=2 && showmessages){
         dualfprintf(fail_file,"Tried entropy and bad on finalstep=%d! t=%g steppart=%d nstep=%ld i=%d j=%d k=%d :: hotpflag=%d entropypflag=%d\n",finalstep,t,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,hotpflag,entropypflag);
         //        int pliter;
         //        if(pr[UU]>1.0) dualfprintf(fail_file,"ADEATH\n");
@@ -1581,7 +1581,7 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
   else if(which==UTOPRIM1DFINAL){ MYFUN(Utoprim_1d_final(Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_1d_final", 1);}
   else if(which==UTOPRIM2DFINAL){ MYFUN(Utoprim_2d_final(Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final", 1);}
   // Below Jon's method handles full  hotMHD, entropy, and coldMHD via setting eomtype (doesn't use parameter)
-  else if(which==UTOPRIMJONNONRELCOMPAT){ MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(eomtype,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);}
+  else if(which==UTOPRIMJONNONRELCOMPAT){ MYFUN(Utoprim_jon_nonrelcompat_inputnorestmass(showmessages,eomtype,GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_2d_final_nonrelcompat_inputnorestmass", 1);}
   else if(which==UTOPRIM5D2){ MYFUN(Utoprim_5d2_final(Ugeomfree, ptrgeom, lpflag, pr,pressure,newtonstats),"step_ch.c:Utoprimgen()", "Utoprim_5d2_final", 1);}
   // alt (not really working) inversion for coldmhd (alt compared to UTOPRIMJONNONRELCOMPAT)
   else if(which==UTOPRIMCOLDGRMHD){ MYFUN(Utoprim_coldgrmhd(Ugeomfree, ptrgeom, pr,&positivityproblem),"step_ch.c:Utoprimgen()", "Utoprim_ffde", 1);}

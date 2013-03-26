@@ -19,7 +19,7 @@ static int ifileglobal,jfileglobal,kfileglobal,pfileglobal;
 
 
 // Main function called:
-static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats);
+static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats);
 
 // Metric-related things:
 static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);
@@ -104,15 +104,15 @@ static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal);
 static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now  ) ;
 
 static void validate_x(void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra),FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static void check_on_inversion(int showmessages, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 
 
 
 // Setup inversion:
 static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, FTYPE *Bsq,FTYPE *QdotB,FTYPE *QdotBsq,FTYPE *Qtsq,FTYPE *Qdotn,FTYPE *Qdotnp,FTYPE *D, FTYPE *Sc, int whicheos, FTYPE *EOSextra);
-static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
@@ -135,7 +135,7 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
 ******************************************************************/
 
 // The ONLY global function:
-int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE *U, struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
+int Utoprim_jon_nonrelcompat_inputnorestmass(int showmessages, int eomtype, FTYPE *EOSextra, FTYPE *U, struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
   FTYPE U_tmp[NPR], U_tmp2[NPR], prim_tmp[NPR];
@@ -314,7 +314,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int eomtype, FTYPE *EOSextra, FTYPE
   // Perform the inversion from U -> P
   //
   /////////////
-  ret = Utoprim_new_body(eomtype, lpflag, whicheos,EOSextra, U_tmp, ptrgeom, prim_tmp,pressure,newtonstats);
+  ret = Utoprim_new_body(showmessages, eomtype, lpflag, whicheos,EOSextra, U_tmp, ptrgeom, prim_tmp,pressure,newtonstats);
 
 
 
@@ -418,7 +418,7 @@ prim.
 
 **********************************************************************************/
 
-static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
+static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
   FTYPE Qconp[NDIM],Qcovp[NDIM];
   FTYPE Qtcon[4],Bcon[4],Bcov[4];
@@ -515,7 +515,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
     // SETUP ITERATIVE METHODS (good for GRMHD or entropy GRMHD or cold GRMHD)
     //
     /////////////
-    retval+=set_guess_Wp(lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+    retval+=set_guess_Wp(showmessages, lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last,wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -712,7 +712,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
   // check on result of inversion even if failure (i.e. even if retval>0)
   // Can be done for Wdependentsolution==0, but ignore Wp
-  check_on_inversion(prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+  check_on_inversion(showmessages, prim, U, ptrgeom, Wp, Qtcon, Bcon, Bcov,retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
   /// check on W' and convert W' -> prim[]
@@ -723,7 +723,7 @@ static int Utoprim_new_body(int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EO
 
 
     // find solution
-    retval+=Wp2prim(lpflag, eomtype,prim, pressure, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+    retval+=Wp2prim(showmessages, lpflag, eomtype,prim, pressure, U, ptrgeom, Wp, Qtcon, Bcon, Bcov, retval, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
     if(retval) return(retval);
   }
 
@@ -914,7 +914,7 @@ static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrge
 // Doesn't use Sc since initial guess for W can be found from last primitives alone
 //
 ////////////////////////////////
-static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE u,p;
   FTYPE utsq;
@@ -1088,12 +1088,12 @@ static int set_guess_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom
     if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>Ss0)){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
-      if(numattemptstofixguess>0) if(debugfail>=2) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(numattemptstofixguess>0) if(showmessages && debugfail>=2) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
 #if(PRODUCTION==0)
-      if(debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
 #endif
 
 
@@ -1333,7 +1333,7 @@ static void check_utsq_fail(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 }
 
 
-static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static void check_on_inversion(int showmessages, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   int checki;
 
@@ -1378,7 +1378,7 @@ static void check_on_inversion(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, F
 
 
 
-static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE W,vsq;
   FTYPE utsq;
@@ -1538,7 +1538,7 @@ static int Wp2prim(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FT
   if( (rho0 <= 0.) 
       || ((p < 0.)&&(eomtype!=EOMCOLDGRMHD))
       ) { 
-    if( debugfail>=2 ) {
+    if(showmessages && debugfail>=2 ) {
       tmpdiff = w - rho0;
       dualfprintf(fail_file,
                   "rho or uu < 0 failure: rho,w,(w-rho),p,u  = %21.15g %21.15g %21.15g %21.15g %21.15g \n",

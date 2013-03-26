@@ -139,29 +139,27 @@
 
 
 
+
+
+
+#define GGG0 (6.674e-8)
+#define CCCTRUE0 (2.99792458e10) // cgs in cm/s
+#define MSUN (1.989E33) //cgs in grams
+#define ARAD0 (7.56593E-15) // cgs in erg/(K^4 cm^3)
+#define ARAD (ARAD0) // only in koral would the code version depend upon G,c
+#define K_BOLTZ (1.3806488e-16) // cgs in erg/K
+#define M_PROTON (1.67262158e-24) // proton mass in cgs in grams
+#define MB (1.66054E-24) // = 1/N_A = 1/(Avogadro's number) = baryon mass in cgs in grams (as often used in general EOSs)
+//#define SIGMA_RAD (5.67e-5) // cgs in erg/(cm^2 s K^4)
+
+
+
 ///////////////
 //
-// Some physical constants
+// scaling for c and G constants (can be overwridden by user in their init.h)
 //
 ///////////////
 #define cTILDA (1.0) // like koral
 //#define cTILDA (1E-5)
 //#define gTILDA (1E-10) // like koral
 #define gTILDA (1.0)
-#define GGG0 (6.674e-8)
-#define GGG (GGG0/gTILDA) // cgs in cm^3/(kg s^2)
-#define CCCTRUE0 (2.99792458e10) // cgs in cm/s
-#define CCCTRUE (CCCTRUE0/cTILDA) // cgs in cm/s
-#define MSUN (1.989E33) //cgs in grams
-#define ARAD (7.56593E-15) // cgs in erg/(K^4 cm^3)
-#define K_BOLTZ (1.3806488e-16) // cgs in erg/K
-#define M_PROTON (1.67262158e-24) // proton mass in cgs in grams
-#define MB (1.66054E-24) // = 1/N_A = 1/(Avogadro's number) = baryon mass in cgs in grams (as often used in general EOSs)
-#define SIGMA_RAD (5.67e-5) // cgs in erg/(cm^2 s K^4)
-
-/////////////////////
-//
-// derived constants
-//
-/////////////////////
-#define MSUNCM (GGG*MSUN/(CCCTRUE*CCCTRUE)) // Msun in cm

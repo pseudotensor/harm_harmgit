@@ -194,6 +194,7 @@ int post_init_specific_init(void)
   trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1)=%g KAPPA_BF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1),KAPPA_BF_CODE(1,1));
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
 
+  trifprintf("MASSCM=%g 1 koral unit = %g harm units (g/cm^3)\n",MASSCM,KORAL2HARMRHO(1.0));
 
   return(0);
 }
@@ -1055,6 +1056,26 @@ int init_global(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
+
+    // NOTE: RADNT has very high disk radiation energy and only goes out very slowly, so not even log will show it if one includes boundary cells.
+
+    RADNT_KKK=1.e-4;
+    RADNT_ELL=4.5;
+    RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
+    //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
+    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2);
+    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
+    RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
+    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
+    RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
+    RADNT_NODONUT=0;
+    RADNT_INFLOWING=0;
+    RADNT_ROUT=2.0;
+    RADNT_OMSCALE=1.0;
+
+    trifprintf("RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
+
+
 
     // TOTRY: Om not happening even if set!
 
@@ -2981,26 +3002,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   }
 
 
-  /*************************************************/
-  /*************************************************/
-  if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
-
-    // NOTE: RADNT has very high disk radiation energy and only goes out very slowly, so not even log will show it if one includes boundary cells.
-
-    RADNT_KKK=1.e-4;
-    RADNT_ELL=4.5;
-    RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
-    //RADNT_RHOATMMIN=1.e-4/RHOBAR;
-    RADNT_RHOATMMIN= 1.e-2/RHOBAR;
-    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
-    RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
-    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
-    RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
-    RADNT_NODONUT=0;
-    RADNT_INFLOWING=0;
-    RADNT_ROUT=2.0;
-    RADNT_OMSCALE=1.0;
-  }
 
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT){
