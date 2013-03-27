@@ -9,11 +9,11 @@
 
 
 static void setup_rktimestep(int truestep, int *numtimeorders,
-			     FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
-			     FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
-			     FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
-			     FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
-			     FTYPE (*CUf)[4],FTYPE (*Cunew)[4]);
+                             FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
+                             FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
+                             FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
+                             FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
+                             FTYPE (*CUf)[4],FTYPE (*Cunew)[4]);
 
 
 
@@ -520,13 +520,13 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 #endif
 
       if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2)){
-	// puts J at the time center, but hard to know if RK is at mid point in time except for midpoint method
-	// compute current_doprecalc if near half-step in time
-	if(
-	   ((numtimeorders>=3)&&(timeorder==1))
-	   ||((numtimeorders<=2)&&(timeorder==0))
-	   )
-	  current_doprecalc(CURTYPET,pf); // should be called using half-time step data
+        // puts J at the time center, but hard to know if RK is at mid point in time except for midpoint method
+        // compute current_doprecalc if near half-step in time
+        if(
+           ((numtimeorders>=3)&&(timeorder==1))
+           ||((numtimeorders<=2)&&(timeorder==0))
+           )
+          current_doprecalc(CURTYPET,pf); // should be called using half-time step data
       }
 
 #if(PRODUCTION==0)
@@ -579,12 +579,12 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
+              FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+              FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+              FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+              FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+              FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+              FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   
   int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR]);
   int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -743,13 +743,13 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       // but interpolate everything on first pass (GODMARK: in reality only need to do field on timeorder=0 since last field update is next field pbb??? -- probably only true if doing simple RK methods (1,2))
 #pragma omp parallel private(pl)
       {
-	npr2interpstart=0;
-	npr2interpend=NPR2INTERP-1;
-	for(pl=npr2interpstart;pl<=npr2interpend;pl++)  npr2interplist[pl]=pl;
-	// choice for range of PLOOPNOTINTERP
-	npr2notinterpstart=0;
-	npr2notinterpend=-1;
-	npr2notinterplist[0]=0;
+        npr2interpstart=0;
+        npr2interpend=NPR2INTERP-1;
+        for(pl=npr2interpstart;pl<=npr2interpend;pl++)  npr2interplist[pl]=pl;
+        // choice for range of PLOOPNOTINTERP
+        npr2notinterpstart=0;
+        npr2notinterpend=-1;
+        npr2notinterplist[0]=0;
       }
       advancepassnumber=0;
 
@@ -772,7 +772,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       // now copy over pff to pbb so Bnew is used in flux calculation of non-field quantities
       COMPFULLLOOP{
-	PLOOPBONLY(pl) MACP1A1(pbb,timeorder,i,j,k,pl)=MACP1A1(pff,timeorder,i,j,k,pl);
+        PLOOPBONLY(pl) MACP1A1(pbb,timeorder,i,j,k,pl)=MACP1A1(pff,timeorder,i,j,k,pl);
       }
 
 
@@ -781,26 +781,26 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       nprstart=0;
       nprend=NPR-1-3; // no field
       for(pl=nprstart;pl<=nprend;pl++){
-	if(pl>=B1) nprlist[pl]=pl+3; // skip field
-	else nprlist[pl]=pl;
+        if(pl>=B1) nprlist[pl]=pl+3; // skip field
+        else nprlist[pl]=pl;
       }
       // choice for range of PLOOPINTERP
       // Interpolation of only fields on second pass since want to use updated field to compute flux and so at end of both steps first updated field and non-field quantites are fed to inversion for consistent P(Bnew) and Bnew is used
 #pragma omp parallel private(pl)
       {
-	npr2interpstart=0;
-	npr2interpend=2;
-	npr2interplist[0]=B1;
-	npr2interplist[1]=B2;
-	npr2interplist[2]=B3;
-	// choice for range of PLOOPNOTINTERP
-	// what not interpolating (all non-field):
-	npr2notinterpstart=0;
-	npr2notinterpend=NPR-1-3; // no field
-	for(pl=npr2notinterpstart;pl<=npr2notinterpend;pl++){
-	  if(pl>=B1) npr2notinterplist[pl]=pl+3; // skip field
-	  else npr2notinterplist[pl]=pl;
-	}
+        npr2interpstart=0;
+        npr2interpend=2;
+        npr2interplist[0]=B1;
+        npr2interplist[1]=B2;
+        npr2interplist[2]=B3;
+        // choice for range of PLOOPNOTINTERP
+        // what not interpolating (all non-field):
+        npr2notinterpstart=0;
+        npr2notinterpend=NPR-1-3; // no field
+        for(pl=npr2notinterpstart;pl<=npr2notinterpend;pl++){
+          if(pl>=B1) npr2notinterplist[pl]=pl+3; // skip field
+          else npr2notinterplist[pl]=pl;
+        }
       }
       advancepassnumber=1;
 
@@ -820,14 +820,14 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       for(pl=nprstart;pl<=nprend;pl++) nprlist[pl]=pl;
 #pragma omp parallel private(pl)
       {
-	// choice for range of PLOOPINTERP
-	npr2interpstart=0;
-	npr2interpend=NPR2INTERP-1;
-	for(pl=npr2interpstart;pl<=npr2interpend;pl++) npr2interplist[pl]=pl;
-	// choice for range of PLOOPNOTINTERP
-	npr2notinterpstart=0;
-	npr2notinterpend=-1;
-	npr2notinterplist[0]=0;
+        // choice for range of PLOOPINTERP
+        npr2interpstart=0;
+        npr2interpend=NPR2INTERP-1;
+        for(pl=npr2interpstart;pl<=npr2interpend;pl++) npr2interplist[pl]=pl;
+        // choice for range of PLOOPNOTINTERP
+        npr2notinterpstart=0;
+        npr2notinterpend=-1;
+        npr2notinterplist[0]=0;
       }
       advancepassnumber=-1;
 
@@ -1059,12 +1059,12 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
 int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-	      FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
-	      FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-	      FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-	      FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
+              FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+              FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+              FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+              FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+              FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+              FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   int boundstage;
   SFTYPE mydt;
   int stage, stagei,stagef;
@@ -1150,18 +1150,18 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       // pi however can be the same as pf since each pi is replaced 1
       // zone at a time with a 0 stencil.
       if(timeorder==1){
-	pi=prim;
-	pb=prim;
-	pf=GLOBALPOINT(pk)[0]; // different already, so good for simulbccalc
-	prevpf=prim; // previous final true array
-	mydt=0.5*dt;
+        pi=prim;
+        pb=prim;
+        pf=GLOBALPOINT(pk)[0]; // different already, so good for simulbccalc
+        prevpf=prim; // previous final true array
+        mydt=0.5*dt;
       }
       else if(timeorder==2){
-	pi=prim;
-	pb=GLOBALPOINT(pk)[0];
-	pf=prim;
-	prevpf=GLOBALPOINT(pk)[0];
-	mydt=dt;
+        pi=prim;
+        pb=GLOBALPOINT(pk)[0];
+        pf=prim;
+        prevpf=GLOBALPOINT(pk)[0];
+        mydt=dt;
       }
     }
     else if(numtimeorders==1){
@@ -1187,22 +1187,22 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 #if(SIMULBCCALC==2)
 #if(TYPE2==1)
       // GODMARK: isf1, etc. are NOT defined?!
-	STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
-	STAGECONDITION(0,N1,-1,N2,isf1,ief1,jsf1,jef1);
-	STAGECONDITION(-1,N1,0,N2,isf2,ief2,jsf2,jef2);
-	STAGECONDITION(0,N1,0,N2,ise,iee,jse,jee);
-	STAGECONDITION(0,N1,0,N2-1,isf1ct,ief1ct,jsf1ct,jef1ct);
-	STAGECONDITION(0,N1-1,0,N2,isf2ct,ief2ct,jsf2ct,jef2ct);
-	STAGECONDITION(-1,N1,-1,N2,isdq,iedq,jsdq,jedq);
-	STAGECONDITION(-2,N1+1,-2,N2+1,ispdq,iepdq,jspdq,jepdq);
-	// GODMARK : probably not right for general boundary condition size
+      STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
+      STAGECONDITION(0,N1,-1,N2,isf1,ief1,jsf1,jef1);
+      STAGECONDITION(-1,N1,0,N2,isf2,ief2,jsf2,jef2);
+      STAGECONDITION(0,N1,0,N2,ise,iee,jse,jee);
+      STAGECONDITION(0,N1,0,N2-1,isf1ct,ief1ct,jsf1ct,jef1ct);
+      STAGECONDITION(0,N1-1,0,N2,isf2ct,ief2ct,jsf2ct,jef2ct);
+      STAGECONDITION(-1,N1,-1,N2,isdq,iedq,jsdq,jedq);
+      STAGECONDITION(-2,N1+1,-2,N2+1,ispdq,iepdq,jspdq,jepdq);
+      // GODMARK : probably not right for general boundary condition size
 #endif
 #endif
 
       // only bounding if safe zones, unsafe needs bz complete
       if(stage<STAGE2){
-	bound_beforeevolveprim(boundstage, finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI); // pstag,ucons not right for supermpi
-	if(stage!=STAGEM1) boundstage++;
+        bound_beforeevolveprim(boundstage, finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI); // pstag,ucons not right for supermpi
+        if(stage!=STAGEM1) boundstage++;
       }
 
       // done here instead of local since pseudo-complicated calculation that might slow the dq calculation if done locally per zone
@@ -1215,17 +1215,17 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
       // must check before MPI operation (since asymmetries would desynchronize cpus)
       if(stage<STAGE2){
-	MYFUN(error_check(1),"step_ch.c", "error_check", 1);
+        MYFUN(error_check(1),"step_ch.c", "error_check", 1);
       }
       if(stage!=STAGEM1){
-	if(stage<STAGE2){
-	  bound_evolveprim(boundstage,finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI);
-	  boundstage++;
-	}
+        if(stage<STAGE2){
+          bound_evolveprim(boundstage,finalstep, boundtime[timeorder], prevpf,pstag,ucons,USEMPI);
+          boundstage++;
+        }
       }
       if(timeorder==numtimeorders){
-	if(ndt>lastndt) ndt=lastndt; // don't change if last was lower
-	else lastndt=ndt; // new is lower, keep it
+        if(ndt>lastndt) ndt=lastndt; // don't change if last was lower
+        else lastndt=ndt; // new is lower, keep it
       }
     }
     if(timeorder==numtimeorders){// only do on full step
@@ -1273,11 +1273,11 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 // GODMARK: Currently RK methods all feed pf into pb on next step, so only need one pstag.  In general should have multiple pstag's.
 
 void setup_rktimestep(int truestep, int *numtimeorders,
-		      FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
-		      FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
-		      FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
-		      FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
-		      FTYPE (*CUf)[4],FTYPE (*Cunew)[4])
+                      FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
+                      FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
+                      FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
+                      FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
+                      FTYPE (*CUf)[4],FTYPE (*Cunew)[4])
 {
 
 

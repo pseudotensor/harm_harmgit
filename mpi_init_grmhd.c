@@ -257,10 +257,10 @@ int report_myid(FILE *out)
     fprintf(out,"rankk=%d::\n",rankk); // report each k-section
     for(rankj=0;rankj<ncpux2;rankj++){
       for(ranki=0;ranki<ncpux1;ranki++){
-	origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
-	fprintf(out,"%04d",MPIid[origid]);
-	if(ranki!=ncpux1-1) fprintf(out," ");
-	else fprintf(out,"\n");
+        origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
+        fprintf(out,"%04d",MPIid[origid]);
+        if(ranki!=ncpux1-1) fprintf(out," ");
+        else fprintf(out,"\n");
       }
       if(rankj==ncpux2-1) fprintf(out,"\n");
     }

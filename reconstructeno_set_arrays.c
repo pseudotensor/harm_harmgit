@@ -3,11 +3,11 @@
 void reconstructeno_set_arrays(void)
 {
 
-///////////////////////////
-//
-// COUNTERS and failure checks
-//
-////////////////////////////
+  ///////////////////////////
+  //
+  // COUNTERS and failure checks
+  //
+  ////////////////////////////
 
 #if( WENOMEMORY && WENO_REDUCE_A2C_LOOK_OTHER_DIRECTIONS )
   GLOBALPOINT(weno_lower_order_fraction) = (FTYPE PTRMACP0A1(weno_lower_order_fraction,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(weno_lower_order_fraction,N1BND,N2BND,N3BND,0)));  //atch

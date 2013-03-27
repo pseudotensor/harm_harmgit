@@ -101,10 +101,10 @@ FTYPE SP0user;
 
 
 int main(
-        int argc,
-        char *argv[],
-        char *envp[]
-        )
+         int argc,
+         char *argv[],
+         char *envp[]
+         )
 {
   int pl;
   FILE * dumpin;
@@ -263,8 +263,8 @@ int main(
 
     if((CALCTYPE!=DOAVG)||(startdump==enddump)){
       if((dumpin=fopen(filenamein,"rt"))==NULL){
-	fprintf(stderr,"problem with file opening %s\n",filenamein);
-	exit(1);
+        fprintf(stderr,"problem with file opening %s\n",filenamein);
+        exit(1);
       }
       sprintf(systemcall,"cat %s | head -2 | tail -1 | wc -w > numcol.txt",filenamein);
       system(systemcall);
@@ -272,8 +272,8 @@ int main(
     else{
       sprintf(dumpnamein,"%s%04d",filenamein,dumpnum);
       if((dumpin=fopen(dumpnamein,"rt"))==NULL){
-	fprintf(stderr,"problem with file opening %s\n",dumpnamein);
-	exit(1);
+        fprintf(stderr,"problem with file opening %s\n",dumpnamein);
+        exit(1);
       }
       sprintf(systemcall,"cat %s | head -2 | tail -1 | wc -w > numcol.txt",dumpnamein);
       system(systemcall);
@@ -283,29 +283,29 @@ int main(
     fclose(colin);
     if(CALCTYPE!=DOFLINE){
       if((DUMPTYPE==SINGLECOLUMN)&&(numcol!=4)){
-	fprintf(stderr,"numcol=%d for singlecolumn, should be 4\n",numcol);
-	//      exit(1);
+        fprintf(stderr,"numcol=%d for singlecolumn, should be 4\n",numcol);
+        //      exit(1);
       }
     }
     else{
       if((DUMPTYPE==SINGLECOLUMN)&&(numcol!=7)){
-	fprintf(stderr,"numcol=%d for singlecolumn/dofline, should be 7\n",numcol);
-	//      exit(1);
+        fprintf(stderr,"numcol=%d for singlecolumn/dofline, should be 7\n",numcol);
+        //      exit(1);
       }
     }
     if(CALCTYPE==DOAVG){
       if(numcol==NUMDUMPCOL1) numgenvars=NUMDUMPCOL1;
       else if(numcol==NUMDUMPCOL2) numgenvars=NUMDUMPCOL2;
       else{
-	fprintf(stderr,"numcol=%d for realdump\n",numcol);
-	exit(1);
+        fprintf(stderr,"numcol=%d for realdump\n",numcol);
+        exit(1);
       }
     }
 
 
 
     
-						 
+                                                 
     ////////////////////
     //
     // Process header
@@ -354,17 +354,17 @@ int main(
 
       // below accounts for if put in boundary zones.  Assumes now iii==0 will be first zone!  This wasn't assumed previously
       if(iii==0){
-	si=ii;
-	sj=jj;
-	sk=kk;
+        si=ii;
+        sj=jj;
+        sk=kk;
       }
       i=ii-si;
       j=jj-sj;
       k=kk-sk;
 
       if((i<0)||(j<0)||(k<0)||(i>=nx)||(j>=ny)||(k>=nz)){
-	fprintf(stderr,"data requested larger than said size: i=%d j=%d k=%d\n",i,j,k); fflush(stderr);
-	exit(1);
+        fprintf(stderr,"data requested larger than said size: i=%d j=%d k=%d\n",i,j,k); fflush(stderr);
+        exit(1);
       }
 
 
@@ -375,112 +375,112 @@ int main(
       /////////////////////////////////
       if(DUMPTYPE==REALDUMP){
 
-	if(CALCTYPE!=DOAVG){
-	  // 3+3+NPR+1+4*4+4+1=36
-	  for(pl=1;pl<=3;pl++) fscanf(dumpin,"%lf",&X[pl]);
-	  fscanf(dumpin,"%lf",&r);
-	  fscanf(dumpin,"%lf",&th);
-	  fscanf(dumpin,"%lf",&ph);
-	  PLOOP(pl) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
-	  fscanf(dumpin,"%lf",&divb);
-	  
-	  for (pl = 0; pl < NDIM; pl++)
-	    fscanf(dumpin,"%lf",&(ucon[pl]));
-	  for (pl = 0; pl < NDIM; pl++)
-	    fscanf(dumpin,"%lf",&(ucov[pl]));
-	  for (pl = 0; pl < NDIM; pl++)
-	    fscanf(dumpin,"%lf",&(bcon[pl]));
-	  for (pl = 0; pl < NDIM; pl++)
-	    fscanf(dumpin,"%lf",&(bcov[pl]));
-	  
-	  fscanf(dumpin,"%lf",&vmin1);
-	  fscanf(dumpin,"%lf",&vmax1);
-	  fscanf(dumpin,"%lf",&vmin2);
-	  fscanf(dumpin,"%lf",&vmax2);
-	  fscanf(dumpin,"%lf",&vmin3);
-	  fscanf(dumpin,"%lf",&vmax3);
-	  
-	  fscanf(dumpin,"%lf",&gdet[MAP1]);
-	}
-	else{
-	  genvar[MAPG(0)]=i+genvar[MAPG(0)];
-	  genvar[MAPG(1)]=j+genvar[MAPG(1)];
-	  genvar[MAPG(2)]=k+genvar[MAPG(2)];
-	  for(pl=3;pl<numgenvars;pl++){
-	    fscanf(dumpin,"%lf", &ftemp);
-	    genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
-	  }
-	  
-	}
+        if(CALCTYPE!=DOAVG){
+          // 3+3+NPR+1+4*4+4+1=36
+          for(pl=1;pl<=3;pl++) fscanf(dumpin,"%lf",&X[pl]);
+          fscanf(dumpin,"%lf",&r);
+          fscanf(dumpin,"%lf",&th);
+          fscanf(dumpin,"%lf",&ph);
+          PLOOP(pl) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
+          fscanf(dumpin,"%lf",&divb);
+          
+          for (pl = 0; pl < NDIM; pl++)
+            fscanf(dumpin,"%lf",&(ucon[pl]));
+          for (pl = 0; pl < NDIM; pl++)
+            fscanf(dumpin,"%lf",&(ucov[pl]));
+          for (pl = 0; pl < NDIM; pl++)
+            fscanf(dumpin,"%lf",&(bcon[pl]));
+          for (pl = 0; pl < NDIM; pl++)
+            fscanf(dumpin,"%lf",&(bcov[pl]));
+          
+          fscanf(dumpin,"%lf",&vmin1);
+          fscanf(dumpin,"%lf",&vmax1);
+          fscanf(dumpin,"%lf",&vmin2);
+          fscanf(dumpin,"%lf",&vmax2);
+          fscanf(dumpin,"%lf",&vmin3);
+          fscanf(dumpin,"%lf",&vmax3);
+          
+          fscanf(dumpin,"%lf",&gdet[MAP1]);
+        }
+        else{
+          genvar[MAPG(0)]=i+genvar[MAPG(0)];
+          genvar[MAPG(1)]=j+genvar[MAPG(1)];
+          genvar[MAPG(2)]=k+genvar[MAPG(2)];
+          for(pl=3;pl<numgenvars;pl++){
+            fscanf(dumpin,"%lf", &ftemp);
+            genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
+          }
+          
+        }
       }
       else if(DUMPTYPE==SINGLECOLUMN){
-	if(CALCTYPE==DOFLINE){
-	  for(pl=5;pl<=7;pl++) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
-	  //	  for(pl=5;pl<=7;pl++) fprintf(stderr,"%lf ", p[MAPP(pl)]);
-	  fscanf(dumpin,"%lf",&gdet[MAP1]);
-	  //	  fprintf(stderr,"%lf \n",gdet[MAP1]);
-	}
-	else if(CALCTYPE==DODER){ // dummy variable position
-	  for(pl=0;pl<=0;pl++) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
-	}
-	else if(CALCTYPE==DOAVG){ // dummy variable position
-	  genvar[MAPG(0)]=i+genvar[MAPG(0)];
-	  genvar[MAPG(1)]=j+genvar[MAPG(1)];
-	  genvar[MAPG(2)]=k+genvar[MAPG(2)];
-	  for(pl=3;pl<numgenvars;pl++){
-	    fscanf(dumpin,"%lf", &ftemp);
-	    genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
-	  }
-	}     
+        if(CALCTYPE==DOFLINE){
+          for(pl=5;pl<=7;pl++) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
+          //      for(pl=5;pl<=7;pl++) fprintf(stderr,"%lf ", p[MAPP(pl)]);
+          fscanf(dumpin,"%lf",&gdet[MAP1]);
+          //      fprintf(stderr,"%lf \n",gdet[MAP1]);
+        }
+        else if(CALCTYPE==DODER){ // dummy variable position
+          for(pl=0;pl<=0;pl++) fscanf(dumpin,"%lf", &p[MAPP(pl)]);
+        }
+        else if(CALCTYPE==DOAVG){ // dummy variable position
+          genvar[MAPG(0)]=i+genvar[MAPG(0)];
+          genvar[MAPG(1)]=j+genvar[MAPG(1)];
+          genvar[MAPG(2)]=k+genvar[MAPG(2)];
+          for(pl=3;pl<numgenvars;pl++){
+            fscanf(dumpin,"%lf", &ftemp);
+            genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
+          }
+        }     
       }
       else if(DUMPTYPE>=ANYCOLUMN){
-	if(CALCTYPE==DOAVG){ // dummy variable position
-	  //fprintf(stderr,"i=%d j=%d mapg(0)=%d\n",i,j,MAPG(0));
-	  genvar[MAPG(0)]=i+genvar[MAPG(0)];
-	  genvar[MAPG(1)]=j+genvar[MAPG(1)];
-	  genvar[MAPG(2)]=k+genvar[MAPG(2)];
-	  for(pl=3;pl<numgenvars;pl++){
-	    fscanf(dumpin,"%lf", &ftemp);
-	    //fprintf(stderr,"mapg(%d)=%d\n",pl,MAPG(pl));
-	    genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
-	  }
-	}
-	else if(CALCTYPE==DOFICALC){ // dummy variable position
-	  for(pl=0;pl<NPR;pl++){
-	    fscanf(dumpin,"%lf", &p[MAPP(pl)]);
-	    //	    fprintf(stderr,"iii=%d ii=%d jj=%d i=%d j=%d :: p[%d]=%21.15g\n",iii,ii,jj,i,j,pl,p[MAPP(pl)]);
-	  }
-	  fscanf(dumpin,"%lf",&Ptot[MAP1]);
-	  fscanf(dumpin,"%lf",&gdet[MAP1]);
-	}
+        if(CALCTYPE==DOAVG){ // dummy variable position
+          //fprintf(stderr,"i=%d j=%d mapg(0)=%d\n",i,j,MAPG(0));
+          genvar[MAPG(0)]=i+genvar[MAPG(0)];
+          genvar[MAPG(1)]=j+genvar[MAPG(1)];
+          genvar[MAPG(2)]=k+genvar[MAPG(2)];
+          for(pl=3;pl<numgenvars;pl++){
+            fscanf(dumpin,"%lf", &ftemp);
+            //fprintf(stderr,"mapg(%d)=%d\n",pl,MAPG(pl));
+            genvar[MAPG(pl)]=ftemp+genvar[MAPG(pl)];
+          }
+        }
+        else if(CALCTYPE==DOFICALC){ // dummy variable position
+          for(pl=0;pl<NPR;pl++){
+            fscanf(dumpin,"%lf", &p[MAPP(pl)]);
+            //      fprintf(stderr,"iii=%d ii=%d jj=%d i=%d j=%d :: p[%d]=%21.15g\n",iii,ii,jj,i,j,pl,p[MAPP(pl)]);
+          }
+          fscanf(dumpin,"%lf",&Ptot[MAP1]);
+          fscanf(dumpin,"%lf",&gdet[MAP1]);
+        }
       }
       
 
       // perform read-time calculations
       if(CALCTYPE==DOFLINE){
-	// field line stuff
-	da[MAP1]=-p[MAPP(6)]*gdet[MAP1]*dx[1];
-	db[MAP1]=p[MAPP(5)]*gdet[MAP1]*dx[2];
-	//fprintf(stdout,"%g %g :: %g %g :: %g %g\n",p[MAPP(6)],p[MAPP(5)],dx[1],dx[2],da[MAP1],db[MAP1]);
+        // field line stuff
+        da[MAP1]=-p[MAPP(6)]*gdet[MAP1]*dx[1];
+        db[MAP1]=p[MAPP(5)]*gdet[MAP1]*dx[2];
+        //fprintf(stdout,"%g %g :: %g %g :: %g %g\n",p[MAPP(6)],p[MAPP(5)],dx[1],dx[2],da[MAP1],db[MAP1]);
       }
       else if(CALCTYPE==DOFARADAY){
-	// faraday (down down)
-	ftemp=gdet[MAP1];
-	faradaydd[MAPF(0)]=ftemp*(bcon[3]*ucon[2]-bcon[2]*ucon[3]);
-	faradaydd[MAPF(1)]=ftemp*(bcon[1]*ucon[3]-bcon[3]*ucon[1]);
-	faradaydd[MAPF(2)]=ftemp*(bcon[2]*ucon[1]-bcon[1]*ucon[2]);
-	faradaydd[MAPF(3)]=ftemp*(bcon[3]*ucon[0]-bcon[0]*ucon[3]);
-	faradaydd[MAPF(4)]=ftemp*(bcon[0]*ucon[2]-bcon[2]*ucon[0]);
-	faradaydd[MAPF(5)]=ftemp*(bcon[1]*ucon[0]-bcon[0]*ucon[1]);
-	
-	// faraday (up up)
-	ftemp=-1.0/ftemp;
-	faradayuu[MAPF(0)]=ftemp*(bcov[3]*ucov[2]-bcov[2]*ucov[3]);
-	faradayuu[MAPF(1)]=ftemp*(bcov[1]*ucov[3]-bcov[3]*ucov[1]);
-	faradayuu[MAPF(2)]=ftemp*(bcov[2]*ucov[1]-bcov[1]*ucov[2]);
-	faradayuu[MAPF(3)]=ftemp*(bcov[3]*ucov[0]-bcov[0]*ucov[3]);
-	faradayuu[MAPF(4)]=ftemp*(bcov[0]*ucov[2]-bcov[2]*ucov[0]);
-	faradayuu[MAPF(5)]=ftemp*(bcov[1]*ucov[0]-bcov[0]*ucov[1]);
+        // faraday (down down)
+        ftemp=gdet[MAP1];
+        faradaydd[MAPF(0)]=ftemp*(bcon[3]*ucon[2]-bcon[2]*ucon[3]);
+        faradaydd[MAPF(1)]=ftemp*(bcon[1]*ucon[3]-bcon[3]*ucon[1]);
+        faradaydd[MAPF(2)]=ftemp*(bcon[2]*ucon[1]-bcon[1]*ucon[2]);
+        faradaydd[MAPF(3)]=ftemp*(bcon[3]*ucon[0]-bcon[0]*ucon[3]);
+        faradaydd[MAPF(4)]=ftemp*(bcon[0]*ucon[2]-bcon[2]*ucon[0]);
+        faradaydd[MAPF(5)]=ftemp*(bcon[1]*ucon[0]-bcon[0]*ucon[1]);
+        
+        // faraday (up up)
+        ftemp=-1.0/ftemp;
+        faradayuu[MAPF(0)]=ftemp*(bcov[3]*ucov[2]-bcov[2]*ucov[3]);
+        faradayuu[MAPF(1)]=ftemp*(bcov[1]*ucov[3]-bcov[3]*ucov[1]);
+        faradayuu[MAPF(2)]=ftemp*(bcov[2]*ucov[1]-bcov[1]*ucov[2]);
+        faradayuu[MAPF(3)]=ftemp*(bcov[3]*ucov[0]-bcov[0]*ucov[3]);
+        faradayuu[MAPF(4)]=ftemp*(bcov[0]*ucov[2]-bcov[2]*ucov[0]);
+        faradayuu[MAPF(5)]=ftemp*(bcov[1]*ucov[0]-bcov[0]*ucov[1]);
       }
 
     }// end over variable loop
@@ -522,27 +522,27 @@ int main(
 
       // generate x-direction integral since 1-D
       for(iii=0;iii<nx;iii++){
-	result1[iii]=-da[kkk*nx*ny+0]*0.5;
-	// jjj here is index in i.  We are doing integral over dx1
-	for(jjj=0;jjj<=iii;jjj++){
-	  if(jjj==iii) result1[iii]+=da[kkk*nx*ny+jjj]*0.5;
-	  else result1[iii]+=da[kkk*nx*ny+jjj];
-	}
+        result1[iii]=-da[kkk*nx*ny+0]*0.5;
+        // jjj here is index in i.  We are doing integral over dx1
+        for(jjj=0;jjj<=iii;jjj++){
+          if(jjj==iii) result1[iii]+=da[kkk*nx*ny+jjj]*0.5;
+          else result1[iii]+=da[kkk*nx*ny+jjj];
+        }
       }
       // now find i,j'th aphi
       for(iii=0;iii<nx*ny;iii++){
-	i=indexi=(int)(iii%nx);
-	j=indexj=(int)((iii%(nx*ny))/nx);
-	k=indexk=(int)(iii/(nx*ny));
+        i=indexi=(int)(iii%nx);
+        j=indexj=(int)((iii%(nx*ny))/nx);
+        k=indexk=(int)(iii/(nx*ny));
       
-	// here jjj is over dx2
-	result2=-db[kkk*nx*ny+0*nx+indexi]*0.5;
-	for(jjj=0;jjj<=indexj;jjj++){
-	  if(jjj==indexj) result2+=db[kkk*nx*ny+jjj*nx+indexi]*0.5;
-	  else result2+=db[kkk*nx*ny+jjj*nx+indexi];
-	}
+        // here jjj is over dx2
+        result2=-db[kkk*nx*ny+0*nx+indexi]*0.5;
+        for(jjj=0;jjj<=indexj;jjj++){
+          if(jjj==indexj) result2+=db[kkk*nx*ny+jjj*nx+indexi]*0.5;
+          else result2+=db[kkk*nx*ny+jjj*nx+indexi];
+        }
       
-	aphi[kkk*nx*ny+indexj*nx+indexi]=result1[indexi]+result2;
+        aphi[kkk*nx*ny+indexj*nx+indexi]=result1[indexi]+result2;
       }
     }// end over kkk out of nz
 
@@ -559,27 +559,27 @@ int main(
       indexi=0;
       // generate x-direction integral since 1-D
       for(jnow=0;jnow<ny;jnow++){
-	result1[jnow]=-db[fakekkk*nx*ny+0]*0.5;
-	// jjj here is index in i.  We are doing integral over dx1
-	for(indexj=0;indexj<=jnow;indexj++){
-	  if(indexj==jnow) result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi]*0.5;
-	  else result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi];
-	}
+        result1[jnow]=-db[fakekkk*nx*ny+0]*0.5;
+        // jjj here is index in i.  We are doing integral over dx1
+        for(indexj=0;indexj<=jnow;indexj++){
+          if(indexj==jnow) result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi]*0.5;
+          else result1[jnow]+=db[fakekkk*nx*ny+nx*indexj+indexi];
+        }
       }
       // now find i,j'th aphi
       for(iii=0;iii<nx*ny;iii++){
-	i=indexi=(int)(iii%nx);
-	j=indexj=(int)((iii%(nx*ny))/nx);
-	k=indexk=(int)(iii/(nx*ny));
+        i=indexi=(int)(iii%nx);
+        j=indexj=(int)((iii%(nx*ny))/nx);
+        k=indexk=(int)(iii/(nx*ny));
       
-	// here jjj is over dx2
-	result2=-da[fakekkk*nx*ny+indexj*nx+0]*0.5;
-	for(inow=0;inow<=indexi;inow++){
-	  if(inow==indexi) result2+=da[fakekkk*nx*ny+indexj*nx+inow]*0.5;
-	  else result2+=da[fakekkk*nx*ny+indexj*nx+inow];
-	}
+        // here jjj is over dx2
+        result2=-da[fakekkk*nx*ny+indexj*nx+0]*0.5;
+        for(inow=0;inow<=indexi;inow++){
+          if(inow==indexi) result2+=da[fakekkk*nx*ny+indexj*nx+inow]*0.5;
+          else result2+=da[fakekkk*nx*ny+indexj*nx+inow];
+        }
       
-	aphi[fakekkk*nx*ny+indexj*nx+indexi]=result1[indexj]+result2;
+        aphi[fakekkk*nx*ny+indexj*nx+indexi]=result1[indexj]+result2;
       }
     }// end over kkk out of nz
 
@@ -600,69 +600,69 @@ int main(
 
       // x1
       if(nx>1){
-	if( ((DERTYPE==2 || DERTYPE==12) || (indexi==0))&&(indexi!=nx-1) ){// forward difference
-	  if(signit==-1) der[MAPDER(0)]=(p[MAPPIP1(0)]-p[MAPP(0)])/dx[1];
-	  else  der[MAPDER(0)]=(fabs(p[MAPPIP1(0)])+fabs(p[MAPP(0)]))/dx[1];
-	}
-	else if( ((DERTYPE==1 || DERTYPE==11)||(indexi==nx-1))&&(indexi!=0) ){// backward difference
-	  if(signit==-1) der[MAPDER(0)]=(p[MAPP(0)]-p[MAPPIM1(0)])/dx[1];
-	  else der[MAPDER(0)]=(fabs(p[MAPP(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
-	}
-	else if(DERTYPE==0 || DERTYPE==10) {// centered difference
-	  if(signit==-1) der[MAPDER(0)]=0.5*(p[MAPPIP1(0)]-p[MAPPIM1(0)])/dx[1];
-	  else der[MAPDER(0)]=0.5*(fabs(p[MAPPIP1(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
-	}
-	else{
-	  der[MAPDER(0)]=0.0;
-	}
+        if( ((DERTYPE==2 || DERTYPE==12) || (indexi==0))&&(indexi!=nx-1) ){// forward difference
+          if(signit==-1) der[MAPDER(0)]=(p[MAPPIP1(0)]-p[MAPP(0)])/dx[1];
+          else  der[MAPDER(0)]=(fabs(p[MAPPIP1(0)])+fabs(p[MAPP(0)]))/dx[1];
+        }
+        else if( ((DERTYPE==1 || DERTYPE==11)||(indexi==nx-1))&&(indexi!=0) ){// backward difference
+          if(signit==-1) der[MAPDER(0)]=(p[MAPP(0)]-p[MAPPIM1(0)])/dx[1];
+          else der[MAPDER(0)]=(fabs(p[MAPP(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
+        }
+        else if(DERTYPE==0 || DERTYPE==10) {// centered difference
+          if(signit==-1) der[MAPDER(0)]=0.5*(p[MAPPIP1(0)]-p[MAPPIM1(0)])/dx[1];
+          else der[MAPDER(0)]=0.5*(fabs(p[MAPPIP1(0)])+fabs(p[MAPPIM1(0)]))/dx[1];
+        }
+        else{
+          der[MAPDER(0)]=0.0;
+        }
       }
       else{
-	der[MAPDER(0)]=0.0;
+        der[MAPDER(0)]=0.0;
       }
 
 
       // x2
       if(ny>1){
-	if( ((DERTYPE==2 || DERTYPE==12) || (indexj==0))&&(indexj!=ny-1) ){// forward difference
-	  if(signit==-1) der[MAPDER(1)]=(p[MAPPJP1(0)]-p[MAPP(0)])/dx[2];
-	  else der[MAPDER(1)]=(fabs(p[MAPPJP1(0)])+fabs(p[MAPP(0)]))/dx[2];
-	}
-	else if( ((DERTYPE==1 || DERTYPE==11)||(indexj==ny-1))&&(indexj!=0) ){// backward difference
-	  if(signit==-1) der[MAPDER(1)]=(p[MAPP(0)]-p[MAPPJM1(0)])/dx[2];
-	  else der[MAPDER(1)]=(fabs(p[MAPP(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
-	}
-	else if(DERTYPE==0 || DERTYPE==10){// centered difference
-	  if(signit==-1) der[MAPDER(1)]=0.5*(p[MAPPJP1(0)]+signit*p[MAPPJM1(0)])/dx[2];
-	  else der[MAPDER(1)]=0.5*(fabs(p[MAPPJP1(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
-	}
-	else{
-	  der[MAPDER(1)]=0.0;
-	}
+        if( ((DERTYPE==2 || DERTYPE==12) || (indexj==0))&&(indexj!=ny-1) ){// forward difference
+          if(signit==-1) der[MAPDER(1)]=(p[MAPPJP1(0)]-p[MAPP(0)])/dx[2];
+          else der[MAPDER(1)]=(fabs(p[MAPPJP1(0)])+fabs(p[MAPP(0)]))/dx[2];
+        }
+        else if( ((DERTYPE==1 || DERTYPE==11)||(indexj==ny-1))&&(indexj!=0) ){// backward difference
+          if(signit==-1) der[MAPDER(1)]=(p[MAPP(0)]-p[MAPPJM1(0)])/dx[2];
+          else der[MAPDER(1)]=(fabs(p[MAPP(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
+        }
+        else if(DERTYPE==0 || DERTYPE==10){// centered difference
+          if(signit==-1) der[MAPDER(1)]=0.5*(p[MAPPJP1(0)]+signit*p[MAPPJM1(0)])/dx[2];
+          else der[MAPDER(1)]=0.5*(fabs(p[MAPPJP1(0)])+fabs(p[MAPPJM1(0)]))/dx[2];
+        }
+        else{
+          der[MAPDER(1)]=0.0;
+        }
       }
       else{
-	der[MAPDER(1)]=0.0;
+        der[MAPDER(1)]=0.0;
       }
 
       // x3
       if(nz>1){
-	if( ((DERTYPE==2 || DERTYPE==12) || (indexk==0))&&(indexk!=nz-1) ){// forward difference
-	  if(signit==-1) der[MAPDER(2)]=(p[MAPPKP1(0)]-p[MAPP(0)])/dx[3];
-	  else der[MAPDER(2)]=(fabs(p[MAPPKP1(0)])+fabs(p[MAPP(0)]))/dx[3];
-	}
-	else if( ((DERTYPE==1 || DERTYPE==11)||(indexk==nz-1))&&(indexk!=0) ){// backward difference
-	  if(signit==-1) der[MAPDER(2)]=(p[MAPP(0)]-p[MAPPKM1(0)])/dx[3];
-	  else der[MAPDER(2)]=(fabs(p[MAPP(0)])+fabs(p[MAPPKM1(0)]))/dx[3];
-	}
-	else if(DERTYPE==0 || DERTYPE==10){// centered difference
-	  if(signit==-1) der[MAPDER(2)]=0.5*(p[MAPPKP1(0)]+signit*p[MAPPKM1(0)])/dx[3];
-	  else der[MAPDER(2)]=0.5*(fabs(p[MAPPKP1(0)])+fabs(p[MAPPKM1(0)]))/dx[3];
-	}
-	else{
-	  der[MAPDER(2)]=0.0;
-	}
+        if( ((DERTYPE==2 || DERTYPE==12) || (indexk==0))&&(indexk!=nz-1) ){// forward difference
+          if(signit==-1) der[MAPDER(2)]=(p[MAPPKP1(0)]-p[MAPP(0)])/dx[3];
+          else der[MAPDER(2)]=(fabs(p[MAPPKP1(0)])+fabs(p[MAPP(0)]))/dx[3];
+        }
+        else if( ((DERTYPE==1 || DERTYPE==11)||(indexk==nz-1))&&(indexk!=0) ){// backward difference
+          if(signit==-1) der[MAPDER(2)]=(p[MAPP(0)]-p[MAPPKM1(0)])/dx[3];
+          else der[MAPDER(2)]=(fabs(p[MAPP(0)])+fabs(p[MAPPKM1(0)]))/dx[3];
+        }
+        else if(DERTYPE==0 || DERTYPE==10){// centered difference
+          if(signit==-1) der[MAPDER(2)]=0.5*(p[MAPPKP1(0)]+signit*p[MAPPKM1(0)])/dx[3];
+          else der[MAPDER(2)]=0.5*(fabs(p[MAPPKP1(0)])+fabs(p[MAPPKM1(0)]))/dx[3];
+        }
+        else{
+          der[MAPDER(2)]=0.0;
+        }
       }
       else{
-	der[MAPDER(2)]=0.0;
+        der[MAPDER(2)]=0.0;
       }
 
     }// end over iii
@@ -672,39 +672,39 @@ int main(
 
     for(dimen=1;dimen<=3;dimen++){
       for(iii=0;iii<nx*ny*nz;iii++){
-	i=indexi=(int)(iii%nx);
-	j=indexj=(int)((iii%(nx*ny))/nx);
-	k=indexk=(int)(iii/(nx*ny));
+        i=indexi=(int)(iii%nx);
+        j=indexj=(int)((iii%(nx*ny))/nx);
+        k=indexk=(int)(iii/(nx*ny));
 #define NUMBC 3
-	if(i>=NUMBC && j>=NUMBC && k>=NUMBC && i<=nx-1-NUMBC && j<=ny-1-NUMBC && k<=nz-1-NUMBC){
-	  // create V,P,Y
-	  for(ismall=-NUMBC;ismall<=+NUMBC;ismall++){
+        if(i>=NUMBC && j>=NUMBC && k>=NUMBC && i<=nx-1-NUMBC && j<=ny-1-NUMBC && k<=nz-1-NUMBC){
+          // create V,P,Y
+          for(ismall=-NUMBC;ismall<=+NUMBC;ismall++){
 
-	    // get V = gdet*rho0*u^i
-	    V[ismall]  = p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , U1+dimen-1)]; // u^i
-	    V[ismall] *= p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , RHO)]; // rho0
-	    V[ismall] *= gdet[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // gdet
+            // get V = gdet*rho0*u^i
+            V[ismall]  = p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , U1+dimen-1)]; // u^i
+            V[ismall] *= p[MAPPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2) , k + ismall*(dimen==3) , RHO)]; // rho0
+            V[ismall] *= gdet[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // gdet
 
-	    //	    P[ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2) , k + ismall*(dimen==3) , UU)]; // assumes ideal gas and only taking ratios of pressures
-	    P[ismall] = Ptot[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // true Ptot
+            //      P[ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2) , k + ismall*(dimen==3) , UU)]; // assumes ideal gas and only taking ratios of pressures
+            P[ismall] = Ptot[MAPGEN(i + ismall*(dimen==1) , j + ismall*(dimen==2)  , k + ismall*(dimen==3) , 0, 1)]; // true Ptot
 
 
-	    //	    PLOOP(pl) Ypl[pl][ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2)  , k + ismall*(dimen==3) , pl)];
+            //      PLOOP(pl) Ypl[pl][ismall] = p[MAPPGEN(i + ismall*(dimen==1),j + ismall*(dimen==2)  , k + ismall*(dimen==3) , pl)];
 
-	    //	    fprintf(stderr,"i=%d j=%d k=%d ismall=%d V=%21.15g P=%21.15g\n",i,j,k,ismall,V[ismall],P[ismall]);
-	  }
+            //      fprintf(stderr,"i=%d j=%d k=%d ismall=%d V=%21.15g P=%21.15g\n",i,j,k,ismall,V[ismall],P[ismall]);
+          }
 
-	  // now compute Ficalc for all pl
-	  //	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P, Ypl);
+          // now compute Ficalc for all pl
+          //      ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P, Ypl);
 
-	  ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P);
+          ficalc[MAPFICALC(dimen-1)]=Ficalc(dimen, V, P);
 
-	  //	  fprintf(stderr,"dimen=%d ficalc=%21.15g\n",dimen,ficalc[MAPFICALC(dimen-1)]);
-	}
-	else{
-	  // then set to 0
-	  ficalc[MAPFICALC(dimen-1)]=0.0;
-	}
+          //      fprintf(stderr,"dimen=%d ficalc=%21.15g\n",dimen,ficalc[MAPFICALC(dimen-1)]);
+        }
+        else{
+          // then set to 0
+          ficalc[MAPFICALC(dimen-1)]=0.0;
+        }
       }// end over iii
     }// end over dimen
   }
@@ -743,33 +743,33 @@ int main(
     }
     else if(CALCTYPE==DOFARADAY){
       fprintf(dumpout,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g "
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+0]
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+1]
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+2]
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+3]
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+4]
-	      ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+5]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+0]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+1]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+2]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+3]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+4]
-	      ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+5]
-	      );
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+0]
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+1]
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+2]
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+3]
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+4]
+              ,faradaydd[indexk*nx*ny*6+indexj*nx*6+indexi*6+5]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+0]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+1]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+2]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+3]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+4]
+              ,faradayuu[indexk*nx*ny*6+indexj*nx*6+indexi*6+5]
+              );
     }
     else if(CALCTYPE==DODER){
       fprintf(dumpout,"%21.15g %21.15g %21.15g "
-	      ,der[MAPDER(0)]
-	      ,der[MAPDER(1)]
-	      ,der[MAPDER(2)]
-	      );
+              ,der[MAPDER(0)]
+              ,der[MAPDER(1)]
+              ,der[MAPDER(2)]
+              );
     }
     else if(CALCTYPE==DOFICALC){
       fprintf(dumpout,"%21.15g %21.15g %21.15g ",ficalc[MAPFICALC(0)],ficalc[MAPFICALC(1)],ficalc[MAPFICALC(2)]);
     }
     else if(CALCTYPE==DOAVG){
       for(pl=0;pl<numgenvars;pl++){
-	fprintf(dumpout,"%21.15g ",genvar[MAPG(pl)]);
+        fprintf(dumpout,"%21.15g ",genvar[MAPG(pl)]);
       }
     }
     fprintf(dumpout,"\n");

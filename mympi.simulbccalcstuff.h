@@ -29,8 +29,8 @@
 // GODMARK: ZSLOOP kept
 #define COMPZSLOOP(istart,istop,jstart,jstop) ZSLOOP(istart,istop,jstart,jstop) if(STAGECONDITION(istart,istop,jstart,jstop))
 /*
-#define COMPZLOOP ZLOOP
-#define COMPZSLOOP(istart,istop,jstart,jstop) ZSLOOP(istart,istop,jstart,jstop)
+  #define COMPZLOOP ZLOOP
+  #define COMPZSLOOP(istart,istop,jstart,jstop) ZSLOOP(istart,istop,jstart,jstop)
 */
 // need another set of condition loops for flux calc since need fluxes a bit farther out than values.
 // note that flux doesn't need more safe zones! (not even flux_ct)
@@ -98,15 +98,15 @@
 
 
 /*
-#define TYPE2 (1)
-#define COMPZLOOP STAGELOOP(isc,iec,jsc,jec)
-// ief1 and jef1 are equal to ief2 and jef2, so ok
-#define COMPFZLOOP(istart,jstart) STAGELOOP(istart,ief1,jstart,jef1)
-#define COMPEMFZLOOP STAGELOOP(ise,iee,jse,jee)
-#define COMPF1CTZLOOP STAGELOOP(isf1ct,ief1ct,jsf1ct,jef1ct)
-#define COMPF2CTZLOOP STAGELOOP(isf2ct,ief2ct,jsf2ct,jef2ct)
-#define COMPDQZLOOP STAGELOOP(isdq,iedq,jsdq,jedq)
-#define COMPPREDQZLOOP STAGELOOP(ispdq,iepdq,jspdq,jepdq)
+  #define TYPE2 (1)
+  #define COMPZLOOP STAGELOOP(isc,iec,jsc,jec)
+  // ief1 and jef1 are equal to ief2 and jef2, so ok
+  #define COMPFZLOOP(istart,jstart) STAGELOOP(istart,ief1,jstart,jef1)
+  #define COMPEMFZLOOP STAGELOOP(ise,iee,jse,jee)
+  #define COMPF1CTZLOOP STAGELOOP(isf1ct,ief1ct,jsf1ct,jef1ct)
+  #define COMPF2CTZLOOP STAGELOOP(isf2ct,ief2ct,jsf2ct,jef2ct)
+  #define COMPDQZLOOP STAGELOOP(isdq,iedq,jsdq,jedq)
+  #define COMPPREDQZLOOP STAGELOOP(ispdq,iepdq,jspdq,jepdq)
 */
 
 

@@ -14,29 +14,29 @@
 // I would assume that if DO_SMONO_A2C==0, then nothing is done
 
 void compute_smonotonicity_line(
-				int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-				int *minorder, int *maxorder, int *shift,   
-				FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-				FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
+                                int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                                int *minorder, int *maxorder, int *shift,   
+                                FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 { 
   void compute_smonotonicity_line_split(int setindicator, int setyout,
-					int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-					int *minorder, int *maxorder, int *shift,   
-					FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-					FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]);
+                                        int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                                        int *minorder, int *maxorder, int *shift,   
+                                        FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                        FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]);
 
   // compute normal monotonicity line
   compute_smonotonicity_line_split(1,1,
-				   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-				   minorder, maxorder, shift,   
-				   shockindicator,  df, 
-				   monoindicator, yin, yout, youtpolycoef);
+                                   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                                   minorder, maxorder, shift,   
+                                   shockindicator,  df, 
+                                   monoindicator, yin, yout, youtpolycoef);
 
 }
 
 void compute_polycoef_line(
-				int preforder, int pl, int bs, int ps, int pe, int be, 
-				FTYPE *yin, FTYPE (*youtpolycoef)[NBIGM])
+                           int preforder, int pl, int bs, int ps, int pe, int be, 
+                           FTYPE *yin, FTYPE (*youtpolycoef)[NBIGM])
 {
   int i;
   int order=(preforder+1)/2;
@@ -44,12 +44,12 @@ void compute_polycoef_line(
   FTYPE polycoefarray[MAXSPACEORDER+1];
 
   for( i = bs+order-1; i <= be-order+1; i++ ) {  
-      compute_c2a_polycoef_simple_eno( preforder, &yin[i], polycoefarray );
-      //place derivatives into external array
-      for( polyorder = 0; polyorder < DEFAULTMONOORDER; polyorder++ ) {
-         youtpolycoef[polyorder][i] = polycoefarray[polyorder];
-      }
-    }  
+    compute_c2a_polycoef_simple_eno( preforder, &yin[i], polycoefarray );
+    //place derivatives into external array
+    for( polyorder = 0; polyorder < DEFAULTMONOORDER; polyorder++ ) {
+      youtpolycoef[polyorder][i] = polycoefarray[polyorder];
+    }
+  }  
 }
 
 
@@ -59,15 +59,15 @@ void compute_polycoef_line(
 // yout[0][i] is the left interface value for c2e (centered value for a2c & c2a) for grid cell i
 // yout[1][i] is the right interface value for c2e for grid cell i, does not make sense for a2c & c2a
 void compute_smonotonicity_line_split(int setindicator, int setyout,
-				int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-				int *minorder, int *maxorder, int *shift,   
-				FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-				FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
+                                      int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                                      int *minorder, int *maxorder, int *shift,   
+                                      FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                      FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 { 
   int i;
   FTYPE indicator;
   int check_for_cusp_new(FTYPE *yin, FTYPE *df, FTYPE *ddf);
-  //	int order = (preforder+1)/2;  //the length of the WENO-preforder substencil 
+  //    int order = (preforder+1)/2;  //the length of the WENO-preforder substencil 
   // JCM: assume want mono result no matter what otherwise order is as long as high enough order so points exist for mono
   int order = (DEFAULTMONOORDER+1)/2;  //the length of the WENO-preforder substencil 
   void set_as_rough_indicator(int recontype, int i, FTYPE (*monoindicator)[NBIGM]);
@@ -88,9 +88,9 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
       //wrong order for SMONO to operate on, therefore initialize the mono indicators in such a way that
       //WENO for that order will be fully used and then return
       for( i = -NBIGBND; i < NBIG + NBIGBND; i++ ){
-	monoindicator[MONOINDTYPE][i] = 0.0;
-	monoindicator[MONOLEFTSET][i] = 0.0;
-	monoindicator[MONORIGHTSET][i] = 0.0;
+        monoindicator[MONOINDTYPE][i] = 0.0;
+        monoindicator[MONOLEFTSET][i] = 0.0;
+        monoindicator[MONORIGHTSET][i] = 0.0;
       }
       return;
     }
@@ -99,15 +99,15 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
     //reset the monoindicator line to zeroes --- otherwise asymmetries develop which indicates that ps & pe are not defined to cover large enough region  SASMARK2
     if(recontype!=CVT_C2E){
       for(i=-NBIGBND;i<NBIG+NBIGBND;i++){
-	monoindicator[MONOINDTYPE][i]=-1;
-	monoindicator[MONOLEFTSET][i]=-1;
+        monoindicator[MONOINDTYPE][i]=-1;
+        monoindicator[MONOLEFTSET][i]=-1;
       }
     }
     else{
       for(i=-NBIGBND;i<NBIG+NBIGBND;i++){
-	monoindicator[MONOINDTYPE][i]=-1;
-	monoindicator[MONOLEFTSET][i]=-1;
-	monoindicator[MONORIGHTSET][i]=-1;
+        monoindicator[MONOINDTYPE][i]=-1;
+        monoindicator[MONOLEFTSET][i]=-1;
+        monoindicator[MONORIGHTSET][i]=-1;
       }
     }
 #endif
@@ -127,24 +127,24 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
       // check for cusp
 
       if(setindicator){
-	if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
-	  set_as_rough_indicator(recontype, i, monoindicator);
-	}
-	else{
-	  monoindicator[MONOINDTYPE][i]=0;
-	  monoindicator[MONOLEFTSET][i]=0;
-	  monoindicator[MONORIGHTSET][i]=0;
-	}
+        if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
+          set_as_rough_indicator(recontype, i, monoindicator);
+        }
+        else{
+          monoindicator[MONOINDTYPE][i]=0;
+          monoindicator[MONOLEFTSET][i]=0;
+          monoindicator[MONORIGHTSET][i]=0;
+        }
       }
 
       if(monoindicator[MONOINDTYPE][i]==0 && monoindicator[MONOLEFTSET][i]==1 && monoindicator[MONORIGHTSET][i]==1){
-	setasrough=1;
+        setasrough=1;
       }
       else setasrough=0;
 
       // assumes set_as_rough_indicator sets indicator to below settings
       if(setyout && setasrough){
-	set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
+        set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
       }
 
 
@@ -155,38 +155,38 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
 
       if(setasrough==0){
 
-	if(setindicator){
+        if(setindicator){
 #if( DO_SMONO_A2C ) 
-	  indicator = compute_mono_indicator_average_eno5( &yin[i], SQRT_WENO_EPSILON );  //note conversion double -> int; temporary: later this switch will be removed
+          indicator = compute_mono_indicator_average_eno5( &yin[i], SQRT_WENO_EPSILON );  //note conversion double -> int; temporary: later this switch will be removed
 #else
-	  indicator = 0;
+          indicator = 0;
 #endif
 #if( SMONO_DO_SMOOTH_TRANSITION )
-	  monoindicator[MONOINDTYPE][i] = indicator;
+          monoindicator[MONOINDTYPE][i] = indicator;
 #else
-	  monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
+          monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
 #endif
-	  monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
+          monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
 
-	  // DEBUG
-	  //	  if(i<0 || i>N1){
-	  //	    monoindicator[MONOINDTYPE][i]=sqrt(-1.);
-	  //	    monoindicator[MONOLEFTSET][i]=sqrt(-1.);
-	  //	    monoindicator[MONORIGHTSET][i]=sqrt(-1.);
-	  //	  }
-	  //	  dualfprintf(fail_file,"nstep=%ld steppart=%d mono[%d]=%21.15g yin=%21.15g\n",nstep,steppart,i,monoindicator[MONOINDTYPE][i],yin[i]);
-	  //	  monoindicator[MONOINDTYPE][i]=1;
-	  //	  	  monoindicator[MONOLEFTSET][i]=1;
-	  //	  	  monoindicator[MONORIGHTSET][i]=1;
+          // DEBUG
+          //      if(i<0 || i>N1){
+          //        monoindicator[MONOINDTYPE][i]=sqrt(-1.);
+          //        monoindicator[MONOLEFTSET][i]=sqrt(-1.);
+          //        monoindicator[MONORIGHTSET][i]=sqrt(-1.);
+          //      }
+          //      dualfprintf(fail_file,"nstep=%ld steppart=%d mono[%d]=%21.15g yin=%21.15g\n",nstep,steppart,i,monoindicator[MONOINDTYPE][i],yin[i]);
+          //      monoindicator[MONOINDTYPE][i]=1;
+          //              monoindicator[MONOLEFTSET][i]=1;
+          //              monoindicator[MONORIGHTSET][i]=1;
 
-	}
+        }
 
-	if(setyout){
-	  //if( indicator != 0 ){
-	  if(monoindicator[MONOINDTYPE][i] != 0 ) {
-      a2c_simple_eno( DEFAULTMONOORDER, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
-	  }
-	}
+        if(setyout){
+          //if( indicator != 0 ){
+          if(monoindicator[MONOINDTYPE][i] != 0 ) {
+            a2c_simple_eno( DEFAULTMONOORDER, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
+          }
+        }
 
       }// end if setasrough
     } // end for loop over i
@@ -202,25 +202,25 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
       // check for cusp
 
       if(setindicator){
-	if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
-	  set_as_rough_indicator(recontype, i, monoindicator);
-	}
-	else{
-	  monoindicator[MONOINDTYPE][i]=0;
-	  monoindicator[MONOLEFTSET][i]=0;
-	  monoindicator[MONORIGHTSET][i]=0;
-	}
+        if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
+          set_as_rough_indicator(recontype, i, monoindicator);
+        }
+        else{
+          monoindicator[MONOINDTYPE][i]=0;
+          monoindicator[MONOLEFTSET][i]=0;
+          monoindicator[MONORIGHTSET][i]=0;
+        }
       }
 
       if(monoindicator[MONOINDTYPE][i]==0 && monoindicator[MONOLEFTSET][i]==1 && monoindicator[MONORIGHTSET][i]==1){
-	setasrough=1;
+        setasrough=1;
       }
       else setasrough=0;
 
 
       // assumes set_as_rough_indicator sets indicator to below settings
       if(setyout && setasrough){
-	set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
+        set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
       }
 
 #else
@@ -232,41 +232,41 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
 
 
       if(setasrough==0){
-	
-	if(setindicator){
+        
+        if(setindicator){
 #if( DO_SMONO_C2E ) 
-	  //have a smooth transition between eno5 and weno5 at the level of SQRT_WENO_EPSILON, i.e. at about the same level as that of WENO-5 switching between its stencils.
-	  indicator = compute_mono_indicator_point_eno5( &yin[i], SMONO_EPSILON );  
+          //have a smooth transition between eno5 and weno5 at the level of SQRT_WENO_EPSILON, i.e. at about the same level as that of WENO-5 switching between its stencils.
+          indicator = compute_mono_indicator_point_eno5( &yin[i], SMONO_EPSILON );  
 #else
-	  indicator = 0;
+          indicator = 0;
 #endif
 #if( SMONO_DO_SMOOTH_TRANSITION )
-	  monoindicator[MONOINDTYPE][i] = indicator;
+          monoindicator[MONOINDTYPE][i] = indicator;
 #else
-	  monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
+          monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
 #endif
-	  monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
-	  monoindicator[MONORIGHTSET][i] = monoindicator[MONOINDTYPE][i];
+          monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
+          monoindicator[MONORIGHTSET][i] = monoindicator[MONOINDTYPE][i];
 
-	}
+        }
 
-	if(setyout){
-	  if(monoindicator[MONOINDTYPE][i] != 0 ){
-	    //if(indicator != 0 ){
-	    //get the left interface value
-      c2e_simple_eno( DEFAULTMONOORDER, 0, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
-	    
-	    //get the right interface value
-	    c2e_simple_eno( DEFAULTMONOORDER, 1, &yin[i], &yout[1][i] ); // MERGEDC2EA2CMETHOD  TODO
+        if(setyout){
+          if(monoindicator[MONOINDTYPE][i] != 0 ){
+            //if(indicator != 0 ){
+            //get the left interface value
+            c2e_simple_eno( DEFAULTMONOORDER, 0, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
+            
+            //get the right interface value
+            c2e_simple_eno( DEFAULTMONOORDER, 1, &yin[i], &yout[1][i] ); // MERGEDC2EA2CMETHOD  TODO
 #if(MERGEDC2EA2CMETHOD)
-      compute_c2a_polycoef_simple_eno( DEFAULTMONOORDER, &yin[i], polycoefarray );
-      //place derivatives into external array
-      for( polyorder = 0; polyorder < DEFAULTMONOORDER; polyorder++ ) {
-         youtpolycoef[pl][i];
-      }
+            compute_c2a_polycoef_simple_eno( DEFAULTMONOORDER, &yin[i], polycoefarray );
+            //place derivatives into external array
+            for( polyorder = 0; polyorder < DEFAULTMONOORDER; polyorder++ ) {
+              youtpolycoef[pl][i];
+            }
 #endif
-	  }
-	}
+          }
+        }
 
       }// end else if smooth
     }
@@ -282,25 +282,25 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
 
 
       if(setindicator){
-	if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
-	  //	  dualfprintf(fail_file,"SET ROUGH i=%d\n",i);
-	  set_as_rough_indicator(recontype, i, monoindicator);
-	}
-	else{
-	  monoindicator[MONOINDTYPE][i]=0;
-	  monoindicator[MONOLEFTSET][i]=0;
-	  monoindicator[MONORIGHTSET][i]=0;
-	}
+        if((check_for_cusp_new(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
+          //      dualfprintf(fail_file,"SET ROUGH i=%d\n",i);
+          set_as_rough_indicator(recontype, i, monoindicator);
+        }
+        else{
+          monoindicator[MONOINDTYPE][i]=0;
+          monoindicator[MONOLEFTSET][i]=0;
+          monoindicator[MONORIGHTSET][i]=0;
+        }
       }
 
       if(monoindicator[MONOINDTYPE][i]==0 && monoindicator[MONOLEFTSET][i]==1 && monoindicator[MONORIGHTSET][i]==1){
-	setasrough=1;
+        setasrough=1;
       }
       else setasrough=0;
 
       // assumes set_as_rough_indicator sets indicator to below settings
       if(setyout && setasrough){
-	set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
+        set_as_rough_value(recontype, i, yin, yout, youtpolycoef);
       }
 
 
@@ -313,36 +313,36 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
 
 #if(0)
       if(crapdebug||1){
-	dualfprintf(fail_file,"i=%d monotype=%21.15g monoleft=%21.15g monoright=%21.15g\n",i,monoindicator[MONOINDTYPE][i],monoindicator[MONOLEFTSET][i],monoindicator[MONORIGHTSET][i]);
+        dualfprintf(fail_file,"i=%d monotype=%21.15g monoleft=%21.15g monoright=%21.15g\n",i,monoindicator[MONOINDTYPE][i],monoindicator[MONOLEFTSET][i],monoindicator[MONORIGHTSET][i]);
       }
 #endif
 
 
       if(setasrough==0){
 
-	if(setindicator){
+        if(setindicator){
 #if( DO_SMONO_C2A ) 
-	  //have a smooth transition between eno5 and weno5 at the level of SQRT_WENO_EPSILON, i.e. at about the same level as that of WENO-5 switching between its stencils.
-	  indicator = compute_mono_indicator_point_eno5( &yin[i], SMONO_EPSILON );  //note conversion double -> int; temporary: later this switch will be removed
+          //have a smooth transition between eno5 and weno5 at the level of SQRT_WENO_EPSILON, i.e. at about the same level as that of WENO-5 switching between its stencils.
+          indicator = compute_mono_indicator_point_eno5( &yin[i], SMONO_EPSILON );  //note conversion double -> int; temporary: later this switch will be removed
 #else
-	  indicator = 0;
+          indicator = 0;
 #endif
 #if( SMONO_DO_SMOOTH_TRANSITION )
-	  monoindicator[MONOINDTYPE][i] = indicator;
+          monoindicator[MONOINDTYPE][i] = indicator;
 #else
-	  monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
+          monoindicator[MONOINDTYPE][i] = (int)(indicator + 0.5);
 #endif
-	  monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
-		
+          monoindicator[MONOLEFTSET][i] = monoindicator[MONOINDTYPE][i];
+                
 
-	}
+        }
 
-	if(setyout){
-	  if( monoindicator[MONOINDTYPE][i] != 0 ){
-	    //if( indicator != 0 ){
-	    c2a_simple_eno( DEFAULTMONOORDER, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
-	  }
-	}
+        if(setyout){
+          if( monoindicator[MONOINDTYPE][i] != 0 ){
+            //if( indicator != 0 ){
+            c2a_simple_eno( DEFAULTMONOORDER, &yin[i], &yout[0][i] ); // MERGEDC2EA2CMETHOD  TODO
+          }
+        }
 
       }// end else if smooth
     }//end for
@@ -350,18 +350,18 @@ void compute_smonotonicity_line_split(int setindicator, int setyout,
 
   ////check symmetry of input
   //for( i = ps; i <= pe; i++ ) {
-  //	if( yin[i] != yin[N1 - 1 - i] * ((pl==U1)?(-1):(1)) ) {
-  //		dualfprintf( fail_file, "Asymmetry in yin: yin[%d] = %21.15g, yin[%d] = %21.15g\n",
-  //			i, yin[i], N1 - 1 - i, yin[N1 - 1 - i]);
-  //	}
+  //    if( yin[i] != yin[N1 - 1 - i] * ((pl==U1)?(-1):(1)) ) {
+  //            dualfprintf( fail_file, "Asymmetry in yin: yin[%d] = %21.15g, yin[%d] = %21.15g\n",
+  //                    i, yin[i], N1 - 1 - i, yin[N1 - 1 - i]);
+  //    }
   //}
 
   ////check symmetry of monoindicators
   //for( i = ps; i <= pe; i++ ) {
-  //	if( monoindicator[MONOYIN][i] != monoindicator[MONOYIN][N1 - 1 - i] ) {
-  //		dualfprintf( fail_file, "Asymmetry in monoindicator: monoindicator[MONOYIN][%d] = %21.15g, monoindicator[MONOYIN][%d] = %21.15g\n",
-  //			i, monoindicator[MONOYIN][i], N1 - 1 - i, monoindicator[MONOYIN][N1 - 1 - i]);
-  //	}
+  //    if( monoindicator[MONOYIN][i] != monoindicator[MONOYIN][N1 - 1 - i] ) {
+  //            dualfprintf( fail_file, "Asymmetry in monoindicator: monoindicator[MONOYIN][%d] = %21.15g, monoindicator[MONOYIN][%d] = %21.15g\n",
+  //                    i, monoindicator[MONOYIN][i], N1 - 1 - i, monoindicator[MONOYIN][N1 - 1 - i]);
+  //    }
   //}
 }
 
@@ -501,7 +501,7 @@ FTYPE compute_mono_indicator_average_eno5( FTYPE *yin, FTYPE epsilon )
   monoindicator = transition_function( minabs_der, 0.0, cutoff_value );
 
   //if( minabs_der != 0.0 && norm > 1 ) {
-  //	dualfprintf( fail_file, "monoindicator = %21.15g\n", monoindicator );
+  //    dualfprintf( fail_file, "monoindicator = %21.15g\n", monoindicator );
   //}
 
   return( monoindicator );
@@ -565,7 +565,7 @@ FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon )
   //right_der[1] = (-yin[-2] + 6*yin[-1] - 18*yin[0] + 10*yin[1] + 3*yin[2])/12.;
   //right_der[2] = (-yin[-2] + 4*yin[-1] + 6*yin[0] - 20*yin[1] + 11*yin[2])/12.;
   //right_der[3] = (yin[-2] - 6*yin[-1] + 12*yin[0] - 10*yin[1] + 3*yin[2])/2.;
-	
+        
 
 #if( DO_MONO_1ST_DERIVATIVE ) 
   left_der[1] = MINMOD( left_der[1], yin[-1] - yin[-2] );
@@ -606,9 +606,9 @@ FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon )
 
 
   //if( fabs(bcoeff) < 2. * fabs(acoeff) ) {  // x_crit = -b/2a, |x_crit| < 1 <=> |b| < 2 |a|
-  //	//this also makes sure that acoeff != 0, so can divide by it
-  //	der2_crit = - bcoeff * bcoeff / (4. * acoeff) + ccoeff; //f_crit = - b^2/(4a) + c = -D/(4a)
-  //	left_der[2] = MINMOD( der2_crit, left_der[2] );  //make sure that near min/max, 2nd der is also of the same sign as at the ends of the interval
+  //    //this also makes sure that acoeff != 0, so can divide by it
+  //    der2_crit = - bcoeff * bcoeff / (4. * acoeff) + ccoeff; //f_crit = - b^2/(4a) + c = -D/(4a)
+  //    left_der[2] = MINMOD( der2_crit, left_der[2] );  //make sure that near min/max, 2nd der is also of the same sign as at the ends of the interval
   //}
 
 
@@ -637,7 +637,7 @@ FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon )
   monoindicator = transition_function( minabs_der, 0.0, cutoff_value );
 
   //if( minabs_der != 0.0 && norm > 1 ) {
-  //	dualfprintf( fail_file, "monoindicator = %21.15g\n", monoindicator );
+  //    dualfprintf( fail_file, "monoindicator = %21.15g\n", monoindicator );
   //}
 
   return( monoindicator );
@@ -666,11 +666,11 @@ int check_for_cusp_new(FTYPE *yin, FTYPE *df, FTYPE *ddf)
   FTYPE norm;
   FTYPE sqrtnorm;
   FTYPE f1a,f5a,f1,f2,f3,f3a,f4,f4a,f5,f6,f7,f7a,f8,f8a;
-	  
+          
   norm=(fabs(yin[-2])+fabs(yin[-1])+fabs(yin[0])+fabs(yin[1])+fabs(yin[2])+SMALL);
   //norm=norm*norm*SQRT_WENO_EPSILON;  //replaced the ERRORNORM with SQRT_WENO_EPSIOLON
   norm=norm*SQRT_WENO_EPSILON;
-			
+                        
   f1a = fabs(df[0]) - norm;
   f1= ddf[-1] * sign(df[0]) -norm;
   f2=-ddf[0]  * sign(df[0]) -norm;
@@ -678,19 +678,19 @@ int check_for_cusp_new(FTYPE *yin, FTYPE *df, FTYPE *ddf)
   f3a = fabs(-df[2] - df[0]) - 0.25 * (fabs(df[2]) + fabs(df[0]));
   f4= -df[1]  * sign(df[0]) -norm;
   f4a = fabs(-df[1] - df[0]) - 0.25 * (fabs(df[1]) + fabs(df[0]));
-					  
+                                          
   //f3 = 0.0;  //SASMARKx
 
 #if(0)
   if(crapdebug||1){
     dualfprintf(fail_file,"f1a=%21.15g f1=%21.15g f2=%21.15g f3=%21.15g f3a=%21.15g f4=%21.15g f4a=%21.15g\n",f1a,f1,f2,f3,f3a,f4,f4a);
-			
-  }	
-#endif								  
+                        
+  }     
+#endif                                                            
 
-							  
+                                                          
   if(f1a > 0 && f1>0 && f2>0 && ((f3>0&&f3a>0) || (f4>0&&f4a>0)) ) return(1);
-								
+                                                                
   f5a = fabs(df[1]) - norm;
   f5=-ddf[1]  * sign(df[1]) -norm;
   f6= ddf[0]  * sign(df[1]) -norm;
@@ -698,20 +698,20 @@ int check_for_cusp_new(FTYPE *yin, FTYPE *df, FTYPE *ddf)
   f7a = fabs(-df[-1] - df[1]) - 0.25 * (fabs(df[-1]) + fabs(df[1]));
   f8= -df[0]  * sign(df[1]) -norm;
   f8a = fabs(-df[0] - df[1]) - 0.25 * (fabs(df[0]) + fabs(df[1]));
-										  
+                                                                                  
   //f7 = 0.0;  //SASMARKx
 
 #if(0)
   if(crapdebug||1){
     dualfprintf(fail_file,"f5a=%21.15g f5=%21.15g f6=%21.15g f7=%21.15g f7a=%21.15g f8=%21.15g f8a=%21.15g\n",f5a,f5,f6,f7,f7a,f8,f8a);
-			
-  }									  
+                        
+  }                                                                       
 #endif
-												  
+                                                                                                  
   if(f5a > 0 && f5>0 && f6>0 && ((f7>0&&f7a>0) || (f8>0&&f8a>0)) ) return(1);
-		
+                
 
-														  
+                                                                                                                  
   return(0);
 }
-															
+                                                                                                                        

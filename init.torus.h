@@ -68,16 +68,16 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
               j >= INFULL2 && j <= OUTFULL2 && k>=INFULL3 && k<=OUTFULL3 ) {
 
 
-	    //BOBMARK: converted to new, macrofy-d format
-	    //	    p[i][j][k][RHO] = tabr;
-	    //	    p[i][j][k][U3] = tabo;
+            //BOBMARK: converted to new, macrofy-d format
+            //      p[i][j][k][RHO] = tabr;
+            //      p[i][j][k][U3] = tabo;
             MACP0A1(panalytic,i,j,k,RHO) = tabr;
             MACP0A1(panalytic,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
 
             MACP0A1(panalytic,i,j,k,U1) = 0.0;
             MACP0A1(panalytic,i,j,k,U2) = 0.0;
             MACP0A1(panalytic,i,j,k,U3) = tabo;
-	    
+            
             MACP0A1(panalytic,i,j,k,B1) = 0.0;
             MACP0A1(panalytic,i,j,k,B2) = 0.0;
             MACP0A1(panalytic,i,j,k,B3) = 0.0;
@@ -86,16 +86,16 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
             trifprintf(" k = %d , i=%d, j=%d, rho=%lg\n", k, i, j, tabr);
 
             numused++;
-              }
-              lineno++;
+          }
+          lineno++;
         }
-	// Close file
+        // Close file
         fclose( fpr );
         //
         ///////
       }
       else{
-	// if null report and fail!
+        // if null report and fail!
         dualfprintf(fail_file,"No Rebecca file 1\n");
         myexit(246346);
       }
@@ -117,34 +117,34 @@ int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR])
     if(fpr!=NULL){
     
       for(j=0; j<N2; j++){
-	
+        
         for(i=0; i<N1; i++){
-	  
+          
           for(k=0; k<N3; k++){
-	    
-	    
-	    //      dualfprintf(fail_file,"i=%d j=%d\n",i,j);
-	    
+            
+            
+            //      dualfprintf(fail_file,"i=%d j=%d\n",i,j);
+            
             fscanf(fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo );
 
-	    
-	    //BOBMARK: converted to new, macrofy-d format
-	    //	    p[i][j][k][RHO] = tabr;
-	    //	    p[i][j][k][U3] = tabo;
+            
+            //BOBMARK: converted to new, macrofy-d format
+            //      p[i][j][k][RHO] = tabr;
+            //      p[i][j][k][U3] = tabo;
             MACP0A1(panalytic,i,j,k,RHO) = tabr;
             MACP0A1(panalytic,i,j,k,UU) = kappa * pow(tabr, gam) / (gam - 1.);
 
             MACP0A1(panalytic,i,j,k,U1) = 0.0;
             MACP0A1(panalytic,i,j,k,U2) = 0.0;
             MACP0A1(panalytic,i,j,k,U3) = tabo;
-	    
+            
             MACP0A1(panalytic,i,j,k,B1) = 0.0;
             MACP0A1(panalytic,i,j,k,B2) = 0.0;
             MACP0A1(panalytic,i,j,k,B3) = 0.0;
-	    
-	    
-	    //      printf("tabom %lf  ", tabom[i][j]);
-	    //      dualfprintf(fail_file,"i=%d j=%d tabr=%21.15g\n",i,j,tabr);
+            
+            
+            //      printf("tabom %lf  ", tabom[i][j]);
+            //      dualfprintf(fail_file,"i=%d j=%d tabr=%21.15g\n",i,j,tabr);
           }
         }
       }
@@ -210,84 +210,84 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   cthin = cos(thin);
   DDin = rin * rin - 2. * rin + a * a;
   AAin = (rin * rin + a * a) * (rin * rin + a * a)
-      - DDin * a * a * sthin * sthin;
+    - DDin * a * a * sthin * sthin;
   SSin = rin * rin + a * a * cthin * cthin;
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-        (AA * sth * AA * sth))) / (SS * DD /
-        AA))
-        - 0.5 * sqrt(1. +
-        4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-        sth))
-        - 2. * a * r * l / AA -
-        (0.5 *
-        log((1. +
-        sqrt(1. +
-        4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-        sthin *
-        sthin))) /
-        (SSin * DDin / AAin))
-        - 0.5 * sqrt(1. +
-        4. * (l * l * SSin * SSin) * DDin / (AAin *
-        AAin *
-        sthin *
-        sthin))
-        - 2. * a * rin * l / AAin);
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
+      - 0.5 * sqrt(1. +
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
+      - 2. * a * r * l / AA -
+      (0.5 *
+       log((1. +
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
+       - 0.5 * sqrt(1. +
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
+       - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
   
 
   
-    /* regions outside torus */
+  /* regions outside torus */
   // this region is already in Kerr Schild prime in proper primitive quantity for velocity
-    if (lnh < 0. || r < rin) {
+  if (lnh < 0. || r < rin) {
 
 
-      get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
-      set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
+    get_geometry(i, j, k, CENT, ptrrealgeom); // true coordinate system
+    set_atmosphere(-1,WHICHVEL,ptrrealgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
 
-      *whichvel=WHICHVEL;
-      *whichcoord=PRIMECOORDS;
-      return(0);
-    }
+    *whichvel=WHICHVEL;
+    *whichcoord=PRIMECOORDS;
+    return(0);
+  }
   /* region inside magnetized torus; u^i is calculated in
-    Boyer-Lindquist coordinates, as per Fishbone & Moncrief, so it
-    needs to be transformed at the end */
-    else {
-      hm1 = exp(lnh) - 1.;
-      rho = pow(hm1 * (gam - 1.) / (kappa * gam), 1. / (gam - 1.));
-      u = kappa * pow(rho, gam) / (gam - 1.);
-      ur = 0.;
-      uh = 0.;
+     Boyer-Lindquist coordinates, as per Fishbone & Moncrief, so it
+     needs to be transformed at the end */
+  else {
+    hm1 = exp(lnh) - 1.;
+    rho = pow(hm1 * (gam - 1.) / (kappa * gam), 1. / (gam - 1.));
+    u = kappa * pow(rho, gam) / (gam - 1.);
+    ur = 0.;
+    uh = 0.;
     
-      /* calculate u^phi */
-      expm2chi = SS * SS * DD / (AA * AA * sth * sth);
-      up1 = sqrt((-1. + sqrt(1. + 4. * l * l * expm2chi)) / 2.);
-      up = 2. * a * r * sqrt(1. + up1 * up1) / sqrt(AA * SS * DD) +
-          sqrt(SS / AA) * up1 / sth;
+    /* calculate u^phi */
+    expm2chi = SS * SS * DD / (AA * AA * sth * sth);
+    up1 = sqrt((-1. + sqrt(1. + 4. * l * l * expm2chi)) / 2.);
+    up = 2. * a * r * sqrt(1. + up1 * up1) / sqrt(AA * SS * DD) +
+      sqrt(SS / AA) * up1 / sth;
     
     
-      pr[RHO] = rho ;
-      pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5));
-      pr[U1] = ur ;
-      pr[U2] = uh ;    
-      pr[U3] = SLOWFAC * up;
+    pr[RHO] = rho ;
+    pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5));
+    pr[U1] = ur ;
+    pr[U2] = uh ;    
+    pr[U3] = SLOWFAC * up;
 
     // just define some field
-      pr[B1]=0.0;
-      pr[B2]=0.0;
-      pr[B3]=0.0;
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
 
-      if(FLUXB==FLUXCTSTAG){
+    if(FLUXB==FLUXCTSTAG){
       // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
-        PLOOPBONLY(pl) pstag[pl]=pr[pl];
-      }
-
-      *whichvel=VEL4;
-      *whichcoord=BLCOORDS;
-      return(0);
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
+
+    *whichvel=VEL4;
+    *whichcoord=BLCOORDS;
+    return(0);
+  }
 }
 
 
@@ -382,15 +382,15 @@ int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i,
   /* region outside disk? */
   R = r*sin(th) ;
 
-    //get atmospheric values
+  //get atmospheric values
   get_geometry(i, j, k, CENT, ptrgeom); // true coordinate system
   set_atmosphere(-1,WHICHVEL,ptrgeom,pr); // set velocity in chosen WHICHVEL frame in any coordinate system
   
-    //pull out analytic density
+  //pull out analytic density
   rho = MACP0A1(GLOBALPOINT(panalytic),i,j,k,RHO);
   u = MACP0A1(GLOBALPOINT(panalytic),i,j,k,UU);
 
-    //avoid computations way outside the torus: fill the region with atmosphere
+  //avoid computations way outside the torus: fill the region with atmosphere
   if( R < rin || rho < pr[RHO] ) {
     *whichvel=WHICHVEL;
     *whichcoord=PRIMECOORDS;
@@ -400,7 +400,7 @@ int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i,
     
   PALLLOOP(pl) {
     if( pl == UU && u < pr[UU] ) {
-        //leave u at floor value if u wants to be lower than floor value
+      //leave u at floor value if u wants to be lower than floor value
       continue;
     }
     pr[pl] = MACP0A1(GLOBALPOINT(panalytic),i,j,k,pl);
@@ -408,7 +408,7 @@ int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i,
 
 
   if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+    // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
     PLOOPBONLY(pl) pstag[pl]=pr[pl];
   }
 
@@ -438,15 +438,15 @@ void compute_gu( FTYPE r, FTYPE th, FTYPE a, FTYPE *gutt, FTYPE *gutp, FTYPE *gu
 {
   //metric (expressions taken from eqtorus_c.nb):
   *gutt = -1 - 4*r*(pow(a,2) + pow(r,2))*
-      pow((-2 + r)*r + pow(a,2),-1)*
-      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+    pow((-2 + r)*r + pow(a,2),-1)*
+    pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
       
   *gutp = -4*a*r*pow((-2 + r)*r + pow(a,2),-1)*
-      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+    pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
     
   *gupp = 2*((-2 + r)*r + pow(a,2)*pow(cos(th),2))*
-      pow(sin(th),-2)*pow((-2 + r)*r + pow(a,2),-1)*
-      pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
+    pow(sin(th),-2)*pow((-2 + r)*r + pow(a,2),-1)*
+    pow(pow(a,2) + cos(2*th)*pow(a,2) + 2*pow(r,2),-1);
 }  
   
 FTYPE thintorus_findl( FTYPE r, FTYPE th, FTYPE a, FTYPE c, FTYPE al )
@@ -732,24 +732,24 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-      ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-      sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-      ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-          pow(a,
-              2) * (2. + r))) / sqrt(1 +
-          (2.
-          *
-          a)
-          /
-          pow(r,
-              1.5)
-          -
-          3.
-          /
-          r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-      (pow(a, 2) + (-2. + r) * r))
-         );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow(r,
+                                                                         1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 FTYPE nz_func(FTYPE R)
@@ -757,9 +757,9 @@ FTYPE nz_func(FTYPE R)
   return(
          sqrt(
               (3.*a*a - 4.*a*sqrt(R) + R*R)/
-      pow(R*(a + pow(R,1.5)),2)
-             )
-        ) ;
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }

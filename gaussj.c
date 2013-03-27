@@ -16,24 +16,24 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
     big = 0.0;
     for (j = 1; j <= n; j++)
       if (ipiv[j] != 1)
-	for (k = 1; k <= n; k++) {
-	  if (ipiv[k] == 0) {
-	    if (fabs(a[j][k]) >= big) {
-	      big = fabs(a[j][k]);
-	      irow = j;
-	      icol = k;
-	    }// assume no other conditions GODMARK (compiler warning)
-	  } else if (ipiv[k] > 1) {
-	    dualfprintf(fail_file, "choke in gaussj\n");
-	    myexit(2);
-	  }
-	}
+        for (k = 1; k <= n; k++) {
+          if (ipiv[k] == 0) {
+            if (fabs(a[j][k]) >= big) {
+              big = fabs(a[j][k]);
+              irow = j;
+              icol = k;
+            }// assume no other conditions GODMARK (compiler warning)
+          } else if (ipiv[k] > 1) {
+            dualfprintf(fail_file, "choke in gaussj\n");
+            myexit(2);
+          }
+        }
     ++(ipiv[icol]);
     if (irow != icol) {
       for (l = 1; l <= n; l++) {
-      SWAP(a[irow][l], a[icol][l])}
+        SWAP(a[irow][l], a[icol][l])}
       for (l = 1; l <= m; l++) {
-      SWAP(b[irow][l], b[icol][l])}
+        SWAP(b[irow][l], b[icol][l])}
     }
     indxr[i] = irow;
     indxc[i] = icol;
@@ -49,18 +49,18 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
       b[icol][l] *= pivinv;
     for (ll = 1; ll <= n; ll++)
       if (ll != icol) {
-	dum = a[ll][icol];
-	a[ll][icol] = 0.0;
-	for (l = 1; l <= n; l++)
-	  a[ll][l] -= a[icol][l] * dum;
-	for (l = 1; l <= m; l++)
-	  b[ll][l] -= b[icol][l] * dum;
+        dum = a[ll][icol];
+        a[ll][icol] = 0.0;
+        for (l = 1; l <= n; l++)
+          a[ll][l] -= a[icol][l] * dum;
+        for (l = 1; l <= m; l++)
+          b[ll][l] -= b[icol][l] * dum;
       }
   }
   for (l = n; l >= 1; l--) {
     if (indxr[l] != indxc[l])
       for (k = 1; k <= n; k++)
-	SWAP(a[k][indxr[l]], a[k][indxc[l]]);
+        SWAP(a[k][indxr[l]], a[k][indxc[l]]);
   }
   free_ivector(ipiv, 1, n);
   free_ivector(indxr, 1, n);

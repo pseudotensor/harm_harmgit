@@ -58,7 +58,7 @@ int dudp_calc_gen(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struc
   VARDUDPSTATIC FTYPE dbiduj[NDIM][NDIM] ;
   VARDUDPSTATIC FTYPE dudduu[NDIM][NDIM];
   VARDUDPSTATIC FTYPE dbdiduj[NDIM][NDIM];
-  VARDUDPSTATIC FTYPE tmp1[NDIM],tmp2[NDIM] ;	
+  VARDUDPSTATIC FTYPE tmp1[NDIM],tmp2[NDIM] ;   
   FTYPE eta,bsq ;
   int i,j,k,l ;
   FTYPE dSdrho,dSdu;
@@ -205,9 +205,9 @@ int dudp_calc_gen(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struc
   //   the rest-mass flux is added to the energy 
   //   flux, which may be numerically convenient (tests are unconclusive -- Charles) */
   // handled by Utoprimgen() now
-  //	if(REMOVERESTMASSFROMUU){
-  //	  for(k=1;k<=5;k++) alpha[UU+1][k] += alpha[RHO+1][k] ;
-  //	}
+  //    if(REMOVERESTMASSFROMUU){
+  //      for(k=1;k<=5;k++) alpha[UU+1][k] += alpha[RHO+1][k] ;
+  //    }
 
   //convert from standard 4-velocity primitive quantity to used primitive quantity
   dPtodP(ptrgeom,pr,q,alpha);
@@ -217,19 +217,19 @@ int dudp_calc_gen(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, struc
   // MULTIPLY BY GDET
   //
   ////////////////////
-  //	if(WHICHEOM==WITHGDET){
+  //    if(WHICHEOM==WITHGDET){
   /* N.B.: all the conserved variables contain a factor of \sqrt{det(g_{\mu\nu})} */
-  //	  for(j=1;j<=5;j++) for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;
-  //	}
-  //	else if(WHICHEOM==WITHNOGDET){
+  //      for(j=1;j<=5;j++) for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;
+  //    }
+  //    else if(WHICHEOM==WITHNOGDET){
   // only the U^t (dU^2/dp^j) through U^\phi (dU^5/dp^j) can avoid containing gdet
-  //	  j=1; for(k=1;k<=5;k++) alpha[j][k] *= geom->g ; // mass flux term never changes
+  //      j=1; for(k=1;k<=5;k++) alpha[j][k] *= geom->g ; // mass flux term never changes
 
-  //	  j=2; if(NOGDET0==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
-  //	  j=3; if(NOGDET1==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
-  //	  j=4; if(NOGDET2==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
-  //	  j=5; if(NOGDET3==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
-  //	}
+  //      j=2; if(NOGDET0==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
+  //      j=3; if(NOGDET1==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
+  //      j=4; if(NOGDET2==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
+  //      j=5; if(NOGDET3==0){ for(k=1;k<=5;k++) alpha[j][k] *= geom->g ;}
+  //    }
 
 
   return(0);
@@ -282,7 +282,7 @@ static void dPtodP(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q, FTYPE
     for(i=1;i<=5;i++) SLOOPA(j) for(l=1;l<=3;l++) tempalpha[RHO+1+i-1][U1+1 +j-1]+=alpha[RHO+1+i-1][U1+1+l-1]*duidvj[l][j];
     for(i=1;i<=5;i++) for(j=1;j<=5;j++) alpha[i][j]=tempalpha[i][j];
   }
-	
+        
 }
 
 
@@ -324,8 +324,8 @@ static void dutdui_calc(struct of_geom *ptrgeom, FTYPE *ucon,FTYPE *dutdui)
 {
   int j ;
   FTYPE ucov[NDIM] ;
-	
-  //	dutdui[TT] = 1.0; // never used even if true
+        
+  //    dutdui[TT] = 1.0; // never used even if true
 
   lower_vec(ucon,ptrgeom,ucov) ;
   SLOOPA(j) dutdui[j] = -ucov[j]/ucov[0] ;
@@ -436,7 +436,7 @@ static void ducon_dv3_calc(struct of_geom *ptrgeom, struct of_state *q,FTYPE (*d
   for (i = 0; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       ducon_dv3[i][j] =
-	q->ucon[TT] * (q->ucon[i] * q->ucov[j] + delta(i, j));
+        q->ucon[TT] * (q->ucon[i] * q->ucov[j] + delta(i, j));
 }
 
 

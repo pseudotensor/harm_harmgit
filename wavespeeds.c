@@ -352,8 +352,8 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE2][NSTORE3][NUMCS], int dir, int is, 
       MACP2A0(wspeed,dir,CMAX,i,j,k)=-BIG; // assume all zones are larger than this
       // GODMARK: 1D, could do multi-D stencil even if interpolation is 1D
       for(m=-1;m<=0;m++){
-	MACP2A0(wspeed,dir,CMIN,i,j,k)=MIN(MACP2A0(wspeed,dir,CMIN,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
-	MACP2A0(wspeed,dir,CMAX,i,j,k)=MAX(MACP2A0(wspeed,dir,CMAX,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+        MACP2A0(wspeed,dir,CMIN,i,j,k)=MIN(MACP2A0(wspeed,dir,CMIN,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+        MACP2A0(wspeed,dir,CMAX,i,j,k)=MAX(MACP2A0(wspeed,dir,CMAX,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
       }
 
 #elif(VCHARTYPE==LOCALVCHAR)
@@ -366,8 +366,8 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE2][NSTORE3][NUMCS], int dir, int is, 
       // GODMARK: 1D, could do multi-D stencil even if interpolation is 1D
       // e.g. if dir=1, then expandi=0 and so COMPFZLOOP from i=0..N inclusive.  So can grab from (relative to i) -2 .. 1 inclusive for average centered on i edge
       for(m=-reallim/2;m<=reallim/2-1;m++){
-	MACP2A0(wspeed,dir,CMIN,i,j,k)=MIN(MACP2A0(wspeed,dir,CMIN,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
-	MACP2A0(wspeed,dir,CMAX,i,j,k)=MAX(MACP2A0(wspeed,dir,CMAX,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
+        MACP2A0(wspeed,dir,CMIN,i,j,k)=MIN(MACP2A0(wspeed,dir,CMIN,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMIN));
+        MACP2A0(wspeed,dir,CMAX,i,j,k)=MAX(MACP2A0(wspeed,dir,CMAX,i,j,k),MACP0A1(pointspeed,i+idel*m,j+jdel*m,k+kdel*m,CMAX));
       }
       
 #elif(VCHARTYPE==GLOBALVCHAR)

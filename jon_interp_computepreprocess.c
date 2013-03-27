@@ -85,18 +85,18 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
       for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&val[colini]); // fscanf(infile,SCANARG,&val[colini]);
       
       if(DATATYPE>=1002 && DATATYPE<=1005){
-	// now assign to vector
-	vec[0]=val[4];
-	vec[1]=val[4]*val[5];
-	vec[2]=val[4]*val[6];
-	vec[3]=val[4]*val[7];
+        // now assign to vector
+        vec[0]=val[4];
+        vec[1]=val[4]*val[5];
+        vec[2]=val[4]*val[6];
+        vec[3]=val[4]*val[7];
       }
       else if(DATATYPE>=1006 && DATATYPE<=1009){
-	// now assign to vect
-	vec[0]=0.0;
-	vec[1]=val[8];
-	vec[2]=val[9];
-	vec[3]=val[10];
+        // now assign to vect
+        vec[0]=0.0;
+        vec[1]=val[8];
+        vec[2]=val[9];
+        vec[3]=val[10];
       }
       else dualfprintf(fail_file,"BAD1 DATATYPE=%d\n",DATATYPE);
     }
@@ -347,7 +347,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
     // EM poloidal flux only
     DLOOPA(jj){
       if(jj==1 || jj==2){
-	Tit[jj]=bsq*ucon[jj]*ucov[0] - bcon[jj]*bcov[0] + delta(jj,0)*(bsq*0.5);
+        Tit[jj]=bsq*ucon[jj]*ucov[0] - bcon[jj]*bcov[0] + delta(jj,0)*(bsq*0.5);
       }
       else Tit[jj]=0.0;
     }
@@ -416,8 +416,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
     if(docurrent==0){ // then not computing current, so do normal procedure
 
       if(numoutputcols!=10){
-	fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,10,docurrent);
-	myexit(1);
+        fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,10,docurrent);
+        myexit(1);
       }
 
 
@@ -437,8 +437,8 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
     else{
 
       if(numoutputcols!=14){
-	fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,14,docurrent);
-	myexit(1);
+        fprintf(stderr,"numoutputcols=%d != %d as expected for datatype==14 with docurrent=%d\n",numoutputcols,14,docurrent);
+        myexit(1);
       }
 
 
@@ -982,28 +982,28 @@ int compute_additionals(void)
       colstorei=0;
       for(colini=0;colini<numcolumns;colini++){
 
-	// get m1
-	h=0; readelement(binaryinput,inFTYPE,infilem1,&dataorigin[colini]);
-	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+        // get m1
+        h=0; readelement(binaryinput,inFTYPE,infilem1,&dataorigin[colini]);
+        if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
 
-	// get normal middle time value
-	h=1; readelement(binaryinput,inFTYPE,infile,&dataorigin[colini]);
-	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
-	val[colini]=dataorigin[colini]; // full store for compute_datatype14(1) to use (store middle time)
+        // get normal middle time value
+        h=1; readelement(binaryinput,inFTYPE,infile,&dataorigin[colini]);
+        if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+        val[colini]=dataorigin[colini]; // full store for compute_datatype14(1) to use (store middle time)
 
-	// get p1
-	h=2; readelement(binaryinput,inFTYPE,infilep1,&dataorigin[colini]);
-	if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
+        // get p1
+        h=2; readelement(binaryinput,inFTYPE,infilep1,&dataorigin[colini]);
+        if(!SKIPFL2STORE(colini)) olddata3time[colstorei][h][i][j][k]=dataorigin[colini];
 
 
-	// only store required information, so only iterate colstorei if storing this quantity
-	if(!SKIPFL2STORE(colini)) colstorei++;
+        // only store required information, so only iterate colstorei if storing this quantity
+        if(!SKIPFL2STORE(colini)) colstorei++;
       }
 
       // check that stored correct number of things
       if(colstorei!=NUMCOLUMNSSTORE){
-	fprintf(stderr,"Didn't properly store olddata3time: %d %d\n",colstorei,NUMCOLUMNSSTORE);
-	myexit(1);
+        fprintf(stderr,"Didn't properly store olddata3time: %d %d\n",colstorei,NUMCOLUMNSSTORE);
+        myexit(1);
       }
 
       //DEBUG
@@ -1030,7 +1030,7 @@ int compute_additionals(void)
       //
       ///////////////////
       // so that don't have to reload data or gdump file for better speed
-      ///////////////	
+      ///////////////   
       // 1 means compute everything but Jconortho
       compute_datatype14(1, val, fvar, ti,  X,  V,  conn,  gcon,  gcov,  gdet,  ck,  dxdxp, &geom);
       // store ONLY non-current results
@@ -1044,8 +1044,8 @@ int compute_additionals(void)
       SLOOPA(jj){ olddatagdump[gdumpjj][h][i][j][k]=V[jj]; gdumpjj++; }
       int lll,mmm; SLOOP12(lll,mmm){ olddatagdump[gdumpjj][h][i][j][k]=dxdxp[lll][mmm];  gdumpjj++;}
       if(gdumpjj!=numgdumps){
-	fprintf(stderr,"Memory issue with olddatagdump assignment\n");
-	myexit(1);
+        fprintf(stderr,"Memory issue with olddatagdump assignment\n");
+        myexit(1);
       }
       // now have all that's required to compute F^{\mu\nu} locally for this grid point
       // and also have enough to compute orthonormal versions of things (e.g. for J^\mu later)
@@ -1105,43 +1105,43 @@ int compute_additionals(void)
       if(k!=kprior){ fprintf(stderr,"."); fflush(stderr); kprior=k; }
 
       SUBLOOPOLDDATA{ // full 4D loop
-	
-	// restrict loop to only required points for computing derivatives
-	if(abs(hhh-1)+abs(iii-1)+abs(jjj-1)+abs(kkk-1)>1) continue; // i.e. only 1 direction offset at a time.
+        
+        // restrict loop to only required points for computing derivatives
+        if(abs(hhh-1)+abs(iii-1)+abs(jjj-1)+abs(kkk-1)>1) continue; // i.e. only 1 direction offset at a time.
 
-	
-	// u^\mu
-	DLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREU0+jj][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
-	SLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]*=uconcube[hhh][iii][jjj][kkk][TT];
-	// B^\mu
-	Bconcube[hhh][iii][jjj][kkk][TT]=0.0;
-	SLOOPA(jj) Bconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREB1+jj-1][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
-	// g_{\mu\nu} for SYMMATRIXNDIM unique elements
-	int gdumpjj=0;
-	for(jj=0;jj<SYMMATRIXNDIM;jj++){ gcovcube[hhh][iii][jjj][kkk][jj]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;}
-	// \detg = \sqrt{-g}
-	gdetcube[hhh][iii][jjj][kkk]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;
+        
+        // u^\mu
+        DLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREU0+jj][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
+        SLOOPA(jj) uconcube[hhh][iii][jjj][kkk][jj]*=uconcube[hhh][iii][jjj][kkk][TT];
+        // B^\mu
+        Bconcube[hhh][iii][jjj][kkk][TT]=0.0;
+        SLOOPA(jj) Bconcube[hhh][iii][jjj][kkk][jj]=olddata3time[STOREB1+jj-1][h+hhh-1][i+iii-1][j+jjj-1][k+kkk-1];
+        // g_{\mu\nu} for SYMMATRIXNDIM unique elements
+        int gdumpjj=0;
+        for(jj=0;jj<SYMMATRIXNDIM;jj++){ gcovcube[hhh][iii][jjj][kkk][jj]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;}
+        // \detg = \sqrt{-g}
+        gdetcube[hhh][iii][jjj][kkk]=olddatagdump[gdumpjj][hgdump][i+iii-1][j+jjj-1][k+kkk-1]; gdumpjj++;
 
-	// DEBUG:
-	//fprintf(stderr,"Before compute_gdetFuu: %d %d %d %d : %d %d %d %d\n",h,i,j,k,hhh,iii,jjj,kkk);fflush(stderr);
+        // DEBUG:
+        //fprintf(stderr,"Before compute_gdetFuu: %d %d %d %d : %d %d %d %d\n",h,i,j,k,hhh,iii,jjj,kkk);fflush(stderr);
 
-	// \detg F^{\mu\nu}
-	compute_simple_gdetFuu(gdetcube[hhh][iii][jjj][kkk], gcovcube[hhh][iii][jjj][kkk], uconcube[hhh][iii][jjj][kkk], Bconcube[hhh][iii][jjj][kkk], gdetFuucube[hhh][iii][jjj][kkk]);
+        // \detg F^{\mu\nu}
+        compute_simple_gdetFuu(gdetcube[hhh][iii][jjj][kkk], gcovcube[hhh][iii][jjj][kkk], uconcube[hhh][iii][jjj][kkk], Bconcube[hhh][iii][jjj][kkk], gdetFuucube[hhh][iii][jjj][kkk]);
 
 
-	// DEBUG:
+        // DEBUG:
 #if(0)
-	fprintf(stderr,"COMPUTE0: %d %d %d %d : %d %d %d %d \n",h,i,j,k,hhh,iii,jjj,kkk);
-	for(jj=0;jj<SYMMATRIXNDIM;jj++) fprintf(stderr,"COMPUTE1: %d %g\n",jj,gcovcube[hhh][iii][jjj][kkk][jj]);
-	fprintf(stderr,"COMPUTE2:  %g\n",gdetcube[hhh][iii][jjj][kkk]);
-	DLOOPA(jj) fprintf(stderr,"COMPUTE3: %d  %g\n",jj,uconcube[hhh][iii][jjj][kkk][jj]);
-	DLOOPA(jj) fprintf(stderr,"COMPUTE4: %d  %g\n",jj,Bconcube[hhh][iii][jjj][kkk][jj]);
-	int kk; DLOOP(jj,kk) fprintf(stderr,"COMPUTE5: %d %d %g\n",jj,kk,gdetFuucube[hhh][iii][jjj][kkk][jj][kk]);
+        fprintf(stderr,"COMPUTE0: %d %d %d %d : %d %d %d %d \n",h,i,j,k,hhh,iii,jjj,kkk);
+        for(jj=0;jj<SYMMATRIXNDIM;jj++) fprintf(stderr,"COMPUTE1: %d %g\n",jj,gcovcube[hhh][iii][jjj][kkk][jj]);
+        fprintf(stderr,"COMPUTE2:  %g\n",gdetcube[hhh][iii][jjj][kkk]);
+        DLOOPA(jj) fprintf(stderr,"COMPUTE3: %d  %g\n",jj,uconcube[hhh][iii][jjj][kkk][jj]);
+        DLOOPA(jj) fprintf(stderr,"COMPUTE4: %d  %g\n",jj,Bconcube[hhh][iii][jjj][kkk][jj]);
+        int kk; DLOOP(jj,kk) fprintf(stderr,"COMPUTE5: %d %d %g\n",jj,kk,gdetFuucube[hhh][iii][jjj][kkk][jj][kk]);
 #endif
 
 
-	// DEBUG:
-	//fprintf(stderr,"After compute_gdetFuu\n");fflush(stderr);
+        // DEBUG:
+        //fprintf(stderr,"After compute_gdetFuu\n");fflush(stderr);
 
       }// over hhh,iii,jjj,kkk
 
@@ -1151,33 +1151,33 @@ int compute_additionals(void)
       FTYPE fakeDT = endtdata0 - starttdata0; // because dX[TT]=dt=1 when oN0=1 and avoid using endtdata and starttdata that get modified since used for another purpose (true 4D data)
       
       Jcon[TT] =
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TT][RR] - gdetFuucube[1][0][1][1][TT][RR])/dX[RR]
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][TT][TH] - gdetFuucube[1][1][0][1][TT][TH])/dX[TH]
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TT][PH] - gdetFuucube[1][1][1][0][TT][PH])/dX[PH]
-	;
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TT][RR] - gdetFuucube[1][0][1][1][TT][RR])/dX[RR]
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][TT][TH] - gdetFuucube[1][1][0][1][TT][TH])/dX[TH]
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TT][PH] - gdetFuucube[1][1][1][0][TT][PH])/dX[PH]
+        ;
 
       Jcon[RR] =
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][RR][TT] - gdetFuucube[0][1][1][1][RR][TT])/fakeDT
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][RR][TH] - gdetFuucube[1][1][0][1][RR][TH])/dX[TH]
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][RR][PH] - gdetFuucube[1][1][1][0][RR][PH])/dX[PH]
-	;
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][RR][TT] - gdetFuucube[0][1][1][1][RR][TT])/fakeDT
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][RR][TH] - gdetFuucube[1][1][0][1][RR][TH])/dX[TH]
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][RR][PH] - gdetFuucube[1][1][1][0][RR][PH])/dX[PH]
+        ;
 
       Jcon[TH] =
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][TH][TT] - gdetFuucube[0][1][1][1][TH][TT])/fakeDT
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TH][RR] - gdetFuucube[1][0][1][1][TH][RR])/dX[RR]
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TH][PH] - gdetFuucube[1][1][1][0][TH][PH])/dX[PH]
-	;
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][TH][TT] - gdetFuucube[0][1][1][1][TH][TT])/fakeDT
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][TH][RR] - gdetFuucube[1][0][1][1][TH][RR])/dX[RR]
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][1][2][TH][PH] - gdetFuucube[1][1][1][0][TH][PH])/dX[PH]
+        ;
 
       Jcon[PH] =
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][PH][TT] - gdetFuucube[0][1][1][1][PH][TT])/fakeDT
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][PH][RR] - gdetFuucube[1][0][1][1][PH][RR])/dX[RR]
-	+(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][PH][TH] - gdetFuucube[1][1][0][1][PH][TH])/dX[TH]
-	;
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[2][1][1][1][PH][TT] - gdetFuucube[0][1][1][1][PH][TT])/fakeDT
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][2][1][1][PH][RR] - gdetFuucube[1][0][1][1][PH][RR])/dX[RR]
+        +(1.0/gdetcube[1][1][1][1])*(gdetFuucube[1][1][2][1][PH][TH] - gdetFuucube[1][1][0][1][PH][TH])/dX[TH]
+        ;
 
 
       // DEBUG:
       //      DLOOPA(jj) fprintf(stderr,"Jcon[%d]=%g : Dx=%g fakeDT=%g gdet=%g\n",jj,Jcon[jj],dX[jj],fakeDT,gdetcube[1][1][1][1]); fflush(stderr);
-      			 
+                         
 
 
       int href=0;
@@ -1190,8 +1190,8 @@ int compute_additionals(void)
       // dx^\mu/dxp^\nu (only modify 1-2 components, since rest didn't change from assignment of constant from gdump read-in in prior loop)
       int lll,mmm; SLOOP12(lll,mmm){ dxdxp[lll][mmm]=olddatagdump[gdumpjj][href][i][j][k]; gdumpjj++; }
       if(gdumpjj!=numgdumps){
-	fprintf(stderr,"Memory issue with olddatagdump assignment\n");
-	myexit(1);
+        fprintf(stderr,"Memory issue with olddatagdump assignment\n");
+        myexit(1);
       }
 
 
@@ -1411,17 +1411,17 @@ static void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FT
    
       faraday[mu][nu]=0.0;
       for(kappa=0;kappa<NDIM;kappa++){
-	for(lambda=0;lambda<NDIM;lambda++){
-	
-	  // faraday_calc(which) refers to whether faraday is fully up or down, and lc4(updown) refers to updown being \epsilon fully up or down.  And these are the same.
-	  // F^{\alpha\beta} = -b_\gamma u_\delta \epsilon^{\alpha\beta\gamma\delta}
-	  // F^{\mu\nu} = \epsilon^{\mu\nu\kappa\lambda} u_\kappa b_\lambda
-	  // So sign below is correct.
-	  faraday[mu][nu] += lc4(which,geom->gdet,mu,nu,kappa,lambda)*u[kappa]*b[lambda];
-	  
-	  // DEBUG:
-	  //fprintf(stderr,"faraday[%d][%d]=%g : lc4=%g : %d %g %d %d %g %g\n",mu,nu,faraday[mu][nu],lc4(which,geom->gdet,mu,nu,kappa,lambda),which,geom->gdet,kappa,lambda,u[kappa],b[lambda]); fflush(stderr);
-	}
+        for(lambda=0;lambda<NDIM;lambda++){
+        
+          // faraday_calc(which) refers to whether faraday is fully up or down, and lc4(updown) refers to updown being \epsilon fully up or down.  And these are the same.
+          // F^{\alpha\beta} = -b_\gamma u_\delta \epsilon^{\alpha\beta\gamma\delta}
+          // F^{\mu\nu} = \epsilon^{\mu\nu\kappa\lambda} u_\kappa b_\lambda
+          // So sign below is correct.
+          faraday[mu][nu] += lc4(which,geom->gdet,mu,nu,kappa,lambda)*u[kappa]*b[lambda];
+          
+          // DEBUG:
+          //fprintf(stderr,"faraday[%d][%d]=%g : lc4=%g : %d %g %d %d %g %g\n",mu,nu,faraday[mu][nu],lc4(which,geom->gdet,mu,nu,kappa,lambda),which,geom->gdet,kappa,lambda,u[kappa],b[lambda]); fflush(stderr);
+        }
       }
     }
   }

@@ -240,12 +240,12 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   cmax = cminmax[CMAX];
 
 
-  //	if(steppart==0) crus=dx[dir]/(dt*0.5);
-  //	else  crus=dx[dir]/(dt);
+  //    if(steppart==0) crus=dx[dir]/(dt*0.5);
+  //    else  crus=dx[dir]/(dt);
   crus=dx[dir]/(dt*CUf);
-  //	crus=dx[dir]/(dt);
-  //	dualfprintf(fail_file,"CUf=%21.15g dt=%21.15g dx[%d]=%21.15g\n",CUf,dt,dir,dx[dir]);
-  //	crus=dx[dir]/(dt);
+  //    crus=dx[dir]/(dt);
+  //    dualfprintf(fail_file,"CUf=%21.15g dt=%21.15g dx[%d]=%21.15g\n",CUf,dt,dir,dx[dir]);
+  //    crus=dx[dir]/(dt);
   
   if(fluxmethod==LAXFFLUX){
     PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
@@ -271,10 +271,10 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     //       ((dir == 1) && ( ((startpos[1]+i == 0)&&(BCtype[X1DN]==OUTFLOW)) || ((startpos[1]+i == totalsize[1])&&(BCtype[X1UP]==OUTFLOW))  ))
     //       )
     //      {
-    //	PLOOP(pliter,pl){
-    //	  hllfrac[pl]=1.0;
-    //	  laxffrac[pl]=0.0;
-    //	}
+    //  PLOOP(pliter,pl){
+    //    hllfrac[pl]=1.0;
+    //    laxffrac[pl]=0.0;
+    //  }
     //      }
     //#endif
 
@@ -350,13 +350,13 @@ int hllflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYPE 
   if(cmax+cmin!=0.0){
     PLOOP(pliter,pl) {
       if( pl == UU + dir && (vmin+vmax!=0.0) ) {
-	//      if(vmin+vmax!=0.0){
-	cminreal = vmin;
-	cmaxreal = vmax;
+        //      if(vmin+vmax!=0.0){
+        cminreal = vmin;
+        cmaxreal = vmax;
       }
       else {
-	cminreal = cmin;
-	cmaxreal = cmax;
+        cminreal = cmin;
+        cmaxreal = cmax;
       }
       F[pl] =  HLLCOMPUTE(cminreal,cmaxreal,U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
     }
@@ -447,8 +447,8 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE cmin, FTYPE cmax, FTYP
       // get primitive pmid(umid)
       MYFUN(Utoprimgen(0,EVOLVEUTOPRIM,UEVOLVE, umid, geom, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
-	if(debugfail>=1) dualfprintf(fail_file,"No initial guess worked, rejecting FORCEFLUX method : nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
-	doforceflux=0;
+        if(debugfail>=1) dualfprintf(fail_file,"No initial guess worked, rejecting FORCEFLUX method : nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
+        doforceflux=0;
       }
     }
   }
@@ -736,9 +736,9 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
     mymustacoeffinal=0.0;
     PLOOP(pliter,pl){
       if(pl==RHO){
-	if(mymustacoeffinal<=mymustacoef[pl]){
-	  mymustacoeffinal=mymustacoef[pl];
-	}
+        if(mymustacoeffinal<=mymustacoef[pl]){
+          mymustacoeffinal=mymustacoef[pl];
+        }
       }
     }
     if(mymustacoeffinal>1.0) mymustacoeffinal=1.0;
@@ -749,10 +749,10 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
     //    pllargest=-1;
     //    PLOOP(pliter,pl){
     //      if(pl<=RHO){
-    //	if(mustaf<=max(fracl[pl],fracr[pl])){
-    //	  mustaf=max(fracl[pl],fracr[pl]);
-    //	  pllargest=pl;
-    //	}
+    //  if(mustaf<=max(fracl[pl],fracr[pl])){
+    //    mustaf=max(fracl[pl],fracr[pl]);
+    //    pllargest=pl;
+    //  }
     //      }
     //    }
     //    if((mustaf>1.0)||(mustaf<0.0)) return(0);
@@ -774,7 +774,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       //      if(fabs(U_l[pl]-U_r[pl])<fabs((U_l[pl]-correctionl[pl])-(U_r[pl]-correctionr[pl]))) return(0);
 
       if(fabs(correctionl[pl]-correctionr[pl])!=0.0){
-	mymustacoef[pl]=(U_l[pl]-U_r[pl])/(correctionl[pl]-correctionr[pl]);
+        mymustacoef[pl]=(U_l[pl]-U_r[pl])/(correctionl[pl]-correctionr[pl]);
       }
       else mymustacoef[pl]=BIG;
       // check that corrections are possibly tunable to be monotonic and so are at least in the right direction
@@ -792,20 +792,20 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
 #if(MUSTACOEFTYPE==0)
     if(1){
       PLOOP(pliter,pl){
-	dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d coef[%d]=%21.15g\n",nstep,steppart,geom->i,pl,mymustacoef[pl]);
+        dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d coef[%d]=%21.15g\n",nstep,steppart,geom->i,pl,mymustacoef[pl]);
       }
     }
     if(1){
       // find minimum of coefficients
       mymustacoeffinal=BIG;
       PLOOP(pliter,pl){
-	if(mymustacoeffinal>mymustacoef[pl]) mymustacoeffinal=mymustacoef[pl];
+        if(mymustacoeffinal>mymustacoef[pl]) mymustacoeffinal=mymustacoef[pl];
       }
       if(mymustacoeffinal>1.0) return(0);
       //      if(fabs(mymustacoef[RHO]-1.0)>2.0) return(0);
       //      if(mymustacoeffinal>1.0) mymustacoeffinal=1.0;
       PLOOP(pliter,pl){
-	mymustacoef[pl]=mymustacoeffinal;
+        mymustacoef[pl]=mymustacoeffinal;
       }
     }
 #elif(MUSTACOEFTYPE==1)
@@ -1101,9 +1101,9 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE cmin_l, FTYPE cmin_r,
       // get new primitive pnow from Unow
       MYFUN(Utoprimgen(0,EVOLVEUTOPRIM,UEVOLVE, Unow, geom, pnow,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
-	if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
-	domustaflux=0;
-	break;
+        if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
+        domustaflux=0;
+        break;
       }
       
 

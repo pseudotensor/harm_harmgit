@@ -1,7 +1,7 @@
 
 /* 
  *
-  NS disk or not and various NS field setups
+ NS disk or not and various NS field setups
  *
  *
  */
@@ -18,7 +18,7 @@
 
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0             /* reduce u_phi by this amount */
 
 SFTYPE rhomaxold,umaxold,rhomax=0,umax=0,bsq_max=0,beta,rin;
 
@@ -37,7 +37,7 @@ int DISKDIR;
 // -1 : disk special wedge or no disk
 // else dir as in global.h
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0             /* reduce u_phi by this amount */
 
 static FTYPE mm;
 
@@ -162,18 +162,18 @@ int init_grid(void)
   /* output choices */
   tf = 10.0*Rout;
 
-  DTd = 5;			/* dumping frequency, in units of M */
+  DTd = 5;                      /* dumping frequency, in units of M */
   DTavg = DTd;
-  DTener = 2;			/* logfile frequency, in units of M */
-  DTi = tf/100.0;			/* image file frequ., in units of M */
+  DTener = 2;                   /* logfile frequency, in units of M */
+  DTi = tf/100.0;                       /* image file frequ., in units of M */
   DTdebug = DTd; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
-  DTr = 100;			/* restart file period in steps */
+  DTr = 100;                    /* restart file period in steps */
 
 
 
 #else
-  #error MCOORD != SPCMINKMETRIC
+#error MCOORD != SPCMINKMETRIC
 #endif
 
   return(0);
@@ -380,7 +380,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel,whichcoord,MAC(p,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
   }
 
@@ -411,7 +411,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel, whichcoord,MAC(p,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
   }
 #endif
@@ -422,7 +422,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
   // copy over initial solution as analytic solution
   // SET ANALYTIC SOLUTION FROM vector potential-based solution
   // NEEDED FOR BOUND in case uses panalytic
- COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND){
+  COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND){
     PLOOP(pliter,pl) MACP0A1(panalytic,i,j,k,pl)=MACP0A1(p,i,j,k,pl);
 
     // 0 out these things so dump files are readable by SM
@@ -478,11 +478,11 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 
 
   trifprintf("Initialize field from vector potential\n");
- COMPFULLLOOPP1{
+  COMPFULLLOOPP1{
     for(l=1;l<=3;l++) MACP1A0(A,l,i,j,k) = 0.;
   }
 
- COMPFULLLOOPP1{
+  COMPFULLLOOPP1{
     // GODMARK: Caution: Possible to use quantity off grid
     // (e.g. density) to define lower corner value of A, which then
     // defines B at center for lower cells.
@@ -497,7 +497,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 
   // copy over initial solution as analytic solution
   // SET ANALYTIC SOLUTION FROM vector potential-based solution
- COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND) PLOOP(pliter,pl){
+  COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND) PLOOP(pliter,pl){
     MACP0A1(panalytic,i,j,k,pl)=MACP0A1(p,i,j,k,pl);
   }
 
@@ -1084,7 +1084,7 @@ void set_analytical_face(void)
 
     prtemp[RHO] = 0; //SASMARK
     //init_nodisk(FACE1, &whichvel, &whichcoord, i, j, k, prtemp);
-      //    set_density_floors(&geom,prtemp,prtemp);
+    //    set_density_floors(&geom,prtemp,prtemp);
     GLOBALMACP1A0(pother,RHOFACE1,i,j,k)=prtemp[RHO];
 
   }
@@ -1148,7 +1148,7 @@ void set_analytical_face(void)
 
     prtemp[RHO] = 0; //SASMARK
     //init_nodisk(FACE2, &whichvel, &whichcoord, i, j, k, prtemp);
-      //    set_density_floors(&geom,prtemp,prtemp);
+    //    set_density_floors(&geom,prtemp,prtemp);
     GLOBALMACP1A0(pother,RHOFACE2,i,j,k)=prtemp[RHO];
 
     // assume Vpar in orthonormal basis
@@ -1208,15 +1208,15 @@ int normalize_field(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
       th=V[2];
       
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
-	if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
-	  FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-	
-	if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
+        if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
+          FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        
+        if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
       }
     }
     else{
       if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
-	FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
       
       if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
     }
@@ -1261,36 +1261,36 @@ int normalize_field(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow
-								     (r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow
+                                                                     (r,
+                                                                      1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 
 FTYPE nz_func(FTYPE R)
 {
   return(
-	 sqrt(
-	      (3.*a*a - 4.*a*sqrt(R) + R*R)/
-	      pow(R*(a + pow(R,1.5)),2)
-	      )
-	 ) ;
+         sqrt(
+              (3.*a*a - 4.*a*sqrt(R) + R*R)/
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }
@@ -1529,7 +1529,7 @@ void get_ramesh_data(void)
       dualfprintf(fail_file,"Cannot open ramesh_nu1.25_m.4_soM1.6.txt\n");
       myexit(100);
     }
-#endif	
+#endif  
 
     if(NTHETA>=NTHETAMAX){
       dualfprintf(fail_file,"NTHETA=%d and NTHETAMAX=%d\n",NTHETA,NTHETAMAX);
@@ -1557,7 +1557,7 @@ void get_ramesh_data(void)
 
 
     for(i=0;i<NTHETA;i++){
-      //	while(!feof(inTheta)){
+      //        while(!feof(inTheta)){
       fscanf(inTheta,"%lf %lf %lf",&ftemp,&ftemp1,&ftemp2);
       // Z/R itself
       theta[i]=ftemp; // ftemp=u= Z/R=tan(\theta) //SASMARK:  actually, theta[i] is not \theta but u = Z/R = tan(\theta)
@@ -1569,10 +1569,10 @@ void get_ramesh_data(void)
       Thetavstheta[NTHETA-1-i]=ftemp1;
       dThetadthetavstheta[NTHETA-1-i]=ftemp2;
 #endif
-      //	  dualfprintf(fail_file,"got1: %d %g %g %g\n",i,theta[NTHETA-1-i],Thetavstheta[NTHETA-1-i],dThetadthetavstheta[NTHETA-1-i]);
-      //	  i++;
+      //          dualfprintf(fail_file,"got1: %d %g %g %g\n",i,theta[NTHETA-1-i],Thetavstheta[NTHETA-1-i],dThetadthetavstheta[NTHETA-1-i]);
+      //          i++;
     }
-    //	NTHETA=i;
+    //  NTHETA=i;
 
     // \theta_j \propto r^{-jetalpha}
     jetalpha = 1.0/(1.0+(Ttpow/nu));
@@ -1860,7 +1860,7 @@ void interpfun(int i, FTYPE th2, FTYPE *theta, FTYPE *fun, FTYPE *answer)
       f2=fun[i+2];
       x0=theta[i];
       x1=theta[i+1];
-      x2=theta[i+2];	
+      x2=theta[i+2];    
     }
     else if(i+1>=NTHETA){
       f0=fun[i-2];
@@ -1868,7 +1868,7 @@ void interpfun(int i, FTYPE th2, FTYPE *theta, FTYPE *fun, FTYPE *answer)
       f2=fun[i];
       x0=theta[i-2];
       x1=theta[i-1];
-      x2=theta[i];	
+      x2=theta[i];      
     }
     else{
       f0=fun[i-1];

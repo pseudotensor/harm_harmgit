@@ -136,7 +136,7 @@
 
 struct weno_weights_s {
   // weight order in array memory is backwards from spatial order (e.g. WENO5 has 0,1,2 corresponding to right,center,left)
-	
+        
   ///////////////////////////////
   //array that holds the weights.  
   //
@@ -146,19 +146,19 @@ struct weno_weights_s {
   //For WENO-5 average to center/center to average there are 6 weights in this array:
   //(unopt_right,unopt_cent,unopt_left; opt_right,opt_cent,opt_left)
   ///////////////////////////////
-  FTYPE weights[MAX_NO_OF_WEIGHTS];		
+  FTYPE weights[MAX_NO_OF_WEIGHTS];             
 
 #if(1|| DO_STORE_SMOOTHNESS_INDICATORS ) // 1|| is to keep code not specialized when trying to access certain elements of structure
   FTYPE smoothness_indicators[MAX_CVT_ORDER];
 #endif
 
 
-	//total number of weights actually stored in the above array
+  //total number of weights actually stored in the above array
   int len;                            
 
   //reconstruction order for which the weights are computed (=3 for WENO-5, =3 for WENO-3)
   //this equals the number of smoothness indicators stored in the smoothness_indicators array
-  int order;													
+  int order;                                                                                                    
 
   //the sum of unnormalized unoptimized weights
   FTYPE unoptimized_weights_sum;
@@ -175,14 +175,14 @@ struct weno_weights_s {
   FTYPE lower_order_weights[MAX_NO_OF_LOWER_ORDER_WEIGHTS];
 
 #if( WENO_C2E_REDUCE_NEAR_CUSPS || WENO_AC_REDUCE_NEAR_CUSPS  )
-	int do_reduce;
+  int do_reduce;
 #endif
 
 #if( WENO_HIGH_ORDER_CENTRAL_WEIGHT )
-	FTYPE high_order_central_weight;
+  FTYPE high_order_central_weight;
 #endif
 
-	FTYPE w_ratio_min, w_ratio_max, w_ratio_left, w_ratio_right, w_ratio_combined, lower_order_fraction, lower_order_fraction_fordpp;
+  FTYPE w_ratio_min, w_ratio_max, w_ratio_left, w_ratio_right, w_ratio_combined, lower_order_fraction, lower_order_fraction_fordpp;
 };
 
 
@@ -196,22 +196,22 @@ typedef struct weno_weights_s weno_weights_t;
 
 
 #define LOWER_ORDER_PREFACTOR (1.) //set to zero to switch off stencil reduction
-                                         //fewer the number of times when the stencil size is reduced
+//fewer the number of times when the stencil size is reduced
 #define WENO_MIN_NONZERO_WEIGHT (1.) //minimum weight that is considered non-zero
 
 //The interval of weights where a linear combination of reconstructions with different orders are used
 //Use different limiting weught ratios for OR and AND versions of stencil reduction.  Because the OR version is more
 //sensitive to these ratios, they should be larger for it
 #if( DO_OR_STENCIL_REDUCTION )
-	#define MAX_TRANSITION_RATIO   (15.L)
-	#define MIN_TRANSITION_RATIO    (9.L)
-	#define MAX_TRANSITION_RATIO_AC (15.L) //(1.6)  using such small weight thresholds does not work for 2d Noh problem -- lots of negative internal energies in smooth preshock region
-	#define MIN_TRANSITION_RATIO_AC (9.L)  //(1.3)
+#define MAX_TRANSITION_RATIO   (15.L)
+#define MIN_TRANSITION_RATIO    (9.L)
+#define MAX_TRANSITION_RATIO_AC (15.L) //(1.6)  using such small weight thresholds does not work for 2d Noh problem -- lots of negative internal energies in smooth preshock region
+#define MIN_TRANSITION_RATIO_AC (9.L)  //(1.3)
 #else
-	#define MAX_TRANSITION_RATIO (1.6L)
-	#define MIN_TRANSITION_RATIO (1.3L)
-	#define MAX_TRANSITION_RATIO_AC (15.L)  //using such small weight thresholds does not work for 2d Noh problem -- lots of negative internal energies in smooth preshock region
-	#define MIN_TRANSITION_RATIO_AC (9.L)
+#define MAX_TRANSITION_RATIO (1.6L)
+#define MIN_TRANSITION_RATIO (1.3L)
+#define MAX_TRANSITION_RATIO_AC (15.L)  //using such small weight thresholds does not work for 2d Noh problem -- lots of negative internal energies in smooth preshock region
+#define MIN_TRANSITION_RATIO_AC (9.L)
 #endif
 
 #define WENO_DELTA_I (1)

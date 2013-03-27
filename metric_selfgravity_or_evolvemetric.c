@@ -105,12 +105,12 @@ void control_time_store_metric(int whichtime, FTYPE *Cunew)
       // always want reasonable old metric to take time derivatives
       // needs to never be duplicate of new time and can't be 1.0 since next step will give wrong dg/dt (i.e. dg/0)
       if(Cunew[3]!=1.0 && ( (steppart>0 && fabs(Cunew[3]-lastCunew)>1E-3) || (steppart==0) ) ){
-	//      if(steppart==0){// try only storing on first substep
-	Xmetricold[TT] = Xmetricnew[TT]; // old g is at that time (time computed previously)
-	// store old grid if doing DOEVOLVEMETRIC==1 
-	// do only when changing metric
-	//dualfprintf(fail_file,"Storing metric if changing metric: doevolvemetricsubsteps=%d steppart=%d Cunew[3]=%21.15g lastCunew=%21.15g\n",doevolvemetricsubsteps,steppart,Cunew[3],lastCunew);
-	store_old_metric();
+        //      if(steppart==0){// try only storing on first substep
+        Xmetricold[TT] = Xmetricnew[TT]; // old g is at that time (time computed previously)
+        // store old grid if doing DOEVOLVEMETRIC==1 
+        // do only when changing metric
+        //dualfprintf(fail_file,"Storing metric if changing metric: doevolvemetricsubsteps=%d steppart=%d Cunew[3]=%21.15g lastCunew=%21.15g\n",doevolvemetricsubsteps,steppart,Cunew[3],lastCunew);
+        store_old_metric();
       }
       // new metric is always at new time
       Xmetricnew[TT] = t + Cunew[3]*dt; // present g is at this time
@@ -453,8 +453,8 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
       // Notice that if gravityskipstep radically decreases, then condition will get triggered sooner.  That is, gravityskipstep as chosen when last did metric update does NOT control next update
       // this allows more flexibility so that gravityskipstep can change alot and we can still keep up with metric changes
       if(nstep>lastupdatenstep+gravityskipstep){
-	// e.g. if lastupdatenstep=0 and nstep=3 and gravityskipstep=2, then time to change!
-	dochange=1;
+        // e.g. if lastupdatenstep=0 and nstep=3 and gravityskipstep=2, then time to change!
+        dochange=1;
       }
     }
 
@@ -501,8 +501,8 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
     // ??should set output file of phivsr, etc. to as often as need to update metric??
 
     //    if(DOSELFGRAVVSR){
-      // must be called after MHD solution set
-      // determine phi(r) , which will be used by set_grid to determine metric
+    // must be called after MHD solution set
+    // determine phi(r) , which will be used by set_grid to determine metric
     //      compute_phi_self_gravity_simple(p);// use standard primitive
     //}
   }
@@ -530,21 +530,21 @@ int compute_new_metric_longsteps(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*p
 // NOTES ABOUT compute_new_metric_and_prims() in initbase.c                                                                    
 //                                                                                                                             
 //  if(DOSELFGRAVVSR && EVOLVEMETRICSUBSTEP==0){ // since if EVOLVEMETRICSUBSTEP==1 then getting proper metric at beginning of substep                                                                                                                         
- // apparently time-change of metric too large if avoiding this step when EVOLVEMETRICSUBSTEP==1 since inversion failures occur when evolving                                                                                                                   
+// apparently time-change of metric too large if avoiding this step when EVOLVEMETRICSUBSTEP==1 since inversion failures occur when evolving                                                                                                                   
 
- // now that have conserved quantities and primitive MHD state, can determine full metric with self-gravity if wanted           
- // if no self-gravity then this will produce same result as original set_grid() above, so not needed                           
- // this needs to be done after init and after restart so that have metric with self-gravity                                    
+// now that have conserved quantities and primitive MHD state, can determine full metric with self-gravity if wanted           
+// if no self-gravity then this will produce same result as original set_grid() above, so not needed                           
+// this needs to be done after init and after restart so that have metric with self-gravity                                    
 
- // 0 above tells function that we are still at initial time                                                                    
- // initial time does 2 things:                                                                                                 
- //    a) dg/dt not computed between set_grid(0) and this function that will call set_grid(0)                                   
- //    b) initial conditions of primitive quantities (rho,u,v^i) are assumed to NOT change since assumed user knew what potential was                                                                                                                           
- //    c) GODMARK: B needs to have divB=0 preserved, so should recompute B from A_\phi using new grid                           
- //                                                                                                                             
- // if used 1, then dg/dt would be computed from difference between metric with and without self-gravity terms                  
+// 0 above tells function that we are still at initial time                                                                    
+// initial time does 2 things:                                                                                                 
+//    a) dg/dt not computed between set_grid(0) and this function that will call set_grid(0)                                   
+//    b) initial conditions of primitive quantities (rho,u,v^i) are assumed to NOT change since assumed user knew what potential was                                                                                                                           
+//    c) GODMARK: B needs to have divB=0 preserved, so should recompute B from A_\phi using new grid                           
+//                                                                                                                             
+// if used 1, then dg/dt would be computed from difference between metric with and without self-gravity terms                  
 
- // if RESTARTMODE==1, then assume primitives and conserved quantities are correctly read-in and just need to compute metric without changing conserved quantities or primitive quantities                                                                      
+// if RESTARTMODE==1, then assume primitives and conserved quantities are correctly read-in and just need to compute metric without changing conserved quantities or primitive quantities                                                                      
 
 // since if EVOLVEMETRICSUBSTEP==1 then getting proper metric at beginning of substep                                          
 
@@ -733,10 +733,10 @@ int compute_new_metric_anystep(int whichtime,FTYPE *CUf, FTYPE *Cunew,FTYPE (*pb
       //
       // must recompute self-gravity to be consistent since may have lost mass to black hole in above operation
       if(DOSELFGRAVVSR){
-	// must be called after MHD solution set
-	// determine phi(r) , which will be used by set_grid to determine metric
-	while(compute_phi_self_gravity_simple(pb)==-1){
-	}
+        // must be called after MHD solution set
+        // determine phi(r) , which will be used by set_grid to determine metric
+        while(compute_phi_self_gravity_simple(pb)==-1){
+        }
       }
     }
 
@@ -874,17 +874,17 @@ int action_ifchange_horizoni(int horizontiold,int horizontinew)
       if(REMOVERESTMASSFROMUU==2) trifprintf("Tried but failed to use: (metric units) Mnew=%21.15g Jnew=%21.15g\n",(-localpcum[X1DN][RHO]+localpcum[X1DN][UU])*Mfactor,localpcum[X1DN][U3]*Jfactor);
       // then remove mass and try again with new larger position
       if(myid==0){
-	localpcum[X1DN][RHO] -= -Mvsrface1_tot[current_horizonti]/Mfactor;
-	if(REMOVERESTMASSFROMUU!=2) localpcum[X1DN][UU] -= Mvsrface1_tot[current_horizonti]/Mfactor;
-	localpcum[X1DN][U3] -= -Jvsrface1_tot[current_horizonti]/Jfactor;
+        localpcum[X1DN][RHO] -= -Mvsrface1_tot[current_horizonti]/Mfactor;
+        if(REMOVERESTMASSFROMUU!=2) localpcum[X1DN][UU] -= Mvsrface1_tot[current_horizonti]/Mfactor;
+        localpcum[X1DN][U3] -= -Jvsrface1_tot[current_horizonti]/Jfactor;
       }
       trifprintf("Trying to move horizon from %d to %d\n",horizontiold, horizontinew);
       trifprintf("Tried horizon: %d but led to real horizon %d, so trying %d\n",current_horizonti,test_horizonti,current_horizonti+1);
       if(REMOVERESTMASSFROMUU==2) trifprintf("Mold=%21.15g Jold=%21.15g\n",(-localpcum[X1DN][RHO]+localpcum[X1DN][UU])*Mfactor,localpcum[X1DN][U3]*Jfactor);
       current_horizonti++;
       if(current_horizonti>=ncpux1*N1){
-	dualfprintf(fail_file,"Never found consistent horizon\n");
-	myexit(7236);
+        dualfprintf(fail_file,"Never found consistent horizon\n");
+        myexit(7236);
       }
       horizonmatches=0;
     }
@@ -975,28 +975,28 @@ int store_old_metric(void)
 
 // initialize self-gravity terms
 int init_selfgrav(void)
-	{
-	int ii;
+{
+  int ii;
 
-	GRAVLOOP(ii){
+  GRAVLOOP(ii){
 
-		dMvsr_tot[ii]=0;
-		dVvsr_tot[ii]=0;
-		vrsqvsr_tot[ii]=0;
-		dTrrvsr_tot[ii]=0;
-		Mvsr_tot[ii]=0;
-		Mvsrface1_tot[ii]=0;
-		MOrvsr_tot[ii]=0;
-		phivsr_tot[ii]=0;
-		dJvsr_tot[ii]=0;
-		Jvsr_tot[ii]=0;
-		Jvsrface1_tot[ii]=0;
+    dMvsr_tot[ii]=0;
+    dVvsr_tot[ii]=0;
+    vrsqvsr_tot[ii]=0;
+    dTrrvsr_tot[ii]=0;
+    Mvsr_tot[ii]=0;
+    Mvsrface1_tot[ii]=0;
+    MOrvsr_tot[ii]=0;
+    phivsr_tot[ii]=0;
+    dJvsr_tot[ii]=0;
+    Jvsr_tot[ii]=0;
+    Jvsrface1_tot[ii]=0;
 
-	  // position data
-		rcent_tot[ii]=0;
-	}
+    // position data
+    rcent_tot[ii]=0;
+  }
 
-	return(0);
+  return(0);
 }
 
 
@@ -1337,9 +1337,9 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     
     ZSLOOP(enerpos[X1DN],enerpos[X1UP],enerpos[X2DN],enerpos[X2UP],enerpos[X3DN],enerpos[X3UP]){
       PALLLOOP(pl){
-	if(!isfinite(MACP0A1(pb,i,j,k,pl)) || !isfinite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
-	  dualfprintf(fail_file,"pl=%d pb=%21.15g ucumformetric=%21.15g\n",pl,MACP0A1(pb,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
-	}
+        if(!isfinite(MACP0A1(pb,i,j,k,pl)) || !isfinite(GLOBALMACP0A1(unewglobal,i,j,k,pl))){
+          dualfprintf(fail_file,"pl=%d pb=%21.15g ucumformetric=%21.15g\n",pl,MACP0A1(pb,i,j,k,pl),GLOBALMACP0A1(unewglobal,i,j,k,pl));
+        }
       }
     }
   }
@@ -1418,15 +1418,15 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     if(BCtype[X1DN]==R0SING){
       startphiiter=0;
       ri=riin;
-      LOOPBOUND1IN{	
-	vrsqvsr_tot[i]=vrsqvsr_tot[ri+(ri-i-1)];
+      LOOPBOUND1IN{     
+        vrsqvsr_tot[i]=vrsqvsr_tot[ri+(ri-i-1)];
       }
     }
     else{
       startphiiter=-N1BND;
       // then assume outflow, which for vrsqvsr means copy from active region
       LOOPBOUND1IN{
-	vrsqvsr_tot[i]=vrsqvsr_tot[0];
+        vrsqvsr_tot[i]=vrsqvsr_tot[0];
       }
     }
   }
@@ -1768,29 +1768,29 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     
     
     dM = (
-	  jacvol*rho*(-1.0/uu0ud0)+
-	  GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rho*(-1.0/uu0ud0)+
+          GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF*(1.0+1.0/uu0ud0)
+          );
     
     
     dJ = (
-	  jacvol*rho*(ucovnative[U3])*(-1.0/uu0ud0)+
-	  GLOBALMACP0A1(unewglobal,i,j,k,U3)*dVF*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rho*(ucovnative[U3])*(-1.0/uu0ud0)+
+          GLOBALMACP0A1(unewglobal,i,j,k,U3)*dVF*(1.0+1.0/uu0ud0)
+          );
     
 
     
 
     /*
-      // equivalent to USEUNEW==2
+    // equivalent to USEUNEW==2
     dM = (
-			       GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF
-			       );
+    GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF
+    );
 
 
     dJ = (
-			       GLOBALMACP0A1(unewglobal,i,j,k,U3)*dVF
-			       );
+    GLOBALMACP0A1(unewglobal,i,j,k,U3)*dVF
+    );
     */
 
 #elif(USEMHDTTTT==10)
@@ -1830,10 +1830,10 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // see /mnt/data1/jon/codebackups/crazyformationofbh.zip (and turn on/off DEBUG below -- different results)
     // sometimes (bug!) huge black hole masses (thought bug since inclusiion or removal of DEBUG for jacvol and geomgdV below changed behavior!!!!) GODMARK!!!
     dM = (
-	  jacvol*rhoco*(-1.0/uu0ud0)+
-	  rhouu0eff*(1.0+1.0/uu0ud0) // causes mass to be too large (why?)
-	  // pressure term too large (u+p) u^t + p when trying to form "effective" rho u^t
-	  );
+          jacvol*rhoco*(-1.0/uu0ud0)+
+          rhouu0eff*(1.0+1.0/uu0ud0) // causes mass to be too large (why?)
+          // pressure term too large (u+p) u^t + p when trying to form "effective" rho u^t
+          );
 
 
 
@@ -1843,17 +1843,17 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // even after mhdnative fixed, still leads to unstable consentrated region
     // mhdnative still has pressure term in it, so probably the problem since include pressure separately
     dM = (
-	  jacvol*rhoco*(-1.0/uu0ud0)+
-	  mhdnative[TT][TT]/(ucovnative[TT])*jacvol*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rhoco*(-1.0/uu0ud0)+
+          mhdnative[TT][TT]/(ucovnative[TT])*jacvol*(1.0+1.0/uu0ud0)
+          );
 
 
 #elif(0) // 3rd submethod
     // seems to keep things stable.  Recall that pressure included in separate term
     dM = (
-	  jacvol*rhoco*(-1.0/uu0ud0)+
-	  rho*(uconnative[TT])*jacvol*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rhoco*(-1.0/uu0ud0)+
+          rho*(uconnative[TT])*jacvol*(1.0+1.0/uu0ud0)
+          );
 
 
 #elif(0) // 4th submethod
@@ -1861,25 +1861,25 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // stable
     // but when using UNI2LOG with large Afactor the mass is very not conserved and big (~1) BH forms 
     dM = (
-	  jacvol*rho*(-1.0/uu0ud0)+
-	  rho*(uconnative[TT])*jacvol*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rho*(-1.0/uu0ud0)+
+          rho*(uconnative[TT])*jacvol*(1.0+1.0/uu0ud0)
+          );
 
 
 #elif(1)  // 5th submethod
     // try using actual limited baryon number since \detg can shrink allowed mass and may limit errors
     dM = (
-	  jacvol*rho*(-1.0/uu0ud0)+
-	  // below term is dM~ \rho u^t \detg dx1dx2dx3
-	  (GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF)*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*rho*(-1.0/uu0ud0)+
+          // below term is dM~ \rho u^t \detg dx1dx2dx3
+          (GLOBALMACP0A1(unewglobal,i,j,k,RHO)*dVF)*(1.0+1.0/uu0ud0)
+          );
 
 
 #elif(0) // 6th submethod
     // doesn't cause mass to be too large, but too small if uu0 large
     dM = (
-	  jacvol*rhoco
-	  );
+          jacvol*rhoco
+          );
 #endif
 
 
@@ -1914,9 +1914,9 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
     
     dJ = (
-	  jacvol*Jco*(-1.0/uu0ud0)+
-	  Jeff*(1.0+1.0/uu0ud0)
-	  );
+          jacvol*Jco*(-1.0/uu0ud0)+
+          Jeff*(1.0+1.0/uu0ud0)
+          );
     
 
 
@@ -2056,14 +2056,14 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // now set boundary conditions on dTrrvsr_tot
     if(BCtype[X1DN]==R0SING){
       ri=0;
-      LOOPBOUND1IN{	
-	dTrrvsr_tot[i]=dTrrvsr_tot[ri+(ri-i-1)]; // at CENT
+      LOOPBOUND1IN{     
+        dTrrvsr_tot[i]=dTrrvsr_tot[ri+(ri-i-1)]; // at CENT
       }
     }
     else{
       // then assume outflow, which for dTrrvsr means no more mass enclosed (i.e. ddTrrvsr=0)
-      LOOPBOUND1IN{	
-	dTrrvsr_tot[i]=0.0;
+      LOOPBOUND1IN{     
+        dTrrvsr_tot[i]=0.0;
       }
     }
 
@@ -2102,17 +2102,17 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     if(BCtype[X1DN]==R0SING){
       startphiiter=0;
       ri=0;
-      LOOPBOUND1IN{	
-	Mvsr_tot[i]=Mvsr_tot[ri+(ri-i-1)]; // at CENT
-	Mvsrface1_tot[i]=Mvsrface1_tot[ri+(ri-i)]; // at FACE1
+      LOOPBOUND1IN{     
+        Mvsr_tot[i]=Mvsr_tot[ri+(ri-i-1)]; // at CENT
+        Mvsrface1_tot[i]=Mvsrface1_tot[ri+(ri-i)]; // at FACE1
       }
     }
     else{
       startphiiter=-N1BND;
       // then assume outflow, which for Mvsr means no more mass enclosed (i.e. dMvsr=0)
-      LOOPBOUND1IN{	
-	Mvsr_tot[i]=0.0;
-	Mvsrface1_tot[i]=0.0;
+      LOOPBOUND1IN{     
+        Mvsr_tot[i]=0.0;
+        Mvsrface1_tot[i]=0.0;
       }
     }
 
@@ -2146,15 +2146,15 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     if(BCtype[X1DN]==R0SING){
       startphiiter=0;
       ri=0;
-      LOOPBOUND1IN{	
-	MOrvsr_tot[i]=-MOrvsr_tot[ri+(ri-i-1)]; // at CENT
+      LOOPBOUND1IN{     
+        MOrvsr_tot[i]=-MOrvsr_tot[ri+(ri-i-1)]; // at CENT
       }
     }
     else{
       startphiiter=-N1BND;
       // then assume outflow, which for Mvsr means no more mass enclosed (i.e. dMvsr=0)
-      LOOPBOUND1IN{	
-	MOrvsr_tot[i]=0.0;
+      LOOPBOUND1IN{     
+        MOrvsr_tot[i]=0.0;
       }
     }
 
@@ -2230,20 +2230,20 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
     //////////////////
     // now set boundary conditions on Jvsr_tot
-   if(BCtype[X1DN]==R0SING){
+    if(BCtype[X1DN]==R0SING){
       startphiiter=0;
       ri=0;
-      LOOPBOUND1IN{	
-	Jvsr_tot[i]=Jvsr_tot[ri+(ri-i-1)];
-	Jvsrface1_tot[i]=Jvsr_tot[ri+(ri-i)];
+      LOOPBOUND1IN{     
+        Jvsr_tot[i]=Jvsr_tot[ri+(ri-i-1)];
+        Jvsrface1_tot[i]=Jvsr_tot[ri+(ri-i)];
       }
     }
     else{
       startphiiter=-N1BND;
       // then assume outflow, which for Jvsr means no more mass enclosed (i.e. dJvsr=0)
-      LOOPBOUND1IN{	
-	Jvsr_tot[i]=0.0;
-	Jvsrface1_tot[i]=0.0;
+      LOOPBOUND1IN{     
+        Jvsr_tot[i]=0.0;
+        Jvsrface1_tot[i]=0.0;
       }
     }
 
@@ -2316,8 +2316,8 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       absrcent=myfabs(rcent_tot[ii]);
       Gammatot = GAMMAGRAV(MBH/absrcent + MOrvsr_tot[ii]);
       if( didformblackhole==0 && (Gammatot<0.0 || Gammatot>Gammagrav_max) && ii>=1+horizoni+horizoncpupos1*N1){
-	formedblackhole=1;
-	whereformedblackhole=ii;
+        formedblackhole=1;
+        whereformedblackhole=ii;
       }
       dr=myfabs(rcent_tot[ii]-rcent_tot[ii-1]);
       dphi=MOrvsr_tot[ii]/(absrcent)*dr + (dTrrvsr_tot[ii] - vrsqvsr_tot[ii]*0.5*dr)/absrcent;
@@ -2330,8 +2330,8 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       absrcent=myfabs(rcent_tot[jj]);
       Gammatot = GAMMAGRAV(MBH/absrcent + MOrvsr_tot[jj]);
       if( didformblackhole==0 && (Gammatot<0.0 || Gammatot>Gammagrav_max)  && jj>=1+horizoni+horizoncpupos1*N1){
-	formedblackhole=1;
-	whereformedblackhole=jj;
+        formedblackhole=1;
+        whereformedblackhole=jj;
       }
       dr=myfabs(rcent_tot[jj]-rcent_tot[jj-1]);
       dphiim1=MOrvsr_tot[jj]/(absrcent)*dr + (dTrrvsr_tot[jj] - vrsqvsr_tot[jj]*0.5*dr)/absrcent;
@@ -2374,14 +2374,14 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
     // now set boundary conditions on phivsr_tot
     if(BCtype[X1DN]==R0SING){
       ri=0;
-      LOOPBOUND1IN{	
-	phivsr_tot[i]=phivsr_tot[ri+(ri-i-1)];
+      LOOPBOUND1IN{     
+        phivsr_tot[i]=phivsr_tot[ri+(ri-i-1)];
       }
     }
     else{
       // then assume outflow, which for phivsr means no more mass enclosed (i.e. dMvsr=0 so the-so-far-computed phivsr is 0)
-      LOOPBOUND1IN{	
-	phivsr_tot[i]=0.0;
+      LOOPBOUND1IN{     
+        phivsr_tot[i]=0.0;
       }
     }
   
@@ -2421,21 +2421,21 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       // assumes spherical polar coords and myid==0 is on the inner-radial boundary
       if(BCtype[X1DN]==R0SING){
 #define GAMMAGRAVTEST(MOr) (1.0/(1.0-2.0*(MOr))) // relativistic TOV factor
-	coord_ijk(SHIFT1*1, 0, 0, FACE1, X);
-	bl_coord_ijk(SHIFT1*1, 0, 0, FACE1, V);
-	Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
-	if(Gamma<Gammagrav_max && Gamma>0.0){
-	  trifprintf("WARNING: Never possible to form black hole at this resolution\n");
-	}
-	trifprintf("Gamma(max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
-	//
-	coord_ijk(SHIFT1*3, 0, 0, FACE1, X);
-	bl_coord_ijk(SHIFT1*3, 0, 0, FACE1, V);
-	Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
-	if(Gamma<Gammagrav_max && Gamma>0.0){
-	  trifprintf("WARNING: Difficult to form black hole at this resolution\n");
-	}
-	trifprintf("Gamma(nearly max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
+        coord_ijk(SHIFT1*1, 0, 0, FACE1, X);
+        bl_coord_ijk(SHIFT1*1, 0, 0, FACE1, V);
+        Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
+        if(Gamma<Gammagrav_max && Gamma>0.0){
+          trifprintf("WARNING: Never possible to form black hole at this resolution\n");
+        }
+        trifprintf("Gamma(max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
+        //
+        coord_ijk(SHIFT1*3, 0, 0, FACE1, X);
+        bl_coord_ijk(SHIFT1*3, 0, 0, FACE1, V);
+        Gamma = GAMMAGRAVTEST(trueMouter/V[1]);
+        if(Gamma<Gammagrav_max && Gamma>0.0){
+          trifprintf("WARNING: Difficult to form black hole at this resolution\n");
+        }
+        trifprintf("Gamma(nearly max possible) = %21.15g M/r = %21.15g Gammagrav_max=%21.15g\n",Gamma,trueMouter/V[1],Gammagrav_max);
       }
 
     }// end if firsttime==1
@@ -2558,7 +2558,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
       // below should never happen since above forces counter inequality
       //      if(whereformedblackhole>horizoni+horizoncpupos1*N1){
-      //	dualfprintf(fail_file,"black hole shifted to a lower radius compared to estimate - fluxes will be wrong and can change evolution and conservation\n");
+      //        dualfprintf(fail_file,"black hole shifted to a lower radius compared to estimate - fluxes will be wrong and can change evolution and conservation\n");
       //      }
 
 
@@ -2577,16 +2577,16 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
       myexit(987);
     }
     else if(MCOORD==BLCOORDS ||
-	    MCOORD==KSCOORDS ||
-	    MCOORD==KS_JP1_COORDS ||
-	    MCOORD==HTMETRIC ||
-	    MCOORD==HTMETRICACCURATE ||
-	    MCOORD==SPCMINKMETRIC){
+            MCOORD==KSCOORDS ||
+            MCOORD==KS_JP1_COORDS ||
+            MCOORD==HTMETRIC ||
+            MCOORD==HTMETRICACCURATE ||
+            MCOORD==SPCMINKMETRIC){
       // then using perturbed self-gravity and shouldn't form black hole!
       trifprintf("Using perturbed self-gravity and shouldn't form BH\n");
       myexit(988);      
     }
-	    
+            
   }
 
 
@@ -2702,18 +2702,18 @@ FTYPE phibh_compute(FTYPE Ms, FTYPE as, FTYPE r, FTYPE th)
 /////////////////////////////////////////////////////////
 
 #if(USERHOREF)
-  // first determine reference density
-  rhoref_send=-BIG;
-  COMPZLOOP{
-    if(startpos[1]+i==0 && startpos[2]+j==totalsize[2]/2 && startpos[3]+k==totalsize[3]/2){
-      get_rhoref(i, j, k, pb, &rhoref_send);
-    }
+// first determine reference density
+rhoref_send=-BIG;
+COMPZLOOP{
+  if(startpos[1]+i==0 && startpos[2]+j==totalsize[2]/2 && startpos[3]+k==totalsize[3]/2){
+    get_rhoref(i, j, k, pb, &rhoref_send);
   }
-  // now maximize over all CPUs since assume only 1 CPU got above 
+}
+// now maximize over all CPUs since assume only 1 CPU got above 
 #if(USEMPI)
-  MPI_Allreduce(&rhoref_send,&rhoref,1,MPI_FTYPE,MPI_MAX,MPI_COMM_GRMHD);
+MPI_Allreduce(&rhoref_send,&rhoref,1,MPI_FTYPE,MPI_MAX,MPI_COMM_GRMHD);
 #else
-  rhoref=rhoref_send;
+rhoref=rhoref_send;
 #endif
 
 #else
@@ -2724,39 +2724,39 @@ FTYPE phibh_compute(FTYPE Ms, FTYPE as, FTYPE r, FTYPE th)
 
 
 
-    //DEBUG
-    //    GRAVLOOP(ii) phivsr_tot[ii]=0.0;
-    //  GRAVLOOP(ii) phivsr_tot[ii]=-0.05/pow(rcent_tot[ii],1);
+//DEBUG
+//    GRAVLOOP(ii) phivsr_tot[ii]=0.0;
+//  GRAVLOOP(ii) phivsr_tot[ii]=-0.05/pow(rcent_tot[ii],1);
 
-    // The above boundary conditions imply no force beyond the computational domain in the interior and exterior
+// The above boundary conditions imply no force beyond the computational domain in the interior and exterior
 
-    ////////////////////////////////////
-    //
-    // add in constant density term if using RHOREF (only for non-rel case)
+////////////////////////////////////
+//
+// add in constant density term if using RHOREF (only for non-rel case)
 #if(USERHOREF)
-    GRAVLOOP(ii){ // now dMvsr done in ghost cells
-    //   GRAVLOOPACTIVE(ii){// because don't determine dMvsr in ghost cells, so don't offset potential or Mvsr
-      // for rho=constant this is true for spherical polar coordinates
-      //    phivsr_tot[ii] += 2.0*M_PI/3.0*(rcent_tot[ii]*rcent_tot[ii]-rcent_tot[0]*rcent_tot[0])*rhoref*Mfactor;
+GRAVLOOP(ii){ // now dMvsr done in ghost cells
+  //   GRAVLOOPACTIVE(ii){// because don't determine dMvsr in ghost cells, so don't offset potential or Mvsr
+  // for rho=constant this is true for spherical polar coordinates
+  //    phivsr_tot[ii] += 2.0*M_PI/3.0*(rcent_tot[ii]*rcent_tot[ii]-rcent_tot[0]*rcent_tot[0])*rhoref*Mfactor;
 
-      // since differenced potential above doesn't include inside Rin, we must subtract off interior part of constant density potential
-      phivsr_tot[ii] += 2.0*M_PI/3.0*(rcent_tot[ii]*rcent_tot[ii]-localRin*localRin)*rhoref*Mfactor;
+  // since differenced potential above doesn't include inside Rin, we must subtract off interior part of constant density potential
+  phivsr_tot[ii] += 2.0*M_PI/3.0*(rcent_tot[ii]*rcent_tot[ii]-localRin*localRin)*rhoref*Mfactor;
 
-      //    dualfprintf(fail_file,"ii=%d rho=%g phi=%g\n",ii,rho,phivsr_tot[ii]);
+  //    dualfprintf(fail_file,"ii=%d rho=%g phi=%g\n",ii,rho,phivsr_tot[ii]);
 
       
-      // since differenced potential above doesn't include inside Rin, we must subtract off interior part of constant density potential
-      Mvsr_tot[ii] += 4.0*M_PI/3.0*(myfabs(rcent_tot[ii]*rcent_tot[ii]*rcent_tot[ii])-localRin*localRin*localRin)*rhoref*Mfactor;
+  // since differenced potential above doesn't include inside Rin, we must subtract off interior part of constant density potential
+  Mvsr_tot[ii] += 4.0*M_PI/3.0*(myfabs(rcent_tot[ii]*rcent_tot[ii]*rcent_tot[ii])-localRin*localRin*localRin)*rhoref*Mfactor;
 
-      MOrvsr_tot[ii] = Mvsr_tot[ii]/myfabs(rcent_tot[ii]);
+  MOrvsr_tot[ii] = Mvsr_tot[ii]/myfabs(rcent_tot[ii]);
 
-    }
+}
 
 // recompute MOrvsr
 
-    // correct FACE-FACE totals
-    phirealouter_tot += 2.0*M_PI/3.0*(localRout*localRout-localRin*localRin)*rhoref*Mfactor;
-    Mrealouter_tot += 4.0*M_PI/3.0*(localRout*localRout*localRout-localRin*localRin*localRin)*rhoref*Mfactor;
+// correct FACE-FACE totals
+phirealouter_tot += 2.0*M_PI/3.0*(localRout*localRout-localRin*localRin)*rhoref*Mfactor;
+Mrealouter_tot += 4.0*M_PI/3.0*(localRout*localRout*localRout-localRin*localRin*localRin)*rhoref*Mfactor;
 #endif
 
 
@@ -2854,81 +2854,81 @@ int bound_spacetime_inside_horizon(void)
       rk=k;
       
       if(WITHINENERREGION(enerpos,i,j,k)){
-	// then do nothing
+        // then do nothing
       }
       else if(locali!=FLUXNOTONGRID){
-	// assume horizon on negative side of "i" so don't modify right side of "i" that happens to be in the outer radial boundary
+        // assume horizon on negative side of "i" so don't modify right side of "i" that happens to be in the outer radial boundary
 
-	if(startpos[1]+i < globali){
-	  // then inside horizon and inside N1BND more grid cells for interpolation
-	  
-	  // just outflow all metric and connection quantities in PRIMECOORDS so that outflowed primitives are consistent and have little influence
-	  // effectively all other points reduce to a duplicate of copied point
+        if(startpos[1]+i < globali){
+          // then inside horizon and inside N1BND more grid cells for interpolation
+          
+          // just outflow all metric and connection quantities in PRIMECOORDS so that outflowed primitives are consistent and have little influence
+          // effectively all other points reduce to a duplicate of copied point
 
-	  // problem is that connection can change rapidly in time, so for connection set to 0 (i.e. no more acceleration)
+          // problem is that connection can change rapidly in time, so for connection set to 0 (i.e. no more acceleration)
 
-	  DLOOP(jj,kk) DLOOPA(ll){
-	    //	    GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll) = GLOBALMETMACP0A3(conn,ri,rj,rk,jj,kk,ll);
-	    // decided to make space-time effectively flat within fake boundary region
-	    GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll) = 0.0;
-	  }
+          DLOOP(jj,kk) DLOOPA(ll){
+            //      GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll) = GLOBALMETMACP0A3(conn,ri,rj,rk,jj,kk,ll);
+            // decided to make space-time effectively flat within fake boundary region
+            GLOBALMETMACP0A3(conn,i,j,k,jj,kk,ll) = 0.0;
+          }
 
-	  DLOOPA(jj){
-	    //GLOBALMETMACP0A1(conn2,i,j,k,jj) = GLOBALMETMACP0A1(conn2,ri,rj,rk,jj);
-	    // decided to make space-time effectively flat within fake boundary region
-	    GLOBALMETMACP0A1(conn2,i,j,k,jj) = 0.0;
-	  }
+          DLOOPA(jj){
+            //GLOBALMETMACP0A1(conn2,i,j,k,jj) = GLOBALMETMACP0A1(conn2,ri,rj,rk,jj);
+            // decided to make space-time effectively flat within fake boundary region
+            GLOBALMETMACP0A1(conn2,i,j,k,jj) = 0.0;
+          }
 
-	  
+          
 #if(NEWMETRICSTORAGE)
 
-	  // copy over entire structure at once
-	  for (loc = NPG - 1; loc >= 0; loc--) GLOBALMETMACP1A0(compgeom,loc,i,j,k) = GLOBALMETMACP1A0(compgeom,loc,ri,rj,rk);
-	  for (loc = NPG - 1; loc >= 0; loc--) GLOBALMETMACP1A0(compgeomlast,loc,i,j,k) = GLOBALMETMACP1A0(compgeomlast,loc,ri,rj,rk);
+          // copy over entire structure at once
+          for (loc = NPG - 1; loc >= 0; loc--) GLOBALMETMACP1A0(compgeom,loc,i,j,k) = GLOBALMETMACP1A0(compgeom,loc,ri,rj,rk);
+          for (loc = NPG - 1; loc >= 0; loc--) GLOBALMETMACP1A0(compgeomlast,loc,i,j,k) = GLOBALMETMACP1A0(compgeomlast,loc,ri,rj,rk);
 
 #else
 
-	  for (loc = NPG - 1; loc >= 0; loc--){
-	    DLOOP(jj,kk){
-	      GLOBALMETMACP1A2(gcon,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcon,loc,ri,rj,rk,jj,kk);
-	      // setting last to be equal to current do dg/dt = 0 in this region
-	      GLOBALMETMACP1A2(gcov,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcov,loc,ri,rj,rk,jj,kk);
+          for (loc = NPG - 1; loc >= 0; loc--){
+            DLOOP(jj,kk){
+              GLOBALMETMACP1A2(gcon,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcon,loc,ri,rj,rk,jj,kk);
+              // setting last to be equal to current do dg/dt = 0 in this region
+              GLOBALMETMACP1A2(gcov,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcov,loc,ri,rj,rk,jj,kk);
 #if(DOEVOLVEMETRIC)
-	      GLOBALMETMACP1A2(gcovlast,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcov,loc,i,j,k,jj,kk) ;
+              GLOBALMETMACP1A2(gcovlast,loc,i,j,k,jj,kk) = GLOBALMETMACP1A2(gcov,loc,i,j,k,jj,kk) ;
 #endif
-	    }
+            }
 
-	    DLOOPA(jj){
-	      // setting last to be equal to current do dg/dt = 0 in this region
-	      GLOBALMETMACP1A1(gcovpert,loc,i,j,k,jj) = GLOBALMETMACP1A1(gcovpert,loc,ri,rj,rk,jj);
+            DLOOPA(jj){
+              // setting last to be equal to current do dg/dt = 0 in this region
+              GLOBALMETMACP1A1(gcovpert,loc,i,j,k,jj) = GLOBALMETMACP1A1(gcovpert,loc,ri,rj,rk,jj);
 #if(DOEVOLVEMETRIC)
-	      GLOBALMETMACP1A1(gcovpertlast,loc,i,j,k,jj) = GLOBALMETMACP1A1(gcovpert,loc,i,j,k,jj) ;
+              GLOBALMETMACP1A1(gcovpertlast,loc,i,j,k,jj) = GLOBALMETMACP1A1(gcovpert,loc,i,j,k,jj) ;
 #endif
-	    }
+            }
 
-	    GLOBALMETMACP1A0(alphalapse,loc,i,j,k) = GLOBALMETMACP1A0(alphalapse,loc,i,j,k) ;
+            GLOBALMETMACP1A0(alphalapse,loc,i,j,k) = GLOBALMETMACP1A0(alphalapse,loc,i,j,k) ;
 #if(DOEVOLVEMETRIC)
-	    GLOBALMETMACP1A0(alphalapselast,loc,i,j,k) = GLOBALMETMACP1A0(alphalapse,loc,i,j,k) ;
+            GLOBALMETMACP1A0(alphalapselast,loc,i,j,k) = GLOBALMETMACP1A0(alphalapse,loc,i,j,k) ;
 #endif
 
-	    GLOBALMETMACP1A0(gdet,loc,i,j,k) = GLOBALMETMACP1A0(gdet,loc,ri,rj,rk);
-	    PLOOP(pliter,pl) GLOBALMETMACP1A1(eomfunc,loc,i,j,k,pl) = GLOBALMETMACP1A1(eomfunc,loc,ri,rj,rk,pl);
+            GLOBALMETMACP1A0(gdet,loc,i,j,k) = GLOBALMETMACP1A0(gdet,loc,ri,rj,rk);
+            PLOOP(pliter,pl) GLOBALMETMACP1A1(eomfunc,loc,i,j,k,pl) = GLOBALMETMACP1A1(eomfunc,loc,ri,rj,rk,pl);
 #if(GDETVOLDIFF)
-	    GLOBALMETMACP1A0(gdetvol,loc,i,j,k) = GLOBALMETMACP1A0(gdetvol,loc,ri,rj,rk);
+            GLOBALMETMACP1A0(gdetvol,loc,i,j,k) = GLOBALMETMACP1A0(gdetvol,loc,ri,rj,rk);
 #endif
-	  }
-	    
-	    
+          }
+            
+            
 #endif // end if old metric storage
 
 
 
 #if(VOLUMEDIFF)
-	  DLOOPA(jj) GLOBALMETMACP0A1(idxvol,i,j,k,jj) = GLOBALMETMACP0A1(idxvol,ri,rj,rk,jj);
+          DLOOPA(jj) GLOBALMETMACP0A1(idxvol,i,j,k,jj) = GLOBALMETMACP0A1(idxvol,ri,rj,rk,jj);
 #endif
 
-	  
-	}// end if inside globali
+          
+        }// end if inside globali
       }// end if inside horizoni
     }// end loop over all cells
 

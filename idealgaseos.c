@@ -29,19 +29,19 @@ FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 // u(rho0, p) (used for initial conditions)
 FTYPE u_rho0_p_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
-	return(p/GAMMAM1) ;
+  return(p/GAMMAM1) ;
 }
 
 // dp(rho0, u)/du
 FTYPE dpdu_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-	return(GAMMAM1) ;
+  return(GAMMAM1) ;
 }
 
 // dp(rho0, u)/drho0
 FTYPE dpdrho0_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
-	return(0.0) ;
+  return(0.0) ;
 }
 
 // sound speed squared (for vchar.c)

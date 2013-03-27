@@ -11,7 +11,7 @@
 
 
 void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
-		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
+                MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
 
 
@@ -50,7 +50,7 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
   }
   else{
     mpiios_init(bintxt, sorted, fpptr, which, headerbytesize, filename, numcolumns, datatype,
-		jonioptr, writebufptr);
+                jonioptr, writebufptr);
   }
 
   logsfprintf("mpiio_init end\n");
@@ -63,7 +63,7 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
 // used to cleanup file writing in non-blocking way
 // should be called before writing if previously wrote and also called at end of calculation to close last file (use fake write to do so)
 void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
-		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
+                 MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
   static int priorinit=0;
 
@@ -106,8 +106,8 @@ void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int
 
 
 void mpiio_combine(int bintxt, int sorted,
-		   int numcolumns, MPI_Datatype datatype,
-		   FILE ** fpptr, void *jonio, void *writebuf)
+                   int numcolumns, MPI_Datatype datatype,
+                   FILE ** fpptr, void *jonio, void *writebuf)
 {
 #if(USEMPI)
 
@@ -123,12 +123,12 @@ void mpiio_combine(int bintxt, int sorted,
     if(truempicombinetype==MPICOMBINESIMPLE){
       
       if (sorted) {
-	mpiios_combine(bintxt, datatype, numcolumns,fpptr, jonio, writebuf);
+        mpiios_combine(bintxt, datatype, numcolumns,fpptr, jonio, writebuf);
       }
       else{
-	mpiiotu_combine(datatype, numcolumns, fpptr, writebuf);
+        mpiiotu_combine(datatype, numcolumns, fpptr, writebuf);
       }
-  }
+    }
     else if(truempicombinetype==MPICOMBINEMINMEM){
       mpiiomin_final(numcolumns,fpptr, jonio, writebuf);
     }
@@ -143,8 +143,8 @@ void mpiio_combine(int bintxt, int sorted,
 
 // this can be made to work without mpi for super-efficient single cpu mode, but not important.  Can still do 1 cpu with MPI and use this!
 void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt, int sorted,
-		   int numcolumns, MPI_Datatype datatype,
-		   FILE ** fp, void *jonio, void *writebuf)
+                  int numcolumns, MPI_Datatype datatype,
+                  FILE ** fp, void *jonio, void *writebuf)
 {
   static struct blink * blinkptr;
   static struct blink * cpulinkptr;
@@ -280,11 +280,11 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
     }
     else if(readwrite==READFILE){
 
-    ///////////////////////
-    //
-    // READFILE, so other CPU recvs from cpu=0
-    //
-    ////////////////////////
+      ///////////////////////
+      //
+      // READFILE, so other CPU recvs from cpu=0
+      //
+      ////////////////////////
 
 
       // means we need to fill writebuf with what cpu=0 will send us
@@ -312,13 +312,13 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       thisslavedone=1;
       // then done with list, check to see if everything adds up
       if(
-	 ((readwrite==WRITEFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns))
-	||((readwrite==READFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns-(long long int)lastnum))
-	 )
-	{
-	dualfprintf(fail_file,"local total doesn't equal expected value\n got=%d demand=%d\n",-bufferoffset,(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns);
-	myexit(10002);
-      }
+         ((readwrite==WRITEFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns))
+         ||((readwrite==READFILE)&&(-bufferoffset!=(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns-(long long int)lastnum))
+         )
+        {
+          dualfprintf(fail_file,"local total doesn't equal expected value\n got=%d demand=%d\n",-bufferoffset,(long long int)N1*(long long int)N2*(long long int)N3*(long long int)numcolumns);
+          myexit(10002);
+        }
     }
 #if(DEBUGMINMEM)
     dualfprintf(fail_file,"got here 0.7\n"); fflush(fail_file);
@@ -413,194 +413,194 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here 3\n"); fflush(fail_file);
+        dualfprintf(fail_file,"got here 3\n"); fflush(fail_file);
 #endif
-	/////////
-	// determine amount of data to get from cpu group
-	
-	// limit the amount of data once doing last grab
-	if((long long int)datasofar0+(long long int)joniosize/((long long int)2)>(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0=-(long long int)datasofar0+(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
-	else datatogetc0=joniosize/((long long int)2);
-	// new amount of data (that will be read total)
-	datasofarc0 += (long long int)datatogetc0;
+        /////////
+        // determine amount of data to get from cpu group
+        
+        // limit the amount of data once doing last grab
+        if((long long int)datasofar0+(long long int)joniosize/((long long int)2)>(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0=-(long long int)datasofar0+(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
+        else datatogetc0=joniosize/((long long int)2);
+        // new amount of data (that will be read total)
+        datasofarc0 += (long long int)datatogetc0;
 
 
-	doset=1;
-	doing0=0;
-	// every receieved dataset is kept in first half of jonio from start of jonio, sorted, then next data set received.
-	datatoget0=0;
-	while(doset){
+        doset=1;
+        doing0=0;
+        // every receieved dataset is kept in first half of jonio from start of jonio, sorted, then next data set received.
+        datatoget0=0;
+        while(doset){
 #if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.4 : cpu=%d: datasofar0=%lld  datasofarc0=%lld\n",cpulinkptr->cpu,datasofar0,datasofarc0); fflush(fail_file);
 #endif
-	  datatoget0 += (long long int)(cpulinkptr->num);
-	  if(cpulinkptr->cpu==0) doing0=1;
+          datatoget0 += (long long int)(cpulinkptr->num);
+          if(cpulinkptr->cpu==0) doing0=1;
 #if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
-	  dualfprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.5: %lld %d %d\n",jonio,cpulinkptr->num,cpulinkptr->cpu); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.51: %lld %lld %lld %lld\n",datatogetc0,totalsize[1],totalsize[2],totalsize[3]); fflush(fail_file);
 #endif
-	  MPI_Irecv(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
+          MPI_Irecv(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
 #if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.515\n"); fflush(fail_file);
 #endif
-	  // have myid wait before continuing to make sure receive is complete
-	  MPI_Wait(&request0,&mpichstatus);
-	  // easiest algorithm/mapping is done using loop over full sorted size, reduced per cpu by if statement and checked
-	  //	  for(sii=0;sii<cpulinkptr->num;sii++){
-
-#if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
-#endif
+          // have myid wait before continuing to make sure receive is complete
+          MPI_Wait(&request0,&mpichstatus);
+          // easiest algorithm/mapping is done using loop over full sorted size, reduced per cpu by if statement and checked
+          //      for(sii=0;sii<cpulinkptr->num;sii++){
 
 #if(DEBUGMINMEM)
-	    dualfprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.52: datatogetc0=%lld\n",datatogetc0); fflush(fail_file);
 #endif
-
-
-	  // repeat this loop until really get all of datatogetc0 from (multiple) CPUs
-	  // The if(gi,gj,gk) below constrains the filling of jonio so that fills in global array with required data into correct array positions
-	  uii=0;
-	  for(sii=0;sii<datatogetc0;sii++){
-	    // uii: iteration count for accessing memory from received data
-
-	    // sii: iteration count for accessing (with joniooffset) where to store some of received data
-
-	    // ri : starting global (over all CPUs) i-location
-	    // rj : "" for j-location
-	    // rk : "" for k-location
-
-	    // sii : sorted index that iterates to include column data
-
-	    // mypos: number of grid positions (not including columns) iterated beyond starting (ri,rj,rk) position
-
-	    // gi : global (over all CPUs) i-location
-	    // gj : "" for j-location
-	    // gk : "" for k-location
-
-	    mypos=(long long int)(sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + (long long int)(cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
-
-	    gi=(long long int)mypos%((long long int)totalsize[1]);
-	    gj=(long long int)((mypos%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
-	    gk=(long long int)(mypos/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	    dualfprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.54: %d %d %d\n",cpulinkptr->ri,cpulinkptr->rj,cpulinkptr->rk); fflush(fail_file);
 #endif
 
-	    if(
-	       (gi>=startpos0[1][cpulinkptr->cpu])&&
-	       (gi<=  endpos0[1][cpulinkptr->cpu])&&
-	       (gj>=startpos0[2][cpulinkptr->cpu])&&
-	       (gj<=  endpos0[2][cpulinkptr->cpu])&&
-	       (gk>=startpos0[3][cpulinkptr->cpu])&&
-	       (gk<=  endpos0[3][cpulinkptr->cpu])
-	       ){
+
+          // repeat this loop until really get all of datatogetc0 from (multiple) CPUs
+          // The if(gi,gj,gk) below constrains the filling of jonio so that fills in global array with required data into correct array positions
+          uii=0;
+          for(sii=0;sii<datatogetc0;sii++){
+            // uii: iteration count for accessing memory from received data
+
+            // sii: iteration count for accessing (with joniooffset) where to store some of received data
+
+            // ri : starting global (over all CPUs) i-location
+            // rj : "" for j-location
+            // rk : "" for k-location
+
+            // sii : sorted index that iterates to include column data
+
+            // mypos: number of grid positions (not including columns) iterated beyond starting (ri,rj,rk) position
+
+            // gi : global (over all CPUs) i-location
+            // gj : "" for j-location
+            // gk : "" for k-location
+
+            mypos=(long long int)(sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + (long long int)(cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
+
+            gi=(long long int)mypos%((long long int)totalsize[1]);
+            gj=(long long int)((mypos%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
+            gk=(long long int)(mypos/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
 #if(DEBUGMINMEM)
-	      dualfprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
+            dualfprintf(fail_file,"got here 3.55: sii=%lld mypos=%lld  gi=%lld gj=%lld gk=%lld\n",sii, mypos, gi,gj,gk); fflush(fail_file);
 #endif
 
-	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[sii+joniooffset]=jonio1[uii++];
-	      else if (datatype == MPI_FLOAT) jonio4[sii+joniooffset]=jonio4[uii++];
-	      else if (datatype == MPI_DOUBLE) jonio8[sii+joniooffset]=jonio8[uii++];
-	      else if (datatype == MPI_LONG_DOUBLE) jonio16[sii+joniooffset]=jonio16[uii++];
-	      else if (datatype == MPI_INT) jonio4i[sii+joniooffset]=jonio4i[uii++];
-	      else if (datatype == MPI_LONG_LONG_INT) jonio8i[sii+joniooffset]=jonio8i[uii++];
-	    }
-	  }// end over sii
+            if(
+               (gi>=startpos0[1][cpulinkptr->cpu])&&
+               (gi<=  endpos0[1][cpulinkptr->cpu])&&
+               (gj>=startpos0[2][cpulinkptr->cpu])&&
+               (gj<=  endpos0[2][cpulinkptr->cpu])&&
+               (gk>=startpos0[3][cpulinkptr->cpu])&&
+               (gk<=  endpos0[3][cpulinkptr->cpu])
+               ){
+
+#if(DEBUGMINMEM)
+              dualfprintf(fail_file,"got here 3.56: did assign: sii=%lld joniooffset=%lld uii=%lld\n",sii,joniooffset,uii); fflush(fail_file);
+#endif
+
+              if (datatype == MPI_UNSIGNED_CHAR) jonio1[sii+joniooffset]=jonio1[uii++];
+              else if (datatype == MPI_FLOAT) jonio4[sii+joniooffset]=jonio4[uii++];
+              else if (datatype == MPI_DOUBLE) jonio8[sii+joniooffset]=jonio8[uii++];
+              else if (datatype == MPI_LONG_DOUBLE) jonio16[sii+joniooffset]=jonio16[uii++];
+              else if (datatype == MPI_INT) jonio4i[sii+joniooffset]=jonio4i[uii++];
+              else if (datatype == MPI_LONG_LONG_INT) jonio8i[sii+joniooffset]=jonio8i[uii++];
+            }
+          }// end over sii
 
 
 #if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
+          dualfprintf(fail_file,"got here 3.6\n"); fflush(fail_file);
 #endif
 
-	  /////////////////
-	  //
-	  // check!
-	  // see if local data total is as expected
-	  //
-	  ////////////////
-	  if(uii!=(long long int)(cpulinkptr->num)){
-	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
-	    myexit(10003);
-	  }
-	  if(cpulinkptr->end) doset=0;
-	  cpulinkptr=cpulinkptr->np;
+          /////////////////
+          //
+          // check!
+          // see if local data total is as expected
+          //
+          ////////////////
+          if(uii!=(long long int)(cpulinkptr->num)){
+            dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
+            myexit(10003);
+          }
+          if(cpulinkptr->end) doset=0;
+          cpulinkptr=cpulinkptr->np;
 
 
-	}// end while(doset)
-
-
-
-	// see if total data is as expected
-	datasofar0 += (long long int)datatoget0; // diagnostic
-	if((long long int)datasofar0 != (long long int)datasofarc0){
-	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
-	  myexit(10004);
-	}
+        }// end while(doset)
 
 
 
-	// now take sorted part and write it to disk
-	// now write out collected data using CPU=0
+        // see if total data is as expected
+        datasofar0 += (long long int)datatoget0; // diagnostic
+        if((long long int)datasofar0 != (long long int)datasofarc0){
+          dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
+          myexit(10004);
+        }
 
 
-	/////////////
-	//
-	// write data to file
-	//
-	///////////////
-	if (datatype == MPI_UNSIGNED_CHAR) joniosubmit=(void*) (jonio1+joniooffset);
-	else if (datatype == MPI_FLOAT) joniosubmit=(void*) (jonio4+joniooffset);
-	else if (datatype == MPI_DOUBLE) joniosubmit=(void*) (jonio8+joniooffset);
-	else if (datatype == MPI_LONG_DOUBLE) joniosubmit=(void*) (jonio16+joniooffset);
-	else if (datatype == MPI_INT) joniosubmit=(void*) (jonio4i+joniooffset);
-	else if (datatype == MPI_LONG_LONG_INT) joniosubmit=(void*) (jonio8i+joniooffset);
 
-	if(docolsplit){
-	  numfiles=numcolumns;
-	}
-	else numfiles=1;
+        // now take sorted part and write it to disk
+        // now write out collected data using CPU=0
 
-	if(bintxt==BINARYOUTPUT){
-	  if(numfiles==1) fwrite(joniosubmit, sizeofdatatype,datatoget0, *fp);
-	  else{
-	    for(sii=0;sii<datatoget0;sii++){
-	      if (datatype == MPI_UNSIGNED_CHAR) fwrite(&jonio1[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	      else if (datatype == MPI_FLOAT) fwrite(&jonio4[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	      else if (datatype == MPI_DOUBLE) fwrite(&jonio8[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	      else if (datatype == MPI_LONG_DOUBLE) fwrite(&jonio16[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	      else if (datatype == MPI_INT) fwrite(&jonio4i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	      else if (datatype == MPI_LONG_LONG_INT) fwrite(&jonio8i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    }
-	  }
-	}
-	else if(bintxt==TEXTOUTPUT){ // properly ordered, so just dump it
-	  for(sii=0;sii<datatoget0;sii++){
-	    if (datatype == MPI_UNSIGNED_CHAR) fprintf(fp[sii%numfiles],"%c",jonio1[sii+joniooffset]);
-	    else if (datatype == MPI_FLOAT) fprintf(fp[sii%numfiles],"%15.7g",jonio4[sii+joniooffset]);
-	    else if (datatype == MPI_DOUBLE) fprintf(fp[sii%numfiles],"%21.15g",jonio8[sii+joniooffset]);
-	    else if (datatype == MPI_LONG_DOUBLE) fprintf(fp[sii%numfiles],"%31.25Lg",jonio16[sii+joniooffset]);
-	    else if (datatype == MPI_INT) fprintf(fp[sii%numfiles],"%d",jonio4i[sii+joniooffset]);
-	    else if (datatype == MPI_LONG_LONG_INT) fprintf(fp[sii%numfiles],"%lld",jonio8i[sii+joniooffset]);
-	    if(numfiles==1){
-	      if((sii+1)%numcolumns) fprintf(fp[sii%numfiles]," ");
-	      else fprintf(fp[sii%numfiles],"\n");
-	    }
-	    else fprintf(fp[sii%numfiles],"\n");
-	  }
-	}
-	if((done0==0)&&(doing0==1)) dofull=0; // cpu==0 still needs to deal with it's own data
-	// if wasn't locally doing cpu=0 by master, then can't exit yet, continue till cpu=0 local data needed by master
-	if(cpulinkptr==NULL){
-	  dofull=0; // end of list
-	  masterdone=1;
-	  if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
-	    dualfprintf(fail_file,"write: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
-	    myexit(10005);
-	  }
-	}
-	// otherwise continue
+
+        /////////////
+        //
+        // write data to file
+        //
+        ///////////////
+        if (datatype == MPI_UNSIGNED_CHAR) joniosubmit=(void*) (jonio1+joniooffset);
+        else if (datatype == MPI_FLOAT) joniosubmit=(void*) (jonio4+joniooffset);
+        else if (datatype == MPI_DOUBLE) joniosubmit=(void*) (jonio8+joniooffset);
+        else if (datatype == MPI_LONG_DOUBLE) joniosubmit=(void*) (jonio16+joniooffset);
+        else if (datatype == MPI_INT) joniosubmit=(void*) (jonio4i+joniooffset);
+        else if (datatype == MPI_LONG_LONG_INT) joniosubmit=(void*) (jonio8i+joniooffset);
+
+        if(docolsplit){
+          numfiles=numcolumns;
+        }
+        else numfiles=1;
+
+        if(bintxt==BINARYOUTPUT){
+          if(numfiles==1) fwrite(joniosubmit, sizeofdatatype,datatoget0, *fp);
+          else{
+            for(sii=0;sii<datatoget0;sii++){
+              if (datatype == MPI_UNSIGNED_CHAR) fwrite(&jonio1[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_FLOAT) fwrite(&jonio4[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_DOUBLE) fwrite(&jonio8[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_LONG_DOUBLE) fwrite(&jonio16[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_INT) fwrite(&jonio4i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_LONG_LONG_INT) fwrite(&jonio8i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+            }
+          }
+        }
+        else if(bintxt==TEXTOUTPUT){ // properly ordered, so just dump it
+          for(sii=0;sii<datatoget0;sii++){
+            if (datatype == MPI_UNSIGNED_CHAR) fprintf(fp[sii%numfiles],"%c",jonio1[sii+joniooffset]);
+            else if (datatype == MPI_FLOAT) fprintf(fp[sii%numfiles],"%15.7g",jonio4[sii+joniooffset]);
+            else if (datatype == MPI_DOUBLE) fprintf(fp[sii%numfiles],"%21.15g",jonio8[sii+joniooffset]);
+            else if (datatype == MPI_LONG_DOUBLE) fprintf(fp[sii%numfiles],"%31.25Lg",jonio16[sii+joniooffset]);
+            else if (datatype == MPI_INT) fprintf(fp[sii%numfiles],"%d",jonio4i[sii+joniooffset]);
+            else if (datatype == MPI_LONG_LONG_INT) fprintf(fp[sii%numfiles],"%lld",jonio8i[sii+joniooffset]);
+            if(numfiles==1){
+              if((sii+1)%numcolumns) fprintf(fp[sii%numfiles]," ");
+              else fprintf(fp[sii%numfiles],"\n");
+            }
+            else fprintf(fp[sii%numfiles],"\n");
+          }
+        }
+        if((done0==0)&&(doing0==1)) dofull=0; // cpu==0 still needs to deal with it's own data
+        // if wasn't locally doing cpu=0 by master, then can't exit yet, continue till cpu=0 local data needed by master
+        if(cpulinkptr==NULL){
+          dofull=0; // end of list
+          masterdone=1;
+          if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
+            dualfprintf(fail_file,"write: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
+            myexit(10005);
+          }
+        }
+        // otherwise continue
       }
 
 
@@ -619,199 +619,199 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
       dofull=1;
       while(dofull){
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here 4\n"); fflush(fail_file);
+        dualfprintf(fail_file,"got here 4\n"); fflush(fail_file);
 #endif
-	// we read data into 2nd half of jonio (sorted part), then desort for one cpu, then continue for next cpu 
-	
-	/////////
-	// determine amount of data to get from file
+        // we read data into 2nd half of jonio (sorted part), then desort for one cpu, then continue for next cpu 
+        
+        /////////
+        // determine amount of data to get from file
 
 
-	// limit the amount of data once doing last grab
-	if(datasofar0+(long long int)joniosize/((long long int)2) > (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0 = -(long long int)datasofar0 + (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
-	else datatogetc0=joniosize/2;
-	// new amount of data (that will be read total)
-	datasofarc0+=datatogetc0;      
+        // limit the amount of data once doing last grab
+        if(datasofar0+(long long int)joniosize/((long long int)2) > (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns) datatogetc0 = -(long long int)datasofar0 + (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns;
+        else datatogetc0=joniosize/2;
+        // new amount of data (that will be read total)
+        datasofarc0+=datatogetc0;      
 
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
+        dualfprintf(fail_file,"got here1 : %lld %lld\n",datatogetc0,datasofarc0); fflush(fail_file);
 #endif
 
-	/////////////
-	// get data from file
-	if (datatype == MPI_UNSIGNED_CHAR) joniosubmit=(void*) (jonio1+joniooffset);
-	else if (datatype == MPI_FLOAT) joniosubmit=(void*) (jonio4+joniooffset);
-	else if (datatype == MPI_DOUBLE) joniosubmit=(void*) (jonio8+joniooffset);
-	else if (datatype == MPI_LONG_DOUBLE) joniosubmit=(void*) (jonio16+joniooffset);
-	else if (datatype == MPI_INT) joniosubmit=(void*) (jonio4i+joniooffset);
-	else if (datatype == MPI_LONG_LONG_INT) joniosubmit=(void*) (jonio8i+joniooffset);
-	
+        /////////////
+        // get data from file
+        if (datatype == MPI_UNSIGNED_CHAR) joniosubmit=(void*) (jonio1+joniooffset);
+        else if (datatype == MPI_FLOAT) joniosubmit=(void*) (jonio4+joniooffset);
+        else if (datatype == MPI_DOUBLE) joniosubmit=(void*) (jonio8+joniooffset);
+        else if (datatype == MPI_LONG_DOUBLE) joniosubmit=(void*) (jonio16+joniooffset);
+        else if (datatype == MPI_INT) joniosubmit=(void*) (jonio4i+joniooffset);
+        else if (datatype == MPI_LONG_LONG_INT) joniosubmit=(void*) (jonio8i+joniooffset);
+        
 
-	if(docolsplit){
-	  numfiles=numcolumns;
-	}
-	else numfiles=1;
+        if(docolsplit){
+          numfiles=numcolumns;
+        }
+        else numfiles=1;
 
-	if(bintxt==BINARYOUTPUT){
-	  // first let cpu=0 read data
-	  if(numfiles==1) fread(joniosubmit, sizeofdatatype,datatogetc0,*fp);
-	  else{
-	    for(sii=0;sii<datatoget0;sii++){
-	    if (datatype == MPI_UNSIGNED_CHAR) fread(&jonio1[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    else if (datatype == MPI_FLOAT) fread(&jonio4[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    else if (datatype == MPI_DOUBLE) fread(&jonio8[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    else if (datatype == MPI_LONG_DOUBLE) fread(&jonio16[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    else if (datatype == MPI_INT) fread(&jonio4i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    else if (datatype == MPI_LONG_LONG_INT) fread(&jonio8i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
-	    }
-	  }
-	}
-	else if(bintxt==TEXTOUTPUT){ // properly ordered, so just grab it
-	  for(sii=0;sii<datatogetc0;sii++){
-	    if (datatype == MPI_UNSIGNED_CHAR){
-	      fscanf(fp[sii%numfiles],"%hu",&short4char);
-	      jonio1[sii+joniooffset]=short4char; // convert to unsigned char
-	    }
-	    else if (datatype == MPI_FLOAT) fscanf(fp[sii%numfiles],"%f",&jonio4[sii+joniooffset]);
-	    else if (datatype == MPI_DOUBLE) fscanf(fp[sii%numfiles],"%lf",&jonio8[sii+joniooffset]);
-	    else if (datatype == MPI_LONG_DOUBLE) fscanf(fp[sii%numfiles],"%Lf",&jonio16[sii+joniooffset]);
-	    else if (datatype == MPI_INT) fscanf(fp[sii%numfiles],"%d",&jonio4i[sii+joniooffset]);
-	    else if (datatype == MPI_LONG_LONG_INT) fscanf(fp[sii%numfiles],"%lld",&jonio8i[sii+joniooffset]);
-	  }
-	}// end if TEXTOUTPUT
+        if(bintxt==BINARYOUTPUT){
+          // first let cpu=0 read data
+          if(numfiles==1) fread(joniosubmit, sizeofdatatype,datatogetc0,*fp);
+          else{
+            for(sii=0;sii<datatoget0;sii++){
+              if (datatype == MPI_UNSIGNED_CHAR) fread(&jonio1[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_FLOAT) fread(&jonio4[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_DOUBLE) fread(&jonio8[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_LONG_DOUBLE) fread(&jonio16[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_INT) fread(&jonio4i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+              else if (datatype == MPI_LONG_LONG_INT) fread(&jonio8i[sii+joniooffset], sizeofdatatype,1, fp[sii%numfiles]);
+            }
+          }
+        }
+        else if(bintxt==TEXTOUTPUT){ // properly ordered, so just grab it
+          for(sii=0;sii<datatogetc0;sii++){
+            if (datatype == MPI_UNSIGNED_CHAR){
+              fscanf(fp[sii%numfiles],"%hu",&short4char);
+              jonio1[sii+joniooffset]=short4char; // convert to unsigned char
+            }
+            else if (datatype == MPI_FLOAT) fscanf(fp[sii%numfiles],"%f",&jonio4[sii+joniooffset]);
+            else if (datatype == MPI_DOUBLE) fscanf(fp[sii%numfiles],"%lf",&jonio8[sii+joniooffset]);
+            else if (datatype == MPI_LONG_DOUBLE) fscanf(fp[sii%numfiles],"%Lf",&jonio16[sii+joniooffset]);
+            else if (datatype == MPI_INT) fscanf(fp[sii%numfiles],"%d",&jonio4i[sii+joniooffset]);
+            else if (datatype == MPI_LONG_LONG_INT) fscanf(fp[sii%numfiles],"%lld",&jonio8i[sii+joniooffset]);
+          }
+        }// end if TEXTOUTPUT
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here2\n"); fflush(fail_file);
-#endif
-
-
-
-	
-	/////////////////
-	//
-	// send data to other cpus (while(doset))
-	//
-	//////////////////
-	
-	// now that data is read into 2nd half of jonio, need to desort data into 1st half per cpu in a loop
-	datasent0=0;
-	datatoget0=0;
-	doset=1;
-	doing0=0;
-
-	while(doset){
-#if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
-#endif
-
-	  if(cpulinkptr->cpu==0) doing0=1;
-	  datatoget0 += (long long int)(cpulinkptr->num);
-
-	  // copy from 2nd half of jonio to first half the node cpu's data
-	  uii=0;
-	  for(sii=0;sii<datatogetc0;sii++){
-#if(DEBUGMINMEM)
-	    dualfprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
-#endif
-
-	    mypos=(long long int)((long long int)sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + ((long long int)cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
-
-	    gi=((long long int)mypos)%((long long int)totalsize[1]);
-	    gj=(long long int)((((long long int)mypos)%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
-	    gk=(long long int)(((long long int)mypos)/((long long int)totalsize[1]*(long long int)totalsize[2]));
-
-#if(DEBUGMINMEM)
-	    dualfprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
-#endif
-	    if(
-	       (gi>=startpos0[1][cpulinkptr->cpu])&&
-	       (gi<=endpos0[1][cpulinkptr->cpu])&&
-	       (gj>=startpos0[2][cpulinkptr->cpu])&&
-	       (gj<=endpos0[2][cpulinkptr->cpu])&&
-	       (gk>=startpos0[3][cpulinkptr->cpu])&&
-	       (gk<=endpos0[3][cpulinkptr->cpu])
-	       ){
-#if(DEBUGMINMEM)
-	      dualfprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
-#endif
-
-	      if (datatype == MPI_UNSIGNED_CHAR) jonio1[uii++]=jonio1[sii+joniooffset];
-	      else if (datatype == MPI_FLOAT) jonio4[uii++]=jonio4[sii+joniooffset];
-	      else if (datatype == MPI_DOUBLE) jonio8[uii++]=jonio8[sii+joniooffset];
-	      else if (datatype == MPI_LONG_DOUBLE) jonio16[uii++]=jonio16[sii+joniooffset];
-	      else if (datatype == MPI_INT) jonio4i[uii++]=jonio16[sii+joniooffset];
-	      else if (datatype == MPI_LONG_LONG_INT) jonio8i[uii++]=jonio16[sii+joniooffset];
-	    }// end if within this CPUs data
-	  }// end over sii
-#if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here3\n"); fflush(fail_file);
+        dualfprintf(fail_file,"got here2\n"); fflush(fail_file);
 #endif
 
 
-	  /////////////////////
-	  //
-	  // check!
-	  if(uii != (long long int)(cpulinkptr->num)){
-	    dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
-	    myexit(10006);
-	  }
-#if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here4\n"); fflush(fail_file);	  
-#endif
-	  // jonio is the unsorted bit here starting at index=0 (for all cpus)
-	  MPI_Isend(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
-	  // have myid wait before continuing to make sure receive is complete
-	  // alternative is to have many sends, but then need to desort all at once which isn't easy since cycling through link list one at a time only once (could store starter pointer, etc.)
-	  MPI_Wait(&request0,&mpichstatus);
-	  
-	  datasent0 += (long long int)(cpulinkptr->num); // diagnostic
 
-	  if(cpulinkptr->end) doset=0;
-	  cpulinkptr=cpulinkptr->np;
+        
+        /////////////////
+        //
+        // send data to other cpus (while(doset))
+        //
+        //////////////////
+        
+        // now that data is read into 2nd half of jonio, need to desort data into 1st half per cpu in a loop
+        datasent0=0;
+        datatoget0=0;
+        doset=1;
+        doing0=0;
+
+        while(doset){
 #if(DEBUGMINMEM)
-	  dualfprintf(fail_file,"got here5\n"); fflush(fail_file);	  
+          dualfprintf(fail_file,"got here 2.4\n"); fflush(fail_file);
 #endif
 
-	}// end while doset
+          if(cpulinkptr->cpu==0) doing0=1;
+          datatoget0 += (long long int)(cpulinkptr->num);
 
-
-
-
-
-	///////////////////
-	//
-	// check to see if total data is correct
-	//
-	//////////////////
-
+          // copy from 2nd half of jonio to first half the node cpu's data
+          uii=0;
+          for(sii=0;sii<datatogetc0;sii++){
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here6\n"); fflush(fail_file);	  
+            dualfprintf(fail_file,"got here2.5: %lld\n",sii); fflush(fail_file);
 #endif
 
-	datasofar0 += (long long int)datatoget0; // diagnostic
-	if((long long int)datasofar0 != (long long int)datasofarc0){
-	  dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
-	  myexit(10007);
-	}
-	if((long long int)datasent0 != (long long int)datatoget0){
-	  dualfprintf(fail_file,"data sent doesn't match data read\n");
-	  myexit(10008);
-	}
-	if((done0==0)&&(doing0==1)) dofull=0; // cpu==0 still needs to deal with more reads for it's own data
-	if(cpulinkptr==NULL){
-	  masterdone=1; // i.e. don't come back
-	  dofull=0; // end of list
-	  if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
-	    dualfprintf(fail_file,"read: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
-	    myexit(10009);
-	  }
-	}// end if NULL
+            mypos=(long long int)((long long int)sii/((long long int)numcolumns)) + (long long int)(cpulinkptr->ri) + (long long int)(cpulinkptr->rj)*(long long int)totalsize[1] + ((long long int)cpulinkptr->rk)*(long long int)totalsize[1]*(long long int)totalsize[2];
 
+            gi=((long long int)mypos)%((long long int)totalsize[1]);
+            gj=(long long int)((((long long int)mypos)%((long long int)totalsize[1]*(long long int)totalsize[2]))/((long long int)totalsize[1]));
+            gk=(long long int)(((long long int)mypos)/((long long int)totalsize[1]*(long long int)totalsize[2]));
 
-
-
-	// otherwise continue
 #if(DEBUGMINMEM)
-	dualfprintf(fail_file,"got here7\n"); fflush(fail_file);	  
+            dualfprintf(fail_file,"got here2.6: %lld %lld\n",gi,gj); fflush(fail_file);
+#endif
+            if(
+               (gi>=startpos0[1][cpulinkptr->cpu])&&
+               (gi<=endpos0[1][cpulinkptr->cpu])&&
+               (gj>=startpos0[2][cpulinkptr->cpu])&&
+               (gj<=endpos0[2][cpulinkptr->cpu])&&
+               (gk>=startpos0[3][cpulinkptr->cpu])&&
+               (gk<=endpos0[3][cpulinkptr->cpu])
+               ){
+#if(DEBUGMINMEM)
+              dualfprintf(fail_file,"got here2.7 %lld\n",cpulinkptr->cpu); fflush(fail_file);
+#endif
+
+              if (datatype == MPI_UNSIGNED_CHAR) jonio1[uii++]=jonio1[sii+joniooffset];
+              else if (datatype == MPI_FLOAT) jonio4[uii++]=jonio4[sii+joniooffset];
+              else if (datatype == MPI_DOUBLE) jonio8[uii++]=jonio8[sii+joniooffset];
+              else if (datatype == MPI_LONG_DOUBLE) jonio16[uii++]=jonio16[sii+joniooffset];
+              else if (datatype == MPI_INT) jonio4i[uii++]=jonio16[sii+joniooffset];
+              else if (datatype == MPI_LONG_LONG_INT) jonio8i[uii++]=jonio16[sii+joniooffset];
+            }// end if within this CPUs data
+          }// end over sii
+#if(DEBUGMINMEM)
+          dualfprintf(fail_file,"got here3\n"); fflush(fail_file);
+#endif
+
+
+          /////////////////////
+          //
+          // check!
+          if(uii != (long long int)(cpulinkptr->num)){
+            dualfprintf(fail_file,"uii and num for this cpu not same, algorithm failure: uii=%d num=%d datatogetc0=%d\n",uii,cpulinkptr->num,datatogetc0);
+            myexit(10006);
+          }
+#if(DEBUGMINMEM)
+          dualfprintf(fail_file,"got here4\n"); fflush(fail_file);        
+#endif
+          // jonio is the unsorted bit here starting at index=0 (for all cpus)
+          MPI_Isend(jonio,cpulinkptr->num,datatype,MPIid[cpulinkptr->cpu],cpulinkptr->cpu,MPI_COMM_GRMHD,&request0);
+          // have myid wait before continuing to make sure receive is complete
+          // alternative is to have many sends, but then need to desort all at once which isn't easy since cycling through link list one at a time only once (could store starter pointer, etc.)
+          MPI_Wait(&request0,&mpichstatus);
+          
+          datasent0 += (long long int)(cpulinkptr->num); // diagnostic
+
+          if(cpulinkptr->end) doset=0;
+          cpulinkptr=cpulinkptr->np;
+#if(DEBUGMINMEM)
+          dualfprintf(fail_file,"got here5\n"); fflush(fail_file);        
+#endif
+
+        }// end while doset
+
+
+
+
+
+        ///////////////////
+        //
+        // check to see if total data is correct
+        //
+        //////////////////
+
+#if(DEBUGMINMEM)
+        dualfprintf(fail_file,"got here6\n"); fflush(fail_file);          
+#endif
+
+        datasofar0 += (long long int)datatoget0; // diagnostic
+        if((long long int)datasofar0 != (long long int)datasofarc0){
+          dualfprintf(fail_file,"cumulative data received via MPI and expected data is different: got=%d expected=%d\n",datasofar0,datasofarc0);
+          myexit(10007);
+        }
+        if((long long int)datasent0 != (long long int)datatoget0){
+          dualfprintf(fail_file,"data sent doesn't match data read\n");
+          myexit(10008);
+        }
+        if((done0==0)&&(doing0==1)) dofull=0; // cpu==0 still needs to deal with more reads for it's own data
+        if(cpulinkptr==NULL){
+          masterdone=1; // i.e. don't come back
+          dofull=0; // end of list
+          if(datasofar0 != (long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns){
+            dualfprintf(fail_file,"read: total data written not equal to expected amount: wrote=%lld expected=%lld\n",datasofar0,(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns);
+            myexit(10009);
+          }
+        }// end if NULL
+
+
+
+
+        // otherwise continue
+#if(DEBUGMINMEM)
+        dualfprintf(fail_file,"got here7\n"); fflush(fail_file);          
 #endif
 
 
@@ -822,7 +822,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 #if(DEBUGMINMEM)
-      dualfprintf(fail_file,"got here8\n"); fflush(fail_file);	  
+      dualfprintf(fail_file,"got here8\n"); fflush(fail_file);    
 #endif
 
 
@@ -846,7 +846,7 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
   //  logsfprintf("end mpiminmem_read\n");
 #if(DEBUGMINMEM)
-  dualfprintf(fail_file,"got here9\n"); fflush(fail_file);	  
+  dualfprintf(fail_file,"got here9\n"); fflush(fail_file);        
 #endif
 
 
@@ -859,8 +859,8 @@ void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt,
 
 
 void mpiio_seperate(int bintxt, int sorted, int stage,
-		    int numcolumns, MPI_Datatype datatype,
-		    FILE ** fpptr, void *jonio, void *writebuf)
+                    int numcolumns, MPI_Datatype datatype,
+                    FILE ** fpptr, void *jonio, void *writebuf)
 {
 #if(USEMPI)
 
@@ -877,10 +877,10 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
     if(truempicombinetype==MPICOMBINESIMPLE){
       
       if(sorted){
-	mpiios_seperate(bintxt, stage, datatype, numcolumns, fpptr, jonio, writebuf);
+        mpiios_seperate(bintxt, stage, datatype, numcolumns, fpptr, jonio, writebuf);
       }
       else{
-	mpiiotu_seperate(stage, datatype, numcolumns, fpptr, writebuf);
+        mpiiotu_seperate(stage, datatype, numcolumns, fpptr, writebuf);
       }
       
       
@@ -1128,8 +1128,8 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 #if(USEMPI&&USEROMIO)
     // NOT using mapping MPIid[myid] below.  Using GRMHD layout rank "myid" that ensures that ROMIO writes correctly spatially no matter what MPI rank is.
     MPI_Type_create_darray(numprocs, myid, ndims, array_of_gsizes, 
-			   array_of_distribs, array_of_dargs,
-			   array_of_psizes, order, datatype, &newtype);
+                           array_of_distribs, array_of_dargs,
+                           array_of_psizes, order, datatype, &newtype);
     MPI_Type_commit(&newtype);
 
 #if(0)
@@ -1364,7 +1364,7 @@ long long int gcountmod(int numcolumns)
 // initializes memory buffers for MPI combining for all MPI combine types(simple, minmem, romio)
 // mpi io sorted or not
 void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesize, char *filename, int numcolumns,
-		MPI_Datatype datatype, void **jonioptr, void **writebufptr)
+                 MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
   FTYPE fakevar;
   int fakei;
@@ -1414,7 +1414,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
   //
   /////////////////////
   
-  if(myid==0){		// total on CPU=0, always, since mpicombine=1
+  if(myid==0){          // total on CPU=0, always, since mpicombine=1
     if(docolsplit){
       numfiles=numcolumns;
     }
@@ -1422,62 +1422,62 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
 
     for(i=0;i<numfiles;i++){
       if(docolsplit&&(numfiles>1)){
-	sprintf(newfilename,"%s-col%04d",filename,i); // must be same name as in dump_gen()
+        sprintf(newfilename,"%s-col%04d",filename,i); // must be same name as in dump_gen()
       }
       else{
-	sprintf(newfilename,"%s",filename);
+        sprintf(newfilename,"%s",filename);
       }
 
 
 #define NUMTRYGETTINGFILE 3
       for(trygettingfile=0;trygettingfile<NUMTRYGETTINGFILE;trygettingfile++){
 
-	if (which == WRITEFILE){
-	  if(bintxt==BINARYOUTPUT)         fp[i] = fopen(newfilename, "a");
-	  else if(bintxt==TEXTOUTPUT)      fp[i] = fopen(newfilename, "at");
-	  else{
-	    dualfprintf(fail_file,"No such bintxt=%d\n",bintxt);
-	    myexit(62061);
-	  }
-	  // file pointer set correctly upon append
-	}
-	else if (which == READFILE){
-	  if(bintxt==BINARYOUTPUT)     fp[i] = fopen(newfilename, "rb");
-	  else if(bintxt==TEXTOUTPUT)  fp[i] = fopen(newfilename, "rt");
-	  else{
-	    dualfprintf(fail_file,"No such bintxt=%d\n",bintxt);
-	    myexit(62062);
-	  }
-	}
-	if (fp[i] == NULL) {
-	  dualfprintf(fail_file, "error opening file: %s\n", newfilename);
-	  if(trygettingfile==NUMTRYGETTINGFILE) myexit(62676);
-	  else{
-	    dualfprintf(fail_file,"Pausing for disk to get into synch: %d\n",trygettingfile);
-	    if(MPIAVOIDFORK){
-	      // compute a bit to fake a sleep
-	      fakevar=0.8;
+        if (which == WRITEFILE){
+          if(bintxt==BINARYOUTPUT)         fp[i] = fopen(newfilename, "a");
+          else if(bintxt==TEXTOUTPUT)      fp[i] = fopen(newfilename, "at");
+          else{
+            dualfprintf(fail_file,"No such bintxt=%d\n",bintxt);
+            myexit(62061);
+          }
+          // file pointer set correctly upon append
+        }
+        else if (which == READFILE){
+          if(bintxt==BINARYOUTPUT)     fp[i] = fopen(newfilename, "rb");
+          else if(bintxt==TEXTOUTPUT)  fp[i] = fopen(newfilename, "rt");
+          else{
+            dualfprintf(fail_file,"No such bintxt=%d\n",bintxt);
+            myexit(62062);
+          }
+        }
+        if (fp[i] == NULL) {
+          dualfprintf(fail_file, "error opening file: %s\n", newfilename);
+          if(trygettingfile==NUMTRYGETTINGFILE) myexit(62676);
+          else{
+            dualfprintf(fail_file,"Pausing for disk to get into synch: %d\n",trygettingfile);
+            if(MPIAVOIDFORK){
+              // compute a bit to fake a sleep
+              fakevar=0.8;
 #define FAKENUM 100 // number of square roots to take to pause
-	      for(fakei=i;fakei<=FAKENUM;fakei++){
-		fakevar=sqrt(fakevar);
-	      }	      
-	    }
-	    else{
-	      system("sleep 1"); // or use something to pause for 1 second
-	    }
-	  }
-	}
-	else{
-	  // then done with loop (ensure no inner loop and so set correct loop to end)
-	  trygettingfile=NUMTRYGETTINGFILE;
-	  break;
-	}
+              for(fakei=i;fakei<=FAKENUM;fakei++){
+                fakevar=sqrt(fakevar);
+              }       
+            }
+            else{
+              system("sleep 1"); // or use something to pause for 1 second
+            }
+          }
+        }
+        else{
+          // then done with loop (ensure no inner loop and so set correct loop to end)
+          trygettingfile=NUMTRYGETTINGFILE;
+          break;
+        }
       }// end if trygettingfile
-	
+        
 
       // must set file pointer to after header
       if (which == READFILE){
-	fseek(fp[i],headerbytesize,SEEK_SET);
+        fseek(fp[i],headerbytesize,SEEK_SET);
       }
 
     }// end over numfiles
@@ -1486,7 +1486,7 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
 
 
 
-  if ( (sorted==SORTED)&&(myid == 0) ){		// total on CPU=0 is stored in memory somehow for sorting before output
+  if ( (sorted==SORTED)&&(myid == 0) ){         // total on CPU=0 is stored in memory somehow for sorting before output
 
     /////////////
     //
@@ -1503,15 +1503,15 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
       // 2 needed since need to read sequentially, then order it into the other buffer for writing
       set_sizeofmemory(2,sizeofdatatype, numcolumns, &sizeofmemory);
       if(sizeofmemory>(long long int)sizeofdatatype * (long long int)totalsize[1] * (long long int)totalsize[2] * (long long int)totalsize[3] * (long long int)numcolumns){
-	sizeofmemory = (long long int)sizeofdatatype * (long long int)totalsize[1] * (long long int)totalsize[2] * (long long int)totalsize[3] * (long long int)numcolumns;
-	truempicombinetype=MPICOMBINESIMPLE; // then switch to simple method
+        sizeofmemory = (long long int)sizeofdatatype * (long long int)totalsize[1] * (long long int)totalsize[2] * (long long int)totalsize[3] * (long long int)numcolumns;
+        truempicombinetype=MPICOMBINESIMPLE; // then switch to simple method
       }
       // need memory to be at least larger than number of columns (X2 for 2 buffers)
       // don't want to work with chunks smaller than # of columns, and all chunks should come in # of column chunks times some integer multiple
       if(sizeofmemory<(long long int)sizeofdatatype*(long long int)numcolumns*(long long int)2) sizeofmemory=(long long int)sizeofdatatype*(long long int)numcolumns*(long long int)2;
       if(sizeofmemory<(long long int)2*(long long int)numcolumns){
-	dualfprintf(fail_file,"problem, sizeofmemory=%lld < %lld=2*numcolumns\n",sizeofmemory,(long long int)2*(long long int)numcolumns);
-	myexit(102000);
+        dualfprintf(fail_file,"problem, sizeofmemory=%lld < %lld=2*numcolumns\n",sizeofmemory,(long long int)2*(long long int)numcolumns);
+        myexit(102000);
       }
 
     }
@@ -1540,13 +1540,13 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
     }
 #if(DEBUGSINIT)
     /*
-    for(i=0;i<sizeofmemory/datatype;i++){
-    if(datatype==sizeof(long double)) (*jonio16)[i]=-10000.0000;
-    if(datatype==sizeof(double)) (*jonio8)[i]=-10000.0000;
-    if(datatype==sizeof(float)) (*jonio4)[i]=-10000.0000;
-    if(datatype==sizeof(unsigned char)) (*jonio1)[i]=100;
-    }
-    dualfprintf(fail_file,"got here1\n");
+      for(i=0;i<sizeofmemory/datatype;i++){
+      if(datatype==sizeof(long double)) (*jonio16)[i]=-10000.0000;
+      if(datatype==sizeof(double)) (*jonio8)[i]=-10000.0000;
+      if(datatype==sizeof(float)) (*jonio4)[i]=-10000.0000;
+      if(datatype==sizeof(unsigned char)) (*jonio1)[i]=100;
+      }
+      dualfprintf(fail_file,"got here1\n");
     */
 #endif
 
@@ -1609,13 +1609,13 @@ void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesi
   }
 #if(DEBUGSINIT)
   /*
-  for(i=0;i<sizeofmemory/sizeofdatatype;i++){
-  if(datatype==sizeof(long double)) (*writebuf16)[i]=-10000.0000;
+    for(i=0;i<sizeofmemory/sizeofdatatype;i++){
+    if(datatype==sizeof(long double)) (*writebuf16)[i]=-10000.0000;
     if(datatype==sizeof(double)) (*writebuf8)[i]=-10000.0000;
     if(datatype==sizeof(float)) (*writebuf4)[i]=-10000.0000;
     if(datatype==sizeof(unsigned char)) (*writebuf1)[i]=100;
-  }
-  dualfprintf(fail_file,"got here2\n");
+    }
+    dualfprintf(fail_file,"got here2\n");
   */
 #endif
   logsfprintf("mpiios_init end: sizeofmemory=%lld sizeofdatatype=%d\n",sizeofmemory,sizeofdatatype);
@@ -1630,9 +1630,9 @@ void mpiiomin_final(int numcolumns,FILE **fp, void *jonio, void *writebuf)
   int i;
   int numfiles;
 
-  free(writebuf);		// writebuf used by each CPU
+  free(writebuf);               // writebuf used by each CPU
   if(myid==0){
-    free(jonio);		// used by CPU=0
+    free(jonio);                // used by CPU=0
     if(docolsplit){
       numfiles=numcolumns;
     }
@@ -1648,7 +1648,7 @@ void mpiiomin_final(int numcolumns,FILE **fp, void *jonio, void *writebuf)
 
 
 void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
-		   FILE ** fp, void *jonio, void *writebuf)
+                    FILE ** fp, void *jonio, void *writebuf)
 {
   long long int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
 #if(USEMPI)
@@ -1700,8 +1700,8 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
     for (l = 0; l < numprocs; l++) {
       logsfprintf("on myid==0: mpiios combine: %d of numprocs=%d data=%lld\n",l,numprocs,(long long int) (N1 * N2 * N3 * numcolumns) );
       if(l!=0){
-	MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &rrequest);
-	MPI_Wait(&rrequest, &mpichstatus);
+        MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &rrequest);
+        MPI_Wait(&rrequest, &mpichstatus);
       }
 
       othercpupos[1]=l%ncpux1;
@@ -1710,34 +1710,34 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 
       // now fill jonio with proper sequence (i.e. tiled mapping)
       for (k = 0; k < N3; k++) for (j = 0; j < N2; j++)
-	for (i = 0; i < N1; i++)
-	  for (col = 0; col < numcolumns; col++) {
-	    // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
-	    // Note that this storage mapping function forces disk to have i as fastest regardless of order stored in original array.
-	    // This is fully compatible with any ORDERSTORAGE choice since global arrays are still properly accessed and this mapping just forces writebuf to be filled or read with fixed mapping function as desirable, so that user can change ORDERSTORAGE without the files written being changed.
-	    mapvaluejonio =
-	      + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
-	      + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
-	      + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
-	      + (long long int)col;
+                                 for (i = 0; i < N1; i++)
+                                   for (col = 0; col < numcolumns; col++) {
+                                     // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
+                                     // Note that this storage mapping function forces disk to have i as fastest regardless of order stored in original array.
+                                     // This is fully compatible with any ORDERSTORAGE choice since global arrays are still properly accessed and this mapping just forces writebuf to be filled or read with fixed mapping function as desirable, so that user can change ORDERSTORAGE without the files written being changed.
+                                     mapvaluejonio =
+                                       + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
+                                       + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
+                                       + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
+                                       + (long long int)col;
 
-	    // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
-	    mapvaluetempbuf =
-	      + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
-	      + (long long int)j * (long long int)N1 * (long long int)numcolumns
-	      + (long long int)i * (long long int)numcolumns + (long long int)col;
-	    
-	    if (datatype == MPI_UNSIGNED_CHAR) jonio1[mapvaluejonio] = writebuf1[mapvaluetempbuf];
-	    else if (datatype == MPI_FLOAT) jonio4[mapvaluejonio] = writebuf4[mapvaluetempbuf];
-	    else if (datatype == MPI_DOUBLE) jonio8[mapvaluejonio] = writebuf8[mapvaluetempbuf];
-	    else if (datatype == MPI_LONG_DOUBLE) jonio16[mapvaluejonio] = writebuf16[mapvaluetempbuf];
-	    else if (datatype == MPI_INT) jonio4i[mapvaluejonio] = writebuf4i[mapvaluetempbuf];
-	    else if (datatype == MPI_LONG_LONG_INT) jonio8i[mapvaluejonio] = writebuf8i[mapvaluetempbuf];
-	  }
+                                     // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
+                                     mapvaluetempbuf =
+                                       + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
+                                       + (long long int)j * (long long int)N1 * (long long int)numcolumns
+                                       + (long long int)i * (long long int)numcolumns + (long long int)col;
+            
+                                     if (datatype == MPI_UNSIGNED_CHAR) jonio1[mapvaluejonio] = writebuf1[mapvaluetempbuf];
+                                     else if (datatype == MPI_FLOAT) jonio4[mapvaluejonio] = writebuf4[mapvaluetempbuf];
+                                     else if (datatype == MPI_DOUBLE) jonio8[mapvaluejonio] = writebuf8[mapvaluetempbuf];
+                                     else if (datatype == MPI_LONG_DOUBLE) jonio16[mapvaluejonio] = writebuf16[mapvaluetempbuf];
+                                     else if (datatype == MPI_INT) jonio4i[mapvaluejonio] = writebuf4i[mapvaluetempbuf];
+                                     else if (datatype == MPI_LONG_LONG_INT) jonio8i[mapvaluejonio] = writebuf8i[mapvaluetempbuf];
+                                   }
     }
   }
   if(myid!=0) MPI_Wait(&srequest, &mpichstatus);
-  free(writebuf);		// writebuf used by each CPU
+  free(writebuf);               // writebuf used by each CPU
 
   if (myid == 0) {
     logsfprintf("on myid==0: mpiios combine: writing: %lld\n",(long long int)totalsize[1] * (long long int)totalsize[2] * (long long int)totalsize[3] * (long long int)numcolumns);
@@ -1751,33 +1751,33 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
       // GODMARK: Below may be too large of a size for fwrite() to output
       if(numfiles==1) fwrite(jonio, sizeofdatatype,totalsize[1] * totalsize[2] * totalsize[3] * numcolumns, *fp);
       else{
-	for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
-	  if (datatype == MPI_UNSIGNED_CHAR) fwrite(&jonio1[i], sizeofdatatype,1, fp[i%numfiles]);
-	  else if (datatype == MPI_FLOAT) fwrite(&jonio4[i], sizeofdatatype,1, fp[i%numfiles]);
-	  else if (datatype == MPI_DOUBLE) fwrite(&jonio8[i], sizeofdatatype,1, fp[i%numfiles]);
-	  else if (datatype == MPI_LONG_DOUBLE) fwrite(&jonio16[i], sizeofdatatype,1, fp[i%numfiles]);
-	  else if (datatype == MPI_INT) fwrite(&jonio4i[i], sizeofdatatype,1, fp[i%numfiles]);
-	  else if (datatype == MPI_LONG_LONG_INT) fwrite(&jonio8i[i], sizeofdatatype,1, fp[i%numfiles]);
-	}
+        for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
+          if (datatype == MPI_UNSIGNED_CHAR) fwrite(&jonio1[i], sizeofdatatype,1, fp[i%numfiles]);
+          else if (datatype == MPI_FLOAT) fwrite(&jonio4[i], sizeofdatatype,1, fp[i%numfiles]);
+          else if (datatype == MPI_DOUBLE) fwrite(&jonio8[i], sizeofdatatype,1, fp[i%numfiles]);
+          else if (datatype == MPI_LONG_DOUBLE) fwrite(&jonio16[i], sizeofdatatype,1, fp[i%numfiles]);
+          else if (datatype == MPI_INT) fwrite(&jonio4i[i], sizeofdatatype,1, fp[i%numfiles]);
+          else if (datatype == MPI_LONG_LONG_INT) fwrite(&jonio8i[i], sizeofdatatype,1, fp[i%numfiles]);
+        }
       }
     }
     else if(bintxt==TEXTOUTPUT){ // properly ordered, so just dump it
       for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
-	if (datatype == MPI_UNSIGNED_CHAR) fprintf(fp[i%numfiles],"%c",jonio1[i]);
-	else if (datatype == MPI_FLOAT) fprintf(fp[i%numfiles],"%15.7g",jonio4[i]);
-	else if (datatype == MPI_DOUBLE) fprintf(fp[i%numfiles],"%21.15g",jonio8[i]);
-	else if (datatype == MPI_LONG_DOUBLE) fprintf(fp[i%numfiles],"%31.25Lg",jonio16[i]);
-	else if (datatype == MPI_INT) fprintf(fp[i%numfiles],"%d",jonio4i[i]);
-	else if (datatype == MPI_LONG_LONG_INT) fprintf(fp[i%numfiles],"%lld",jonio8i[i]);
-	if(numfiles==1){
-	  if((i+1)%numcolumns) fprintf(*fp," ");
-	  else fprintf(*fp,"\n");
-	}
-	else  fprintf(fp[i%numfiles],"\n");
+        if (datatype == MPI_UNSIGNED_CHAR) fprintf(fp[i%numfiles],"%c",jonio1[i]);
+        else if (datatype == MPI_FLOAT) fprintf(fp[i%numfiles],"%15.7g",jonio4[i]);
+        else if (datatype == MPI_DOUBLE) fprintf(fp[i%numfiles],"%21.15g",jonio8[i]);
+        else if (datatype == MPI_LONG_DOUBLE) fprintf(fp[i%numfiles],"%31.25Lg",jonio16[i]);
+        else if (datatype == MPI_INT) fprintf(fp[i%numfiles],"%d",jonio4i[i]);
+        else if (datatype == MPI_LONG_LONG_INT) fprintf(fp[i%numfiles],"%lld",jonio8i[i]);
+        if(numfiles==1){
+          if((i+1)%numcolumns) fprintf(*fp," ");
+          else fprintf(*fp,"\n");
+        }
+        else  fprintf(fp[i%numfiles],"\n");
       }
     }
     logsfprintf("on myid==0: mpiios combine: freeing\n");
-    free(jonio);		// used by CPU=0
+    free(jonio);                // used by CPU=0
     for(i=0;i<numfiles;i++){
       fclose(fp[i]);
       fp[i] = NULL;
@@ -1792,8 +1792,8 @@ void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
 
 
 void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumns,
-		    FILE ** fp, void *jonio,
-		    void *writebuf)
+                     FILE ** fp, void *jonio,
+                     void *writebuf)
 {
   long long int i, j, k, l, col, mapvaluejonio, mapvaluetempbuf;
 #if(USEMPI)
@@ -1847,88 +1847,88 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
   if (stage == STAGE1) {
     if (myid == 0) {
       if(docolsplit){
-	numfiles=numcolumns;
+        numfiles=numcolumns;
       }
       else numfiles=1;
       
       if(bintxt==BINARYOUTPUT){
-	// first let cpu=0 read data
-	// GODMARK: Below may be too big for fread() to read
-	if(numfiles==1) fread(jonio, sizeofdatatype,totalsize[1] * totalsize[2] * totalsize[3] * numcolumns, *fp);
-	else{
-	  for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
-	    if (datatype == MPI_UNSIGNED_CHAR) fread(&jonio1[i], sizeofdatatype,1, fp[i%numfiles]);
-	    else if (datatype == MPI_FLOAT) fread(&jonio4[i], sizeofdatatype,1, fp[i%numfiles]);
-	    else if (datatype == MPI_DOUBLE)  fread(&jonio8[i], sizeofdatatype,1, fp[i%numfiles]);
-	    else if (datatype == MPI_LONG_DOUBLE) fread(&jonio16[i], sizeofdatatype,1, fp[i%numfiles]);
-	    else if (datatype == MPI_INT) fread(&jonio4i[i], sizeofdatatype,1, fp[i%numfiles]);
-	    else if (datatype == MPI_LONG_LONG_INT) fread(&jonio8i[i], sizeofdatatype,1, fp[i%numfiles]);
-	  }
-	}
+        // first let cpu=0 read data
+        // GODMARK: Below may be too big for fread() to read
+        if(numfiles==1) fread(jonio, sizeofdatatype,totalsize[1] * totalsize[2] * totalsize[3] * numcolumns, *fp);
+        else{
+          for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
+            if (datatype == MPI_UNSIGNED_CHAR) fread(&jonio1[i], sizeofdatatype,1, fp[i%numfiles]);
+            else if (datatype == MPI_FLOAT) fread(&jonio4[i], sizeofdatatype,1, fp[i%numfiles]);
+            else if (datatype == MPI_DOUBLE)  fread(&jonio8[i], sizeofdatatype,1, fp[i%numfiles]);
+            else if (datatype == MPI_LONG_DOUBLE) fread(&jonio16[i], sizeofdatatype,1, fp[i%numfiles]);
+            else if (datatype == MPI_INT) fread(&jonio4i[i], sizeofdatatype,1, fp[i%numfiles]);
+            else if (datatype == MPI_LONG_LONG_INT) fread(&jonio8i[i], sizeofdatatype,1, fp[i%numfiles]);
+          }
+        }
       }
       else if(bintxt==TEXTOUTPUT){ // properly ordered, so just dump it
-	for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
-	  if (datatype == MPI_UNSIGNED_CHAR){
-	    fscanf(fp[i%numfiles],"%hu",&short4char);
-	    jonio1[i]=short4char; // convert
-	  }
-	  else if (datatype == MPI_FLOAT) fscanf(fp[i%numfiles],"%f",&jonio4[i]);
-	  else if (datatype == MPI_DOUBLE) fscanf(fp[i%numfiles],"%lf",&jonio8[i]);
-	  else if (datatype == MPI_LONG_DOUBLE) fscanf(fp[i%numfiles],"%Lf",&jonio16[i]);
-	  else if (datatype == MPI_INT) fscanf(fp[i%numfiles],"%d",&jonio4i[i]);
-	  else if (datatype == MPI_LONG_LONG_INT) fscanf(fp[i%numfiles],"%lld",&jonio8i[i]);
-	}
+        for(i=0;i<totalsize[1]*totalsize[2]*totalsize[3]*numcolumns;i++){
+          if (datatype == MPI_UNSIGNED_CHAR){
+            fscanf(fp[i%numfiles],"%hu",&short4char);
+            jonio1[i]=short4char; // convert
+          }
+          else if (datatype == MPI_FLOAT) fscanf(fp[i%numfiles],"%f",&jonio4[i]);
+          else if (datatype == MPI_DOUBLE) fscanf(fp[i%numfiles],"%lf",&jonio8[i]);
+          else if (datatype == MPI_LONG_DOUBLE) fscanf(fp[i%numfiles],"%Lf",&jonio16[i]);
+          else if (datatype == MPI_INT) fscanf(fp[i%numfiles],"%d",&jonio4i[i]);
+          else if (datatype == MPI_LONG_LONG_INT) fscanf(fp[i%numfiles],"%lld",&jonio8i[i]);
+        }
       }
     }
     // writebuf is CPU=0's tempbuf for each CPU, including CPU=0, which is done last
     if (myid == 0) {
       for (l = numprocs-1 ; l >=0; l--) {
 
-	othercpupos[1]=l%ncpux1;
-	othercpupos[2]=(int)((l%(ncpux1*ncpux2))/ncpux1);
-	othercpupos[3]=(int)(l/(ncpux1*ncpux2));
+        othercpupos[1]=l%ncpux1;
+        othercpupos[2]=(int)((l%(ncpux1*ncpux2))/ncpux1);
+        othercpupos[3]=(int)(l/(ncpux1*ncpux2));
 
-	// now unfill jonio with proper sequence (i.e. tiled mapping)
-	for (k = 0; k < N3; k++) for (j = 0; j < N2; j++) {
-	  for (i = 0; i < N1; i++) {
-	    for (col = 0; col < numcolumns; col++) {
+        // now unfill jonio with proper sequence (i.e. tiled mapping)
+        for (k = 0; k < N3; k++) for (j = 0; j < N2; j++) {
+            for (i = 0; i < N1; i++) {
+              for (col = 0; col < numcolumns; col++) {
 
-	    // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
-	    mapvaluejonio =
-	      + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
-	      + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
-	      + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
-	      + (long long int)col;
+                // mapvaluejonio is global single-dimensional index for position in total CPU space - in C order for "array[k][j][i]"
+                mapvaluejonio =
+                  + (long long int)ncpux1 * (long long int)N1 * (long long int)ncpux2 * (long long int)N2 * (long long int)numcolumns * ((long long int)k + (long long int)othercpupos[3] * (long long int)N3)
+                  + (long long int)ncpux1 * (long long int)N1 * (long long int)numcolumns * ((long long int)j + (long long int)othercpupos[2] * (long long int)N2)
+                  + (long long int)numcolumns * ((long long int)i + (long long int)othercpupos[1] * (long long int)N1)
+                  + (long long int)col;
 
-	    // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
-	    mapvaluetempbuf =
-	      + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
-	      + (long long int)j * (long long int)N1 * (long long int)numcolumns
-	      + (long long int)i * (long long int)numcolumns + (long long int)col;
-	    
-	      // debug check
-	      if((mapvaluetempbuf<0)||(mapvaluetempbuf>=(long long int)N1*N2*N3*numcolumns)){
-		dualfprintf(fail_file,"mapvaluetempbuf out of range: %d\n",mapvaluetempbuf);
-		myexit(96726);
-	      }
-	      if((mapvaluejonio<0)||(mapvaluejonio>=(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns)){
-		dualfprintf(fail_file,"mapvaluejonio out of range: %d\n",mapvaluejonio);
-		myexit(6726);
-	      }
-	      if (datatype == MPI_UNSIGNED_CHAR) writebuf1[mapvaluetempbuf] = jonio1[mapvaluejonio];
-	      if (datatype == MPI_FLOAT) writebuf4[mapvaluetempbuf] = jonio4[mapvaluejonio];
-	      if (datatype == MPI_DOUBLE) writebuf8[mapvaluetempbuf] = jonio8[mapvaluejonio];
-	      if (datatype == MPI_LONG_DOUBLE) writebuf16[mapvaluetempbuf] = jonio16[mapvaluejonio];
-	      if (datatype == MPI_INT) writebuf4i[mapvaluetempbuf] = jonio4i[mapvaluejonio];
-	      if (datatype == MPI_LONG_LONG_INT) writebuf8i[mapvaluetempbuf] = jonio8i[mapvaluejonio];
-	    }
-	  }
-	}
-	if(l!=0){
-	  
-	  MPI_Isend(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &srequest);
-	  MPI_Wait(&srequest, &mpichstatus);
-	}
+                // mapvaluetempbuf is a single-buffer single-dimensional index for the position in the buffer in C-order
+                mapvaluetempbuf =
+                  + (long long int)k * (long long int)N1 * (long long int)N2 * (long long int)numcolumns
+                  + (long long int)j * (long long int)N1 * (long long int)numcolumns
+                  + (long long int)i * (long long int)numcolumns + (long long int)col;
+            
+                // debug check
+                if((mapvaluetempbuf<0)||(mapvaluetempbuf>=(long long int)N1*N2*N3*numcolumns)){
+                  dualfprintf(fail_file,"mapvaluetempbuf out of range: %d\n",mapvaluetempbuf);
+                  myexit(96726);
+                }
+                if((mapvaluejonio<0)||(mapvaluejonio>=(long long int)totalsize[1]*(long long int)totalsize[2]*(long long int)totalsize[3]*(long long int)numcolumns)){
+                  dualfprintf(fail_file,"mapvaluejonio out of range: %d\n",mapvaluejonio);
+                  myexit(6726);
+                }
+                if (datatype == MPI_UNSIGNED_CHAR) writebuf1[mapvaluetempbuf] = jonio1[mapvaluejonio];
+                if (datatype == MPI_FLOAT) writebuf4[mapvaluetempbuf] = jonio4[mapvaluejonio];
+                if (datatype == MPI_DOUBLE) writebuf8[mapvaluetempbuf] = jonio8[mapvaluejonio];
+                if (datatype == MPI_LONG_DOUBLE) writebuf16[mapvaluetempbuf] = jonio16[mapvaluejonio];
+                if (datatype == MPI_INT) writebuf4i[mapvaluetempbuf] = jonio4i[mapvaluejonio];
+                if (datatype == MPI_LONG_LONG_INT) writebuf8i[mapvaluetempbuf] = jonio8i[mapvaluejonio];
+              }
+            }
+          }
+        if(l!=0){
+          
+          MPI_Isend(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &srequest);
+          MPI_Wait(&srequest, &mpichstatus);
+        }
       }
       free(jonio); // done with jonio after loop
     }
@@ -1936,7 +1936,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
       // chosen CPU to receive data from CPU=0
       
       MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[0], myid, MPI_COMM_GRMHD, &rrequest);
-      MPI_Wait(&rrequest, &mpichstatus);	// writebuf used until      
+      MPI_Wait(&rrequest, &mpichstatus);        // writebuf used until      
     }
   } else if (stage == STAGE2) {
     free(writebuf);
@@ -1947,7 +1947,7 @@ void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumn
   }
 #endif
 
- logsfprintf("mpiios end seperate\n");
+  logsfprintf("mpiios end seperate\n");
 
 
 
@@ -1996,41 +1996,41 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
     // done in forward order, no need to use tempbuf since CPU=0's writebuf is first out
     for (l = 0; l <numprocs; l++) {
       if(l!=0){
-	MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &rrequest);
-	MPI_Wait(&rrequest, &mpichstatus);
+        MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l, MPI_COMM_GRMHD, &rrequest);
+        MPI_Wait(&rrequest, &mpichstatus);
       }
       // now write writebuf
       DUMPGENLOOP{
-	for(col=0;col<numcolumns;col++){
+        for(col=0;col<numcolumns;col++){
 
-	  bufferwritemap=(long long int)col + (long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
+          bufferwritemap=(long long int)col + (long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
 
-	  if(datatype== MPI_UNSIGNED_CHAR){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%c ",writebuf1[bufferwritemap]);
-	  }
-	  else if(datatype==MPI_FLOAT){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%15.7g ",writebuf4[bufferwritemap]);
-	  }
-	  else if(datatype==MPI_DOUBLE){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%21.15g ",writebuf8[bufferwritemap]);
-	  }
-	  else if(datatype==MPI_LONG_DOUBLE){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%31.25Lg ",writebuf16[bufferwritemap]);
-	  }
-	  else if(datatype==MPI_INT){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%d ",writebuf4i[bufferwritemap]);
-	  }
-	  else if(datatype==MPI_LONG_LONG_INT){
-	    fprintf(fp[(bufferwritemap)%numfiles],"%lld ",writebuf8i[bufferwritemap]);
-	  }
-	  if(numfiles>1) fprintf(fp[(bufferwritemap)%numfiles],"\n");
-	}
-	if(numfiles==1) fprintf(*fp,"\n");
+          if(datatype== MPI_UNSIGNED_CHAR){
+            fprintf(fp[(bufferwritemap)%numfiles],"%c ",writebuf1[bufferwritemap]);
+          }
+          else if(datatype==MPI_FLOAT){
+            fprintf(fp[(bufferwritemap)%numfiles],"%15.7g ",writebuf4[bufferwritemap]);
+          }
+          else if(datatype==MPI_DOUBLE){
+            fprintf(fp[(bufferwritemap)%numfiles],"%21.15g ",writebuf8[bufferwritemap]);
+          }
+          else if(datatype==MPI_LONG_DOUBLE){
+            fprintf(fp[(bufferwritemap)%numfiles],"%31.25Lg ",writebuf16[bufferwritemap]);
+          }
+          else if(datatype==MPI_INT){
+            fprintf(fp[(bufferwritemap)%numfiles],"%d ",writebuf4i[bufferwritemap]);
+          }
+          else if(datatype==MPI_LONG_LONG_INT){
+            fprintf(fp[(bufferwritemap)%numfiles],"%lld ",writebuf8i[bufferwritemap]);
+          }
+          if(numfiles>1) fprintf(fp[(bufferwritemap)%numfiles],"\n");
+        }
+        if(numfiles==1) fprintf(*fp,"\n");
       }
     }    
   }
   if(myid!=0) MPI_Wait(&srequest, &mpichstatus);
-  free(writebuf);		// writebuf used by each CPU
+  free(writebuf);               // writebuf used by each CPU
 
   if (myid == 0) {
     for(i=0;i<numfiles;i++){
@@ -2044,7 +2044,7 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
 
 // fill writebuf with each cpu's data set,using CPU=0 to process the file
 void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
-		      FILE ** fp,void *writebuf)
+                      FILE ** fp,void *writebuf)
 {
   long long int i, j, k, l, col;
 #if(USEMPI)
@@ -2116,60 +2116,60 @@ void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
   if (stage == 1) {
     if (myid == 0) {
       if(docolsplit){
-	numfiles=numcolumns;
+        numfiles=numcolumns;
       }
       else numfiles=1;
 
       for (l = 0; l < numprocs; l++) {
-	if(l==0){
-	  sendbuf=writebuf;
-	  sendbuf1=writebuf1;
-	  sendbuf4=writebuf4;
-	  sendbuf8=writebuf8;
-	  sendbuf4i=writebuf4i;
-	  sendbuf8i=writebuf8i;
-	}
-	else{
-	  sendbuf=tempbuf;
-	  sendbuf1=tempbuf1;
-	  sendbuf4=tempbuf4;
-	  sendbuf8=tempbuf8;
-	  sendbuf4i=tempbuf4i;
-	  sendbuf8i=tempbuf8i;
-	}
+        if(l==0){
+          sendbuf=writebuf;
+          sendbuf1=writebuf1;
+          sendbuf4=writebuf4;
+          sendbuf8=writebuf8;
+          sendbuf4i=writebuf4i;
+          sendbuf8i=writebuf8i;
+        }
+        else{
+          sendbuf=tempbuf;
+          sendbuf1=tempbuf1;
+          sendbuf4=tempbuf4;
+          sendbuf8=tempbuf8;
+          sendbuf4i=tempbuf4i;
+          sendbuf8i=tempbuf8i;
+        }
 
-	DUMPGENLOOP for (col = 0; col < numcolumns; col++) {
+        DUMPGENLOOP for (col = 0; col < numcolumns; col++) {
 
-	  bufferwritemap=(long long int)col+(long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
+          bufferwritemap=(long long int)col+(long long int)numcolumns*((long long int)i+(long long int)N1*(long long int)j+(long long int)N1*(long long int)N2*(long long int)k);
 
-	  if(datatype==MPI_UNSIGNED_CHAR){
-	    fscanf(fp[(bufferwritemap)%numfiles],"%hu",&short4char);
-	    sendbuf1[bufferwritemap]=short4char;
-	  }
-	  else if(datatype==MPI_FLOAT) fscanf(fp[(bufferwritemap)%numfiles],"%f",&sendbuf4[bufferwritemap]);
-	  else if(datatype==MPI_DOUBLE) fscanf(fp[(bufferwritemap)%numfiles],"%lf",&sendbuf8[bufferwritemap]);
-	  else if(datatype==MPI_LONG_DOUBLE) fscanf(fp[(bufferwritemap)%numfiles],"%Lf",&sendbuf16[bufferwritemap]);
-	  else if(datatype==MPI_INT) fscanf(fp[(bufferwritemap)%numfiles],"%d",&sendbuf4i[bufferwritemap]);
-	  else if(datatype==MPI_LONG_LONG_INT) fscanf(fp[(bufferwritemap)%numfiles],"%lld",&sendbuf8i[bufferwritemap]);
-	}
-	if(l!=0){
-	  MPI_Isend(sendbuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l,  MPI_COMM_GRMHD, &srequest);
-	  // have to wait before filling sendbuf buffer again for next CPU
-	  MPI_Wait(&srequest, &mpichstatus);
-	}
+          if(datatype==MPI_UNSIGNED_CHAR){
+            fscanf(fp[(bufferwritemap)%numfiles],"%hu",&short4char);
+            sendbuf1[bufferwritemap]=short4char;
+          }
+          else if(datatype==MPI_FLOAT) fscanf(fp[(bufferwritemap)%numfiles],"%f",&sendbuf4[bufferwritemap]);
+          else if(datatype==MPI_DOUBLE) fscanf(fp[(bufferwritemap)%numfiles],"%lf",&sendbuf8[bufferwritemap]);
+          else if(datatype==MPI_LONG_DOUBLE) fscanf(fp[(bufferwritemap)%numfiles],"%Lf",&sendbuf16[bufferwritemap]);
+          else if(datatype==MPI_INT) fscanf(fp[(bufferwritemap)%numfiles],"%d",&sendbuf4i[bufferwritemap]);
+          else if(datatype==MPI_LONG_LONG_INT) fscanf(fp[(bufferwritemap)%numfiles],"%lld",&sendbuf8i[bufferwritemap]);
+        }
+        if(l!=0){
+          MPI_Isend(sendbuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[l], l,  MPI_COMM_GRMHD, &srequest);
+          // have to wait before filling sendbuf buffer again for next CPU
+          MPI_Wait(&srequest, &mpichstatus);
+        }
       }
       free(tempbuf);
     }
     else{
       MPI_Irecv(writebuf, N1 * N2 * N3 * numcolumns, datatype, MPIid[0], myid, MPI_COMM_GRMHD, &rrequest);
-      MPI_Wait(&rrequest, &mpichstatus);	// writebuf used until
+      MPI_Wait(&rrequest, &mpichstatus);        // writebuf used until
     }
   } else if (stage == 2) {
     free(writebuf);
     if (myid == 0) {
       for(i=0;i<numfiles;i++){
-	fclose(fp[i]);
-	fp[i] = NULL;
+        fclose(fp[i]);
+        fp[i] = NULL;
       }
     }
   }
@@ -2399,54 +2399,54 @@ void myfwrite(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb
   if(mpicombine==0){
     if(bintxt==BINARYOUTPUT){ // binaryoutput
       if(!docolsplit){
-	fwrite((char*)ptr+(sizeofdatatype*start), sizeofdatatype, nmemb, stream[0]);
-	nextbuf+=nmemb;
+        fwrite((char*)ptr+(sizeofdatatype*start), sizeofdatatype, nmemb, stream[0]);
+        nextbuf+=nmemb;
       }
       else{
-	for(pl=start;pl<start+nmemb;pl++){
-	  streamnum=nextbuf;
-	  fwrite((char*)ptr+(sizeofdatatype*pl), sizeofdatatype, 1, stream[streamnum]);
-	  nextbuf++;
-	}
+        for(pl=start;pl<start+nmemb;pl++){
+          streamnum=nextbuf;
+          fwrite((char*)ptr+(sizeofdatatype*pl), sizeofdatatype, 1, stream[streamnum]);
+          nextbuf++;
+        }
       }
     }
     else{ // text output
       for(pl=start;pl<start+nmemb;pl++){
-	if(docolsplit) streamnum=nextbuf;
-	else streamnum=0;
-	if (datatype == MPI_UNSIGNED_CHAR) fprintf(stream[streamnum],"%c ",ptr1[pl]);
-	else if (datatype == MPI_FLOAT) fprintf(stream[streamnum],"%15.7g ",ptr4[pl]);
-	else if (datatype == MPI_DOUBLE) fprintf(stream[streamnum],"%21.15g ",ptr8[pl]);
-	else if (datatype == MPI_LONG_DOUBLE) fprintf(stream[streamnum],"%31.25Lg ",ptr16[pl]);
-	else if (datatype == MPI_INT) fprintf(stream[streamnum],"%d ",ptr4i[pl]);
-	else if (datatype == MPI_LONG_LONG_INT) fprintf(stream[streamnum],"%lld ",ptr8i[pl]);
-	nextbuf++;
+        if(docolsplit) streamnum=nextbuf;
+        else streamnum=0;
+        if (datatype == MPI_UNSIGNED_CHAR) fprintf(stream[streamnum],"%c ",ptr1[pl]);
+        else if (datatype == MPI_FLOAT) fprintf(stream[streamnum],"%15.7g ",ptr4[pl]);
+        else if (datatype == MPI_DOUBLE) fprintf(stream[streamnum],"%21.15g ",ptr8[pl]);
+        else if (datatype == MPI_LONG_DOUBLE) fprintf(stream[streamnum],"%31.25Lg ",ptr16[pl]);
+        else if (datatype == MPI_INT) fprintf(stream[streamnum],"%d ",ptr4i[pl]);
+        else if (datatype == MPI_LONG_LONG_INT) fprintf(stream[streamnum],"%lld ",ptr8i[pl]);
+        nextbuf++;
       }
     }
   }
   else{ // mpicombine==1
     if(docolsplit&&USEROMIO){ // column splitting with ROMIO
       for(pl=start;pl<start+nmemb;pl++){
-	if(nextbuf==romiocoliter){ // only write if doing that column
-	  // BUFFERMAP2 only depends on i,j, not column number
-	  if (datatype == MPI_UNSIGNED_CHAR) writebuf1[BUFFERMAP2] = ptr1[pl];
-	  if (datatype == MPI_FLOAT) writebuf4[BUFFERMAP2] = ptr4[pl];
-	  if (datatype == MPI_DOUBLE) writebuf8[BUFFERMAP2] = ptr8[pl];
-	  if (datatype == MPI_LONG_DOUBLE) writebuf16[BUFFERMAP2] = ptr16[pl];
-	  if (datatype == MPI_INT) writebuf4i[BUFFERMAP2] = ptr4i[pl];
-	  if (datatype == MPI_LONG_LONG_INT) writebuf8i[BUFFERMAP2] = ptr8i[pl];
-	}
-	nextbuf++;
+        if(nextbuf==romiocoliter){ // only write if doing that column
+          // BUFFERMAP2 only depends on i,j, not column number
+          if (datatype == MPI_UNSIGNED_CHAR) writebuf1[BUFFERMAP2] = ptr1[pl];
+          if (datatype == MPI_FLOAT) writebuf4[BUFFERMAP2] = ptr4[pl];
+          if (datatype == MPI_DOUBLE) writebuf8[BUFFERMAP2] = ptr8[pl];
+          if (datatype == MPI_LONG_DOUBLE) writebuf16[BUFFERMAP2] = ptr16[pl];
+          if (datatype == MPI_INT) writebuf4i[BUFFERMAP2] = ptr4i[pl];
+          if (datatype == MPI_LONG_LONG_INT) writebuf8i[BUFFERMAP2] = ptr8i[pl];
+        }
+        nextbuf++;
       }
     }
     else{ // no ROMIO column splitting, just normal MPI buffer writing
       for(pl=start;pl<start+nmemb;pl++){
-	if (datatype == MPI_UNSIGNED_CHAR) writebuf1[BUFFERMAP] = ptr1[pl];
-	if (datatype == MPI_FLOAT) writebuf4[BUFFERMAP] = ptr4[pl];
-	if (datatype == MPI_DOUBLE) writebuf8[BUFFERMAP] = ptr8[pl];
-	if (datatype == MPI_LONG_DOUBLE) writebuf16[BUFFERMAP] = ptr16[pl];
-	if (datatype == MPI_INT) writebuf4i[BUFFERMAP] = ptr4i[pl];
-	if (datatype == MPI_LONG_LONG_INT) writebuf8i[BUFFERMAP] = ptr8i[pl];
+        if (datatype == MPI_UNSIGNED_CHAR) writebuf1[BUFFERMAP] = ptr1[pl];
+        if (datatype == MPI_FLOAT) writebuf4[BUFFERMAP] = ptr4[pl];
+        if (datatype == MPI_DOUBLE) writebuf8[BUFFERMAP] = ptr8[pl];
+        if (datatype == MPI_LONG_DOUBLE) writebuf16[BUFFERMAP] = ptr16[pl];
+        if (datatype == MPI_INT) writebuf4i[BUFFERMAP] = ptr4i[pl];
+        if (datatype == MPI_LONG_LONG_INT) writebuf8i[BUFFERMAP] = ptr8i[pl];
       }
     }
   }
@@ -2506,56 +2506,56 @@ void myfread(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb,
   if(mpicombine==0){
     if(bintxt==BINARYOUTPUT){
       if(!docolsplit){
-	fread((char*)ptr+(sizeofdatatype*start), sizeofdatatype, nmemb, stream[0]);
-	nextbuf+=nmemb;
+        fread((char*)ptr+(sizeofdatatype*start), sizeofdatatype, nmemb, stream[0]);
+        nextbuf+=nmemb;
       }
       else{
-	for(pl=start;pl<start+nmemb;pl++){
-	  streamnum=nextbuf;
-	  fread((char*)ptr+(sizeofdatatype*pl), sizeofdatatype, 1, stream[streamnum]);
-	  nextbuf++;
-	}
+        for(pl=start;pl<start+nmemb;pl++){
+          streamnum=nextbuf;
+          fread((char*)ptr+(sizeofdatatype*pl), sizeofdatatype, 1, stream[streamnum]);
+          nextbuf++;
+        }
       }
     }
     else{
       for(pl=start;pl<start+nmemb;pl++){
-	if(docolsplit) streamnum=nextbuf;
-	else streamnum=0;
-	if (datatype == MPI_UNSIGNED_CHAR){
-	  fscanf(stream[streamnum],"%hu",&short4char);
-	  ptr1[pl]=short4char;
-	}
-	else if (datatype == MPI_FLOAT) fscanf(stream[streamnum],"%f",&ptr4[pl]);
-	else if (datatype == MPI_DOUBLE) fscanf(stream[streamnum],"%lf",&ptr8[pl]);
-	else if (datatype == MPI_LONG_DOUBLE) fscanf(stream[streamnum],"%Lf",&ptr16[pl]);
-	else if (datatype == MPI_INT) fscanf(stream[streamnum],"%d",&ptr4i[pl]);
-	else if (datatype == MPI_LONG_LONG_INT) fscanf(stream[streamnum],"%lld",&ptr8i[pl]);
-	nextbuf++;
+        if(docolsplit) streamnum=nextbuf;
+        else streamnum=0;
+        if (datatype == MPI_UNSIGNED_CHAR){
+          fscanf(stream[streamnum],"%hu",&short4char);
+          ptr1[pl]=short4char;
+        }
+        else if (datatype == MPI_FLOAT) fscanf(stream[streamnum],"%f",&ptr4[pl]);
+        else if (datatype == MPI_DOUBLE) fscanf(stream[streamnum],"%lf",&ptr8[pl]);
+        else if (datatype == MPI_LONG_DOUBLE) fscanf(stream[streamnum],"%Lf",&ptr16[pl]);
+        else if (datatype == MPI_INT) fscanf(stream[streamnum],"%d",&ptr4i[pl]);
+        else if (datatype == MPI_LONG_LONG_INT) fscanf(stream[streamnum],"%lld",&ptr8i[pl]);
+        nextbuf++;
       }
     }
   }
   else{
     if(docolsplit&&USEROMIO){
       for(pl=start;pl<start+nmemb;pl++){
-	if(nextbuf==romiocoliter){
-	  if (datatype == MPI_UNSIGNED_CHAR) ptr1[pl]=writebuf1[BUFFERMAP2]; 
-	  if (datatype == MPI_FLOAT) ptr4[pl]=writebuf4[BUFFERMAP2]; 
-	  if (datatype == MPI_DOUBLE) ptr8[pl]=writebuf8[BUFFERMAP2]; 
-	  if (datatype == MPI_LONG_DOUBLE) ptr16[pl]=writebuf16[BUFFERMAP2]; 
-	  if (datatype == MPI_INT) ptr4i[pl]=writebuf4i[BUFFERMAP2]; 
-	  if (datatype == MPI_LONG_LONG_INT) ptr8i[pl]=writebuf8i[BUFFERMAP2]; 
-	}
-	nextbuf++;
+        if(nextbuf==romiocoliter){
+          if (datatype == MPI_UNSIGNED_CHAR) ptr1[pl]=writebuf1[BUFFERMAP2]; 
+          if (datatype == MPI_FLOAT) ptr4[pl]=writebuf4[BUFFERMAP2]; 
+          if (datatype == MPI_DOUBLE) ptr8[pl]=writebuf8[BUFFERMAP2]; 
+          if (datatype == MPI_LONG_DOUBLE) ptr16[pl]=writebuf16[BUFFERMAP2]; 
+          if (datatype == MPI_INT) ptr4i[pl]=writebuf4i[BUFFERMAP2]; 
+          if (datatype == MPI_LONG_LONG_INT) ptr8i[pl]=writebuf8i[BUFFERMAP2]; 
+        }
+        nextbuf++;
       }
     }
     else for(pl=start;pl<start+nmemb;pl++){
-      if (datatype == MPI_UNSIGNED_CHAR) ptr1[pl]=writebuf1[BUFFERMAP]; 
-      if (datatype == MPI_FLOAT) ptr4[pl]=writebuf4[BUFFERMAP]; 
-      if (datatype == MPI_DOUBLE) ptr8[pl]=writebuf8[BUFFERMAP]; 
-      if (datatype == MPI_LONG_DOUBLE) ptr16[pl]=writebuf16[BUFFERMAP]; 
-      if (datatype == MPI_INT) ptr4i[pl]=writebuf4i[BUFFERMAP]; 
-      if (datatype == MPI_LONG_LONG_INT) ptr8i[pl]=writebuf8i[BUFFERMAP]; 
-    }
+        if (datatype == MPI_UNSIGNED_CHAR) ptr1[pl]=writebuf1[BUFFERMAP]; 
+        if (datatype == MPI_FLOAT) ptr4[pl]=writebuf4[BUFFERMAP]; 
+        if (datatype == MPI_DOUBLE) ptr8[pl]=writebuf8[BUFFERMAP]; 
+        if (datatype == MPI_LONG_DOUBLE) ptr16[pl]=writebuf16[BUFFERMAP]; 
+        if (datatype == MPI_INT) ptr4i[pl]=writebuf4i[BUFFERMAP]; 
+        if (datatype == MPI_LONG_LONG_INT) ptr8i[pl]=writebuf8i[BUFFERMAP]; 
+      }
   }
 }
 
@@ -2719,10 +2719,10 @@ int init_linklists(void)
       numlists=0;
       numcells=0;
       while(blinkptr!=NULL){
-	numcells+=blinkptr->num;
-	//      logfprintf("i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells);
-	numlists++;
-	blinkptr=blinkptr->np; // next one
+        numcells+=blinkptr->num;
+        //      logfprintf("i=%d num=%d, numtotal=%d\n",i,blinkptr->num,numcells);
+        numlists++;
+        blinkptr=blinkptr->np; // next one
       }
       logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
       numlists=0;
@@ -2734,18 +2734,18 @@ int init_linklists(void)
     trifprintf("start cpu==0 lists\n");
     for(i=0;i<NUMDUMPTYPES;i++){
       if(dnumcolumns[i]>0){
-	logfprintf("i=%d\n",i);
-	cpulinkptr=cpulinkptr0[i];
-	numlists=0;
-	numcells=0;
-	while(cpulinkptr!=NULL){
-	  numcells+=cpulinkptr->num;
-	  //	logfprintf("i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells);
-	  numlists++;
-	  cpulinkptr=cpulinkptr->np; // next one
-	}
-	logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
-	numlists=0;
+        logfprintf("i=%d\n",i);
+        cpulinkptr=cpulinkptr0[i];
+        numlists=0;
+        numcells=0;
+        while(cpulinkptr!=NULL){
+          numcells+=cpulinkptr->num;
+          //    logfprintf("i=%d num=%d, cpu=%d, li=%d, lj=%d, lk=%d, col=%d, numtotal=%lld\n",i,cpulinkptr->num,cpulinkptr->cpu,cpulinkptr->i,cpulinkptr->j,cpulinkptr->k,cpulinkptr->col,numcells);
+          numlists++;
+          cpulinkptr=cpulinkptr->np; // next one
+        }
+        logfprintf("i=%d numlists=%lld numcells=%lld\n",i,numlists,numcells);
+        numlists=0;
       }
     }
   }
@@ -2849,102 +2849,102 @@ int setuplinklist(int numcolumns,int which)
   /////////////////////////
   // general loop
   for(k=0;k<ncpux3*N3;k++)  for(j=0;j<ncpux2*N2;j++)  for(i=0;i<ncpux1*N1;i++) for(col=0;col<numcolumns;col++){
-    // relative local index
-    li=i%N1;
-    lj=j%N2;
-    lk=k%N3;
-    // cpu position number
-    pi=(i/(long long int)N1);
-    pj=(j/(long long int)N2);
-    pk=(k/(long long int)N3);
-    // cpu id for this data
-    pid=pk*ncpux2*ncpux1+pj*ncpux1+pi;
-    if(myid==pid) lcount++;
-    if(myid==0){
-      lcountfor0[pid]++;
-      // below is if we have need this cpu's data (pid) and need to mark starting point on full grid
-      if(firstlijk[pid]){
-	cpulist0[numcpusinlist0++]=pid;
-	li0[pid]=i;
-	lj0[pid]=j;
-	lk0[pid]=k;
-	lcol0[pid]=col;
-	if(col!=0){
-	  dualfprintf(fail_file,"col!=0 col=%lld, so chunking bad: numcolumns=%d which=%d\n",col,numcolumns,which);
-	  myexit(10019);
-	}
-	firstlijk[pid]=0;
-      }
-    }
-    gcount++;
-    //    if(myid==0){
-    //  dualfprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
-    // }
-    //    logfprintf("%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount);
-    // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
-    // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
-    // chunk in minimum size of numcolumns
-    if((gcount%(gcountmod(numcolumns))==0)||(gcount==(long long int)totalzones*(long long int)numcolumns)){
-      // ok, so numcolumns can't exceed the buffer size, highly unlikely to happen, and checked for!
-      if(myid==0){
-	// must do in order determined to have data, not numerical order
-	for(itercpu=0;itercpu<numcpusinlist0;itercpu++){
-	  lcpu=cpulist0[itercpu];
-	  if(lcountfor0[lcpu]>0){
-	    if(itercpu==0){ // first cpu in list
-	      ri=li0[lcpu];
-	      rj=lj0[lcpu];
-	      rk=lk0[lcpu];
-	      rcol=lcol0[lcpu];
-	    }
-	    if(firstlinkfor0){
-	      linkptrfor0=linkptr0for0=addlink(NULL);
-	      firstlinkfor0=0;
-	    }
-	    else{
-	      linkptrfor0=addlink(linkptrfor0);
-	    }
-	    linkptrfor0->cpu=lcpu;
-	    linkptrfor0->num=lcountfor0[lcpu];
-	    linkptrfor0->i=li0[lcpu];
-	    linkptrfor0->j=lj0[lcpu];
-	    linkptrfor0->k=lk0[lcpu];
-	    linkptrfor0->col=lcol0[lcpu];
-	    linkptrfor0->ri=ri;
-	    linkptrfor0->rj=rj;
-	    linkptrfor0->rk=rk;
-	    linkptrfor0->rcol=rcol;
-	    linkptrfor0->end=0;
-	    
-	    lcountfor0[lcpu]=0; // reset counter for this id
-	    firstlijk[lcpu]=1; // reset starting value
-	  }
-	  else{
-	    dualfprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
-	    myexit(10020);
-	  }
-	}
-	// the last link is here identified as the last in the series of cpus to communicate with.  There's at least one new link here!
-	linkptrfor0->end=1;
-	numcpusinlist0=0; // reset list of cpus for this list
-      }
-      if(lcount>0){
-	logfprintf("numcolumns=%d lcount=%lld\n",numcolumns,lcount); 
-        // initialize another structure
-        // set previous structure value to this structure, set this next one to NULL
-        if(firstlink){
-          clinkptr=clinkptr0=addlink(NULL);
-	  clinkptr->num=lcount;
-          firstlink=0;
-        }
-        else{
-          clinkptr=addlink(clinkptr);
-	  clinkptr->num=lcount;
-        }
-        lcount=0;
-      }
-    }// otherwise continue
-  }      // now we have a link list for each cpu that determines how long each next buffer is that needs to be sent to cpu=0
+          // relative local index
+          li=i%N1;
+          lj=j%N2;
+          lk=k%N3;
+          // cpu position number
+          pi=(i/(long long int)N1);
+          pj=(j/(long long int)N2);
+          pk=(k/(long long int)N3);
+          // cpu id for this data
+          pid=pk*ncpux2*ncpux1+pj*ncpux1+pi;
+          if(myid==pid) lcount++;
+          if(myid==0){
+            lcountfor0[pid]++;
+            // below is if we have need this cpu's data (pid) and need to mark starting point on full grid
+            if(firstlijk[pid]){
+              cpulist0[numcpusinlist0++]=pid;
+              li0[pid]=i;
+              lj0[pid]=j;
+              lk0[pid]=k;
+              lcol0[pid]=col;
+              if(col!=0){
+                dualfprintf(fail_file,"col!=0 col=%lld, so chunking bad: numcolumns=%d which=%d\n",col,numcolumns,which);
+                myexit(10019);
+              }
+              firstlijk[pid]=0;
+            }
+          }
+          gcount++;
+          //    if(myid==0){
+          //  dualfprintf(fail_file,"%lld %lld %lld %lld\n",numcpusinlist0,gcount,pid,cpulist0[numcpusinlist0]); fflush(fail_file);
+          // }
+          //    logfprintf("%lld %lld %lld %lld %lld %lld %lld %lld\n",li,lj,lk,pi,pj,pk,pid,lcount,gcount);
+          // 1st below if is to catch every buffer amount, while 2nd if part is needed to account for when the number of buffers is such that the last buffer isn't completely needed
+          // this should work for any numcolumns or NUMBUFFERS, even at very last zone no matter what
+          // chunk in minimum size of numcolumns
+          if((gcount%(gcountmod(numcolumns))==0)||(gcount==(long long int)totalzones*(long long int)numcolumns)){
+            // ok, so numcolumns can't exceed the buffer size, highly unlikely to happen, and checked for!
+            if(myid==0){
+              // must do in order determined to have data, not numerical order
+              for(itercpu=0;itercpu<numcpusinlist0;itercpu++){
+                lcpu=cpulist0[itercpu];
+                if(lcountfor0[lcpu]>0){
+                  if(itercpu==0){ // first cpu in list
+                    ri=li0[lcpu];
+                    rj=lj0[lcpu];
+                    rk=lk0[lcpu];
+                    rcol=lcol0[lcpu];
+                  }
+                  if(firstlinkfor0){
+                    linkptrfor0=linkptr0for0=addlink(NULL);
+                    firstlinkfor0=0;
+                  }
+                  else{
+                    linkptrfor0=addlink(linkptrfor0);
+                  }
+                  linkptrfor0->cpu=lcpu;
+                  linkptrfor0->num=lcountfor0[lcpu];
+                  linkptrfor0->i=li0[lcpu];
+                  linkptrfor0->j=lj0[lcpu];
+                  linkptrfor0->k=lk0[lcpu];
+                  linkptrfor0->col=lcol0[lcpu];
+                  linkptrfor0->ri=ri;
+                  linkptrfor0->rj=rj;
+                  linkptrfor0->rk=rk;
+                  linkptrfor0->rcol=rcol;
+                  linkptrfor0->end=0;
+            
+                  lcountfor0[lcpu]=0; // reset counter for this id
+                  firstlijk[lcpu]=1; // reset starting value
+                }
+                else{
+                  dualfprintf(fail_file,"wtf: shoudn't be here.  Maybe passed more CPUs to batch system (mpirun) than passed to code?\n");
+                  myexit(10020);
+                }
+              }
+              // the last link is here identified as the last in the series of cpus to communicate with.  There's at least one new link here!
+              linkptrfor0->end=1;
+              numcpusinlist0=0; // reset list of cpus for this list
+            }
+            if(lcount>0){
+              logfprintf("numcolumns=%d lcount=%lld\n",numcolumns,lcount); 
+              // initialize another structure
+              // set previous structure value to this structure, set this next one to NULL
+              if(firstlink){
+                clinkptr=clinkptr0=addlink(NULL);
+                clinkptr->num=lcount;
+                firstlink=0;
+              }
+              else{
+                clinkptr=addlink(clinkptr);
+                clinkptr->num=lcount;
+              }
+              lcount=0;
+            }
+          }// otherwise continue
+        }      // now we have a link list for each cpu that determines how long each next buffer is that needs to be sent to cpu=0
   blinkptr0[which]=clinkptr0;
   cpulinkptr0[which]=linkptr0for0;
 

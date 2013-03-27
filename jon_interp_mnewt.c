@@ -124,7 +124,7 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
     }
     else{ // estimate error normally
       errf = 0.0;
-      for (i = 1; i <= n; i++)	errf += fabs(fvec[i]);
+      for (i = 1; i <= n; i++)  errf += fabs(fvec[i]);
       errf/=normf; // renormalize since truly U (conserved quantity) has no better significance than this error
 
       if (errf <= abstolhard) lowtol[1]=2;
@@ -145,18 +145,18 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
       dampdeath=0;
       // how hard do we want to make the code try for the highest precision (damping)?
       if((dampfactor<1E-5)&&(errf<tolf*100.0)){
-	// then we'll assume this is good enough and any smaller dampfactor won't get us much less error
-	dampdeath=1;
+        // then we'll assume this is good enough and any smaller dampfactor won't get us much less error
+        dampdeath=1;
       }
       else if(dampfactor<1E-7){
-	if(debugfail>=1){
-	  dualfprintf(fail_file,"mnewt: ok, we really need something better\n: dampfactor: %g errf: %g\n",dampfactor,errf);	
-	}
-	dampdeath=1; // let the bottom non-convergence criterea handle things
+        if(debugfail>=1){
+          dualfprintf(fail_file,"mnewt: ok, we really need something better\n: dampfactor: %g errf: %g\n",dampfactor,errf);     
+        }
+        dampdeath=1; // let the bottom non-convergence criterea handle things
       }
       if(dampdeath==0){
-	for (i = 1; i <= n; i++)	x[i]=xold[i];
-	k--; // want absolute number of trials to be fixed
+        for (i = 1; i <= n; i++)        x[i]=xold[i];
+        k--; // want absolute number of trials to be fixed
       }
     }
     else{
@@ -173,20 +173,20 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
       // save old x to go back to it
       for (i = 1; i <= n; i++) xold[i]=x[i]; 
       
-      for (i = 1; i <= n; i++)	pp[i] = -fvec[i];
+      for (i = 1; i <= n; i++)  pp[i] = -fvec[i];
       ludcmp(fjac, n, indx, &d);
       lubksb(fjac, n, indx, pp);
       // DAMP (faster to damp every other one)
       // 
-      if(DODAMP) for (i = 1; i <= n; i++)	pp[i] = dampfactor*pp[i];
+      if(DODAMP) for (i = 1; i <= n; i++)       pp[i] = dampfactor*pp[i];
 
       ///////
       // evaluate x error (already properly normalized since directly what we seek)
       ///////
       errx = 0.0;
       for (i = 1; i <= n; i++) {
-	errx += fabs(pp[i]);
-	x[i] += pp[i];
+        errx += fabs(pp[i]);
+        x[i] += pp[i];
       }
 
       if (errx <= abstolhard) lowtol[0]=2;
@@ -228,20 +228,20 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
 #if(DEBUG)
   if (lastnstep < nstep) {
     logfprintf("#1 count/zone: %g calls: %g\n",
-	    ((FTYPE) count) / ((FTYPE) (N1 * N2)),
-	    ((FTYPE)calls) / ((FTYPE)(N1 * N2)));
+               ((FTYPE) count) / ((FTYPE) (N1 * N2)),
+               ((FTYPE)calls) / ((FTYPE)(N1 * N2)));
     logfprintf("count: %ld zones: %d calls: %ld\n",
-	    count,N1 * N2,calls);
+               count,N1 * N2,calls);
     /*
       myfprintf(stderr,"count: %ld zones: %d calls: %d\n",
       count,totalzones,calls);
     */
     myfprintf(logfull_file,"#1 count/zone: %g calls: %g\n",
-	      ((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
-							calls) / ((FTYPE)(totalzones)));
+              ((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
+                                                        calls) / ((FTYPE)(totalzones)));
     myfprintf(stderr,"#1 count/zone: %g calls: %g\n",
-	      ((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
-							calls) / ((FTYPE)(totalzones)));
+              ((FTYPE) count) / ((FTYPE) (totalzones)),((FTYPE)
+                                                        calls) / ((FTYPE)(totalzones)));
     count = (long)(k - 1);
     lastnstep = nstep;
     calls = 0;

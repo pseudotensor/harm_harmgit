@@ -453,7 +453,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #endif
 
 
-// need not change below datatype stuff
+  // need not change below datatype stuff
 #if(REALTYPE==FLOATTYPE)
 #define MINNUMREPRESENT FLT_MIN
 #define NUMEPSILON FLT_EPSILON
@@ -474,12 +474,12 @@ god=deathadflkjasdflkjasdlfkja242424
 #endif
 
 
-// used for numerical differencing
+  // used for numerical differencing
 #define NUMSQRTEPSILON (sqrt(NUMEPSILON))
 #define NUMSQEPSILON (NUMEPSILON*NUMEPSILON)
 
-// for finite differences.
-// If one uses (say) 1E-5 for DX and has (Vh-Vl)/(Xh-Xl), then even if Xh-Xl is machine representable, Xh and Xl may not be.
+  // for finite differences.
+  // If one uses (say) 1E-5 for DX and has (Vh-Vl)/(Xh-Xl), then even if Xh-Xl is machine representable, Xh and Xl may not be.
 #define MY1EM5 (1.0/(2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0)) // 1/2^{17} \approx 7.6E-6\sim 1E-5.
 
 #define MY1EM6 (1.0/(2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0)) // 1/2^{20} \approx 7.6E-6\sim 1E-6.
@@ -508,20 +508,20 @@ god=deathadflkjasdflkjasdlfkja242424
 #endif
 
 
-// GODMARK: NUMENERVAR outdated?
+  // GODMARK: NUMENERVAR outdated?
 #define NUMENERVAR (6+NPR+NPR+3)
 
 
-/* numerical convenience */
+  /* numerical convenience */
 #if(REALTYPE==FLOATTYPE)
 #define VERYBIG (1.e37)
 #define BIG (1.e+30)
-#define SMALL	(1.e-35)
+#define SMALL   (1.e-35)
 #define KINDASMALL (1.e-30)
 #else
 #define VERYBIG (1.e150)
 #define BIG (1.e+100)
-#define SMALL	(1.e-300)
+#define SMALL   (1.e-300)
 #define KINDASMALL (1.e-100)
 #endif
 
@@ -529,15 +529,15 @@ god=deathadflkjasdflkjasdlfkja242424
 #define SLEPSILON (1.e-6)
 
 
-/* size of step in numerical derivative evaluations */
-#define HSTEP	(1.e-5)
+  /* size of step in numerical derivative evaluations */
+#define HSTEP   (1.e-5)
 
 
 
 
 #if(SENSITIVE==LONGDOUBLETYPE)
 #define SFTYPEHEADERONEIN "%Lf"
-// assume sensitive>=realtype in precision
+  // assume sensitive>=realtype in precision
 #if(REALTYPE==LONGDOUBLETYPE) // was FLOATTYPE==REALTYPE and SENS=DOUBLETYPE
 #define HEADERONEIN "%Lf"
 #define HEADER2IN "%Lf %Lf"
@@ -552,12 +552,12 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER17IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER18IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
-#define RESTARTHEADER "%d %d %d "\
-	      "%Lf %Lf %ld %Lf %Lf %Lf %Lf %Lf "\
-	      "%Lf %d %d %d %d %d %d %d %d "\
-	      "%Lf %Lf %Lf %Lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%Lf %Lf %ld %Lf %Lf %Lf %Lf %Lf "                                  \
+    "%Lf %d %d %d %d %d %d %d %d "                                      \
+    "%Lf %Lf %Lf %Lf %d "                                               \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #elif(REALTYPE==DOUBLETYPE)
 #define HEADERONEIN "%lf"
 #define HEADER2IN "%lf %lf"
@@ -572,12 +572,12 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER17IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER18IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
-#define RESTARTHEADER "%d %d %d "\
-	      "%Lf %Lf %ld %Lf %Lf %Lf %lf %lf "\
-	      "%Lf %d %d %d %d %d %d %d %d "\
-	      "%lf %lf %lf %lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%Lf %Lf %ld %Lf %Lf %Lf %lf %lf "                                  \
+    "%Lf %d %d %d %d %d %d %d %d "                                      \
+    "%lf %lf %lf %lf %d "                                               \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #elif(REALTYPE==FLOATTYPE)
 #define HEADERONEIN "%f"
 #define HEADER2IN "%f %f"
@@ -592,17 +592,17 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADER "%d %d %d "\
-	      "%Lf %Lf %ld %Lf %Lf %Lf %f %f "\
-	      "%Lf %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%Lf %Lf %ld %Lf %Lf %Lf %f %f "                                    \
+    "%Lf %d %d %d %d %d %d %d %d "                                      \
+    "%f %f %f %f %d "                                                   \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #elif(SENSITIVE==DOUBLETYPE)
 #define SFTYPEHEADERONEIN "%lf"
-// assume sensitive>=realtype in precision
+  // assume sensitive>=realtype in precision
 #if(REALTYPE==DOUBLETYPE)
 #define HEADERONEIN "%lf"
 #define HEADER2IN "%lf %lf"
@@ -617,12 +617,12 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER17IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER18IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
-#define RESTARTHEADER "%d %d %d "\
-	      "%lf %lf %ld %lf %lf %lf %lf %lf "\
-	      "%lf %d %d %d %d %d %d %d %d "\
-	      "%lf %lf %lf %lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%lf %lf %ld %lf %lf %lf %lf %lf "                                  \
+    "%lf %d %d %d %d %d %d %d %d "                                      \
+    "%lf %lf %lf %lf %d "                                               \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #elif(REALTYPE==FLOATTYPE)
 #define HEADERONEIN "%f"
 #define HEADER2IN "%f %f"
@@ -637,12 +637,12 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADER "%d %d %d "\
-	      "%lf %lf %ld %lf %lf %lf %f %f "\
-	      "%lf %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%lf %lf %ld %lf %lf %lf %f %f "                                    \
+    "%lf %d %d %d %d %d %d %d %d "                                      \
+    "%f %f %f %f %d "                                                   \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #elif(SENSITIVE==FLOATTYPE)
@@ -664,32 +664,32 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADER "%d %d %d "\
-	      "%f %f %ld %f %f %f %f %f "\
-	      "%f %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADER "%d %d %d "                                       \
+    "%f %f %ld %f %f %f %f %f "                                         \
+    "%f %d %d %d %d %d %d %d %d "                                       \
+    "%f %f %f %f %d "                                                   \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #endif
 
 
-// 2
-// 6
-// 10
-// 3
-// 5
-// 4
-// SUM=30
-// 23+10=33
-// total=63
-#define WRITERESTARTHEADER "%lld %lld %lld " \
-		 "%26.20g %26.20g %ld %26.20g %26.20g %26.20g %26.20g %26.20g " \
-		 "%26.20g %d %d %d %d %d %d %d %d " \
-		 "%26.20g %26.20g %26.20g %26.20g %d " \
-                 "%d %d %d %d %d %d " \
-                 "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g "
+  // 2
+  // 6
+  // 10
+  // 3
+  // 5
+  // 4
+  // SUM=30
+  // 23+10=33
+  // total=63
+#define WRITERESTARTHEADER "%lld %lld %lld "                            \
+    "%26.20g %26.20g %ld %26.20g %26.20g %26.20g %26.20g %26.20g "      \
+    "%26.20g %d %d %d %d %d %d %d %d "                                  \
+    "%26.20g %26.20g %26.20g %26.20g %d "                               \
+    "%d %d %d %d %d %d "                                                \
+    "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g "
 
 #define HEADERONEOUT "%26.20g"
 #define SFTYPEHEADERONEOUT "%31.26g"

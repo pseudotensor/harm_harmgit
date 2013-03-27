@@ -1,7 +1,7 @@
 
 /* 
  *
-  NS disk or not and various NS field setups
+ NS disk or not and various NS field setups
  *
  *
  */
@@ -18,7 +18,7 @@
 
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0             /* reduce u_phi by this amount */
 
 SFTYPE rhomaxold,umaxold,rhomax=0,umax=0,bsq_max=0,beta,rin;
 
@@ -373,14 +373,14 @@ int init_global(void)
   /* output choices */
 
   // SUPERGODMARK
-  //DTd = 1E-5;			/* dumping frequency, in units of M */
-  DTd = 5.0;			/* dumping frequency, in units of M */
+  //DTd = 1E-5;                 /* dumping frequency, in units of M */
+  DTd = 5.0;                    /* dumping frequency, in units of M */
   DTavg = DTd;
-  DTener = 2.0;			/* logfile frequency, in units of M */
-  DTi = 2.0;			/* image file frequ., in units of M */
+  DTener = 2.0;                 /* logfile frequency, in units of M */
+  DTi = 2.0;                    /* image file frequ., in units of M */
   DTdebug = DTd; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
-  DTr = 100;			/* restart file period in steps */
+  DTr = 100;                    /* restart file period in steps */
 
   return(0);
 
@@ -465,7 +465,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel,whichcoord,MAC(p,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
   }
 
@@ -496,7 +496,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel, whichcoord,MAC(p,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
   }
 #endif
@@ -507,7 +507,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
   // copy over initial solution as analytic solution
   // SET ANALYTIC SOLUTION FROM vector potential-based solution
   // NEEDED FOR BOUND in case uses panalytic
- COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND){
+  COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND){
     PLOOP(pliter,pl) MACP0A1(panalytic,i,j,k,pl)=MACP0A1(p,i,j,k,pl);
 
     // 0 out these things so dump files are readable by SM
@@ -563,11 +563,11 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 
 
   trifprintf("Initialize field from vector potential\n");
- COMPFULLLOOPP1{
+  COMPFULLLOOPP1{
     for(l=1;l<=3;l++) MACP1A0(A,l,i,j,k) = 0.;
   }
 
- COMPFULLLOOPP1{
+  COMPFULLLOOPP1{
     // GODMARK: Caution: Possible to use quantity off grid
     // (e.g. density) to define lower corner value of A, which then
     // defines B at center for lower cells.
@@ -582,7 +582,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 
   // copy over initial solution as analytic solution
   // SET ANALYTIC SOLUTION FROM vector potential-based solution
- COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND) PLOOP(pliter,pl){
+  COMPZSLOOP(-N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND) PLOOP(pliter,pl){
     MACP0A1(panalytic,i,j,k,pl)=MACP0A1(p,i,j,k,pl);
   }
 
@@ -718,24 +718,24 @@ int init_donut(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr)
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * a * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
@@ -1062,65 +1062,65 @@ int init_vpot_V(int l, struct of_geom *geom, FTYPE *V, FTYPE (*prim)[NSTORE2][NS
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)||(FIELDTYPE==DISKDIPOLE)){
       if(DISKTYPE==DONUTDISK){ // single loop
-	// average of density that lives on CORN3
-	
-	
-	// since init_vpot() is called for all i,j,k, can't use
-	// non-existence values, so limit averaging:
-	if((i==-N1BND)&&(j==-N2BND)){
-	  rho_av = MACP0A1(p,i,j,k,RHO);
-	  u_av = MACP0A1(p,i,j,k,UU);
-	}
-	else if(i==-N1BND){
-	  rho_av = AVGN_2(p,i,j,k,RHO);
-	  u_av = AVGN_2(p,i,j,k,UU);
-	}
-	else if(j==-N2BND){
-	  rho_av = AVGN_1(p,i,j,k,RHO);
-	  u_av = AVGN_1(p,i,j,k,UU);
-	}
-	else{ // normal cells
-	  rho_av = AVGN_for3(p,i,j,k,RHO);
-	  u_av = AVGN_for3(p,i,j,k,UU);
-	}
-	
-	q = rho_av / rhomax - 0.2;
-	
-	//	if (q > 0.)      *A += q;
-	
-	//if (q > 0.)      *A += q*sqrt(2.0*(gam-1.0)*u_av/beta);
-	if (q > 0.)      *A += q*sqrt(2.0*10.0/beta);
+        // average of density that lives on CORN3
+        
+        
+        // since init_vpot() is called for all i,j,k, can't use
+        // non-existence values, so limit averaging:
+        if((i==-N1BND)&&(j==-N2BND)){
+          rho_av = MACP0A1(p,i,j,k,RHO);
+          u_av = MACP0A1(p,i,j,k,UU);
+        }
+        else if(i==-N1BND){
+          rho_av = AVGN_2(p,i,j,k,RHO);
+          u_av = AVGN_2(p,i,j,k,UU);
+        }
+        else if(j==-N2BND){
+          rho_av = AVGN_1(p,i,j,k,RHO);
+          u_av = AVGN_1(p,i,j,k,UU);
+        }
+        else{ // normal cells
+          rho_av = AVGN_for3(p,i,j,k,RHO);
+          u_av = AVGN_for3(p,i,j,k,UU);
+        }
+        
+        q = rho_av / rhomax - 0.2;
+        
+        //      if (q > 0.)      *A += q;
+        
+        //if (q > 0.)      *A += q*sqrt(2.0*(gam-1.0)*u_av/beta);
+        if (q > 0.)      *A += q*sqrt(2.0*10.0/beta);
 
 
       }
       else if(DISKTYPE==KEPDISK){ // multiple loops
-	// in MPI, don't have "equatorial value" for all cpus so easily, so just compute it
-	// just replaced R with r and remaining th with Pi/2
-	H = h_over_r*r ;
-	nz = nz_func(r) ;
-	z = 0.0 ;
-	S = 1./(H*H*nz) ;
-	cs = H*nz ;
-	
-	rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H))* taper_func(r,rin) ;
-	u_ref = rho*cs*cs/(gam - 1.) ;
-	//	u_ref/=rhomaxold; // SUPERGODMARK?
-	/*
-	  u_ref = 0.25*(
-	  MAC(p,i,N2/2,UU) +
-	  MAC(p,i-1,N2/2,UU) +
-	  MAC(p,i,N2/2-1,UU) +
-	  MAC(p,i-1,N2/2-1,UU)) ;
-	*/
+        // in MPI, don't have "equatorial value" for all cpus so easily, so just compute it
+        // just replaced R with r and remaining th with Pi/2
+        H = h_over_r*r ;
+        nz = nz_func(r) ;
+        z = 0.0 ;
+        S = 1./(H*H*nz) ;
+        cs = H*nz ;
+        
+        rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H))* taper_func(r,rin) ;
+        u_ref = rho*cs*cs/(gam - 1.) ;
+        //      u_ref/=rhomaxold; // SUPERGODMARK?
+        /*
+          u_ref = 0.25*(
+          MAC(p,i,N2/2,UU) +
+          MAC(p,i-1,N2/2,UU) +
+          MAC(p,i,N2/2-1,UU) +
+          MAC(p,i-1,N2/2-1,UU)) ;
+        */
 #define STARTFIELD (1.1*rin)
-	
-	if(r > STARTFIELD) q = ((u_av/u_ref) - 0.2)*pow(r,0.25) ;
-	else q = 0. ;
-	
-	if(q > 0.){
-	  *A += q*q*sin(log(r/STARTFIELD)/fieldhor)*taper_func(r,STARTFIELD);
-	  //trifprintf("%d %d u_ref=%g A=%g\n",i,j,u_ref,A[i][j]);
-	}
+        
+        if(r > STARTFIELD) q = ((u_av/u_ref) - 0.2)*pow(r,0.25) ;
+        else q = 0. ;
+        
+        if(q > 0.){
+          *A += q*q*sin(log(r/STARTFIELD)/fieldhor)*taper_func(r,STARTFIELD);
+          //trifprintf("%d %d u_ref=%g A=%g\n",i,j,u_ref,A[i][j]);
+        }
       }
     }
 
@@ -1482,7 +1482,7 @@ void set_analytical_face(void)
     dxdxprim(X, V, dxdxp);
 
     init_nodisk(FACE1, &whichvel, &whichcoord, i, j, k, prtemp);
-      //    set_density_floors(&geom,prtemp,prtemp);
+    //    set_density_floors(&geom,prtemp,prtemp);
     GLOBALMACP1A0(pother,RHOFACE1,i,j,k)=prtemp[RHO];
 
   }
@@ -1566,15 +1566,15 @@ int normalize_field(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
       th=V[2];
       
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
-	if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
-	  FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-	
-	if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
+        if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
+          FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        
+        if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
       }
     }
     else{
       if (bsq_calc(MAC(p,i,j,k), &geom, &bsq_ij) >= 1)
-	FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
       
       if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
     }
@@ -1619,36 +1619,36 @@ int normalize_field(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow
-								     (r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow
+                                                                     (r,
+                                                                      1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 
 FTYPE nz_func(FTYPE R)
 {
   return(
-	 sqrt(
-	      (3.*a*a - 4.*a*sqrt(R) + R*R)/
-	      pow(R*(a + pow(R,1.5)),2)
-	      )
-	 ) ;
+         sqrt(
+              (3.*a*a - 4.*a*sqrt(R) + R*R)/
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }

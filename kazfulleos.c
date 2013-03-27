@@ -138,13 +138,13 @@ static int get_eos_fromtable(int whichtablesubtype, int *iffun, int whichd, FTYP
     // now get extrapolation
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
-	if(badlookups1[coli]==0 && badlookups2[coli]==0){
-	  badlookups[coli]=0;
-	  answers[coli] = answers1[coli]*(quant1temp2-quant1) + answers2[coli]*(quant1-quant1temp1);
-	  // apply divisor
-	  answers[coli] =  answers[coli]*divisor;
-	}
-	else badlookups[coli]=1; // indicate one of extrapolated versions was bad lookup
+        if(badlookups1[coli]==0 && badlookups2[coli]==0){
+          badlookups[coli]=0;
+          answers[coli] = answers1[coli]*(quant1temp2-quant1) + answers2[coli]*(quant1-quant1temp1);
+          // apply divisor
+          answers[coli] =  answers[coli]*divisor;
+        }
+        else badlookups[coli]=1; // indicate one of extrapolated versions was bad lookup
       }// end iffun
     }// end over coli
 
@@ -369,9 +369,9 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
     for(coli=0;coli<numcols;coli++){
       // check if already got the function wanted
       if(repeatedfun[firsteos+coli] && iffun[coli]){
-	// choice of table irrelevant if already found solution
-	answers[coli]=resultold[firsteos+coli];
-	badlookups[coli]=0; // no longer need to get this one
+        // choice of table irrelevant if already found solution
+        answers[coli]=resultold[firsteos+coli];
+        badlookups[coli]=0; // no longer need to get this one
       }
     }
 
@@ -397,48 +397,48 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
       
       // check if previously did get table result and previously used degeneracy and non-degeneracy tables fell within same table type (full, simple, simplezoom)
       if(whichtable[isextratype][whichd][ISNOTDEGENTABLE]==NOTABLE || whichtable[isextratype][whichd][ISDEGENTABLE]!=whichtable[isextratype][whichd][ISNOTDEGENTABLE]){
-	diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	if(debugfail>=2){
-	  dualfprintf(fail_file,"Stilltoget, but tables not consistent or bad: i=%d j=%d k=%d notdegen=%d degen=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichtable[isextratype][whichd][ISDEGENTABLE],whichtable[isextratype][whichd][ISNOTDEGENTABLE]);
-	  for(coli=0;coli<numcols;coli++){
-	    if(iffun[coli] && badlookups[coli]==1){
-	      dualfprintf(fail_file,"Stilltoget: whichtablesubtype=%d coli=%d\n",whichtablesubtype,coli);
-	    }
-	  }
-	}
-	// badlookups[all coli] will remain for all bad ones
-	// return now since nothing else to do
-	return(0); // but not hard failure
+        diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+        if(debugfail>=2){
+          dualfprintf(fail_file,"Stilltoget, but tables not consistent or bad: i=%d j=%d k=%d notdegen=%d degen=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichtable[isextratype][whichd][ISDEGENTABLE],whichtable[isextratype][whichd][ISNOTDEGENTABLE]);
+          for(coli=0;coli<numcols;coli++){
+            if(iffun[coli] && badlookups[coli]==1){
+              dualfprintf(fail_file,"Stilltoget: whichtablesubtype=%d coli=%d\n",whichtablesubtype,coli);
+            }
+          }
+        }
+        // badlookups[all coli] will remain for all bad ones
+        // return now since nothing else to do
+        return(0); // but not hard failure
       }
       else{
-	// DEBUG:
-	//if(debugfail>=2) dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
-	//if(debugfail>=2) dualfprintf(fail_file,"CHECKLOOKUP:(repeated) %d %d %d : %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichdegen,whichfun);
+        // DEBUG:
+        //if(debugfail>=2) dualfprintf(fail_file,"REPEATFROMLOOKUP\n"); // DEBUG
+        //if(debugfail>=2) dualfprintf(fail_file,"CHECKLOOKUP:(repeated) %d %d %d : %d %d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL],whichdegen,whichfun);
 
 
-	// tell get_eos_fromlookup() which functions to try and get.  Better than having to look at badlookups inside get_eos_fromlookup()
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]&&badlookups[coli]) localiffun[coli]=1; else localiffun[coli]=0;
+        // tell get_eos_fromlookup() which functions to try and get.  Better than having to look at badlookups inside get_eos_fromlookup()
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]&&badlookups[coli]) localiffun[coli]=1; else localiffun[coli]=0;
 
-	// do lookup directly using old indexarray that is valid since independents unchanged
-	failreturn += get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[isextratype][whichd][whichdegen], whichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray[isextratype][whichd], myanswers[whichdegen],badlookups);
+        // do lookup directly using old indexarray that is valid since independents unchanged
+        failreturn += get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[isextratype][whichd][whichdegen], whichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray[isextratype][whichd], myanswers[whichdegen],badlookups);
 
-	// see if good lookup
-	for(coli=0;coli<numcols;coli++){
-	  if(localiffun[coli]){ // only look at new coli's
-	    if(badlookups[coli]){
-	      diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	      if(debugfail>=2) dualfprintf(fail_file,"Repeated lookup got no valid lookup in table: i=%d j=%d k=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]); // actually bad failure
-	    } // end if bad lookup
-	    else{
-	      // setup return of answer
-	      answers[coli]=myanswers[whichdegen][coli];
+        // see if good lookup
+        for(coli=0;coli<numcols;coli++){
+          if(localiffun[coli]){ // only look at new coli's
+            if(badlookups[coli]){
+              diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+              if(debugfail>=2) dualfprintf(fail_file,"Repeated lookup got no valid lookup in table: i=%d j=%d k=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]); // actually bad failure
+            } // end if bad lookup
+            else{
+              // setup return of answer
+              answers[coli]=myanswers[whichdegen][coli];
 
-	      // now save result if got result so can use next time
-	      resultold[firsteos+coli]=myanswers[whichdegen][coli];
-	      repeatedfun[firsteos+coli]=1;
-	    }// end else if good lookup
-	  }// end localiffun==1
-	}// end over coli
+              // now save result if got result so can use next time
+              resultold[firsteos+coli]=myanswers[whichdegen][coli];
+              repeatedfun[firsteos+coli]=1;
+            }// end else if good lookup
+          }// end localiffun==1
+        }// end over coli
 
       }// end else if correct table and did previously get a result from table
     }// end if still quantity to get
@@ -491,12 +491,12 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
       //
       //////////////
       if(whichdegen==ISNOTDEGENTABLE){
-	localnumcols=numcols;
-	for(coli=0;coli<localnumcols;coli++) if(iffun[coli]&&badlookups[coli]){ localwhichtablesubtype=whichtablesubtype; localiffun[coli]=1; localbadlookups[coli]=1;} else { localwhichtablesubtype=whichtablesubtype; localiffun[coli]=0; localbadlookups[coli]=0;}
+        localnumcols=numcols;
+        for(coli=0;coli<localnumcols;coli++) if(iffun[coli]&&badlookups[coli]){ localwhichtablesubtype=whichtablesubtype; localiffun[coli]=1; localbadlookups[coli]=1;} else { localwhichtablesubtype=whichtablesubtype; localiffun[coli]=0; localbadlookups[coli]=0;}
       }
       else{
-	localnumcols=get_numcols(whichtable[isextratype][whichd][whichdegen],SUBTYPEDEGEN);
-	for(coli=0;coli<localnumcols;coli++) {localwhichtablesubtype=SUBTYPEDEGEN; localiffun[coli]=1; localbadlookups[coli]=1;}
+        localnumcols=get_numcols(whichtable[isextratype][whichd][whichdegen],SUBTYPEDEGEN);
+        for(coli=0;coli<localnumcols;coli++) {localwhichtablesubtype=SUBTYPEDEGEN; localiffun[coli]=1; localbadlookups[coli]=1;}
       }
 
 
@@ -511,97 +511,97 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
 
       // check if got a table, and if so then use it, otherwise return(1) and assume using off-table values
       if(whichtable[isextratype][whichd][whichdegen]==NOTABLE){
-	if(debugfail>=3){
-	  dualfprintf(fail_file,"subtype=%d whichtable=%d : whichd=%d whichdegen=%d :: ig=%d jg=%d kg=%d\n",whichtablesubtype,whichtable[isextratype][whichd][whichdegen],whichd,whichdegen,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	  for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) dualfprintf(fail_file,"qarray[%d]=%21.15g\n",qi,qarray[qi]);
-	  for(coli=0;coli<localnumcols;coli++) if(iffun[coli]) dualfprintf(fail_file,"coli=%d bad=%d\n",coli,badlookups[coli]);
-	}
-	diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	if(debugfail>=2) dualfprintf(fail_file,"qarray not within table: i=%d j=%d k=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	// badlookups will be used since didn't change to 0
-	// return now since nothing else to do
-	return(0); // but not hard failure
+        if(debugfail>=3){
+          dualfprintf(fail_file,"subtype=%d whichtable=%d : whichd=%d whichdegen=%d :: ig=%d jg=%d kg=%d\n",whichtablesubtype,whichtable[isextratype][whichd][whichdegen],whichd,whichdegen,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+          for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) dualfprintf(fail_file,"qarray[%d]=%21.15g\n",qi,qarray[qi]);
+          for(coli=0;coli<localnumcols;coli++) if(iffun[coli]) dualfprintf(fail_file,"coli=%d bad=%d\n",coli,badlookups[coli]);
+        }
+        diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+        if(debugfail>=2) dualfprintf(fail_file,"qarray not within table: i=%d j=%d k=%d\n",(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+        // badlookups will be used since didn't change to 0
+        // return now since nothing else to do
+        return(0); // but not hard failure
 
       }
       else{
 
-	// check that degen and normal table resolved to same table, since can't use degen value from one table to get values from another table
-	if(whichdegen==whichdegenend){
+        // check that degen and normal table resolved to same table, since can't use degen value from one table to get values from another table
+        if(whichdegen==whichdegenend){
 
-	  if(whichtable[isextratype][whichd][ISNOTDEGENTABLE]==NOTABLE || whichtable[isextratype][whichd][ISNOTDEGENTABLE]!=whichtable[isextratype][whichd][ISDEGENTABLE]){
-	    diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	    if(debugfail>=2) dualfprintf(fail_file,"Degen and normal table selections different: normal=%d degen=%d i=%d j=%d k=%d\n",whichtable[isextratype][whichd][ISNOTDEGENTABLE],whichtable[isextratype][whichd][ISDEGENTABLE],(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	    // badlookups will be used since didn't change to 0
-	    // return now since nothing else to do
-	    return(0); // but not hard failure
-	  }
-	}
-
-
-
-	////////////
-	//
-	// Lookup the positions: ieos,jeos,keos,leos for a given table, independent variable definition, and indep values "qarray"
-	//
-	// for whichdegen==1, below does set indexarray[][2]=0 for accessing degen table
-	//
-	////////////
-	eos_lookup_prepost_degen(whichdegen, whichtable[isextratype][whichd][whichdegen], whichindep, vartypearraylocal, qarray, indexarray[isextratype][whichd]);
+          if(whichtable[isextratype][whichd][ISNOTDEGENTABLE]==NOTABLE || whichtable[isextratype][whichd][ISNOTDEGENTABLE]!=whichtable[isextratype][whichd][ISDEGENTABLE]){
+            diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+            if(debugfail>=2) dualfprintf(fail_file,"Degen and normal table selections different: normal=%d degen=%d i=%d j=%d k=%d\n",whichtable[isextratype][whichd][ISNOTDEGENTABLE],whichtable[isextratype][whichd][ISDEGENTABLE],(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+            // badlookups will be used since didn't change to 0
+            // return now since nothing else to do
+            return(0); // but not hard failure
+          }
+        }
 
 
 
-	////////////////////////////
-	//
-	// now compute result
-	//
-	// For whichdegen==1, myanswers[whichdegen==1] then contains either {utot/ptot/chitot/stot}offset for utotdegencut==0,1 OR contains 3 quantities corressponding to {utot,ptot,chitot,stot}{0,in,out} used by eos_lookup_modify_qarray() to obtain indexed version of qarray[TEMPLIKEINDEP]
-	//
-	// For whichdegen==0, presume qarray[TEMPLIKEINDEP] correct for lookup and so lookup quantities within subtable=whichtablesubtype and lookup those quantities listed as iffun[whichfun]=1
-	//
-	////////////////////////////
-	
-
-	//////////////
-	//
-	// do either non-degen or degen lookup
-	//
-	//////////////
-	failreturn=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[isextratype][whichd][whichdegen], localwhichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray[isextratype][whichd],myanswers[whichdegen],localbadlookups);
+        ////////////
+        //
+        // Lookup the positions: ieos,jeos,keos,leos for a given table, independent variable definition, and indep values "qarray"
+        //
+        // for whichdegen==1, below does set indexarray[][2]=0 for accessing degen table
+        //
+        ////////////
+        eos_lookup_prepost_degen(whichdegen, whichtable[isextratype][whichd][whichdegen], whichindep, vartypearraylocal, qarray, indexarray[isextratype][whichd]);
 
 
-	////////////
-	//
-	// Check if bad lookup
-	//
-	////////////
-	for(coli=0;coli<localnumcols;coli++){
-	  if(localiffun[coli] && localbadlookups[coli]==1){
-	    if(debugfail>=3){
-	      dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d out of %d\n",coli,localnumcols);
-	      dualfprintf(fail_file,"subtype=%d whichtable=%d : whichd=%d whichdegen=%d :: ig=%d jg=%d kg=%d\n",whichtablesubtype,whichtable[isextratype][whichd][whichdegen],whichd,whichdegen,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	      for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) dualfprintf(fail_file,"qarray[%d]=%21.15g\n",qi,qarray[qi]);
-	    }
-	    diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
-	    if(debugfail>=2) dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d out of %d i=%d j=%d k=%d\n",coli,localnumcols,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
 
-	  }
-	}
+        ////////////////////////////
+        //
+        // now compute result
+        //
+        // For whichdegen==1, myanswers[whichdegen==1] then contains either {utot/ptot/chitot/stot}offset for utotdegencut==0,1 OR contains 3 quantities corressponding to {utot,ptot,chitot,stot}{0,in,out} used by eos_lookup_modify_qarray() to obtain indexed version of qarray[TEMPLIKEINDEP]
+        //
+        // For whichdegen==0, presume qarray[TEMPLIKEINDEP] correct for lookup and so lookup quantities within subtable=whichtablesubtype and lookup those quantities listed as iffun[whichfun]=1
+        //
+        ////////////////////////////
+        
 
-
-	// transfer over badlookups if final non-degen quantity
-	if(whichdegen==0) for(coli=0;coli<numcols;coli++) if(iffun[coli]&&badlookups[coli] && localbadlookups[coli]==0) badlookups[coli]=0;
+        //////////////
+        //
+        // do either non-degen or degen lookup
+        //
+        //////////////
+        failreturn=get_eos_fromlookup(repeatedeos,WHICHEOSDIMEN,whichdegen, whichtable[isextratype][whichd][whichdegen], localwhichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray[isextratype][whichd],myanswers[whichdegen],localbadlookups);
 
 
-	if(whichdegen==1){
-	  ////////////////////////////
-	  //
-	  // translate qarray[TEMPLIKEINDEP] from original value to value required to do final temperature-like quantity lookup
-	  //
-	  // myanswers[whichdegen] should have multiple values with utotdegencut>=2
-	  //
-	  ////////////////////////////
-	  eos_lookup_modify_qarray(whichdegen, myanswers[whichdegen],whichtable[isextratype][whichd][whichdegen],whichindep,vartypearraylocal,qarray,indexarray[isextratype][whichd]);
-	}
+        ////////////
+        //
+        // Check if bad lookup
+        //
+        ////////////
+        for(coli=0;coli<localnumcols;coli++){
+          if(localiffun[coli] && localbadlookups[coli]==1){
+            if(debugfail>=3){
+              dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d out of %d\n",coli,localnumcols);
+              dualfprintf(fail_file,"subtype=%d whichtable=%d : whichd=%d whichdegen=%d :: ig=%d jg=%d kg=%d\n",whichtablesubtype,whichtable[isextratype][whichd][whichdegen],whichd,whichdegen,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+              for(qi=FIRSTINDEPDIMEN;qi<=LASTINDEPDIMENUSED;qi++) dualfprintf(fail_file,"qarray[%d]=%21.15g\n",qi,qarray[qi]);
+            }
+            diag_eosfaillookup((int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+            if(debugfail>=2) dualfprintf(fail_file,"Looked up, but no answer within table: coli=%d out of %d i=%d j=%d k=%d\n",coli,localnumcols,(int)EOSextra[IGLOBAL],(int)EOSextra[JGLOBAL],(int)EOSextra[KGLOBAL]);
+
+          }
+        }
+
+
+        // transfer over badlookups if final non-degen quantity
+        if(whichdegen==0) for(coli=0;coli<numcols;coli++) if(iffun[coli]&&badlookups[coli] && localbadlookups[coli]==0) badlookups[coli]=0;
+
+
+        if(whichdegen==1){
+          ////////////////////////////
+          //
+          // translate qarray[TEMPLIKEINDEP] from original value to value required to do final temperature-like quantity lookup
+          //
+          // myanswers[whichdegen] should have multiple values with utotdegencut>=2
+          //
+          ////////////////////////////
+          eos_lookup_modify_qarray(whichdegen, myanswers[whichdegen],whichtable[isextratype][whichd][whichdegen],whichindep,vartypearraylocal,qarray,indexarray[isextratype][whichd]);
+        }
 
 
       } // end if whichtable!=NOTABLE and so qarray[] within some table's independent variables
@@ -611,15 +611,15 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
     // finally, normal table lookup gives answer over *all* originally desired coli's
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli] && badlookups[coli]==0){
-	answers[coli]=myanswers[ISNOTDEGENTABLE][coli];
-	// setup repeated for next time
-	resultold[firsteos+coli]=answers[coli];
-	repeatedfun[firsteos+coli]=1;
+        answers[coli]=myanswers[ISNOTDEGENTABLE][coli];
+        // setup repeated for next time
+        resultold[firsteos+coli]=answers[coli];
+        repeatedfun[firsteos+coli]=1;
 
-	// DEBUG:
-	//	if(whichtablesubtype==SUBTYPEEXTRA){
-	//	  dualfprintf(fail_file,"coli=%d answers=%21.15g\n",coli,answers[coli]);
-	//	}
+        // DEBUG:
+        //      if(whichtablesubtype==SUBTYPEEXTRA){
+        //        dualfprintf(fail_file,"coli=%d answers=%21.15g\n",coli,answers[coli]);
+        //      }
 
 
       }
@@ -651,7 +651,7 @@ static int get_eos_fromtable_noextrapolation(int whichtablesubtype, int *iffun, 
   for(coli=0;coli<numcols;coli++){
     if(iffun[coli] && badlookups[coli]==0){
       if(needspostoffset(whichd,whichtablesubtype,coli,&whichdfake)){
-	offsetquant2(-1.0,whichdfake, EOSextra, quant1, answers[coli], &answers[coli]);
+        offsetquant2(-1.0,whichdfake, EOSextra, quant1, answers[coli], &answers[coli]);
       }
     }
   }
@@ -695,11 +695,11 @@ static void reset_repeatedfun(int isextratype, int whichd, int numcols, int firs
     int subtype;
     for(subtype=0;subtype<NUMTABLESUBTYPES;subtype++){
       if(whichd==whichdintablesubtype[subtype]){
-	// then this subtype should be reset
+        // then this subtype should be reset
       
-	numcolslocal = numcolintablesubtype[subtype]; // ok use of numcolintablesubtype
-	firsteoslocal=firsteosintablesubtype[subtype];
-	for(coli=0;coli<numcolslocal;coli++) repeatedfun[firsteoslocal+coli]=0;
+        numcolslocal = numcolintablesubtype[subtype]; // ok use of numcolintablesubtype
+        firsteoslocal=firsteosintablesubtype[subtype];
+        for(coli=0;coli<numcolslocal;coli++) repeatedfun[firsteoslocal+coli]=0;
       }
     }
   }

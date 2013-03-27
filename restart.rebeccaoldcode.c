@@ -10,13 +10,13 @@
 #define HEADEROLD7IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADEROLD8IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADEROLD9IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%Lf %Lf %ld %Lf %Lf %Lf "\
-	      "%Lf %Lf %Lf %Lf %ld %Lf %ld %ld %ld %ld %ld "\
-	      "%Lf %d %d %d %d %d %d %d %d "\
-	      "%Lf %Lf %Lf %Lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%Lf %Lf %ld %Lf %Lf %Lf "                                            \
+  "%Lf %Lf %Lf %Lf %ld %Lf %ld %ld %ld %ld %ld "                        \
+  "%Lf %d %d %d %d %d %d %d %d "                                        \
+  "%Lf %Lf %Lf %Lf %d "                                                 \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #elif(REALTYPE==DOUBLETYPE)
 #define HEADEROLDONEIN "%lf"
 #define HEADEROLD2IN "%lf %lf"
@@ -27,13 +27,13 @@
 #define HEADEROLD7IN "%lf %lf %lf %lf %lf %lf %lf"
 #define HEADEROLD8IN "%lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADEROLD9IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%Lf %Lf %ld %lf %lf %lf "\
-	      "%Lf %Lf %Lf %Lf %ld %Lf %ld %ld %ld %ld %ld "\
-	      "%Lf %d %d %d %d %d %d %d %d "\
-	      "%lf %lf %lf %lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%Lf %Lf %ld %lf %lf %lf "                                            \
+  "%Lf %Lf %Lf %Lf %ld %Lf %ld %ld %ld %ld %ld "                        \
+  "%Lf %d %d %d %d %d %d %d %d "                                        \
+  "%lf %lf %lf %lf %d "                                                 \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #elif(REALTYPE==FLOATTYPE)
 #define HEADEROLDONEIN "%f"
 #define HEADEROLD2IN "%f %f"
@@ -44,13 +44,13 @@
 #define HEADEROLD7IN "%f %f %f %f %f %f %f"
 #define HEADEROLD8IN "%f %f %f %f %f %f %f %f"
 #define HEADEROLD9IN "%f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%lf %lf %ld %f %f %f "\
-	      "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "\
-	      "%lf %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%lf %lf %ld %f %f %f "                                               \
+  "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "                        \
+  "%lf %d %d %d %d %d %d %d %d "                                        \
+  "%f %f %f %f %d "                                                     \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #elif(SENSITIVE==DOUBLETYPE)
@@ -65,13 +65,13 @@
 #define HEADEROLD7IN "%lf %lf %lf %lf %lf %lf %lf"
 #define HEADEROLD8IN "%lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADEROLD9IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%lf %lf %ld %lf %lf %lf "\
-	      "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "\
-	      "%lf %d %d %d %d %d %d %d %d "\
-	      "%lf %lf %lf %lf %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%lf %lf %ld %lf %lf %lf "                                            \
+  "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "                        \
+  "%lf %d %d %d %d %d %d %d %d "                                        \
+  "%lf %lf %lf %lf %d "                                                 \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #elif(REALTYPE==FLOATTYPE)
 #define HEADEROLDONEIN "%f"
 #define HEADEROLD2IN "%f %f"
@@ -82,13 +82,13 @@
 #define HEADEROLD7IN "%f %f %f %f %f %f %f"
 #define HEADEROLD8IN "%f %f %f %f %f %f %f %f"
 #define HEADEROLD9IN "%f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%lf %lf %ld %f %f %f "\
-	      "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "\
-	      "%lf %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%lf %lf %ld %f %f %f "                                               \
+  "%lf %lf %lf %lf %ld %lf %ld %ld %ld %ld %ld "                        \
+  "%lf %d %d %d %d %d %d %d %d "                                        \
+  "%f %f %f %f %d "                                                     \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #elif(SENSITIVE==FLOATTYPE)
@@ -105,13 +105,13 @@
 #define HEADEROLD7IN "%f %f %f %f %f %f %f"
 #define HEADEROLD8IN "%f %f %f %f %f %f %f %f"
 #define HEADEROLD9IN "%f %f %f %f %f %f %f %f %f"
-#define RESTARTHEADEROLD "%d %d %d "\
-	      "%f %f %ld %f %f %f "\
-	      "%f %f %f %f %ld %f %ld %ld %ld %ld %ld "\
-	      "%f %d %d %d %d %d %d %d %d "\
-	      "%f %f %f %f %d "\
-              "%d %d %d %d %d %d "\
-              "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
+#define RESTARTHEADEROLD "%d %d %d "                                    \
+  "%f %f %ld %f %f %f "                                                 \
+  "%f %f %f %f %ld %f %ld %ld %ld %ld %ld "                             \
+  "%f %d %d %d %d %d %d %d %d "                                         \
+  "%f %f %f %f %d "                                                     \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %f %f %f %f %f %f %f"
 #endif
 
 #endif
@@ -126,13 +126,13 @@
 // SUM=30
 // 23+10=33
 // total=63
-#define WRITERESTARTHEADEROLD "%lld %lld %lld " \
-		 "%21.15g %21.15g %ld %21.15g %21.15g %21.15g " \
-		 "%21.15g %21.15g %21.15g %21.15g %ld %21.15g %ld %ld %ld %ld %ld" \
-		 "%21.15g %d %d %d %d %d %d %d %d " \
-		 "%21.15g %21.15g %21.15g %21.15g %d " \
-                 "%d %d %d %d %d %d " \
-                 "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g "
+#define WRITERESTARTHEADEROLD "%lld %lld %lld "                         \
+  "%21.15g %21.15g %ld %21.15g %21.15g %21.15g "                        \
+  "%21.15g %21.15g %21.15g %21.15g %ld %21.15g %ld %ld %ld %ld %ld"     \
+  "%21.15g %d %d %d %d %d %d %d %d "                                    \
+  "%21.15g %21.15g %21.15g %21.15g %d "                                 \
+  "%d %d %d %d %d %d "                                                  \
+  "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g "
 
 #define HEADEROLDONEOUT "%21.15g "
 
@@ -332,14 +332,14 @@ int read_restart_header_old(int whichdump, int whichdumpversion, int numcolumns,
   // assumes headerptr is normal file pointer already defined
   else{
     fscanf(headerptr,RESTARTHEADEROLD,
-	   &idum1,&idum2,&idum3,
-	   &t,&tf,&nstep,&a,&gam,&cour,
-	   &(DTdumpgen[MAINDUMPTYPE]),&(DTdumpgen[AVG1DUMPTYPE]),&(DTdumpgen[ENERDUMPTYPE]),&(DTdumpgen[IMAGEDUMPTYPE]),&DTr,&(DTdumpgen[DEBUGDUMPTYPE]),&(dumpcntgen[MAINDUMPTYPE]),&(dumpcntgen[IMAGEDUMPTYPE]),&rdump_cnt,&(dumpcntgen[AVG1DUMPTYPE]),&(dumpcntgen[DEBUGDUMPTYPE]),
-	   &dt,&lim[1],&lim[2],&lim[3],&TIMEORDER,&fluxmethod,&FLUXB,&UTOPRIMVERSION,&failed,
-	   &R0,&Rin,&Rout,&hslope,&defcoord,
-	   &BCtype[X1UP],&BCtype[X1DN],&BCtype[X2UP],&BCtype[X2DN],&BCtype[X3UP],&BCtype[X3DN],
-	   &realnstep,&debugfail,&whichrestart,&cooling,&restartsteps[0],&restartsteps[1],&GAMMIEDUMP,&GAMMIEIMAGE,&GAMMIEENER,&DODIAGS,&DOENERDIAG,&DOGDUMPDIAG,&DORDUMPDIAG,&DODUMPDIAG,&DOAVGDIAG,&DOIMAGEDIAG,&DOAREAMAPDIAG,&POSDEFMETRIC,&periodicx1,&periodicx2,&periodicx3,&binaryoutput,&sortedoutput,&defcon,&SAFE,&RHOMIN,&UUMIN,&RHOMINLIMIT,&UUMINLIMIT,&BSQORHOLIMIT,&BSQOULIMIT,&GAMMAMAX,&GAMMADAMP,&GAMMAFAIL
-	   );
+           &idum1,&idum2,&idum3,
+           &t,&tf,&nstep,&a,&gam,&cour,
+           &(DTdumpgen[MAINDUMPTYPE]),&(DTdumpgen[AVG1DUMPTYPE]),&(DTdumpgen[ENERDUMPTYPE]),&(DTdumpgen[IMAGEDUMPTYPE]),&DTr,&(DTdumpgen[DEBUGDUMPTYPE]),&(dumpcntgen[MAINDUMPTYPE]),&(dumpcntgen[IMAGEDUMPTYPE]),&rdump_cnt,&(dumpcntgen[AVG1DUMPTYPE]),&(dumpcntgen[DEBUGDUMPTYPE]),
+           &dt,&lim[1],&lim[2],&lim[3],&TIMEORDER,&fluxmethod,&FLUXB,&UTOPRIMVERSION,&failed,
+           &R0,&Rin,&Rout,&hslope,&defcoord,
+           &BCtype[X1UP],&BCtype[X1DN],&BCtype[X2UP],&BCtype[X2DN],&BCtype[X3UP],&BCtype[X3DN],
+           &realnstep,&debugfail,&whichrestart,&cooling,&restartsteps[0],&restartsteps[1],&GAMMIEDUMP,&GAMMIEIMAGE,&GAMMIEENER,&DODIAGS,&DOENERDIAG,&DOGDUMPDIAG,&DORDUMPDIAG,&DODUMPDIAG,&DOAVGDIAG,&DOIMAGEDIAG,&DOAREAMAPDIAG,&POSDEFMETRIC,&periodicx1,&periodicx2,&periodicx3,&binaryoutput,&sortedoutput,&defcon,&SAFE,&RHOMIN,&UUMIN,&RHOMINLIMIT,&UUMINLIMIT,&BSQORHOLIMIT,&BSQOULIMIT,&GAMMAMAX,&GAMMADAMP,&GAMMAFAIL
+           );
     PDUMPLOOP(pliter,pl) fscanf(headerptr,HEADEROLDONEIN,&prMAX[pl]);
 
     fscanf(headerptr,"%d",&rescaletype);
@@ -688,15 +688,15 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
   }
   else if(bintxt==TEXTOUTPUT){
     fprintf(headerptr,WRITERESTARTHEADEROLD,
-	    totalsize[1],totalsize[2], totalsize[3], //3
-	    t,tf,nstep,a,gam,cour, // 6
-	    DTdumpgen[MAINDUMPTYPE],DTdumpgen[AVG1DUMPTYPE],DTdumpgen[ENERDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],DTr,DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[MAINDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],rdump_cnt,dumpcntgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE], // 11
-	    dt,lim[1],lim[2],lim[3],TIMEORDER,fluxmethod,FLUXB,UTOPRIMVERSION,failed,  // 3
-	    R0,Rin,Rout,hslope,defcoord, // 5
-	    BCtype[X1UP],BCtype[X1DN],BCtype[X2UP],BCtype[X2DN],BCtype[X3UP],BCtype[X3DN], // 6
-	    realnstep,debugfail,whichrestart,cooling,restartsteps[0],restartsteps[1],GAMMIEDUMP,GAMMIEIMAGE,GAMMIEENER,DODIAGS,DOENERDIAG,DOGDUMPDIAG,DORDUMPDIAG,DODUMPDIAG,DOAVGDIAG,DOIMAGEDIAG,DOAREAMAPDIAG,POSDEFMETRIC,periodicx1,periodicx2,periodicx3,binaryoutput,sortedoutput,defcon,SAFE,RHOMIN,UUMIN,RHOMINLIMIT,UUMINLIMIT,BSQORHOLIMIT,BSQOULIMIT,GAMMAMAX,GAMMADAMP,GAMMAFAIL // 23+10+1
-	    // total = 65 (not updated)
-	    );
+            totalsize[1],totalsize[2], totalsize[3], //3
+            t,tf,nstep,a,gam,cour, // 6
+            DTdumpgen[MAINDUMPTYPE],DTdumpgen[AVG1DUMPTYPE],DTdumpgen[ENERDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],DTr,DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[MAINDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],rdump_cnt,dumpcntgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE], // 11
+            dt,lim[1],lim[2],lim[3],TIMEORDER,fluxmethod,FLUXB,UTOPRIMVERSION,failed,  // 3
+            R0,Rin,Rout,hslope,defcoord, // 5
+            BCtype[X1UP],BCtype[X1DN],BCtype[X2UP],BCtype[X2DN],BCtype[X3UP],BCtype[X3DN], // 6
+            realnstep,debugfail,whichrestart,cooling,restartsteps[0],restartsteps[1],GAMMIEDUMP,GAMMIEIMAGE,GAMMIEENER,DODIAGS,DOENERDIAG,DOGDUMPDIAG,DORDUMPDIAG,DODUMPDIAG,DOAVGDIAG,DOIMAGEDIAG,DOAREAMAPDIAG,POSDEFMETRIC,periodicx1,periodicx2,periodicx3,binaryoutput,sortedoutput,defcon,SAFE,RHOMIN,UUMIN,RHOMINLIMIT,UUMINLIMIT,BSQORHOLIMIT,BSQOULIMIT,GAMMAMAX,GAMMADAMP,GAMMAFAIL // 23+10+1
+            // total = 65 (not updated)
+            );
 
     // 74 total so far
 
@@ -721,7 +721,7 @@ int write_restart_header_old(int whichdump, int whichdumpversion, int numcolumns
 
     // 93 total so far
 
-      // new June 6, 2003 (cumulatives)
+    // new June 6, 2003 (cumulatives)
     ENERREGIONLOOP(enerregion) DIRLOOP(dir) PDUMPLOOP(pliter,pl) fprintf(headerptr,HEADEROLDONEOUT,pcumreg_tot[enerregion][dir][pl]);
 
     // 93 + 3*6*8 = 237 so far

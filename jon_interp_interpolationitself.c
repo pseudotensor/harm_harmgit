@@ -178,10 +178,10 @@ int compute_spatial_interpolation(void)
     // shift coordinate if periodic and went "out of bounds"
     if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
       if(X[3]-Xmax[3] >= 0){
-	X[3] = X[3] - (Xmax[3]-startx[3]);
+        X[3] = X[3] - (Xmax[3]-startx[3]);
       }
       else if(X[3]-startx[3] < 0){
-	X[3] = X[3] + (Xmax[3]-startx[3]);
+        X[3] = X[3] + (Xmax[3]-startx[3]);
       }
     }
 
@@ -189,57 +189,57 @@ int compute_spatial_interpolation(void)
     if(DATATYPE==0){
       // make black if no solution or if out of bounds
       if(nosolution){
-	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
-	getinterp=0;
+        for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
+        getinterp=0;
       }
       else if(
-	      (oN0!=1)&&((X[0]-startx[0] < 0) || (X[0]-Xmax[0] >= 0)) ||
-	      (oN1!=1)&&((X[1]-startx[1] < 0) || (X[1]-Xmax[1] >= 0)) ||
-	      (oN2!=1)&&((X[2]-startx[2] < 0) || (X[2]-Xmax[2] >= 0)) ||
-	      (oN3!=1)&&((X[3]-startx[3] < 0) || (X[3]-Xmax[3] >= 0))
-	      ) {
+              (oN0!=1)&&((X[0]-startx[0] < 0) || (X[0]-Xmax[0] >= 0)) ||
+              (oN1!=1)&&((X[1]-startx[1] < 0) || (X[1]-Xmax[1] >= 0)) ||
+              (oN2!=1)&&((X[2]-startx[2] < 0) || (X[2]-Xmax[2] >= 0)) ||
+              (oN3!=1)&&((X[3]-startx[3] < 0) || (X[3]-Xmax[3] >= 0))
+              ) {
 
-	if(EXTRAPOLATE){
-	  getinterp=1;
-	  interptypetodo=0;
-	}
-	else{
-	  for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
-	  getinterp=0;
-	  interptypetodo=0;
-	}
+        if(EXTRAPOLATE){
+          getinterp=1;
+          interptypetodo=0;
+        }
+        else{
+          for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]);
+          getinterp=0;
+          interptypetodo=0;
+        }
       }
       else{
-	getinterp=1;
-	interptypetodo=INTERPTYPE;
+        getinterp=1;
+        interptypetodo=INTERPTYPE;
       }
     }
     else{
       // make defaultvalue only if no solution
       if(nosolution) {
-	for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
-	getinterp=0;
+        for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
+        getinterp=0;
       }
       else if(
-	      (oN0!=1)&&((X[0]-startx[0] < 0) || (X[0]-Xmax[0] >= 0)) ||
-	      (oN1!=1)&&((X[1]-startx[1] < 0) || (X[1]-Xmax[1] >= 0)) ||
-	      (oN2!=1)&&((X[2]-startx[2] < 0) || (X[2]-Xmax[2] >= 0)) ||
-	      (oN3!=1)&&((X[3]-startx[3] < 0) || (X[3]-Xmax[3] >= 0))
-	      ){
-	if(EXTRAPOLATE){
-	  getinterp=1;
-	  interptypetodo=0;
-	}
-	else{
-	  for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
-	  getinterp=0;
-	  interptypetodo=0;
-	}
+              (oN0!=1)&&((X[0]-startx[0] < 0) || (X[0]-Xmax[0] >= 0)) ||
+              (oN1!=1)&&((X[1]-startx[1] < 0) || (X[1]-Xmax[1] >= 0)) ||
+              (oN2!=1)&&((X[2]-startx[2] < 0) || (X[2]-Xmax[2] >= 0)) ||
+              (oN3!=1)&&((X[3]-startx[3] < 0) || (X[3]-Xmax[3] >= 0))
+              ){
+        if(EXTRAPOLATE){
+          getinterp=1;
+          interptypetodo=0;
+        }
+        else{
+          for(coli=0;coli<numoutputcols;coli++) newdatatemp[coli]=defaultvalue[coli];
+          getinterp=0;
+          interptypetodo=0;
+        }
       }
       else{
-	// normal interpolation
-	getinterp=1;
-	interptypetodo=INTERPTYPE;
+        // normal interpolation
+        getinterp=1;
+        interptypetodo=INTERPTYPE;
       }
     }
 
@@ -261,20 +261,20 @@ int compute_spatial_interpolation(void)
 
       // GODMARK: for now only use nearest neighbor in k -> kold
       //      if(DEBUGINTERP){
-      //	if(kold==15 || kold==0){
-      //	  fprintf(stderr,"interp: %d %d %d\n",hold,iold,jold,kold);
-      //	  fflush(stderr);
-      //	}
+      //        if(kold==15 || kold==0){
+      //          fprintf(stderr,"interp: %d %d %d\n",hold,iold,jold,kold);
+      //          fflush(stderr);
+      //        }
       //      }
 
       // check if symmetric -- yes, it is
       //      if(j==nN2/3 && (i==nN1/4 || i==3*nN1/4-1)){
-      //      	fprintf(stderr,"i=%d j=%d r=%21.15g th=%21.15g X[1]=%21.15g X[2]=%21.15g iold=%d jold=%d\n",i,j,r,th,X[1],X[2],iold,jold);
+      //        fprintf(stderr,"i=%d j=%d r=%21.15g th=%21.15g X[1]=%21.15g X[2]=%21.15g iold=%d jold=%d\n",i,j,r,th,X[1],X[2],iold,jold);
       //      }
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"doing hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",hold,iold,jold,kold,h,i,j,k); fflush(stderr);
+        fprintf(stderr,"doing hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       }
 
       //////////////////////////////
@@ -283,73 +283,73 @@ int compute_spatial_interpolation(void)
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"Done copy\n"); fflush(stderr);
+        fprintf(stderr,"Done copy\n"); fflush(stderr);
       }
 
       if(interptypetodo==0){
-	nearest_interp(hold,iold,jold,kold,oldimage,olddata, newdatatemp);
+        nearest_interp(hold,iold,jold,kold,oldimage,olddata, newdatatemp);
       }
       else if(interptypetodo==1){
-	bilinear_interp_simple(hold,iold,jold,kold,X,startx,dx,oldimage,olddata,newdatatemp);
-	//	bilinear_interp(t,r,th,ph, hold, iold, jold, kold, oldimage,olddata,newdatatemp); // not working
+        bilinear_interp_simple(hold,iold,jold,kold,X,startx,dx,oldimage,olddata,newdatatemp);
+        //      bilinear_interp(t,r,th,ph, hold, iold, jold, kold, oldimage,olddata,newdatatemp); // not working
       }
       else if(interptypetodo==2){
-	plane_interp(t, r, th, ph, hold, iold, jold, kold, oldimage,olddata, newdatatemp);
+        plane_interp(t, r, th, ph, hold, iold, jold, kold, oldimage,olddata, newdatatemp);
       }
       else if(interptypetodo==3){
-	bicubic_interp_wrap(oN0,oN1,oN2,oN3, hold,iold,jold,kold, X[0],X[1],X[2],X[3],oldimage,olddata, newdatatemp);
+        bicubic_interp_wrap(oN0,oN1,oN2,oN3, hold,iold,jold,kold, X[0],X[1],X[2],X[3],oldimage,olddata, newdatatemp);
       }
       else{
-	fprintf(stderr,"no such interptypetodo=%d\n",interptypetodo);
-	exit(1);
+        fprintf(stderr,"no such interptypetodo=%d\n",interptypetodo);
+        exit(1);
       }
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"Done interp h=%d i=%d j=%d k=%d\n",h,i,j,k); fflush(stderr);
+        fprintf(stderr,"Done interp h=%d i=%d j=%d k=%d\n",h,i,j,k); fflush(stderr);
       }
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"Done set newdata(temp) or write to file the interpolation result\n"); fflush(stderr);
+        fprintf(stderr,"Done set newdata(temp) or write to file the interpolation result\n"); fflush(stderr);
       }
 
       // test symmetry -- yes!
       //      if(j==nN2/3 && (i==nN1/4 || i==3*nN1/4-1)){
-      //      	fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdatatemp[coli]);
+      //        fprintf(stderr,"i=%d j=%d data=%21.15g\n",i,j,newdatatemp[coli]);
       //      }
 
 
       // DEBUG
       //      if((r>95)&&(r<105)&&(fabs(th-M_PI*0.5)<0.1)){
-      //	fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
+      //        fprintf(stderr,"%d %d : %g %g : %g %g : %d %d : %g\n",i,j,r,th,X[1],X[2],iold,jold,ftemp);
       //      }
 
       //      if(newdatatemp[coli]<=0.0){
-      //      	fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
+      //        fprintf(stderr,"NEGATIVE FOUND interptypetodo=%d :: hold=%d iold=%d jold=%d kold=%d h=%d i=%d j=%d k=%d\n",interptypetodo,hold,iold,jold,kold,h,i,j,k); fflush(stderr);
       //      }
 
       // DEBUG
       if(DEBUGINTERP){
-	fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold);
-	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	  fprintf(stderr,"coli=%d newdatatemp=%g\n",coli,newdatatemp[coli]);
-	}
-	fflush(stderr);
+        fprintf(stderr,"%d %d %d %d: %g %g %g %g: %g %g %g %g: %d %d %d %d\n",h,i,j,k, t,r,th,ph, X[0],X[1],X[2],X[3], hold,iold,jold,kold);
+        for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+          fprintf(stderr,"coli=%d newdatatemp=%g\n",coli,newdatatemp[coli]);
+        }
+        fflush(stderr);
       }
 
 
       // copy over newdatatemp to newimagetemp if doing DATATYPE==0
       if(DATATYPE==0){
-	for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(newdatatemp[coli]) ;
+        for(coli=0;coli<numoutputcols;coli++) newimagetemp[coli] = FLOAT2IMAGE(newdatatemp[coli]) ;
       }
 
 
     }// end if getinterp==1
     else{
       for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	if(DATATYPE==0)      newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]) ;
-	else newdatatemp[coli]=defaultvalue[coli];
+        if(DATATYPE==0)      newimagetemp[coli] = FLOAT2IMAGE(defaultvalue[coli]) ;
+        else newdatatemp[coli]=defaultvalue[coli];
       }
     }// end else
 
@@ -415,7 +415,7 @@ void setup_newgrid(void)
     startyc=startx[2];
     startzc=startx[3]; // was 0
 
-    //	     &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&EP3,&THETAROT);
+    //       &t,&totalsize[1],&totalsize[2],&startx[1],&startx[2],&dX[1],&dX[2],&readnstep,&gam,&spin,&R0,&Rin,&Rout,&hslope,&dt,&defcoord,&MBH,&QBH,&EP3,&THETAROT);
 
     fakedtc=dtc;
     fakedxc=dxc;
@@ -581,7 +581,7 @@ static void new_xycoord(int h, int i, int j, int k, FTYPE *tc, FTYPE *xc, FTYPE 
     ynew = (nN2/2-(j+0.5))*dyc ;
 
     *x= sqrt(xnew*xnew + ynew*ynew) ;
-    *y = atan2(xnew,ynew) ;	// deliberately interchanged args
+    *y = atan2(xnew,ynew) ;     // deliberately interchanged args
     */
 
   if(newgridtype==GRIDTYPENOCHANGE){
@@ -636,12 +636,12 @@ static void new_xycoord(int h, int i, int j, int k, FTYPE *tc, FTYPE *xc, FTYPE 
     else{ // assumes symmetric around x=0
       // assumes i=nN1/2 is x=0
       if(i>=nN1/2){
-	newX1u=log10(fakeRin)+(i-nN1/2+0.5)*(dxc);
-	*xc = pow(10.0,newX1u) ;
+        newX1u=log10(fakeRin)+(i-nN1/2+0.5)*(dxc);
+        *xc = pow(10.0,newX1u) ;
       }
       else if(i<nN1/2){
-	newX1d=log10(fakeRin)+(nN1/2-i-0.5)*(dxc);
-	*xc = -pow(10.0,newX1d) ;
+        newX1d=log10(fakeRin)+(nN1/2-i-0.5)*(dxc);
+        *xc = -pow(10.0,newX1d) ;
       }
     }
 
@@ -657,12 +657,12 @@ static void new_xycoord(int h, int i, int j, int k, FTYPE *tc, FTYPE *xc, FTYPE 
     else{ // assumes symmetric around x=0
       // assumes j=nN2/2 is y=0
       if(j>=nN2/2){
-	newX2u=log10(fakeRin)+(j-nN2/2+0.5)*(dyc);
-	*yc = pow(10.0,newX2u) ;
+        newX2u=log10(fakeRin)+(j-nN2/2+0.5)*(dyc);
+        *yc = pow(10.0,newX2u) ;
       }
       else if(j<nN2/2){
-	newX2d=log10(fakeRin)+(nN2/2-j-0.5)*(dyc);
-	*yc = -pow(10.0,newX2d) ;
+        newX2d=log10(fakeRin)+(nN2/2-j-0.5)*(dyc);
+        *yc = -pow(10.0,newX2d) ;
       }
     }
     if(startzc>=0.0){
@@ -677,12 +677,12 @@ static void new_xycoord(int h, int i, int j, int k, FTYPE *tc, FTYPE *xc, FTYPE 
     else{ // assumes symmetric around x=0
       // assumes k=nN3/3 is z=0
       if(k>=nN3/2){
-	newX3u=log10(fakeRin)+(k-nN3/2+0.5)*(dzc);
-	*zc = pow(10.0,newX3u) ;
+        newX3u=log10(fakeRin)+(k-nN3/2+0.5)*(dzc);
+        *zc = pow(10.0,newX3u) ;
       }
       else if(k<nN3/2){
-	newX3d=log10(fakeRin)+(nN3/2-k-0.5)*(dzc);
-	*zc = -pow(10.0,newX3d) ;
+        newX3d=log10(fakeRin)+(nN3/2-k-0.5)*(dzc);
+        *zc = -pow(10.0,newX3d) ;
       }
     }
   }
@@ -738,7 +738,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
   }
   else if(newgridtype==GRIDTYPELOGSPC && oldgridtype==GRIDTYPESPC){
     // original grid must be SPC
-	
+        
 
     // here xc,yc,zc are related to r,th,ph via
     //
@@ -770,7 +770,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
 
     Rc = sqrt(xc*xc+zc*zc); // R' = \sqrt(x'^2 + y'^2)
 
-    *th = atan2(Rc,yc) ;	/* deliberately interchanged args */
+    *th = atan2(Rc,yc) ;        /* deliberately interchanged args */
     if(*th<0) *th+=M_PI;
     if(*th<0) *th+=M_PI;
     if(*th<0) *th+=M_PI;
@@ -785,7 +785,7 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
     if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
     if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
     if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
-	  
+          
 
   }
   else if(newgridtype==GRIDTYPECART || newgridtype==GRIDTYPECARTLIGHT){// Cart output (i.e. tc,xc,yc,zc are Cartesian labels for new grid)
@@ -830,49 +830,49 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
       rspc=*r;
       
       Rc=sqrt(xc*xc+zc*zc);
-	
+        
       // \theta = atan(R/z)
-      *th = atan2(Rc,yc) ;	/* deliberately interchanged args */
+      *th = atan2(Rc,yc) ;      /* deliberately interchanged args */
       if(*th<0) *th+=M_PI;
       if(*th<0) *th+=M_PI;
       if(*th<0) *th+=M_PI;
       if(*th>M_PI) *th-=M_PI;
       if(*th>M_PI) *th-=M_PI;
       if(*th>M_PI) *th-=M_PI;
-      //	    *th = atan(Rc/yc) ;
+      //            *th = atan(Rc/yc) ;
       //dualfprintf(fail_file," got here %d %d\n",newgridtype,oN3);
 
 
       // NOTE: \phi = atan(x/y) has x>0,y=0 plane as \phi=0, as in Griffiths.
       if(oN3==1){
-	*ph = atan2(fabs(zc),fabs(xc));
-	if(*ph<0) *ph+=M_PI;
-	if(*ph>M_PI) *ph-=M_PI;
-	//		dualfprintf(fail_file,"newcoord here ph=%g\n",*ph);
+        *ph = atan2(fabs(zc),fabs(xc));
+        if(*ph<0) *ph+=M_PI;
+        if(*ph>M_PI) *ph-=M_PI;
+        //              dualfprintf(fail_file,"newcoord here ph=%g\n",*ph);
       }
       else{
-	*ph = atan2(zc,xc) ;
-	if(*ph<0) *ph+=2.0*M_PI;
-	if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
+        *ph = atan2(zc,xc) ;
+        if(*ph<0) *ph+=2.0*M_PI;
+        if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
       }
 
       
       if(defcoord==666){ // then override above
-	*r=xc;
-	*th=yc;
-	*ph=zc;
-	// get rspc
-	rspc=sqrt(xc*xc+yc*yc+zc*zc); // GODMARK: Probably wrong, but no time to fix obscure 666 defcoord
+        *r=xc;
+        *th=yc;
+        *ph=zc;
+        // get rspc
+        rspc=sqrt(xc*xc+yc*yc+zc*zc); // GODMARK: Probably wrong, but no time to fix obscure 666 defcoord
       }
     }// end if oldgridtype==GRIDTYPESPC
     else if(oldgridtype==GRIDTYPECYL){ // Cylindrical coordinates input
 
-      //	    rspc = sqrt(xc*xc + yc*yc + zc*zc) ;
+      //            rspc = sqrt(xc*xc + yc*yc + zc*zc) ;
       Rc=sqrt(xc*xc+zc*zc);
-	    
+            
       *r = Rc; // Cyl radius
       *th = yc; // Cyl height
-      *ph = atan2(zc,xc) ;	// Cyl angle
+      *ph = atan2(zc,xc) ;      // Cyl angle
       if(*ph<0) *ph+=2.0*M_PI;
       if(*ph>2.0*M_PI) *ph-=2.0*M_PI;
 
@@ -884,14 +884,14 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
     else if(oldgridtype==GRIDTYPECARTLIGHT){ // CartLIGHT input
 
       if(ROTATECARTLIGHT==0){
-	*r=xc;
-	*th=yc;
-	*ph=zc;
+        *r=xc;
+        *th=yc;
+        *ph=zc;
       }
       else{
-	// recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
-	fprintf(stderr,"NOT YET 295638667 oldgridtype=%d\n",oldgridtype);
-	exit(1);
+        // recall: xc is Cart-x , yc is Cart-z, and zc is Cart-y
+        fprintf(stderr,"NOT YET 295638667 oldgridtype=%d\n",oldgridtype);
+        exit(1);
       }
       
       // get rspc
@@ -998,32 +998,32 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
 
 
       if(newgridtype==GRIDTYPELOGSPC){
-	// then fake Cartesian generated
-	*tc = t;
-	*xc = log(r+1.0)*sin(th)*cos(ph); // my x
-	*yc = log(r+1.0)*cos(th); // my z
-	*zc = log(r+1.0)*sin(th)*sin(ph); // my y
+        // then fake Cartesian generated
+        *tc = t;
+        *xc = log(r+1.0)*sin(th)*cos(ph); // my x
+        *yc = log(r+1.0)*cos(th); // my z
+        *zc = log(r+1.0)*sin(th)*sin(ph); // my y
       }
       // below seems unnecessary and was even wrong before
       //      else if(newgridtype==GRIDTYPECART && oN3==1){
-      //	*tc = t;
-      //	*xc = 0; // not really equivalent to code before because before *xc was just unset, but unsure why that was or why doing this new version GODMARK
-      //	*yc = r*cos(th); // my z
-      //	*zc = r*sin(th)*sin(ph); // my y
+      //        *tc = t;
+      //        *xc = 0; // not really equivalent to code before because before *xc was just unset, but unsure why that was or why doing this new version GODMARK
+      //        *yc = r*cos(th); // my z
+      //        *zc = r*sin(th)*sin(ph); // my y
       //      }
       else{// normal SPC 2 Cart
-	*tc = t;
-	*xc = fabs(r*sin(th)*cos(ph)); // my x
-	*yc = r*cos(th); // my z
-	*zc = r*sin(th)*sin(ph); // my y
+        *tc = t;
+        *xc = fabs(r*sin(th)*cos(ph)); // my x
+        *yc = r*cos(th); // my z
+        *zc = r*sin(th)*sin(ph); // my y
       }
       
 
       if(newgridtype==GRIDTYPECARTLIGHT){ // override default tc
-	// r is really spherical polar "r", so good to use directly
-	*tc = t + r*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)
+        // r is really spherical polar "r", so good to use directly
+        *tc = t + r*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)
 
-	// Note that if(ROTATECARTLIGHT==1), then we don't rotate or back rotate since we really want SPC -> True Cart here for distances!
+        // Note that if(ROTATECARTLIGHT==1), then we don't rotate or back rotate since we really want SPC -> True Cart here for distances!
 
       }
 
@@ -1049,7 +1049,7 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
     *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
     *zc  = ph;
 
-      //    }
+    //    }
 
     rspc = sqrt((*xc)*(*xc) + (*yc)*(*yc) + (*zc)*(*zc));
     *tc = t + rspc*cos(tnrdegrees*M_PI/180.0); // map back to true Cartesian (note sign is +, not -)
@@ -1397,13 +1397,13 @@ static void X2spc(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff)
       if(X[2]-Xmax[2] >= 0) X[2]=Xmax[2];
 
       if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
-	if(X[3]-startx[3] < 0) X[3]=X[3]+(Xmax[3]-startx[3]);
-	if(X[3]-Xmax[3]  >= 0) X[3]=X[3]-(Xmax[3]-startx[3]);
+        if(X[3]-startx[3] < 0) X[3]=X[3]+(Xmax[3]-startx[3]);
+        if(X[3]-Xmax[3]  >= 0) X[3]=X[3]-(Xmax[3]-startx[3]);
       }
       else{
-	// then normal non-periodic
-	if(X[3]-startx[3] < 0) X[3]=startx[3];
-	if(X[3]-Xmax[3] >= 0) X[3]=Xmax[3];
+        // then normal non-periodic
+        if(X[3]-startx[3] < 0) X[3]=startx[3];
+        if(X[3]-Xmax[3] >= 0) X[3]=Xmax[3];
       }
     }
 
@@ -1548,10 +1548,10 @@ static int usrfun_joninterp2(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff
  
  
 #define NORMMETHOD 1
- // 0: no norm method
- // 1: special norm method
+// 0: no norm method
+// 1: special norm method
  
- /* auxiliary function required by mnewt */
+/* auxiliary function required by mnewt */
 static int usrfun_joninterp(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *beta, FTYPE **alpha, FTYPE*norm)
 {
   int h = 0, i = 0, j = 0, k = 0;
@@ -1601,8 +1601,8 @@ static int usrfun_joninterp(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *beta, FTY
   for (j = 0; j < n; j++){
     for (k = 0; k < n; k++){
       if(fabs(alpha[j + 1][k + 1])>NUMEPSILON){
-	*norm+=fabs(alpha[j + 1][k + 1]);
-	numnormterms++;
+        *norm+=fabs(alpha[j + 1][k + 1]);
+        numnormterms++;
       }
     }
   }
@@ -1852,7 +1852,7 @@ static int plane_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int ho
     }
     else{
       newvalue=((y3 - ycref)*(x2*f1 - x1*f2) + x3*(-(y2*f1) + ycref*f1 + y1*f2 - ycref*f2) + 
-		(-(x2*y1) + x1*y2 - x1*ycref + x2*ycref)*f3 + xcref*(y2*f1 - y3*f1 - y1*f2 + y3*f2 + y1*f3 - y2*f3))/(x3*(y1 - y2) + x1*(y2 - y3) + x2*(-y1 + y3));
+                (-(x2*y1) + x1*y2 - x1*ycref + x2*ycref)*f3 + xcref*(y2*f1 - y3*f1 - y1*f2 + y3*f2 + y1*f3 - y2*f3))/(x3*(y1 - y2) + x1*(y2 - y3) + x2*(-y1 + y3));
     }
     if(DEBUGINTERP)   fprintf(stderr,"%d %d %d %d :: %g %g %g\n",hold,iold,jold,kold, newvalue,interpolate,f1); fflush(stderr);
     
@@ -2090,10 +2090,10 @@ static int bilinear_interp_ij(int hold, int iold, int jold,int kold,  FTYPE dhol
   
     for(p=1;p<=NUMIJK;p++){
       if(DATATYPE==0){
-	myfun[coli][p]=(double)((unsigned char)oldimage[hsel[p]][isel[p]][jsel[p]][ksel[p]]);
+        myfun[coli][p]=(double)((unsigned char)oldimage[hsel[p]][isel[p]][jsel[p]][ksel[p]]);
       }
       else{
-	myfun[coli][p]=olddata[coli][hsel[p]][isel[p]][jsel[p]][ksel[p]];
+        myfun[coli][p]=olddata[coli][hsel[p]][isel[p]][jsel[p]][ksel[p]];
       }
       //    fprintf(stderr,"bi: p=%d dist=%10.5g myfun=%10.5g\n",p,dist[p],myfun[0][p]);
     }
@@ -2166,8 +2166,8 @@ static int nearest_interp_ij(int hold, int iold,int jold,int kold, unsigned char
 
   
   for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-    if(DATATYPE==0)			newdatatemp[coli]=(FTYPE)oldimage[coli][hold][iold][jold][kold] ;
-    else 			newdatatemp[coli]=(FTYPE)olddata[coli][hold][iold][jold][kold] ;
+    if(DATATYPE==0)                     newdatatemp[coli]=(FTYPE)oldimage[coli][hold][iold][jold][kold] ;
+    else                        newdatatemp[coli]=(FTYPE)olddata[coli][hold][iold][jold][kold] ;
   }
 
 
@@ -2243,22 +2243,22 @@ static int bilinear_interp(FTYPE tref, FTYPE rref, FTYPE thref, FTYPE phref, int
     }
     else if(0){
       if(myxc[2]>myxc[1]){
-	f1=(xcref-myxc[1])*(myfun[coli][2]-myfun[coli][1])/(myxc[2]-myxc[1])+myfun[coli][1];
+        f1=(xcref-myxc[1])*(myfun[coli][2]-myfun[coli][1])/(myxc[2]-myxc[1])+myfun[coli][1];
       }
       else{
-	f1=(xcref-myxc[2])*(myfun[coli][1]-myfun[coli][2])/(myxc[1]-myxc[2])+myfun[coli][2];
+        f1=(xcref-myxc[2])*(myfun[coli][1]-myfun[coli][2])/(myxc[1]-myxc[2])+myfun[coli][2];
       }
       if(myxc[4]>myxc[3]){
-	f2=(xcref-myxc[3])*(myfun[coli][4]-myfun[coli][3])/(myxc[4]-myxc[3])+myfun[coli][3];
+        f2=(xcref-myxc[3])*(myfun[coli][4]-myfun[coli][3])/(myxc[4]-myxc[3])+myfun[coli][3];
       }
       else{
-	f2=(xcref-myxc[4])*(myfun[coli][3]-myfun[coli][4])/(myxc[3]-myxc[4])+myfun[coli][4];
+        f2=(xcref-myxc[4])*(myfun[coli][3]-myfun[coli][4])/(myxc[3]-myxc[4])+myfun[coli][4];
       }
       if(myyc[3]>myyc[1]){ // 1 associated with f1, 3 associated with f2
-	newvalue=(ycref-myyc[1])*(f2-f1)/(myyc[3]-myyc[1])+f1;
+        newvalue=(ycref-myyc[1])*(f2-f1)/(myyc[3]-myyc[1])+f1;
       }
       else{
-	newvalue=(ycref-myyc[3])*(f1-f2)/(myyc[1]-myyc[3])+f2;
+        newvalue=(ycref-myyc[3])*(f1-f2)/(myyc[1]-myyc[3])+f2;
       }
     }
     
@@ -2344,14 +2344,14 @@ static int bicubic_interp_wrap(int nt, int nx, int ny, int nz,  int hold, int io
     // always copy values
     if(DATATYPE==0){
       for(j=0;j<nx;j++) for(k=0;k<ny;k++){
-	  ya[j][k]=(FTYPE)oldimage[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
-	}
+          ya[j][k]=(FTYPE)oldimage[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
+        }
     }
     // else if(DATATYPE==1) ya=olddata;
     else{
       for(j=0;j<nx;j++) for(k=0;k<ny;k++){
-	  ya[j][k]=olddata[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
-	}
+          ya[j][k]=olddata[coli][hold][j][k][kold]; // GODMARK3D -- nearest neighbor in h-direction and k-direction
+        }
     }
     
     
@@ -2407,48 +2407,48 @@ void dervs_for_bicubic(int nx, int ny, FTYPE **ya, FTYPE **y1a, FTYPE **y2a, FTY
 
 
       if((j>0)&&(j<nx-1)&&(k>0)&&(k<ny-1)){
-	y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
-	y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
-	y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k-1]-ya[j-1][k+1]+ya[j-1][k-1])/(4.0*dx[1]*dx[2]);
+        y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
+        y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
+        y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k-1]-ya[j-1][k+1]+ya[j-1][k-1])/(4.0*dx[1]*dx[2]);
       }
       else if((j==0)&&(k==0)){
-	y1a[j][k]=(ya[j+1][k]-ya[j][k])/dx[1];
-	y2a[j][k]=(ya[j][k+1]-ya[j][k])/dx[2];
-	y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k]-ya[j][k+1]+ya[j][k])/(dx[1]*dx[2]);      
+        y1a[j][k]=(ya[j+1][k]-ya[j][k])/dx[1];
+        y2a[j][k]=(ya[j][k+1]-ya[j][k])/dx[2];
+        y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k]-ya[j][k+1]+ya[j][k])/(dx[1]*dx[2]);      
       }
       else if((j==nx-1)&&(k==0)){
-	y1a[j][k]=(ya[j][k]-ya[j-1][k])/(dx[1]);
-	y2a[j][k]=(ya[j][k+1]-ya[j][k])/(dx[2]);
-	y12a[j][k]=(ya[j][k+1]-ya[j][k]-ya[j-1][k+1]+ya[j-1][k])/(dx[1]*dx[2]);
+        y1a[j][k]=(ya[j][k]-ya[j-1][k])/(dx[1]);
+        y2a[j][k]=(ya[j][k+1]-ya[j][k])/(dx[2]);
+        y12a[j][k]=(ya[j][k+1]-ya[j][k]-ya[j-1][k+1]+ya[j-1][k])/(dx[1]*dx[2]);
       }
       else if((j==0)&&(k==ny-1)){
-	y1a[j][k]=(ya[j+1][k]-ya[j][k])/(dx[1]);
-	y2a[j][k]=(ya[j][k]-ya[j][k-1])/(dx[2]);
-	y12a[j][k]=(ya[j+1][k]-ya[j+1][k-1]-ya[j][k+1]+ya[j][k-1])/(dx[1]*dx[2]);
+        y1a[j][k]=(ya[j+1][k]-ya[j][k])/(dx[1]);
+        y2a[j][k]=(ya[j][k]-ya[j][k-1])/(dx[2]);
+        y12a[j][k]=(ya[j+1][k]-ya[j+1][k-1]-ya[j][k+1]+ya[j][k-1])/(dx[1]*dx[2]);
       }
       else if(j==0){
-	y1a[j][k]=(ya[j+1][k]-ya[j][k])/(dx[1]);
-	y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
-	y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k-1]-ya[j][k+1]+ya[j][k-1])/(2.0*dx[1]*dx[2]);
+        y1a[j][k]=(ya[j+1][k]-ya[j][k])/(dx[1]);
+        y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
+        y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k-1]-ya[j][k+1]+ya[j][k-1])/(2.0*dx[1]*dx[2]);
       }
       else if(j==nx-1){
-	y1a[j][k]=(ya[j][k]-ya[j-1][k])/(dx[1]);
-	y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
-	y12a[j][k]=(ya[j][k+1]-ya[j][k-1]-ya[j-1][k+1]+ya[j-1][k-1])/(2.0*dx[1]*dx[2]);
+        y1a[j][k]=(ya[j][k]-ya[j-1][k])/(dx[1]);
+        y2a[j][k]=(ya[j][k+1]-ya[j][k-1])/(2.0*dx[2]);
+        y12a[j][k]=(ya[j][k+1]-ya[j][k-1]-ya[j-1][k+1]+ya[j-1][k-1])/(2.0*dx[1]*dx[2]);
       }
       else if(k==0){
-	y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
-	y2a[j][k]=(ya[j][k+1]-ya[j][k])/(dx[2]);
-	y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k]-ya[j-1][k+1]+ya[j-1][k])/(2.0*dx[1]*dx[2]);
+        y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
+        y2a[j][k]=(ya[j][k+1]-ya[j][k])/(dx[2]);
+        y12a[j][k]=(ya[j+1][k+1]-ya[j+1][k]-ya[j-1][k+1]+ya[j-1][k])/(2.0*dx[1]*dx[2]);
       }
       else if(k==ny-1){
-	y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
-	y2a[j][k]=(ya[j][k]-ya[j][k-1])/(dx[2]);
-	y12a[j][k]=(ya[j+1][k]-ya[j+1][k-1]-ya[j-1][k]+ya[j-1][k-1])/(2.0*dx[1]*dx[2]);
+        y1a[j][k]=(ya[j+1][k]-ya[j-1][k])/(2.0*dx[1]);
+        y2a[j][k]=(ya[j][k]-ya[j][k-1])/(dx[2]);
+        y12a[j][k]=(ya[j+1][k]-ya[j+1][k-1]-ya[j-1][k]+ya[j-1][k-1])/(2.0*dx[1]*dx[2]);
       }
       else{
-	fprintf(stderr,"No such j=%d k=%d condition\n",j,k);
-	exit(1);
+        fprintf(stderr,"No such j=%d k=%d condition\n",j,k);
+        exit(1);
       }
 
 #if(0) //test
@@ -2477,8 +2477,8 @@ FTYPE bicubic_interp(int nx,int ny, int hl,int il,int jl,int kl, FTYPE *Xget,FTY
   FTYPE yap[4+1],y1ap[4+1],y2ap[4+1],y12ap[4+1];
   int i;
   extern void bcuint(FTYPE y[], FTYPE y1[], FTYPE y2[], FTYPE y12[], FTYPE x1l,
-		     FTYPE x1u, FTYPE x2l, FTYPE x2u, FTYPE x1, FTYPE x2, FTYPE *ansy,
-		     FTYPE *ansy1, FTYPE *ansy2);
+                     FTYPE x1u, FTYPE x2l, FTYPE x2u, FTYPE x1, FTYPE x2, FTYPE *ansy,
+                     FTYPE *ansy1, FTYPE *ansy2);
   FTYPE answer,answerd1,answerd2;
   int atboundary;
 
@@ -2640,12 +2640,12 @@ void refine_data(void)
 
     if(refinefactor>1.0){
       if(DATATYPE==0){
-	oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
+        oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+        for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
       }
       else{
-	olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
+        olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+        for(coli=0;coli<numoutputcols;coli++) for(k=0;k<oN3;k++) for(j=0;j<oN2;j++)      for(i=0;i<oN1;i++) for(h=0;h<oN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
       }
       //writeimage("jontest1.r8",oldimage,roN0,roN1,roN2,roN3);
       //      exit(0);
@@ -2654,12 +2654,12 @@ void refine_data(void)
     else{
       high2low(oN0, oN1, oN2, oN3, roN0, roN1, roN2, roN3, oldimage0,olddata0);
       if(DATATYPE==0){
-	oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++) for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++)  for(h=0;h<roN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
+        oldimage = c5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+        for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++) for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++)  for(h=0;h<roN0;h++) oldimage[coli][h][i][j][k]=oldimage0[coli][h][i][j][k];
       }
       else{
-	olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
-	for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++)  for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) for(h=0;h<roN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
+        olddata = f5matrix(0,numoutputcols-1,0,roN0-1,0,roN1-1,0,roN2-1,0,roN3-1) ;
+        for(coli=0;coli<numoutputcols;coli++) for(k=0;k<roN3;k++)  for(j=0;j<roN2;j++)      for(i=0;i<roN1;i++) for(h=0;h<roN0;h++) olddata[coli][h][i][j][k]=olddata0[coli][h][i][j][k];
       }
     }
     // reset size
@@ -2778,7 +2778,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       exit(1);
     }
     for(j=0;j<nxlow;j++) for(k=0;k<nylow;k++){
-	ya[j][k]=(FTYPE)oldimage[0][0][j][k][0]; // GODMARK3D // COLIMARK
+        ya[j][k]=(FTYPE)oldimage[0][0][j][k][0]; // GODMARK3D // COLIMARK
       }
   }
   // else if(DATATYPE==1) ya=olddata;
@@ -2789,7 +2789,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       exit(1);
     }
     for(j=0;j<nxlow;j++) for(k=0;k<nylow;k++){
-	ya[j][k]=olddata[0][0][j][k][0]; // GODMARK3D // COLIMARK
+        ya[j][k]=olddata[0][0][j][k][0]; // GODMARK3D // COLIMARK
       }
 
   }
@@ -2856,7 +2856,7 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
       djl=(FTYPE)ftempj-(FTYPE)(jl+SHIFTNN);
 
       FTYPE blob[MAXCOLS]
-      nearest_interp_ij(hl, il, jl, kl ,Ilowc,Ilowf,blob);
+        nearest_interp_ij(hl, il, jl, kl ,Ilowc,Ilowf,blob);
       ftemp=blob[0]; // GODCOLIMARK
 #elif(HIGHLOWINTERPTYPE==1)
       ///////////////////////////////////////////
@@ -2930,13 +2930,13 @@ void low2high(int ntlow, int nxlow, int nylow, int nzlow,  int nthigh, int nxhig
     // in principle could output in different order if wanted
     if(DATATYPE!=0){
       if(1){ // needs to be set
-	for(jh=0;jh<nyhigh;jh++)      for(ih=0;ih<nxhigh;ih++) {
-	    ftemp=olddata[0][0][ih][jh][0];// GODMARK3D // COLIMARK
-	    if(ftemp<0.0) ftemp=0.0;
-	    if(ftemp>255.0) ftemp=255.0;
-	    uctemp=(unsigned char)ftemp;
-	    oldimage[0][0][ih][jh][0]=uctemp; // GODMARK3D // COLIMARK
-	  }
+        for(jh=0;jh<nyhigh;jh++)      for(ih=0;ih<nxhigh;ih++) {
+            ftemp=olddata[0][0][ih][jh][0];// GODMARK3D // COLIMARK
+            if(ftemp<0.0) ftemp=0.0;
+            if(ftemp>255.0) ftemp=255.0;
+            uctemp=(unsigned char)ftemp;
+            oldimage[0][0][ih][jh][0]=uctemp; // GODMARK3D // COLIMARK
+          }
       }
     }
     writeimage("jontest.r8",oldimage,nthigh,nxhigh,nyhigh,nzhigh);
@@ -3017,9 +3017,9 @@ void high2low(int nthigh, int nxhigh, int nyhigh, int nzhigh,  int ntlow, int nx
       Ilow[jl*nxlow+il]+=Ihigh[jh*nxhigh+ih]*W;
       IlowW[jl*nxlow+il]+=W;
       /*
-	if((il==1)&&(jl==1)){
-	printf("%g %g %g %g %g %g %g %d %d %g %g %g\n",ilfrac,jlfrac,ioldbcl,joldbcl,deltaih,deltajh,W,il,jl,Ilow[jl*nxlow+il],IlowW[jl*nxlow+il],Ihigh[jh*nxhigh+ih]*W);
-	}
+        if((il==1)&&(jl==1)){
+        printf("%g %g %g %g %g %g %g %d %d %g %g %g\n",ilfrac,jlfrac,ioldbcl,joldbcl,deltaih,deltajh,W,il,jl,Ilow[jl*nxlow+il],IlowW[jl*nxlow+il],Ihigh[jh*nxhigh+ih]*W);
+        }
       */
     }
   }

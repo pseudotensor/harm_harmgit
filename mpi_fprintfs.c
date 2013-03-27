@@ -195,8 +195,8 @@ void myfclose(FILE ** fileptrptr,char*message)
     if(*fileptrptr!=NULL){
       reterror = fclose(*fileptrptr);
       if (reterror == EOF) {
-	dualfprintf(fail_file, message);
-	myexit(10101);
+        dualfprintf(fail_file, message);
+        myexit(10101);
       }
     }
     else{
