@@ -1632,26 +1632,27 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #endif
 
 
+
   if(ISSPCMCOORDNATIVE(MCOORD) && COORDSINGFIX){
     // avoid polar axis if SPC.  Also used for CTSTAG approach so can evolve B2
 #if(1)
     // So use X[2] only -- closer to using j itself that we don't have available.
-    if(fabs(startx[TH]-X[TH])<SINGSMALL) V[TH]=SINGSMALL;
+    if(BCtype[X2DN]==POLARAXIS && fabs(startx[TH]-X[TH])<SINGSMALL) V[TH]=SINGSMALL;
     FTYPE endx2=startx[TH]+totalsize[TH]*dx[TH];
-    if(fabs(endx2-X[TH])<SINGSMALL) V[TH]=M_PI-SINGSMALL;
+    if(BCtype[X2UP]==POLARAXIS && fabs(endx2-X[TH])<SINGSMALL) V[TH]=M_PI-SINGSMALL;
 #endif
 #if(0)
     // OK, but worry about large radii where \theta is small towards axis
-    if (fabs(V[TH]) < SINGSMALL) V[TH]+=SINGSMALL;
-    else if (fabs(M_PI-V[TH]) < SINGSMALL)  V[TH]-=SINGSMALL;
+    if (BCtype[X2DN]==POLARAXIS && fabs(V[TH]) < SINGSMALL) V[TH]+=SINGSMALL;
+    else if (BCtype[X2UP]==POLARAXIS && fabs(M_PI-V[TH]) < SINGSMALL)  V[TH]-=SINGSMALL;
 #endif
 #if(0)
     // WRONG!
-    if (fabs(V[TH]) < SINGSMALL){
+    if (BCtype[X2DN]==POLARAXIS && fabs(V[TH]) < SINGSMALL){
       if(V[TH]>=0) V[TH]=SINGSMALL;
       if(V[TH]<0) V[TH]=-SINGSMALL;
     }
-    if (fabs(M_PI-V[TH]) < SINGSMALL){
+    if (BCtype[X2UP]==POLARAXIS && fabs(M_PI-V[TH]) < SINGSMALL){
       if(V[TH]>=M_PI) V[TH]=M_PI+SINGSMALL;
       if(V[TH]<M_PI) V[TH]=M_PI-SINGSMALL;
     }
