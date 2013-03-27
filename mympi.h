@@ -25,16 +25,16 @@
 
 
 // macros that depend on no other macros
-#include "mympi.global.nondepnmemonics.h"
+#include "mympi.global.nondepmnemonics.h"
 
 // default settings
 #include "mympi.definit.h"
 
-// always include these settings(must come after mympi.definit.h and mympi.global.nondepnmemonics)
+// always include these settings(must come after mympi.definit.h and mympi.global.nondepmnemonics)
 #include "global.mpi_grmhd_grray_liaison.h"
 
 // macros, etc. that depend on other macros
-#include "mympi.global.depnmemonics.h"
+#include "mympi.global.depmnemonics.h"
 
 // some MPI-related per-point loops
 #include "mympi.global.loops.h"

@@ -135,7 +135,7 @@
 #include "global.realdef.h"
 
 #include "coord.h"
-#include "global.nondepnmemonics.h"
+#include "global.nondepmnemonics.h"
 #include "definit.h"
 
 #define POSDEFMETRIC 0
@@ -220,7 +220,7 @@
 
 
 
-#include "global.depnmemonics.h"
+#include "global.depmnemonics.h"
 #include "global.storage.h"
 #include "global.loops.h"
 

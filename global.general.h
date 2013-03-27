@@ -48,7 +48,7 @@
 
 // all pure nmenomics that don't depend upon anything else but what's inside file
 // Doesn't even depend upon N?, N?M, or N?BND, etc.
-#include "global.nondepnmemonics.h"
+#include "global.nondepmnemonics.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,10 +74,10 @@
 
 // define nmenomics that depend on other mnemonics
 // Must not make storage items
-#include "global.depnmemonics.h"
+#include "global.depmnemonics.h"
 
 // Determines how we store arrays and how we loop
-// Depends upon N?,N?BND,SHIFT? created in global.depnmemonics.h
+// Depends upon N?,N?BND,SHIFT? created in global.depmnemonics.h
 #include "global.storage.h"
 
 // UP TO THIS POINT SHOULD NOT CREATE MEMORY ITEMS that depend upon grid sizes, since depend upon global.storage.h setting the storage sizes

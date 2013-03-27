@@ -1,7 +1,7 @@
 
 ////////////////
 //
-// globals made private with OpenMP so thread safe reentrance in global.nondepnmemonics.h in definition OPENMPKAZEOSPRIVATE
+// globals made private with OpenMP so thread safe reentrance in global.nondepmnemonics.h in definition OPENMPKAZEOSPRIVATE
 //
 // variables need to keep so can quickly get EOS values if repeated input q1-q5
 //

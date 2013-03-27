@@ -25,7 +25,7 @@
 #define SMALL 1E-300
 #define THIRD          0.3333333333333333333333333333333333L  /* 1/3 */
 
-#include "global.nondepnmemonics.h"
+#include "global.nondepmnemonics.h"
 #define WHICHPARA PARA4
 #include "para_and_paraenohybrid.h"
 
