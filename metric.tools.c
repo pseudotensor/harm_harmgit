@@ -464,6 +464,7 @@ FTYPE mycos(FTYPE th)
 
 
 
+#if(SUPERLONGDOUBLE==0)
 //#ifdef WIN32
 // cot = 1/tan = cos/sin
 FTYPE cot(FTYPE arg)
@@ -482,6 +483,7 @@ FTYPE cot(FTYPE arg)
 
 }
 //#endif 
+#endif
 
 FTYPE csc(FTYPE arg)
 {

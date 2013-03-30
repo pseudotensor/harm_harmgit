@@ -3,7 +3,7 @@
 void set_arrays_multidimen_rad(void)
 {
   int i,j,k;
-  int valueinit;
+  FTYPE valueinit;
   // KORAL
 
 

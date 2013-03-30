@@ -243,7 +243,9 @@ extern FTYPE myfabs(FTYPE x);
 extern FTYPE mysin(FTYPE th);
 extern FTYPE mycos(FTYPE th);
 
+#if(SUPERLONGDOUBLE==0)
 extern FTYPE cot(FTYPE arg);
+#endif
 extern FTYPE csc(FTYPE arg);
 extern FTYPE sec(FTYPE arg);
 
