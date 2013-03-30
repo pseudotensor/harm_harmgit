@@ -778,9 +778,9 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 }
 
 
-#define EXCPLICITNOTNECESSARY -1
-#define EXCPLICITNOTFAILED 0
-#define EXCPLICITFAILED 1
+#define EXPLICITNOTNECESSARY -1
+#define EXPLICITNOTFAILED 0
+#define EXPLICITFAILED 1
 
 
 
@@ -807,8 +807,8 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // SETUP LOOPS
   //
   ///////////////
-  int showmessages=0;
-  int showmessagesheavy=0;
+  int showmessages=1;
+  int showmessagesheavy=1;
   int allowlocalfailurefixandnoreport=0; // need to see if any failures.
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
@@ -864,7 +864,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         }
         else{
           // if here, then must be doing implicit checks, so return that should just do implicit instead of any more expensive calculations here.
-          return(EXCPLICITFAILED);
+          return(EXPLICITFAILED);
         }
 
         // backing off dU
@@ -879,7 +879,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
             fracdtuu0=0.0;
             break;
           }
-          else return(EXCPLICITFAILED);
+          else return(EXPLICITFAILED);
         }
         else{
           // recompute use of full dU so Unew0 is updated
@@ -987,7 +987,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
       else if(NUMEPSILON*dtsub>=realdt && itersub==0){
         // then no need for source term at all
-        return(EXCPLICITNOTNECESSARY);
+        return(EXPLICITNOTNECESSARY);
       }
 
 
@@ -1044,8 +1044,14 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
     }
     else{
-      // if here, then must be doing implicit checks, so return that should just do implicit instead of sub-cycling.
-      return(EXCPLICITFAILED);
+      if(fracdtG!=1.0){
+        // if here, then must be doing implicit checks, so return that should just do implicit instead of sub-cycling.
+        return(EXPLICITFAILED);
+      }
+      else{
+        // then implicit testing, and had to do step, but only 1 step, so consider success.
+        return(EXPLICITNOTFAILED);
+      }
     }
 
     ///////
@@ -1072,7 +1078,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     int failutoprim=Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats);
     if(failutoprim){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"BAD: Utoprimgen_wrapper() failed during explicit sub-stepping.  So sub-cycling failed.\n");
-      return(EXCPLICITFAILED);
+      return(EXPLICITFAILED);
     }
 
 
@@ -1129,20 +1135,35 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
   *qorig=*q;
 
 
-
+  /////////////////
+  //
+  // Choose which method for stepping to use
+  //
+  /////////////////
 
   if(whichradsourcemethod==RADSOURCEMETHODEXPLICIT || whichradsourcemethod==RADSOURCEMETHODEXPLICITSUBCYCLE){
 
     // try explicit sub-cycling
     int failexplicit=koral_source_rad_explicit(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
-    if(failexplicit==EXCPLICITFAILED){
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed to prepare, which means subcycle won't be correctly determining Gd or dtsub: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
-      myexit(928328532); // FUCK
+    if(failexplicit==EXPLICITFAILED){
+      if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+        // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
+        // assume nothing else to do, BUT DEFINITELY report this.
+        if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        return(0);
+      }
+      else{
+        // tells that explicit didn't work
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        return(EXPLICITFAILED);
+      }
     }
-    else if(failexplicit==EXCPLICITNOTNECESSARY){
+    else if(failexplicit==EXPLICITNOTNECESSARY){
       // then don't need any source term
+      return(0);
     }
+    //else explicit succeeded, so just return
+    return(0);
   }
   else if(whichradsourcemethod==RADSOURCEMETHODIMPLICIT){
 	
@@ -1150,41 +1171,43 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
 	
 	if(failimplicit){
 	  if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
-        return(koral_source_rad(RADSOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
-      }
+        int failexplicit=koral_source_rad(RADSOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        if(failexplicit==EXPLICITFAILED){
+          // nothing else to revert to, but just continue and report
+          if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          return(0);
+        }
+      }// end if reverting to explicit
       else{
-		// then can only fail
-		myexit(39475251);
-	  }
-	}
+        if(debugfail>=2) dualfprintf(fail_file,"BAD: implicit failed and didn't choose to revert: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        return(0);        
+      }
+	}// end if failed to do implicit
+    // no failure in implicit, then just return
+    return(0);
 
   }
   else if(whichradsourcemethod==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
-
-#if(0)// DEBUG
-    FTYPE tautot[NDIM],tautotmax;
-    calc_tautot(pinorig, ptrgeom, tautot, &tautotmax);
-    dualfprintf(fail_file,"%g %g %g tautotmax=%g\n",tautot[1],tautot[2],tautot[3],tautotmax);
-#endif
-
-
 
     // try explicit (or see if no source at all required)
     int failreturn=koral_source_rad(RADSOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 
     // determine if still need to do implicit
     int doimplicit;
-    if(failreturn==EXCPLICITFAILED){
+    if(failreturn==EXPLICITFAILED){
       doimplicit=1;
-      if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Tried explicit step, but didn't work out: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Tried explicit step, but wasn't good choice or failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      // don't return until do implicit
     }
-    else if(failreturn==EXCPLICITNOTNECESSARY){
+    else if(failreturn==EXPLICITNOTNECESSARY){
       // then no source at all required
       doimplicit=0;
+      return(0);
     }
     else{
       doimplicit=0;
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Was able to take explicit step: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      return(0);
     }
   
 
@@ -1198,6 +1221,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
   }
   else if(whichradsourcemethod==RADSOURCEMETHODNONE){
     // then no source applied even if required
+    return(0);
   }
   else{
 
