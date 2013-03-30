@@ -1805,11 +1805,11 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPAES defines fractoin of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
-//#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
+#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
 //#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
 //#define KAPPAES (10.0)
 //#define KAPPAES (1E-1)
-#define KAPPAES (1.0)
+//#define KAPPAES (1.0)
 //#define KAPPAES (1E-10)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA)

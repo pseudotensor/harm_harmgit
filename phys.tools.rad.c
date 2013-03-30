@@ -807,8 +807,8 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // SETUP LOOPS
   //
   ///////////////
-  int showmessages=1;
-  int showmessagesheavy=1;
+  int showmessages=0;
+  int showmessagesheavy=0;
   int allowlocalfailurefixandnoreport=0; // need to see if any failures.
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
@@ -1118,8 +1118,8 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
-  int showmessages=1; // 0 ok if not debugging and think everything works.
-  int showmessagesheavy=1;
+  int showmessages=0; // 0 ok if not debugging and think everything works.
+  int showmessagesheavy=0;
 
 
   // make code use "orig" values that below can modify, so return preserves no changes to these no matter what internal functions do.
