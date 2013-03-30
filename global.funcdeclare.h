@@ -313,7 +313,7 @@ extern int merror;
 
 #ifndef WIN32
 //#if USINGICC==0
-#if( !defined(isfinite))
+#if(SUPERLONGDOUBLE==0 && !defined(isfinite))
 // needed for Sauron
 #define isfinite(arg) finite(arg)  //atch -- on mako, in force-free it would complain about multiply-defined __finite() if not include this line
 #endif

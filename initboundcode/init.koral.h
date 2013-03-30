@@ -504,6 +504,8 @@ struct Ccoordparams {
 #define RADCYLBEAMBC 211
 #define RADBEAM2DKSVERTBEAMINFLOW 212
 #define RADCYLBEAMCARTBC 213
+#define HORIZONOUTFLOWSTATIC 214
+#define OUTFLOWSTATIC 215
 
 
 ///////////////////////////////

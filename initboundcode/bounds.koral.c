@@ -175,6 +175,19 @@ int bound_radcylbeamcart(int dir,
                          int *localenerpos
                          );
 
+int bound_staticset(int dir,
+                         int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                         int *inboundloop,
+                         int *outboundloop,
+                         int *innormalloop,
+                         int *outnormalloop,
+                         int (*inoutlohi)[NUMUPDOWN][NDIM],
+                         int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                         int *dosetbc,
+                         int enerregion,
+                         int *localenerpos
+                         );
+
 
 
 
@@ -305,6 +318,13 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x1dn_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==HORIZONOUTFLOWSTATIC){
+        BCtype[dir]=HORIZONOUTFLOW;
+        bound_x1dn_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        BCtype[dir]=HORIZONOUTFLOWSTATIC;
+        bound_staticset(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
+      }
       else if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
         bound_x1dn_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[dir]=1;
@@ -352,6 +372,17 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
     if(dosetbc[dir] && donebc[dir]==0){
       if((BCtype[dir]==OUTFLOW)||(BCtype[dir]==FIXEDOUTFLOW)||(BCtype[dir]==FREEOUTFLOW)){
         bound_x1up_outflow_simple(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==HORIZONOUTFLOW){
+        bound_x1up_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==HORIZONOUTFLOWSTATIC){
+        BCtype[dir]=HORIZONOUTFLOW;
+        bound_x1up_outflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        BCtype[dir]=HORIZONOUTFLOWSTATIC;
+        bound_staticset(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
         donebc[dir]=1;
       }
       else if(BCtype[dir]==RADBEAM2DFLOWINFLOW){
@@ -3561,3 +3592,150 @@ int get_radcylbeamcart(int dir, int *dirprim, int ispstag, int ri, int rj, int r
 
   return(0);
 }
+
+
+
+
+
+
+// X1 upper and lower static
+int bound_staticset(int dir,
+                    int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                    int *inboundloop,
+                    int *outboundloop,
+                    int *innormalloop,
+                    int *outnormalloop,
+                    int (*inoutlohi)[NUMUPDOWN][NDIM],
+                    int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                    int *dosetbc,
+                    int enerregion,
+                    int *localenerpos
+                    )
+  
+{
+
+
+
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+    if((BCtype[X1DN]==OUTFLOWSTATIC || BCtype[X1DN]==HORIZONOUTFLOWSTATIC) && (totalsize[1]>1) && (mycpupos[1] == 0) ){
+
+
+      OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+      //////// LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+        ri=riin;
+        rj=j;
+        rk=k;
+
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        
+        FTYPE *pr;
+        LOOPBOUND1IN{
+          
+          pr = &MACP0A1(prim,i,j,k,0);
+
+    
+          //initially copying everything
+          //          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+          if(ispstag==0){
+
+            //initially copying everything
+            PBOUNDLOOP(pliter,pl) if(pl==U1) MACP0A1(prim,i,j,k,pl) = 0.0; // static
+
+          }// end if not staggered fields
+
+        }// end loop over outer i's
+
+      }// end over loop
+    }// end if correct boundary condition and core
+
+
+
+    if((BCtype[X1UP]==OUTFLOWSTATIC || BCtype[X1UP]==HORIZONOUTFLOWSTATIC) && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
+
+
+      OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+      //////// LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+        ri=riout;
+        rj=j;
+        rk=k;
+
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        
+        FTYPE *pr;
+        LOOPBOUND1OUT{
+          
+          pr = &MACP0A1(prim,i,j,k,0);
+
+    
+          //initially copying everything
+          //          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+          if(ispstag==0){
+
+            //initially copying everything
+            PBOUNDLOOP(pliter,pl) if(pl==U1) MACP0A1(prim,i,j,k,pl) = 0.0; // static
+
+          }// end if not staggered fields
+
+        }// end loop over outer i's
+
+      }// end over loop
+    }// end if correct boundary condition and core
+
+
+
+   
+   
+   
+  }// end parallel region
+  
+
+
+ 
+
+
+
+  return(0);
+} 
+
+
+
