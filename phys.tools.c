@@ -1634,6 +1634,26 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
+// all get_state() things except the field quantities
+int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+
+
+  get_state_uconucovonly(pr, ptrgeom, q);
+
+#if(EOMRADTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
+
+  get_state_thermodynamics(ptrgeom, pr, q);
+
+  return (0);
+}
+
+
 // used to check inversion, which has consistent pressure used to get things as functions of \chi instead of u in case of using jon's inversion
 int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {

@@ -9,8 +9,6 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
 static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
-
-
 static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
 
@@ -144,8 +142,11 @@ static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailure
   }
 
   // re-get needed q's
-  get_state_uconucovonly(pp, ptrgeom, &q);
-  get_state_uradconuradcovonly(pp, ptrgeom, &q);
+  //  get_state_uconucovonly(pp, ptrgeom, &q);
+  //  get_state_uradconuradcovonly(pp, ptrgeom, &q);
+  // Not above because thermo can change
+  get_state(pp,ptrgeom,&q);
+
 
   //radiative covariant four-force
   FTYPE Gd[NDIM];
@@ -908,8 +909,10 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // get needed qforG
   struct of_state qforG;
   FTYPE dtsubforG;
-  get_state_uconucovonly(prforG, ptrgeom, &qforG);
-  get_state_uradconuradcovonly(prforG, ptrgeom, &qforG);
+  // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
+  //  get_state_uconucovonly(prforG, ptrgeom, &qforG);
+  //  get_state_uradconuradcovonly(prforG, ptrgeom, &qforG);
+  get_state(prforG,ptrgeom,&qforG);
   koral_source_rad_calc(prforG, ptrgeom, &qforG, Gpl, &chi);
   get_dtsub(method, prforG, &qforG, Uiin, Ufin, dUother, CUf, Gpl, chi, ptrgeom, &dtsubforG);
 
@@ -948,8 +951,11 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   while(1){
 
     // re-get needed qnew[prnew[Unew]] using new prnew[Unew]
-    get_state_uconucovonly(prnew, ptrgeom, &qnew);
-    get_state_uradconuradcovonly(prnew, ptrgeom, &qnew);
+    //    get_state_uconucovonly(prnew, ptrgeom, &qnew);
+    //    get_state_uradconuradcovonly(prnew, ptrgeom, &qnew);
+    // Not above because thermo can change
+    get_state(prnew,ptrgeom,&qnew);
+
     
     // get 4-force for full pl set
     PLOOP(pliter,pl) Gplprevious[pl]=Gpl[pl];
