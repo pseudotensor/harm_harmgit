@@ -33,11 +33,6 @@
 //passive definitions
 /*********************/
 
-#define RADSOURCEMETHODNONE 0
-#define RADSOURCEMETHODEXPLICIT 1
-#define RADSOURCEMETHODEXPLICITSUBCYCLE 2 // leads to dt->0 unless use SPACETIMESUBSPLITMHDRAD that is a bit noisy
-#define RADSOURCEMETHODIMPLICIT 3
-#define RADSOURCEMETHODIMPLICITEXPLICITCHECK 4 // works
 
 #define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term.  Required to not only avoid failure of explicit scheme, but also that explicit scheme is really accurate compared to implicit.  E.g., near \tau\sim 1, explicit won't fail with RADPULSEPLANAR but will not give same results as implicit.  So only use explicit if really in optically thin regime.
 

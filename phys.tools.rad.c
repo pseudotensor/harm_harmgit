@@ -2,13 +2,17 @@
 
 static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
 
-static void koral_source_rad_calc(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gpl, FTYPE *chireturn);
+static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub);
+
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn);
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
-static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub,
+                           void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
+                           FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+
 static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
 
@@ -787,17 +791,16 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 
 #define GETADVANCEDUNEW0FOREXPLICIT 1 // Use this to check if single explicit step was really allowable, but get_dtsub() already uses advanced U.  But chi will be not updated for fluid dUriemann update, so still might want to do this (with proper code changes) in order to get chi good.
 
-// compute changes to U (both T and R) using implicit method
-// NOTEMARK: The explicit scheme is only stable if the fluid speed is order the speed of light.  Or, one can force the explicit scheme to use vrad=c.
-// Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
-//
 // Based upon size of Gd, sub-cycle this force.
 // 1) calc_Gd()
 // 2) locally set dtsub~dt/\tau or whatever it should be
 // 3) update T^t_\nu and R^t_\nu
 // 4) U->P locally
 // 5) repeat.
-static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+// Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
+static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub,
+                           void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
+                           FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter, pl;
 
@@ -813,12 +816,6 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int allowlocalfailurefixandnoreport=0; // need to see if any failures.
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
-
-
-  int method;
-  // SPACETIMESUBSPLITMHDRAD doesn't work -- generates tons of noise in prad1 with COURRADEXPLICIT=0.2, and was asymmetric in x.
-  method=TAUSUPPRESS; // forced -- only method that is efficient and effective and noise free at moderate optical depths.
-
 
 
   ////////////////
@@ -860,7 +857,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
       if(failutoprim){
 
-        if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+        if(whichrealstepmethod==SOURCEMETHODEXPLICIT || whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
           // then ok to be here
         }
         else{
@@ -875,7 +872,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
         if(fracdtuu0<NUMEPSILON){
           if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"In explicit, backed-off to very small level of fracdtuu0=%g, so must abort\n",fracdtuu0);
-          if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+          if(whichrealstepmethod==SOURCEMETHODEXPLICIT || whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
             // just use initial Unew0 then
             fracdtuu0=0.0;
             break;
@@ -905,19 +902,13 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   //////////
   // get prforG to compute G and chi for calc_dtsub() to ensure future update doesn't have radically different opacity and so 4-force and underpredict that implicit or sub-cycles are needed.
   PLOOP(pliter,pl) prforG[pl]=prnew[pl];
-
-  // get needed qforG
-  struct of_state qforG;
+  
+  // get dtsubforG (don't use Gpl from this)
   FTYPE dtsubforG;
-  // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
-  //  get_state_uconucovonly(prforG, ptrgeom, &qforG);
-  //  get_state_uradconuradcovonly(prforG, ptrgeom, &qforG);
-  get_state(prforG,ptrgeom,&qforG);
-  koral_source_rad_calc(prforG, ptrgeom, &qforG, Gpl, &chi);
-  get_dtsub(method, prforG, &qforG, Uiin, Ufin, dUother, CUf, Gpl, chi, ptrgeom, &dtsubforG);
+  sourcefunc(methoddtsub, prforG, Uiin, Ufin, dUother, CUf, Gpl, ptrgeom, &dtsubforG);
 
-  if(WHICHRADSOURCEMETHOD!=RADSOURCEMETHODEXPLICIT){
-    // then if sub-cycling, really want to start with beginning pin so consistently do sub-steps for effective flux force and radiative force in time.
+  if(whichrealstepmethod!=SOURCEMETHODEXPLICIT){
+    // then if sub-cycling, really want to start with beginning pin so consistently do sub-steps for effective flux force and full-pl fluid force in time.
     // then prforG is only used to ensure not getting bad guess for whether *should* sub-cycle.
     PLOOP(pliter,pl) prnew[pl]=pin[pl];
   }
@@ -934,13 +925,12 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE realdt=compute_dt(CUf,dt);
   FTYPE fracdtG;
 
-  int jj, sc;
-  FTYPE Gplprevious[NPR]={0}, radsource[NPR];
+  int jj;
+  FTYPE Gplprevious[NPR]={0}, sourcepl[NPR];
 
 
   // initialize source update
-  sc = RADSOURCE;
-  PLOOP(pliter,pl) radsource[pl] = 0;
+  PLOOP(pliter,pl) sourcepl[pl] = 0;
 
   //////////////
   //
@@ -950,43 +940,28 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int itersub=0;
   while(1){
 
-    // re-get needed qnew[prnew[Unew]] using new prnew[Unew]
-    //    get_state_uconucovonly(prnew, ptrgeom, &qnew);
-    //    get_state_uradconuradcovonly(prnew, ptrgeom, &qnew);
-    // Not above because thermo can change
-    get_state(prnew,ptrgeom,&qnew);
-
-    
+  
     // get 4-force for full pl set
     PLOOP(pliter,pl) Gplprevious[pl]=Gpl[pl];
-    koral_source_rad_calc(prnew, ptrgeom, &qnew, Gpl, &chi);
+    // get Gpl and dtsub for sub-cycling
+    sourcefunc(methoddtsub, prnew, Uiin, Ufin, dUother, CUf, Gpl, ptrgeom, &dtsub);
     if(itersub==0)  PLOOP(pliter,pl) Gplprevious[pl]=Gpl[pl]; // constant interpolation rather than just using zero for midpoint method
+    if(itersub==0 && dtsub>dtsubforG) dtsub=dtsubforG; // ensure initial sub-stepping is not too large due to large state changes not accounted for yet.  Assuming slow safety factor growth in dtsub can occur from then on and that's ok since will catch updated state change to some fraction.
 
 
     //////////////////
     // get fracdtG
     //////////////////
       
-    if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT){
+    if(whichrealstepmethod==SOURCEMETHODEXPLICIT){
       fracdtG=1.0;
     }
     else{
 
-      // dynamically change dt to allow chi to change during sub-cycling.
-      // use subcycling if directly requested or if reversion from implicit and that reversion was requested
-      //      if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE || (WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICITEXPLICITCHECK) && IMPLICITREVERTEXPLICIT){
-        
-        
-      // get dt for explicit stiff source term sub-cycling
-      // prnew ok to use, while many methods only use Uiin, Ufin, dUother directly
-      // only chi(prnew) is updated for TAUSUPPRESS method or Gpl(prnew) for other methods
-      get_dtsub(method, prnew, &qnew, Uiin, Ufin, dUother, CUf, Gpl, chi, ptrgeom, &dtsub);
-      if(itersub==0 && dtsub>dtsubforG) dtsub=dtsubforG; // ensure initial sub-stepping is not too large due to large state changes not accounted for yet.  Assuming slow safety factor growth in dtsub can occur from then on and that's ok since will catch updated state change to some fraction.
-      
-
-      if(0&& realdt/dtsub>MAXSUBCYCLES && method!=TAUSUPPRESS){
+      //      if(0&& realdt/dtsub>MAXSUBCYCLES && methoddtsub != TAUSUPPRESS){
+      if(0){
         // don't use MAXSUBCYCLES for now.  Assume if really revert to explicit (or really trying to use it) then rarely occurs or want to solve for actual solution, so do all needed sub-cycles!
-        // Semi-required to limit number of cycles for non-simple "method" procedure that can produce arbitrarily small dtsub due to (e.g.) momentum term or something like that.
+        // Semi-required to limit number of cycles for non-simple "methoddtsub" procedure that can produce arbitrarily small dtsub due to (e.g.) momentum term or something like that.
         // NOTE: For high \tau, rad velocity entering chars goes like 1/\tau, so that timestep is higher.  But dtsub remains what it should be for explicit stepping, and so in high-tau case, explicit steps required per actual step goes like \tau^2.  So "kinda" ok that takes long time for explicit sub-stepping since ultimately reaching longer time.
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g chi=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,chi,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         dtsub=realdt/(FTYPE)MAXSUBCYCLES;
@@ -1026,9 +1001,9 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     // add to final result if starting point is full U0
     // forward step integration
-    //    PLOOP(pliter,pl) radsource[pl] += Gpl[pl]*fracdtG;
+    //    PLOOP(pliter,pl) sourcepl[pl] += Gpl[pl]*fracdtG;
     // Trapezoidal Rule (midpoint method):
-    PLOOP(pliter,pl) radsource[pl] += 0.5*(Gplprevious[pl]+Gpl[pl])*fracdtG;
+    PLOOP(pliter,pl) sourcepl[pl] += 0.5*(Gplprevious[pl]+Gpl[pl])*fracdtG;
 
 
 
@@ -1037,10 +1012,10 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // see if done
     //
     ///////////////
-    if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT){
+    if(whichrealstepmethod==SOURCEMETHODEXPLICIT){
       break;
     }
-    else if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+    else if(whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
       if(dtcum>=realdt){
         // then done
         break;
@@ -1077,7 +1052,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     
 
     // get new Unew using 1) current Unew0 (so Unew updates a bit towards final Unew0 as if fracdtuu0=1) and 2) cumulative 4-force so far
-    PLOOP(pliter,pl) Unew[pl] = Unew0[pl] + radsource[pl] * realdt;
+    PLOOP(pliter,pl) Unew[pl] = Unew0[pl] + sourcepl[pl] * realdt;
 
     // get prnew(Unew)
     newtonstats.nstroke=newtonstats.lntries=0;
@@ -1089,7 +1064,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
     // DEBUG:
-    //    if(debugfail>=2) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%2d Unew0=%26.20g Unew=%26.20g radsource*realdt=%26.20g fakefracdtuu0=%g\n",pl,Unew0[pl],Unew[pl],radsource[pl]*realdt,fakefracdtuu0);
+    //    if(debugfail>=2) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%2d Unew0=%26.20g Unew=%26.20g sourcepl*realdt=%26.20g fakefracdtuu0=%g\n",pl,Unew0[pl],Unew[pl],sourcepl[pl]*realdt,fakefracdtuu0);
 
 
     // step      
@@ -1106,7 +1081,7 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // only changed this quantity, none of other among function arguments
   //
   ////////////
-  PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
+  PLOOP(pliter,pl) dUcomp[whichsc][pl] += sourcepl[pl];
 
 
   return(0);
@@ -1120,7 +1095,10 @@ static int koral_source_rad_explicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
 
-
+// General radiation source term calculation
+// NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
+// NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
+// For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
 int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
@@ -1147,12 +1125,20 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
   //
   /////////////////
 
-  if(whichradsourcemethod==RADSOURCEMETHODEXPLICIT || whichradsourcemethod==RADSOURCEMETHODEXPLICITSUBCYCLE){
+  if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE){
+
+    int methoddtsub;
+    // SPACETIMESUBSPLITMHDRAD doesn't work -- generates tons of noise in prad1 with COURRADEXPLICIT=0.2, and was asymmetric in x.
+    methoddtsub=TAUSUPPRESS; // forced -- only method that is efficient and effective and noise free at moderate optical depths.
+
+    // real stepping method want to use
+    int whichrealstepmethod=WHICHRADSOURCEMETHOD;
+    int whichsc = RADSOURCE;
 
     // try explicit sub-cycling
-    int failexplicit=koral_source_rad_explicit(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failexplicit=source_explicit(whichsc, whichrealstepmethod,methoddtsub,koral_source_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
     if(failexplicit==EXPLICITFAILED){
-      if(WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE){
+      if(WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICITSUBCYCLE){
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
         // assume nothing else to do, BUT DEFINITELY report this.
         if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -1171,13 +1157,13 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
     //else explicit succeeded, so just return
     return(0);
   }
-  else if(whichradsourcemethod==RADSOURCEMETHODIMPLICIT){
+  else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
 	
 	int failimplicit=koral_source_rad_implicit(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 	
 	if(failimplicit){
 	  if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
-        int failexplicit=koral_source_rad(RADSOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
           if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -1193,10 +1179,10 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
     return(0);
 
   }
-  else if(whichradsourcemethod==RADSOURCEMETHODIMPLICITEXPLICITCHECK){
+  else if(whichradsourcemethod==SOURCEMETHODIMPLICITEXPLICITCHECK){
 
     // try explicit (or see if no source at all required)
-    int failreturn=koral_source_rad(RADSOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 
     // determine if still need to do implicit
     int doimplicit;
@@ -1221,11 +1207,11 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // one-deep recursive call to implicit scheme
-      return(koral_source_rad(RADSOURCEMETHODIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
+      return(koral_source_rad(SOURCEMETHODIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
 	}// end if doimplicit==1
 
   }
-  else if(whichradsourcemethod==RADSOURCEMETHODNONE){
+  else if(whichradsourcemethod==SOURCEMETHODNONE){
     // then no source applied even if required
     return(0);
   }
@@ -1312,18 +1298,32 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 }
 
 // get 4-force for all pl's
-static void koral_source_rad_calc(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gpl, FTYPE *chireturn)
+static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   FTYPE Gd[NDIM];
   int jj;
   int pliter,pl;
+  FTYPE chi;
 
-  calc_Gd(pp, ptrgeom, q, Gd, chireturn);
+  struct of_state q;
+  // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
+  //  get_state_uconucovonly(pr, ptrgeom, &q);
+  //  get_state_uradconuradcovonly(pr, ptrgeom, &q);
+  get_state(pr,ptrgeom,&q);
+
+  calc_Gd(pr, ptrgeom, &q, Gd, &chi);
 
   PLOOP(pliter,pl) Gpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
   DLOOPA(jj) Gpl[UU+jj]    = -SIGNGD*Gd[jj];
   DLOOPA(jj) Gpl[URAD0+jj] = +SIGNGD*Gd[jj];
+
+  if(dtsub!=NULL){
+    // then assume expect calculation of dtsub
+    get_dtsub(method, pr, &q, Ui, Uf, dUother, CUf, Gpl, chi, ptrgeom, dtsub);
+  }
+  // else "method" can be anything and it doesn't matter
+
 
 }
 
@@ -1464,7 +1464,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   FTYPE vrad2=THIRD;
   FTYPE vrad2limited;
 
-  if(chi>0.0){// && WHICHRADSOURCEMETHOD==RADSOURCEMETHODIMPLICIT){
+  if(chi>0.0){// && WHICHRADSOURCEMETHOD==SOURCEMETHODIMPLICIT){
     // NOT DOING THIS:
     // compute tautot assuming chi is optical depth per unit grid dx[1-3].  I.e. calc_chi() computes grid-based opacity
     // tautot is the total optical depth of the cell in dim dimension
@@ -1482,7 +1482,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6 or NR2007 S20.2 with D=1/(3\chi), but twice higher speed is only more robust.
     vrad2limited=MIN(vrad2,vrad2tau);
 
-	// NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==RADSOURCEMETHODEXPLICITSUBCYCLE method.
+	// NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICITSUBCYCLE method.
 
     // TODOMARK: I wonder if another possibility is to use a speed limiter in the advection equation.  With my pseudo-Newtonian code is has a limiter on the sound and Alfven speeds following the idea of limiting the Alfven speed by Miller & Stone (2000, http://adsabs.harvard.edu/abs/2000ApJ...534..398M).  That is, there must be a way to insert a term into the radiation advection equations to limit the velocity to ~c/\tau that only becomes effective at and beyond that speed.  Then the Jacobian would be modified (Or thinking of how the Jacobian could get modified, one gets a different equation of motion).
 

@@ -630,6 +630,15 @@
 // TIMEORDER: 3 : 4 steps (classic RK3 method -- error term is 4th order for smooth flows)
 // TIMEORDER: 4 : 4 steps (classic RK4 method -- error term is 5th order for smooth flows)
 
+
+// type of method used for source term (generic labels)
+#define SOURCEMETHODNONE 0
+#define SOURCEMETHODEXPLICIT 1
+#define SOURCEMETHODEXPLICITSUBCYCLE 2
+#define SOURCEMETHODIMPLICIT 3
+#define SOURCEMETHODIMPLICITEXPLICITCHECK 4
+
+
 // tetrad.c stuff:
 #define METRICTETRAD 0
 #define NONMETRICTETRIC 1
