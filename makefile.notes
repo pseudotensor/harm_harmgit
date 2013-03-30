@@ -22,13 +22,18 @@
 # for real trig/etc long doubles
 # 1) setup code dir
 #    mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
-# 2) run:
+# 2a) run:
 #    sh double2longdouble.sh
+# 2b) run that script in the initboundcode directory as well
 # 3) copy back the tau_neededbyharm.c file:
 #    cp <prelongdoubledirectory>/tau_neededbyharm.c .
 # 4) untgz the ldouble.tgz file:
 #    tar xvzf ldouble.tgz
-# 5) compile code:
+# 5a) in nantst.c replace "int isnanl(), isfinitel(), signbitl();" with "extern int isnanl(), isfinitel(), signbitl();" to avoid compiler error about multiple definitions
+# 5b) Do same for testvect.c :  "int isfinitel (long double);" -> "extern int isfinitel (long double);"
+# 5c) lcalc.c : extern int isnanl(), isfinitel(), signbitl();
+# 5d) wrap the isnanl.c:isfinitel(x) function in #if(USINGICC==0) #endif since already in MKL library
+# 6) compile code:
 # make superclean ; make prepgrmhdldouble ; make grmhdldouble
 
 # for liaison code do (e.g.):

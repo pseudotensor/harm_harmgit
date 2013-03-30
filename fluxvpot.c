@@ -1738,7 +1738,7 @@ int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, 
     //    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,myip1,j,k,B1)+MACP0A1(pstag,i,myjm1,k,B1)+MACP0A1(pstag,myip1,myjm1,k,B1));
     //    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,mykp1,B3)+MACP0A1(pstag,i,myjm1,k,B3)+MACP0A1(pstag,i,myjm1,mykp1,B3));
     primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,i,myjm1,k,B1));
-    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,myjm1,k,B2));
+    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,myjm1,k,B2));
     primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,i,myjm1,k,B3));
 
     // do FACE3 for B3 in PRIMECOORDS

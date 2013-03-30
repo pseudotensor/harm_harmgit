@@ -800,6 +800,9 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==ATMSTATIC)
 
+#undef ANALYTICMEMORY
+#define ANALYTICMEMORY 1
+
 //#define DOSTOREPOSITIONDATA 0
 
 //#undef VARTOINTERP
